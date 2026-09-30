@@ -17,6 +17,8 @@ This private repository owns Seif's reusable software-factory skills. Read `READ
 
 ## Connected workflows
 
+Keep `preview/index.html`, our plain-language visual introduction, accurate as the factory changes. Explain outcomes before implementation details. Clearly distinguish skills available in the source collection, skills imported here, and workflows demonstrated in a real run.
+
 When connecting skills, make the handoff explicit: inputs, output artifact, acceptance condition, failure state, and next responsible step. Keep task state durable where the target environment supports it. Do not mark a ticket complete when work only reached a review or deployment handoff.
 
 For unattended workflows, define retry, time, and cost limits appropriate to the task. Avoid duplicate actions on retries. Keep independent acceptance checks outside the builder's unrestricted control when their integrity matters.

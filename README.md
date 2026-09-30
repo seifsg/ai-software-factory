@@ -10,7 +10,11 @@ The factory runs against the customer's or team's project. This repository owns 
 
 ## Current state
 
-Repository foundation only. No skills have been imported yet. No runtime, unattended workflow, integrations, or deployment behavior has been implemented or verified.
+Repository foundation and visual design. No skills have been imported yet. No runtime, unattended workflow, integrations, or deployment behavior has been implemented or verified.
+
+## Start here
+
+Open [the visual introduction](preview/index.html) in a browser. It explains the factory in plain language: understand, build, check, approve. It is our living guide to the goal, the existing skill collection, and the next milestone. It works locally without installation or external dependencies.
 
 The [skill lifecycle map](docs/skill-lifecycle-map.md) maps the 38 supplied RepairCheck skills to delivery stages, review checks, system adapters and business workflows. It records existing instructions separately from proposed factory connections.
 
