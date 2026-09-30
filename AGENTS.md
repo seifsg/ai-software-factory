@@ -4,6 +4,15 @@
 
 This private repository owns Seif's reusable software-factory skills. Read `README.md` and `.agents/skills/README.md` before changing the system. Follow the user's current instructions and preserve existing skill behavior unless the requested change requires altering it.
 
+## Quality standard
+
+Our motto: **give 100% minimum; aim to give more through the quality of the work.**
+
+- Put extra effort into correctness, clarity, polish, usability, and appropriate verification.
+- Review and refine the output before calling it finished. Iterate further when doing so materially improves the result.
+- Overdeliver through useful improvements that are needed within the agreed scope. Preserve the user's intent and avoid adding unsolicited deliverables or unrelated features.
+- Judge success by the quality and usefulness of the outcome, rather than the amount of material produced.
+
 ## Skill development
 
 - Use the available Skill Creator workflow when creating or substantially updating a skill.
