@@ -14,9 +14,9 @@ Repository foundation and visual design. No skills have been imported yet. No ru
 
 ## Start here
 
-Open [the visual introduction](preview/index.html) in a browser. It explains the factory in plain language: understand, build, check, approve. It is our living guide to the goal, the existing skill collection, and the next milestone. It works locally without installation or external dependencies.
+Open [the visual introduction](preview/index.html) in a browser. Its concise first screen explains the goal and the process: understand, build, check, approve. A single status line shows where we are today. It works locally without installation or external dependencies.
 
-Its interactive architecture map shows the named skills, their handoffs, the five review lenses, correction and observation loops, human approval, and proposed orchestration/release capabilities. Select a node for its inputs and outputs, or explore all 38 skills in the library view. Keep the HTML, stylesheet, and script together in `preview/` when copying it.
+Expand “Explore the full factory” for the detailed map, handoffs, five review lenses, correction loops, proposed capabilities, and all 38 source skills. Select a node for its inputs and outputs. Keep the HTML, stylesheet, and script together in `preview/` when copying it.
 
 The [skill lifecycle map](docs/skill-lifecycle-map.md) maps the 38 supplied RepairCheck skills to delivery stages, review checks, system adapters and business workflows. It records existing instructions separately from proposed factory connections.
 

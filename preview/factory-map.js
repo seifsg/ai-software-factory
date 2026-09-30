@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const root = document.getElementById('factory-picture');
+  const root = document.getElementById('architecture-map');
   const stage = document.getElementById('map-stage');
   const wires = document.getElementById('map-wires');
   const dialog = document.getElementById('map-detail-dialog');
@@ -125,6 +125,7 @@
   function drawWires(){
     if(document.getElementById('delivery-panel').hidden)return;
     const base=stage.getBoundingClientRect();
+    if(!base.width||!base.height)return;
     wires.setAttribute('viewBox',`0 0 ${base.width} ${base.height}`);
     wires.replaceChildren();
     const defs=document.createElementNS(svgNS,'defs');
