@@ -16,6 +16,8 @@ Repository foundation and visual design. No skills have been imported yet. No ru
 
 Open [the visual introduction](preview/index.html) in a browser. It explains the factory in plain language: understand, build, check, approve. It is our living guide to the goal, the existing skill collection, and the next milestone. It works locally without installation or external dependencies.
 
+Its interactive architecture map shows the named skills, their handoffs, the five review lenses, correction and observation loops, human approval, and proposed orchestration/release capabilities. Select a node for its inputs and outputs, or explore all 38 skills in the library view. Keep the HTML, stylesheet, and script together in `preview/` when copying it.
+
 The [skill lifecycle map](docs/skill-lifecycle-map.md) maps the 38 supplied RepairCheck skills to delivery stages, review checks, system adapters and business workflows. It records existing instructions separately from proposed factory connections.
 
 Seif identifies this supplied collection as his own work, with AI assistance in writing and committing some skills. Commit author metadata does not determine design authorship; source history is preserved.
