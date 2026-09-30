@@ -12,6 +12,10 @@ The factory runs against the customer's or team's project. This repository owns 
 
 Repository foundation only. No skills have been imported yet. No runtime, unattended workflow, integrations, or deployment behavior has been implemented or verified.
 
+The [skill lifecycle map](docs/skill-lifecycle-map.md) maps the 38 supplied RepairCheck skills to delivery stages, review checks, system adapters and business workflows. It records existing instructions separately from proposed factory connections.
+
+Seif identifies this supplied collection as his own work, with AI assistance in writing and committing some skills. Commit author metadata does not determine design authorship; source history is preserved.
+
 ## Structure
 
 ```text
