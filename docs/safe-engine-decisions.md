@@ -10,6 +10,12 @@ Seif owns naming and design decisions. For each new improvement or unresolved de
 
 Choosing an architectural direction does not silently settle remaining language, format, host, numerical limit, or permission choices. Already authorized work can continue within the selected scope; unresolved choices stay visible.
 
+## Skill authorship
+
+Seif is the primary skill author. He supplies the working method in his own words and owns the final procedures. The assistant helps him examine examples, structure his writing, expose gaps and contradictions, refine wording, and test the resulting skills. Existing Seif-authored skills are the starting material; external examples provide inspiration. The assistant may prepare a specific draft when asked, but should not independently write the majority of the skill library.
+
+Plans for skill counts, individual skill boundaries, and new skill names require Seif's selection. No new skill files are created merely to reserve proposed roles.
+
 ## Naming
 
 | ID | Selection | Approved direction |

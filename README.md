@@ -10,6 +10,8 @@ The factory runs against the customer's or team's project. This repository owns 
 
 The engine is named **Safe Engine**. The [design decision record](docs/safe-engine-decisions.md) captures Seif's selected architecture and quality procedures, with unresolved choices kept explicit. The selected project onboarding approach discovers configuration and offers a profile for review and correction.
 
+Seif leads skill authorship; the assistant helps structure, review, refine, and validate his procedures. The [proposed build plan](docs/safe-engine-build-plan.md) contains skill-count options, an ASCII architecture, and the completion checklist. Its recommended skill count and role boundaries await selection.
+
 ## Current state
 
 Repository foundation and visual design. No skills have been imported yet. No runtime, unattended workflow, integrations, or deployment behavior has been implemented or verified.
