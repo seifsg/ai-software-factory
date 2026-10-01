@@ -2,6 +2,8 @@
 
 **Initial baseline, retained for its core workflow and checklist.** Seif subsequently expanded the required scope to include specialist engineering, product, design, security, and autonomous browser capabilities. Use the [expanded capability plan](safe-engine-expanded-scope.md) for the current scope and count alternatives; the numbers below describe the earlier proposal.
 
+The later [fast feature delivery design](safe-engine-fast-delivery.md) governs test batching, the improvement pass before push, and the priority for accurate maintenance by AI agents.
+
 The initial recommendation was **11 core skill entry files**, followed by **2 release and observation skills when deployment enters scope**. The count, role boundaries, and individual names were not approved. No skill files have been created.
 
 Seif writes the procedures. The assistant helps structure, challenge, refine, and test them. Eight proposed core entry files adapt Seif's existing procedures; three core roles need new instructions. Splitting the existing planning and implementation procedure accounts for two of the eight adapted files.

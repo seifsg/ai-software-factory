@@ -12,6 +12,8 @@ The engine is named **Safe Engine**. The [design decision record](docs/safe-engi
 
 Seif leads skill authorship; the assistant helps structure, review, refine, and validate his procedures. The [expanded capability plan](docs/safe-engine-expanded-scope.md) covers worktrees, skill writing, TDD, debugging, architecture, UX, idea assessment, security, and autonomous browser inspection and repair. It includes source comparisons, three alternatives for each design choice, an ASCII architecture, and acceptance cases. Skill counts, boundaries, and new procedures await selection. The [initial build plan](docs/safe-engine-build-plan.md) preserves the core delivery workflow and engine checklist.
 
+Development should proceed in substantial batches, followed by relevant verification. Before a feature is pushed, inspect worthwhile cleanup, reuse, design, performance, and security improvements, then verify the changes. The [fast feature delivery design](docs/safe-engine-fast-delivery.md) records this cadence and the proposed criteria for code that AI agents can navigate and change accurately.
+
 ## Current state
 
 Repository foundation and visual design. No skills have been imported yet. No runtime, unattended workflow, integrations, or deployment behavior has been implemented or verified.

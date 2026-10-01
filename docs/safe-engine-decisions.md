@@ -24,6 +24,14 @@ The factory must be designed to open and navigate the actual application, identi
 
 The [expanded capability plan](safe-engine-expanded-scope.md) records research, source examples, packaging alternatives, individual choices E1–E14, and proposed demonstrations. These requirements expand the initial build-plan scope; they do not approve its proposed 22-core-plus-2-later count, new names, or procedural recommendations. The capabilities are not implemented yet.
 
+## Fast development and improvement requirements
+
+Seif subsequently specified substantial development batches, with unit and E2E verification at meaningful boundaries instead of constant test runs. Do not use per-edit or per-function test execution as the default, and do not start test watchers by default. Test-first methods remain available for deliberately selected cases; the earlier E4 recommendation is superseded where it conflicts with this cadence.
+
+Before the feature is pushed, inspect and apply worthwhile in-scope cleanup, reuse, refactoring, performance, security, and agent-navigability improvements. Then run QA appropriate to the resulting changes and obtain the already selected fresh independent assessment. Code should prioritize accurate, efficient maintenance by AI agents over individual human style preferences. Improvement claims require suitable evidence; function or file size alone does not justify refactoring.
+
+The [fast feature delivery design](safe-engine-fast-delivery.md) compares the remaining choices F1–F4. The optional “scale button” remains a control proposal, with its meaning, labels, depth, and packaging unselected. These directions do not settle G6, G9, names, numerical limits, or skill count.
+
 ## Naming
 
 | ID | Selection | Approved direction |

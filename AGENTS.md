@@ -38,6 +38,7 @@ For unattended workflows, define retry, time, and cost limits appropriate to the
 
 ## Verification and changes
 
+- For application development, batch unit and E2E runs after substantial planned work; do not run tests after every edit or start test watchers by default. Before pushing a feature, inspect worthwhile in-scope design, cleanup, reuse, performance, security, and agent-navigability improvements, then verify the affected result. Read `docs/safe-engine-fast-delivery.md`; its option recommendations remain unselected.
 - Validate skill frontmatter, names, references, and any executable helpers.
 - Test observable behavior when warranted. Report checks not run and their limits honestly.
 - Keep changes focused and preserve unrelated work. Use a branch for substantive changes to an established repository.

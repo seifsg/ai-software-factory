@@ -6,6 +6,8 @@ The target is a factory that can understand a task, build it, use the resulting 
 
 This expands the [initial build plan](safe-engine-build-plan.md). It preserves the [selected engine decisions](safe-engine-decisions.md), including project discovery with review/correction, separate planning and execution, bounded reviewer repairs followed by independent verification, and the agreed human delivery/release boundaries. G6 and G9 remain unresolved.
 
+Seif subsequently specified **substantial development batches, verification at batch boundaries, and an improvement pass before pushing followed by QA**. The [fast feature delivery design](safe-engine-fast-delivery.md) governs that cadence and records the requested priority for code that AI agents can maintain accurately. The updated E4 below preserves TDD as a capability without prescribing tests after every edit.
+
 ## What must be covered
 
 | Requested capability | What a useful result must demonstrate | Starting material to examine together |
@@ -15,7 +17,7 @@ This expands the [initial build plan](safe-engine-build-plan.md). It preserves t
 | Planning | Translate the request into executable steps, dependencies, interfaces, and observable acceptance. | Seif's `analyze-start` and `get-ready-to-code`; [Superpowers plans][sp-plans]; [BMAD product requirements][bmad-prd]. |
 | Execution | Follow the current plan, check real outcomes, retain progress and deviations, and continue through in-scope repairs. | Seif's pre/change/post method; [Superpowers execution][sp-execution]. |
 | Debugging | Reproduce a defect, discriminate between causes, repair the cause, and verify the original failure and regressions. | Seif's `bug-investigation`; [Superpowers debugging][sp-debug]. |
-| TDD and TDD review | Observe a meaningful failure before the fix, then success; review whether the test would detect the intended defect. | [Superpowers TDD][sp-tdd] and [test-quality guidance][sp-test-quality]. Applicability policy remains to be selected. |
+| TDD and TDD review | Support test-first methods when explicitly chosen and review whether tests detect intended defects. Default feature development batches test execution after substantial work. | [Superpowers TDD][sp-tdd] and [test-quality guidance][sp-test-quality], adapted to Seif's cadence. |
 | Architecture | Ground decisions in existing code; define boundaries, data ownership, interfaces, and relevant deployment constraints. | [BMAD architecture][bmad-architecture] and its [decision template][bmad-spine]. |
 | UX design | Define the intended journeys, content, interactions, screen states, responsive behavior, and design language. | Seif's `ux-investigation`; [BMAD UX][bmad-ux]; [gstack design consultation][gs-consult]. |
 | Product design review | Assess whether the proposed and rendered experience serves its users, makes the next action clear, and meets the agreed standard. | [gstack plan design review][gs-plan-design] and [rendered design review][gs-design]. |
@@ -61,7 +63,7 @@ Under B, the original core roles remain 1–11: enter/resume, discover project, 
 |---|---|---|
 | 12 | Workspace and worktree management | Own workspace preparation, baseline, ownership, and recovery. |
 | 13 | Assisted skill authoring and evaluation | Factory maintenance; Seif supplies the procedure. |
-| 14 | Test-driven implementation | Own the TDD method and test-quality rubric; quality review invokes that rubric independently. |
+| 14 | Test-driven implementation | Own the optional TDD method and test-quality rubric; respect the default batch cadence. Quality review invokes the rubric independently. |
 | 15 | Systematic debugging | Own evidence-driven defect investigation; execution and QA can invoke it. |
 | 16 | Architecture design and review | Own shared structural decisions and their conformance criteria. |
 | 17 | UX design | Own intended journeys, states, content, and visual rules. |
@@ -101,13 +103,15 @@ Every choice below is **open**. Recommendations are research conclusions for Sei
 
 ### E4 — TDD and test review
 
+Seif's later instruction settles the default execution cadence: batch tests after substantial development. The remaining alternatives concern when to author tests and how to retain TDD as a deliberate technique. This replaces the earlier strict test-first options.
+
 | Option | Approach | Benefit and cost |
 |---|---|---|
-| A | Strict test-first for every code behavior change. | Consistent discipline; difficult for exploration or poor test seams. |
-| B | Behavior-first TDD with explicit applicability rules. | Strong feature and bug coverage; requires clear rules for alternative evidence. |
-| C | Acceptance-test-first, with finer tests added during implementation. | Protects task outcomes; lower-level design feedback can arrive later. |
+| A | Author acceptance tests before coding; execute them at substantial batch boundaries. | Keeps expected behavior independent of implementation; some details need revision during discovery. |
+| B | Batch development and verification by default; use explicit test-first work only for deliberately chosen tasks. | Preserves speed and access to TDD where wanted; the task must make that choice clear. |
+| C | Implement each substantial batch, then author and execute its tests. | Least interruption to implementation; requires stronger review against tests mirroring the code. |
 
-**Recommend B.** Observe failure for the intended reason, implement, observe success, then refactor. Review whether plausible defects would fail the tests and whether expected results come from requirements. Use rendered evidence for visual judgment; avoid tests that merely mirror implementation. TDD policy remains open, especially for exploratory work. Sources: [TDD][sp-tdd], [test quality][sp-test-quality].
+**Recommend B.** Review whether plausible defects would fail the tests and whether expected results come from requirements. For selected TDD work, observe the intended failure and later success; do not label unobserved execution as RED/GREEN evidence. Use rendered inspection for visual judgment. The [batch-boundary options](safe-engine-fast-delivery.md#f1-verification-batch-boundaries) remain open. Sources: [TDD][sp-tdd], [test quality][sp-test-quality].
 
 ### E5 — Debugging
 
@@ -207,7 +211,7 @@ Every choice below is **open**. Recommendations are research conclusions for Sei
 | B | Continue through dependent steps and in-scope repairs using durable checkpoints. | Fits autonomous delivery while retaining evidence and recovery; depends on the selected controller. |
 | C | Dispatch independent tasks concurrently and integrate their results. | Can reduce elapsed time; requires stable interfaces, resource isolation, and integration review. |
 
-**Recommend B.** Preserve the existing pre/change/post checks, record actual results, and follow the run-wide budget. Continue authorized work without repeated permission requests; surface genuine unresolved choices or blockers. Fresh independent verification remains required after reviewer repairs. Inspiration: [execution procedure][sp-execution], adapted to our selected G4, G8, I3, and I4.
+**Recommend B.** Preserve the existing pre/change/post inspection, batch test execution after substantial work, record actual results, and follow the run-wide budget. Continue authorized work without repeated permission requests; surface genuine unresolved choices or blockers. Include the requested improvement pass before push and verify the result. Fresh independent verification remains required after reviewer repairs. Inspiration: [execution procedure][sp-execution], adapted to our selected G4, G8, I3, and I4.
 
 ## How the pieces connect
 
@@ -258,7 +262,7 @@ CONTROLLER SUPPORT THROUGHOUT
   Workspace and browser adapters | permissions | retry budget
 ```
 
-The diagram groups responsibilities, not mandatory sequential invocations. After any repair, repeat affected verification and obtain a fresh final assessment of the corrected candidate. Independent work can continue when only one decision is blocked. A browser is not required for a project without a browser interface.
+The diagram groups responsibilities, not mandatory sequential invocations. Development and related repairs are grouped into meaningful batches, followed by affected verification and a fresh final assessment. The improvement pass before push follows the newer fast-delivery design. Independent work can continue when only one decision is blocked. A browser is not required for a project without a browser interface.
 
 ## The autonomous browser quality loop
 
