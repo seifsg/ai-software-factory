@@ -2,6 +2,8 @@
 
 Research and design, 30 September 2026. This document compares Seif's existing procedures with published factory patterns and proposes the next capabilities to build. It does not install a skill, hooks, a runner, or GitHub protections.
 
+For selected directions and pending choices, use the [Safe Engine design decisions](safe-engine-decisions.md), recorded on 1 October 2026. This document retains the earlier research; provisional skill names below are not approved names.
+
 **Build a small `factory-qa` entry skill backed by saved task state, executable gates, host hooks, and independent delivery checks.** The skill chooses the process; the gates require evidence before the work advances. Instructions alone cannot guarantee that an agent follows every rule.
 
 ## What we already have

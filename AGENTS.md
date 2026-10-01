@@ -15,6 +15,8 @@ Our motto: **give 100% minimum; aim to give more through the quality of the work
 
 ## Skill development
 
+The engine is named **Safe Engine**. Read `docs/safe-engine-decisions.md` before designing or changing the factory. Preserve Seif's selected options; keep pending choices unresolved. For new improvement or design decisions, present three credible alternatives in a comparison table, recommend one with reasons, and leave the selection to Seif. Recommendations do not become approved defaults. Exact stage and skill names remain open unless explicitly selected.
+
 - Use the available Skill Creator workflow when creating or substantially updating a skill.
 - Read an imported skill and its relevant resources before adapting it. Record provenance where known; do not invent authorship or copy rights.
 - Store each skill in `.agents/skills/<skill-name>/SKILL.md`, with YAML `name` and `description`. Match the name to the folder.

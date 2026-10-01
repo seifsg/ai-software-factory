@@ -140,7 +140,7 @@ Business workflows are a separate product capability: the factory can build and 
                Human decisions at configured boundaries
 ```
 
-Skills supply procedures. The controller supplies continuity and routing. Tools supply actual capabilities. A project profile supplies the context needed to reuse the procedures beyond RepairCheck. The controller might begin as one manually invoked skill with file-based handoffs; a persistent service or queue can follow after the same loop works on real tasks.
+Skills supply procedures. The controller supplies continuity and routing. Tools supply actual capabilities. A project profile supplies the context needed to reuse the procedures beyond RepairCheck. The [Safe Engine design decisions](safe-engine-decisions.md) record the selected direction: a small controller with an entry skill, saved checkpoints, shared gates, and project discovery with review and correction. These components remain unimplemented.
 
 ### Minimum shared handoff
 

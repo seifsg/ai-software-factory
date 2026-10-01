@@ -8,6 +8,8 @@ Make skills work together as a repeatable delivery system: understand a request,
 
 The factory runs against the customer's or team's project. This repository owns the reusable skills and their supporting resources, not client source code or credentials.
 
+The engine is named **Safe Engine**. The [design decision record](docs/safe-engine-decisions.md) captures Seif's selected architecture and quality procedures, with unresolved choices kept explicit. The selected project onboarding approach discovers configuration and offers a profile for review and correction.
+
 ## Current state
 
 Repository foundation and visual design. No skills have been imported yet. No runtime, unattended workflow, integrations, or deployment behavior has been implemented or verified.
