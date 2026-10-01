@@ -1,6 +1,6 @@
 # Safe Engine fast feature delivery
 
-Seif's direction, recorded 1 October 2026: **build substantial parts of a feature, batch verification at meaningful boundaries, improve the completed design before pushing, then verify the improvements. Optimize the code for reliable future work by AI agents.** These requirements amend the [expanded capability plan](safe-engine-expanded-scope.md). They are design instructions; no runtime or skills have been implemented.
+Seif's direction, recorded 1 October 2026: **build substantial parts of a feature, batch verification at meaningful boundaries, improve the completed design before pushing, then verify the improvements. Optimize the code for reliable future work by AI agents.** These requirements amend the [expanded capability plan](safe-engine-expanded-scope.md). The later [local pilot](pilot-verification.md) implements the first delivery loop; the broader choices below remain proposals.
 
 The remaining choices below concern batch boundaries, improvement scope, agent-oriented structure, and an optional control. Each has three alternatives and one recommendation. Names, control design, numerical limits, and skill packaging remain Seif's decisions.
 
@@ -55,7 +55,7 @@ Within a batch run, select checks by changed behavior and affected dependencies.
 
 Nx demonstrates dependency-aware task selection using Git changes and the project graph; this is inspiration for adapters, not a requirement to install Nx. [Affected tasks](https://nx.dev/docs/features/ci-features/affected).
 
-Avoid rerunning identical, still-valid checks solely because another stage starts. Caching is appropriate only when the result's relevant inputs and environment are controlled and its validity can be established. Backend-dependent browser results cannot be reused merely because source files did not change. The exact evidence binding and reuse rules remain part of unresolved G6; no new cache mechanism is selected here. [Nx cache constraints](https://nx.dev/docs/features/cache-task-results).
+Avoid rerunning identical, still-valid checks solely because another stage starts. Caching is appropriate only when the result's relevant inputs and environment are controlled and its validity can be established. Backend-dependent browser results cannot be reused merely because source files did not change. G6 now selects exact declared-input binding for the pilot; safe result reuse remains future work. The initial pilot conservatively reruns its final batch, including after a no-change improvement pass; this is a known efficiency gap against this target. [Nx cache constraints](https://nx.dev/docs/features/cache-task-results).
 
 ## The improvement pass before push
 
@@ -150,4 +150,4 @@ If the pass introduces a failure, repair or undo the responsible optimization an
 - Compare representative agent maintenance tasks before and after structural changes.
 - Confirm that the optional control cannot weaken required acceptance or broaden authority silently.
 
-These are evaluation targets for the future implementation. No application tests were needed for this documentation change, and no test watchers, new skills, or runtime gates were installed.
+These are evaluation targets for the full implementation. The [pilot verification record](pilot-verification.md) documents the subset actually exercised; no test watchers are used.

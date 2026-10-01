@@ -4,7 +4,7 @@
 
 The later [fast feature delivery design](safe-engine-fast-delivery.md) governs test batching, the improvement pass before push, and the priority for accurate maintenance by AI agents.
 
-The initial recommendation was **11 core skill entry files**, followed by **2 release and observation skills when deployment enters scope**. The count, role boundaries, and individual names were not approved. No skill files have been created.
+The initial recommendation was **11 core skill entry files**, followed by **2 release and observation skills when deployment enters scope**. The full count, role boundaries, and individual names were not approved. The later selected pilot packages five existing procedures and one coordinator; see [pilot scope and verification](pilot-verification.md). The checklist below still tracks the broader design.
 
 Seif writes the procedures. The assistant helps structure, challenge, refine, and test them. Eight proposed core entry files adapt Seif's existing procedures; three core roles need new instructions. Splitting the existing planning and implementation procedure accounts for two of the eight adapted files.
 
@@ -117,10 +117,10 @@ The diagram shows the normal draft-PR delivery path. Stages can return a blocker
 - [x] Choose the engine name: Safe Engine.
 - [x] Establish Seif as primary skill author, with assisted editing and validation.
 - [x] Record 23 clear architecture and quality selections.
-- [ ] Resolve G6, evidence freshness, and G9, skill versioning.
+- [x] Resolve G6, evidence freshness, and G9, skill versioning for the pilot.
 - [ ] Select the current skill count and role boundaries from the expanded capability plan.
 - [ ] Choose the actual skill and stage names.
-- [ ] Select the first host, implementation language, record formats, pilot project, and delivery boundary through explicit design decisions.
+- [x] Select the first host, implementation language, record formats, pilot project, and delivery boundary: local Codex, Python, JSON, disposable browser app, checked local handoff.
 
 ### Author the core together
 
@@ -129,13 +129,13 @@ The diagram shows the normal draft-PR delivery path. Stages can return a blocker
 - [ ] Write the three new core procedures: entry/resume, project discovery, and verification.
 - [ ] Remove project-specific assumptions and declare actual tools and dependencies.
 - [ ] Define each skill's inputs, outputs, required evidence, failure behavior, and routing boundary.
-- [ ] Validate real entrypoints and register only completed skills in the index.
+- [x] Validate the six pilot entrypoints and register them in the index; validate later additions separately.
 
 ### Implement the selected engine design
 
-- [ ] Implement the controller, validated task record, checkpoints, cancellation, and recovery.
-- [ ] Implement discovery that produces a reviewable and correctable project profile.
-- [ ] Implement shared gates, evidence freshness according to G6, and a run-wide correction budget with agreed limits.
+- [x] Implement the local controller, validated task record, checkpoints, cancellation, and resume; wider crash recovery remains to exercise.
+- [x] Implement discovery that produces a reviewable and correctable project profile.
+- [x] Implement local shared gates, evidence freshness according to G6, and an explicit run-wide correction budget.
 - [ ] Connect the chosen host's hooks and verify their real coverage and failure behavior.
 - [ ] Implement scenario adapters, baseline comparison, and reproducible project setup where applicable.
 - [ ] Protect acceptance criteria and action authority; resolve the private-repository feature prerequisite for merge enforcement.
@@ -152,9 +152,9 @@ The diagram shows the normal draft-PR delivery path. Stages can return a blocker
 
 ### Package and document the demonstrated system
 
-- [ ] Package installation and dependencies according to the selected G9 versioning approach.
-- [ ] Document setup, supported hosts and project types, recovery, and known limitations.
-- [ ] Update the preview and skill index to reflect implemented and demonstrated capabilities.
+- [x] Package controller, skills, adapters and version in one repository bundle; global installation remains separate.
+- [x] Document pilot setup, dependencies, recovery, and known limitations.
+- [x] Update the preview and skill index to distinguish the pilot from the wider target.
 
 ### Extend to release when needed
 

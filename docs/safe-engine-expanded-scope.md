@@ -1,10 +1,10 @@
 # Safe Engine: expanded capability plan
 
-Research and proposal, 1 October 2026. **The capabilities below are requested by Seif. Their packaging, names, and new procedural choices remain proposals.** The repository currently contains design work and a preview; no connected factory or skill library has been implemented.
+Research and proposal, 1 October 2026. **The capabilities below are requested by Seif. Their packaging, names, and new procedural choices remain proposals.** The later Safe Engine 0.1.0 local pilot implements a narrow delivery loop with six entrypoints; see its [verification record](pilot-verification.md). This broader plan is not a claim that every capability is implemented.
 
 The target is a factory that can understand a task, build it, use the resulting application, notice defects and poor experiences, repair them, and produce fresh evidence without Seif repeatedly pointing out what is broken. Seif remains the primary skill author and owns product and design decisions.
 
-This expands the [initial build plan](safe-engine-build-plan.md). It preserves the [selected engine decisions](safe-engine-decisions.md), including project discovery with review/correction, separate planning and execution, bounded reviewer repairs followed by independent verification, and the agreed human delivery/release boundaries. G6 and G9 remain unresolved.
+This expands the [initial build plan](safe-engine-build-plan.md). It preserves the [selected engine decisions](safe-engine-decisions.md), including project discovery with review/correction, separate planning and execution, bounded reviewer repairs followed by independent verification, and the agreed human delivery/release boundaries. G6 now binds evidence to exact declared inputs; G9 versions the controller, skills and adapters as one repository bundle.
 
 Seif subsequently specified **substantial development batches, verification at batch boundaries, and an improvement pass before pushing followed by QA**. The [fast feature delivery design](safe-engine-fast-delivery.md) governs that cadence and records the requested priority for code that AI agents can maintain accurately. The updated E4 below preserves TDD as a capability without prescribing tests after every edit.
 
@@ -297,7 +297,7 @@ Approved task + experience brief + project profile
 
 The entrypoint can support quick diagnosis and repair, but the report must state its coverage. A quick smoke check cannot satisfy omitted requirements. Gstack's [Quick mode][gs-modes] deliberately omits its detailed checklist; we should not mistake that mode for complete acceptance.
 
-For a visual finding, retain the route, viewport, initial state, user role where relevant, observed and expected result, reproduction, source candidate, and before/after render. For a behavioral finding, add the executed assertion or trace. Evidence must correspond to the candidate being reviewed; the exact freshness mechanism remains G6's pending decision.
+For a visual finding, retain the route, viewport, initial state, user role where relevant, observed and expected result, reproduction, source candidate, and before/after render. For a behavioral finding, add the executed assertion or trace. Evidence must correspond to the candidate being reviewed; the selected G6 pilot binds code, definitions and declared environment inputs and checks generated artifact hashes.
 
 The factory needs all three kinds of inspection:
 
@@ -336,7 +336,7 @@ Measure detection, repair success, missed defects, false findings, introduced re
 - [x] Record Seif's expanded capability requirements.
 - [x] Inspect relevant external procedures and identify useful mechanisms and limits.
 - [ ] Seif selects packaging E1 and procedural choices E2–E14; choose actual names afterward.
-- [ ] Resolve existing G6 and G9 and choose the first host, browser adapter, implementation stack, and pilot project through explicit option comparisons.
+- [x] Resolve G6 and G9 and choose the local Codex/Python/JSON pilot with a disposable browser app. General adapters remain future work.
 - [ ] Agree a small experience brief and objective defects for the first browser-quality demonstration.
 - [ ] Seif writes the first procedures; the assistant supports source comparison, structure, critique, editing, and behavioral trials.
 - [ ] Adapt the existing planning, implementation, and review methods with one canonical owner per shared rubric.

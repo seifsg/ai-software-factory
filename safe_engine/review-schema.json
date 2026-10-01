@@ -1,0 +1,20 @@
+{
+  "type": "object",
+  "properties": {
+    "verdict": {"type": "string", "enum": ["PASS", "FAIL"]},
+    "summary": {"type": "string"},
+    "method_followed": {"type": "boolean"},
+    "criteria": {"type": "array", "items": {
+      "type": "object",
+      "properties": {"id": {"type": "string"}, "status": {"type": "string", "enum": ["PASS", "FAIL", "UNKNOWN"]}, "evidence": {"type": "string"}},
+      "required": ["id", "status", "evidence"], "additionalProperties": false
+    }},
+    "findings": {"type": "array", "items": {
+      "type": "object",
+      "properties": {"severity": {"type": "string", "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW"]}, "location": {"type": "string"}, "description": {"type": "string"}},
+      "required": ["severity", "location", "description"], "additionalProperties": false
+    }}
+  },
+  "required": ["verdict", "summary", "method_followed", "criteria", "findings"],
+  "additionalProperties": false
+}

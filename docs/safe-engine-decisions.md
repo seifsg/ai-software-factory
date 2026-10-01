@@ -1,6 +1,6 @@
 # Safe Engine design decisions
 
-Seif selected these directions on 1 October 2026. **Safe Engine** is the engine name. The repository remains AI Software Factory. These are approved design choices; the engine and connected skills are not implemented yet.
+Seif selected these directions on 1 October 2026. **Safe Engine** is the engine name. The repository remains AI Software Factory. Safe Engine 0.1.0 implements the selected local pilot subset; the [verification record](pilot-verification.md) distinguishes demonstrated behavior from the wider approved design.
 
 The decision IDs refer to the 25-option discussion: N1–N2 cover naming, G1–G13 cover confirmed gaps, and I1–I10 cover further improvements. They do not match the numbering in the earlier 24-gap research document.
 
@@ -22,7 +22,7 @@ Seif explicitly requested worktree management, assisted skill writing, planning,
 
 The factory must be designed to open and navigate the actual application, identify broken UI and poor user experiences, make authorized in-scope repairs autonomously, and verify the result without Seif repeatedly identifying defects. High quality includes the rendered experience and complete user journeys. Preserve Seif's product decisions and the selected human handoff/release boundaries.
 
-The [expanded capability plan](safe-engine-expanded-scope.md) records research, source examples, packaging alternatives, individual choices E1–E14, and proposed demonstrations. These requirements expand the initial build-plan scope; they do not approve its proposed 22-core-plus-2-later count, new names, or procedural recommendations. The capabilities are not implemented yet.
+The [expanded capability plan](safe-engine-expanded-scope.md) records research, source examples, packaging alternatives, individual choices E1–E14, and proposed demonstrations. These requirements expand the initial build-plan scope; they do not approve its proposed 22-core-plus-2-later count, new names, or procedural recommendations. The broader specialist library remains to be coauthored and verified.
 
 ## Fast development and improvement requirements
 
@@ -30,7 +30,7 @@ Seif subsequently specified substantial development batches, with unit and E2E v
 
 Before the feature is pushed, inspect and apply worthwhile in-scope cleanup, reuse, refactoring, performance, security, and agent-navigability improvements. Then run QA appropriate to the resulting changes and obtain the already selected fresh independent assessment. Code should prioritize accurate, efficient maintenance by AI agents over individual human style preferences. Improvement claims require suitable evidence; function or file size alone does not justify refactoring.
 
-The [fast feature delivery design](safe-engine-fast-delivery.md) compares the remaining choices F1–F4. The optional “scale button” remains a control proposal, with its meaning, labels, depth, and packaging unselected. These directions do not settle G6, G9, names, numerical limits, or skill count.
+The [fast feature delivery design](safe-engine-fast-delivery.md) compares the remaining choices F1–F4. The optional “scale button” remains a control proposal, with its meaning, labels, depth, and packaging unselected. G6 and G9 were subsequently resolved for the pilot below; broader names, numerical limits, and skill counts remain separate decisions.
 
 ## Naming
 
@@ -48,10 +48,10 @@ The [fast feature delivery design](safe-engine-fast-delivery.md) compares the re
 | G3 | B | A validated task record with a readable view, preserving the original request, acceptance criteria, scope, decisions, and completion boundary. |
 | G4 | A | Saved checkpoints with a small history. Recover interrupted work and reconcile uncertain external actions before repeating them. |
 | G5 | B | Shared gate logic called by host adapters, commands, and independent delivery checks. |
-| G6 | Pending | The spoken selection was “recommended D,” but the offered choices were A–C. Clarify the intended approach to evidence freshness. |
+| G6 | A, pilot clarification | Bind evidence to exact project code, check definitions, and declared environment inputs. Invalidate it when those inputs change. Seif explicitly selected this pilot option on 1 October 2026, resolving the earlier ambiguous spoken answer. |
 | G7 | B | Separately controlled acceptance checks plus fresh review. Independence requires a real permission boundary around decisive checks. |
 | G8 | A | One correction budget for the entire run, including nested build and review loops. Numerical limits remain open. |
-| G9 | Pending | No option was supplied for skill and dependency versioning. |
+| G9 | A | One versioned repository bundle containing controller, skills, and adapters. Seif explicitly selected this option on 1 October 2026. |
 | G10 | B | Project-specific scenario adapters for repeatable UI, API, or command-line checks of user outcomes. |
 | G11 | B | End-to-end fault scenarios for the QA system, including a successful valid run and failures involving skipped stages, stale evidence, hooks, interruption, and exhausted retries. |
 | G12 | B | A protected repository workflow as the target merge boundary. Resolve private-repository feature availability and credential configuration before claiming enforcement. |
@@ -73,6 +73,8 @@ The [fast feature delivery design](safe-engine-fast-delivery.md) compares the re
 | I10 | B | A stable benchmark plus reserved cases to compare quality across factory versions. Track missed defects, false findings, unnecessary edits, acceptance, and recovery behavior. |
 
 ## Important connections
+
+Seif selected an initial local Codex pilot with a small Python controller, JSON task records, his existing methods, and one Safe Engine entry skill, demonstrated on a disposable web application. This authorizes the pilot implementation and its small coordinating skill; Seif remains the primary author of the wider library. The first bundle uses existing skill names and the selected Safe Engine brand. Detailed specialist modules and their names remain open.
 
 - G2 discovers and proposes the project profile; G3 preserves the particular task's requirements. They serve different purposes.
 - G1, G4, and G5 describe the controller, its saved state, and its gates. They are parts of one execution system.
