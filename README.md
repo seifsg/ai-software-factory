@@ -10,7 +10,7 @@ The factory runs against the customer's or team's project. This repository owns 
 
 The engine is named **Safe Engine**. The [design decision record](docs/safe-engine-decisions.md) captures Seif's selected architecture and quality procedures, with unresolved choices kept explicit. The selected project onboarding approach discovers configuration and offers a profile for review and correction.
 
-Seif leads skill authorship; the assistant helps structure, review, refine, and validate his procedures. The [proposed build plan](docs/safe-engine-build-plan.md) contains skill-count options, an ASCII architecture, and the completion checklist. Its recommended skill count and role boundaries await selection.
+Seif leads skill authorship; the assistant helps structure, review, refine, and validate his procedures. The [expanded capability plan](docs/safe-engine-expanded-scope.md) covers worktrees, skill writing, TDD, debugging, architecture, UX, idea assessment, security, and autonomous browser inspection and repair. It includes source comparisons, three alternatives for each design choice, an ASCII architecture, and acceptance cases. Skill counts, boundaries, and new procedures await selection. The [initial build plan](docs/safe-engine-build-plan.md) preserves the core delivery workflow and engine checklist.
 
 ## Current state
 
@@ -51,7 +51,7 @@ Create supporting folders only when a skill needs them. Keep skill names lowerca
 4. Validate its structure and references. Exercise meaningful behavior where the environment permits.
 5. Record what was tested, what remains unknown, and how it connects to other skills.
 
-Start with actual skills and working use cases. Choose orchestration after we understand their inputs, outputs, and dependencies.
+Start with actual skills and working use cases. Implement the selected Safe Engine architecture around explicit inputs, outputs, and dependencies.
 
 ## Working principles
 

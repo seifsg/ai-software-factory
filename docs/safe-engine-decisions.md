@@ -16,6 +16,14 @@ Seif is the primary skill author. He supplies the working method in his own word
 
 Plans for skill counts, individual skill boundaries, and new skill names require Seif's selection. No new skill files are created merely to reserve proposed roles.
 
+## Expanded capability requirements
+
+Seif explicitly requested worktree management, assisted skill writing, planning, execution, debugging, TDD and TDD review, architecture, UX, browser QA with quick diagnosis and repair, security, product design review, and idea assessment. The TDD applicability policy remains open; the requested capability and its review must be considered in the design.
+
+The factory must be designed to open and navigate the actual application, identify broken UI and poor user experiences, make authorized in-scope repairs autonomously, and verify the result without Seif repeatedly identifying defects. High quality includes the rendered experience and complete user journeys. Preserve Seif's product decisions and the selected human handoff/release boundaries.
+
+The [expanded capability plan](safe-engine-expanded-scope.md) records research, source examples, packaging alternatives, individual choices E1–E14, and proposed demonstrations. These requirements expand the initial build-plan scope; they do not approve its proposed 22-core-plus-2-later count, new names, or procedural recommendations. The capabilities are not implemented yet.
+
 ## Naming
 
 | ID | Selection | Approved direction |

@@ -1,6 +1,8 @@
 # Safe Engine build plan
 
-Proposal for Seif to review. The recommended scope is **11 core skill entry files**, followed by **2 release and observation skills when deployment enters scope**. The count, role boundaries, and individual names remain unapproved. No skill files have been created.
+**Initial baseline, retained for its core workflow and checklist.** Seif subsequently expanded the required scope to include specialist engineering, product, design, security, and autonomous browser capabilities. Use the [expanded capability plan](safe-engine-expanded-scope.md) for the current scope and count alternatives; the numbers below describe the earlier proposal.
+
+The initial recommendation was **11 core skill entry files**, followed by **2 release and observation skills when deployment enters scope**. The count, role boundaries, and individual names were not approved. No skill files have been created.
 
 Seif writes the procedures. The assistant helps structure, challenge, refine, and test them. Eight proposed core entry files adapt Seif's existing procedures; three core roles need new instructions. Splitting the existing planning and implementation procedure accounts for two of the eight adapted files.
 
@@ -114,7 +116,7 @@ The diagram shows the normal draft-PR delivery path. Stages can return a blocker
 - [x] Establish Seif as primary skill author, with assisted editing and validation.
 - [x] Record 23 clear architecture and quality selections.
 - [ ] Resolve G6, evidence freshness, and G9, skill versioning.
-- [ ] Select the skill count and role boundaries from this proposal.
+- [ ] Select the current skill count and role boundaries from the expanded capability plan.
 - [ ] Choose the actual skill and stage names.
 - [ ] Select the first host, implementation language, record formats, pilot project, and delivery boundary through explicit design decisions.
 
@@ -154,7 +156,7 @@ The diagram shows the normal draft-PR delivery path. Stages can return a blocker
 
 ### Extend to release when needed
 
-- [ ] Coauthor release and observation skills 12–13.
+- [ ] Coauthor the conditional release and observation skills; their numbering depends on the selected expanded inventory.
 - [ ] Connect an explicitly authorized release procedure and verify the deployed revision and relevant health signals.
 - [ ] Exercise the agreed recovery path and route observed defects back into intake.
 
