@@ -58,6 +58,8 @@ For an active app, return to [the live-session adoption procedure](references/li
 
 ## Invocation
 
+For installation across projects or hosts, use [the portable GitHub entry](../../../docs/install-improve-factory.md). Keep this canonical procedure in its complete factory bundle; its folder alone does not contain all dependencies.
+
 ```text
 Use $improve-factory. During this build, the factory did [what happened].
 It should do [expected behavior]. Preserve this app's progress, repair the

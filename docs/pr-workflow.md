@@ -27,7 +27,7 @@ Canonical owners: [creation](../.agents/skills/how-to-make-a-pr/SKILL.md) and [r
 | Repository / base | Private `seifsg/ai-software-factory`; remote heads checked 2 October: `main` and `docs/skill-lifecycle-map`; no dev branch; verified default `main` is the source-procedure fallback |
 | Current PR | [Draft #1](https://github.com/seifsg/ai-software-factory/pull/1); retain its published history |
 | Task | Pending Seif's selection; this PR changes controller/application files and does not qualify for the routine-only exception |
-| Review owner / notification | Pending explicit project binding; remote collaborators list only `seifsg`; do not pretend an author self-review request succeeded |
+| Review owner / notification | Seif explicitly requested a completion notification to himself through Slack for the reusable-skill delivery on 2 October; the connected profile resolves his personal DM. Record actual delivery in the PR. This does not select a permanent notification policy or resolve GitHub's author self-review restriction; formal reviewer/alternative handoff remains pending |
 | Checks | Python controller suite, skill validation, local references, affected JavaScript syntax and rendered preview; no configured package build/typecheck/lint toolchain |
 | Observability | No production session informed this local pilot |
 | Ready / merge / release | Human decision; no automatic transition |

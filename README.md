@@ -41,6 +41,8 @@ This retains Seif's analysis charts, planning critique, per-todo inspection, bat
 
 When the factory itself needs correction, use [improve-factory](.agents/skills/improve-factory/SKILL.md), including during an app build. It preserves the app checkpoint, coordinates an isolated repair and independent assessment, then checks whether the current run can adopt it. This is an agent-operated procedure; automatic hooks, bundle migration, and uninterrupted upgrades are not implemented.
 
+To call it from other projects, [install the reusable skill from GitHub](docs/install-improve-factory.md). Install **`skills/improve-factory`**: this portable entry loads the complete versioned factory and preserves an active app's recorded bundle. Invoke `$improve-factory` in Codex or `/improve-factory` after installation in Claude Code. Private GitHub access and the documented host prerequisites apply; native Claude execution remains unverified.
+
 Open [the visual introduction](preview/index.html) in a browser. Its concise first screen explains the goal and the process: understand, build, check, approve. A single status line shows where we are today. It works locally without installation or external dependencies.
 
 Expand “Explore the full factory” for the detailed map, handoffs, five review lenses, correction loops, proposed capabilities, and all 38 source skills. Select a node for its inputs and outputs. Keep the HTML, stylesheet, and script together in `preview/` when copying it.
@@ -66,6 +68,7 @@ docs/pilot-usage.md       Setup, commands, recovery and limits
     scripts/              Helpers when needed
     references/           Supporting instructions when needed
     assets/               Reusable output assets when needed
+skills/improve-factory/   Installable entry loading the complete canonical bundle
 ```
 
 Create supporting folders only when a skill needs them. Keep skill names lowercase with hyphens. A skill's frontmatter name must match its folder name.

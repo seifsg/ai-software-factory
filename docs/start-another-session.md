@@ -144,11 +144,11 @@ Preserve this app's progress. Checkpoint it, repair the factory in isolation,
 get an independent assessment, and resume through the supported workflow.
 ```
 
-Replace the path if the bundle lives elsewhere. If the host discovers the skill, `$improve-factory` is the shorter invocation; explicit file loading remains the portable entry point. This adds no Claude-native slash command or global installation.
+Replace the path if the bundle lives elsewhere. If the host discovers the skill, `$improve-factory` is the shorter invocation. For a reusable personal installation, follow [Install Improve Factory from GitHub](install-improve-factory.md): its portable folder enables `$improve-factory` in Codex or `/improve-factory` in Claude Code after discovery. It loads the complete canonical bundle and preserves an active run's recorded version. The controller's broader host limitations above still apply.
 
 The selected policy holds affected app work during repair; only demonstrably independent work may continue. The parent keeps app ownership and passes a durable context packet to delegates. Exact bundle versions and evidence matter: incompatible changes may require a new reviewed run in a fresh app worktree, preserving the old run. The [live-session procedure](../.agents/skills/improve-factory/references/live-session.md) explains actual 0.1.0 recovery limits. No automatic state migration or uninterrupted mid-run upgrade is claimed.
 
-## Making invocation permanent is a separate choice
+## Making the delivery coordinator invocation permanent
 
 | Option | Benefit | Tradeoff |
 |---|---|---|
@@ -156,4 +156,4 @@ The selected policy holds affected app work during repair; only demonstrably ind
 | B — Personal host adapters pointing to the bundle | Short invocation across local projects | Requires installation for each host and machine; cloud is separate. |
 | C — Per-project host adapters with a pinned bundle | Each repository carries a repeatable entrypoint | Adds configuration and version maintenance to every project. |
 
-**Recommend A for the next examples.** It exposes the real workflow before we standardize an installer. B and C remain choices for Seif; no global installation or host adapter has been added by this documentation change.
+**Recommend A for the next app examples.** B and C remain choices for the delivery coordinator (`safe-engine`). Seif separately authorized a personal reusable entry for `improve-factory`; its installation guide above covers that maintenance skill only.

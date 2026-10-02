@@ -1,5 +1,7 @@
 # Pilot skill provenance
 
+On 2 October Seif explicitly requested that `improve-factory` be reusable from GitHub in other agent sessions, pushed, and announced to him through an authorized notification. The assistant added `skills/improve-factory` as a portable loading adapter plus a standard-library resolver; the complete procedure remains under `.agents/skills/improve-factory`. No source skill was replaced or copied into a second procedure. The resolver and installation layout are new implementation under that request; native Claude/cloud execution still requires separate demonstration.
+
 Seif identifies the source collection as his own work, with AI assistance in writing and committing. Source: `Repaircheck/claude-routines`, commit `449e1110104b6ac27aed3a940c5ed6d1bf671f11`, under `.claude/skills/`.
 
 The pilot adapts `analyze-start`, `get-ready-to-code`, `deep-review`, `change-guard`, and `compliance-check`. On 2 October Seif explicitly required the complete `how-to-make-a-pr` and `how-to-review-a-pr` procedures for every project, authorizing their generic adaptation. Those two entrypoints and their body/comment/synthesis resources are now packaged. The three lens references remain canonically under `deep-review/references/`, originating from `how-to-review-a-pr/references/`; both reviewers link them rather than duplicate them. The original source checkout has not been modified.
