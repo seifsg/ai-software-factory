@@ -16,6 +16,7 @@
   const existing = 'Existing source instructions · not imported here yet';
   const imported = 'Imported in local pilot · broader coverage still to verify';
   const importedSkills = new Set(['analyze-start','get-ready-to-code','deep-review','change-guard','compliance-check']);
+  const prSkills = new Set(['how-to-make-a-pr','how-to-review-a-pr']);
   const nodes = {
     controller: {title:'Safe Engine keeps the whole job moving.',status:'Safe Engine 0.1.0 · local agent-operated pilot',description:'One coordinator carries the original task between skills, records progress, avoids duplicate work, and stops when a decision or budget blocks progress.',input:'A work item, discovered and reviewed project settings, available tools, and agreed execution limits.',output:'A durable run record: current stage, next owner, artifacts, and any blocker.',skills:'safe-engine · Python controller · reviewed project profile'},
     intake: {title:'Define the job.',status:existing,description:'Turn a request into a clear, deduplicated task before starting new work. UX suggestions remain in backlog until selected.',input:'The request, relevant evidence, and existing tasks or pull requests.',output:'A linked work item with an intended outcome and acceptance criteria.',skills:'how-to-write-a-clickup-task · clickup-task'},
@@ -80,7 +81,7 @@
       detail = {title:skill,status:existing,description:specialistDetails[skill] || group.description,input:group.name==='System adapters'?'A service-specific task and provisioned tool access.':'The context and evidence required by this skill’s entrypoint.',output:group.name==='System adapters'?'The service procedures and constraints needed by the calling workflow.':group.name==='Business workflows'?'The outcome specified by the source playbook. Domain routines have not all undergone a full operational audit.':'An assessment or artifact following this source playbook. It supports the delivery workflow when relevant.',skills:skill};
     }
     if (skill && skillRoutes[skill]) detail = {...detail,skills:skill};
-    if (skill) detail = {...detail,status:importedSkills.has(skill)?imported:existing};
+    if (skill) detail = {...detail,status:prSkills.has(skill)?nodes[key].status:importedSkills.has(skill)?imported:existing};
     if (skill==='how-to-review-a-pr') detail = {...detail,description:'The complete PR-review skill is packaged and mandatory for every factory PR, on a separate instance. It preserves Seif’s ordered method, five passes, bounded fixes and detailed comment. Missing execution or project settings block completion.'};
     Object.keys(inspector).forEach(field=>inspector[field].textContent=detail[field]);
     root.querySelectorAll('[data-map-node]').forEach(button=>{

@@ -102,6 +102,8 @@ class Workflow:
     def check(self):
         state = self.load()
         self.require_phase(state, "verify", "final-verify")
+        if state.get("checks") and not state["checks"]["passed"]:
+            raise EngineError("Completed failed checks require correction; use repair before another check batch")
         self.integrity(state)
         current = self.current(state)
         anchor = "batch" if state["phase"] == "verify" else "improvement"

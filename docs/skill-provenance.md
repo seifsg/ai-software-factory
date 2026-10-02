@@ -15,6 +15,7 @@ Frontmatter descriptions are shortened and YAML-quoted for reliable discovery. T
 | Source behavior | Factory adaptation |
 |---|---|
 | Dev-default remote discovery; no-dev fallback; explicit paired hotfix | Preserved; actual project topology replaces RepairCheck repository names and precedent PR numbers |
+| Recovery from a wrong PR base | Retarget only after verifying a focused diff, or fresh correct-base branch with selective cherry-picks and a cross-linked replacement; no force-push; closure needs authority |
 | Task dedup on two axes, reverse links, exact Development done status | Preserved through a resolved tracker/status binding; not silently replaced by local state or made optional |
 | Narrow routine-only task exception | Preserved only for a proven designated routine repository and routine-only diff; controller/app/docs work is not automatically exempt |
 | Named reviewer, immediate GitHub request and notification, urgent reminders | Preserved outcomes; actual owner/destination/authority replaces company names, accounts and channel IDs; missing binding stays blocked |

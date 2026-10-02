@@ -81,6 +81,54 @@ class WorkflowTests(unittest.TestCase):
         with self.assertRaises(EngineError):
             self.artifact("improvement")
 
+    def test_completed_failed_check_requires_repair_after_resume(self):
+        (self.root / "acceptance.py").write_text(
+            "from pathlib import Path\n"
+            "marker = Path('.factory/first-attempt')\n"
+            "if not marker.exists():\n"
+            "    marker.write_text('failed')\n"
+            "    raise SystemExit(1)\n", encoding="utf-8")
+        self.git("add", "acceptance.py")
+        self.git("commit", "-qm", "Configure initially failing check")
+        self.start(budget=1)
+        for kind in ("analysis", "plan", "batch"):
+            self.artifact(kind)
+        self.assertFalse(self.flow.check()["checks_passed"])
+        failed_state = self.flow.load()
+        resumed = Workflow(self.root)
+        with self.assertRaisesRegex(EngineError, "repair"):
+            resumed.check()
+        self.assertEqual(resumed.load(), failed_state)
+        resumed.repair("Investigated and corrected the transient check failure")
+        self.artifact("batch")
+        result = resumed.check()
+        self.assertTrue(result["checks_passed"])
+        self.assertEqual(result["repairs_used"], 1)
+
+    def test_failed_final_check_cannot_reroll_with_zero_budget(self):
+        (self.root / "acceptance.py").write_text(
+            "from pathlib import Path\n"
+            "raise SystemExit(1 if Path('.factory/fail-check').exists() else 0)\n",
+            encoding="utf-8")
+        self.git("add", "acceptance.py")
+        self.git("commit", "-qm", "Configure runtime failure scenario")
+        self.start(budget=0)
+        for kind in ("analysis", "plan", "batch"):
+            self.artifact(kind)
+        self.assertTrue(self.flow.check()["checks_passed"])
+        self.artifact("improvement")
+        failure = self.root / ".factory/fail-check"
+        failure.write_text("unavailable", encoding="utf-8")
+        self.assertFalse(self.flow.check()["checks_passed"])
+        failure.unlink()
+        failed_state = self.flow.load()
+        resumed = Workflow(self.root)
+        with self.assertRaisesRegex(EngineError, "repair"):
+            resumed.check()
+        with self.assertRaisesRegex(EngineError, "budget exhausted"):
+            resumed.repair("Runtime dependency recovered")
+        self.assertEqual(resumed.load(), failed_state)
+
     def test_stale_code_and_declared_environment_rejected(self):
         self.profile["environment_inputs"] = ["SAFE_ENGINE_TEST_INPUT"]
         with patch.dict(os.environ, {"SAFE_ENGINE_TEST_INPUT": "before"}):

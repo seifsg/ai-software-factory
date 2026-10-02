@@ -48,6 +48,14 @@ Read the target repository's PR template. Preserve its required structure and pl
 - Open as **draft** with the verified base and Conventional Commit-style title. Use a saved body file with CLI `--body-file`; do not interpolate multiline prose into shell code. Attach the PR to the current chat when the host supports it.
 - For an existing PR, inspect its full current diff and history before editing metadata. Correct omissions honestly; do not claim retrospective checks happened earlier. Preserve state/history; do not close or replace a PR without authority.
 
+### Correct a PR opened against the wrong base
+
+Fetch and verify the actual integration base before correcting the target. Inspect the candidate diff against it first.
+
+- If the head already starts from the correct integration base and the resulting diff contains only the intended change, retarget the existing PR with the available GitHub tool (for example, `gh pr edit <number> --base <verified-base>`). Read back the new base and complete diff; obtain fresh checks/review as needed for the changed comparison.
+- If the bases diverge and retargeting would pull unrelated production-only commits into the PR, create a **fresh branch from the current correct base** and cherry-pick only the intended change commits (`git cherry-pick -x <sha>`). Verify the resulting diff and actual gates. Open a replacement draft through this entire procedure, cross-link both PRs, and record which supersedes which. Close the old PR only with applicable authority; otherwise leave the closure explicitly pending.
+- Never force-push or rewrite remote history to disguise the wrong base. A replacement is a new candidate and receives the full separate-instance review, task links and owner handoff. Preserve the old record and adjustment history.
+
 ## 5. Human handoff immediately at draft creation
 
 Resolve the project's real human review owner and notification destination from its bindings.
