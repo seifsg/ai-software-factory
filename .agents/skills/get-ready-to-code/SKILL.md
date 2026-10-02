@@ -76,7 +76,7 @@ Every change goes through this loop. It is **absolute for each and every todo st
 
 ## Factory execution cadence
 
-The pre/change/post inspection remains mandatory for each todo. Unit and E2E commands run after substantial batches, not after every edit. At feature completion, inspect worthwhile cleanup, reuse, performance, security, and agent-navigability improvements; verify resulting changes. The controller separates Part A and Part B into distinct stages.
+The pre/change/post inspection remains mandatory for each todo. Unit and E2E commands run after substantial batches, not after every edit. At feature completion, inspect worthwhile cleanup, reuse, performance, security, and agent-navigability improvements; verify resulting changes. The controller separates Part A and Part B into distinct stages. Plan completed capability boundaries and the affected checks/consumers. During build, the Safe Engine [usage guide](../../../docs/pilot-usage.md#feature-feedback-and-version-checkpoints) provides partial feature feedback; final version acceptance still requires every configured check and fresh review. Keep detailed 0–4 records durable; user updates summarize the outcome and next meaningful boundary, without narrating every todo.
 
 ## Provenance
 

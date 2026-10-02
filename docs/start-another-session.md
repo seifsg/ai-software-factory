@@ -29,7 +29,9 @@ chosen direction and my delegated/reserved decision authority. For a new app,
 save an original plan, research competitors/features/visuals using research-market,
 then revise the plan before coding. Carry these methods,
 decisions, real artifacts, diagnostic progress and actual constraints into every resume or delegation.
-Batch tests after substantial work. Inspect worthwhile improvements, verify,
+Batch completed capabilities; use affected feature checks as feedback, then full
+version QA. Keep detailed method records durable and progress updates concise.
+Inspect worthwhile improvements, validate final QA,
 and obtain a fresh independent review before the checked handoff.
 For any authorized PR, always execute how-to-make-a-pr, then the full
 how-to-review-a-pr on a separate instance. Keep its task/owner handoff,
@@ -76,7 +78,7 @@ Ignore .factory/, establish a clean Git baseline, then initialize Safe Engine.
 Show what belongs to bootstrap setup and what belongs to the controlled build.
 ```
 
-The controller requires a Git project with a clean baseline and real configured checks. An empty folder alone cannot pass initialization. The agent performs that setup before the controlled analysis/plan/build cycle. For large apps, start with a bounded first feature; the pilot does not yet schedule arbitrary multi-feature projects.
+The controller requires a Git project with a clean baseline and real configured checks. An empty folder alone cannot pass initialization. The agent performs that setup before the controlled analysis/plan/build cycle. For large apps, plan bounded coherent capabilities; the pilot supports partial feature feedback and full version checkpoints but does not automatically select dependencies or schedule arbitrary projects.
 
 ## Start from another computer or cloud workspace
 

@@ -9,7 +9,7 @@ Use on initial load, after context loss, on resume and when handing work to anot
 | Prepare to code | [get-ready-to-code Part A](../../get-ready-to-code/SKILL.md) | File set → critique → phases → all todos → complete plan; no code |
 | New application, after original Part A plan | [research-market](../../research-market/SKILL.md), then revised Part A | Original plan, primary sources, visual evidence, comparison and decision/change matrix, revised plan |
 | Every implementation todo | Same skill, Part B | 0–4 context, change-site analysis, apply, inspect, correct; pre/change/post |
-| After substantial work | Project's actual gates and Safe Engine improvement step | Batched results; supported cleanup/reuse/security/performance improvements; resulting QA |
+| After substantial work | Project's actual gates and Safe Engine improvement step | Feature feedback clearly separated from full version results; supported cleanup/reuse/security/performance improvements; exact-input validated final QA and fresh review |
 | Assess candidate | [deep-review](../../deep-review/SKILL.md) and its three references | Separate security, performance, original-journey findings and verdicts |
 | Protect existing behavior | [change-guard](../../change-guard/SKILL.md) | All consumers and per-file regression evidence |
 | Prove the original ask | [compliance-check](../../compliance-check/SKILL.md) | Requirement/rule/plan traceability; UNKNOWN remains unresolved |

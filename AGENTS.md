@@ -46,7 +46,7 @@ For unattended workflows, follow the [session contract](.agents/skills/safe-engi
 
 ## Verification and changes
 
-- For application development, batch unit and E2E runs after substantial planned work; do not run tests after every edit or start test watchers by default. Before pushing a feature, inspect worthwhile in-scope design, cleanup, reuse, performance, security, and agent-navigability improvements, then verify the affected result. Read `docs/safe-engine-fast-delivery.md`; its option recommendations remain unselected.
+- For application development, batch unit and E2E runs after substantial planned work; do not run tests after every edit or start test watchers by default. Before pushing a feature, inspect worthwhile in-scope design, cleanup, reuse, performance, security, and agent-navigability improvements, then verify the affected result. Read `docs/safe-engine-fast-delivery.md`; its broader option recommendations remain unselected. The 2 October owner-selected cadence supports completed feature feedback and comprehensive version checkpoints; see the canonical usage guide. User updates should be concise and outcome-focused, with complete method evidence in durable linked artifacts.
 - Validate skill frontmatter, names, references, and any executable helpers.
 - Test observable behavior when warranted. Report checks not run and their limits honestly.
 - Keep changes focused and preserve unrelated work. Use a branch for substantive changes to an established repository.

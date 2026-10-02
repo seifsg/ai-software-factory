@@ -53,6 +53,8 @@ def validate_profile(profile):
         raise EngineError("Profile must be an object with version 1")
     if profile.get("interface") not in ("web", "cli", "library"):
         raise EngineError("Profile interface must be web, cli, or library")
+    if "reuse_unchanged_checks" in profile and type(profile["reuse_unchanged_checks"]) is not bool:
+        raise EngineError("reuse_unchanged_checks must be an explicit boolean")
     checks = profile.get("checks")
     if not isinstance(checks, list) or not checks:
         raise EngineError("Configure at least one real check in the reviewed profile")

@@ -78,3 +78,7 @@ The authoring batch passed all nine skill structural validations, 127 local refe
 The updated preview status was inspected in real Chromium at 320 and 1440 pixels: no horizontal overflow or page errors, both map tabs worked, and the 38-source-entry catalog remained intact. The one-off preview helper initially referenced the wrong tab ID; correcting its selector made the retry pass without an application change. Both resulting screenshots were visually inspected.
 
 Local raw evidence is excluded under `.factory/improve-factory-validation/`. Independent assessment and realistic instruction exercises are separate evidence categories. A complete app build interrupted, repaired and resumed by this new skill has not yet been demonstrated. The historical 1 October run remains unchanged; local creation/validation does not update, release or certify the remote PR.
+
+## Feature cadence maintenance — 2 October 2026
+
+The feature-feedback/version-checkpoint implementation adds build-only partial checks and explicit controlled unchanged full-gate reuse. Earlier demonstration counts/timings above remain historical. New behavioral evidence is held in the maintenance case and requires fresh separate assessment before adoption; no app resume, PR delivery or performance estimate is implied by this source change.

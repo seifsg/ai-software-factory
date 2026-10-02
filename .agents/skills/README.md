@@ -6,7 +6,7 @@ Ten real entrypoints are packaged: seven adapted from Seif's supplied collection
 
 | Skill | Purpose | Dependencies |
 |---|---|---|
-| [safe-engine](safe-engine/SKILL.md) | Start/resume a local delivery cycle and checked handoff | Python controller, Git, Codex CLI, actual project check tools, the five methods below |
+| [safe-engine](safe-engine/SKILL.md) | Start/resume coherent feature batches, partial feedback, full version QA and checked handoff | Python controller, Git, Codex CLI, actual project check tools, the five methods below |
 | [improve-factory](improve-factory/SKILL.md) | Turn factory feedback into an isolated correction, with an app checkpoint and reviewed resume when invoked mid-build | Existing full methods, Git isolation, actual reproduction/check tools, separate assessor; host delegation where available |
 | [research-market](research-market/SKILL.md) | Study competing features and visual experiences between the original and revised new-app plan | Original plan, current public primary sources, available screenshot/visual tools, session decisions |
 | [analyze-start](analyze-start/SKILL.md) | Read code, explain purpose, map consumers, draw ASCII charts; no edits | Actual source and read/search tools |

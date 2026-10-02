@@ -16,12 +16,13 @@ Development should proceed in substantial batches, followed by relevant verifica
 
 ## Current state
 
-The demonstrated local pilot connects five of Seif's existing skills through one new coordinator. It saves task progress, enforces stage order and records corrections without a numerical repair ceiling, runs checks in batches, rejects stale evidence, and launches a fresh read-only Codex review before producing a checked handoff. Two further Seif-authored skills now govern every PR: `how-to-make-a-pr` and the complete separate-instance `how-to-review-a-pr`. Their project bindings and enforcement limits are recorded in the [PR workflow](docs/pr-workflow.md).
+The demonstrated local pilot connects five of Seif's existing skills through one new coordinator. It saves task progress, enforces stage order and records corrections without a numerical repair ceiling, runs affected feature checks as feedback and full version QA, rejects stale evidence, and launches a fresh read-only Codex review before producing a checked handoff. Two further Seif-authored skills now govern every PR: `how-to-make-a-pr` and the complete separate-instance `how-to-review-a-pr`. Their project bindings and enforcement limits are recorded in the [PR workflow](docs/pr-workflow.md).
 
 ```text
 analyze-start → original plan → market research (new app) → revised plan
     → build with the 0–4 loop
-    → batched checks → worthwhile improvement → final QA
+    → feature feedback (continue build) → full version QA → worthwhile improvement
+    → full final-QA validation (controlled unchanged reuse only)
     → fresh local review → checked local handoff
     → how-to-make-a-pr → full separate how-to-review-a-pr → human
                      findings → supported repair ↗

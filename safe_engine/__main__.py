@@ -22,7 +22,11 @@ def main():
     record = commands.add_parser("record", help="Save a method artifact and advance the appropriate phase")
     record.add_argument("kind", choices=("analysis", "plan", "batch", "improvement"))
     record.add_argument("--file", required=True)
-    commands.add_parser("check", help="Execute the configured verification batch")
+    check = commands.add_parser("check", help="Validate the full configured version batch")
+    check.add_argument("--fresh", action="store_true", help="Execute all commands even when unchanged reuse is eligible")
+    feature = commands.add_parser("feature-check", help="Run partial feature feedback while staying in build")
+    feature.add_argument("--checks", nargs="+", required=True, help="Configured check IDs covering the completed feature and consumers")
+    feature.add_argument("--file", required=True, help="Substantive completed-feature 0-4 batch artifact")
     review = commands.add_parser("review", help="Launch a fresh read-only Codex CLI assessment")
     review.add_argument("--timeout", required=True, type=int)
     for name in ("repair", "cancel"):
@@ -49,6 +53,10 @@ def main():
                     result = workflow.initialize(read_json(args.task), read_json(args.profile), args.max_repairs)
                 elif args.command == "record":
                     result = workflow.record(args.kind, args.file)
+                elif args.command == "check":
+                    result = workflow.check(fresh=args.fresh)
+                elif args.command == "feature-check":
+                    result = workflow.feature_check(args.checks, args.file)
                 elif args.command == "review":
                     result = workflow.review(args.timeout)
                 elif args.command in ("repair", "cancel"):
@@ -57,6 +65,8 @@ def main():
                     result = getattr(workflow, args.command)()
         print(json.dumps(result, indent=2, ensure_ascii=False))
         if args.command == "check" and not result["checks_passed"]:
+            return 1
+        if args.command == "feature-check" and not result["feature_checks_passed"]:
             return 1
         if args.command == "review" and result["phase"] != "ready":
             return 1
