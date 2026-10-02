@@ -128,6 +128,47 @@ def protected_inputs(project, profile):
     return {name: file_hash(inside(project, name)) for name in profile["protected_paths"]}
 
 
+def bundle_input_paths(bundle):
+    """The required procedural contract plus added code/guidance in its areas."""
+    contract_name = "safe_engine/bundle-inputs.json"
+    contract_path = inside(bundle, contract_name)
+    # Require the contract even when a directory walk would silently omit it.
+    if not contract_path.is_file():
+        raise EngineError(f"Required factory input is not a file: {contract_path}")
+    try:
+        contract = json.loads(contract_path.read_text(encoding="utf-8-sig"))
+    except (OSError, ValueError) as error:
+        raise EngineError(f"Cannot read factory input contract: {error}") from error
+    if (not isinstance(contract, dict) or contract.get("version") != 1
+            or set(contract) != {"version", "required_files", "source_trees"}):
+        raise EngineError("Unsupported factory input contract")
+    for key in ("required_files", "source_trees"):
+        names = contract[key]
+        if (not isinstance(names, list) or not names
+                or any(not isinstance(name, str) or not name or "\\" in name or ":" in name
+                       or any(part in ("", ".", "..") for part in name.split("/")) for name in names)
+                or len({name.casefold() for name in names}) != len(names)):
+            raise EngineError(f"Factory {key} must be unique relative paths within the bundle")
+    names = set(contract["required_files"])
+    names.add(contract_name)
+    for name in sorted(names):
+        path = inside(bundle, name)
+        if not path.is_file():
+            raise EngineError(f"Required factory input is not a file: {path}")
+    for name in contract["source_trees"]:
+        folder = inside(bundle, name)
+        if not folder.is_dir():
+            raise EngineError(f"Required factory source area is not a directory: {folder}")
+        for path in folder.rglob("*"):
+            if "__pycache__" in path.parts:
+                continue
+            if path.is_symlink():
+                raise EngineError(f"Symlink factory inputs are unsupported: {path}")
+            if path.is_file() and path.suffix.lower() in (".py", ".md", ".json", ".yaml", ".yml"):
+                names.add(path.relative_to(bundle).as_posix())
+    return sorted(names)
+
+
 def fingerprint(project, profile, task, run_dir):
     names = git(project, "ls-files", "--cached", "--others", "--exclude-standard", "-z").split("\0")
     files = {}
@@ -148,13 +189,7 @@ def fingerprint(project, profile, task, run_dir):
             raise EngineError(f"Check executable unavailable: {first}")
         executables[first] = file_hash(Path(executable))
     bundle = Path(__file__).resolve().parent.parent
-    bundle_files = {}
-    for folder in (bundle / "safe_engine", bundle / ".agents" / "skills"):
-        for path in sorted(folder.rglob("*")):
-            if path.is_file() and "__pycache__" not in path.parts and path.suffix in (".py", ".md", ".json", ".yaml"):
-                bundle_files[str(path.relative_to(bundle))] = file_hash(path)
-    for name in ("AGENTS.md", "docs/pilot-usage.md", "docs/skill-provenance.md", "docs/start-another-session.md", "docs/pr-workflow.md"):
-        bundle_files[name] = file_hash(bundle / name)
+    bundle_files = {name: file_hash(inside(bundle, name)) for name in bundle_input_paths(bundle)}
     return digest({"project": str(project),
                    "files": files, "profile": profile, "task": task, "declared": declared,
                    "environment": {name: os.environ.get(name) for name in profile["environment_inputs"]},

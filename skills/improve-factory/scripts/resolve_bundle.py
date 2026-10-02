@@ -41,10 +41,36 @@ def inspect_bundle(root, expected=None, clean=False):
     revision = git("rev-parse", "HEAD", cwd=root)
     if expected and revision != expected:
         raise RuntimeError("Cached checkout does not match the requested commit")
-    missing = [name for name in REQUIRED if not (root / name).is_file()]
+    required = list(REQUIRED)
+    contract_name = "safe_engine/bundle-inputs.json"
+    contract_path = root / contract_name
+    tracked_contract = git("ls-tree", "--name-only", "HEAD", "--", contract_name, cwd=root)
+    if contract_path.exists() or tracked_contract:
+        if contract_path.is_symlink() or not contract_path.is_file():
+            raise RuntimeError("Incomplete factory bundle: " + contract_name)
+        try:
+            contract = json.loads(contract_path.read_text(encoding="utf-8-sig"))
+        except (OSError, ValueError) as error:
+            raise RuntimeError(f"Invalid factory input contract: {error}") from error
+        if (not isinstance(contract, dict) or contract.get("version") != 1
+                or set(contract) != {"version", "required_files", "source_trees"}):
+            raise RuntimeError("Invalid factory input contract")
+        for key in ("required_files", "source_trees"):
+            names = contract[key]
+            if (not isinstance(names, list) or not names
+                    or any(not isinstance(name, str) or not name or "\\" in name or ":" in name
+                           or any(part in ("", ".", "..") for part in name.split("/")) for name in names)
+                    or len({name.casefold() for name in names}) != len(names)):
+                raise RuntimeError(f"Invalid {key} in factory input contract")
+        for name in contract["source_trees"]:
+            folder = root / name
+            if folder.is_symlink() or not folder.is_dir() or not folder.resolve().is_relative_to(root):
+                raise RuntimeError("Incomplete factory source area: " + name)
+        required += [contract_name, *contract["required_files"]]
+    missing = [name for name in required if not (root / name).is_file() or (root / name).is_symlink()]
     if missing:
         raise RuntimeError("Incomplete factory bundle: " + ", ".join(missing))
-    if any(not (root / name).resolve().is_relative_to(root) for name in REQUIRED):
+    if any(not (root / name).resolve().is_relative_to(root) for name in required):
         raise RuntimeError("Required factory file resolves outside the bundle")
     status = git("status", "--porcelain", "--untracked-files=all", cwd=root)
     if clean and status:

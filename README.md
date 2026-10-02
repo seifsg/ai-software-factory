@@ -30,6 +30,8 @@ analyze-start → original plan → market research (new app) → revised plan
 
 The current Codex session does the building; Python controls the gates. This is a local agent-operated pilot, not an unattended production service. Browser QA uses the target project's real browser checks. The broader specialist library, host hooks, protected remote acceptance, general project adapters, and deployment remain ahead. See the [verification record](docs/pilot-verification.md) for actual results and limits.
 
+QA fingerprints bind the controller and declared operative guidance, including approved decisions, cadence and the portable entry. Missing mandatory inputs block acceptance; guidance changes invalidate older evidence. [Pilot usage](docs/pilot-usage.md) defines the enforced boundary and the runtime inputs that a project must declare.
+
 ## Start here
 
 For a new chat or another project, use the [pasteable fresh-session starter](docs/start-another-session.md). To see the first run, open the [recorded walkthrough](examples/pilot-walkthrough.md), including before/after images and the actual repair. [Complete example commands](examples/pilot-commands.md) show setup and every controller step. Claude Code and cloud limitations are explicit in the starter guide.

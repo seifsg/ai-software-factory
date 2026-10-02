@@ -125,6 +125,36 @@ class DistributionTests(unittest.TestCase):
         self.assertEqual(len(pending), 1)
         self.assertIn(".pending-", pending[0].name)
 
+    def add_contract(self, required=None):
+        path = self.source / 'safe_engine/bundle-inputs.json'
+        path.write_text(json.dumps({'version': 1, 'required_files': required or
+            ['docs/safe-engine-decisions.md', 'docs/safe-engine-fast-delivery.md'],
+            'source_trees': ['safe_engine', 'docs', '.agents/skills']}), encoding='utf-8')
+        cadence = self.source / 'docs/safe-engine-fast-delivery.md'
+        cadence.write_text('Required cadence fixture.\n', encoding='utf-8')
+        return path
+
+    def test_current_contract_requires_all_declared_guidance(self):
+        self.add_contract()
+        self.assertTrue(resolver.inspect_bundle(self.source)['dirty'])
+        (self.source / 'docs/safe-engine-fast-delivery.md').unlink()
+        with self.assertRaisesRegex(RuntimeError, 'Incomplete.*fast-delivery'):
+            resolver.inspect_bundle(self.source)
+
+    def test_deleted_committed_contract_cannot_fall_back_to_legacy(self):
+        path = self.add_contract()
+        self.git('add', '--', str(path), cwd=self.source)
+        self.git('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid',
+                 'commit', '-qm', 'new input contract', cwd=self.source)
+        self.git('rm', '-f', '--', str(path), cwd=self.source)
+        with self.assertRaisesRegex(RuntimeError, 'Incomplete.*bundle-inputs'):
+            resolver.inspect_bundle(self.source)
+
+    def test_unsafe_current_contract_is_rejected_before_outside_read(self):
+        self.add_contract(required=['../outside-file'])
+        with self.assertRaisesRegex(RuntimeError, 'Invalid required_files'):
+            resolver.inspect_bundle(self.source)
+
 
 if __name__ == "__main__":
     unittest.main()

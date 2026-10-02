@@ -48,6 +48,8 @@ Installed portable skill
 
 The resolver prints the full path, commit and dirty status. It rejects wrong repositories, incomplete bundles and modified cached checkouts. It can inspect an explicitly supplied dirty app bundle without altering it; the main procedure then records the actual dirty inputs. Keep a run's selected bundle unchanged and perform factory edits in another worktree. This is a local procedure, not an automatic hook or background service.
 
+Current bundles declare their required procedural files and source areas in [bundle-inputs.json](../safe_engine/bundle-inputs.json). The resolver validates that contract when present or recorded at the selected commit; deleting it cannot fall back to older completeness checks. Older bundles without the contract retain the legacy required-file inspection so active runs can keep their pinned version. Neither path certifies QA. The installed launcher is a separate copy: record its identity, and declare it as a profile input if it participates in target acceptance. The selected bundle's controller enforces the [procedural fingerprint boundary](pilot-usage.md).
+
 To inspect an existing bundle without downloading/updating it:
 
 ```text

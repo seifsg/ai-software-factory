@@ -9,7 +9,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from safe_engine.project import EngineError, validate_profile
+from safe_engine.project import EngineError, bundle_input_paths, validate_profile
 from safe_engine.storage import atomic_json
 from safe_engine.workflow import Workflow
 
@@ -133,10 +133,8 @@ class FeatureBatchTests(unittest.TestCase):
     def test_changed_bundle_inputs_execute_full_suite(self):
         copied=self.root/'.factory/bundle';copied.mkdir(parents=True)
         source=Path(__file__).resolve().parents[1]
-        for folder in ('safe_engine','.agents/skills'):
-            shutil.copytree(source/folder,copied/folder,ignore=shutil.ignore_patterns('__pycache__'))
-        for name in ('AGENTS.md','docs/pilot-usage.md','docs/skill-provenance.md','docs/start-another-session.md','docs/pr-workflow.md'):
-            target=copied/name;target.parent.mkdir(exist_ok=True);shutil.copyfile(source/name,target)
+        for name in bundle_input_paths(source):
+            target=copied/name;target.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(source/name,target)
         with patch('safe_engine.project.__file__',str(copied/'safe_engine/project.py')):
             self.full();f=copied/'safe_engine/__init__.py';f.write_text(f.read_text()+'\n# actual changed bundle fixture\n')
             self.assertFalse(self.final()['checks_reused'])
