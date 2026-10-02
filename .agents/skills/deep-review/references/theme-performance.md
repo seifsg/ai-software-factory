@@ -10,7 +10,7 @@ scale?**
 
 ## Essential checks — repo-agnostic
 
-Apply to whichever stack the change touches (web: NestJS/Prisma + React; mobile: Expo/React Native).
+Apply to the target project's actual stack and workload. Web and mobile mechanisms below are examples, not required technologies.
 
 - **Data / DB** — N+1 queries; missing indexes on queried columns; unbounded fetches (no
   pagination/limit); `SELECT *` / missing projection; queries in a loop that could be one batched

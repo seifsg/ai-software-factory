@@ -1,6 +1,6 @@
 # Skill index
 
-Six real entrypoints are packaged in Safe Engine 0.1.0: five adapted from Seif's supplied collection and one authorized coordinator. All six pass structural validation. That validates their packaging, not every possible workflow outcome. See the [pilot verification record](../../docs/pilot-verification.md) for observed behavior and limits.
+Eight real entrypoints are packaged: seven adapted from Seif's supplied collection and one authorized coordinator. The original six belong to the demonstrated Safe Engine 0.1.0 pilot; the two complete PR procedures were added on 2 October at Seif's explicit request. Packaging does not prove every workflow outcome. See the [pilot verification record](../../docs/pilot-verification.md) and [PR workflow status](../../docs/pr-workflow.md).
 
 | Skill | Purpose | Dependencies |
 |---|---|---|
@@ -10,9 +10,11 @@ Six real entrypoints are packaged in Safe Engine 0.1.0: five adapted from Seif's
 | [deep-review](deep-review/SKILL.md) | Review logic, boundaries, security, performance and user journey | Candidate source, diff, applicable bundled review references |
 | [change-guard](change-guard/SKILL.md) | Inspect consumers and regressions after substantial changes | Consumer map, source/diff and check evidence |
 | [compliance-check](compliance-check/SKILL.md) | Trace original requirements to supported outcomes | Original task, acceptance criteria and actual evidence |
+| [how-to-make-a-pr](how-to-make-a-pr/SKILL.md) | Mandatory visual draft, task/owner handoff and separate PR review, on every project | Git/GitHub, resolved project bindings, paired review skill |
+| [how-to-review-a-pr](how-to-review-a-pr/SKILL.md) | Full ordered PR review, three alternatives, five passes, bounded fixes and detailed comment | Separate instance, exact PR/context, original five methods, real project gates |
 
 Existing skills supplied by Seif are the starting point. The [expanded capability plan](../../docs/safe-engine-expanded-scope.md) records the requested specialist capabilities and proposed boundaries. Seif leads authorship; counts, names, and new procedures remain open until selected.
 
-The wider collection contains 38 source entrypoints; five have been imported here. [Provenance and adaptations](../../docs/skill-provenance.md) records the exact source revision. Planning and execution remain two parts of Seif's original file in this pilot, with distinct controller phases; the proposed larger modular library is still ahead.
+The wider collection contains 38 source entrypoints; seven have been imported here. [Provenance and adaptations](../../docs/skill-provenance.md) records the exact source revision. Planning and execution remain two parts of Seif's original file in this pilot, with distinct controller phases; the proposed larger modular library is still ahead.
 
 On 2 October, the coordinator gained explicit guidance for visible demonstrations and fresh-session setup. The update passes structural validation; the first complete run remains the dated 1 October record. Claude-native and cloud delivery are not verified. Use the [fresh-session guide](../../docs/start-another-session.md) for the actual entry prompt and current host limits.

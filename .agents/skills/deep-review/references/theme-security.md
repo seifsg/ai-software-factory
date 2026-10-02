@@ -9,7 +9,7 @@ untrusted input the code trusts?**
 
 ## Essential checks — repo-agnostic
 
-Apply to whichever stack the change touches (web: NestJS/Prisma + React; mobile: Expo/React Native).
+Apply to the target project's actual stack and trust boundaries. Web and mobile mechanisms below are examples, not required technologies.
 
 - **Secrets** — real server/service secrets (DB URLs, signing keys, third-party API secrets) stay
   server-side and out of the repo. Anything in a client bundle or config ships to the user and is

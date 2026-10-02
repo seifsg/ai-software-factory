@@ -74,6 +74,8 @@ The [fast feature delivery design](safe-engine-fast-delivery.md) compares the re
 
 ## Important connections
 
+On 2 October Seif required **how-to-make-a-pr** and **how-to-review-a-pr** to execute for every factory-managed PR, in all projects, with no workflow bypass. Adapt project-specific content into real project bindings while preserving the full method. This explicitly authorizes importing those two existing procedures, not independently writing the wider skill library. The local candidate review is not a substitute for the full separate-instance PR review. Missing bindings/access remain blockers. See [PR workflow and pending bindings](pr-workflow.md).
+
 Seif selected an initial local Codex pilot with a small Python controller, JSON task records, his existing methods, and one Safe Engine entry skill, demonstrated on a disposable web application. This authorizes the pilot implementation and its small coordinating skill; Seif remains the primary author of the wider library. The first bundle uses existing skill names and the selected Safe Engine brand. Detailed specialist modules and their names remain open.
 
 - G2 discovers and proposes the project profile; G3 preserves the particular task's requirements. They serve different purposes.

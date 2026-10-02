@@ -30,6 +30,14 @@ Seif is the primary author of the skills. Help him express his procedures, compa
 
 ## Connected workflows
 
+### Mandatory PR creation and review
+
+For every factory-managed project and every PR, read and execute [.agents/skills/how-to-make-a-pr/SKILL.md](.agents/skills/how-to-make-a-pr/SKILL.md), then [.agents/skills/how-to-review-a-pr/SKILL.md](.agents/skills/how-to-review-a-pr/SKILL.md) on a separate instance. This also applies to documentation, skills, existing-PR corrections and updates; no size- or project-based bypass. The paired skill explicitly authorizes delegation for that review. Preserve the full procedure, not only its formatting or five review lenses.
+
+Keep the task links/status, truthful human attribution, Why-first visual body, adjustment history, human handoff, bounded fixes, actual checks and detailed review comment. Use real project bindings for tracker, owners, notifications, stack and branches; missing required settings/access are blockers. Read [this repository's bindings](docs/pr-workflow.md). Never invent or silently omit them.
+
+The local controller's read-only candidate review and `handoff` do not constitute PR creation or full PR review. Every changed PR candidate needs a fresh separate assessment. Leave PRs draft; the human owns ready/merge/release. These instructions do not claim host-hook or protected remote enforcement.
+
 Keep `preview/index.html`, our plain-language visual introduction, accurate as the factory changes. Explain outcomes before implementation details. Clearly distinguish skills available in the source collection, skills imported here, and workflows demonstrated in a real run.
 
 When connecting skills, make the handoff explicit: inputs, output artifact, acceptance condition, failure state, and next responsible step. Keep task state durable where the target environment supports it. Do not mark a ticket complete when work only reached a review or deployment handoff.

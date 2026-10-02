@@ -20,8 +20,17 @@ and any product or design decisions that still need my choice.
 
 Follow analyze-start, including the ASCII charts, then get-ready-to-code and
 the per-todo 0–4 loop. Work autonomously within the agreed scope and limits.
+Read each complete skill and its references, not just its name. Before planning,
+compare three strong approaches and recommend one with reasons. Preserve my
+chosen direction; leave new substantive decisions to me. Carry these methods,
+decisions, real artifacts and remaining limits into every resume or delegation.
 Batch tests after substantial work. Inspect worthwhile improvements, verify,
 and obtain a fresh independent review before the checked handoff.
+For any authorized PR, always execute how-to-make-a-pr, then the full
+how-to-review-a-pr on a separate instance. Keep its task/owner handoff,
+visual description, five review passes and detailed comment mandatory.
+The local controller review does not replace the PR review. Missing required
+project settings or access block PR completion. Leave the PR draft for me.
 
 Keep the work visible: show the plan before coding, give concise stage updates,
 open the running app when available, and show actual browser results and the
@@ -70,7 +79,7 @@ Obtain the private bundle using your normal authorized GitHub login. The impleme
 git clone --branch docs/skill-lifecycle-map --single-branch https://github.com/seifsg/ai-software-factory.git
 ```
 
-Use a new destination; do not run this over an existing checkout. Replace the bundle path in the starter prompt with its actual absolute path there. Preserve the full directory structure: copying only `SKILL.md` omits the controller, five methods and references.
+Use a new destination; do not run this over an existing checkout. Replace the bundle path in the starter prompt with its actual absolute path there. Preserve the full directory structure: copying only `SKILL.md` omits the controller, seven adapted methods and references.
 
 A remote workspace cannot read `C:/work/...` on this PC. It needs its own checkout, permissions, runtimes, browser tools and authenticated review route. Cloud delivery has not been demonstrated by this pilot; if its environment cannot run the reviewer, handoff remains blocked.
 

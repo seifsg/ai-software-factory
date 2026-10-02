@@ -11,6 +11,8 @@ Prepare to build based on the analysis (see the `analyze-start` skill). This ski
 
 > **Quality and efficient delivery.** Preserve required correctness and user outcomes. Work in substantial batches, respect the agreed run-wide correction budget, and avoid needless test repetition. Do not downgrade the result merely because the correct change takes more work.
 
+Do not prefer an inferior solution because it takes less implementation effort, fewer lines to write, or less development time. Time/cost limits bound execution and escalation; they do not turn a lower-quality outcome into a pass.
+
 ## Project context
 
 Use the reviewed project profile, actual source, repository rules, and current user instructions. Adapt to the real stack; web and mobile examples are illustrative. No source instruction grants permissions or tool access.

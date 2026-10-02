@@ -17,22 +17,26 @@ Capture the original request and explicit acceptance criteria in the task JSON. 
 
 ## Follow the saved phase
 
+**Supply the real routines, not summaries of their names.** Before executing a phase, open and read its complete linked `SKILL.md` and applicable references. On resume or delegation, provide the original request, approved/pending decisions, exact candidate, saved artifacts, remaining limits and canonical skill paths; the receiving instance must load them itself. Use [the method handoff](references/method-handoff.md) to check nothing disappeared. Missing access to a required routine blocks that phase. A prior chat summary is not the procedure.
+
 When the user wants to watch or learn from a run, make the execution visible: show the actual brief and acceptance before building, the analysis chart and plan, concise stage updates, the running app when available, and real check/review outcomes. Link the recorded artifacts. Distinguish a historical walkthrough from a new execution. Progress updates do not require another approval; pause only for a real unresolved decision, missing authority/access, or exhausted limit. Use the user's selected example, not a substitute demo. For starting elsewhere, read [fresh-session setup](../../../docs/start-another-session.md); Claude-native and cloud operation must not be claimed without verification.
 
 | Phase | Action |
 |---|---|
 | `analyze` | Use [analyze-start](../analyze-start/SKILL.md). Read real code, explain why, map consumers, draw ASCII flow/architecture charts, and label unknowns. No code edits. Record the analysis artifact. |
-| `plan` | Use Part A of [get-ready-to-code](../get-ready-to-code/SKILL.md): file list, critique, phases, all todos, full plan. No code edits. Record the plan. |
+| `plan` | First compare three strong approaches/recommendations in a table and recommend exactly one with reasons. Preserve Seif's already selected direction; unresolved substantive choices stay with him. Then use Part A of [get-ready-to-code](../get-ready-to-code/SKILL.md): file list, critique, phases, all todos, full plan. No code edits. Record the comparison, decision state and plan. |
 | `build` | Use Part B of the same method. Every todo has context, change-site analysis, application, inspection, and correction. Build a substantial batch; write useful tests without starting watch loops. Record the batch and its pre/change/post observations. |
 | `verify` | Run one configured check batch. Inspect real failures; use `repair` before changing a recorded candidate and then repeat the necessary method. |
 | `improve` | Inspect the completed feature for worthwhile cleanup, reuse, design, security, performance, and agent-maintainability improvements. Apply only supported in-scope changes. A sound result can remain unchanged. Record what changed and why, or why no changes were warranted. |
 | `final-verify` | Run the final check batch on the resulting candidate; inspect rendered UI and actual user outcomes where applicable. |
-| `review` | Run the controller's fresh read-only Codex review. Do not write your own passing review in its place. Findings lead to a bounded repair, affected checks, and another fresh assessment. |
-| `ready` | Generate the checked handoff. Push, PR, merge, and release follow the task's actual authorization; this controller performs none of them automatically. |
+| `review` | Run the controller's fresh read-only Codex review, supplying the full analysis/planning methods and all five review passes. Do not write your own passing review in its place. Findings lead to a bounded repair, affected checks, and another fresh assessment. This local review is not the complete PR workflow. |
+| `ready` | Generate the checked local handoff. When PR delivery is authorized, execute [how-to-make-a-pr](../how-to-make-a-pr/SKILL.md), which must launch [how-to-review-a-pr](../how-to-review-a-pr/SKILL.md) on a separate instance. Full PR review is additional to the local candidate review. Missing required project bindings block PR completion; never skip the paired skills. The controller performs no push/PR/merge/release itself. |
 | `cancelled` | Stop. Preserve the record and worktree for the user. |
 
 Keep artifacts in `.factory/` or another excluded local location. Read command logs and report unverified coverage honestly. A reviewer or test saying “pass” does not authorize changed requirements. Never alter protected acceptance files or task records to make a gate pass. If the accepted task or profile needs correction, preserve this run and start a newly reviewed task in a fresh worktree.
 
 ## Operating boundaries
+
+The paired PR procedures are mandatory for all factory-managed PRs, including documentation, skills and subsequent updates. Read them before preparing a PR, even outside an active controller run. Preserve their original ordered chain and detailed report. Use project-specific bindings, keep unresolved decisions with Seif, and leave the PR draft. A `ready` local phase is not a completed or accepted PR workflow.
 
 The pilot supports one coherent feature batch per normal cycle; corrections use the shared budget. Broader multi-batch scheduling remains an extension. It uses the current Codex session as its builder and a fresh read-only CLI process as reviewer. It is not a background app-building service, host hook, or tamper-resistant security boundary. Do not claim production-level autonomous UX quality from this pilot demonstration.

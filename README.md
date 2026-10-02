@@ -16,12 +16,13 @@ Development should proceed in substantial batches, followed by relevant verifica
 
 ## Current state
 
-The local pilot connects five of Seif's existing skills through one new coordinator. It saves task progress, enforces stage order and repair limits, runs checks in batches, rejects stale evidence, and launches a fresh read-only Codex review before producing a checked handoff.
+The demonstrated local pilot connects five of Seif's existing skills through one new coordinator. It saves task progress, enforces stage order and repair limits, runs checks in batches, rejects stale evidence, and launches a fresh read-only Codex review before producing a checked handoff. Two further Seif-authored skills now govern every PR: `how-to-make-a-pr` and the complete separate-instance `how-to-review-a-pr`. Their project bindings and enforcement limits are recorded in the [PR workflow](docs/pr-workflow.md).
 
 ```text
 analyze-start → get-ready-to-code plan → build with the 0–4 loop
     → batched checks → worthwhile improvement → final QA
-    → fresh independent review → checked human handoff
+    → fresh local review → checked local handoff
+    → how-to-make-a-pr → full separate how-to-review-a-pr → human
                      findings → bounded repair ↗
 ```
 
@@ -35,7 +36,7 @@ Read [pilot setup and usage](docs/pilot-usage.md), then ask Codex in this reposi
 
 > Use $safe-engine to implement [feature] in [absolute target project path].
 
-This retains Seif's analysis charts, planning critique, per-todo inspection, batched verification, and improvement pass. The [skill index](.agents/skills/README.md) lists the six packaged entrypoints; [provenance](docs/skill-provenance.md) records the five adapted sources. Seif continues to lead authorship of the wider library.
+This retains Seif's analysis charts, planning critique, per-todo inspection, batched verification, and improvement pass. The [skill index](.agents/skills/README.md) lists eight packaged entrypoints; [provenance](docs/skill-provenance.md) records the seven adapted sources. Seif continues to lead authorship of the wider library.
 
 Open [the visual introduction](preview/index.html) in a browser. Its concise first screen explains the goal and the process: understand, build, check, approve. A single status line shows where we are today. It works locally without installation or external dependencies.
 

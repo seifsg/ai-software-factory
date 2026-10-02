@@ -54,3 +54,11 @@ The preview passed interaction and layout checks at widths 320, 390, 768 and 144
 - Broader modular packaging. Planning and execution have separate phases but still share Seif's original skill file. Release and observation remain outside this pilot.
 
 These gaps do not prevent supervised local use of the demonstrated cycle. They do limit claims of universal compatibility, unattended operation and production enforcement.
+
+## 2 October — complete routines and PR procedures
+
+The source comparison and generic adaptations are recorded in [provenance](skill-provenance.md). Eight packaged entrypoints pass Skill Creator validation. The full required procedures now include creation and separate-instance PR review; the coordinator requires complete skill loading, the three-alternative comparison and a method-preserving resume/delegation packet. The local review prompt explicitly supplies the planning method and all five review passes. Repository rules and PR bindings join the bundle fingerprint.
+
+Validation on the changed bundle: 18 controller tests passed; 108 local documentation/reference targets exist; affected JavaScript syntax and Git whitespace checks passed. The preview passed real Chromium interactions at 320, 390, 768 and 1440 pixels, with no horizontal overflow or page errors, functioning dialogs and keyboard dismissal, 38 source entries and offline operation. Its 70-word opening remains within the tested phone viewport.
+
+The updated local review prompt has not been demonstrated by a second complete app run. The PR procedures are mandatory instructions, not host hooks or protected remote gates. [PR workflow status](pr-workflow.md) records pending project bindings; actual independent PR reviews and their current-head results belong on the PRs. Do not treat the earlier browser run as proof of these new steps.
