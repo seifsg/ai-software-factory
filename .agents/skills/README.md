@@ -14,3 +14,5 @@ Six real entrypoints are packaged in Safe Engine 0.1.0: five adapted from Seif's
 Existing skills supplied by Seif are the starting point. The [expanded capability plan](../../docs/safe-engine-expanded-scope.md) records the requested specialist capabilities and proposed boundaries. Seif leads authorship; counts, names, and new procedures remain open until selected.
 
 The wider collection contains 38 source entrypoints; five have been imported here. [Provenance and adaptations](../../docs/skill-provenance.md) records the exact source revision. Planning and execution remain two parts of Seif's original file in this pilot, with distinct controller phases; the proposed larger modular library is still ahead.
+
+On 2 October, the coordinator gained explicit guidance for visible demonstrations and fresh-session setup. The update passes structural validation; the first complete run remains the dated 1 October record. Claude-native and cloud delivery are not verified. Use the [fresh-session guide](../../docs/start-another-session.md) for the actual entry prompt and current host limits.

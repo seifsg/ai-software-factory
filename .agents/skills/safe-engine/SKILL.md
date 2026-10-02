@@ -17,6 +17,8 @@ Capture the original request and explicit acceptance criteria in the task JSON. 
 
 ## Follow the saved phase
 
+When the user wants to watch or learn from a run, make the execution visible: show the actual brief and acceptance before building, the analysis chart and plan, concise stage updates, the running app when available, and real check/review outcomes. Link the recorded artifacts. Distinguish a historical walkthrough from a new execution. Progress updates do not require another approval; pause only for a real unresolved decision, missing authority/access, or exhausted limit. Use the user's selected example, not a substitute demo. For starting elsewhere, read [fresh-session setup](../../../docs/start-another-session.md); Claude-native and cloud operation must not be claimed without verification.
+
 | Phase | Action |
 |---|---|
 | `analyze` | Use [analyze-start](../analyze-start/SKILL.md). Read real code, explain why, map consumers, draw ASCII flow/architecture charts, and label unknowns. No code edits. Record the analysis artifact. |

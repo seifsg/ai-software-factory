@@ -29,7 +29,7 @@ Independent report SHA-256: `9e9e8a0e8fef18a7f2867d74649bf614259483e979b8cf63459
 
 The final unit command took 0.094 seconds; browser command 1.703 seconds; independent review 151.516 seconds. These are observations from this small fixture, not performance estimates for real features. Zero post-build repair cycles were needed, against a demonstration budget of three.
 
-Local run state, reports, logs, screenshots, dependencies and the disposable worktree are excluded from this repository. The hashes identify the local evidence; they are not signed remote attestations. Reproduction instructions are in [examples](../examples/README.md) and [pilot usage](pilot-usage.md).
+Local run state, reports, logs, dependencies and the disposable worktree remain excluded from this repository. On 2 October, three selected unmodified screenshots were added as documentation assets in the [recorded walkthrough](../examples/pilot-walkthrough.md), at Seif's request to make the example visible. They are historical illustrations, not acceptance inputs for a new run. The hashes identify the original local evidence; they are not signed remote attestations. Reproduction instructions are in [examples](../examples/README.md) and [pilot usage](pilot-usage.md).
 
 ## Controller and skill verification
 

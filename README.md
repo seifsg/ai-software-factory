@@ -29,6 +29,8 @@ The current Codex session does the building; Python controls the gates. This is 
 
 ## Start here
 
+For a new chat or another project, use the [pasteable fresh-session starter](docs/start-another-session.md). To see the first run, open the [recorded walkthrough](examples/pilot-walkthrough.md), including before/after images and the actual repair. [Complete example commands](examples/pilot-commands.md) show setup and every controller step. Claude Code and cloud limitations are explicit in the starter guide.
+
 Read [pilot setup and usage](docs/pilot-usage.md), then ask Codex in this repository:
 
 > Use $safe-engine to implement [feature] in [absolute target project path].

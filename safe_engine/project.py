@@ -151,7 +151,7 @@ def fingerprint(project, profile, task, run_dir):
         for path in sorted(folder.rglob("*")):
             if path.is_file() and "__pycache__" not in path.parts and path.suffix in (".py", ".md", ".json", ".yaml"):
                 bundle_files[str(path.relative_to(bundle))] = file_hash(path)
-    for name in ("docs/pilot-usage.md", "docs/skill-provenance.md"):
+    for name in ("docs/pilot-usage.md", "docs/skill-provenance.md", "docs/start-another-session.md"):
         bundle_files[name] = file_hash(bundle / name)
     return digest({"project": str(project),
                    "files": files, "profile": profile, "task": task, "declared": declared,

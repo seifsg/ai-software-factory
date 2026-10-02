@@ -2,6 +2,12 @@
 
 `pilot-app/` is a deliberately broken fixture, not a finished starter application. `pilot-task.json` describes its three observable acceptance criteria. The baseline unit and browser commands are expected to fail.
 
+- [Watch what happened](pilot-walkthrough.md): recorded before/after screens, analysis, plan, actual code changes and review result.
+- [Run the complete commands](pilot-commands.md): concrete PowerShell paths, dependency setup, worktree, profile and every stage. `pilot-profile.json` supplies the check definitions.
+- [Start in another session](../docs/start-another-session.md): copy/paste entry and resume prompts, plus Codex/Claude Code status.
+
+Only the task-notes fixture has a verified delivery record. The next example is Seif's choice; a suggested prompt is not another completed run.
+
 1. Copy the entire `pilot-app/` directory, including `.gitignore`, into a new disposable location outside this factory repository. Initialize Git and commit that baseline. Create a linked worktree for the repair with `git worktree add -b pilot-fix <new-worktree-path>`.
 2. Follow [pilot usage](../docs/pilot-usage.md) from the factory bundle's root. Discover the worktree; review its profile. Use `pilot-task.json` as the original request.
 3. Configure checks as `node tests/unit.mjs` and `node tests/browser.cjs`, with timeouts appropriate to the demonstration. Protect both test files. Declare the three browser artifacts shown in the usage profile. The example run used a 3-repair budget and a 600-second review limit; those are fixture settings, not universal defaults.
