@@ -1,5 +1,7 @@
 # Safe Engine 0.1.0 — verified local pilot
 
+**Historical evidence:** original finite allowances and retry-exhaustion proposals below describe their dated baseline. Seif superseded artificial credits, repair/retry ceilings and session deadlines on 2 October 2026. Current operation follows the [continuous session contract](../.agents/skills/safe-engine/references/session-contract.md); historical results are preserved, not re-certified.
+
 Verified on 1 October 2026. The factory completed a real local delivery cycle on a disposable browser application. This proves the declared pilot path, not a general unattended software factory or every planned specialist capability.
 
 ## What ran
@@ -66,3 +68,13 @@ The full separate-instance PR review found a failed-check reroll bypass, mislead
 The fresh assessment exposed ambient Git-identity dependence in the two new regression fixtures. Their commits now supply the same explicit test identity as fixture initialization. The full 20-test suite also passes with system/global Git configuration disabled. This portability correction requires final independent assessment of its exact candidate; it does not establish a new app demonstration.
 
 The updated local review prompt has not been demonstrated by a second complete app run. The PR procedures are mandatory instructions, not host hooks or protected remote gates. [PR workflow status](pr-workflow.md) records pending project bindings; actual independent PR reviews and their current-head results belong on the PRs. Do not treat the earlier browser run as proof of these new steps.
+
+## 2 October — factory maintenance skill, local candidate
+
+Seif selected `improve-factory` and checkpoint → isolated repair → review → compatible resume. The [skill](../.agents/skills/improve-factory/SKILL.md) and its conditional live-session procedure reuse the existing methods. No runtime, host hook, model router or migration command was added.
+
+The authoring batch passed all nine skill structural validations, 127 local reference targets and all 20 existing controller tests (26.363 seconds with ambient system/global Git configuration disabled). Five isolated mechanism checks used disposable bundle/app copies: planning rejected changed bundle inputs without changing saved state; post-QA adoption invalidated old evidence and charged a real repair allowance before a new passing batch; inspection preserved tracked/untracked app work and state; a different bundle version was rejected; the original bundle remained unchanged. Synthetic method records in these checks are explicitly test fixtures, not proof of full agent adherence.
+
+The updated preview status was inspected in real Chromium at 320 and 1440 pixels: no horizontal overflow or page errors, both map tabs worked, and the 38-source-entry catalog remained intact. The one-off preview helper initially referenced the wrong tab ID; correcting its selector made the retry pass without an application change. Both resulting screenshots were visually inspected.
+
+Local raw evidence is excluded under `.factory/improve-factory-validation/`. Independent assessment and realistic instruction exercises are separate evidence categories. A complete app build interrupted, repaired and resumed by this new skill has not yet been demonstrated. The historical 1 October run remains unchanged; local creation/validation does not update, release or certify the remote PR.

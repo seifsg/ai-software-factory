@@ -58,16 +58,16 @@ Task JSON:
 }
 ```
 
-Initialize with explicitly agreed limits. The numbers below illustrate the disposable demo, not universal settings:
+Initialize with the completion boundary and authority recorded in the [session contract](../.agents/skills/safe-engine/references/session-contract.md). No numerical correction allowance or session deadline is required or invented. Keep actual owner stop/checkpoint and provider/access constraints. Individual check/review timeouts diagnose hung commands; they are not a whole-session limit:
 
 ```text
-python -m safe_engine --project <project> init --task <task.json> --profile <profile.json> --max-repairs 3
+python -m safe_engine --project <project> init --task <task.json> --profile <profile.json>
 python -m safe_engine --project <project> status
 ```
 
 ## Follow the stages
 
-Use the actual procedures, then record their outputs. Artifacts can be Markdown with diagrams and tables; the controller validates presence and integrity, while the fresh reviewer assesses substance.
+Use the actual procedures, then record their outputs. For a new app, the existing `plan` phase contains original Part A plan → [research-market](../.agents/skills/research-market/SKILL.md) → revised Part A plan; retain and link all three before recording the final plan. No new CLI stage is introduced. Artifacts can be Markdown with diagrams and tables; the controller validates presence and integrity, while the fresh reviewer assesses substance.
 
 ```text
 record analysis --file <analysis.md>       analyze-start; no code changes
@@ -80,11 +80,11 @@ review --timeout 600                       fresh read-only Codex CLI process
 handoff                                   validate evidence and write handoff.md
 ```
 
-Prefix every line with `python -m safe_engine --project <project>`. A failed check or finding requires `repair --reason "..."`, implementation using the same method, a new batch record, checks, improvement record, final checks, and fresh review. The correction count is shared across the run. `cancel --reason "..."` stops future progression and preserves work. No operation deletes the worktree.
+Prefix every line with `python -m safe_engine --project <project>`. A failed check or finding requires `repair --reason "..."`, implementation using the same method, a new batch record, checks, improvement record, final checks, and fresh review. The correction count is diagnostic history, not a stop condition. `cancel --reason "..."` stops future progression and preserves work. No operation deletes the worktree.
 
 After interruption, use `status`. An incomplete check or review is not acceptance; rerun it on current inputs. A changed candidate after its batch record needs a repair cycle. File locks release when the process exits. To stop an active check or review, interrupt its foreground controller; it terminates its owned process tree. A concurrent cancel command does not bypass the active operation's lock.
 
-The first pilot supports one feature batch and bounded correction batches. Final checks currently run again after the improvement stage, including when no changes were made. Avoiding that duplicate work for provably unchanged controlled inputs is a remaining optimization; this pilot never runs tests on each edit or save.
+The first pilot supports one feature batch and supported correction batches without a numerical ceiling. Final checks currently run again after the improvement stage, including when no changes were made. Avoiding that duplicate work for provably unchanged controlled inputs is a remaining optimization; this pilot never runs tests on each edit or save.
 
 ## What is enforced
 
@@ -93,13 +93,13 @@ The first pilot supports one feature batch and bounded correction batches. Final
 - Required acceptance files and recorded artifacts cannot change unnoticed through ordinary controller use.
 - Evidence includes exact source contents, check definitions, declared inputs, executables, and the factory bundle. A commit that only records unchanged contents does not itself invalidate evidence.
 - Passing commands, current logs, an improvement artifact, and a fresh successful review are necessary for handoff.
-- Corrections share the explicitly supplied budget; cancelled runs cannot continue.
+- Corrections continue with supported diagnosis and fresh acceptance; cancelled runs cannot continue. New init defaults to continuous; deprecated `--max-repairs` and old saved integers remain historical metadata, never active caps. `status` exposes `repair_policy: continuous`, `max_repairs: null`, `historical_max_repairs`, and preserved `repairs_used`. Compatible old post-QA runs use normal `repair --reason ...`; no manual state edit or acceptance carry-over.
 
 ## Remaining gaps
 
 The controller does not intercept arbitrary agent actions, install host hooks, or protect GitHub merges. Its local records are not signed or isolated from the builder's OS identity. A fresh read-only reviewer supplies context and permission separation, but is not a separately administered acceptance service. Model judgments and tests can miss defects.
 
-PR delivery always uses [how-to-make-a-pr](../.agents/skills/how-to-make-a-pr/SKILL.md) followed by the **complete separate-instance** [how-to-review-a-pr](../.agents/skills/how-to-review-a-pr/SKILL.md). This is mandatory for every factory-managed project, including docs/skills and subsequent updates. A successful local `handoff` does not certify those PR steps. Resolve real tracker, human owner, notifications and project check bindings; missing required bindings block PR completion. See [PR workflow status](pr-workflow.md). The paired skills are instruction-level requirements, not executable GitHub/host enforcement.
+PR delivery always uses [how-to-make-a-pr](../.agents/skills/how-to-make-a-pr/SKILL.md) followed by the **complete separate-instance** [how-to-review-a-pr](../.agents/skills/how-to-review-a-pr/SKILL.md). This is mandatory for every factory-managed project, including docs/skills and subsequent updates. A successful local `handoff` does not certify those PR steps. Resolve real tracker, human owner, notifications and project check bindings; discover bindings first; missing required bindings block PR completion while independent local owner-test delivery continues. See [PR workflow status](pr-workflow.md). The paired skills are instruction-level requirements, not executable GitHub/host enforcement.
 
 The full architecture, UX, security, idea-assessment, TDD, skill-writing, and worktree-management modules are not implemented as independent specialist skills. General review lenses cover only part of those responsibilities. Planning and execution are separate controller phases but still share the original `get-ready-to-code` entrypoint; the selected modular split remains future packaging work.
 

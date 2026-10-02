@@ -121,7 +121,7 @@ Seif's later instruction settles the default execution cadence: batch tests afte
 | B | Evidence-driven investigation scaled to the defect. | Fast when the cause is clear, deeper when needed; requires disciplined reasoning. |
 | C | Competing independent investigations before repair. | Useful for ambiguous cross-system failures; costs more and needs synthesis. |
 
-**Recommend B.** Keep one investigation record: reproduction, hypothesis, discriminating experiment, result, fix, and recheck. Repeated failure triggers reassessment under the shared run budget. It does not prove an architectural flaw. Combine Seif's existing investigation method with [Superpowers debugging][sp-debug].
+**Recommend B.** Keep one investigation record: reproduction, hypothesis, discriminating experiment, result, fix, and recheck. Repeated failure triggers reassessment and new discriminating evidence under the continuous session contract. It does not prove an architectural flaw. Combine Seif's existing investigation method with [Superpowers debugging][sp-debug].
 
 ### E6 — Architecture
 
@@ -211,7 +211,7 @@ Seif's later instruction settles the default execution cadence: batch tests afte
 | B | Continue through dependent steps and in-scope repairs using durable checkpoints. | Fits autonomous delivery while retaining evidence and recovery; depends on the selected controller. |
 | C | Dispatch independent tasks concurrently and integrate their results. | Can reduce elapsed time; requires stable interfaces, resource isolation, and integration review. |
 
-**Recommend B.** Preserve the existing pre/change/post inspection, batch test execution after substantial work, record actual results, and follow the run-wide budget. Continue authorized work without repeated permission requests; surface genuine unresolved choices or blockers. Include the requested improvement pass before push and verify the result. Fresh independent verification remains required after reviewer repairs. Inspiration: [execution procedure][sp-execution], adapted to our selected G4, G8, I3, and I4.
+**Recommend B.** Preserve the existing pre/change/post inspection, batch test execution after substantial work, record actual results, and follow the completion boundary and actual authority. Continue authorized work without repeated permission requests; surface genuine unresolved choices or blockers. Include the requested improvement pass before push and verify the result. Fresh independent verification remains required after reviewer repairs. Inspiration: [execution procedure][sp-execution], adapted to our selected G4, G8, I3, and I4.
 
 ## How the pieces connect
 
@@ -249,7 +249,7 @@ REQUEST --> SAFE ENGINE: enter / resume
       +----------+------------+                    |
                  |                                 |
        Supported defect? -- yes --> Debug / UI repair
-                 |                    shared budget
+                 |                    diagnosed corrections
                  |
        Fresh independent assessment
                  |
@@ -259,7 +259,7 @@ REQUEST --> SAFE ENGINE: enter / resume
 
 CONTROLLER SUPPORT THROUGHOUT
   Current task and decisions | checkpoints | gates | evidence
-  Workspace and browser adapters | permissions | retry budget
+  Workspace and browser adapters | permissions | diagnostic history
 ```
 
 The diagram groups responsibilities, not mandatory sequential invocations. Development and related repairs are grouped into meaningful batches, followed by affected verification and a fresh final assessment. The improvement pass before push follows the newer fast-delivery design. Independent work can continue when only one decision is blocked. A browser is not required for a project without a browser interface.
@@ -291,7 +291,7 @@ Approved task + experience brief + project profile
                  /                     \
          Still unresolved        Required evidence passes
                  |                     |
-       Next bounded attempt        Checked handoff
+       Next diagnosed correction        Checked handoff
        or explicit blocker
 ```
 
@@ -309,7 +309,7 @@ The factory needs all three kinds of inspection:
 
 Visual snapshots detect changes against a baseline, not whether that baseline is good design. [Playwright visual comparison][pw-snapshots]. Automated accessibility scans also need keyboard/focus checks and appropriate human evaluation; passing a scan alone cannot establish accessibility conformance. [Playwright accessibility][pw-accessibility], [W3C evaluation guidance][wai-evaluation].
 
-The required browser backend, supported hosts, test-data strategy, and numeric budgets still need concrete choices. Worktrees need separate ports and runtime ownership where applicable. Browser state and downstream services must belong to the intended test environment. A missing browser, unavailable login, or unidentified running build yields an unverified result, not a pass.
+The required browser backend, supported hosts, test-data strategy and actual access boundaries still need concrete choices. Worktrees need separate ports and runtime ownership where applicable. Browser state and downstream services must belong to the intended test environment. A missing browser, unavailable login, or unidentified running build yields an unverified result, not a pass.
 
 ## What must be demonstrated before calling this autonomous
 
@@ -343,7 +343,7 @@ Measure detection, repair success, missed defects, false findings, introduced re
 - [ ] Build the smallest connected controller path that runs browser QA, repairs a reproduced defect, and obtains independent verification.
 - [ ] Demonstrate both a broken-UI repair and an already-good page that needs no changes.
 - [ ] Add the remaining selected modules and test their individual routing, outputs, and handoffs.
-- [ ] Exercise interrupted runs, exhausted budgets, stale evidence, missing dependencies, security findings, and regression recovery.
+- [ ] Exercise interrupted runs, continuous corrections past former ceilings, stale evidence, missing dependencies, security findings, and regression recovery.
 - [ ] Demonstrate portability in another materially different project.
 - [ ] Update the skill index and preview only as capabilities become implemented and demonstrated.
 

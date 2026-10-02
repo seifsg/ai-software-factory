@@ -18,7 +18,7 @@ BEFORE                           AFTER
 ## Flow
 ```text
 <actual trigger> -> <actual stages> -> <outcome>
-                        | failure -> <bounded recovery>
+                        | failure -> <diagnosed in-scope recovery>
 ```
 
 ## Decisions

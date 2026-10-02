@@ -37,8 +37,8 @@ class WorkflowTests(unittest.TestCase):
     def git(self, *args):
         subprocess.run(["git", "-C", str(self.root), *args], check=True, capture_output=True)
 
-    def start(self, budget=2):
-        self.flow.initialize(self.task, self.profile, budget)
+    def start(self, historical_limit=None):
+        self.flow.initialize(self.task, self.profile, historical_limit)
 
     def artifact(self, kind):
         path = self.root / ".factory" / f"draft-{kind}.md"
@@ -91,7 +91,7 @@ class WorkflowTests(unittest.TestCase):
         self.git("add", "acceptance.py")
         self.git("-c", "user.name=Safe Engine Test", "-c", "user.email=test@example.invalid",
                  "commit", "-qm", "Configure initially failing check")
-        self.start(budget=1)
+        self.start(historical_limit=1)
         for kind in ("analysis", "plan", "batch"):
             self.artifact(kind)
         self.assertFalse(self.flow.check()["checks_passed"])
@@ -106,7 +106,7 @@ class WorkflowTests(unittest.TestCase):
         self.assertTrue(result["checks_passed"])
         self.assertEqual(result["repairs_used"], 1)
 
-    def test_failed_final_check_cannot_reroll_with_zero_budget(self):
+    def test_legacy_zero_limit_recovers_only_through_supported_repair(self):
         (self.root / "acceptance.py").write_text(
             "from pathlib import Path\n"
             "raise SystemExit(1 if Path('.factory/fail-check').exists() else 0)\n",
@@ -114,7 +114,7 @@ class WorkflowTests(unittest.TestCase):
         self.git("add", "acceptance.py")
         self.git("-c", "user.name=Safe Engine Test", "-c", "user.email=test@example.invalid",
                  "commit", "-qm", "Configure runtime failure scenario")
-        self.start(budget=0)
+        self.start(historical_limit=0)
         for kind in ("analysis", "plan", "batch"):
             self.artifact(kind)
         self.assertTrue(self.flow.check()["checks_passed"])
@@ -127,9 +127,18 @@ class WorkflowTests(unittest.TestCase):
         resumed = Workflow(self.root)
         with self.assertRaisesRegex(EngineError, "repair"):
             resumed.check()
-        with self.assertRaisesRegex(EngineError, "budget exhausted"):
-            resumed.repair("Runtime dependency recovered")
         self.assertEqual(resumed.load(), failed_state)
+        result = resumed.repair("Runtime dependency recovered; fresh acceptance required")
+        self.assertEqual(result["repairs_used"], 1)
+        self.assertEqual(result["historical_max_repairs"], 0)
+        self.assertIsNone(result["max_repairs"])
+        self.assertIsNone(resumed.load()["checks"])
+        self.assertIsNone(resumed.load()["review"])
+        self.assertEqual(resumed.load()["task"], failed_state["task"])
+        self.assertEqual(resumed.load()["profile"], failed_state["profile"])
+        self.assertEqual(resumed.load()["history"][:-1], failed_state["history"])
+        self.artifact("batch")
+        self.assertTrue(resumed.check()["checks_passed"])
 
     def test_stale_code_and_declared_environment_rejected(self):
         self.profile["environment_inputs"] = ["SAFE_ENGINE_TEST_INPUT"]
@@ -168,15 +177,58 @@ class WorkflowTests(unittest.TestCase):
         with self.assertRaisesRegex(EngineError, "evidence"):
             self.flow.require_checks(state)
 
-    def test_repair_budget_is_shared_and_cancel_stops_progress(self):
-        self.start(budget=0)
+    def test_continuous_repairs_preserve_cancellation(self):
+        self.start(historical_limit=0)
         for kind in ("analysis", "plan", "batch"):
             self.artifact(kind)
-        with self.assertRaisesRegex(EngineError, "budget exhausted"):
-            self.flow.repair("Any correction")
+        self.flow.repair("Actual supported correction")
         self.flow.cancel("User stopped the run")
         with self.assertRaises(EngineError):
             self.flow.check()
+        with self.assertRaises(EngineError):
+            self.flow.repair("Cannot revive a cancelled run")
+
+    def test_continuous_changed_batches_continue_past_former_maximum(self):
+        self.built()
+        for correction in range(105):
+            result = self.flow.repair(f"Correct documented fixture case {correction}")
+            (self.root / "app.py").write_text(f"value = 1\n# corrected case {correction}\n")
+            self.artifact("batch")
+            self.assertEqual(result["repairs_used"], correction + 1)
+            self.assertEqual(result["repair_policy"], "continuous")
+            self.assertIsNone(result["max_repairs"])
+        self.assertTrue(self.flow.check()["checks_passed"])
+        self.assertEqual(Workflow(self.root).status()["repairs_used"], 105)
+
+    def cli_init(self, *extra):
+        for filename, value in (("task.json", self.task), ("profile.json", self.profile)):
+            (self.root / ".factory").mkdir(exist_ok=True)
+            (self.root / ".factory" / filename).write_text(json.dumps(value))
+        result = subprocess.run([sys.executable, "-m", "safe_engine", "--project", str(self.root),
+                                 "init", "--task", str(self.root / ".factory/task.json"),
+                                 "--profile", str(self.root / ".factory/profile.json"), *extra],
+                                cwd=Path(__file__).resolve().parents[1], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        status = json.loads(result.stdout)
+        self.assertEqual(status["repair_policy"], "continuous")
+        self.assertIsNone(status["max_repairs"])
+        return status
+
+    def test_cli_initializes_without_an_allowance(self):
+        self.cli_init()
+        self.assertIsNone(self.flow.load()["max_repairs"])
+
+    def test_cli_legacy_flag_is_historical_and_never_blocks_repair(self):
+        status = self.cli_init("--max-repairs", "0")
+        self.assertEqual(status["historical_max_repairs"], 0)
+        for kind in ("analysis", "plan", "batch"):
+            self.artifact(kind)
+        self.assertEqual(self.flow.repair("Diagnosed correction")["repairs_used"], 1)
+
+    def test_legacy_metadata_does_not_restore_the_former_one_hundred_ceiling(self):
+        self.start(historical_limit=101)
+        self.assertEqual(self.flow.status()["historical_max_repairs"], 101)
+        self.assertIsNone(self.flow.status()["max_repairs"])
 
     def test_contract_change_rejected_and_history_saved(self):
         self.start()

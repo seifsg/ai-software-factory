@@ -17,7 +17,8 @@ def main():
     init = commands.add_parser("init", help="Start one reviewed task from a clean project")
     init.add_argument("--task", required=True)
     init.add_argument("--profile", required=True)
-    init.add_argument("--max-repairs", required=True, type=int)
+    init.add_argument("--max-repairs", type=int,
+                      help="Deprecated historical metadata only; repairs have no numerical limit")
     record = commands.add_parser("record", help="Save a method artifact and advance the appropriate phase")
     record.add_argument("kind", choices=("analysis", "plan", "batch", "improvement"))
     record.add_argument("--file", required=True)

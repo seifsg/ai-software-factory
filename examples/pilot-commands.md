@@ -60,10 +60,10 @@ node tests/browser.cjs
 # Expected exit 1: the 320px page overflows. Inspect .factory/outputs/browser/mobile.png.
 Set-Location $bundle
 py -3 -m safe_engine --project $target discover
-py -3 -m safe_engine --project $target init --task "$target\.factory\task.json" --profile "$target\.factory\profile.json" --max-repairs 3
+py -3 -m safe_engine --project $target init --task "$target\.factory\task.json" --profile "$target\.factory\profile.json"
 ```
 
-Review the supplied task and profile first. The 3-repair budget and 60/120-second check timeouts describe this small fixture only. Missing dependencies are setup failures, not the intended baseline defect. A new target must remain clean and committed; diagnostic output stays inside ignored `.factory/`.
+Review the supplied task and profile first. Current initialization has no repair allowance. The historical first run's allowance remains recorded; 60/120-second command watchdogs describe this fixture and fail stuck operations for diagnosis. Missing dependencies are setup failures, not the intended baseline defect. A new target must remain clean and committed; diagnostic output stays inside ignored `.factory/`.
 
 ## The agent does the work between these commands
 

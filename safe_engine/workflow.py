@@ -20,13 +20,13 @@ class Workflow:
         self.project = project
         self.directory = project / ".factory"
 
-    def initialize(self, task, profile, max_repairs):
+    def initialize(self, task, profile, max_repairs=None):
         if (self.directory / "state.json").exists():
             raise EngineError("This project already has a run. Resume it; use a fresh worktree for another task.")
         validate_profile(profile)
         validate_task(task, profile)
-        if type(max_repairs) is not int or not 0 <= max_repairs <= 100:
-            raise EngineError("Supply an explicit max-repairs budget between 0 and 100")
+        if max_repairs is not None and (type(max_repairs) is not int or max_repairs < 0):
+            raise EngineError("Deprecated max-repairs metadata must be a nonnegative integer")
         if git(self.project, "status", "--porcelain", "--untracked-files=normal"):
             raise EngineError("Initialize from a clean, committed project; preserve existing work before starting")
         state = {"schema_version": 1, "bundle_version": __version__, "run_id": str(uuid.uuid4()),
@@ -71,7 +71,8 @@ class Workflow:
         current = self.current(state)
         evidence = state.get("checks")
         return {"run_id": state["run_id"], "phase": state["phase"], "project": str(self.project),
-                "repairs_used": state["repairs_used"], "max_repairs": state["max_repairs"],
+                "repair_policy": "continuous", "repairs_used": state["repairs_used"],
+                "max_repairs": None, "historical_max_repairs": state.get("max_repairs"),
                 "checks_current": bool(evidence and evidence["fingerprint"] == current),
                 "checks_passed": bool(evidence and evidence["passed"]),
                 "review_current": bool(state.get("review") and state["review"]["fingerprint"] == current),
@@ -150,8 +151,6 @@ class Workflow:
         self.require_phase(state, "verify", "improve", "final-verify", "review", "ready")
         if not reason.strip():
             raise EngineError("Record the reason for correction")
-        if state["repairs_used"] >= state["max_repairs"]:
-            raise EngineError("Run-wide repair budget exhausted; return a blocker")
         state["repairs_used"] += 1
         state["phase"] = "build"
         state["checks"] = None

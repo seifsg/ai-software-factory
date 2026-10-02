@@ -85,7 +85,7 @@ Performance, security, reuse, and navigability are separate outcomes. A cleanup 
 | B | The feature, its relevant callers, and shared components it touches. | Finds useful design opportunities while keeping the feature deliverable. |
 | C | The entire application. | Exposes broader debt and structural issues; can turn feature delivery into a large refactor. |
 
-**Recommend B.** It covers the reuse and simplification opportunities Seif described. Keep separate opportunities outside the feature visible for a later decision. Required defect repairs remain part of acceptance; optional improvements stop when their expected value no longer justifies added change and verification work. Concrete limits use the selected shared run budget and remain to be agreed.
+**Recommend B.** It covers the reuse and simplification opportunities Seif described. Keep separate opportunities outside the feature visible for a later decision. Required defect repairs remain part of acceptance; optional improvements stop when their expected value no longer justifies added change and verification work. The selected continuous session contract governs completion and actual owner boundaries; no artificial repair allowance or session deadline is introduced.
 
 ## Code optimized for AI agents
 

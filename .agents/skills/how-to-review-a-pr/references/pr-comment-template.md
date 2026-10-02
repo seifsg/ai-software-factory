@@ -63,7 +63,7 @@ Fill with observed results; delete unused illustrative rows, never leave empty p
 | Original requirements | <complete or remaining evidence> |
 | Creation workflow | <task, owner, notification and body evidence/blockers> |
 | Retry record | <failed step, correction, retry outcome; or none> |
-| Shared limits | <used/remaining when part of a factory run> |
+| Continuity | <diagnostic history/progress, actual constraints and owner stop conditions> |
 | Fresh assessment | <exact reviewed candidate after repairs, or blocker> |
 | Resume | <branch, commands, artifacts, unresolved decisions> |
 ````

@@ -30,10 +30,10 @@ UX proposal          <---- bounded fixes <---- Review <---------+         |     
 |---|---|---|---|
 | Intake and requirements | `how-to-write-a-clickup-task`, `clickup-task`; `bug-investigation` and `ux-investigation` supply signals | Deduplicated work item, intended outcome, evidence, acceptance criteria | Durable claim/ownership, routing, priority and permission profile |
 | Understand and design | `analyze-start` | Code-grounded analysis: purpose, callers, contracts, unknowns and user journey | Persist analysis against the work item and starting revision |
-| Plan and implement | `get-ready-to-code` | Critiqued file set, phases, todos, plan, changed code | Explicit plan acceptance rule and bounded execution state |
+| Plan and implement | `get-ready-to-code` | Critiqued file set, phases, todos, plan, changed code | Explicit plan acceptance rule and durable execution state |
 | Verify | Build/test gates in PR and review procedures; `deep-review`, `change-guard`, `compliance-check` | Checks and findings tied to the exact reviewed revision | Portable check runner, acceptance scenarios and evidence contract |
 | Package delivery | `how-to-make-a-pr` | Draft PR, linked work item and change summary | Project-specific branch, owner, tracker and communication configuration |
-| Independent review | `how-to-review-a-pr`, its five review lenses and synthesis | Verdict, applied fixes, remaining flags/blockers, verification | Reliable fresh reviewer dispatch; whole-run retry limit |
+| Independent review | `how-to-review-a-pr`, its five review lenses and synthesis | Verdict, applied fixes, remaining flags/blockers, verification | Reliable fresh reviewer dispatch; meaningful diagnosed corrections and fresh acceptance |
 | Release | Existing source stops at a draft PR and human handoff | Approved revision, deployment result, recovery path | Reusable release procedure with project-defined authority, staging/smoke and rollback |
 | Operate and learn | `bug-investigation`, `ux-investigation` give evidence-based investigations | Incident or improvement proposal with evidence | General post-release checks, monitoring trigger and feedback routing |
 
@@ -62,7 +62,7 @@ flowchart TD
     Observe -->|friction evidence| UX
 ```
 
-The chart proposes connections, not an already implemented trigger chain. UX proposals remain backlog items until selected. A failed build/check can return to the builder within its budget or become a blocker. Release requires the applicable project authorization.
+The chart proposes connections, not an already implemented trigger chain. UX proposals remain backlog items until selected. A failed build/check can return to the builder through a diagnosed correction or become a blocker for an actual unresolved dependency. Release requires the applicable project authorization.
 
 ## The review station
 
@@ -144,7 +144,7 @@ Skills supply procedures. The controller supplies continuity and routing. Tools 
 
 ### Minimum shared handoff
 
-For each work item, retain: identifier, repository/base revision, requested outcome, acceptance criteria, allowed scope, relevant project profile, dependencies, authority boundaries, execution budget and current owner/state.
+For each work item, retain: identifier, repository/base revision, requested outcome, acceptance criteria, allowed scope, relevant project profile, dependencies, authority boundaries, completion boundary, diagnostic history and current owner/state.
 
 For each stage result, retain: work/run identifier, stage, revision, artifact links, checks performed and their results, findings, unresolved questions, next owner and status. Credentials stay outside these records. Evidence of a prior revision must not silently validate new code.
 
@@ -159,7 +159,7 @@ BACKLOG -> READY -> BUILDING -> CHECKING -> IN_REVIEW -> AWAITING_HUMAN
                                                                v
                                                              DONE
 
-Any active stage -> BLOCKED when a dependency, decision or budget stops progress.
+Any active stage -> BLOCKED when an actual dependency, owner-reserved decision or explicit owner stop prevents progress.
 Checks/review -> BUILDING for bounded fixes; a new revision invalidates affected checks.
 Release failure -> recovery + BLOCKED, with an accurate report.
 ```
@@ -175,12 +175,12 @@ Candidate additions below are design proposals only; no placeholder skills have 
 | Candidate | Purpose | Completion evidence |
 |---|---|---|
 | `project-context` | Resolve the target repo, checks, integrations and decision boundaries; could be a shared reference/profile rather than a standalone skill | Validated profile and explicit missing dependencies |
-| `factory-run` | Route and claim one work item, orchestrate stages, persist handoffs, avoid duplicates, respect retry/time/cost limits | Complete run record or actionable blocker |
+| `factory-run` | Route and claim one work item, orchestrate stages, persist handoffs, avoid duplicates, continue meaningful progress and respect actual authority/owner stops | Complete run record or actionable blocker |
 | `verify-change` | Run relevant deterministic checks and acceptance scenarios; unify repeated verification requirements | Results and artifacts bound to the exact revision |
 | `release-change` | Apply the project's authorized release path, smoke checks and recovery plan | Deployment/version evidence and smoke results, or recovery/blocker |
 | `observe-release` | Inspect agreed health/user-outcome signals and route evidenced defects or proposals | Observation result or deduplicated work item |
 
-Review iterations need a shared whole-run limit. The build loop restarts on issues; the PR reviewer has both finding loops and a retry-once rule. Connecting them without a total budget could keep repeating work. A budget limit should produce a blocker, not lower a correctness bar or claim success.
+Seif superseded the initial shared-budget/retry-once proposal on 2 October. Build and review continue through meaningful diagnosed corrections until verified completion. Reassess stalled hypotheses and reconcile uncertain effects; do not reroll an unchanged rejected candidate. Actual missing access/authority or an owner stop blocks dependent work without lowering acceptance.
 
 Preserve the source's quality-first intent, but do not turn "as close to O(1) as possible" into a universal pass criterion. Some valid problems require traversing input. Define the relevant performance requirement and check it for the target workload.
 

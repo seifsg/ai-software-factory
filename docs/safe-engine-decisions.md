@@ -6,15 +6,15 @@ The decision IDs refer to the 25-option discussion: N1–N2 cover naming, G1–G
 
 ## Decision ownership
 
-Seif owns naming and design decisions. For each new improvement or unresolved design choice, present three credible alternatives in a comparison table, recommend exactly one, and explain why. A recommendation is a proposal until Seif selects it. Preserve approved choices across sessions and reopen them only when requested or when new evidence warrants a proposed revision.
+Seif owns the outcome and may explicitly delegate in-scope product, design, technical and working-name choices for a session. Preserve approved and rejected choices; delegation does not silently reopen them. For new choices, present three credible alternatives, recommend exactly one and explain why. Under explicit delegation, record the evidence and agent selection and continue; otherwise a new substantive owner decision remains pending. A recommendation alone is not authority.
 
-Choosing an architectural direction does not silently settle remaining language, format, host, numerical limit, or permission choices. Already authorized work can continue within the selected scope; unresolved choices stay visible.
+Read and apply the [session contract](../.agents/skills/safe-engine/references/session-contract.md) once at intake and on handoff. Reuse answers across the whole workflow. Full autonomy means continue to the agreed testable handoff, without artificial credits, repair allowances or session deadlines. It does not expand permissions or authorize deployment, ready/merge/release, purchases or a guessed recipient. Block only dependent work for real missing authority/evidence; continue independent authorized work.
 
 ## Skill authorship
 
 Seif is the primary skill author. He supplies the working method in his own words and owns the final procedures. The assistant helps him examine examples, structure his writing, expose gaps and contradictions, refine wording, and test the resulting skills. Existing Seif-authored skills are the starting material; external examples provide inspiration. The assistant may prepare a specific draft when asked, but should not independently write the majority of the skill library.
 
-Plans for skill counts, individual skill boundaries, and new skill names require Seif's selection. No new skill files are created merely to reserve proposed roles.
+Plans for broader skill counts, boundaries and names remain pending unless selected or explicitly delegated. A request to create a specific procedure authorizes that focused draft and a descriptive working name within delegation. No new skill files are created merely to reserve proposed roles.
 
 ## Expanded capability requirements
 
@@ -50,10 +50,10 @@ The [fast feature delivery design](safe-engine-fast-delivery.md) compares the re
 | G5 | B | Shared gate logic called by host adapters, commands, and independent delivery checks. |
 | G6 | A, pilot clarification | Bind evidence to exact project code, check definitions, and declared environment inputs. Invalidate it when those inputs change. Seif explicitly selected this pilot option on 1 October 2026, resolving the earlier ambiguous spoken answer. |
 | G7 | B | Separately controlled acceptance checks plus fresh review. Independence requires a real permission boundary around decisive checks. |
-| G8 | A | One correction budget for the entire run, including nested build and review loops. Numerical limits remain open. |
+| G8 | Superseded 2 October by Seif | Continuous progress through maintenance and nested build/review loops; no artificial credits, numerical correction allowance, fixed retry ceiling or overall session deadline. Keep diagnostic history and require meaningful corrections. Earlier finite-budget decisions and consumed counts remain historical. |
 | G9 | A | One versioned repository bundle containing controller, skills, and adapters. Seif explicitly selected this option on 1 October 2026. |
 | G10 | B | Project-specific scenario adapters for repeatable UI, API, or command-line checks of user outcomes. |
-| G11 | B | End-to-end fault scenarios for the QA system, including a successful valid run and failures involving skipped stages, stale evidence, hooks, interruption, and exhausted retries. |
+| G11 | B | End-to-end fault scenarios for the QA system, including a successful valid run and failures involving skipped stages, stale evidence, hooks, interruption, cancellation, continuous corrections and rejected unchanged rerolls. |
 | G12 | B | A protected repository workflow as the target merge boundary. Resolve private-repository feature availability and credential configuration before claiming enforcement. |
 | G13 | B | A human-approved release procedure when deployment enters scope, with deployed-version verification, health checks, and explicitly defined recovery authority. |
 
@@ -84,6 +84,38 @@ Seif selected an initial local Codex pilot with a small Python controller, JSON 
 - G10 supplies reusable scenario execution; I6 determines the evidence each task must produce.
 - G11 tests whether enforcement works; I10 measures whether factory versions make better decisions and deliver better results.
 - G12 and G13 are design selections. They do not themselves authorize subscription purchases, permission changes, merges, releases, or deployment to a live project.
+
+## Factory maintenance — 2 October 2026
+
+Seif authorized a dedicated skill to evolve the factory from his feedback while preserving its integrity, selected **`improve-factory`**, and selected mid-build option **A**. He remains the author of the intended procedures; this request authorizes this specific draft, not independent expansion of the library.
+
+| Decision | Alternatives compared | Selection and reason |
+|---|---|---|
+| Structure | A dedicated maintenance skill; B maintenance mode in Safe Engine; C hook-triggered maintenance | A, authorized after the recommendation: focused scope, reuse of existing methods, explicit handback |
+| Name | `maintain-factory`; `repair-factory`; `improve-factory` | `improve-factory`, explicitly selected by Seif, emphasizing evolving the workflow |
+| Mid-build behavior | A checkpoint and isolated repair, independent work only; B continue with pinned old bundle until later adoption; C sequential parent repair with separate review | A, explicitly selected: checkpoint → isolated repair → review → compatible resume |
+
+The procedure preserves dirty app/bundle state, reads full routines, delegates with an explicit context packet where available, and treats adoption as a compatibility/evidence decision. The current controller has no pause or migration command. New schemas/contracts or invalidated analysis can require a reviewed run in a fresh app worktree; acceptance and cancellation cannot be reset to bypass a failure. Human ready/merge/release remains unchanged.
+
+Model routing is not newly configured by this skill. It preserves existing user/host settings and records actual capabilities. For a future routing change, compare these options; no new routing policy is selected here:
+
+| Option | Benefit | Tradeoff |
+|---|---|---|
+| A — recommended: inherit the configured session model | Preserves the user's current choice; straightforward first version | Does not optimize each role separately |
+| B — user-approved models by role | Can balance diagnosis/review quality and bounded lookup cost | Requires available-model checks and representative evaluations |
+| C — user chooses a model for each maintenance case | Maximum direct control for unusual cases | Interrupts routine repairs and adds repeated decisions |
+
+Recommendation: A for the first version. Capability comes from observed tools, context and verification, not an assumed model name. Existing host instructions still govern actual spawning; there is no provider switch, installed model router or guarantee of the same model across hosts.
+
+## Autonomous execution and market research — 2 October 2026
+
+Seif reported that the factory stopped unnecessarily and explicitly requested autonomous execution for this session through a finished local application with factory QA and independent review, ready for his initial testing. Deployment remains excluded; human ready/merge/release stays reserved. He asked for essential preferences once at intake when needed, persistent decisions, discovery and researched options before escalation. This clarification supersedes earlier wording that every numerical limit or substantive choice needs a new owner answer even after delegation.
+
+For new applications he selected **original plan → market/competitor research → revised plan** before implementation, protecting original creativity while learning from existing products, features and visual experiences. He authorized creation of the missing focused skill now. `research-market` is its descriptive working name under that delegation, not a user-selected permanent brand. Research evidence and names must support the product; the rejected app name stays rejected. All three steps fit inside the existing controller `plan` phase; no new stage/schema or autonomous service is implemented.
+
+## Continuous execution correction — 2 October 2026
+
+Seif explicitly corrected the allowance/exhaustion premise: “There are no allowances, no credits, and AI should prompt as long as it needs to achieve something.” This supersedes earlier G8 finite safeguards and the source PR retry-once ceiling for current operation. Keep former counts/limits in history; never ask to replenish them. Continue authorized meaningful corrections to the agreed verified handoff, honor explicit owner checkpoints/cancellation, and preserve fresh QA, separate review and human ready/merge/release. Actual provider quotas, unavailable access and individual process watchdogs remain real constraints; no unlimited compute, daemon or host enforcement is claimed. The canonical session contract owns discovery, stalled-progress diagnosis and reconciliation before uncertain external actions are retried.
 
 ## Relationship to earlier proposals
 

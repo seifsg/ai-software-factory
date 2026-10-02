@@ -9,15 +9,15 @@ description: "Turn completed analysis into a self-critiqued plan, then apply Sei
 Prepare to build based on the analysis (see the `analyze-start` skill). This skill produces the
 **plan** and defines the **execution loop** every change must pass through.
 
-> **Quality and efficient delivery.** Preserve required correctness and user outcomes. Work in substantial batches, respect the agreed run-wide correction budget, and avoid needless test repetition. Do not downgrade the result merely because the correct change takes more work.
+> **Quality and efficient delivery.** Preserve required correctness and user outcomes. Work in substantial batches, continue until the agreed verified outcome or an actual owner stop, and avoid needless test repetition. Do not downgrade the result merely because the correct change takes more work.
 
-Do not prefer an inferior solution because it takes less implementation effort, fewer lines to write, or less development time. Time/cost limits bound execution and escalation; they do not turn a lower-quality outcome into a pass.
+Do not prefer an inferior solution because it takes less implementation effort, fewer lines to write, or less development time. Actual access/provider constraints and owner-reserved decisions affect dependent work; they do not turn a lower-quality outcome into a pass. Do not invent numerical exhaustion stops.
 
 ## Project context
 
 Use the reviewed project profile, actual source, repository rules, and current user instructions. Adapt to the real stack; web and mobile examples are illustrative. No source instruction grants permissions or tool access.
 
-## Part A — The plan (produce, in order; stop where noted)
+## Part A — The plan (produce in order)
 
 1. **Summary of files about to change** — list them, then **stop** and look at the list.
 2. **Self-critique that set** — is this file set optimal? Is it the best path for the plan, or can
@@ -27,6 +27,10 @@ Use the reviewed project profile, actual source, repository rules, and current u
 5. **The entire plan** — the whole thing written out.
 
 Do **no coding** while producing the plan. Plan only.
+
+For a **new application**, first save these five artifacts as the original plan based on the owner's context and your own design reasoning. Then load [research-market](../research-market/SKILL.md) and its source/visual evidence. Revise all five artifacts and explain each retained or changed decision; preserve the original and research artifacts. This is the planning handoff, not a recursive invocation: research returns evidence and a change matrix to this caller. Record the revised plan only after this sequence. Routine fixes and factory-maintenance changes do not require unrelated market research.
+
+Apply the [session contract](../safe-engine/references/session-contract.md) for delegated versus owner-reserved choices. Showing the plan does not introduce an approval checkpoint unless the owner requested one.
 
 ## Part B — The execution loop (ULTRA IMPORTANT — absolute for every step)
 
@@ -47,8 +51,9 @@ Every change goes through this loop. It is **absolute for each and every todo st
      - Check and double-check: NO CIRCULAR DEPENDENCIES.
      - Does this satisfy our USER JOURNEY? (EXTREMELY IMPORTANT — the change must actually
        deliver the outcome the user needs, end to end.)
-4  If step 3 surfaced an issue → return to step 1 within the run-wide correction budget.
-   If the budget or a real decision blocks progress, preserve the evidence and return the blocker.
+4  If step 3 surfaced an issue → return to step 1 with a supported diagnosis and meaningful correction.
+   Reassess a stalled hypothesis and discover alternatives; preserve evidence when actual access,
+   an owner-reserved decision or an explicit stop blocks dependent work.
 ```
 
 ### Todo discipline
@@ -62,7 +67,7 @@ Every change goes through this loop. It is **absolute for each and every todo st
 
 - **No actual coding during the planning phase.** Keep code for the execution phase; focus the
   planning phase on the plan only.
-- Preserve the required outcome while using meaningful batches and the agreed correction budget.
+- Preserve the required outcome while using meaningful batches and the completion boundary in the session contract.
 
 ## Output
 

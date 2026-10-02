@@ -10,7 +10,7 @@ Checked local candidate
        visual draft + human owner + notification
   -> how-to-review-a-pr [SEPARATE INSTANCE]
        original goal -> analyze-start -> three alternatives
-       get-ready-to-code plan -> bounded corrections
+       get-ready-to-code plan -> diagnosed in-scope corrections
        security + performance + journey + change-guard + compliance
        actual build gate -> additive fixes -> fresh assessment
        detailed PR comment for the current head
@@ -41,6 +41,8 @@ Canonical owners: [creation](../.agents/skills/how-to-make-a-pr/SKILL.md) and [r
 | C | Leave bindings pending | Avoids inventing operational settings | Overall PR workflow stays blocked |
 
 Recommendation: A for this repository because the work is already in GitHub. It is **not selected** until Seif chooses. These are project bindings, not alternatives to executing the skills.
+
+Before escalating a missing binding, inspect actual project records, remote metadata and available authorized integrations. Pending bindings above remain pending until evidence or an actual owner decision resolves them; autonomous local delivery is not permission to invent a tracker, review recipient or notification substitute. These blockers affect PR completion, while independent local implementation, QA and owner testing may continue under the session contract.
 
 ## Actual enforcement boundary
 

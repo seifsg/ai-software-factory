@@ -19,23 +19,29 @@ prepare the acceptance criteria and real check commands, and show me the brief
 and any product or design decisions that still need my choice.
 
 Follow analyze-start, including the ASCII charts, then get-ready-to-code and
-the per-todo 0–4 loop. Work autonomously within the agreed scope and limits.
+the per-todo 0–4 loop. Work autonomously within the agreed scope and recorded session contract.
+Ask essential preferences once only when not already answered. Under delegated
+autonomy, continue until the agreed verified outcome without artificial credits,
+correction allowances, fixed retry ceilings or session deadlines. Honor my explicit stops.
 Read each complete skill and its references, not just its name. Before planning,
 compare three strong approaches and recommend one with reasons. Preserve my
-chosen direction; leave new substantive decisions to me. Carry these methods,
-decisions, real artifacts and remaining limits into every resume or delegation.
+chosen direction and my delegated/reserved decision authority. For a new app,
+save an original plan, research competitors/features/visuals using research-market,
+then revise the plan before coding. Carry these methods,
+decisions, real artifacts, diagnostic progress and actual constraints into every resume or delegation.
 Batch tests after substantial work. Inspect worthwhile improvements, verify,
 and obtain a fresh independent review before the checked handoff.
 For any authorized PR, always execute how-to-make-a-pr, then the full
 how-to-review-a-pr on a separate instance. Keep its task/owner handoff,
 visual description, five review passes and detailed comment mandatory.
 The local controller review does not replace the PR review. Missing required
-project settings or access block PR completion. Leave the PR draft for me.
+project settings or access block PR completion after discovery; keep independent
+local build, QA and owner-test delivery moving. Leave the PR draft for me.
 
 Keep the work visible: show the plan before coding, give concise stage updates,
 open the running app when available, and show actual browser results and the
 final review. Continue without waiting at routine progress updates. Ask when
-a real decision, missing access or an agreed limit prevents progress.
+an owner-reserved decision, actual missing access or my explicit stop prevents dependent progress.
 Do not choose a different example or change the product requirements for me.
 ```
 
@@ -50,9 +56,9 @@ Codex discovers repository skills in `.agents/skills` within the repository scop
 - The complete factory bundle, Python 3.11+, Git, and access to the target project.
 - An authenticated `codex` CLI on PATH for the current independent reviewer.
 - The target project's actual test tools. Browser work needs a browser driver and runnable app.
-- An agreed task, observable acceptance, protected check files, and explicit repair/time limits. The first demo's numbers are examples, not automatic defaults for every app.
+- An agreed task, observable acceptance, protected check files, and recorded authority and completion boundaries. The first demo's finite allowance is historical and does not govern continuous execution; actual command watchdogs still detect stuck processes.
 
-The agent can make routine implementation choices. Your unresolved product and factory-design choices stay yours. A prompt does not install missing dependencies or grant access outside the session's permissions. Keep the factory bundle unchanged during a target run; editing its instructions changes an acceptance input.
+The [session contract](../.agents/skills/safe-engine/references/session-contract.md) preserves delegated and reserved choices. The agent makes in-scope delegated choices; unresolved owner-reserved choices stay yours. A prompt does not install missing dependencies or grant access outside the session's permissions. Keep the factory bundle unchanged during a target run; editing its instructions changes an acceptance input.
 
 ## Start a brand-new application
 
@@ -62,7 +68,8 @@ Add this to the first message when the target does not exist:
 This is a new application. Start with a minimal project baseline in the target
 directory. Preserve any existing files. Inspect the repository before choosing
 the stack; if it is empty and I have not chosen the stack, give me three options
-with one recommendation and wait for my choice before scaffolding it.
+with one recommendation. Choose within my explicit delegation; otherwise ask
+for the required owner choice. Do not reopen choices I already made.
 
 Define the agreed behavior and check commands before feature implementation.
 Ignore .factory/, establish a clean Git baseline, then initialize Safe Engine.
@@ -125,6 +132,21 @@ evidence freshness and continue from the next valid step. Do not replace the
 task record, reinitialize the run or treat old passing evidence as current.
 Show me the saved progress and remaining work before continuing.
 ```
+
+## Improve the factory during a build
+
+Stay in the app-building chat and explain the behavior you want corrected:
+
+```text
+Read C:/work/ai-software-factory/.agents/skills/improve-factory/SKILL.md.
+The factory did [what happened]. It should do [expected behavior].
+Preserve this app's progress. Checkpoint it, repair the factory in isolation,
+get an independent assessment, and resume through the supported workflow.
+```
+
+Replace the path if the bundle lives elsewhere. If the host discovers the skill, `$improve-factory` is the shorter invocation; explicit file loading remains the portable entry point. This adds no Claude-native slash command or global installation.
+
+The selected policy holds affected app work during repair; only demonstrably independent work may continue. The parent keeps app ownership and passes a durable context packet to delegates. Exact bundle versions and evidence matter: incompatible changes may require a new reviewed run in a fresh app worktree, preserving the old run. The [live-session procedure](../.agents/skills/improve-factory/references/live-session.md) explains actual 0.1.0 recovery limits. No automatic state migration or uninterrupted mid-run upgrade is claimed.
 
 ## Making invocation permanent is a separate choice
 

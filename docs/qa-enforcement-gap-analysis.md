@@ -1,5 +1,7 @@
 # QA entry point and enforcement gaps
 
+**Historical evidence:** original finite allowances and retry-exhaustion proposals below describe their dated baseline. Seif superseded artificial credits, repair/retry ceilings and session deadlines on 2 October 2026. Current operation follows the [continuous session contract](../.agents/skills/safe-engine/references/session-contract.md); historical results are preserved, not re-certified.
+
 Research and design, 30 September 2026. This document compares Seif's existing procedures with published factory patterns and proposes the next capabilities to build. It does not install a skill, hooks, a runner, or GitHub protections.
 
 For selected directions and pending choices, use the [Safe Engine design decisions](safe-engine-decisions.md), recorded on 1 October 2026. This document retains the earlier research; provisional skill names below are not approved names.

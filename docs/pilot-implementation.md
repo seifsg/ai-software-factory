@@ -6,7 +6,7 @@ The first working version runs Seif's existing methods inside a local Codex sess
 
 Before this implementation, the repository contained documentation and a static preview. The reusable method is in Seif's source repository at `449e1110104b6ac27aed3a940c5ed6d1bf671f11`. `analyze-start` defines code-grounded analysis, callers, ASCII diagrams, and no coding. `get-ready-to-code` defines five planning artifacts followed by the per-todo 0–4 inspection loop. `deep-review`, `change-guard`, and `compliance-check` supply the complementary review lenses. There was no runtime connecting them. The completed implementation's evidence is in [pilot verification](pilot-verification.md).
 
-The pilot retains these five entrypoints and adds `safe-engine`. It adapts only the recorded user decisions: project-neutral language, bounded corrections, unknowns that block affected decisions, authorized exceptions, measured performance, batched tests, and fresh review. The selected eventual split of planning and execution into separate skills remains packaging work; the controller already separates those phases and preserves the original procedure.
+The pilot retains these five entrypoints and adds `safe-engine`. It adapts only the recorded user decisions: project-neutral language, supported in-scope corrections, unknowns that block affected decisions, authorized exceptions, measured performance, batched tests, and fresh review. The selected eventual split of planning and execution into separate skills remains packaging work; the controller already separates those phases and preserves the original procedure.
 
 ```text
 Codex + safe-engine skill
@@ -30,9 +30,9 @@ Keep code in a small `safe_engine` Python package, with project input discovery,
 
 1. Import and adapt five source procedures, preserving the user's analysis and execution loop; add one coordinating entry skill.
 2. Implement project discovery, JSON profile/task validation, atomic checkpoints, and input fingerprints.
-3. Implement analysis/plan/build/check/improve/review/handoff transitions, cancellation, and a caller-supplied repair budget.
+3. Implement analysis/plan/build/check/improve/review/handoff transitions, cancellation, and diagnostic correction history without a numerical ceiling.
 4. Execute real commands as batches; capture outcomes, reject changed inputs, and run fresh Codex review in read-only mode.
-5. Exercise successful delivery plus failed checks, stale evidence, skipped phases, exhausted repairs, and cancelled runs.
+5. Exercise successful delivery plus failed checks, stale evidence, skipped phases, continuous corrections beyond former caps, and cancelled runs.
 6. Demonstrate a feature on a disposable Git worktree with unit and real browser checks, then independently review the pilot.
 7. Publish accurate setup, scope, invocation, provenance, demonstrated results, and remaining gaps; update the preview's status.
 
@@ -42,9 +42,9 @@ Every implementation todo follows context gathering, change-site analysis, appli
 
 - A user can discover a project, initialize a task, follow the original methods, run a QA batch, record an improvement pass, obtain fresh review, and produce a readable handoff.
 - Source edits during analysis/planning are rejected at the relevant transition.
-- Failed commands, missing artifacts, incomplete criteria, stale inputs, missing review, and exhausted repairs prevent a ready handoff.
+- Failed commands, missing artifacts, incomplete criteria, stale inputs, and missing review prevent a ready handoff.
 - A resumed process reads the saved task and next stage; concurrent mutation is refused.
 - At least one real browser journey is verified in a disposable application, with actual tool results distinguished from fixture assertions.
 - No runtime file, secret, installed dependency tree, or disposable worktree is committed.
 
-The pilot demonstration uses explicit finite test budgets and timeout values as fixture configuration, not permanent defaults for customer projects. The wider factory still needs protected external acceptance, host hooks, more scenario adapters, the rest of the specialist library, and demonstrated portability.
+The 1 October pilot demonstration used finite repair settings, retained as historical evidence. Seif superseded numerical exhaustion gates on 2 October; current runs are continuous, while individual command timeouts still detect hung processes. The wider factory still needs protected external acceptance, host hooks, more scenario adapters, the rest of the specialist library, and demonstrated portability.

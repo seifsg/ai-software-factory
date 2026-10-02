@@ -62,9 +62,9 @@ Request ----------------> [1] Enter / resume
                              |
                          [5] Build <---------------------+
                              |                          |
-                         [6] Verify -- failed check ----+ bounded
+                         [6] Verify -- failed check ----+ scoped
                              |                            repair
-                    [11] Prepare draft PR                 budget
+                    [11] Prepare draft PR                 history
                              |
                      [10] Fresh review
                              |
@@ -92,7 +92,7 @@ Request ----------------> [1] Enter / resume
 
 SAFE ENGINE CODE SUPPORTS EVERY STAGE
   Controller | checkpoints | shared gates | permission checks
-  Evidence records | correction budget | cancellation / recovery
+  Evidence records | correction history | cancellation / recovery
         |                                  |
   Host hook adapters             Independent repository checks
 
@@ -135,7 +135,7 @@ The diagram shows the normal draft-PR delivery path. Stages can return a blocker
 
 - [x] Implement the local controller, validated task record, checkpoints, cancellation, and resume; wider crash recovery remains to exercise.
 - [x] Implement discovery that produces a reviewable and correctable project profile.
-- [x] Implement local shared gates, evidence freshness according to G6, and an explicit run-wide correction budget.
+- [x] Implement local shared gates, evidence freshness according to G6, and continuous supported corrections (Seif superseded the initial finite-budget selection on 2 October).
 - [ ] Connect the chosen host's hooks and verify their real coverage and failure behavior.
 - [ ] Implement scenario adapters, baseline comparison, and reproducible project setup where applicable.
 - [ ] Protect acceptance criteria and action authority; resolve the private-repository feature prerequisite for merge enforcement.
@@ -143,7 +143,7 @@ The diagram shows the normal draft-PR delivery path. Stages can return a blocker
 ### Prove the factory works
 
 - [ ] Complete one real task through a checked draft PR and human handoff.
-- [ ] Detect a missing requirement, a regression, stale evidence, a failed critical check, and exhausted retries.
+- [ ] Detect a missing requirement, a regression, stale evidence, a failed critical check, cancellation and rejected unchanged rerolls.
 - [ ] Interrupt, resume, and cancel without losing requirements or duplicating external actions.
 - [ ] Verify unknown applicability, exception authority, misleading retrieved instructions, and independent review after reviewer repairs.
 - [ ] Confirm that a good change can pass review without unnecessary edits.

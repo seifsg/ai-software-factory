@@ -69,7 +69,7 @@ These communications belong to the explicitly invoked PR workflow. They do not a
 
 ## 6. Mandatory separate-instance PR review
 
-Immediately launch [how-to-review-a-pr](../how-to-review-a-pr/SKILL.md) on a **separate instance** after drafting. This is an explicit instruction to delegate that review. Pass the PR URL, exact head/base, original request, approved decisions, project bindings, gate evidence and limits. Do not feed it a desired verdict. The builder's self-check and the controller's local read-only review do **not** satisfy this step.
+Immediately launch [how-to-review-a-pr](../how-to-review-a-pr/SKILL.md) on a **separate instance** after drafting. This is an explicit instruction to delegate that review. Pass the PR URL, exact head/base, original request, approved decisions, project bindings, gate evidence, diagnostic progress and actual constraints. Do not feed it a desired verdict. The builder's self-check and the controller's local read-only review do **not** satisfy this step.
 
 If creation/handoff has a blocker, report it and still run independent inspection that is possible; the overall PR workflow remains incomplete. If independent execution is unavailable, record BLOCK, never substitute your own approval.
 
