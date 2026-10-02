@@ -89,7 +89,8 @@ class WorkflowTests(unittest.TestCase):
             "    marker.write_text('failed')\n"
             "    raise SystemExit(1)\n", encoding="utf-8")
         self.git("add", "acceptance.py")
-        self.git("commit", "-qm", "Configure initially failing check")
+        self.git("-c", "user.name=Safe Engine Test", "-c", "user.email=test@example.invalid",
+                 "commit", "-qm", "Configure initially failing check")
         self.start(budget=1)
         for kind in ("analysis", "plan", "batch"):
             self.artifact(kind)
@@ -111,7 +112,8 @@ class WorkflowTests(unittest.TestCase):
             "raise SystemExit(1 if Path('.factory/fail-check').exists() else 0)\n",
             encoding="utf-8")
         self.git("add", "acceptance.py")
-        self.git("commit", "-qm", "Configure runtime failure scenario")
+        self.git("-c", "user.name=Safe Engine Test", "-c", "user.email=test@example.invalid",
+                 "commit", "-qm", "Configure runtime failure scenario")
         self.start(budget=0)
         for kind in ("analysis", "plan", "batch"):
             self.artifact(kind)
