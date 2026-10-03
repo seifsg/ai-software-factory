@@ -4,7 +4,20 @@
 
 This private repository owns Seif's reusable software-factory skills. Read `README.md` and `.agents/skills/README.md` before changing the system. Follow the user's current instructions and preserve existing skill behavior unless the requested change requires altering it.
 
+## Quality standard
+
+Our motto: **give 100% minimum; aim to give more through the quality of the work.**
+
+- Put extra effort into correctness, clarity, polish, usability, and appropriate verification.
+- Review and refine the output before calling it finished. Iterate further when doing so materially improves the result.
+- Overdeliver through useful improvements that are needed within the agreed scope. Preserve the user's intent and avoid adding unsolicited deliverables or unrelated features.
+- Judge success by the quality and usefulness of the outcome, rather than the amount of material produced.
+
 ## Skill development
+
+The engine is named **Safe Engine**. Read `docs/safe-engine-decisions.md` before designing or changing the factory. Preserve Seif's selected options; keep pending choices unresolved. For new improvement or design decisions, compare three credible alternatives and recommend exactly one with reasons. Follow the canonical decision-ownership policy and session contract: Seif may explicitly delegate in-scope choices for a run; owner-reserved choices stay pending. Recommendations alone are not authority. Preserve selected names; descriptive working names may be chosen within explicit delegation.
+
+Seif is the primary author of the skills. Help him express his procedures, compare relevant examples, identify gaps or contradictions, refine wording, structure files, and validate behavior. Preserve his intent and voice. Do not independently draft most of the skill library or create placeholder skills. New procedures and substantive rewrites should develop from Seif's writing or an explicit request for a particular draft. Examples from other factories are inspiration, not approved names or procedures. Skill counts, boundaries, and build plans remain proposals until selected.
 
 - Use the available Skill Creator workflow when creating or substantially updating a skill.
 - Read an imported skill and its relevant resources before adapting it. Record provenance where known; do not invent authorship or copy rights.
@@ -17,12 +30,23 @@ This private repository owns Seif's reusable software-factory skills. Read `READ
 
 ## Connected workflows
 
+### Mandatory PR creation and review
+
+For every factory-managed project and every PR, read and execute [.agents/skills/how-to-make-a-pr/SKILL.md](.agents/skills/how-to-make-a-pr/SKILL.md), then [.agents/skills/how-to-review-a-pr/SKILL.md](.agents/skills/how-to-review-a-pr/SKILL.md) on a separate instance. This also applies to documentation, skills, existing-PR corrections and updates; no size- or project-based bypass. The paired skill explicitly authorizes delegation for that review. Preserve the full procedure, not only its formatting or five review lenses.
+
+Keep the task links/status, truthful human attribution, Why-first visual body, adjustment history, human handoff, supported in-scope fixes, actual checks and detailed review comment. Use real project bindings for tracker, owners, notifications, stack and branches; missing required settings/access are blockers. Read [this repository's bindings](docs/pr-workflow.md). Never invent or silently omit them.
+
+The local controller's read-only candidate review and `handoff` do not constitute PR creation or full PR review. Every changed PR candidate needs a fresh separate assessment. Leave PRs draft; the human owns ready/merge/release. These instructions do not claim host-hook or protected remote enforcement.
+
+Keep `preview/index.html`, our plain-language visual introduction, accurate as the factory changes. Explain outcomes before implementation details. Clearly distinguish skills available in the source collection, skills imported here, and workflows demonstrated in a real run.
+
 When connecting skills, make the handoff explicit: inputs, output artifact, acceptance condition, failure state, and next responsible step. Keep task state durable where the target environment supports it. Do not mark a ticket complete when work only reached a review or deployment handoff.
 
-For unattended workflows, define retry, time, and cost limits appropriate to the task. Avoid duplicate actions on retries. Keep independent acceptance checks outside the builder's unrestricted control when their integrity matters.
+For unattended workflows, follow the [session contract](.agents/skills/safe-engine/references/session-contract.md) to record delegated authority, completion boundaries, diagnostic progress and actual constraints. Continue authorized work without artificial credits, repair allowances, fixed retry limits or session deadlines; honor explicit owner stops. Avoid duplicate actions on retries. Keep independent acceptance checks outside the builder's unrestricted control when their integrity matters.
 
 ## Verification and changes
 
+- For application development, batch unit and E2E runs after substantial planned work; do not run tests after every edit or start test watchers by default. Before pushing a feature, inspect worthwhile in-scope design, cleanup, reuse, performance, security, and agent-navigability improvements, then verify the affected result. Read `docs/safe-engine-fast-delivery.md`; its broader option recommendations remain unselected. The 2 October owner-selected cadence supports completed feature feedback and comprehensive version checkpoints; see the canonical usage guide. User updates should be concise and outcome-focused, with complete method evidence in durable linked artifacts.
 - Validate skill frontmatter, names, references, and any executable helpers.
 - Test observable behavior when warranted. Report checks not run and their limits honestly.
 - Keep changes focused and preserve unrelated work. Use a branch for substantive changes to an established repository.
