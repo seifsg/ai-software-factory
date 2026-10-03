@@ -5,6 +5,12 @@ description: "Create, update, or retrospectively correct every factory-managed p
 
 # How to make a PR
 
+## Small-change mode — select before the full chain
+
+For a bounded small patch, execute both PR procedures using [small-change](../small-change/SKILL.md). Its six routines replace full analysis, three alternatives, five planning artifacts, separate deep-review reports and broad test batteries. Keep exact candidate identity, real project bindings, task/owner constraints, attribution, adjustment history and draft status. A concise body/comment can carry the requested result, affected scope, actual focused checks, findings and limits; do not manufacture empty tables.
+
+Inspect the whole PR's metadata and previous assessment boundary, but review a follow-up delta plus its affected consumers. An unresolved earlier full-PR finding stays unresolved. State whether the verdict covers only the delta or the whole PR. Reuse valid exact-candidate focused evidence; a push alone is not grounds to rerun it. One separate instance may perform the final small-change and PR assessment together. If code changes afterward, reassess the affected delta and checks. Neither procedure automatically adds a full suite, duplicate local review, improvement loop or fresh-final gate. This is the owner's 3 October scope correction, not permission to bypass a real protected gate or human handoff. Read the remaining procedure for applicable delivery mechanics without re-executing superseded full-method stages.
+
 Seif's mandatory PR procedure. Execute it for **every factory-managed PR**, including documentation, skills, fixes, and later updates. Do not replace it with a short summary, a template alone, or the local controller's review. A missing dependency blocks completion; it never makes the procedure optional.
 
 Read the target project's instructions, PR template and recorded delivery settings. Use [project bindings](references/project-bindings.md) to resolve repository-specific facts without importing another company's people, accounts or tools. Read the entire procedure before acting. Preserve evidence of each completed step and every blocker in the PR body and review comment. A skill describes required behavior; it is not a host hook or protected GitHub gate.
@@ -69,7 +75,7 @@ These communications belong to the explicitly invoked PR workflow. They do not a
 
 ## 6. Mandatory separate-instance PR review
 
-Immediately launch [how-to-review-a-pr](../how-to-review-a-pr/SKILL.md) on a **separate instance** after drafting. This is an explicit instruction to delegate that review. Pass the PR URL, exact head/base, original request, approved decisions, project bindings, gate evidence, diagnostic progress and actual constraints. Do not feed it a desired verdict. The builder's self-check and the controller's local read-only review do **not** satisfy this step.
+Immediately launch [how-to-review-a-pr](../how-to-review-a-pr/SKILL.md) on a **separate instance** after drafting. This is an explicit instruction to delegate that review. Pass the PR URL, exact head/base, original request, approved decisions, project bindings, gate evidence, diagnostic progress and actual constraints. Do not feed it a desired verdict. The builder's self-check does **not** satisfy this step. In version mode the controller's local review is also separate; small-change mode may combine the final independent assessment with this PR review on the same head.
 
 If creation/handoff has a blocker, report it and still run independent inspection that is possible; the overall PR workflow remains incomplete. If independent execution is unavailable, record BLOCK, never substitute your own approval.
 

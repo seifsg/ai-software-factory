@@ -5,6 +5,12 @@ description: "Execute Seif's complete autonomous review of every factory-managed
 
 # How to review a PR
 
+## Small-change mode — select before the full chain
+
+For a bounded small patch, execute both PR procedures using [small-change](../small-change/SKILL.md). Its six routines replace full analysis, three alternatives, five planning artifacts, separate deep-review reports and broad test batteries. Keep exact candidate identity, real project bindings, task/owner constraints, attribution, adjustment history and draft status. A concise body/comment can carry the requested result, affected scope, actual focused checks, findings and limits; do not manufacture empty tables.
+
+Inspect the whole PR's metadata and previous assessment boundary, but review a follow-up delta plus its affected consumers. An unresolved earlier full-PR finding stays unresolved. State whether the verdict covers only the delta or the whole PR. Reuse valid exact-candidate focused evidence; a push alone is not grounds to rerun it. One separate instance may perform the final small-change and PR assessment together. If code changes afterward, reassess the affected delta and checks. Neither procedure automatically adds a full suite, duplicate local review, improvement loop or fresh-final gate. This is the owner's 3 October scope correction, not permission to bypass a real protected gate or human handoff. Read the remaining procedure for applicable delivery mechanics without re-executing superseded full-method stages.
+
 Mandatory paired procedure for [how-to-make-a-pr](../how-to-make-a-pr/SKILL.md), on **a separate instance from the builder**. Applies to every project and every factory-managed PR, including docs and skills. This is the factory's own PR self-review, not a claim of human approval or a generic review of strangers' PRs. The local controller's review does not replace it.
 
 Read the entire chain and its linked references. Resolve the real stack, commands, user journeys, locales and [project bindings](../how-to-make-a-pr/references/project-bindings.md); never assume a named product, npm stack, language, reviewer, tracker or chat service. Unsupported access or evidence is BLOCK, not PASS.

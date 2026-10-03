@@ -1,5 +1,7 @@
 # AI Software Factory
 
+Small direct fixes use [Small Change](.agents/skills/small-change/SKILL.md): brief analysis and planning → careful code → affected checks → one narrow review → concise handoff. Broader regression is offered when useful and runs only when requested or truly required. Larger app/version delivery retains the full workflow below. This optional agent method preserves pinned controller runs and their evidence limits.
+
 Private home for Seif's software-delivery skills and **Safe Engine 0.1.0**, the first local factory pilot.
 
 ## Goal
@@ -40,7 +42,7 @@ Read [pilot setup and usage](docs/pilot-usage.md), then ask Codex in this reposi
 
 > Use $safe-engine to implement [feature] in [absolute target project path].
 
-This retains Seif's analysis charts, planning critique, per-todo inspection, batched verification, and improvement pass. The [session contract](.agents/skills/safe-engine/references/session-contract.md) preserves delegated autonomy and continuous progress to the verified handoff without repeat questions. New applications use [research-market](.agents/skills/research-market/SKILL.md) between their original and revised plans; evidence includes current competitors and visual experiences. These are agent instructions, not a background service or a claim of a demonstrated market outcome. The [skill index](.agents/skills/README.md) lists ten packaged entrypoints; [provenance](docs/skill-provenance.md) records the seven adapted sources. Seif continues to lead authorship of the wider library.
+This retains Seif's analysis charts, planning critique, per-todo inspection, batched verification, and improvement pass. The [session contract](.agents/skills/safe-engine/references/session-contract.md) preserves delegated autonomy and continuous progress to the verified handoff without repeat questions. New applications use [research-market](.agents/skills/research-market/SKILL.md) between their original and revised plans; evidence includes current competitors and visual experiences. These are agent instructions, not a background service or a claim of a demonstrated market outcome. The [skill index](.agents/skills/README.md) lists eleven packaged entrypoints; [provenance](docs/skill-provenance.md) records the seven adapted sources. Seif continues to lead authorship of the wider library.
 
 When the factory itself needs correction, use [improve-factory](.agents/skills/improve-factory/SKILL.md), including during an app build. It preserves the app checkpoint, coordinates an isolated repair and independent assessment, then checks whether the current run can adopt it. This is an agent-operated procedure; automatic hooks, bundle migration, and uninterrupted upgrades are not implemented.
 

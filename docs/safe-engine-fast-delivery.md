@@ -1,5 +1,9 @@
 # Safe Engine fast feature delivery
 
+## Small direct changes
+
+Seif selected [small-change](../.agents/skills/small-change/SKILL.md) on 3 October: six lightweight routines, careful implementation, focused checks and one narrow independent assessment. This route precedes the full version workflow described below. No automatic broad regression, full-suite reruns or five-artifact planning for a small fix. Accumulated changes may prompt an offer of affected-area validation; execution waits for the user. It is an agent-operated scoped handoff, not a new controller command or whole-version acceptance. Existing pinned runs retain their bundle/state; see the method for explicit local trials and evidence limits.
+
 Seif's direction, recorded 1 October 2026: **build substantial parts of a feature, batch verification at meaningful boundaries, improve the completed design before pushing, then verify the improvements. Optimize the code for reliable future work by AI agents.** These requirements amend the [expanded capability plan](safe-engine-expanded-scope.md). The later [local pilot](pilot-verification.md) implements the first delivery loop. On 2 October Seif selected completed feature batches with affected feedback, followed by comprehensive version QA and quieter updates. Broader choices below remain proposals.
 
 The remaining choices below concern batch boundaries, improvement scope, agent-oriented structure, and an optional control. Each has three alternatives and one recommendation. Names, control design, numerical limits, and skill packaging remain Seif's decisions.

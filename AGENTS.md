@@ -1,5 +1,9 @@
 # AI Software Factory — repository rules
 
+## Scope selection — owner correction, 3 October 2026
+
+Use [small-change](.agents/skills/small-change/SKILL.md) for small direct fixes. Its six lightweight routines override the full analysis/planning/review and repeated QA requirements below for that scope, including both PR procedures. Correct code, focused affected-behavior verification and a narrow independent assessment remain required. Do not automatically run broad regression or full suites; offer an affected-area batch when cumulative changes justify it and wait for the user's request before running it. Preserve actual protected gates and honest evidence. Version work keeps the full procedure. This is Seif's explicit selected change, not a new exception to request repeatedly.
+
 ## Scope
 
 This private repository owns Seif's reusable software-factory skills. Read `README.md` and `.agents/skills/README.md` before changing the system. Follow the user's current instructions and preserve existing skill behavior unless the requested change requires altering it.

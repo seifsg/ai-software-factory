@@ -6,6 +6,8 @@ description: "Verify a completed change against its original request, accepted p
 
 # Compliance Check — did we build the right thing? Prove it.
 
+**Small-change routing takes precedence.** For a bounded direct fix, use the corresponding lightweight routine in [small-change](../small-change/SKILL.md), then return to its compact handoff. The full procedure below applies to version work; do not execute both versions or escalate a small fix into full QA.
+
 Did we build what was actually asked? Does it follow our rules? Prove it against the source of
 truth, not against what you'd have preferred to build.
 

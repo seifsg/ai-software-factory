@@ -1,5 +1,7 @@
 # Session authority and continuous progress
 
+For bounded direct changes, [small-change](../../small-change/SKILL.md) is the selected lightweight delivery method. Autonomy does not authorize automatic broad regression or full-version revalidation for each fix. Reuse session answers, keep scoped evidence and preserve the owner's choice of any later broader checkpoint.
+
 Read at intake, resume and delegation. This is the canonical operating procedure for the [decision ownership policy](../../../../docs/safe-engine-decisions.md#decision-ownership). Record it once in an ignored `.factory/session-contract.md` (or the existing equivalent), link it from stage artifacts, and carry it into every handoff. Supplement saved controller records; never rewrite their fixed task/profile or accepted evidence.
 
 ## Establish the contract

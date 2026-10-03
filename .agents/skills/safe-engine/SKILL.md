@@ -5,6 +5,12 @@ description: "Run or resume a Safe Engine app-development task using Seif's anal
 
 # Safe Engine
 
+## Choose the delivery scope first
+
+For a bounded direct fix or successive small adjustments, read and execute [small-change](../small-change/SKILL.md) as the complete selected method. Route before controller initialization, full-routine loading or version gates. Natural-language requests are enough; do not require the user to choose a mode. Its six light routines replace the full stages below for that scope. They produce a focused local handoff, not controller-certified full-version acceptance. Existing runs, evidence and bundle selections follow its continuity rules.
+
+New apps and substantial features retain the version workflow below. Do not run a broader test batch for a small change without the owner's request or an actual non-waivable requirement. Both PR procedures retain the selected scope.
+
 This is the small coordinator for the local pilot. Seif's procedures own analysis, planning, implementation, and review. Read [pilot usage](../../../docs/pilot-usage.md) for the real CLI, profile, limitations, and recovery. Resolve the bundle root from this skill's location; do not assume the target project contains the controller.
 
 ## Start or resume
@@ -39,6 +45,6 @@ Keep artifacts in `.factory/` or another excluded local location. Read command l
 
 When the user reports a problem with the factory during this run, use [improve-factory](../improve-factory/SKILL.md). Preserve the app goal and checkpoint before any factory mutation; follow its isolation, independent-assessment and compatibility rules. Return here at the supported resume step after maintenance. Do not recursively start another delivery run or treat a skill reload as fresh QA.
 
-The paired PR procedures are mandatory for all factory-managed PRs, including documentation, skills and subsequent updates. Read them before preparing a PR, even outside an active controller run. Preserve their original ordered chain and detailed report. Use actual project bindings and session decision authority, keep owner-reserved decisions with Seif, and leave the PR draft. A `ready` local phase is not a completed or accepted PR workflow.
+The paired PR procedures are mandatory for all factory-managed PRs, including documentation, skills and subsequent updates. Read them before preparing a PR, even outside an active controller run. Preserve their selected full or lightweight ordered chain and its truthful scoped report. Use actual project bindings and session decision authority, keep owner-reserved decisions with Seif, and leave the PR draft. A `ready` local phase is not a completed or accepted PR workflow.
 
-The pilot supports agent-planned coherent feature batches inside build, followed by a full version gate and fresh review. It does not automatically select dependencies or schedule arbitrary projects. Diagnostic correction counts do not stop continued work. Each meaningful correction still needs the complete method and fresh acceptance. It uses the current Codex session as its builder and a fresh read-only CLI process as reviewer. It is not a background app-building service, host hook, or tamper-resistant security boundary. Do not claim production-level autonomous UX quality from this pilot demonstration.
+The pilot supports agent-planned coherent feature batches inside build, followed by a full version gate and fresh review. It does not automatically select dependencies or schedule arbitrary projects. Diagnostic correction counts do not stop continued work. Version-cycle corrections need their selected method and fresh acceptance. Bounded follow-up fixes use the small-change route above and never claim refreshed full-version acceptance. It uses the current Codex session as its builder and a fresh read-only CLI process as reviewer. It is not a background app-building service, host hook, or tamper-resistant security boundary. Do not claim production-level autonomous UX quality from this pilot demonstration.

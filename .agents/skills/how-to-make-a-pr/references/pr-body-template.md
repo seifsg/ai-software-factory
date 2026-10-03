@@ -1,5 +1,7 @@
 # PR body template
 
+For selected small-change mode, use a concise request/result, affected scope, actual focused checks, review limits, adjustment history and human handoff. The full version template below is optional in that mode; do not fill empty sections merely to reproduce it. Keep required project fields and truthful bindings.
+
 Use within the target repository's template. Fill every applicable section with actual evidence. Explain unsupported applicability; never leave placeholder claims. Keep attribution first and Why immediately after it. Use the project's plain professional heading style; decorative emojis are not required.
 
 ````markdown

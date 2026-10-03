@@ -1,5 +1,7 @@
 # Preserve Seif's complete working method
 
+Select scope first. A bounded direct fix uses the complete [small-change method](../../small-change/SKILL.md) and its single compact record instead of the full-method table below. Carry request, decisions, exact delta, affected consumers, checks, reviewer and prior full-version status. A small handoff does not refresh a whole-version verdict.
+
 Use on initial load, after context loss, on resume and when handing work to another instance. This table routes to canonical instructions; it never replaces reading them. No file is imported merely to reserve a future skill name.
 
 | When | Full instruction to load | Evidence carried forward |
