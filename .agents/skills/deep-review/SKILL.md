@@ -34,6 +34,8 @@ Ruthless code review. No mercy, no shortcuts. Find every damn problem.
 - Missing validation on inputs (DTOs, params, query strings)
 - Incomplete error handling (catch blocks that swallow errors)
 - Missing logging for debugging critical paths
+- For app work, apply [app diagnostics](../safe-engine/references/app-diagnostics.md): inspect the coverage map and real event sites, safe context/correlation, bounded retention, logger failures and owner discovery. Missing changed-journey diagnostics require the scoped correction; report wider app gaps without inventing a full-app retrofit.
+- Apply [app efficiency](../safe-engine/references/app-efficiency.md) for affected app operations: assess early cost/reuse decisions, actual invocation/resource evidence and cache validity/ownership/bounds. Necessary cost can remain; a cache's existence alone does not demonstrate optimization.
 - Forgotten TODO/FIXME items that should be addressed now
 
 #### 3. Anti-Patterns
@@ -55,7 +57,7 @@ Ruthless code review. No mercy, no shortcuts. Find every damn problem.
 - Heavy operations in hot paths
 
 #### 5. Stupid Mistakes
-- Console.log left in production code
+- Ad-hoc debug output left in production code; preserve intentional structured diagnostics required by the app's logging contract
 - Commented-out code that should be removed
 - Dead code or unreachable branches
 - Wrong file/module imported

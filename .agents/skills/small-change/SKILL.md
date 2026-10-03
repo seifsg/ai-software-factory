@@ -23,6 +23,10 @@ Run these in order, keeping one short change record rather than six reports. Hea
 
 Read the changed behavior's real implementation and trace the relevant callers/events/bindings. State the likely cause and supporting evidence; label uncertain causes. One short flow is enough if it clarifies the defect. No mandatory architecture chart, repository-wide reading, market research or three-alternative exercise for an obvious fix. Investigate a real unknown before coding; a file name or screenshot alone does not establish the cause.
 
+For app changes, read [app diagnostics](../safe-engine/references/app-diagnostics.md), inspect existing facilities/event sites and keep its compact app-wide coverage inventory in this same record. Automatically include an absent minimum shared module and missing events for this journey/affected consumers in the small patch; implement and check them through the remaining routines. Record wider gaps/unknowns honestly without turning this fix into a full instrumentation sweep or QA cycle.
+
+Apply [app efficiency](../safe-engine/references/app-efficiency.md) to the affected path: identify material repeated work/resource lifetime, choose useful safe reuse and record the smallest relevant evidence. Carry applicable cache validity, bounds, cancellation/ownership and cold/warm checks into preparation, code, this narrow review and handoff. A copy/input change with no resource impact needs only that supported conclusion; no automatic benchmark, new cache or app-wide optimization sweep.
+
 ### 2. Prepare lightly
 
 State the files/behavior to change, the smallest complete solution and the exact verification needed. Critique that choice briefly. Preserve earlier decisions; do not invent alternatives to a user-selected repair. Reuse existing relevant checks where they exercise the actual failure. This replaces the five full planning artifacts.
@@ -34,6 +38,8 @@ Prepare context → inspect change site → implement → inspect the diff and u
 ### 4. Review lightly
 
 Use one narrow independent assessment of the final small batch, covering the changed lines plus enough surrounding code/consumers to judge correctness, relevant security/resource risks and the requested user interaction. Return actual findings and a brief verdict, not separate full security/performance/journey reports. No whole-project audit, alternative-design exercise or unrelated fixes. A clean result needs no edits.
+
+Include the affected diagnostics coverage and module contract in that assessment when app code changes. Use the reference's focused evidence for new/changed logging, and include log discovery plus remaining coverage gaps in the concise handoff.
 
 When the host supports delegation, prefer an available fast/light model for this bounded analysis or review as authorized by Seif. Discover the available model and tool capabilities, pass the original request, exact diff/base, relevant source paths, known dependencies and raw check evidence; do not prescribe its verdict. Keep implementation quality and the main coding configuration intact. If lightweight routing is unavailable, inherit the current model and continue with narrow scope; do not install a provider, buy access, or block merely because a preferred model is missing. Record the actual model when exposed. If the case exceeds its capability, use a capable reviewer for that affected scope. No automatic multi-agent fleet.
 
