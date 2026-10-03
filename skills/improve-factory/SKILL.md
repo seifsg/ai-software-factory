@@ -1,25 +1,53 @@
 ---
 name: improve-factory
-description: "Improve or repair your Safe Engine software factory from feedback, including during an app build. Loads the complete versioned factory from its private GitHub repository, preserves app progress, and coordinates isolated repair and independent review. Ordinary app defects stay in the app workflow."
+description: "Load the complete Safe Engine factory from private GitHub to repair its skills or workflow. Preserve active app progress and use isolated repair and independent review. Ordinary app defects stay in app work."
 ---
 
-# Improve Factory — portable entry
+# Improve Factory
 
-This installable entry loads the canonical `improve-factory` procedure and its complete dependencies. It does not replace or summarize Seif's methods. Source: `https://github.com/seifsg/ai-software-factory`; current distribution branch: `main`. The repository is private: the current agent environment needs authorized Git access. Never request tokens in chat or make the repository public.
+Load the complete factory, then use its canonical Improve Factory method. This installed entry does not replace Seif's methods.
 
-## Resolve the factory before acting
+Source: `https://github.com/seifsg/ai-software-factory`. Distribution branch: `main`. The repo is private. Use the environment's authorized Git access. Do not ask for tokens in chat or make the repo public.
 
-1. Preserve the user's report and original app goal. Check for an active app run, checkpoint or session contract **before fetching a different factory version**. If one exists, use its recorded absolute bundle path and exact revision/dirty state. If that identity cannot be established, inspect the existing evidence and block dependent changes; do not substitute the newest branch.
-2. Locate `scripts/resolve_bundle.py` relative to this installed skill file. Run it with the available Python 3 interpreter (`python3`, `python`, or `py -3` on Windows). Use an argument array or proper shell quoting for paths with spaces.
-   - Existing run or explicitly supplied checkout: `python3 <skill-dir>/scripts/resolve_bundle.py --bundle <absolute-factory-root>`.
-   - New maintenance case with no active run: `python3 <skill-dir>/scripts/resolve_bundle.py`. This resolves the distribution branch once, obtains a complete detached checkout in the user's `.safe-engine/bundles/<commit>` cache, and returns the exact identity.
-   - User-specified pinned revision: add `--ref <full-commit-sha>` for a new case. A pin is not permission to change an active run's bundle.
-3. Read the JSON result, verify it matches the intended run, and record its `bundle_root`, `revision`, dirty state and entrypoint in the maintenance record. For a dirty active checkout, capture the actual diff/untracked input hashes under the canonical checkpoint procedure; the commit alone is insufficient. Current bundles use `safe_engine/bundle-inputs.json` to guard required guidance; older bundles retain their legacy completeness inspection. Preserve the installed launcher's separate identity and declare it as a profile input if used in acceptance. The helper validates repository identity and required files; it does not establish app compatibility, test code, or grant permissions.
-4. Open and read the **entire returned canonical `entrypoint`**, then its applicable references and linked routines. Continue that procedure once. Never call this launcher recursively, install the canonical folder alone, or treat loading this entry as successful maintenance.
+## Find the right factory version
 
-Keep the resolved cache checkout unchanged while any app uses it. Repair in a separate worktree from that revision; follow the canonical compatibility and evidence rules before adopting any candidate. Never pull/reset an active bundle or silently switch global settings. Reuse the recorded bundle for this case on subsequent turns, even if the distribution branch advances.
+Preserve the report and original app goal. Check for an active app run, checkpoint, or session contract before fetching another version.
 
-If Git, Python, private-repository access, full skill files, or required independent review are unavailable, report the exact missing prerequisite and preserve the app state. A cloud agent needs its own authorized checkout and tools; a local installation does not install into other machines or cloud sessions. The helper only resolves files; it does not install hooks, select models, push, merge, notify or launch an app.
+If an app run exists, use its recorded absolute bundle path and exact revision/dirty state. Inspect saved evidence if needed. If identity remains unknown, preserve the run and stop dependent changes. Do not substitute the newest branch.
+
+Locate `scripts/resolve_bundle.py` relative to this installed file. Use the available Python 3 interpreter: `python3`, `python`, or `py -3` on Windows. Quote paths or use an argument array.
+
+For an existing run or supplied checkout:
+
+```text
+python3 <skill-dir>/scripts/resolve_bundle.py --bundle <absolute-factory-root>
+```
+
+For a new maintenance case without an active run:
+
+```text
+python3 <skill-dir>/scripts/resolve_bundle.py
+```
+
+The helper resolves the distribution branch once and obtains a complete detached checkout in `~/.safe-engine/bundles/<commit>`. For a new case, add `--ref <full-commit-sha>` when the user specifies a pin. A pin does not authorize changing an active run's bundle.
+
+## Read the result and use the method
+
+Read the JSON. Verify it identifies the intended run. Record `bundle_root`, `revision`, dirty state, and entrypoint in the maintenance record.
+
+For a dirty active checkout, capture actual diff and untracked-input hashes through the canonical checkpoint procedure. The commit alone is insufficient. Current bundles use `safe_engine/bundle-inputs.json` to check required guidance; older bundles keep their legacy completeness inspection.
+
+Record the installed launcher's separate identity. Declare it as a profile input when used in acceptance. The helper checks repository identity and required files. It does not test code, establish app compatibility, or grant permission.
+
+Open the entire returned canonical `entrypoint`, then its applicable references and linked methods. Execute that procedure once. Keep an analysis-only or planning-only request within that phase. Do not recursively call this launcher, install the canonical folder alone, or call file loading a successful repair.
+
+Keep a cache checkout unchanged while an app uses it. Repair in a separate worktree from that revision. Follow the canonical compatibility and evidence rules before adoption. Do not pull/reset an active bundle or silently change global settings. Reuse this case's recorded bundle on later turns even if the branch advances.
+
+## Missing capabilities
+
+If Git, Python, private-repository access, full skill files, or required independent review is unavailable, report the exact missing prerequisite and preserve app state. A cloud agent needs its own authorized checkout and tools; local installation does not install into another host or session.
+
+The helper resolves files. It does not install hooks, choose models, push, merge, notify anyone, or launch an app.
 
 ## Invoke
 
@@ -27,4 +55,4 @@ Codex: `$improve-factory The factory did X; it should do Y. Preserve this app's 
 
 Claude Code, after installing this folder in its skill location: `/improve-factory The factory did X; it should do Y. Preserve this app's progress.`
 
-For installation and exact GitHub references, read `docs/install-improve-factory.md` in the source repository. Host discovery and permissions still apply; the explicit `SKILL.md` path works when discovery is unavailable.
+Read `docs/install-improve-factory.md` in the source repo for installation and exact GitHub references. Host discovery and permissions still apply. If discovery fails, read this `SKILL.md` by explicit path.

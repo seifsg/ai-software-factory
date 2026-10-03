@@ -1,61 +1,49 @@
 # AI Software Factory — repository rules
 
-## Scope selection — owner correction, 3 October 2026
+Read [README](README.md), the [skill index](.agents/skills/README.md) and [current decisions](docs/safe-engine-decisions.md) before changing this factory.
 
-Use [small-change](.agents/skills/small-change/SKILL.md) for small direct fixes. Its six lightweight routines override the full analysis/planning/review and repeated QA requirements below for that scope, including both PR procedures. Correct code, focused affected-behavior verification and a narrow independent assessment remain required. Do not automatically run broad regression or full suites; offer an affected-area batch when cumulative changes justify it and wait for the user's request before running it. Preserve actual protected gates and honest evidence. Version work keeps the full procedure. This is Seif's explicit selected change, not a new exception to request repeatedly.
+## Write in Seif's words
 
-## Scope
+Use the original when one exists. RepairCheck Mobile is the first source; use another original only when Mobile has no equivalent for that task. [Provenance](docs/skill-provenance.md) records the mapping. Preserve wording, order, emphasis and checkpoints. Analyze Start keeps its three approved additions.
 
-This private repository owns Seif's reusable software-factory skills. Read `README.md` and `.agents/skills/README.md` before changing the system. Follow the user's current instructions and preserve existing skill behavior unless the requested change requires altering it.
+For skills without originals, write direct instructions: the task, priorities, outputs, necessary steps and checks, and where to stop. Keep instructions short without reducing the work. Number steps when order matters. Compare requirements before and after rewriting. Do not quietly drop behavior or import another workflow through a link.
 
-## Quality standard
+Seif is the primary author. Keep project bindings and coordination outside original bodies. Record necessary packaging changes. Do not invent the rest of the library or create placeholders. The current request authorizes this whole-repository restoration and writing pass.
 
-Our motto: **give 100% minimum; aim to give more through the quality of the work.**
+## Keep the requested scope
 
-- Put extra effort into correctness, clarity, polish, usability, and appropriate verification.
-- Review and refine the output before calling it finished. Iterate further when doing so materially improves the result.
-- Overdeliver through useful improvements that are needed within the agreed scope. Preserve the user's intent and avoid adding unsolicited deliverables or unrelated features.
-- Judge success by the quality and usefulness of the outcome, rather than the amount of material produced.
-- For app work, apply [app efficiency](.agents/skills/safe-engine/references/app-efficiency.md) from analysis/planning through the selected scoped handoff: design CPU/memory/resource lifetimes, implement useful safe caching/reuse and verify relevant costs and correctness. Keep small changes focused and preserve necessary costs; a factory instruction is not proof of an optimized app.
+An analysis, planning or review request stays in that phase. A small subject does not authorize coding. Honor the original file-summary stop unless existing user instructions explicitly authorize continuing through it.
 
-## Skill development
+For a requested small implementation or fix, use [Small Change](.agents/skills/small-change/SKILL.md). Its six light routines replace full version procedures for that change. Keep the 0–4 discipline, focused checks and one narrow independent assessment. Offer broader affected-area checks when useful; run them only when requested or required by a real protected gate.
 
-The engine is named **Safe Engine**. Read `docs/safe-engine-decisions.md` before designing or changing the factory. Preserve Seif's selected options; keep pending choices unresolved. For new improvement or design decisions, compare three credible alternatives and recommend exactly one with reasons. Follow the canonical decision-ownership policy and session contract: Seif may explicitly delegate in-scope choices for a run; owner-reserved choices stay pending. Recommendations alone are not authority. Preserve selected names; descriptive working names may be chosen within explicit delegation.
+For larger factory changes, use [Improve Factory](.agents/skills/improve-factory/SKILL.md). Preserve existing work and active app state. Use a suitable branch or isolated worktree. Keep one writer per file; subagents do not have automatic filesystem isolation.
 
-Seif is the primary author of the skills. Help him express his procedures, compare relevant examples, identify gaps or contradictions, refine wording, structure files, and validate behavior. Preserve his intent and voice. Do not independently draft most of the skill library or create placeholder skills. New procedures and substantive rewrites should develop from Seif's writing or an explicit request for a particular draft. Examples from other factories are inspiration, not approved names or procedures. Skill counts, boundaries, and build plans remain proposals until selected.
+## Decisions and quality
 
-- Use the available Skill Creator workflow when creating or substantially updating a skill.
-- Read an imported skill and its relevant resources before adapting it. Record provenance where known; do not invent authorship or copy rights.
-- Store each skill in `.agents/skills/<skill-name>/SKILL.md`, with YAML `name` and `description`. Match the name to the folder.
-- Describe when the skill applies, what context it needs, and what it returns. Add exclusions when they prevent likely misrouting.
-- Keep procedures self-contained where practical. Declare real dependencies; do not assume tools or integrations exist.
-- Keep reusable content in one canonical owner. Link supporting references from the skill entrypoint.
-- Do not create placeholder skills or claim that a skill is operational because its instructions exist.
-- Update the skill index after adding, removing, or materially changing a skill.
+Give 100% minimum. Aim higher through correct, useful work within scope.
 
-## Connected workflows
+Preserve selected options. For a new substantive choice, compare three credible alternatives and recommend one. Choose when delegated; ask only for an unresolved owner choice. Do not reopen settled decisions.
 
-### Mandatory PR creation and review
+Use the [session contract](.agents/skills/safe-engine/references/session-contract.md) for authority, continuation and recovery. Continue to the agreed outcome without invented correction credits, retry ceilings or session deadlines. Honor access limits, protected gates and owner stops. Discover permitted alternatives when a UI/control route fails.
 
-For every factory-managed project and every PR, read and execute [.agents/skills/how-to-make-a-pr/SKILL.md](.agents/skills/how-to-make-a-pr/SKILL.md), then [.agents/skills/how-to-review-a-pr/SKILL.md](.agents/skills/how-to-review-a-pr/SKILL.md) on a separate instance. This also applies to documentation, skills, existing-PR corrections and updates; no size- or project-based bypass. The paired skill explicitly authorizes delegation for that review. Preserve the full procedure, not only its formatting or five review lenses.
+For app delivery, Safe Engine owns [diagnostics](.agents/skills/safe-engine/references/app-diagnostics.md) and [efficiency](.agents/skills/safe-engine/references/app-efficiency.md). Standalone analysis does not authorize instrumentation or optimization work.
 
-Keep the task links/status, truthful human attribution, Why-first visual body, adjustment history, human handoff, supported in-scope fixes, actual checks and detailed review comment. Use real project bindings for tracker, owners, notifications, stack and branches; missing required settings/access are blockers. Read [this repository's bindings](docs/pr-workflow.md). Never invent or silently omit them.
+## Files and verification
 
-The local controller's read-only candidate review and `handoff` do not constitute PR creation or full PR review. Every changed PR candidate needs a fresh separate assessment. Leave PRs draft; the human owns ready/merge/release. These instructions do not claim host-hook or protected remote enforcement.
+- Use Skill Creator for new or substantially revised skills.
+- Keep canonical skills in `.agents/skills/<name>/SKILL.md`, with matching YAML `name` and useful `description`.
+- Read an original and its resources before importing it. Record repository, revision, path and deviations.
+- Keep each procedure in one canonical place. Declare real dependencies and preserve links.
+- Update affected callers, index, source records and current usage/preview statements together. Preserve dated evidence as history.
+- Check frontmatter, references and changed helpers. Exercise realistic behavior when instructions or executable behavior change. Wording checks alone do not prove method adherence.
+- Batch relevant checks after coherent work. Inspect worthwhile in-scope improvements before delivery. Reuse valid evidence; rerun when a change or concrete concern warrants it.
+- Distinguish implemented, checked, independently reviewed, adopted and released. Report incomplete or unverified work plainly.
+- Keep secrets, client data, transcripts and runtime artifacts out of Git. Preserve unrelated edits.
 
-Keep `preview/index.html`, our plain-language visual introduction, accurate as the factory changes. Explain outcomes before implementation details. Clearly distinguish skills available in the source collection, skills imported here, and workflows demonstrated in a real run.
+## PRs and external actions
 
-When connecting skills, make the handoff explicit: inputs, output artifact, acceptance condition, failure state, and next responsible step. Keep task state durable where the target environment supports it. Do not mark a ticket complete when work only reached a review or deployment handoff.
+For every authorized PR or update, use the original [creation](.agents/skills/how-to-make-a-pr/SKILL.md) and [review](.agents/skills/how-to-review-a-pr/SKILL.md) procedures with the [project adapter](docs/pr-workflow.md). Run PR review on a separate instance. The adapter records actual settings, selected small-change scope and current recovery/review rules.
 
-For unattended workflows, follow the [session contract](.agents/skills/safe-engine/references/session-contract.md) to record delegated authority, completion boundaries, diagnostic progress and actual constraints. Continue authorized work without artificial credits, repair allowances, fixed retry limits or session deadlines; honor explicit owner stops. Avoid duplicate actions on retries. Keep independent acceptance checks outside the builder's unrestricted control when their integrity matters.
+Source company names, accounts, channels, tracker lists and tool names are not this project's settings. Discover actual bindings before asking. Missing bindings block the affected external action; keep authorized local work moving. Local review and controller `ready` do not complete the PR workflow.
 
-Before handing a runtime-control problem back to the owner, follow the contract's [failed-route recovery](.agents/skills/safe-engine/references/session-contract.md#recover-a-failed-control-route). A missing UI window does not establish that every permitted CLI/API route is unavailable. Preserve exact-target authority, state and tool restrictions; report actual recovery evidence. Review app exit and failure feedback through the existing user-journey lens.
-
-## Verification and changes
-
-- For application development, batch unit and E2E runs after substantial planned work; do not run tests after every edit or start test watchers by default. Before pushing a feature, inspect worthwhile in-scope design, cleanup, reuse, performance, security, and agent-navigability improvements, then verify the affected result. Read `docs/safe-engine-fast-delivery.md`; its broader option recommendations remain unselected. The 2 October owner-selected cadence supports completed feature feedback and comprehensive version checkpoints; see the canonical usage guide. User updates should be concise and outcome-focused, with complete method evidence in durable linked artifacts.
-- Validate skill frontmatter, names, references, and any executable helpers.
-- Test observable behavior when warranted. Report checks not run and their limits honestly.
-- Keep changes focused and preserve unrelated work. Use a branch for substantive changes to an established repository.
-- Do not merge, release, contact others, spend money, or change a target project's live systems without applicable user authorization.
-- Never commit credentials, client source/data, transcripts containing sensitive information, or local runtime state.
+Keep task links, truthful attribution, visual context, adjustment history and human handoff. Leave PRs draft. Do not infer authority to notify, merge, release, deploy or spend money. No host hook or protected remote gate is installed by these instructions.

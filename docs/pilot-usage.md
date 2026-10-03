@@ -2,6 +2,8 @@
 
 ## Small direct changes
 
+This route is for requested implementation. An explicit analysis, planning or review request stays in that phase.
+
 Seif selected [small-change](../.agents/skills/small-change/SKILL.md) on 3 October: six lightweight routines, careful implementation, focused checks and one narrow independent assessment. This route precedes the full version workflow described below. No automatic broad regression, full-suite reruns or five-artifact planning for a small fix. Accumulated changes may prompt an offer of affected-area validation; execution waits for the user. It is an agent-operated scoped handoff, not a new controller command or whole-version acceptance. Existing pinned runs retain their bundle/state; see the method for explicit local trials and evidence limits.
 
 Safe Engine 0.1.0 is a local, agent-operated delivery loop. The current Codex session builds the feature using Seif's methods. Python records stages and executes checks; a fresh read-only Codex CLI process reviews the final candidate. The controller creates a checked local handoff. It does not push, merge, deploy, or run as an unattended daemon.
@@ -71,13 +73,13 @@ python -m safe_engine --project <project> status
 
 ## Follow the stages
 
-Use the actual procedures, then record their outputs. For a new app, the existing `plan` phase contains original Part A plan → [research-market](../.agents/skills/research-market/SKILL.md) → revised Part A plan; retain and link all three before recording the final plan. No new CLI stage is introduced. Artifacts can be Markdown with diagrams and tables; the controller validates presence and integrity, while the fresh reviewer assesses substance.
+Use the actual procedures, then record their outputs. Honor Get Ready to Code's file-summary stop unless existing user instructions explicitly authorize continuing. Read the Mobile-priority [source map](skill-provenance.md#current-source-map--3-october-2026). For a new app, the existing `plan` phase contains original plan → [research-market](../.agents/skills/research-market/SKILL.md) → revised plan; retain and link all three before recording the final plan. No new CLI stage is introduced. Artifacts can be Markdown with diagrams and tables; the controller validates presence and integrity, while the fresh reviewer assesses substance.
 
 ```text
 record analysis --file <analysis.md>       analyze-start; no code changes
-record plan --file <plan.md>               get-ready-to-code Part A; no code changes
+record plan --file <plan.md>               get-ready-to-code planning outputs; no code changes
 feature-check --checks unit --file <feature.md>  optional completed capability feedback; stays build
-record batch --file <batch.md>             Part B: complete the planned version batch
+record batch --file <batch.md>             0–4 loop: complete the planned version batch
 check                                     run ALL configured version checks together
 record improvement --file <improvement.md> inspect/apply supported improvements
 check                                     validate full final QA; eligible unchanged reuse or full rerun
@@ -116,7 +118,7 @@ Do not add the reuse flag to a saved profile: the contract is immutable. Older p
 
 The controller does not intercept arbitrary agent actions, install host hooks, or protect GitHub merges. Its local records are not signed or isolated from the builder's OS identity. A fresh read-only reviewer supplies context and permission separation, but is not a separately administered acceptance service. Model judgments and tests can miss defects.
 
-PR delivery always uses [how-to-make-a-pr](../.agents/skills/how-to-make-a-pr/SKILL.md) followed by the **complete separate-instance** [how-to-review-a-pr](../.agents/skills/how-to-review-a-pr/SKILL.md). This is mandatory for every factory-managed project, including docs/skills and subsequent updates. A successful local `handoff` does not certify those PR steps. Resolve real tracker, human owner, notifications and project check bindings; discover bindings first; missing required bindings block PR completion while independent local owner-test delivery continues. See [PR workflow status](pr-workflow.md). The paired skills are instruction-level requirements, not executable GitHub/host enforcement.
+PR delivery always uses [how-to-make-a-pr](../.agents/skills/how-to-make-a-pr/SKILL.md) with the [project adapter](pr-workflow.md), followed by the **complete separate-instance** [how-to-review-a-pr](../.agents/skills/how-to-review-a-pr/SKILL.md). This is mandatory for every factory-managed project, including docs/skills and subsequent updates. A successful local `handoff` does not certify those PR steps. Resolve real tracker, human owner, notifications and project check bindings; discover bindings first; missing required bindings block PR completion while independent local owner-test delivery continues. See [PR workflow status](pr-workflow.md). The paired skills are instruction-level requirements, not executable GitHub/host enforcement.
 
 The full architecture, UX, security, idea-assessment, TDD, skill-writing, and worktree-management modules are not implemented as independent specialist skills. General review lenses cover only part of those responsibilities. Planning and execution are separate controller phases but still share the original `get-ready-to-code` entrypoint; the selected modular split remains future packaging work.
 

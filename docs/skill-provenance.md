@@ -1,4 +1,47 @@
-# Pilot skill provenance
+# Skill sources and adaptations
+
+## Current source map — 3 October 2026
+
+Seif requested a repository-wide pass: use his originals, with RepairCheck Mobile first, and write skills without originals in the same direct style. These are the current sources. Earlier adaptation records below are history where this selection supersedes them.
+
+| Factory file | Original in RepairCheck Mobile |
+|---|---|
+| `analyze-start/SKILL.md` | `.cursor/rules/analyze-start.mdc` + the three approved purpose/evidence/PR-wiring lines |
+| `get-ready-to-code/SKILL.md` | `.cursor/rules/get-ready-to-code.mdc` |
+| `deep-review/SKILL.md` | `.cursor/skills/deep-review/SKILL.md` |
+| `change-guard/SKILL.md` | `.cursor/skills/change-guard/SKILL.md` |
+| `compliance-check/SKILL.md` | `.cursor/skills/compliance-check/SKILL.md` |
+| `how-to-review-a-pr/SKILL.md` | `.cursor/skills/pr-review/SKILL.md`; existing factory name retained for callers |
+
+Factory paths above are relative to `.agents/skills/`. Mobile source: `Repaircheck/repaircheck_mobile`, commit `8ed32a10034bd78660f761685b81cdd881188c85`, branch `main`.
+
+`how-to-make-a-pr` uses `Repaircheck/claude-routines`, commit `cbd252632f0218fa2a12161e91282da013c73839`, `.claude/skills/how-to-make-a-pr/SKILL.md`. Mobile's `release-pr` was inspected first: it prepares production release rollups, bumps versions and consolidates changelogs. It is a different task from ordinary feature-draft creation, so it was not substituted into that route.
+
+### Packaging changes only
+
+- Keep valid Codex metadata. Cursor rule files receive `name` and `description`; the Mobile PR skill keeps its body under the existing factory name.
+- Analyze Start retains its three explicitly approved additions. No Small Change redirect, app-default requirements or provenance link is appended.
+- Compliance gets a short adapter note for actual target rule locations. Each PR entry links the project-binding adapter. Original company/stack wording stays visible; it does not become the target project's settings.
+- Replace Cursor `mdc:` links with bundled relative paths. PR analysis and execution links use canonical Analyze Start and Get Ready to Code.
+- Mobile's performance, security and user-journey rubrics stay at the existing `deep-review/references/` paths. Its change-guard, synthesis and comment references live under `how-to-review-a-pr/references/`.
+- Copy the four required Mobile rule files unchanged into `how-to-review-a-pr/references/mobile-rules/`. These are source-project context; actual target rules take precedence through the adapter.
+- The separate PR body reference points to the original creation skill's template instead of maintaining a second rewritten template.
+
+The Mobile PR workflow has four themed reviewers, synthesis, a question gate, scoped fixes and push/comment checkpoints. It does not contain the old routines review's three-option phase or retry-once rule. Any old summary inside the restored creation original is superseded by the actual Mobile review file and the [PR adapter](pr-workflow.md). The local controller's five acceptance passes remain a separate workflow.
+
+### Skills without originals
+
+`safe-engine`, `improve-factory`, `research-market` and `small-change` are factory-specific procedures based on Seif's requests. Their bodies, six factory references, two portable loading entries and project adapter were rewritten in direct instructions. Keep the task, priorities, outputs, necessary steps/checks and stopping point. Preserve commands, authority, evidence and recovery requirements.
+
+Source checkouts stay unchanged. The remaining source library is not imported by this pass. Current docs and callers are reconciled; dated design records, tests, example apps and recorded screenshots are retained according to their actual purpose. This local revision is not a new release or refreshed historical app QA.
+
+## Mobile original wording — 3 October 2026
+
+Seif selected the originals in `Repaircheck/repaircheck_mobile` as the drafting baseline for `analyze-start`, `get-ready-to-code` and `deep-review`. The source checkout is at `8ed32a10034bd78660f761685b81cdd881188c85` (`main`); the three files also match the fetched `dev` tip. Analysis and planning originate in `.cursor/rules/analyze-start.mdc` and `.cursor/rules/get-ready-to-code.mdc`; review originates in `.cursor/skills/deep-review/SKILL.md`, mirrored unchanged under `.claude/skills/`.
+
+The first revision changed only `analyze-start`, retaining the Mobile body and three approved lines. Seif then removed its Small Change, diagnostics, efficiency and provenance links. The whole-repository pass above now extends source restoration to the other skills. The earlier routines-based draft and the adaptation history below do not override the current source map.
+
+## Earlier factory history
 
 On 2 October Seif explicitly requested that `improve-factory` be reusable from GitHub in other agent sessions, pushed, and announced to him through an authorized notification. The assistant added `skills/improve-factory` as a portable loading adapter plus a standard-library resolver; the complete procedure remains under `.agents/skills/improve-factory`. No source skill was replaced or copied into a second procedure. The resolver and installation layout are new implementation under that request; native Claude/cloud execution still requires separate demonstration.
 

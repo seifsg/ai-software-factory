@@ -1,45 +1,68 @@
 ---
 name: safe-engine
-description: "Build or resume an app or feature through Seif's Safe Engine software factory. Loads the complete versioned factory, analysis charts, planning and coding methods, batched QA and independent review from private GitHub. Use for factory delivery, not factory maintenance or ordinary questions."
+description: "Build or resume an app or feature with Seif's complete Safe Engine factory from private GitHub. Loads the versioned methods, checks, and independent review. Use for factory delivery, not factory maintenance or ordinary questions."
 ---
 
-# Safe Engine — reusable factory entry
+# Safe Engine
 
-## Authorized local app-defaults trial
+Load the complete factory and use its methods in the user's project. The canonical source is `https://github.com/seifsg/ai-software-factory`. This installed folder only loads it. Use `improve-factory` to change the factory.
 
-If this installed folder contains `references/local-app-diagnostics.md`, read it before selecting a method. This existing optional host-local record may cover reviewed app defaults, including diagnostics and efficiency; retain its filename for continuity. It must carry the owner's trial authority/scope, exact candidate root/revision, fresh independent assessment and rollback destination. Verify the recorded candidate's identity and clean status; read its complete selected method and canonical references within that scope. For a new project without a run/selection, a recorded trial may explicitly choose this complete candidate with `--bundle <verified-candidate-root> --project <target>` instead of remote `main`. For an existing app's bounded change, use the recorded complete candidate Small Change method as a separate local trial and keep the original version pin/state intact. Substantial version adoption still follows the canonical compatibility handoff. Record both identities and evidence limits. This record is not shipped as a universal default or a claim that a draft candidate is merged.
+An explicit analysis, planning, or review request stays in that phase. Do not turn it into a build or small-fix delivery run.
 
-## Route small requests before full version work
+## Check existing work and local trials
 
-For a bounded direct fix, select the canonical `.agents/skills/small-change/SKILL.md` from the resolved bundle or the applicable verified app-defaults trial above and read it fully. An applicable app-defaults trial takes precedence over an older host-local small-change record within its recorded scope. It owns six lightweight routines, focused verification, narrow independent review and scoped PR delivery. Load only the selected method and applicable references; do not require a full controller run or its CLI reviewer for this agent-operated handoff. For full version work retain the procedure below.
+Preserve the request, answers, decision authority, and project work. Establish the absolute target directory from the session or user. Read project instructions, `.factory/state.json`, selection record, and session/checkpoint artifacts before choosing a bundle. Create a missing directory only within the requested app scope. Do not initialize a second run or substitute a demo.
 
-Preserve project selections. If the pinned bundle lacks this method, do not silently upgrade or emulate it by skipping controller gates. Use an already owner-authorized reviewed candidate by explicit path as a separate local trial, following its continuity rules; otherwise explain the available method and obtain the missing adoption decision. A launcher update alone never migrates an app. If this installed folder contains `references/local-small-change.md`, read that host-local trial record for its explicit authority, exact candidate and scope; verify the recorded path/revision and clean status before using it. Such a trial can route bounded requests before resolution of the old version bundle, leaving that selection intact. The optional record is not shipped as a universal default.
+If this installed folder has `references/local-app-diagnostics.md`, read it before selecting a method. The optional host-local record may cover both diagnostics and efficiency; keep its filename for continuity. Check its owner-authorized scope, candidate root/revision, fresh independent assessment, and rollback destination. Verify candidate identity and clean status. Read its entire selected method and references.
 
-Use this skill to build applications and features in the user's chosen project. This is the factory's entry point; `improve-factory` is for changing the factory. The full workflow has one canonical owner in `https://github.com/seifsg/ai-software-factory`. This folder is a standalone installation adapter, not a substitute for Seif's complete methods.
+Within that record's authority:
 
-The current resolved method owns default app diagnostics: new apps include sufficient app-wide logs; existing app changes audit coverage and add the minimum missing module/events autonomously with focused evidence. Read the bundle's canonical `safe-engine/references/app-diagnostics.md` through its selected method. An older selected bundle may lack this guidance: preserve its pin, report the capability gap and use an already authorized reviewed local trial above or Improve Factory's adoption procedure. Do not claim an older bundle gained the standard, implement a second standard in this adapter or silently upgrade its selection.
+- A new project without a run or selection may explicitly select the complete candidate with `--bundle <verified-candidate-root> --project <target>`.
+- An existing app's bounded fix may use the candidate's Small Change method as a separate trial, preserving its original version pin and state.
+- Substantial version adoption still needs the canonical compatibility handoff.
 
-The same rule applies to early app efficiency: read the selected method's canonical `safe-engine/references/app-efficiency.md` for CPU/memory/resource design, useful safe caching and focused evidence. The adapter routes this default without duplicating its contract. An older bundle lacking it retains its pin and capability gap unless an authorized reviewed trial/adoption supplies the method; no application optimization is claimed merely from installing this entry.
+Record both identities and evidence limits. A local trial record is neither a universal default nor proof that a draft merged.
 
-## Load the factory, then run it
+For a requested bounded fix, load the resolved bundle's entire `.agents/skills/small-change/SKILL.md`, or the applicable verified trial above. Use only that method and applicable references. It owns six light routines, focused checks, narrow independent review, and scoped PR delivery; it does not need a full controller run or CLI reviewer.
 
-1. Preserve the actual app request, existing answers, decision authority and project work. Establish the absolute target directory from session context or the user. Inspect its project instructions, `.factory/state.json`, selection record and existing session/checkpoint artifacts before choosing a bundle. Create a missing directory only within the requested app scope; do not initialize a second run or choose a substitute example.
-2. Locate `scripts/resolve_bundle.py` relative to this installed skill. Run with Python 3 (`python3`, `python`, or `py -3` on Windows), quoting paths or using an argument array:
+If `references/local-small-change.md` exists here, read its authority, exact candidate, and scope. Verify path, revision, and clean status before use. An applicable app-defaults trial takes precedence within its scope. Such a verified trial may route a bounded fix before resolving the older version bundle, while leaving that selection intact.
 
-   ```text
-   python3 <installed-skill>/scripts/resolve_bundle.py --entrypoint safe-engine --project <absolute-target-directory>
-   ```
+If the pinned bundle lacks Small Change, preserve it. Use an already authorized reviewed candidate by explicit path as a separate trial, or explain the available method and obtain the missing adoption decision. Do not simulate Small Change by skipping controller gates. Updating this launcher never migrates an app.
 
-   New projects resolve private GitHub `main` once to a complete detached checkout in `~/.safe-engine/bundles/<commit>`. The helper records the selection in the project's excluded `.factory/entry-bundle.json`. Existing selections resume offline at their recorded path and revision; `--ref` cannot upgrade them. For a new run, an explicit `--ref <full-SHA>` pins the bundle as well as the separately installed launcher.
+## Resolve and read the factory
 
-   A legacy run without a selection record needs its **established original bundle**, supplied with `--bundle <absolute-factory-root>` and `--project`. Inspect original session evidence to establish it; a version label or matching HEAD alone cannot identify dirty inputs. If that identity is missing, preserve the run and stop dependent actions. Never substitute latest `main`, rewrite its state or reset acceptance. A receipt selects source files; it does not certify compatibility or QA.
-3. Read the returned JSON: actual bundle root, revision, dirty status, selection record and canonical entrypoint. Verify the intended identity. Preserve the installed launcher's separate identity in the session contract. For explicit dirty bundles, record actual diff/untracked input hashes through the canonical checkpoint method. Keep the selected bundle unchanged; a resolver failure must be diagnosed, never ignored.
-4. Read the **entire returned `entrypoint`** (`.agents/skills/safe-engine/SKILL.md`) and select scope first. For version work also read its session contract, usage guide and method handoff; small-change work loads its complete selected method and applicable references. Read every full method and applicable reference when its phase requires it. Execute that canonical procedure once, from the returned bundle root against the target project. Do not recursively invoke this adapter, run the controller from the app directory, or treat file loading as a completed build.
-5. Check actual prerequisites before dependent execution: Python 3.11+, Git, private-repository access, authenticated Codex CLI for the implemented fresh review, project check tools, and real browser tools for browser QA. Use existing capabilities and diagnose missing access honestly. Local installation does not provision another machine or cloud environment; a Claude-only reviewer adapter is not implemented.
+Locate `scripts/resolve_bundle.py` relative to this installed skill. Use Python 3 (`python3`, `python`, or `py -3` on Windows). Quote paths or pass an argument array.
 
-The canonical flow preserves `analyze-start` charts → `get-ready-to-code` planning → new-app research/revised plan → the 0–4 coding loop → coherent feature feedback → full QA → worthwhile improvement → final QA → fresh independent review → checked handoff. Every authorized PR also executes both complete PR procedures with separate-instance review. Follow recorded autonomous scope, batch tests, keep meaningful progress visible, and preserve human release boundaries. No hooks, daemon, global permission changes or universal host enforcement are installed here.
+```text
+python3 <installed-skill>/scripts/resolve_bundle.py --entrypoint safe-engine --project <absolute-target-directory>
+```
 
-## Invoke after installation
+New projects resolve private GitHub `main` once into `~/.safe-engine/bundles/<commit>`. The helper records the selection in the project's excluded `.factory/entry-bundle.json`. Existing selections resume offline at their recorded path/revision; `--ref` cannot upgrade them. For a new run, `--ref <full-SHA>` pins the bundle separately from the installed launcher.
+
+For a legacy run without a selection record, establish its original bundle from session evidence and supply `--bundle <absolute-factory-root> --project <target>`. A version label or matching HEAD cannot identify dirty inputs. If identity is unknown, preserve the run and stop dependent work. Do not substitute latest `main`, rewrite state, or reset acceptance. A selection receipt does not certify compatibility or QA.
+
+Read the returned JSON. Check bundle root, revision, dirty status, selection record, and canonical entrypoint against the intended identity. Record the launcher's separate identity in the session contract. For an explicit dirty bundle, capture actual diff and untracked-input hashes through the canonical checkpoint method. Diagnose resolver failures; do not ignore them. Keep the selected bundle unchanged.
+
+Read the entire returned `entrypoint` (`.agents/skills/safe-engine/SKILL.md`). For version work, also read its session contract, usage guide, and method handoff. For Small Change, read its entire method and applicable references. Load every complete method and applicable reference when its phase needs it.
+
+Run the canonical procedure once from the returned bundle root against the target project. Do not recursively call this adapter or run the controller from the app directory. Loading files is not a completed build.
+
+## Check the required capabilities
+
+Before dependent work, check Python 3.11+, Git, authorized private-repository access, authenticated Codex CLI for the implemented fresh review, project check tools, and real browser tools for browser QA. Use available capabilities and report actual missing access. Local installation does not provision another machine or cloud session. A Claude-only reviewer adapter is not implemented.
+
+The selected method owns app defaults. Read its canonical `safe-engine/references/app-diagnostics.md` and `safe-engine/references/app-efficiency.md` through that method:
+
+- New apps need sufficient app-wide logs; existing changes inspect coverage and include minimum missing modules/events with focused evidence.
+- Plan CPU, memory, resource lifetimes, and useful safe reuse early.
+
+Do not duplicate these contracts here. If an older selected bundle lacks them, preserve its pin and report the gap. Use an already authorized reviewed trial or Improve Factory's adoption procedure. Installing this entry alone neither upgrades that bundle nor optimizes an app.
+
+The full flow is analysis with charts → planning → new-app research and revised plan → 0–4 coding loop → feature feedback → full QA → worthwhile improvement → final QA → fresh independent review → checked handoff. Authorized PR delivery also runs both complete PR methods with separate-instance review through the project adapter.
+
+Honor delegated scope and real checkpoints. Batch tests, show meaningful progress, and preserve human release decisions. This entry installs no hooks, daemon, global permissions, or host-wide enforcement.
+
+## Invoke
 
 Codex: `$safe-engine Build [app or feature] in [absolute project path]. Success means [observable outcome].`
 
@@ -47,4 +70,4 @@ Claude Code: `/safe-engine Build [app or feature] in [absolute project path]. Su
 
 Resume: `$safe-engine Resume the existing run in [absolute project path]. Preserve its decisions, bundle and evidence.`
 
-The maintenance skill is optional for normal delivery; this entry does not require it to be separately installed. The complete bundle includes the canonical maintenance procedure for a mid-build factory correction. See `docs/install-safe-engine.md` in the source repository for installation, cloud and host limits. Skill discovery remains host-controlled; explicitly reading the installed file is the fallback.
+Normal delivery does not require a separate Improve Factory installation; its canonical procedure is in the complete bundle. Read `docs/install-safe-engine.md` in the source repository for installation, cloud, and host limits. Discovery depends on the host. If needed, read this installed file by its explicit path.

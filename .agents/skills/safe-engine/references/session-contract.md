@@ -1,41 +1,66 @@
 # Session authority and continuous progress
 
-For bounded direct changes, [small-change](../../small-change/SKILL.md) is the selected lightweight delivery method. Autonomy does not authorize automatic broad regression or full-version revalidation for each fix. Reuse session answers, keep scoped evidence and preserve the owner's choice of any later broader checkpoint.
+Read at intake, resume and delegation. Follow the [decision ownership policy](../../../../docs/safe-engine-decisions.md#decision-ownership). Save one ignored `.factory/session-contract.md` or use its existing equivalent. Link it from stage artifacts and carry it into handoffs. Keep the controller's fixed task/profile and accepted evidence intact.
 
-Read at intake, resume and delegation. This is the canonical operating procedure for the [decision ownership policy](../../../../docs/safe-engine-decisions.md#decision-ownership). Record it once in an ignored `.factory/session-contract.md` (or the existing equivalent), link it from stage artifacts, and carry it into every handoff. Supplement saved controller records; never rewrite their fixed task/profile or accepted evidence.
+For a bounded direct fix, use [small-change](../../small-change/SKILL.md). Do not run broad regression or full-version validation automatically for each fix. Reuse session answers, preserve scoped evidence and let the owner choose a later broader checkpoint. An analysis-only request does not become a fix.
 
 ## Establish the contract
 
-First inspect the user's request, earlier answers, repository instructions and existing contract. Reuse decisions. If essential preferences remain open, ask a short grouped intake covering only what matters: completion boundary, delegated versus reserved choices, desired checkpoints/update cadence, and any time/cost constraints. Do not present a questionnaire when the user already supplied these. Continue independent discovery while awaiting a required answer.
+Read the request, earlier answers, repo instructions and existing contract first. Ask only about essential missing preferences: completion boundary, delegated/reserved choices, checkpoints/update cadence and actual time/cost constraints. Group the questions. Do not ask again for answers already given. Continue independent discovery while waiting for a required answer.
 
 Record:
+- The original outcome and acceptance. Approved choices and their sources. Rejected and unresolved owner-reserved choices.
+- The actual autonomy granted: advice/options, owner checkpoints or delegated execution. Do not infer external permissions.
+- Decisions the agent may make, their reasons/evidence, and decisions reserved for the owner. Full autonomy covers in-scope product, technical and working-name choices unless reserved or already fixed.
+- The intended handoff, updates and owner stop points. Showing a plan or giving an update is not an approval gate.
+- Actual access/provider constraints, diagnostic attempts and progress. Carry these across maintenance, delegation and resume. Keep old allowance/deadline records as history and record the user instruction that superseded them.
 
-- Original outcome and acceptance; approved choices and their source; rejected choices; unresolved owner-reserved choices.
-- Autonomy: advise/options only, owner checkpoints, or delegated execution. Record the actual request, not an inferred grant of external permissions.
-- Which choices the agent may make and their rationale/evidence; which require the owner. Explicit full autonomy permits in-scope product, technical and working-name choices unless reserved or already fixed. Compare three credible approaches and recommend one when the methods call for it; delegated choice may proceed after the comparison without another vote.
-- Intended handoff (for example a locally running application after QA and fresh review for initial owner testing), notification cadence, and owner-requested stop points. Progress updates and showing a plan are not approval gates.
-- Completion boundary, owner-requested checkpoints/stops, actual access/provider constraints, and diagnostic attempts/progress across maintenance, delegates and resumes. Preserve historical allowance/deadline records as history, with the latest user instruction that supersedes them.
+Where the method calls for alternatives, compare three credible approaches and recommend one. An explicitly delegated choice can then proceed without another vote.
 
-Continue authorized work until the agreed outcome passes the required checks and independent review, or the owner requests a stop/checkpoint. Do not invent repair allowances, credits, overall session deadlines or exhaustion gates. Reuse decisions rather than ask for more corrections. An explicit owner stop condition stays effective until the owner changes it. Allow existing authorized tool use, but no new purchases or paid provider fallback without authority. If authority to proceed is genuinely unclear, resolve only that missing boundary.
+Continue until the agreed outcome passes its required checks and independent review, or the owner requests a stop/checkpoint. Do not invent repair allowances, credits, session deadlines or exhaustion gates. An owner stop stays in force until changed. Reuse existing authorized tools; new purchases or paid fallbacks need authority. Resolve only the missing boundary when authority is actually unclear.
 
-The continuous 0.1.0 controller has no repair ceiling: new runs omit `--max-repairs`; the deprecated flag and saved integers are historical metadata, while `repairs_used` records diagnostic history. `status` reports `repair_policy: continuous`, `max_repairs: null`, and `historical_max_repairs`. Existing runs use normal `repair --reason ...` without editing state; it still clears acceptance and requires a new version batch, full checks, improvement, full final-QA validation and fresh independent review. Completed feature batches can use partial checks while remaining in build; they never satisfy version acceptance. Exact unchanged full-evidence reuse requires explicit reviewed profile eligibility and integrity validation; see the [usage guide](../../../../docs/pilot-usage.md#feature-feedback-and-version-checkpoints). Never initialize a new run to bypass a failed gate or revive cancellation. Individual command watchdog timeouts detect stuck operations; they fail that operation for diagnosis and are not a session deadline. No background scheduler, unlimited provider quota or host-level continuous execution guarantee is implemented.
+For the continuous 0.1.0 controller:
+- New runs omit `--max-repairs`. The deprecated flag and saved integers are history; `repairs_used` records diagnostic corrections.
+- `status` reports `repair_policy: continuous`, `max_repairs: null` and `historical_max_repairs`.
+- Existing runs use `repair --reason ...`. Do not edit state. Repair clears acceptance and requires a new version batch, full checks, improvement, full final-QA validation and fresh independent review.
+- Partial feature checks remain in build. They cannot satisfy version acceptance.
+- Reusing unchanged full evidence requires explicit reviewed-profile eligibility and integrity validation. Read the [usage guide](../../../../docs/pilot-usage.md#feature-feedback-and-version-checkpoints).
+- Never start a new run to bypass a failed gate or revive cancellation.
+
+A command watchdog detects a stuck operation. Diagnose that operation; do not treat the timeout as a session deadline. These instructions provide no scheduler, unlimited quota or host-level execution guarantee.
 
 ## Discover, decide and continue
 
-For a missing fact/tool/binding, inspect actual files/configuration, existing session records and available authorized integrations; consult current primary documentation or market sources where relevant. Search plausible locations or alternatives before escalating. Keep a short discovery record. Do not invent identities, statuses, commands, access or evidence. A failed lookup is not automatically an owner decision; use an evidence-based in-scope fallback when authorized.
+Missing a fact, tool or binding? Inspect files/config, session records and authorized integrations. Consult current primary docs or market sources where relevant. Search plausible locations and alternatives. Keep a short discovery record. Do not invent identities, status, commands, access or evidence. Use a supported in-scope fallback when authorized; a failed lookup alone does not require an owner decision.
 
-Every further attempt needs a diagnosed cause, meaningful correction, recovered dependency or new discriminating evidence. When progress stalls, change the hypothesis, inspect raw failures and consumers, research alternatives, or seek independent diagnosis; do not reroll an unchanged rejected candidate or repeat a known impossible mutation. Reconcile uncertain pushes, comments and external effects before retrying, to prevent duplicates. Continue useful independent work while a dependent action awaits actual access or an owner-reserved decision. A genuine obstacle is explained with evidence and a concrete resume step; no fixed attempt count manufactures a blocker.
+Every next attempt needs a diagnosed cause, meaningful correction, recovered dependency or new evidence that distinguishes the possibilities. When stuck, change the hypothesis, inspect raw failures and consumers, research alternatives or seek independent diagnosis. Do not reroll an unchanged rejected candidate or repeat a known impossible mutation.
+
+Reconcile uncertain pushes, comments and external effects before retrying. Do not duplicate actions. Continue useful independent work while another step needs access or an owner decision. Explain real obstacles with evidence and a concrete resume step. Do not manufacture a blocker from an attempt count.
 
 ### Recover a failed control route
 
-A tool failing to find a window or perform an action establishes a limitation of that route, not that the requested outcome is impossible. Before returning a runtime problem to the owner, inspect available permitted alternatives: an application's own command/API, a supported CLI, or OS process management. Read the applicable tool instructions; consult current primary documentation when behavior or permissions are uncertain. Keep tool-specific restrictions in force: never invent UI handles, evade a denied action through another interface, change host security, or infer new authority from a search result.
+A missing window or failed tool action only proves that route failed. Before returning a runtime problem to the owner, inspect permitted alternatives: the app's command/API, a supported CLI or OS process management. Read tool instructions and current primary docs when behavior/permissions are uncertain.
 
-For stopping a local app, establish the exact target from observed process identity, executable path and ownership; record active work and preserve accessible saved state without exposing secrets. Recheck identity before mutation because a PID can be reused. Prefer an available graceful stop that lets the app save and clean up. If it fails or the app is unresponsive, a targeted force stop can be used only within actual authority for that app and the risk to unsaved work; use existing explicit authorization rather than asking again. A general request to finish a project is not blanket permission to terminate unrelated apps or discard private work. Do not claim a backup of saved files captures an in-memory draft.
+Keep restrictions in force. Do not invent UI handles, bypass a denied action through another interface, change host security or treat a search result as new authority.
 
-Verify the process actually exited and the relevant resource was released before resuming dependent QA or restarting. Record what was preserved, what could not be recovered, the chosen route and its observed result. If authorized alternatives still fail or essential authority/access is missing, explain the actual obstacle and the smallest owner action needed; continue useful independent work. Keep this recovery within the original task and normal evidence/review cycle. Discovery and research support further meaningful attempts, not an endless unchanged loop or a guarantee that every failure is recoverable.
+To stop a local app:
+1. Establish the exact process, executable path and ownership from evidence. Record active work. Preserve accessible saved state without exposing secrets.
+2. Recheck identity before acting; a PID can be reused.
+3. Prefer graceful stop so the app can save and clean up.
+4. If it fails or the app is unresponsive, force-stop only within authority for that exact app and the risk to unsaved work. Reuse explicit authorization. A general project request does not authorize killing unrelated apps or discarding private work.
+5. Verify the process exited and relevant resources were released before dependent QA or restart.
+6. Record what was preserved, what was unrecoverable, the route and observed result. A saved-file backup does not capture an in-memory draft.
 
-Continue through planning, substantial build batches, QA, justified repairs, independent review and the agreed handoff. Pause dependent work only for a real access/tool/provider obstacle after reasonable discovery, an owner-reserved decision or changed requirement, a required failed gate that cannot be repaired within authority, or an explicit owner stop/checkpoint. Report the exact condition and attempts; finish independent authorized work that is still useful and safe.
+If permitted alternatives still fail or essential access/authority is missing, explain the obstacle and smallest owner action needed. Continue useful independent work. Keep recovery within the original task and normal evidence/review cycle. Research supports meaningful attempts, not an endless unchanged loop or guaranteed recovery.
 
-Missing PR repository/tracker/owner/notification bindings block the affected PR step and complete PR delivery, not independent local implementation, QA or owner testing. Run both mandatory PR procedures when delivery is possible; do not label them completed if blocked. Discover existing bindings before asking; autonomy does not invent a recipient or authorize messages beyond the invoked procedure and actual binding.
+Continue through planning, substantial build batches, QA, repairs, independent review and the agreed handoff. Pause dependent work only for:
+- A real access/tool/provider obstacle after reasonable discovery.
+- An owner-reserved decision or changed requirement.
+- A required failed gate that cannot be repaired within authority.
+- An explicit owner stop/checkpoint.
 
-Preserve ready/merge/release and deployment for the human unless explicitly separately authorized. A local controller `ready` state means checked local handoff only. Full autonomy does not waive acceptance, independent review, security, permissions or the human's final product acceptance. If a necessary QA tool is unavailable, report unverified coverage honestly instead of declaring the app finished.
+Report the condition and attempts. Finish independent work that remains useful and safe.
+
+Missing PR repository/tracker/owner/notification bindings block the affected PR step and complete PR delivery. They do not block independent local implementation, QA or owner testing. Discover bindings before asking. Run both PR procedures when delivery is possible; do not call blocked procedures complete. Do not invent recipients or messaging authority beyond the invoked procedure and real binding.
+
+Ready/merge/release and deployment stay with the human unless separately authorized. Controller `ready` means checked local handoff. Autonomy does not waive acceptance, independent review, security, permissions or final human product acceptance. If QA tools are unavailable, report the unverified coverage; do not declare the app finished.

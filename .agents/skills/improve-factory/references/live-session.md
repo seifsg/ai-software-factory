@@ -1,8 +1,8 @@
 # Maintenance during an app-building session
 
-A completed or checkpointed app does not need a new app QA cycle merely because maintenance delivered a new optional method. Preserve its selected bundle. A separately authorized [small-change trial](../../small-change/SKILL.md#continuity-with-a-version-run) records both identities without editing controller state or claiming refreshed version acceptance. The adoption table below governs changes to the bundle used by a controller run.
+Read this when factory repair interrupts an active app run. Keep the app goal active. The parent owns the app and user updates; delegates do focused factory work and return evidence.
 
-Read this reference whenever a factory improvement interrupts an active app run. The app goal stays active. The parent remains responsible for the app and user communication; delegates do focused factory work and return evidence.
+An optional new method does not require another QA cycle for a completed/checkpointed app. Keep its selected bundle. A separately authorized [small-change trial](../../small-change/SKILL.md#continue-alongside-a-version-run) records both identities without changing controller state or claiming fresh version acceptance. Use the adoption table below when changing a controller run's bundle.
 
 ```text
 App coordinator ── save checkpoint ─────────────────── revalidate and resume
@@ -13,73 +13,95 @@ App coordinator ── save checkpoint ─────────────�
 
 ## Quiesce and checkpoint
 
-Stop scheduling dependent app writes, tests and reviews at the next safe boundary. Identify active operations and their owners before acting; a pending operation is not proof a process has stopped. Let an owned command finish under its actual process watchdog, or use supported cancellation for the owned operation and verify its outcome. Do not kill unrelated processes, clear a lock, edit saved state, or abandon a child that can still write. If you cannot establish a stable boundary, block dependent mutation and retain the evidence.
+Stop scheduling dependent app writes, tests and reviews at the next safe boundary. Identify active operations and owners. A pending operation has not necessarily stopped.
 
-Read [the complete method handoff](../../safe-engine/references/method-handoff.md). Save that packet plus the maintenance additions below in a unique ignored local record. Verify the record can be read back. It should recover the work even if conversation context is compacted.
+Let an owned command finish under its actual watchdog, or use supported cancellation and verify the result. Do not kill unrelated processes, clear locks, edit saved state or leave a child able to write. If the boundary is unstable, block dependent mutation and preserve the evidence.
 
-| Checkpoint field | Required information |
+Read the [complete method handoff](../../safe-engine/references/method-handoff.md). Save its packet and these additions in a unique ignored local record. Read it back. It must recover the work after context loss.
+
+| Field | Record |
 |---|---|
-| Original work | Original request, acceptance criteria, approved/pending choices, analysis chart, plan and current todo |
-| App identity | Absolute root/worktree, branch, base/head, controller run ID and phase, task/profile digest, actual status, dirty diff and untracked-file inventory |
-| Preservation | Leave original app files and uncommitted work intact; securely preserve relevant diffs and needed untracked files if migration is proposed, without committing secrets |
-| Factory identity | Resolved bundle root, commit, dirty status and hashes of dirty/untracked bundle inputs; a version label alone is insufficient |
-| Evidence | Paths and hashes for saved artifacts/logs/reviews; fresh/stale status; pending operations, owners and locks |
-| Authority and continuity | Authorized scope/actions, completion boundary, explicit owner checkpoints/stops and actual access/provider constraints, available tools/delegation and model configuration as observed |
-| Maintenance | User's complaint and expected result, affected app steps, maintenance worktree, writer, reviewer, next resume action |
+| Original work | Request, acceptance, approved/pending choices, analysis chart, plan and current todo |
+| App identity | Absolute root/worktree, branch, base/head, controller run ID/phase, task/profile digest, actual status, dirty diff and untracked inventory |
+| Preservation | Keep app files and uncommitted work intact. If migration is proposed, securely preserve relevant diffs and needed untracked files. Never commit secrets. |
+| Factory identity | Bundle root, commit, dirty status and hashes of dirty/untracked bundle inputs. A version label is not enough. |
+| Evidence | Artifact/log/review paths and hashes, fresh/stale status, pending operations, owners and locks |
+| Authority and continuity | Authorized scope/actions, completion boundary, owner checkpoints/stops, real access/provider constraints, observed tools/delegation and model configuration |
+| Maintenance | Complaint, expected result, affected app steps, maintenance worktree, writer, reviewer and next resume action |
 
-Do not record secret environment values. Record declared input names and use the controller's existing fingerprints. Do not copy an entire private transcript when a focused request/decision packet suffices. Inaccessible evidence remains UNKNOWN.
+Record declared input names, not secret environment values. Use existing controller fingerprints. Keep a focused request/decision packet instead of a private transcript. Inaccessible evidence stays UNKNOWN.
 
 ## Keep the versions and writers separate
 
-Preserve the exact bundle currently used by the app. Inspect that checkout for uncommitted skills/config/controller changes: a worktree created at HEAD does not include them. Retain the dirty original and, when required for reproduction, carry an explicit reviewed patch and necessary untracked bundle files into the isolated candidate. Record both states and verify the resulting files. Never call a bare commit the exact snapshot of a dirty bundle.
+Preserve the exact app bundle. Inspect uncommitted skill/config/controller changes. A worktree at HEAD does not contain them. Keep the dirty original. If reproduction needs them, carry a reviewed patch and necessary untracked bundle files into the isolated candidate. Record both states and verify the files. Do not call a bare commit an exact dirty snapshot.
 
-Create or reuse a suitable isolated factory worktree from the actual app bundle revision, following host/repository rules. Keep the original bundle path unchanged while the app uses it; do not point global settings or symlinks at the candidate. Worktrees separate files, but ports, databases, caches, credentials and external services may still be shared: isolate or serialize the relevant effects. A sub-agent must operate at its assigned absolute path; creating a worktree does not change its working directory automatically.
+Create or reuse a suitable isolated factory worktree from the app's actual bundle revision. Follow host/repo rules. Keep the original bundle path, global settings and symlinks unchanged while the app uses it.
 
-The approved policy is to hold affected app work while repairing. Parallel app work is allowed only if its files, runtime effects, acceptance and decisions are independent of the reported fault, the app keeps its fixed original bundle, and ownership is explicit. Otherwise keep it checkpointed. Before any adoption, quiesce again and capture the current app state; the earlier checkpoint may have become stale.
+Worktrees separate files. Ports, databases, caches, credentials and services may still be shared. Isolate or serialize affected operations. Give each agent its absolute work path; a new worktree does not change its working directory.
+
+Hold affected app work during repair. Parallel app work is allowed only when:
+- Files, runtime effects, acceptance and decisions are independent of the fault.
+- The app keeps its original fixed bundle.
+- Ownership is explicit.
+
+Otherwise keep it checkpointed. Before adoption, stop dependent operations again and capture current app state. The earlier checkpoint may be stale.
 
 ## Delegate with sufficient context
 
-Where supported and authorized, delegate the focused factory repair to one writer and the assessment to a fresh reviewer. Keep dependent coordination in the parent; multiple overlapping writers add risk. If repair delegation is unavailable, the parent can perform the isolated repair sequentially. Independent assessment is still required before acceptance; do not substitute same-instance approval.
+When supported and authorized, assign one repair writer and a fresh reviewer. Keep dependent coordination in the parent. Avoid overlapping writers. If delegation is unavailable, the parent can repair sequentially in isolation. Independent assessment is still required; same-instance approval cannot replace it.
 
-Give each delegate the original relevant report, expected behavior, invariant/decision record, precise app and factory identities, canonical skill/reference paths, raw reproduction artifacts, allowed paths/actions, own role, progress history, actual constraints and owner stop conditions, and expected return artifact. Require it to read the actual files and full applicable routines. A fork's inherited conversation is useful context, not a replacement for verified state. A fresh reviewer gets the requirements and evidence, without the builder's desired verdict.
+Give each delegate:
+- The relevant original report, expected behavior and invariants/decisions.
+- Exact app/factory identities and canonical skill/reference paths.
+- Raw reproduction artifacts.
+- Allowed paths/actions, role and expected return artifact.
+- Progress history, actual constraints and owner stop conditions.
 
-Preserve the user's or host's existing model/reasoning configuration. Do not hard-code a model, switch providers, lower reasoning, or launch a paid fallback on the assumption that it is best. If an approved role configuration exists, verify its model/tools/context capability is available and record actual routing when exposed; otherwise inherit the current configuration and label unavailable model identity as unknown. A skill cannot guarantee which model an external host runs. If capability is insufficient, give the user three available alternatives and one recommendation before a new routing decision.
+Require full applicable skills and actual files to be read. Inherited conversation does not replace verified state. Give the fresh reviewer requirements and evidence, not the builder's desired verdict.
 
-Agents preserve one maintenance record and the same authority/completion boundary; they do not create artificial correction allowances. The parent reconciles completed/failed/in-flight actions before retrying. Keep one active maintenance case for the same cause and checkpoint; resume its record after interruption instead of launching duplicate repairs. When already maintaining the factory, continue that case rather than recursively invoking this skill.
+Keep the user's/host's model and reasoning configuration. Do not hard-code models, switch providers, lower reasoning or buy fallback access because it seems better. If a role configuration is approved, verify its model/tools/context capability and record actual routing when exposed. Otherwise inherit the current configuration; mark unavailable model identity unknown. The skill cannot guarantee the external host's model. If capability is insufficient, present three available alternatives and one recommendation before a new routing decision.
+
+Use one maintenance record and the same authority/completion boundary. No correction allowances. The parent reconciles completed, failed and in-flight actions before retrying. Keep one active case for the same cause/checkpoint. Resume it after interruption; do not launch duplicate or recursive repairs.
 
 ## Review, adoption and resume
 
-After independent assessment, compare the exact reviewed candidate with the app's preserved bundle and current state. Establish whether the change affects runtime version/schema, task/profile/acceptance, required methods, app decisions or evidence. Check actual controller code and CLI; the table below describes the current 0.1.0 implementation, not future versions.
+After independent assessment, compare the exact reviewed candidate with the preserved bundle and current app state. Check effects on version/schema, task/profile/acceptance, methods, app decisions and evidence. Read the actual controller and CLI. This table describes 0.1.0.
 
-**No automatic pause, resume, upgrade or migrate command exists in 0.1.0.** A checkpoint here is an agent-managed record. Never invent a command or modify `.factory/state.json` to make adoption possible.
+Important: **0.1.0 has no automatic pause, resume, upgrade or migrate command.** The checkpoint is an agent record. Do not invent commands or edit `.factory/state.json` to permit adoption.
 
-| Current condition | Supported action |
+| Current condition | What to do |
 |---|---|
-| Existing instructions were skipped; no bundle change needed | Load the complete routine and recover the missing work. Reassess dependent artifacts/evidence; use the normal phase rules and `repair` where required. |
-| Repair is not adopted in this run | Continue with the unchanged old bundle only if the fault does not undermine the next steps or acceptance. Otherwise keep affected work blocked. |
-| Candidate preserves version/schema/task/profile and existing recorded analysis/plan remain substantively valid; phase is `build` | After authorized adoption, read the revised routines, re-evaluate the plan/consumers, append a compatibility note, then produce the next real batch artifact using the selected bundle. There are no passing checks to carry forward. |
-| Same compatible candidate; phase is `verify`, `improve`, `final-verify`, `review` or `ready` | Use the supported `repair --reason ...` transition before further work. This records a diagnostic correction and clears check/review acceptance; former max-repairs integers are historical metadata under the continuous controller; record a new batch, run the required check/improvement/final-check cycle, then obtain fresh review. |
-| Bundle inputs change during `analyze` or `plan` | The initial fingerprint prevents recording under changed inputs. Continue on the unchanged original bundle if sound, or preserve this run and prepare a separately reviewed run in a fresh app worktree. Do not rewrite its initial fingerprint. |
-| Version/schema/task/profile differs, or the earlier plan/analysis is no longer valid | No automatic migration is implemented. Preserve the original run and app work; prepare a reviewed task/profile and clean baseline in a fresh app worktree, explicitly carrying the relevant work and decisions. Re-run the necessary methods and QA there. |
-| Operation still active, protected acceptance changed unexpectedly, unavailable reviewer, or incompatible/unknown state | Block adoption. Retain the app checkpoint and exact candidate; resolve the actual condition. A fresh run must not bypass a failed gate or revive an owner-cancelled run. |
-| Phase is `cancelled` | Preserve the cancelled run. Restarting requires an authorized new task/run; do not revive it by editing state. |
+| Instructions were skipped; bundle need not change | Read the full routine and recover missing work. Reassess dependent artifacts/evidence. Follow normal phase rules and use `repair` where required. |
+| Repair is not adopted | Continue on the unchanged old bundle only if the fault does not undermine next steps or acceptance. Otherwise block affected work. |
+| Same version/schema/task/profile; recorded analysis/plan remain valid; phase is `build` | After authorized adoption, read revised routines, reassess plan/consumers, append a compatibility note and produce the next real batch with the selected bundle. No passing checks carry forward. |
+| Same compatible candidate; phase is `verify`, `improve`, `final-verify`, `review` or `ready` | Use `repair --reason ...` before further work. It records correction and clears check/review acceptance. Old max-repairs integers are history. Record a new batch, complete required checks/improvement/final checks, then obtain fresh review. |
+| Bundle inputs change during `analyze` or `plan` | The initial fingerprint prevents recording against changed inputs. Use the unchanged original if sound, or preserve the run and prepare a separately reviewed run in a fresh app worktree. Never rewrite the initial fingerprint. |
+| Version/schema/task/profile differs, or prior analysis/plan is invalid | No automatic migration exists. Preserve the run and app work. Prepare a reviewed task/profile and clean baseline in a fresh app worktree. Carry relevant work/decisions explicitly; rerun necessary methods and QA. |
+| Active operation, unexpected protected-acceptance change, unavailable reviewer, incompatible or unknown state | Block adoption. Keep checkpoint and candidate. Resolve the actual condition. A fresh run cannot bypass a failed gate or revive an owner-cancelled run. |
+| Phase is `cancelled` | Preserve it. Restart needs an authorized new task/run. Never revive it by editing state. |
 
-Adoption must be within existing user authority. A verified compatible local trial does not imply merge, release, global installation, or changing other sessions. Report the exact chosen bundle path and revision/dirty manifest. When the gate implementation itself changes, the separate assessor must validate its behavior independently; its own output alone cannot establish compatibility.
+Adopt only within user authority. A compatible local trial does not authorize merge, release, global installation or changes to other sessions. Report the exact selected path and revision/dirty manifest. If gate code changes, the separate assessor validates its behavior independently. The gate's own output is not enough.
 
-For a run using the portable entry, include `.factory/entry-bundle.json` in its checkpoint. After authorized compatible adoption, the app coordinator preserves the original selection in the maintenance record, then updates only the receipt's `bundle_root` and `revision` to the established candidate identity. Validate that identity with the portable resolver's explicit `--bundle` inspection before recording it; preserve dirty input hashes separately. Re-read the updated receipt and perform the supported controller resume/repair step above. If adoption is blocked, keep the original receipt unchanged. Never delete it to fetch latest, copy accepted state, or treat the new selection as QA. This is an agent-managed compatibility handoff, not automatic migration or a general upgrade command. A fresh worktree/run records its own selection and old/new lineage; it never overwrites the original run's receipt.
+For a portable-entry run:
+1. Checkpoint `.factory/entry-bundle.json`.
+2. After authorized compatible adoption, preserve its old selection in the maintenance record.
+3. Validate candidate identity using the portable resolver's explicit `--bundle` inspection.
+4. Update only the receipt's `bundle_root` and `revision`. Keep dirty input hashes separately.
+5. Read the receipt back. Perform the supported controller step in the table.
 
-If a fresh app worktree/run is necessary, leave the original intact, preserve needed dirty/untracked app work, record old/new run lineage and diagnostic history, authority and actual constraints, and inspect all copied artifacts for secrets and applicability. Do not copy accepted state or verdicts as fresh evidence. A new baseline must not silently redefine the original acceptance or claim unverified partial work passed. Historical exhausted allowances remain recorded as history; they are not active gates under the owner-selected continuous policy. Do not edit saved state to remove them.
+Blocked adoption leaves the old receipt intact. Never delete it to fetch latest, copy accepted state or treat a selection as QA. This is a compatibility handoff, not automatic migration or a general upgrade command. A fresh worktree/run gets its own receipt and old/new lineage; preserve the original.
 
-Re-read the current app status and actual work, compare against the latest checkpoint, and load the full revised routines before resuming the first unfinished or invalidated step. The app coordinator performs app mutations; the factory repairer does not overwrite them. Return to the existing delivery cycle once, preserving the original goal and required PR procedures.
+For a fresh app worktree/run, keep the original and needed dirty/untracked work. Record run lineage, correction history, authority and actual constraints. Check copied artifacts for secrets and applicability. Do not copy acceptance/verdicts as fresh evidence, redefine requirements or mark unverified partial work passed. Keep exhausted historical allowances as history; do not remove them from saved state.
 
-For rollback, preserve both bundle revisions and the original app state. Reverting the selected bundle does not restore old QA validity after app/environment changes: reassess compatibility and evidence again. If adoption fails, record the failure, stop dependent work, and use the known prior bundle only when it remains valid. Never label the app resumed until the actual supported next step has succeeded.
+Before resuming, read current app status and work, compare with the latest checkpoint and read revised routines fully. Resume the first unfinished/invalidated step. The app coordinator changes the app; the factory repairer does not overwrite it. Return once to the existing delivery cycle, preserving the goal and PR procedures.
+
+For rollback, keep both bundle revisions and original app state. Reverting a bundle does not restore QA after app/environment changes. Reassess compatibility and evidence. If adoption fails, record it and stop dependent work. Use the prior bundle only if still valid. Claim resumed only after the real supported next step succeeds.
 
 ## Basis and limits
 
-The checkpoint/isolation policy is Seif's selection on 2 October 2026. Provider documentation supports bounded delegation and explicit context handling; the policy above is our design, not a provider guarantee:
+Seif selected checkpoint/isolation on 2 October 2026. Supporting docs checked that day:
+- [OpenAI subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents): focused delegation with parent coordination.
+- [OpenAI worktrees](https://learn.chatgpt.com/docs/environments/git-worktrees): separate Git working directories.
+- [Claude Code subagents](https://code.claude.com/docs/en/sub-agents): separate context, forks and model settings.
 
-- [OpenAI subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents): separate delegated tasks and keep coordination in the main agent.
-- [OpenAI worktrees](https://learn.chatgpt.com/docs/environments/git-worktrees): independent Git working directories for concurrent work.
-- [Claude Code subagents](https://code.claude.com/docs/en/sub-agents): ordinary subagents start with separate context; forks and model configuration have distinct behavior.
-
-Documentation was checked on 2 October 2026. Actual host tools and permissions control availability. This skill ships no Claude-native adapter, hook installation, model router, state migration or automatic bundle pinning.
+This policy is our design, not a provider guarantee. Actual tools/permissions determine availability. This skill installs no Claude-native adapter, hook, model router, state migration or automatic bundle pinning.

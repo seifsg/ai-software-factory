@@ -67,7 +67,7 @@ Review the supplied task and profile first. Current initialization has no repair
 
 ## The agent does the work between these commands
 
-Run each command only after its preceding work is done. Do not paste all stages as a blind script. The artifacts are outputs of real analysis and implementation, not files to fill with passing claims.
+Honor Get Ready to Code's file-summary stop unless the user already authorized continuing through it. Run each command only after its preceding work is done. Do not paste all stages as a blind script. The artifacts are outputs of real analysis and implementation, not files to fill with passing claims.
 
 | Work the agent performs | Artifact it writes |
 |---|---|

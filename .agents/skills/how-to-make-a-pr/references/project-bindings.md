@@ -1,17 +1,29 @@
-# Bind the same procedure to each project
+# Use the actual project's settings
 
-Resolve these facts from the user's decisions, target instructions, remote metadata and actual tooling. Record their source in the PR. Search available project instructions/configuration, session records, remote metadata and authorized integrations before asking. UNKNOWN blocks the affected PR action and overall PR completion; continue independent authorized local implementation, QA and owner-test delivery. The [session contract](../../safe-engine/references/session-contract.md) governs authority; discovery never authorizes a guessed tracker, recipient or substitute handoff. Tool names are bindings, not substitutes for the procedure.
+Read the original procedure fully. Resolve its names and examples against the target project before acting. The [PR adapter](../../../../docs/pr-workflow.md) records current factory scope and review policies.
 
-| Binding | Required fact | Do not assume |
-|---|---|---|
-| Repository | Exact remote, integration/production branches, template, signing policy | Every repo has dev, or main always means production |
-| Task tracking | System, destination, search/create procedure, two-way link mechanism, exact awaiting-review state | A GitHub issue or local JSON automatically replaces ClickUp |
-| Routine-only applicability | Explicit routine repository and eligible paths, checked against full diff | All docs or all factory work are exempt |
-| Human review | Owner's identity, GitHub account, platform-supported handoff | RepairCheck's owners apply elsewhere, or an author can request themselves |
-| Notification | Destination, authorized audience/account, originating thread where relevant | A default Slack workspace/channel, or a guessed mention |
-| Reminders | Urgency, existing authority, cadence/backoff/stop condition | Every PR needs a new recurring automation |
-| Checks | Stack-specific commands, touched consumers, cycles check, required outputs | Every project uses npm, a browser, German copy or a mobile build |
-| Evidence | Real original goal, decisions, user journeys/locales, observability links, head/base | A source PR's language, customer IDs or telemetry vendor apply here |
-| Review continuity | Completion boundary, diagnostic history, actual constraints and explicit owner stops | An invented retry allowance, session deadline, unchanged approval reroll or new authority from nested review |
+Find the facts in the user's decisions, repository rules, remote metadata and available authorized integrations. Record the source. Ask only when a consequential fact is still missing.
 
-Keep credentials outside version control. Use existing project settings rather than introducing a new configuration system just to fill this table. If an adapter is missing, obtain the missing decision/access; do not downgrade the required outcome to optional.
+| Find | Check |
+|---|---|
+| Repository and branches | Actual remote, feature/release purpose, integration/production branches, PR template and signing policy. Do not assume dev exists. |
+| Project rules | Actual rule locations. Mobile `.cursor/rules` links and copied Mobile rules are source context; inspect this project's AGENTS/rules/configuration. |
+| Stack and checks | Actual build, lint, typecheck, test and cycle tools. Map Mobile's Expo/native/OTA concerns only where applicable. A missing check remains unverified. |
+| Product and language | Actual user journey, supported platforms and locales. German copy, React Native, NestJS and source config paths are not universal requirements. |
+| Task tracking | Real tracker, search/dedup procedure, destination, reverse links and exact awaiting-review state. A local note is not a tracker update. |
+| Routine-only exception | Confirm the designated routine repository and eligible paths against the full diff. Documentation alone does not establish the exception. |
+| Human handoff | Actual owner/account and supported review request. Do not guess a reviewer or request an unsupported author self-review. |
+| Notification and reminders | Authorized destination, audience, source thread and any requested cadence/stop condition. Source channels and names do not authorize sending or scheduling. |
+| Evidence | Original request, base/head, relevant decisions, real screenshots/logs and their limits. Do not copy source PR IDs or telemetry links as evidence. |
+
+The original bodies retain RepairCheck wording. Use these resolved settings in execution and output. Tool names mean the available equivalent capability; if none exists, report the missing step. Do not fabricate a successful action.
+
+Keep credentials outside Git. Preserve dirty work; use an isolated checkout instead of silently stashing or switching. Review-only stays read-only. Check existing permission before push, comments or notifications; explicit prior authorization remains valid.
+
+Unknown settings block the dependent action and PR completion. Keep independent authorized local work moving.
+
+## Factory app review
+
+Keep the restored Mobile rubrics unchanged. For factory acceptance, also preserve Seif's selected exit/recovery requirement: trace drafts, recordings and active work when closing, quitting or cancelling. If saving keeps failing, explain what remains unsaved and offer a reachable explicit exit with truthful loss consequences. Retry alone is not a usable exit. Never silently discard private work. Verify that the process and owned resources actually stop; hiding the window is not quitting.
+
+Unknown applicability stays UNKNOWN until supported. A mandatory-rule exception needs actual authority; an explanation alone is not permission to waive it. These are current factory acceptance rules, separate from the source wording.

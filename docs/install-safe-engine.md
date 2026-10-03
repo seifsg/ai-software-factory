@@ -2,6 +2,8 @@
 
 ## Small direct changes
 
+This route is for requested implementation. Explicit analysis, planning and review remain in their phase.
+
 Seif selected [small-change](../.agents/skills/small-change/SKILL.md) on 3 October: six lightweight routines, careful implementation, focused checks and one narrow independent assessment. This route precedes the full version workflow described below. No automatic broad regression, full-suite reruns or five-artifact planning for a small fix. Accumulated changes may prompt an offer of affected-area validation; execution waits for the user. It is an agent-operated scoped handoff, not a new controller command or whole-version acceptance. Existing pinned runs retain their bundle/state; see the method for explicit local trials and evidence limits.
 
 **Install `safe-engine` to build apps.** `improve-factory` repairs the factory and is not required as a separate installation. Both load the same complete factory; Seif's original methods remain canonical.
@@ -62,11 +64,13 @@ $safe-engine + your app request
   -> resolve complete private main bundle to one commit
   -> save the app's selected bundle path/revision
   -> read full canonical factory and all methods as each phase requires
-  -> analyze charts -> plan -> new-app research -> revised plan
+  -> analyze charts -> file-summary checkpoint -> plan -> new-app research -> revised plan
   -> build coherent batches -> feature feedback -> full QA
   -> worthwhile improvements -> final QA -> fresh review -> handoff
   -> both complete PR procedures when PR delivery is authorized
 ```
+
+Honor the original file-summary stop unless the user has already authorized continuing the plan.
 
 The agent creates a missing target directory within the agreed scope, preserves existing work, discovers real project settings, establishes the session contract and clean Git baseline, then initializes once. Your chosen task and product decisions remain yours. Meaningful authorized work continues without artificial correction credits; real permissions, required gates and owner stops remain effective. QA is batched after substantial work. Browser QA needs an actual runnable app/browser driver and observable outcomes.
 

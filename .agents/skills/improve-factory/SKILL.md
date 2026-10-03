@@ -1,69 +1,82 @@
 ---
 name: improve-factory
-description: "Repair or improve Safe Engine's skills, controller, or delivery workflow from user feedback, including during an app-building session. Preserve the active app, diagnose the factory failure, verify an isolated correction, and hand back a resumable checkpoint. Ordinary app defects stay in the app workflow."
+description: "Repair Safe Engine's skills, controller, or delivery workflow from feedback. Preserve any active app, verify the factory correction in isolation, and return a safe resume step. Ordinary app bugs stay in the app workflow."
 ---
 
 # Improve Factory
 
-## Proportionate maintenance
+Understand what happened and what Seif expected. Fix the actual factory cause. Preserve his methods and the app's progress.
 
-Route a bounded direct instruction/helper correction through [small-change](../small-change/SKILL.md), retaining this skill's app preservation, isolation, canonical-consumer updates and compatible adoption. Its lightweight alternatives replace the full analysis/planning/review steps below for that case. A change to factory-wide routing, acceptance or several interacting procedures needs the relevant maintenance analysis and independent behavioral exercise; this does not require unrelated controller/app suites. Select checks from the actual changed consumers. Keep one maintenance record and one final independent assessment, combining it with PR review when the selected mode permits. Do not recursively invoke maintenance from maintenance.
+For a requested bounded instruction/helper correction, use [small-change](../small-change/SKILL.md). Keep this skill's checkpoint, isolation, consumer updates, and adoption rules. Its light routines replace the full analysis, planning, and review below for that scope. An analysis-only or planning-only request stays in that phase.
 
-Turn Seif's explanation of what happened and what should happen into an evidenced factory correction. He owns the intended behavior and may delegate in-scope design and working-name choices through the [session contract](../safe-engine/references/session-contract.md). Reuse his existing methods in full; this skill coordinates them and does not replace them.
+Factory-wide routing, acceptance, or interacting procedure changes need the relevant maintenance analysis and an independent behavioral exercise. Select checks from affected consumers; do not run unrelated controller/app suites. Keep one maintenance record and one final independent assessment. Combine it with PR review when the selected scope permits. Do not recursively start maintenance.
 
-The selected mid-build policy is **checkpoint → isolated repair → independent review → compatible resume**. Parallel app work is allowed only when demonstrably independent of the fault and the factory repair. This is an agent-operated procedure, not an installed hook, automatic upgrade service, or guarantee of uninterrupted execution.
+For an active build, follow this order:
 
-## Intake and scope
+`Checkpoint → isolated repair → independent review → compatible resume`
 
-Accept a natural-language complaint; do not require the user to fill a technical form. Capture the original report, expected behavior, and any example. Find the relevant session artifacts, source, actual commands, and factory version yourself where accessible. Ask only for material missing facts or decisions.
+Parallel app work can continue only when it is demonstrably independent of the fault and repair. This is a procedure operated by the agent, not a hook or automatic upgrade service.
 
-Resolve the factory root from this file and the app root separately. Read factory/project rules and [approved decisions](../../../docs/safe-engine-decisions.md). Inspect status before editing. Distinguish:
+## Understand the report
 
-- An agent skipped an existing instruction: recover the missed step and investigate the invocation/handoff; a new rule may be unnecessary.
-- A skill is ambiguous or incomplete: correct its canonical owner and affected callers.
-- A controller or adapter is faulty: reproduce its observable failure and repair that layer.
-- A tool/access limitation or unresolved decision: preserve it as a blocker, not an invented implementation.
-- An application defect: return it to the app workflow unless there is separate evidence of a factory defect.
+Accept the user's own explanation. Record the report, expected behavior, and example. Find the session artifacts, source, actual commands, and factory version yourself. Ask only for consequential missing facts or decisions. Seif owns intended behavior and may delegate design and working-name choices through the [session contract](../safe-engine/references/session-contract.md).
 
-If an app run is active, **read and execute [live-session maintenance](references/live-session.md) before changing either workspace**. Capture its checkpoint before delegates start. If no run is active, use an isolated factory branch/worktree and skip the app-resume steps. Never silently stash, reset, switch, or upgrade the app's checkout.
+Resolve the factory root from this file and the app root separately. Read both projects' rules and [approved decisions](../../../docs/safe-engine-decisions.md). Inspect their status before edits.
 
-## Understand and prepare
+What actually failed?
 
-1. Read and execute [analyze-start](../analyze-start/SKILL.md), including real source, every consumer, an ASCII flow, claims versus evidence, and unknowns. Reproduce the reported behavior with the smallest relevant case where possible. Label an unobserved failure as unverified. No implementation during analysis.
-2. State the expected correction and preserved invariants: the original app goal, selected product/design decisions, Seif's complete routines, evidence freshness, continuous progress, owner stop decisions, and human release boundary. Changes to these invariants need the user's actual decision; editing a failing acceptance definition is not a repair.
-3. For a new substantive choice, compare three credible alternatives, recommend exactly one and explain why. Reuse approved choices and explicit delegation without asking again. An in-scope delegated selection or localized correction restoring agreed behavior may proceed under existing authority; owner-reserved choices remain pending. Keep unrelated opportunities out of the repair.
-4. Execute [get-ready-to-code](../get-ready-to-code/SKILL.md) Part A: file set, critique, phases, all todos, complete plan. Include reproduction/behavioral verification, affected consumers, before/after evidence, compatibility, and the app's next safe step.
+- An agent skipped an existing instruction: recover that step and inspect the invocation or handoff. A new rule may be unnecessary.
+- A skill is unclear or incomplete: fix its canonical owner and affected callers.
+- The controller or adapter is faulty: reproduce the observable failure and fix that layer.
+- A tool, access, or decision is missing: record the blocker. Do not invent an implementation.
+- The app has a bug: return it to app work unless there is separate evidence of a factory defect.
 
-## Repair and verify
+For an active app run, read and execute [live-session maintenance](references/live-session.md) before changing either workspace. Capture the checkpoint before delegates start. Without an active run, use an isolated factory branch/worktree and skip app-resume steps. Never silently stash, reset, switch, or upgrade the app checkout.
 
-- Give one writer ownership of the factory candidate in its isolated checkout. The app coordinator owns app changes and run state. A sub-agent has no automatic filesystem isolation: explicitly scope paths and tools. Follow the delegation contract in the live-session reference when applicable.
-- Execute the existing method's Part B, including the full 0–4 loop and pre/change/post inspection for every todo. Use Skill Creator for skill changes when available; otherwise preserve its required structural and behavioral checks and report the host limitation.
-- Fix the canonical cause rather than append a universal instruction for every complaint. Update actual consumers, skill index, provenance, and relevant usage/preview statements together. Avoid duplicated procedures and recursive skill invocation.
-- When required procedural inputs change, update [the factory input contract](../../../safe_engine/bundle-inputs.json) with the actual consumer map. Its required files protect against silent deletion; declared source trees discover added code/guidance. Use [pilot usage](../../../docs/pilot-usage.md) for the enforced fingerprint boundary and external-input limits; a whole candidate snapshot and that boundary are distinct evidence.
-- Batch relevant checks after the substantive correction. Use a behavioral regression for an executable bug or a realistic agent exercise for changed instructions; syntax/word matching alone does not demonstrate behavior. Preserve the initial failure and candidate evidence. See [validation scenarios](references/validation-scenarios.md) for applicable exercises, not a mandatory full suite on every edit.
-- Run [deep-review](../deep-review/SKILL.md) with its security, performance, and user-journey references, then [change-guard](../change-guard/SKILL.md) and [compliance-check](../compliance-check/SKILL.md). Check both the reported outcome and preserved behavior. No unsupported performance/quality claims.
-- Obtain a fresh **separate-instance** assessment of the exact candidate. Delegate that assessment when the host permits; supply raw evidence and required context, not a requested verdict. If the reviewer makes repairs, obtain another fresh assessment. Missing independent execution leaves acceptance blocked. Do not certify a changed gate using only that gate's new passing output: retain the old rule/repro and have the reviewer assess the gate change independently.
-- Follow the canonical session contract across delegates, retries and follow-ups: no invented credits, allowances, session deadlines or fixed retry ceiling. Preserve diagnostic history, require meaningful corrections and reconcile uncertain effects before another attempt. Discover alternatives when progress stalls. Never start another run to bypass failed acceptance or cancellation; actual missing access/authority blocks only dependent work.
+## Prepare the correction
 
-## Deliver and return to the app
+1. Read and execute [analyze-start](../analyze-start/SKILL.md). Inspect real source and consumers, draw the flow, separate claims from evidence, and state unknowns. Reproduce the smallest relevant case where possible. An unobserved failure stays unverified. Do not implement during analysis.
+2. State what should change and what must remain: app goal, selected product/design decisions, complete routines, fresh evidence, continuous progress, owner stops, and human release decisions. Changing these needs the user's actual decision. Editing a failed acceptance definition is not a repair.
+3. For a new substantive choice, compare three credible options and recommend one. Reuse approved choices and explicit delegation without asking again. A delegated choice or local correction restoring agreed behavior can proceed. Owner-reserved choices stay pending. Keep unrelated improvements out.
+4. Read [get-ready-to-code](../get-ready-to-code/SKILL.md). Prepare its files, critique, phases, todos, and complete plan. Honor the file-summary stop unless existing user delegation explicitly covers continuing the plan. Include reproduction, behavioral checks, consumers, before/after evidence, compatibility, and the app's next safe step.
 
-For every PR or PR update, read and execute [how-to-make-a-pr](../how-to-make-a-pr/SKILL.md) and its complete separate-instance [how-to-review-a-pr](../how-to-review-a-pr/SKILL.md). Local skill validation or a local candidate assessment does not replace this pair. Use actual [project bindings](../../../docs/pr-workflow.md); discover actual task/owner/notification settings before asking. Unresolved settings remain PR blockers; independent local repair and owner-test delivery continue. Preserve draft status and the human's ready/merge/release decision.
+## Repair and check
 
-Return a concise before/after explanation plus a durable maintenance record containing:
+Give one writer ownership of the factory candidate in its isolated checkout. The app coordinator owns app changes and run state. Delegation does not isolate files automatically: assign explicit paths and tools. For active runs, follow the live-session delegation contract.
 
-- Original report and intended behavior; reproduced cause or explicit unknown.
-- Approved/pending decisions and invariants; canonical files/routines read and analysis/plan artifacts.
-- App checkpoint reference when present; exact old/new bundle commits plus any dirty candidate manifest, diff, evidence and reviewer identity as actually known.
-- Verification results and their limits; diagnostic attempts/progress and actual constraints, blockers, and PR links when present.
-- Adoption decision, compatibility, rollback destination, next responsible agent and exact resume step.
+Use Get Ready to Code's complete 0–4 execution loop and pre/change/post inspection for every todo. Use Skill Creator for skill edits when available. Otherwise preserve its structural and behavioral checks and report the host limitation.
 
-Keep private runtime records in an excluded local directory (for example `.factory/maintenance/<unique-id>/`), verify exclusion, and share only minimal sanitized evidence outside it. Preserve saved controller artifacts; add supplementary records rather than overwrite them. A user-visible receipt is not a controller command or a proof of host enforcement.
+Fix the canonical cause. Do not append a universal rule for every complaint. Update actual consumers, skill index, provenance, and affected usage/preview statements. Avoid duplicate procedures and recursive calls.
 
-For an active app, return to [the live-session adoption procedure](references/live-session.md#review-adoption-and-resume). Report factory repair, PR delivery, and app adoption separately. A verified local candidate can be offered for an explicitly authorized local trial while its PR remains draft; do not describe it as released. If adoption is blocked, preserve the checkpoint and state whether the old bundle can safely continue. Resume the original app task only through its supported workflow, without initializing it again or silently changing its requirements.
+If required procedure inputs change, update [the factory input contract](../../../safe_engine/bundle-inputs.json) and its consumer map. Required files guard against deletion; declared source trees discover added code and guidance. Read [pilot usage](../../../docs/pilot-usage.md) for the fingerprint boundary and external-input limits. A whole-candidate snapshot and that fingerprint protect different things.
 
-## Invocation
+Batch relevant checks after the correction. Use a behavioral regression for executable bugs or a realistic agent exercise for changed instructions. Word matching or syntax checks alone do not prove behavior. Preserve the initial failure and candidate evidence. Choose applicable [validation scenarios](references/validation-scenarios.md); they are not a mandatory full suite for every edit.
 
-For installation across projects or hosts, use [the portable GitHub entry](../../../docs/install-improve-factory.md). Keep this canonical procedure in its complete factory bundle; its folder alone does not contain all dependencies.
+Run [deep-review](../deep-review/SKILL.md) and its [security](../deep-review/references/theme-security.md), [performance](../deep-review/references/theme-performance.md), and [user-journey](../deep-review/references/theme-user-journey.md) reviews, then [change-guard](../change-guard/SKILL.md) and [compliance-check](../compliance-check/SKILL.md). Check the correction and preserved behavior. Support quality and performance claims with evidence.
+
+Obtain a fresh assessment of the exact candidate from a separate instance. Delegate when supported. Give it raw evidence and context; do not ask for a particular verdict. If it makes repairs, get another fresh assessment. Missing independent execution blocks acceptance. For a changed gate, retain the old rule/reproduction and have the reviewer assess that change independently; its new passing output alone is insufficient.
+
+Follow the session contract across retries and delegates. Do not invent credits, allowances, deadlines, or retry ceilings. Keep diagnostic history, make meaningful corrections, and reconcile uncertain effects before retrying. Find alternatives when stuck. Do not start another run to bypass failure or cancellation. Missing access or authority blocks only dependent work.
+
+## Deliver and resume
+
+For authorized PR creation or updates, execute [how-to-make-a-pr](../how-to-make-a-pr/SKILL.md), its separate-instance [how-to-review-a-pr](../how-to-review-a-pr/SKILL.md), and [the project adapter](../../../docs/pr-workflow.md). Local validation or candidate review does not replace that pair. Discover actual task, owner, and notification bindings before asking. Missing bindings block PR completion; independent local repair and owner testing continue. Keep the PR draft and ready/merge/release decisions with the human.
+
+Give a short before/after explanation. Save one maintenance record with:
+
+- Original report, expected result, reproduced cause or unknown.
+- Approved/pending decisions, preserved requirements, methods read, analysis, and plan.
+- App checkpoint when present, exact old/new commits, dirty candidate manifest and diff where needed, evidence, and actual reviewer identity.
+- Checks and limits, diagnostic progress, real constraints, blockers, and any PR links.
+- Adoption decision, compatibility, rollback destination, next responsible agent, and exact resume step.
+
+Keep private records in an excluded directory such as `.factory/maintenance/<unique-id>/`. Verify exclusion. Share only minimal sanitized evidence externally. Add records alongside saved controller artifacts; do not overwrite them. A written receipt does not enforce host behavior or act as a controller command.
+
+For an active app, use [review, adoption, and resume](references/live-session.md#review-adoption-and-resume). Report repair, PR delivery, and app adoption separately. A verified local candidate can support an explicitly authorized trial while its PR remains draft; it is not released. If adoption is blocked, preserve the checkpoint and say whether the old bundle can safely continue. Resume the original app through its supported workflow. Do not initialize it again or silently change its requirements.
+
+## Invoke
+
+For installation across projects or hosts, use [the portable GitHub entry](../../../docs/install-improve-factory.md). Keep this procedure in the full factory bundle; this folder alone lacks dependencies.
 
 ```text
 Use $improve-factory. During this build, the factory did [what happened].
@@ -71,4 +84,4 @@ It should do [expected behavior]. Preserve this app's progress, repair the
 factory in isolation, and tell me what can safely resume.
 ```
 
-If the skill is not discovered in the current project, ask the agent to read this full file by its absolute path. File access and actual host capabilities are prerequisites; a name alone does not install a command.
+If skill discovery fails, read this entire file by absolute path. File access and actual host tools are still required.

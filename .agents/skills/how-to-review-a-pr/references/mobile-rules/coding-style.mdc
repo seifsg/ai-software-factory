@@ -1,0 +1,104 @@
+---
+alwaysApply: false
+---
+## Variable Declarations
+- ALWAYS use `const` for immutable values
+- ALWAYS use `let` for mutable values
+- NEVER use `var`
+- ALWAYS use meaningful variable names
+
+## Functions
+- ALWAYS use arrow functions for anonymous functions
+- ALWAYS use function declarations for named functions
+- ALWAYS use explicit return types for functions
+
+## Objects & Arrays
+- ALWAYS use object shorthand when possible
+- ALWAYS use destructuring for multiple properties
+- ALWAYS use trailing commas in multiline structures
+
+## Type Annotations
+- ALWAYS use explicit types for function parameters
+- ALWAYS use explicit return types for functions
+- ALWAYS use interfaces over type aliases for object shapes
+- ALWAYS use PascalCase for interfaces and types
+
+## Import/Export
+- ALWAYS use named imports when possible
+- ALWAYS order imports: external libraries first, then internal modules
+- ALWAYS use absolute imports for src/ files
+
+## Error Handling
+- ALWAYS use try-catch for async operations
+- ALWAYS handle errors explicitly
+- NEVER ignore promise rejections
+
+## Comments
+- ALWAYS use // for single-line comments
+- ALWAYS use /** */ for JSDoc comments
+- NEVER leave TODO comments in production code
+
+
+## Naming Conventions
+- ALWAYS use camelCase for variables and functions
+- ALWAYS use PascalCase for classes and interfaces
+- ALWAYS use UPPER_SNAKE_CASE for constants
+- ALWAYS use kebab-case for file names
+
+## Code Style Rules
+- ALWAYS keep comments and descriptions SHORT and TO THE POINT
+- ALWAYS use one sentence max for descriptions
+- ALWAYS focus on essential info only, no redundancy
+- NEVER write verbose explanations or over-document
+- NEVER repeat what's obvious from code
+
+## Architecture Rules
+- ALWAYS adhere to SOLID Principles
+- ALWAYS utilize design patterns and best practices
+- ALWAYS add comments explaining what a function does and why we need it
+- ALWAYS build in steps - main function calls step1, step2, step3 subfunctions
+- ALWAYS decompose complex functions into reusable subfunctions
+- ALWAYS keep functions simple and minimal
+- ALWAYS make least amount of code changes to achieve solution
+- ALWAYS keep code short and human readable
+- ALWAYS add checks for undefined, nulls, wrong values or exceptions
+- ALWAYS provide production ready code
+- NEVER let files exceed 1000 lines - create new files instead
+
+## Timeline Service Rules
+- ALWAYS use TimelineHelperService for timeline operations
+- ALWAYS import TimelineModule in your module
+- NEVER use TimelineService directly
+
+### Timeline Event Recording
+- ALWAYS handle timeline errors gracefully with try-catch
+- NEVER let timeline errors break main business logic
+- ALWAYS include meaningful metadata in timeline events
+- ALWAYS use specific event types over generic ones
+
+
+## Error Handling Rules
+- ALWAYS handle errors gracefully
+- ALWAYS continue main business logic when non-critical operations fail
+- ALWAYS log errors with sufficient context
+- NEVER let timeline or TalkJS errors break core functionality
+- ALWAYS use try-catch for non-critical integrations
+
+## Response Style Rules
+- Add wisdom and thoroughness to responses
+- Be creative and think of aspects people commonly miss or overlook
+- Always iterate until solution is solved directly without workarounds
+- Appreciate high quality and build systems that outlast their creator
+- Can use curse words and profanity
+- Vary tone: be smart, funny, noble, high class, fun, clever - pick random personas
+
+Swagger definitions always in their own separate files. Within a swagger folder.
+
+Controllers need to have paths that are correct and relative to the functions. Put the right function in the right controller path. Create other controllers if we don't fit.
+
+No cutting corners.
+
+Talk as brief as possible and always to the point. Only boast when its really something to brag about.
+
+
+Always import the config module and service that we have personalized and created within the project and not the default nestjs config module.

@@ -1,5 +1,7 @@
 # Safe Engine 0.1.0 — verified local pilot
 
+Skill sources, counts and PR procedures here describe their dated candidate. The [current Mobile-priority source map](skill-provenance.md#current-source-map--3-october-2026) supersedes those descriptions. These results do not re-certify the restored skills.
+
 **Historical evidence:** original finite allowances and retry-exhaustion proposals below describe their dated baseline. Seif superseded artificial credits, repair/retry ceilings and session deadlines on 2 October 2026. Current operation follows the [continuous session contract](../.agents/skills/safe-engine/references/session-contract.md); historical results are preserved, not re-certified.
 
 Verified on 1 October 2026. The factory completed a real local delivery cycle on a disposable browser application. This proves the declared pilot path, not a general unattended software factory or every planned specialist capability.

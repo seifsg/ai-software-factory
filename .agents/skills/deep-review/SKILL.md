@@ -1,12 +1,9 @@
 ---
 name: deep-review
-description: "Review implementation quality for bugs, missing cases, dependency problems, performance, and unnecessary complexity. Use for a substantive code review or completed feature improvement pass."
+description: Deep code analysis and review that hunts for bugs, oversights, anti-patterns, performance issues, stupid mistakes, potential blockers, wrong implementations, and bad code. Use when wanting a thorough code review, quality audit, or pre-merge verification of implementation quality.
 ---
 
-
 # Deep Review
-
-**Small-change routing takes precedence.** For a bounded direct fix, use the corresponding lightweight routine in [small-change](../small-change/SKILL.md), then return to its compact handoff. The full procedure below applies to version work; do not execute both versions or escalate a small fix into full QA.
 
 Ruthless code review. No mercy, no shortcuts. Find every damn problem.
 
@@ -34,12 +31,10 @@ Ruthless code review. No mercy, no shortcuts. Find every damn problem.
 - Missing validation on inputs (DTOs, params, query strings)
 - Incomplete error handling (catch blocks that swallow errors)
 - Missing logging for debugging critical paths
-- For app work, apply [app diagnostics](../safe-engine/references/app-diagnostics.md): inspect the coverage map and real event sites, safe context/correlation, bounded retention, logger failures and owner discovery. Missing changed-journey diagnostics require the scoped correction; report wider app gaps without inventing a full-app retrofit.
-- Apply [app efficiency](../safe-engine/references/app-efficiency.md) for affected app operations: assess early cost/reuse decisions, actual invocation/resource evidence and cache validity/ownership/bounds. Necessary cost can remain; a cache's existence alone does not demonstrate optimization.
 - Forgotten TODO/FIXME items that should be addressed now
 
 #### 3. Anti-Patterns
-- Functions doing too much
+- God classes or functions doing too much
 - Tight coupling between modules
 - Magic numbers/strings without constants
 - Callback hell or deeply nested conditionals
@@ -57,7 +52,7 @@ Ruthless code review. No mercy, no shortcuts. Find every damn problem.
 - Heavy operations in hot paths
 
 #### 5. Stupid Mistakes
-- Ad-hoc debug output left in production code; preserve intentional structured diagnostics required by the app's logging contract
+- Console.log left in production code
 - Commented-out code that should be removed
 - Dead code or unreachable branches
 - Wrong file/module imported
@@ -81,8 +76,8 @@ Ruthless code review. No mercy, no shortcuts. Find every damn problem.
 
 #### 8. Bad Code
 - Poor naming (single letters, misleading names, abbreviations)
-- Functions with mixed responsibilities or difficult-to-follow control flow; length is an inspection prompt
-- Files with unclear ownership or excessive coupling; length alone does not require splitting
+- Functions over 50 lines
+- Files over 500 lines
 - No error messages or unhelpful ones
 - Inconsistent patterns within the same module
 - Missing TypeScript types (any, unknown abuse)
@@ -120,11 +115,3 @@ Ruthless code review. No mercy, no shortcuts. Find every damn problem.
 ### Verdict
 [Overall assessment - is this code ready to ship?]
 ```
-
-## Applicable lenses
-
-Read [security](references/theme-security.md), [performance](references/theme-performance.md), and [user journey](references/theme-user-journey.md) when relevant to the task. Report actual findings, including none; the priority list can contain fewer than three. A reviewer repair requires affected checks and a fresh independent assessment.
-
-## Provenance
-
-Adapted from Seif's existing procedure. See [provenance and adaptations](../../../docs/skill-provenance.md). Current user instructions and the reviewed task govern its use.
