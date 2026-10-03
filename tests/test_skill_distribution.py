@@ -155,6 +155,84 @@ class DistributionTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, 'Invalid required_files'):
             resolver.inspect_bundle(self.source)
 
+    def test_factory_and_maintenance_entries_route_to_their_canonical_methods(self):
+        for name in resolver.ENTRYPOINTS:
+            result = resolver.inspect_bundle(self.source, entrypoint=name)
+            self.assertEqual(Path(result['entrypoint']), self.source / f'.agents/skills/{name}/SKILL.md')
+        with self.assertRaisesRegex(RuntimeError, 'Unknown factory entrypoint'):
+            resolver.inspect_bundle(self.source, entrypoint='../other')
+
+    def test_packaged_helpers_have_one_owner_and_no_distribution_drift(self):
+        root = SCRIPT.parents[3]
+        owner = (root / 'safe_engine/distribution.py').read_bytes()
+        for name in resolver.ENTRYPOINTS:
+            self.assertEqual((root / f'skills/{name}/scripts/resolve_bundle.py').read_bytes(), owner)
+
+    def test_standalone_factory_cli_selects_delivery_without_maintenance_install(self):
+        script = SCRIPT.parents[2] / 'safe-engine/scripts/resolve_bundle.py'
+        result = subprocess.run([sys.executable, str(script), '--bundle', str(self.source)],
+                                check=True, capture_output=True, text=True)
+        self.assertEqual(Path(json.loads(result.stdout)['entrypoint']),
+                         self.source / '.agents/skills/safe-engine/SKILL.md')
+
+    def new_project(self):
+        project = self.root / 'app with spaces'
+        project.mkdir()
+        (project / 'user-file.txt').write_text('preserve this\n')
+        return project
+
+    def test_project_selection_resumes_offline_and_preserves_app_progress(self):
+        project = self.new_project()
+        cache = self.root / 'unused cache'
+        first = resolver.select_for_project(project, self.source, None, cache, 'safe-engine')
+        receipt = Path(first['selection_record'])
+        before = receipt.read_bytes()
+        state = project / '.factory/state.json'
+        state.write_text('{"progress":"in-flight"}')
+        with patch.object(resolver, 'resolve_bundle', side_effect=AssertionError('no network on resume')):
+            again = resolver.select_for_project(project, None, None, cache, 'safe-engine')
+        self.assertEqual(again, first)
+        self.assertEqual(receipt.read_bytes(), before)
+        self.assertEqual(state.read_text(), '{"progress":"in-flight"}')
+        self.assertEqual((project / 'user-file.txt').read_text(), 'preserve this\n')
+        self.assertFalse(cache.exists())
+
+    def test_selection_rejects_upgrades_missing_bundle_and_changed_revision(self):
+        project = self.new_project()
+        cache = self.root / 'unused cache'
+        resolver.select_for_project(project, self.source, None, cache, 'safe-engine')
+        for bundle, ref in ((None, 'main'), (self.root / 'other checkout', None)):
+            with self.assertRaisesRegex(RuntimeError, 'cannot be upgraded'):
+                resolver.select_for_project(project, bundle, ref, cache, 'safe-engine')
+        self.git('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid',
+                 'commit', '--allow-empty', '-qm', 'changed revision', cwd=self.source)
+        with self.assertRaisesRegex(RuntimeError, 'requested commit'):
+            resolver.select_for_project(project, None, None, cache, 'safe-engine')
+
+    def test_legacy_run_never_falls_back_to_latest_bundle(self):
+        project = self.new_project()
+        (project / '.factory').mkdir()
+        state = project / '.factory/state.json'
+        state.write_text('legacy run must survive')
+        with patch.object(resolver, 'resolve_bundle', side_effect=AssertionError('no latest fallback')):
+            with self.assertRaisesRegex(RuntimeError, 'establish its original bundle'):
+                resolver.select_for_project(project, None, None, self.root / 'cache', 'safe-engine')
+        self.assertEqual(state.read_text(), 'legacy run must survive')
+        result = resolver.select_for_project(project, self.source, None, self.root / 'cache', 'safe-engine')
+        self.assertEqual(result['revision'], self.revision)
+        self.assertEqual(state.read_text(), 'legacy run must survive')
+
+    def test_invalid_selection_cannot_fetch_or_overwrite_evidence(self):
+        project = self.new_project()
+        (project / '.factory').mkdir()
+        receipt = project / '.factory/entry-bundle.json'
+        for value in ('not json', json.dumps({'version': 1, 'bundle_root': 'relative', 'revision': self.revision})):
+            receipt.write_text(value)
+            with patch.object(resolver, 'resolve_bundle', side_effect=AssertionError('no fetch')):
+                with self.assertRaises(RuntimeError):
+                    resolver.select_for_project(project, None, None, self.root / 'cache', 'safe-engine')
+            self.assertEqual(receipt.read_text(), value)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,6 +1,6 @@
 # Skill index
 
-For reuse across projects, install [the portable improve-factory entry](../../skills/improve-factory/SKILL.md) using [the GitHub installation guide](../../docs/install-improve-factory.md). It resolves the complete bundle and loads the canonical method below; it is an installation adapter for the same skill, not an eleventh procedure.
+For building apps across projects, install [the portable Safe Engine entry](../../skills/safe-engine/SKILL.md) using [its GitHub installation guide](../../docs/install-safe-engine.md). For factory repairs, [Improve Factory](../../docs/install-improve-factory.md) is an optional separate installation. Both load the complete bundle and canonical methods below; these two adapters add no new canonical procedures.
 
 Ten real entrypoints are packaged: seven adapted from Seif's supplied collection, the delivery coordinator, the authorized factory-maintenance skill, and the requested market-research skill. The original six belong to the demonstrated Safe Engine 0.1.0 pilot; the two complete PR procedures and `improve-factory` were added on 2 October at Seif's explicit request. Packaging does not prove every workflow outcome. See the [pilot verification record](../../docs/pilot-verification.md) and [PR workflow status](../../docs/pr-workflow.md).
 

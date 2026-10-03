@@ -34,7 +34,7 @@ QA fingerprints bind the controller and declared operative guidance, including a
 
 ## Start here
 
-For a new chat or another project, use the [pasteable fresh-session starter](docs/start-another-session.md). To see the first run, open the [recorded walkthrough](examples/pilot-walkthrough.md), including before/after images and the actual repair. [Complete example commands](examples/pilot-commands.md) show setup and every controller step. Claude Code and cloud limitations are explicit in the starter guide.
+For a new chat or another project, [install Safe Engine as a regular skill](docs/install-safe-engine.md), then invoke `$safe-engine` with your app request and target path. The [fresh-session starter](docs/start-another-session.md) also supports manual bundle use. To see the first run, open the [recorded walkthrough](examples/pilot-walkthrough.md), including before/after images and the actual repair. [Complete example commands](examples/pilot-commands.md) show setup and every controller step. Claude Code and cloud limitations are explicit in the starter guide.
 
 Read [pilot setup and usage](docs/pilot-usage.md), then ask Codex in this repository:
 
@@ -44,7 +44,7 @@ This retains Seif's analysis charts, planning critique, per-todo inspection, bat
 
 When the factory itself needs correction, use [improve-factory](.agents/skills/improve-factory/SKILL.md), including during an app build. It preserves the app checkpoint, coordinates an isolated repair and independent assessment, then checks whether the current run can adopt it. This is an agent-operated procedure; automatic hooks, bundle migration, and uninterrupted upgrades are not implemented.
 
-To call it from other projects, [install the reusable skill from GitHub](docs/install-improve-factory.md). Install **`skills/improve-factory`**: this portable entry loads the complete versioned factory and preserves an active app's recorded bundle. Invoke `$improve-factory` in Codex or `/improve-factory` after installation in Claude Code. Private GitHub access and the documented host prerequisites apply; native Claude execution remains unverified.
+For factory maintenance from other projects, [install Improve Factory](docs/install-improve-factory.md). Install **`skills/improve-factory`**: this portable entry loads the complete versioned factory and preserves an active app's recorded bundle. Invoke `$improve-factory` in Codex or `/improve-factory` after installation in Claude Code. Private GitHub access and the documented host prerequisites apply; native Claude execution remains unverified.
 
 Open [the visual introduction](preview/index.html) in a browser. Its concise first screen explains the goal and the process: understand, build, check, approve. A single status line shows where we are today. It works locally without installation or external dependencies.
 
@@ -71,7 +71,9 @@ docs/pilot-usage.md       Setup, commands, recovery and limits
     scripts/              Helpers when needed
     references/           Supporting instructions when needed
     assets/               Reusable output assets when needed
-skills/improve-factory/   Installable entry loading the complete canonical bundle
+skills/safe-engine/       Installable app-building entry loading the complete bundle
+skills/improve-factory/   Optional installable factory-maintenance entry
+scripts/package_skill_entries.py  Publish/check both resolver copies from one owner
 ```
 
 Create supporting folders only when a skill needs them. Keep skill names lowercase with hyphens. A skill's frontmatter name must match its folder name.

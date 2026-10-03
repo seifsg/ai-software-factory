@@ -26,6 +26,7 @@
     "AGENTS.md",
     "README.md",
     "docs/install-improve-factory.md",
+    "docs/install-safe-engine.md",
     "docs/pilot-implementation.md",
     "docs/pilot-usage.md",
     "docs/pilot-verification.md",
@@ -41,18 +42,23 @@
     "safe_engine/__init__.py",
     "safe_engine/__main__.py",
     "safe_engine/bundle-inputs.json",
+    "safe_engine/distribution.py",
     "safe_engine/project.py",
     "safe_engine/review-schema.json",
     "safe_engine/runner.py",
     "safe_engine/storage.py",
     "safe_engine/workflow.py",
+    "scripts/package_skill_entries.py",
     "skills/improve-factory/SKILL.md",
-    "skills/improve-factory/scripts/resolve_bundle.py"
+    "skills/improve-factory/scripts/resolve_bundle.py",
+    "skills/safe-engine/SKILL.md",
+    "skills/safe-engine/scripts/resolve_bundle.py"
   ],
   "source_trees": [
     "safe_engine",
     ".agents/skills",
     "skills",
-    "docs"
+    "docs",
+    "scripts"
   ]
 }
