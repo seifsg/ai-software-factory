@@ -4,6 +4,8 @@ Seif's software-building skills and **Safe Engine 0.1.0**, the local controller 
 
 Understand the request. Prepare the work. Build it. Check it. Return the result with evidence.
 
+**Reading from your phone?** Start with the [factory status and skill links](docs/factory-status.md), then the [full audit](docs/factory-audit-2026-10-03.md). Both render directly on GitHub. Sign in with an account that can access this private repository.
+
 ## The skills
 
 Use Seif's originals where they exist. RepairCheck Mobile comes first. Write the remaining skills in the same direct style. Keep real requirements; remove needless explanation and hidden workflow changes.
