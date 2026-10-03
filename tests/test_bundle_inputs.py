@@ -24,20 +24,25 @@ class BundleInputTests(unittest.TestCase):
         self.binding.start()
         self.addCleanup(self.binding.stop)
 
-    def test_app_diagnostics_changes_inputs_and_cannot_be_omitted(self):
-        name = '.agents/skills/safe-engine/references/app-diagnostics.md'
-        self.assertIn(name, bundle_input_paths(self.bundle))
+    def test_app_defaults_change_inputs_and_cannot_be_omitted(self):
         def current():
             return fingerprint(self.fixture.root, self.fixture.profile, self.fixture.task,
                                self.fixture.flow.directory)
-        before = current()
-        path = self.bundle / name
-        original = path.read_bytes()
-        path.write_bytes(original + b'\nChanged diagnostic guidance fixture.\n')
-        self.assertNotEqual(current(), before)
-        path.unlink()
-        with self.assertRaisesRegex(EngineError, 'Required factory input.*app-diagnostics'):
-            bundle_input_paths(self.bundle)
+        for default in ('app-diagnostics', 'app-efficiency'):
+            with self.subTest(default=default):
+                name = f'.agents/skills/safe-engine/references/{default}.md'
+                self.assertIn(name, bundle_input_paths(self.bundle))
+                before = current()
+                path = self.bundle / name
+                original = path.read_bytes()
+                try:
+                    path.write_bytes(original + b'\nChanged app guidance fixture.\n')
+                    self.assertNotEqual(current(), before)
+                    path.unlink()
+                    with self.assertRaisesRegex(EngineError, f'Required factory input.*{default}'):
+                        bundle_input_paths(self.bundle)
+                finally:
+                    path.write_bytes(original)
 
     def test_mandatory_decision_change_runs_every_real_command(self):
         self.fixture.full()

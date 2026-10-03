@@ -13,6 +13,8 @@ New apps and substantial features retain the version workflow below. Do not run 
 
 For every app, read [app diagnostics](references/app-diagnostics.md). Sufficient logs are a default component: include app-wide coverage in new-app design and delivery; audit existing coverage and automatically add the minimum missing module/events for changed journeys. Carry focused diagnostic evidence and log discovery into QA, review and handoff using the selected scope. Preserve protected records and report wider gaps honestly.
 
+Read [app efficiency](references/app-efficiency.md) during analysis and planning, before building app features. Plan CPU/memory/resource lifetimes and safe reuse of repeated expensive work from the beginning; implement worthwhile caching with explicit validity and bounds. Version QA/review and the normal handoff must carry the planned resource/reuse evidence and its limits. Existing changes stay focused on affected journeys; Small Change routes this same default without a broad optimization or regression sweep.
+
 This is the small coordinator for the local pilot. Seif's procedures own analysis, planning, implementation, and review. Read [pilot usage](../../../docs/pilot-usage.md) for the real CLI, profile, limitations, and recovery. Resolve the bundle root from this skill's location; do not assume the target project contains the controller.
 
 ## Start or resume

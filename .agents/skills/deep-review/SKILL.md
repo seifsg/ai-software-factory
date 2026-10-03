@@ -35,6 +35,7 @@ Ruthless code review. No mercy, no shortcuts. Find every damn problem.
 - Incomplete error handling (catch blocks that swallow errors)
 - Missing logging for debugging critical paths
 - For app work, apply [app diagnostics](../safe-engine/references/app-diagnostics.md): inspect the coverage map and real event sites, safe context/correlation, bounded retention, logger failures and owner discovery. Missing changed-journey diagnostics require the scoped correction; report wider app gaps without inventing a full-app retrofit.
+- Apply [app efficiency](../safe-engine/references/app-efficiency.md) for affected app operations: assess early cost/reuse decisions, actual invocation/resource evidence and cache validity/ownership/bounds. Necessary cost can remain; a cache's existence alone does not demonstrate optimization.
 - Forgotten TODO/FIXME items that should be addressed now
 
 #### 3. Anti-Patterns

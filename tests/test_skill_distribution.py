@@ -56,17 +56,19 @@ class DistributionTests(unittest.TestCase):
         self.assertEqual(untracked.read_text(), "preserve me\n")
         # The origin is real GitHub, but the command only inspects the local checkout.
 
-    def test_missing_default_app_diagnostics_rejects_bundle(self):
-        name = '.agents/skills/safe-engine/references/app-diagnostics.md'
-        path = self.source / name
-        path.write_text('Current diagnostic guidance fixture.\n', encoding='utf-8')
-        self.add_contract(required=[name])
-        resolver.inspect_bundle(self.source)
-        path.unlink()
-        with self.assertRaisesRegex(RuntimeError, 'Incomplete factory bundle:.*app-diagnostics'):
-            resolver.inspect_bundle(self.source)
+    def test_missing_default_app_guidance_rejects_bundle(self):
+        for default in ('app-diagnostics', 'app-efficiency'):
+            with self.subTest(default=default):
+                name = f'.agents/skills/safe-engine/references/{default}.md'
+                path = self.source / name
+                path.write_text('Current app guidance fixture.\n', encoding='utf-8')
+                self.add_contract(required=[name])
+                resolver.inspect_bundle(self.source)
+                path.unlink()
+                with self.assertRaisesRegex(RuntimeError, f'Incomplete factory bundle:.*{default}'):
+                    resolver.inspect_bundle(self.source)
 
-    def test_older_pinned_selection_without_diagnostics_stays_intact(self):
+    def test_older_pinned_selection_without_app_defaults_stays_intact(self):
         self.add_contract()
         project = self.root / 'older app'
         project.mkdir()
@@ -78,6 +80,7 @@ class DistributionTests(unittest.TestCase):
         self.assertEqual(resumed['revision'], self.revision)
         self.assertEqual(receipt.read_bytes(), before)
         self.assertFalse((self.source / '.agents/skills/safe-engine/references/app-diagnostics.md').exists())
+        self.assertFalse((self.source / '.agents/skills/safe-engine/references/app-efficiency.md').exists())
 
     def test_subdirectory_wrong_origin_and_missing_dependency_are_rejected(self):
         with self.assertRaisesRegex(RuntimeError, "checkout root"):

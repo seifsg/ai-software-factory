@@ -38,6 +38,7 @@ Use the reviewed project profile, actual source, repository rules, and current u
    callers, consumers, route/DTO/schema references, event names, storage keys, tests. List them.
    This is what later regression/change-guard checks build on. Prefer grep/read over assumption.
    For app work, read [app diagnostics](../safe-engine/references/app-diagnostics.md) and map actual logging coverage/gaps across applicable subsystems and the changed journeys. A logger file does not prove event coverage. Carry this inventory into planning; no implementation during analysis.
+   Also apply [app efficiency](../safe-engine/references/app-efficiency.md): trace material repeated costs, resource ownership/lifetimes and expected workload. Separate unnecessary regeneration from duplicate user effects; carry measured baselines or explicit unknowns and reuse opportunities into planning.
 4. **Draw ASCII charts.** Use ASCII diagrams to show the flow and the architecture — trigger →
    layers → data/persistence → result — and mark where the change sits.
 

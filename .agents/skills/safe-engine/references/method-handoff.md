@@ -6,6 +6,8 @@ Use on initial load, after context loss, on resume and when handing work to anot
 
 For every app, carry the [app diagnostics](app-diagnostics.md) coverage inventory, actual module/event sites, safe log location/access/retention, focused evidence and remaining gaps/unknowns. New apps include this component by default; small changes retain its scoped automatic backfill and focused checks. The receiving instance reads the reference; a summary or historical full-version pass is not current diagnostic coverage evidence.
 
+Carry [app efficiency](app-efficiency.md) decisions from analysis/planning through build, QA, review and handoff: material workload/targets, repeated costs, reuse validity/bounds/lifetime, actual cold/warm/resource evidence and unresolved limits. The receiver loads this canonical guidance within the selected full or small scope. No inherited full-version pass or fake-dependency timing certifies a real app speedup.
+
 | When | Full instruction to load | Evidence carried forward |
 |---|---|---|
 | Understand, before coding | [analyze-start](../../analyze-start/SKILL.md) | Purpose, real source, all consumers, ASCII chart, claims vs code, unknowns |

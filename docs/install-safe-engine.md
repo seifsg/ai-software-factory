@@ -78,9 +78,11 @@ The portable helper uses `.factory/entry-bundle.json` to select a complete check
 
 An older run without the record needs its original bundle established from the existing session/checkpoint artifacts. Use `--bundle <absolute-original-factory-root>` with `--project` only after establishing that identity; a commit/version alone cannot identify dirty inputs. The resolver reports dirty state; the canonical checkpoint/evidence rules record actual hashes. The receipt is selection metadata, never a passing QA certificate or an authority to edit acceptance. Factory upgrades go through `improve-factory` and its compatibility review, not deletion of the receipt.
 
-## Reviewed local diagnostics trial
+## Reviewed local app-defaults trial
 
 An unmerged candidate does not change what a normal new-project resolution of `main` loads. When the owner authorizes local use after fresh independent assessment, the app coordinator can preserve the installed entry and add a host-local `references/local-app-diagnostics.md` alongside it. Record the actual authority/scope, clean candidate absolute root and exact commit, canonical Safe Engine/Small Change/diagnostics paths, independent assessment evidence, prior installation/bundle identities and usable rollback destination. Verify these facts before activation; this optional record is not distributed to other hosts.
+
+The existing record filename is retained for compatibility; an explicitly authorized reviewed efficiency correction can extend its scope to [app efficiency](../.agents/skills/safe-engine/references/app-efficiency.md). Record that canonical path and fresh assessment too. Load the selected app defaults at analysis/planning and preserve earlier diagnostic/Small Change behavior. Do not silently give an older recorded trial new capabilities or authority.
 
 For a **new project with no run or selection**, inspect the reviewed complete candidate with the installed resolver's `--bundle <candidate-root>`, then explicitly select it with `--bundle <candidate-root> --project <target>`. Read its canonical method and include diagnostics before creating the new task/profile. Record launcher and candidate identities separately; this is a local trial, not a merged release.
 

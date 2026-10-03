@@ -12,6 +12,8 @@ scale?**
 
 Apply to the target project's actual stack and workload. Web and mobile mechanisms below are examples, not required technologies.
 
+For app work, read [app efficiency](../../safe-engine/references/app-efficiency.md). Compare planned resource/reuse decisions with actual call sites and focused evidence: repeated expensive work, cache validity and capacity, concurrent misses, cancellation/ownership, cold/warm behavior and resource release/idle costs. Keep source-proven repeated work distinct from measured CPU/memory gains, and regeneration distinct from duplicate user effects. Scope to the change and real workload; do not demand an unrelated benchmark suite.
+
 - **Data / DB** — N+1 queries; missing indexes on queried columns; unbounded fetches (no
   pagination/limit); `SELECT *` / missing projection; queries in a loop that could be one batched
   query; missing transaction where needed. On mobile, also client caching misconfig (e.g. no

@@ -25,6 +25,8 @@ Read the changed behavior's real implementation and trace the relevant callers/e
 
 For app changes, read [app diagnostics](../safe-engine/references/app-diagnostics.md), inspect existing facilities/event sites and keep its compact app-wide coverage inventory in this same record. Automatically include an absent minimum shared module and missing events for this journey/affected consumers in the small patch; implement and check them through the remaining routines. Record wider gaps/unknowns honestly without turning this fix into a full instrumentation sweep or QA cycle.
 
+Apply [app efficiency](../safe-engine/references/app-efficiency.md) to the affected path: identify material repeated work/resource lifetime, choose useful safe reuse and record the smallest relevant evidence. Carry applicable cache validity, bounds, cancellation/ownership and cold/warm checks into preparation, code, this narrow review and handoff. A copy/input change with no resource impact needs only that supported conclusion; no automatic benchmark, new cache or app-wide optimization sweep.
+
 ### 2. Prepare lightly
 
 State the files/behavior to change, the smallest complete solution and the exact verification needed. Critique that choice briefly. Preserve earlier decisions; do not invent alternatives to a user-selected repair. Reuse existing relevant checks where they exercise the actual failure. This replaces the five full planning artifacts.

@@ -16,6 +16,7 @@ Our motto: **give 100% minimum; aim to give more through the quality of the work
 - Review and refine the output before calling it finished. Iterate further when doing so materially improves the result.
 - Overdeliver through useful improvements that are needed within the agreed scope. Preserve the user's intent and avoid adding unsolicited deliverables or unrelated features.
 - Judge success by the quality and usefulness of the outcome, rather than the amount of material produced.
+- For app work, apply [app efficiency](.agents/skills/safe-engine/references/app-efficiency.md) from analysis/planning through the selected scoped handoff: design CPU/memory/resource lifetimes, implement useful safe caching/reuse and verify relevant costs and correctness. Keep small changes focused and preserve necessary costs; a factory instruction is not proof of an optimized app.
 
 ## Skill development
 
