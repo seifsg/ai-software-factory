@@ -95,6 +95,7 @@ Start with actual skills and working use cases. Implement the selected Safe Engi
 - Distinguish implemented, tested, accepted, and deployed states.
 - Use observable evidence for completion. A generated summary alone is insufficient.
 - Continue meaningful authorized work until the agreed verified outcome or an explicit owner stop. Diagnose stalled progress, research alternatives, reconcile uncertain actions and report actual access/authority obstacles; do not invent credits or exhaustion stops.
+- A failed UI/control route requires [permitted-route discovery and recovery](.agents/skills/safe-engine/references/session-contract.md#recover-a-failed-control-route) before calling the outcome blocked. App exit and recovery feedback are reviewed through the existing user-journey lens; these instructions install no process-control service.
 - Keep secrets, client data, local runtime state, and generated run artifacts out of version control.
 
 Project skills live in `.agents/skills`. Discovery depends on the host and repository context. From another project, explicitly reference this bundle's coordinator by absolute path or install it separately; creating this repository does not install its skills globally.

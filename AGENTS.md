@@ -44,6 +44,8 @@ When connecting skills, make the handoff explicit: inputs, output artifact, acce
 
 For unattended workflows, follow the [session contract](.agents/skills/safe-engine/references/session-contract.md) to record delegated authority, completion boundaries, diagnostic progress and actual constraints. Continue authorized work without artificial credits, repair allowances, fixed retry limits or session deadlines; honor explicit owner stops. Avoid duplicate actions on retries. Keep independent acceptance checks outside the builder's unrestricted control when their integrity matters.
 
+Before handing a runtime-control problem back to the owner, follow the contract's [failed-route recovery](.agents/skills/safe-engine/references/session-contract.md#recover-a-failed-control-route). A missing UI window does not establish that every permitted CLI/API route is unavailable. Preserve exact-target authority, state and tool restrictions; report actual recovery evidence. Review app exit and failure feedback through the existing user-journey lens.
+
 ## Verification and changes
 
 - For application development, batch unit and E2E runs after substantial planned work; do not run tests after every edit or start test watchers by default. Before pushing a feature, inspect worthwhile in-scope design, cleanup, reuse, performance, security, and agent-navigability improvements, then verify the affected result. Read `docs/safe-engine-fast-delivery.md`; its broader option recommendations remain unselected. The 2 October owner-selected cadence supports completed feature feedback and comprehensive version checkpoints; see the canonical usage guide. User updates should be concise and outcome-focused, with complete method evidence in durable linked artifacts.
