@@ -6,6 +6,8 @@ description: "Review implementation quality for bugs, missing cases, dependency 
 
 # Deep Review
 
+**Small-change routing takes precedence.** For a bounded direct fix, use the corresponding lightweight routine in [small-change](../small-change/SKILL.md), then return to its compact handoff. The full procedure below applies to version work; do not execute both versions or escalate a small fix into full QA.
+
 Ruthless code review. No mercy, no shortcuts. Find every damn problem.
 
 ## Instructions

@@ -6,6 +6,8 @@ description: "Review regressions after a substantial change batch or refactor, i
 
 # Change Guard — did we break what already worked?
 
+**Small-change routing takes precedence.** For a bounded direct fix, use the corresponding lightweight routine in [small-change](../small-change/SKILL.md), then return to its compact handoff. The full procedure below applies to version work; do not execute both versions or escalate a small fix into full QA.
+
 Post-implementation verification. Run this after a substantial change batch and before handoff. Keep per-todo inspection in the coding loop, while batching executable tests.
 The user-journey review checks the **new** behavior; change-guard defends the **old** behavior:
 what worked before that might not work now, including callers and dependents the change did **not**

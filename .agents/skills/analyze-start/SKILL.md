@@ -6,6 +6,8 @@ description: "Analyze a feature, defect, refactor, or PR before coding: read act
 
 # Analyze Start — understand it fully, write no code
 
+**Small-change routing takes precedence.** For a bounded direct fix, use the corresponding lightweight routine in [small-change](../small-change/SKILL.md), then return to its compact handoff. The full procedure below applies to version work; do not execute both versions or escalate a small fix into full QA.
+
 Deep, thorough, **analysis-only** phase. Educate yourself on the feature/task/PR until you
 understand it end-to-end, then explain it back so any teammate (or a future agent) could pick it
 up cold. **Do not write or change code in this phase.** Reading, grepping, and diagramming only.

@@ -1,5 +1,7 @@
 # Detailed PR review handoff
 
+In small-change mode, report the exact reviewed delta/head, original request, relevant findings, focused evidence, earlier unresolved findings and handoff limits in one compact comment. The full five-pass template below applies to version reviews; do not reintroduce it through this reference after selecting the lightweight procedure.
+
 Fill with observed results; delete unused illustrative rows, never leave empty placeholders. No model/tool signatures, dev-time estimates, invented fixes or formal self-approval. Keep all five pass outcomes even when clean. This template complements the target project's required review fields.
 
 ````markdown

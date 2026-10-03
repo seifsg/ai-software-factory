@@ -1,5 +1,7 @@
 # Maintenance during an app-building session
 
+A completed or checkpointed app does not need a new app QA cycle merely because maintenance delivered a new optional method. Preserve its selected bundle. A separately authorized [small-change trial](../../small-change/SKILL.md#continuity-with-a-version-run) records both identities without editing controller state or claiming refreshed version acceptance. The adoption table below governs changes to the bundle used by a controller run.
+
 Read this reference whenever a factory improvement interrupts an active app run. The app goal stays active. The parent remains responsible for the app and user communication; delegates do focused factory work and return evidence.
 
 ```text

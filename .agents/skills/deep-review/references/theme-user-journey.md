@@ -48,6 +48,7 @@ original ask says), and show where they diverge.
 - Empty / null / first-run states; long text; rapid double-submits; fast navigation away mid-request.
 - **Failure & offline paths** — dependency down, request rejected, no connectivity: does the user
   see a sane state (retry, cached data, clear error) or a spinner forever / a raw error?
+- **Exit and recovery** — when the user closes/quits or cancels, trace drafts, recordings and active work. Quit must remain usable even if saving a draft or recording keeps failing. Explain what remains unsaved and provide a reachable, explicit exit choice with truthful loss consequences; never silently discard private work. Recovery actions may accompany that choice, but explanation plus Retry alone does not complete the exit journey. Verify the process/resources actually stop when exit is chosen; do not confuse hiding a window with quitting.
 - **Permissions denied** (e.g. camera/location/notifications) — graceful fallback, not a crash or
   infinite prompt loop.
 - **Platform / device / viewport variance** — browsers and responsive viewports on web; iOS vs

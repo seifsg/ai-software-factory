@@ -6,6 +6,8 @@ description: "Turn completed analysis into a self-critiqued plan, then apply Sei
 
 # Get Ready To Code — plan first, self-critique, then execute the loop
 
+**Small-change routing takes precedence.** For a bounded direct fix, use the corresponding lightweight routine in [small-change](../small-change/SKILL.md), then return to its compact handoff. The full procedure below applies to version work; do not execute both versions or escalate a small fix into full QA.
+
 Prepare to build based on the analysis (see the `analyze-start` skill). This skill produces the
 **plan** and defines the **execution loop** every change must pass through.
 
@@ -61,7 +63,7 @@ Every change goes through this loop. It is **absolute for each and every todo st
 - **Each todo has three parts: a pre-step, the step itself, and a post-step** — so the loop above
   can be applied to it. The pre-step is loop steps 0–1, the step is loop step 2, the post-step is
   loop steps 3–4.
-- The loop above is **absolute** for every todo. No exceptions, no "small enough to skip."
+- The 0–4 reasoning discipline applies to each change. For a bounded small change, the lightweight coding routine preserves it without the full planning/reporting or version-QA cycle.
 
 ## Things to avoid
 

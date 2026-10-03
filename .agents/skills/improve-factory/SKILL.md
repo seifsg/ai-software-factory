@@ -5,6 +5,10 @@ description: "Repair or improve Safe Engine's skills, controller, or delivery wo
 
 # Improve Factory
 
+## Proportionate maintenance
+
+Route a bounded direct instruction/helper correction through [small-change](../small-change/SKILL.md), retaining this skill's app preservation, isolation, canonical-consumer updates and compatible adoption. Its lightweight alternatives replace the full analysis/planning/review steps below for that case. A change to factory-wide routing, acceptance or several interacting procedures needs the relevant maintenance analysis and independent behavioral exercise; this does not require unrelated controller/app suites. Select checks from the actual changed consumers. Keep one maintenance record and one final independent assessment, combining it with PR review when the selected mode permits. Do not recursively invoke maintenance from maintenance.
+
 Turn Seif's explanation of what happened and what should happen into an evidenced factory correction. He owns the intended behavior and may delegate in-scope design and working-name choices through the [session contract](../safe-engine/references/session-contract.md). Reuse his existing methods in full; this skill coordinates them and does not replace them.
 
 The selected mid-build policy is **checkpoint → isolated repair → independent review → compatible resume**. Parallel app work is allowed only when demonstrably independent of the fault and the factory repair. This is an agent-operated procedure, not an installed hook, automatic upgrade service, or guarantee of uninterrupted execution.

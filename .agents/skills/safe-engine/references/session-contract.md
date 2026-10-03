@@ -1,5 +1,7 @@
 # Session authority and continuous progress
 
+For bounded direct changes, [small-change](../../small-change/SKILL.md) is the selected lightweight delivery method. Autonomy does not authorize automatic broad regression or full-version revalidation for each fix. Reuse session answers, keep scoped evidence and preserve the owner's choice of any later broader checkpoint.
+
 Read at intake, resume and delegation. This is the canonical operating procedure for the [decision ownership policy](../../../../docs/safe-engine-decisions.md#decision-ownership). Record it once in an ignored `.factory/session-contract.md` (or the existing equivalent), link it from stage artifacts, and carry it into every handoff. Supplement saved controller records; never rewrite their fixed task/profile or accepted evidence.
 
 ## Establish the contract
@@ -23,6 +25,14 @@ The continuous 0.1.0 controller has no repair ceiling: new runs omit `--max-repa
 For a missing fact/tool/binding, inspect actual files/configuration, existing session records and available authorized integrations; consult current primary documentation or market sources where relevant. Search plausible locations or alternatives before escalating. Keep a short discovery record. Do not invent identities, statuses, commands, access or evidence. A failed lookup is not automatically an owner decision; use an evidence-based in-scope fallback when authorized.
 
 Every further attempt needs a diagnosed cause, meaningful correction, recovered dependency or new discriminating evidence. When progress stalls, change the hypothesis, inspect raw failures and consumers, research alternatives, or seek independent diagnosis; do not reroll an unchanged rejected candidate or repeat a known impossible mutation. Reconcile uncertain pushes, comments and external effects before retrying, to prevent duplicates. Continue useful independent work while a dependent action awaits actual access or an owner-reserved decision. A genuine obstacle is explained with evidence and a concrete resume step; no fixed attempt count manufactures a blocker.
+
+### Recover a failed control route
+
+A tool failing to find a window or perform an action establishes a limitation of that route, not that the requested outcome is impossible. Before returning a runtime problem to the owner, inspect available permitted alternatives: an application's own command/API, a supported CLI, or OS process management. Read the applicable tool instructions; consult current primary documentation when behavior or permissions are uncertain. Keep tool-specific restrictions in force: never invent UI handles, evade a denied action through another interface, change host security, or infer new authority from a search result.
+
+For stopping a local app, establish the exact target from observed process identity, executable path and ownership; record active work and preserve accessible saved state without exposing secrets. Recheck identity before mutation because a PID can be reused. Prefer an available graceful stop that lets the app save and clean up. If it fails or the app is unresponsive, a targeted force stop can be used only within actual authority for that app and the risk to unsaved work; use existing explicit authorization rather than asking again. A general request to finish a project is not blanket permission to terminate unrelated apps or discard private work. Do not claim a backup of saved files captures an in-memory draft.
+
+Verify the process actually exited and the relevant resource was released before resuming dependent QA or restarting. Record what was preserved, what could not be recovered, the chosen route and its observed result. If authorized alternatives still fail or essential authority/access is missing, explain the actual obstacle and the smallest owner action needed; continue useful independent work. Keep this recovery within the original task and normal evidence/review cycle. Discovery and research support further meaningful attempts, not an endless unchanged loop or a guarantee that every failure is recoverable.
 
 Continue through planning, substantial build batches, QA, justified repairs, independent review and the agreed handoff. Pause dependent work only for a real access/tool/provider obstacle after reasonable discovery, an owner-reserved decision or changed requirement, a required failed gate that cannot be repaired within authority, or an explicit owner stop/checkpoint. Report the exact condition and attempts; finish independent authorized work that is still useful and safe.
 

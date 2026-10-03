@@ -1,5 +1,9 @@
 # AI Software Factory — repository rules
 
+## Scope selection — owner correction, 3 October 2026
+
+Use [small-change](.agents/skills/small-change/SKILL.md) for small direct fixes. Its six lightweight routines override the full analysis/planning/review and repeated QA requirements below for that scope, including both PR procedures. Correct code, focused affected-behavior verification and a narrow independent assessment remain required. Do not automatically run broad regression or full suites; offer an affected-area batch when cumulative changes justify it and wait for the user's request before running it. Preserve actual protected gates and honest evidence. Version work keeps the full procedure. This is Seif's explicit selected change, not a new exception to request repeatedly.
+
 ## Scope
 
 This private repository owns Seif's reusable software-factory skills. Read `README.md` and `.agents/skills/README.md` before changing the system. Follow the user's current instructions and preserve existing skill behavior unless the requested change requires altering it.
@@ -43,6 +47,8 @@ Keep `preview/index.html`, our plain-language visual introduction, accurate as t
 When connecting skills, make the handoff explicit: inputs, output artifact, acceptance condition, failure state, and next responsible step. Keep task state durable where the target environment supports it. Do not mark a ticket complete when work only reached a review or deployment handoff.
 
 For unattended workflows, follow the [session contract](.agents/skills/safe-engine/references/session-contract.md) to record delegated authority, completion boundaries, diagnostic progress and actual constraints. Continue authorized work without artificial credits, repair allowances, fixed retry limits or session deadlines; honor explicit owner stops. Avoid duplicate actions on retries. Keep independent acceptance checks outside the builder's unrestricted control when their integrity matters.
+
+Before handing a runtime-control problem back to the owner, follow the contract's [failed-route recovery](.agents/skills/safe-engine/references/session-contract.md#recover-a-failed-control-route). A missing UI window does not establish that every permitted CLI/API route is unavailable. Preserve exact-target authority, state and tool restrictions; report actual recovery evidence. Review app exit and failure feedback through the existing user-journey lens.
 
 ## Verification and changes
 

@@ -1,5 +1,9 @@
 # Mandatory PR workflow
 
+## Small direct changes
+
+Seif selected [small-change](../.agents/skills/small-change/SKILL.md) on 3 October: six lightweight routines, careful implementation, focused checks and one narrow independent assessment. This route precedes the full version workflow described below. No automatic broad regression, full-suite reruns or five-artifact planning for a small fix. Accumulated changes may prompt an offer of affected-area validation; execution waits for the user. It is an agent-operated scoped handoff, not a new controller command or whole-version acceptance. Existing pinned runs retain their bundle/state; see the method for explicit local trials and evidence limits.
+
 Seif's decision, 2 October 2026: **both original PR skills must execute for every factory-managed PR, in every project, without a workflow bypass.** Project-specific names/accounts/commands become bindings; the working method stays intact.
 
 ```text

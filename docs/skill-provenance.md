@@ -44,3 +44,11 @@ Independent assessment of that maintenance candidate found that changed mandator
 ## Portable delivery entry — 3 October 2026
 
 Seif explicitly requested the app-building factory as an ordinary reusable skill after the maintenance-only guide. `skills/safe-engine` adapts installation/loading of the existing canonical Safe Engine coordinator; it introduces no new authored method or imported competitor procedure. Both portable helper copies are generated from `safe_engine/distribution.py` and checked for equality. [Factory installation](install-safe-engine.md) documents actual prerequisites and host verification limits. The ten canonical entrypoints remain ten; two installation adapters are packaged separately.
+
+## Runtime recovery guidance
+
+On 3 October Seif requested untrapped, explainable app exit and recovery through computer use or Windows commands after a UI-control lookup failed, plus durable skills/rules and continued research. The assistant used Skill Creator for a narrow existing session-contract/entry update, repository routing and the existing user-journey lens, with the owner's decision preserved. No external skill, OS-control helper, new controller mechanism or installed global-memory synchronization was added. Microsoft process-close/stop documentation informed the distinction between graceful cleanup and authorized termination; it grants no tool/owner permission. Structural checks, realistic independent instruction exercises, separate assessment, actual app repair/adoption and full PR delivery remain distinct evidence.
+
+## Small-change alternatives — 3 October 2026
+
+Seif supplied the six-stage lightweight intent directly after the input-fix audit. The assistant used Skill Creator to structure that specific request into `small-change` and precedence routes in its real callers. No external skill or new controller was imported. The earlier preserved full-method statements describe version mode; the owner explicitly superseded their application to bounded small fixes, including narrow PR updates. Structural validation, realistic instruction exercises and independent scoped assessment are distinct from a production app repair.
