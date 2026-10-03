@@ -6,7 +6,7 @@ import unittest
 from unittest.mock import patch
 
 import test_feature_batches as feature
-from safe_engine.project import EngineError, bundle_input_paths
+from safe_engine.project import EngineError, bundle_input_paths, fingerprint
 
 
 class BundleInputTests(unittest.TestCase):
@@ -23,6 +23,21 @@ class BundleInputTests(unittest.TestCase):
         self.binding = patch('safe_engine.project.__file__', str(self.bundle / 'safe_engine/project.py'))
         self.binding.start()
         self.addCleanup(self.binding.stop)
+
+    def test_app_diagnostics_changes_inputs_and_cannot_be_omitted(self):
+        name = '.agents/skills/safe-engine/references/app-diagnostics.md'
+        self.assertIn(name, bundle_input_paths(self.bundle))
+        def current():
+            return fingerprint(self.fixture.root, self.fixture.profile, self.fixture.task,
+                               self.fixture.flow.directory)
+        before = current()
+        path = self.bundle / name
+        original = path.read_bytes()
+        path.write_bytes(original + b'\nChanged diagnostic guidance fixture.\n')
+        self.assertNotEqual(current(), before)
+        path.unlink()
+        with self.assertRaisesRegex(EngineError, 'Required factory input.*app-diagnostics'):
+            bundle_input_paths(self.bundle)
 
     def test_mandatory_decision_change_runs_every_real_command(self):
         self.fixture.full()

@@ -34,6 +34,8 @@ For a **new application**, first save these five artifacts as the original plan 
 
 Apply the [session contract](../safe-engine/references/session-contract.md) for delegated versus owner-reserved choices. Showing the plan does not introduce an approval checkpoint unless the owner requested one.
 
+For app work, apply [app diagnostics](../safe-engine/references/app-diagnostics.md) to the plan and coding loop: new apps include the shared module and applicable app-wide event sites in both plans; existing apps reuse adequate facilities and autonomously fill the minimum module/changed-journey gaps. Plan focused privacy, correlation, failure-tolerance and discovery evidence, retaining honest coverage limits and the selected test cadence.
+
 ## Part B — The execution loop (ULTRA IMPORTANT — absolute for every step)
 
 Every change goes through this loop. It is **absolute for each and every todo step**:

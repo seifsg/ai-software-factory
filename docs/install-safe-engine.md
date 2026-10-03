@@ -78,13 +78,23 @@ The portable helper uses `.factory/entry-bundle.json` to select a complete check
 
 An older run without the record needs its original bundle established from the existing session/checkpoint artifacts. Use `--bundle <absolute-original-factory-root>` with `--project` only after establishing that identity; a commit/version alone cannot identify dirty inputs. The resolver reports dirty state; the canonical checkpoint/evidence rules record actual hashes. The receipt is selection metadata, never a passing QA certificate or an authority to edit acceptance. Factory upgrades go through `improve-factory` and its compatibility review, not deletion of the receipt.
 
+## Reviewed local diagnostics trial
+
+An unmerged candidate does not change what a normal new-project resolution of `main` loads. When the owner authorizes local use after fresh independent assessment, the app coordinator can preserve the installed entry and add a host-local `references/local-app-diagnostics.md` alongside it. Record the actual authority/scope, clean candidate absolute root and exact commit, canonical Safe Engine/Small Change/diagnostics paths, independent assessment evidence, prior installation/bundle identities and usable rollback destination. Verify these facts before activation; this optional record is not distributed to other hosts.
+
+For a **new project with no run or selection**, inspect the reviewed complete candidate with the installed resolver's `--bundle <candidate-root>`, then explicitly select it with `--bundle <candidate-root> --project <target>`. Read its canonical method and include diagnostics before creating the new task/profile. Record launcher and candidate identities separately; this is a local trial, not a merged release.
+
+For a **bounded existing-app change**, the record routes directly to the candidate's complete Small Change method and diagnostics reference. Preserve the older controller bundle, receipt, state/profile and historical QA; record the separate method identity and scoped evidence. A substantial version run adopts only through [the compatibility handoff](../.agents/skills/improve-factory/references/live-session.md#review-adoption-and-resume). The resolver continues to inspect an older bundle by that bundle's own required-input contract; no missing new optional method silently triggers an upgrade. If no reviewed/authorized trial exists, keep the pin and report the missing capability rather than claiming it is active.
+
+Removing the host-local record restores the earlier entry route; it does not undo app source changes or restore stale acceptance. Retain the saved original installation and both method identities for an explicit rollback. Installation, local activation, source PR delivery and app coverage evidence are separate outcomes; ready/merge/release/deployment remain owner decisions.
+
 ## Another machine or cloud session
 
 Install inside that environment, using its own authorized GitHub login and tools. This computer's personal skill installation does not propagate to other hosts. Claude cloud sessions can load project skills committed to their cloned repository; personal `~/.claude/skills` folders are local. Read the installed entry explicitly if discovery is unavailable. If the environment cannot run required checks or independent review, report the actual blocked step; do not label delivery verified.
 
 ## Packaging and verification
 
-`skills/safe-engine` is standalone for installation, while the resolved bundle owns all ten canonical entrypoints. Both installed skill helpers are generated from `safe_engine/distribution.py`; after editing that owner run `python scripts/package_skill_entries.py`, then `--check` at the pre-push gate. No second independently maintained resolver or duplicated method library exists.
+`skills/safe-engine` is standalone for installation, while the resolved bundle owns all eleven canonical entrypoints. Both installed skill helpers are generated from `safe_engine/distribution.py`; after editing that owner run `python scripts/package_skill_entries.py`, then `--check` at the pre-push gate. No second independently maintained resolver or duplicated method library exists.
 
 The existing [pilot record](pilot-verification.md) documents the actual local build and repair. Distribution tests exercise real Git checkout/cache/selection boundaries; a successful install or file-loading smoke test is not proof of a new complete app build or every host's compatibility.
 

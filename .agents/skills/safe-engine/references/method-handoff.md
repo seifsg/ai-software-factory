@@ -4,6 +4,8 @@ Select scope first. A bounded direct fix uses the complete [small-change method]
 
 Use on initial load, after context loss, on resume and when handing work to another instance. This table routes to canonical instructions; it never replaces reading them. No file is imported merely to reserve a future skill name.
 
+For every app, carry the [app diagnostics](app-diagnostics.md) coverage inventory, actual module/event sites, safe log location/access/retention, focused evidence and remaining gaps/unknowns. New apps include this component by default; small changes retain its scoped automatic backfill and focused checks. The receiving instance reads the reference; a summary or historical full-version pass is not current diagnostic coverage evidence.
+
 | When | Full instruction to load | Evidence carried forward |
 |---|---|---|
 | Understand, before coding | [analyze-start](../../analyze-start/SKILL.md) | Purpose, real source, all consumers, ASCII chart, claims vs code, unknowns |

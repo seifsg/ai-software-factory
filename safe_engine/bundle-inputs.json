@@ -21,6 +21,7 @@
     ".agents/skills/improve-factory/references/validation-scenarios.md",
     ".agents/skills/research-market/SKILL.md",
     ".agents/skills/safe-engine/SKILL.md",
+    ".agents/skills/safe-engine/references/app-diagnostics.md",
     ".agents/skills/safe-engine/references/method-handoff.md",
     ".agents/skills/safe-engine/references/session-contract.md",
     ".agents/skills/small-change/SKILL.md",
