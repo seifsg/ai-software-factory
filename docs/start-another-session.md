@@ -2,7 +2,11 @@
 
 The first thing to give the agent is the Safe Engine entry skill and your actual task. The agent then runs the controller commands. There is no `safe-engine start` daemon or one shell command that independently builds an app.
 
-## Paste this first on this computer
+## Regular skill: recommended entry
+
+Install [Safe Engine itself](install-safe-engine.md) from GitHub `main`, path `skills/safe-engine`, once per host. Then call `$safe-engine Build [my app or feature] in [absolute project directory]` in Codex, or `/safe-engine` after personal Claude Code installation. The adapter loads the complete factory and saves the target's selected bundle for safe resume. `improve-factory` is for changing the factory; it is not required as a separate installation for app delivery.
+
+## Manual bundle: paste this first on this computer
 
 Start a Codex chat in the target project. Replace the two bracketed fields below. The factory bundle already exists at `C:/work/ai-software-factory`.
 
@@ -82,10 +86,10 @@ The controller requires a Git project with a clean baseline and real configured 
 
 ## Start from another computer or cloud workspace
 
-Obtain the private bundle using your normal authorized GitHub login. The implemented pilot is currently on the PR branch; cloning only `main` may give the earlier foundation.
+Obtain the private bundle using your normal authorized GitHub login. The complete factory is merged on `main`. Prefer the regular skill installation above, or clone the full bundle for manual use.
 
 ```sh
-git clone --branch docs/skill-lifecycle-map --single-branch https://github.com/seifsg/ai-software-factory.git
+git clone --branch main --single-branch https://github.com/seifsg/ai-software-factory.git
 ```
 
 Use a new destination; do not run this over an existing checkout. Replace the bundle path in the starter prompt with its actual absolute path there. Preserve the full directory structure: copying only `SKILL.md` omits the controller, seven adapted methods and references.
@@ -108,7 +112,7 @@ For an installed Claude Code CLI, launch from your target project:
 claude --add-dir 'C:\work\ai-software-factory'
 ```
 
-Then paste the same explicit-path starter. For an existing Claude Code session, `/add-dir C:/work/ai-software-factory` grants access to the bundle. This repository uses `.agents/skills`, while Claude's native discovery uses `.claude/skills`; adding file access does not create a `/safe-engine` command from this bundle. [Claude CLI reference](https://code.claude.com/docs/en/cli-reference), [Claude skills](https://code.claude.com/docs/en/skills).
+Then paste the same explicit-path starter. For an existing Claude Code session, `/add-dir C:/work/ai-software-factory` grants access to the bundle. This repository uses `.agents/skills`, while Claude's native discovery uses `.claude/skills`; adding file access does not create a `/safe-engine` command from this bundle. Install the portable `skills/safe-engine` folder in Claude's skill directory to obtain that command. [Claude CLI reference](https://code.claude.com/docs/en/cli-reference), [Claude skills](https://code.claude.com/docs/en/skills).
 
 Claude Code was not available on PATH when this guide was checked on 2 October 2026. These are official-documented launch instructions, not a claim that a Claude-only factory run passed.
 
@@ -158,4 +162,4 @@ The selected policy holds affected app work during repair; only demonstrably ind
 | B — Personal host adapters pointing to the bundle | Short invocation across local projects | Requires installation for each host and machine; cloud is separate. |
 | C — Per-project host adapters with a pinned bundle | Each repository carries a repeatable entrypoint | Adds configuration and version maintenance to every project. |
 
-**Recommend A for the next app examples.** B and C remain choices for the delivery coordinator (`safe-engine`). Seif separately authorized a personal reusable entry for `improve-factory`; its installation guide above covers that maintenance skill only.
+**Current selection, 3 October:** Seif requested the factory itself as a regular reusable skill, selecting B for this delivery under his implementation delegation. [Install Safe Engine](install-safe-engine.md) for the short invocation. Manual option A remains available; C is not selected. Maintenance installation is separate and optional.

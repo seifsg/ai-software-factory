@@ -2,13 +2,13 @@
 
 Install **`skills/improve-factory`**, the portable launcher. The canonical procedure in `.agents/skills/improve-factory` depends on the complete factory, so copying that folder alone is insufficient.
 
-The repository is private. Use an agent environment with your authorized GitHub access, Git and Python 3.11 or newer (the resolver alone supports 3.10). This branch is available for testing while [PR #1](https://github.com/seifsg/ai-software-factory/pull/1) remains draft; it is not a merge or production-release claim.
+The repository is private. Use an agent environment with your authorized GitHub access, Git and Python 3.11 or newer (the resolver alone supports 3.10). The complete factory is merged on `main`; [PR #1](https://github.com/seifsg/ai-software-factory/pull/1) records its source review and merge. To build apps, install [Safe Engine itself](install-safe-engine.md); this guide installs maintenance only. Merge does not imply deployment or production certification.
 
 ## Codex — paste into another session
 
 ```text
 Use skill-installer to install improve-factory from repository
-seifsg/ai-software-factory, ref docs/skill-lifecycle-map,
+seifsg/ai-software-factory, ref main,
 path skills/improve-factory.
 Use my existing authorized GitHub login. Do not install the canonical
 .agents/skills/improve-factory folder alone, because it has bundle dependencies.
@@ -19,14 +19,14 @@ Then invoke `$improve-factory` and describe what happened and what should happen
 With the bundled Skill Installer script, the equivalent arguments are:
 
 ```text
-python <skill-installer>/scripts/install-skill-from-github.py --repo seifsg/ai-software-factory --ref docs/skill-lifecycle-map --path skills/improve-factory
+python <skill-installer>/scripts/install-skill-from-github.py --repo seifsg/ai-software-factory --ref main --path skills/improve-factory
 ```
 
 ## Claude Code — paste into another session
 
 ```text
 Install the reusable skill from seifsg/ai-software-factory,
-ref docs/skill-lifecycle-map, folder skills/improve-factory,
+ref main, folder skills/improve-factory,
 into my personal ~/.claude/skills/improve-factory directory.
 Use my existing GitHub credentials; include SKILL.md and scripts/.
 Preserve any existing installation and report its identity before replacing it.

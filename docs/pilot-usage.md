@@ -8,7 +8,7 @@ Open this repository as the Codex project and ask:
 
 > Use $safe-engine to implement this feature in [absolute target project path]: [request]. Follow analyze-start and get-ready-to-code. Work in substantial batches and stop at a checked handoff.
 
-From another project, explicitly reference this bundle's `.agents/skills/safe-engine/SKILL.md` by absolute path. Repository skills are not automatically installed globally or into other repositories. Codex normally discovers `.agents/skills` within its repository scope. [Official skill documentation](https://learn.chatgpt.com/docs/build-skills).
+From another project, [install the portable Safe Engine skill](install-safe-engine.md) and invoke `$safe-engine`. You can also explicitly reference this bundle's `.agents/skills/safe-engine/SKILL.md` by absolute path. Repository skills are not automatically installed globally or into other repositories. Codex normally discovers `.agents/skills` within its repository scope. [Official skill documentation](https://learn.chatgpt.com/docs/build-skills).
 
 Requirements: Python 3.11+, Git, authenticated Codex CLI, and the target project's actual check dependencies. Browser work additionally requires a working browser driver and a runnable test application. Use a suitable existing isolated worktree or the host's worktree tool. The demo uses an explicitly created disposable Git worktree.
 

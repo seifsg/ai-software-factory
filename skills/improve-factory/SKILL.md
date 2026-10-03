@@ -5,7 +5,7 @@ description: "Improve or repair your Safe Engine software factory from feedback,
 
 # Improve Factory — portable entry
 
-This installable entry loads the canonical `improve-factory` procedure and its complete dependencies. It does not replace or summarize Seif's methods. Source: `https://github.com/seifsg/ai-software-factory`; current distribution branch: `docs/skill-lifecycle-map`. The repository is private: the current agent environment needs authorized Git access. Never request tokens in chat or make the repository public.
+This installable entry loads the canonical `improve-factory` procedure and its complete dependencies. It does not replace or summarize Seif's methods. Source: `https://github.com/seifsg/ai-software-factory`; current distribution branch: `main`. The repository is private: the current agent environment needs authorized Git access. Never request tokens in chat or make the repository public.
 
 ## Resolve the factory before acting
 
