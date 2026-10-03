@@ -2,6 +2,8 @@
 
 ## Small direct changes
 
+This route is for requested implementation. Explicit analysis, planning and review stay in their phase.
+
 Seif selected [small-change](../.agents/skills/small-change/SKILL.md) on 3 October: six lightweight routines, careful implementation, focused checks and one narrow independent assessment. This route precedes the full version workflow described below. No automatic broad regression, full-suite reruns or five-artifact planning for a small fix. Accumulated changes may prompt an offer of affected-area validation; execution waits for the user. It is an agent-operated scoped handoff, not a new controller command or whole-version acceptance. Existing pinned runs retain their bundle/state; see the method for explicit local trials and evidence limits.
 
 The first thing to give the agent is the Safe Engine entry skill and your actual task. The agent then runs the controller commands. There is no `safe-engine start` daemon or one shell command that independently builds an app.
@@ -12,7 +14,7 @@ Install [Safe Engine itself](install-safe-engine.md) from GitHub `main`, path `s
 
 ## Manual bundle: paste this first on this computer
 
-Start a Codex chat in the target project. Replace the two bracketed fields below. The factory bundle already exists at `C:/work/ai-software-factory`.
+Start a Codex chat in the target project. Replace the two bracketed fields below. The path below is an example. Use the actual absolute path of your complete factory checkout.
 
 ```text
 Read and follow C:/work/ai-software-factory/.agents/skills/safe-engine/SKILL.md
@@ -31,8 +33,9 @@ the per-todo 0–4 loop. Work autonomously within the agreed scope and recorded 
 Ask essential preferences once only when not already answered. Under delegated
 autonomy, continue until the agreed verified outcome without artificial credits,
 correction allowances, fixed retry ceilings or session deadlines. Honor my explicit stops.
-Read each complete skill and its references, not just its name. Before planning,
-compare three strong approaches and recommend one with reasons. Preserve my
+Read each complete skill and its applicable references, not just its name. Honor
+Get Ready to Code's file-summary stop unless I already authorized continuing.
+For new substantive choices, compare three strong approaches and recommend one. Preserve my
 chosen direction and my delegated/reserved decision authority. For a new app,
 save an original plan, research competitors/features/visuals using research-market,
 then revise the plan before coding. Carry these methods,
@@ -43,7 +46,9 @@ Inspect worthwhile improvements, validate final QA,
 and obtain a fresh independent review before the checked handoff.
 For any authorized PR, always execute how-to-make-a-pr, then the full
 how-to-review-a-pr on a separate instance. Keep its task/owner handoff,
-visual description, five review passes and detailed comment mandatory.
+visual description and detailed comment. Read the PR project adapter first.
+Use Mobile's four themed reviews and synthesis; the local controller's five
+acceptance passes are a separate check.
 The local controller review does not replace the PR review. Missing required
 project settings or access block PR completion after discovery; keep independent
 local build, QA and owner-test delivery moving. Leave the PR draft for me.

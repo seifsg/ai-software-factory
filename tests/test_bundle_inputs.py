@@ -76,7 +76,9 @@ class BundleInputTests(unittest.TestCase):
         self.fixture.flow.record('improvement', self.fixture.draft('improvement'))
         before = self.fixture.flow.load()
         for name in ('docs/safe-engine-decisions.md', 'safe_engine/bundle-inputs.json',
-                     'safe_engine/workflow.py', '.agents/skills/deep-review/references/theme-security.md'):
+                     'safe_engine/workflow.py', '.agents/skills/deep-review/references/theme-security.md',
+                     '.agents/skills/how-to-review-a-pr/references/theme-change-guard.md',
+                     '.agents/skills/how-to-review-a-pr/references/mobile-rules/dont-code.mdc'):
             with self.subTest(input=name):
                 path = self.bundle / name
                 original = path.read_bytes()

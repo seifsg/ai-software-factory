@@ -1,107 +1,70 @@
 # AI Software Factory
 
-Small direct fixes use [Small Change](.agents/skills/small-change/SKILL.md): brief analysis and planning → careful code → affected checks → one narrow review → concise handoff. Broader regression is offered when useful and runs only when requested or truly required. Larger app/version delivery retains the full workflow below. This optional agent method preserves pinned controller runs and their evidence limits.
+Seif's software-building skills and **Safe Engine 0.1.0**, the local controller that connects them.
 
-Private home for Seif's software-delivery skills and **Safe Engine 0.1.0**, the first local factory pilot.
+Understand the request. Prepare the work. Build it. Check it. Return the result with evidence.
 
-## Goal
+## The skills
 
-Make skills work together as a repeatable delivery system: understand a request, prepare the work, implement it, verify the result, handle feedback, and return evidence. Connect release and monitoring when the target project supports them and the user authorizes them.
+Use Seif's originals where they exist. RepairCheck Mobile comes first. Write the remaining skills in the same direct style. Keep real requirements; remove needless explanation and hidden workflow changes.
 
-The factory runs against the customer's or team's project. This repository owns the reusable skills and their supporting resources, not client source code or credentials.
+The [skill index](.agents/skills/README.md) lists eleven canonical skills: seven with originals and four factory-specific skills. Two portable entries load the complete factory from another project. [Provenance](docs/skill-provenance.md) records exact sources, task matches and packaging changes.
 
-[App diagnostics](.agents/skills/safe-engine/references/app-diagnostics.md) are a default component: new apps receive sufficient app-wide operational/error/recovery logs, and existing-app changes audit coverage and autonomously add the minimum missing module/events for affected journeys. Privacy, correlation, bounded local retention, logging-failure behavior and owner discovery are checked within the selected delivery scope. Wider gaps remain explicit; these instructions do not install telemetry or a host enforcement service.
-
-[App efficiency](.agents/skills/safe-engine/references/app-efficiency.md) starts in analysis and planning: identify repeated expensive work, design CPU/memory/resource lifetimes, and implement useful safe reuse with explicit cache validity and capacity. Focused checks verify correct cold/warm results, avoided work and relevant resource bounds. Existing changes stay scoped; no blanket cache insertion, automatic broad benchmark suite or unmeasured speedup claim.
-
-The engine is named **Safe Engine**. The [design decision record](docs/safe-engine-decisions.md) captures Seif's selected architecture and quality procedures, with unresolved choices kept explicit. The selected project onboarding approach discovers configuration and offers a profile for review and correction.
-
-Seif leads skill authorship; the assistant helps structure, review, refine, and validate his procedures. The [expanded capability plan](docs/safe-engine-expanded-scope.md) covers worktrees, skill writing, TDD, debugging, architecture, UX, idea assessment, security, and autonomous browser inspection and repair. It includes source comparisons, three alternatives for each design choice, an ASCII architecture, and acceptance cases. Skill counts, boundaries, and new procedures await selection. The [initial build plan](docs/safe-engine-build-plan.md) preserves the core delivery workflow and engine checklist.
-
-Development should proceed in substantial batches, followed by relevant verification. Before a feature is pushed, inspect worthwhile cleanup, reuse, design, performance, and security improvements, then verify the changes. The [fast feature delivery design](docs/safe-engine-fast-delivery.md) records this cadence and the proposed criteria for code that AI agents can navigate and change accurately.
-
-## Current state
-
-The demonstrated local pilot connects five of Seif's existing skills through one new coordinator. It saves task progress, enforces stage order and records corrections without a numerical repair ceiling, runs affected feature checks as feedback and full version QA, rejects stale evidence, and launches a fresh read-only Codex review before producing a checked handoff. Two further Seif-authored skills now govern every PR: `how-to-make-a-pr` and the complete separate-instance `how-to-review-a-pr`. Their project bindings and enforcement limits are recorded in the [PR workflow](docs/pr-workflow.md).
+Ask for analysis and you get analysis. Ask for planning and you get planning. A small feature does not turn either request into permission to code. For a requested bounded fix, [Small Change](.agents/skills/small-change/SKILL.md) runs six light routines with focused checks and one independent review. Larger delivery follows the version workflow:
 
 ```text
-analyze-start → original plan → market research (new app) → revised plan
-    → build with the 0–4 loop
-    → feature feedback (continue build) → full version QA → worthwhile improvement
-    → full final-QA validation (controlled unchanged reuse only)
-    → fresh local review → checked local handoff
-    → how-to-make-a-pr → full separate how-to-review-a-pr → human
-                     findings → supported repair ↗
+analyze → original plan → market research for new apps → revised plan
+        → build with the 0–4 loop → feature feedback
+        → full version QA → useful improvements → final QA → fresh review
+        → checked local handoff → authorized PR creation and review → human
 ```
 
-The current Codex session does the building; Python controls the gates. This is a local agent-operated pilot, not an unattended production service. Browser QA uses the target project's real browser checks. The broader specialist library, host hooks, protected remote acceptance, general project adapters, and deployment remain ahead. See the [verification record](docs/pilot-verification.md) for actual results and limits.
+The original planning checkpoint remains. Proceed through it only when the user's instructions already authorize that continuation.
 
-QA fingerprints bind the controller and declared operative guidance, including approved decisions, cadence and the portable entry. Missing mandatory inputs block acceptance; guidance changes invalidate older evidence. [Pilot usage](docs/pilot-usage.md) defines the enforced boundary and the runtime inputs that a project must declare.
+## Start or resume
 
-## Start here
-
-For a new chat or another project, [install Safe Engine as a regular skill](docs/install-safe-engine.md), then invoke `$safe-engine` with your app request and target path. The [fresh-session starter](docs/start-another-session.md) also supports manual bundle use. To see the first run, open the [recorded walkthrough](examples/pilot-walkthrough.md), including before/after images and the actual repair. [Complete example commands](examples/pilot-commands.md) show setup and every controller step. Claude Code and cloud limitations are explicit in the starter guide.
-
-Read [pilot setup and usage](docs/pilot-usage.md), then ask Codex in this repository:
-
-> Use $safe-engine to implement [feature] in [absolute target project path].
-
-This retains Seif's analysis charts, planning critique, per-todo inspection, batched verification, and improvement pass. The [session contract](.agents/skills/safe-engine/references/session-contract.md) preserves delegated autonomy and continuous progress to the verified handoff without repeat questions. New applications use [research-market](.agents/skills/research-market/SKILL.md) between their original and revised plans; evidence includes current competitors and visual experiences. These are agent instructions, not a background service or a claim of a demonstrated market outcome. The [skill index](.agents/skills/README.md) lists eleven packaged entrypoints; [provenance](docs/skill-provenance.md) records the seven adapted sources. Seif continues to lead authorship of the wider library.
-
-When the factory itself needs correction, use [improve-factory](.agents/skills/improve-factory/SKILL.md), including during an app build. It preserves the app checkpoint, coordinates an isolated repair and independent assessment, then checks whether the current run can adopt it. This is an agent-operated procedure; automatic hooks, bundle migration, and uninterrupted upgrades are not implemented.
-
-For factory maintenance from other projects, [install Improve Factory](docs/install-improve-factory.md). Install **`skills/improve-factory`**: this portable entry loads the complete versioned factory and preserves an active app's recorded bundle. Invoke `$improve-factory` in Codex or `/improve-factory` after installation in Claude Code. Private GitHub access and the documented host prerequisites apply; native Claude execution remains unverified.
-
-Open [the visual introduction](preview/index.html) in a browser. Its concise first screen explains the goal and the process: understand, build, check, approve. A single status line shows where we are today. It works locally without installation or external dependencies.
-
-Expand “Explore the full factory” for the detailed map, handoffs, five review lenses, correction loops, proposed capabilities, and all 38 source skills. Select a node for its inputs and outputs. Keep the HTML, stylesheet, and script together in `preview/` when copying it.
-
-The [skill lifecycle map](docs/skill-lifecycle-map.md) maps the 38 supplied RepairCheck skills to delivery stages, review checks, system adapters and business workflows. It records existing instructions separately from proposed factory connections.
-
-The [QA entry point and gap analysis](docs/qa-enforcement-gap-analysis.md) is the earlier research baseline. Its 24 improvements describe the broader target; the pilot verification record identifies the subset now implemented and exercised.
-
-Seif identifies this supplied collection as his own work, with AI assistance in writing and committing some skills. Commit author metadata does not determine design authorship; source history is preserved.
-
-## Structure
+[Install Safe Engine](docs/install-safe-engine.md), then give it the task and target:
 
 ```text
-AGENTS.md                 Repository working rules
-safe_engine/             Python controller, version and review schema
-tests/                   Controller fault scenarios
-examples/pilot-app/       Deliberately broken disposable demo fixture
-docs/pilot-usage.md       Setup, commands, recovery and limits
-.agents/skills/           Skill folders and their index
-  <skill-name>/
-    SKILL.md              Purpose, trigger, workflow, and outputs
-    agents/openai.yaml    Optional Codex metadata
-    scripts/              Helpers when needed
-    references/           Supporting instructions when needed
-    assets/               Reusable output assets when needed
-skills/safe-engine/       Installable app-building entry loading the complete bundle
-skills/improve-factory/   Optional installable factory-maintenance entry
-scripts/package_skill_entries.py  Publish/check both resolver copies from one owner
+$safe-engine Build [app or feature] in [absolute project directory].
+Success means [observable outcomes].
 ```
 
-Create supporting folders only when a skill needs them. Keep skill names lowercase with hyphens. A skill's frontmatter name must match its folder name.
+To continue, ask it to resume the existing run. Keep the selected bundle, decisions and evidence. [Fresh-session setup](docs/start-another-session.md) covers manual loading and other hosts. [Pilot usage](docs/pilot-usage.md) contains actual commands and prerequisites.
 
-## Building together
+To improve the factory, use [Improve Factory](.agents/skills/improve-factory/SKILL.md). It preserves an active app checkpoint, repairs separately, obtains independent review and checks whether the app can safely resume. [Install its portable entry](docs/install-improve-factory.md) when working elsewhere.
 
-1. Supply an existing skill or describe a concrete workflow we need.
-2. Read its instructions and supporting files. Preserve useful behavior and identify assumptions about tools, access, and target projects.
-3. Add or adapt it under `.agents/skills/<skill-name>/` and register it in the index.
-4. Validate its structure and references. Exercise meaningful behavior where the environment permits.
-5. Record what was tested, what remains unknown, and how it connects to other skills.
+Use existing authorized GitHub access. A local installation does not install on another machine or grant new permissions.
 
-Start with actual skills and working use cases. Implement the selected Safe Engine architecture around explicit inputs, outputs, and dependencies.
+## What works today
 
-## Working principles
+The current Codex session builds; Python saves stages, runs configured checks and rejects stale evidence. A fresh read-only Codex CLI process reviews the candidate before local handoff. The controller does not push, merge, deploy or run as a background service.
 
-- A skill describes a procedure; it does not grant access or authorize external actions.
-- Preserve human decisions at the agreed review and release boundaries.
-- Distinguish implemented, tested, accepted, and deployed states.
-- Use observable evidence for completion. A generated summary alone is insufficient.
-- Continue meaningful authorized work until the agreed verified outcome or an explicit owner stop. Diagnose stalled progress, research alternatives, reconcile uncertain actions and report actual access/authority obstacles; do not invent credits or exhaustion stops.
-- A failed UI/control route requires [permitted-route discovery and recovery](.agents/skills/safe-engine/references/session-contract.md#recover-a-failed-control-route) before calling the outcome blocked. App exit and recovery feedback are reviewed through the existing user-journey lens; these instructions install no process-control service.
-- Keep secrets, client data, local runtime state, and generated run artifacts out of version control.
+The [recorded pilot](docs/pilot-verification.md) demonstrates a local browser fixture and repair. It does not certify this revised wording, every host, or a production app. PR delivery needs actual project settings from the [PR adapter](docs/pr-workflow.md). Claude-native and cloud delivery are unverified.
 
-Project skills live in `.agents/skills`. Discovery depends on the host and repository context. From another project, explicitly reference this bundle's coordinator by absolute path or install it separately; creating this repository does not install its skills globally.
+During app delivery, the coordinator applies [diagnostics](.agents/skills/safe-engine/references/app-diagnostics.md) and [efficiency](.agents/skills/safe-engine/references/app-efficiency.md). New apps plan these from the start; existing changes address affected paths. Instructions alone do not prove useful logs or a faster app.
+
+QA binds to declared code, guidance and runtime inputs. Changing a required skill invalidates old evidence. Preserve active pins and use the compatibility procedure before adopting a different factory.
+
+## Repository layout
+
+```text
+.agents/skills/           Canonical skills, references and index
+skills/                  Two installable entries and generated resolvers
+safe_engine/             Python controller, schema and bundle input contract
+scripts/                 Resolver packaging helper
+tests/                   Controller and distribution checks
+docs/                    Usage, sources, decisions and dated design records
+preview/                 Visual factory map
+examples/                Disposable fixture and recorded demonstration
+```
+
+Client source, credentials and runtime records belong outside this reusable bundle. Keep run records in ignored `.factory/` folders.
+
+Both portable resolvers come from `safe_engine/distribution.py`. After editing it, run `python scripts/package_skill_entries.py`, then check with `--check`.
+
+## Keep building together
+
+Read [repository rules](AGENTS.md) and [selected decisions](docs/safe-engine-decisions.md) before editing. Restore originals faithfully. For a new procedure, start from Seif's actual request, compare requirements before and after editing, then verify affected behavior.
+
+The [visual map](preview/index.html) explains the flow. The [lifecycle map](docs/skill-lifecycle-map.md) catalogs all 38 supplied source skills; seven source skills are imported here. The [expanded plan](docs/safe-engine-expanded-scope.md), [build plan](docs/safe-engine-build-plan.md) and [delivery design](docs/safe-engine-fast-delivery.md) preserve earlier proposals and choices. They do not authorize importing the rest of the library.

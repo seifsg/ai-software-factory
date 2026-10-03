@@ -1,5 +1,19 @@
 # Safe Engine design decisions
 
+## Whole-repository originals and writing pass — 3 October 2026
+
+Seif authorized revisiting the entire repository: use his originals wherever they exist, prioritizing RepairCheck Mobile, and rewrite skills without originals in the same plainspoken style. Preserve requirements and real checkpoints. Shorter instructions must not mean shallower work or hidden workflow changes.
+
+The [source map](skill-provenance.md#current-source-map--3-october-2026) records the exact selection. Six existing skills now use Mobile originals, including its incoming PR review. Feature PR creation keeps the routines original because Mobile's release-pr has a different release/versioning scope. Four factory-specific skills and their supporting instructions are rewritten; historical records remain dated evidence.
+
+The original planning file-summary stop remains unless existing user direction authorizes continuation. Explicit analysis/planning/review stays in that phase. Factory policies belong to their coordinator or adapter, not injected into original bodies. Mobile's four-theme PR review replaces the earlier routines PR-review chain; the local controller keeps its separate five acceptance passes. [PR workflow](pr-workflow.md) makes the distinction and current project bindings explicit.
+
+This source selection supersedes earlier statements below about generic rewrites of original skills. It does not change controller states, authorize a push/release, refresh historical QA or update installed copies. Existing source performance questions and length criteria are restored verbatim; controller acceptance still requires actual evidence, and scoped implementation still preserves necessary complexity.
+
+## Concise Analyze Start — 3 October 2026
+
+Seif selected Mobile's original Analyze Start wording plus three additions: purpose/success, evidence with labeled guesses/unknowns, and PR claims checked against actual code/wiring. He then removed the Small Change redirect, mandatory diagnostics/efficiency references and provenance link from the body. Preserve that self-contained analysis phase. The later whole-repository instruction above extends restoration to the other skills. The exact Mobile source is recorded in [provenance](skill-provenance.md#mobile-original-wording--3-october-2026).
+
 Seif selected these directions on 1 October 2026. **Safe Engine** is the engine name. The repository remains AI Software Factory. Safe Engine 0.1.0 implements the selected local pilot subset; the [verification record](pilot-verification.md) distinguishes demonstrated behavior from the wider approved design.
 
 The decision IDs refer to the 25-option discussion: N1–N2 cover naming, G1–G13 cover confirmed gaps, and I1–I10 cover further improvements. They do not match the numbering in the earlier 24-gap research document.

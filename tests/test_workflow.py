@@ -260,6 +260,14 @@ class WorkflowTests(unittest.TestCase):
         def review_double(argv, cwd, timeout, log, stdin):
             self.assertIn("read-only", argv)
             self.assertIn("--ephemeral", argv)
+            skills = Path(__file__).resolve().parents[1] / ".agents/skills"
+            for relative in ("deep-review/references/theme-security.md",
+                             "deep-review/references/theme-performance.md",
+                             "deep-review/references/theme-user-journey.md",
+                             "how-to-make-a-pr/references/project-bindings.md"):
+                required = skills / relative
+                self.assertTrue(required.is_file(), relative)
+                self.assertIn(str(required), stdin)
             Path(argv[argv.index("--output-last-message") + 1]).write_text(json.dumps(report))
             log.write_text("explicit test double")
             return {"passed": True, "exit_code": 0}

@@ -1,73 +1,73 @@
-# Detailed PR review handoff
+# PR comment template — the handoff context dump
 
-In small-change mode, report the exact reviewed delta/head, original request, relevant findings, focused evidence, earlier unresolved findings and handoff limits in one compact comment. The full five-pass template below applies to version reviews; do not reintroduce it through this reference after selecting the lightweight procedure.
+This is the **only author-visible artifact**, so it must be professional, specific, and self-
+contained. Its job is twofold: (1) tell the author what we changed and why, and (2) carry enough
+context that **a fresh agent or teammate with zero prior knowledge can take over the job**.
 
-Fill with observed results; delete unused illustrative rows, never leave empty placeholders. No model/tool signatures, dev-time estimates, invented fixes or formal self-approval. Keep all five pass outcomes even when clean. This template complements the target project's required review fields.
+Keep the local report candid; keep this comment constructive. State facts, not verdicts about the
+author. Fill every placeholder — an empty section is better deleted than left as a stub.
 
-````markdown
-## PR review and fixes
+```markdown
+## 🤖 RepairCheck automated review + fixes
 
-**Verdict:** <APPROVE / APPROVE-WITH-FIXES / REQUEST-CHANGES / BLOCK> — <reason>
-**Candidate:** <repo/PR; exact base and head SHAs; candidate after any repairs>
-**Review:** <separate from builder; fresh assessment after repairs, or blocker>
-**Gate / pushed:** <actual results / commit SHAs or no changes>
-**State:** draft; human owns ready/merge/release.
+**Verdict:** <APPROVE | APPROVE-WITH-FIXES | REQUEST-CHANGES | BLOCK> — <one-line reason>
+**Gate:** ✅ typecheck · lint · tests · circular-dep green &nbsp;|&nbsp; **Pushed:** <commit sha(s)> _(or: no push — see Handoff)_
 
-### Original goal
-> <verbatim original request>
+### What this PR claims
+> <the claim, quoted/trimmed from the PR body>
 
-**Delivered:** <YES / PARTIAL / NO; evidence and limits>
+**Does it deliver?** <YES / PARTIAL / NO> — <one sentence, from the user-journey review>
 
-### Analysis — analyze-start
-```text
-<actual flow, changed area and consumers>
+---
+
+### What we changed
+<Only if we pushed fixes. One row per fix.>
+
+| # | Area | What we did | Why |
+|---|------|-------------|-----|
+| 1 | <file> | <change> | <finding it addresses> |
+
+#### Before / After
+<Per non-trivial fix — short, readable. Code fences or prose.>
+
+**<file:line> — <title>**
+- Before: `<old behavior / snippet>`
+- After:  `<new behavior / snippet>`
+
+---
+
+### Review summary
+Four themed passes: performance · security · user journey · change-guard.
+
+| # | Sev | Theme | File:Line | Finding | Status |
+|---|-----|-------|-----------|---------|--------|
+| 1 | CRITICAL | security | file:line | … | ✅ fixed / ⏳ flagged |
+
+<Condense to the findings that matter. Full detail lives in our local report.>
+
+---
+
+### ❓ Open questions for the team
+<Only the ones neither the reviewer nor the maintainer could resolve without you.
+Omit this whole section if there are none.>
+
+1. **<question>** — <why it matters / what's blocked until answered>
+
+---
+
+### 🔁 Handoff (for whoever picks this up next)
+- **Current state:** <what's merge-ready, what isn't>
+- **Done:** <fixes pushed / verified>
+- **Pending:** <flagged findings not fixed, and why (out of scope / needs decision / needs native build)>
+- **How to resume:** <branch, the gate commands that passed, where the flagged items live>
+<If push failed (fork/protected branch), include the full patch here so it can be applied manually.>
 ```
-| Claim | Actual code / document evidence | Supported? |
-|---|---|---|
-| <claim> | <path:line or exact result> | <yes/no/unknown> |
 
-### Solutions considered
-| Option | Approach | Recommendation | Reason / decision authority |
-|---|---|---|---|
-| A | <credible option> | <one recommendation only> | <comparison> |
-| B | <credible option> | <status> | <comparison> |
-| C | <credible option> | <status> | <comparison> |
-
-### Plan and execution — get-ready-to-code
-| Step | Evidence |
-|---|---|
-| File set and critique | <actual correction scope or empty set> |
-| Phases, todos, full plan | <actual plan/artifact> |
-| 0–4 execution | <pre/change/post per correction; or no edits needed> |
-| Before → after | <observable difference for each substantive correction> |
-
-### Full review battery
-| Pass | Verdict | Evidence / findings / applicability |
-|---|---|---|
-| Security | <outcome> | <actual evidence> |
-| Performance | <outcome> | <actual evidence> |
-| User journey vs original goal | <outcome> | <actual evidence and feedback trace> |
-| Change guard | <outcome> | <actual consumer/regression evidence> |
-| Compliance | <outcome> | <requirement coverage> |
-
-| # | Severity | Lenses | Location | Finding / impact | Fixed or flagged; reason |
-|---|---|---|---|---|---|
-| <id> | <severity> | <passes> | <path:line> | <supported finding> | <status> |
-
-### Build gate
-| Command / inspection | Result | Coverage / limits |
-|---|---|---|
-| <actual command> | <exit/count> | <candidate and relevant limitation> |
-
-### Blockers and handoff
-| Item | Status / next owner and action |
-|---|---|
-| Original requirements | <complete or remaining evidence> |
-| Creation workflow | <task, owner, notification and body evidence/blockers> |
-| Retry record | <failed step, correction, retry outcome; or none> |
-| Continuity | <diagnostic history/progress, actual constraints and owner stop conditions> |
-| Fresh assessment | <exact reviewed candidate after repairs, or blocker> |
-| Resume | <branch, commands, artifacts, unresolved decisions> |
-````
-
-Post using the available GitHub tooling and verify read-back. Preserve any earlier review as history. If a post's outcome is uncertain, find it before retrying. An unpushed correction is a proposal/patch, never a completed remote fix.
+## Rules
+- Post with `gh pr comment <n> --body-file <file>` (write the body to a temp file first — avoids
+  shell-escaping pain with the markdown).
+- **Confirm with the user before posting** — it's author-facing and hard to unsend.
+- **No AI attribution** in the comment (repo rule `no-ai-commit-attribution` applies to PR content too).
+- If we didn't push (fork perms, protected branch, or user declined), keep the "What we changed"
+  section as *proposed* changes and put the patch/diff in **Handoff** so nothing is lost.
+- No internal-only candor, no blame, no dev-time estimates. Impact and next steps only.

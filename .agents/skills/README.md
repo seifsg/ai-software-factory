@@ -1,33 +1,25 @@
 # Skill index
 
-For building apps across projects, install [the portable Safe Engine entry](../../skills/safe-engine/SKILL.md) using [its GitHub installation guide](../../docs/install-safe-engine.md). For factory repairs, [Improve Factory](../../docs/install-improve-factory.md) is an optional separate installation. Both load the complete bundle and canonical methods below; these two adapters add no new canonical procedures.
+Use the original where it exists. RepairCheck Mobile is the first source. The [source map](../../docs/skill-provenance.md) records exact paths and packaging changes.
 
-Eleven real entrypoints are packaged: seven adapted from Seif's supplied collection, the delivery coordinator, the authorized factory-maintenance skill, the requested market-research skill, and the owner-requested lightweight small-change method. The original six belong to the demonstrated Safe Engine 0.1.0 pilot; the two complete PR procedures and `improve-factory` were added on 2 October at Seif's explicit request. Packaging does not prove every workflow outcome. See the [pilot verification record](../../docs/pilot-verification.md) and [PR workflow status](../../docs/pr-workflow.md).
-
-| Skill | Purpose | Dependencies |
+| Skill | Job | Source / dependencies |
 |---|---|---|
-| [small-change](small-change/SKILL.md) | Small direct fixes: six light routines, correct code, affected checks, one narrow review; no automatic broad regression | Actual source/consumers, focused UI/check tools, independent host review, preserved session decisions |
-| [safe-engine](safe-engine/SKILL.md) | Start/resume coherent feature batches, partial feedback, full version QA and checked handoff | Python controller, [required procedural inputs](../../safe_engine/bundle-inputs.json), Git, Codex CLI, actual project check tools, the five methods below |
-| [improve-factory](improve-factory/SKILL.md) | Turn factory feedback into an isolated correction, with an app checkpoint and reviewed resume when invoked mid-build | Existing full methods, Git isolation, actual reproduction/check tools, separate assessor; host delegation where available |
-| [research-market](research-market/SKILL.md) | Study competing features and visual experiences between the original and revised new-app plan | Original plan, current public primary sources, available screenshot/visual tools, session decisions |
-| [analyze-start](analyze-start/SKILL.md) | Read code, explain purpose, map consumers, draw ASCII charts; no edits | Actual source and read/search tools |
-| [get-ready-to-code](get-ready-to-code/SKILL.md) | Five planning artifacts followed by the per-todo 0–4 loop | Completed analysis, source editing, configured checks |
-| [deep-review](deep-review/SKILL.md) | Review logic, boundaries, security, performance and user journey | Candidate source, diff, applicable bundled review references |
-| [change-guard](change-guard/SKILL.md) | Inspect consumers and regressions after substantial changes | Consumer map, source/diff and check evidence |
-| [compliance-check](compliance-check/SKILL.md) | Trace original requirements to supported outcomes | Original task, acceptance criteria and actual evidence |
-| [how-to-make-a-pr](how-to-make-a-pr/SKILL.md) | Mandatory visual draft, task/owner handoff and separate PR review, on every project | Git/GitHub, resolved project bindings, paired review skill |
-| [how-to-review-a-pr](how-to-review-a-pr/SKILL.md) | Full ordered PR review, three alternatives, five passes, supported fixes and detailed comment | Separate instance, exact PR/context, original five methods, real project gates |
+| [analyze-start](analyze-start/SKILL.md) | Understand the feature and every use. Explain with ASCII charts. No coding. | Mobile original + three approved lines; actual source and read/search tools |
+| [get-ready-to-code](get-ready-to-code/SKILL.md) | Prepare files, critique, phases, todos and plan. Define the 0–4 execution loop. | Mobile original; honor its file-summary stop and no-code planning boundary |
+| [deep-review](deep-review/SKILL.md) | Find bugs, oversights, bad implementation and unnecessary complexity. | Mobile original; candidate files and surrounding code |
+| [change-guard](change-guard/SKILL.md) | Check the change against existing behavior and consumers. | Mobile original; base/diff, consumers and relevant evidence |
+| [compliance-check](compliance-check/SKILL.md) | Check the original request, plan and project rules against the actual result. | Mobile original; actual target rules, request, plan and implementation |
+| [how-to-make-a-pr](how-to-make-a-pr/SKILL.md) | Prepare a feature draft and its task/reviewer handoff. | Routines original; Mobile's release-pr has a different release/versioning scope. Resolve the [PR adapter](../../docs/pr-workflow.md). |
+| [how-to-review-a-pr](how-to-review-a-pr/SKILL.md) | Capture PR claims, analyze, run four themed reviews, synthesize and hand off permitted fixes. | Mobile pr-review under the existing canonical name; Mobile rubrics, real target tools, PR checkpoints |
+| [safe-engine](safe-engine/SKILL.md) | Coordinate app delivery or resume from its saved phase. | Factory-specific; controller, complete methods, real project checks |
+| [improve-factory](improve-factory/SKILL.md) | Repair the factory while preserving active app work. | Factory-specific; isolation, affected checks and independent review |
+| [research-market](research-market/SKILL.md) | Research competitors and visuals between original and revised new-app plans. | Factory-specific; original plan and current source evidence |
+| [small-change](small-change/SKILL.md) | Deliver a requested bounded fix with six light routines. | Factory-specific; affected code, focused checks and narrow independent review |
 
-Existing skills supplied by Seif are the starting point. The [expanded capability plan](../../docs/safe-engine-expanded-scope.md) records the requested specialist capabilities and proposed boundaries. Seif leads authorship; counts, names, and new procedures remain open until selected.
+Eleven canonical skills: seven with originals, four factory-specific. Two portable entries, [Safe Engine](../../skills/safe-engine/SKILL.md) and [Improve Factory](../../skills/improve-factory/SKILL.md), load the same complete bundle. Install using their [delivery](../../docs/install-safe-engine.md) or [maintenance](../../docs/install-improve-factory.md) guide.
 
-The wider collection contains 38 source entrypoints; seven have been imported here. [Provenance and adaptations](../../docs/skill-provenance.md) records the exact source revision. Planning and execution remain two parts of Seif's original file in this pilot, with distinct controller phases; the proposed larger modular library is still ahead.
+A direct analysis/planning/review request keeps its phase. Small Change is for requested implementation. App [diagnostics](safe-engine/references/app-diagnostics.md) and [efficiency](safe-engine/references/app-efficiency.md) belong to the delivery coordinator; restored originals do not import them automatically.
 
-On 2 October, the coordinator gained explicit guidance for visible demonstrations and fresh-session setup. The update passes structural validation; the first complete run remains the dated 1 October record. Claude-native and cloud delivery are not verified. Use the [fresh-session guide](../../docs/start-another-session.md) for the actual entry prompt and current host limits.
+The local controller keeps its five acceptance passes. The Mobile PR procedure uses four themed reviewers and a synthesis/compliance lens. These are separate workflows; do not claim one completed the other.
 
-Seif subsequently removed artificial credits, correction allowances, fixed retry ceilings and session deadlines. The [continuous session contract](safe-engine/references/session-contract.md) now owns that policy across delivery, maintenance, research and paired PR review. The controller records corrections without a ceiling, retaining old limit integers as historical metadata; fresh QA/review, actual access and owner stop/release decisions remain required.
-
-The same contract owns [failed control-route recovery](safe-engine/references/session-contract.md#recover-a-failed-control-route): a UI lookup failure requires discovery of permitted alternatives before an outcome blocker is claimed. The existing user-journey lens reviews explainable draft/exit recovery. These are updates to existing procedures, not another packaged skill or installed process-control service.
-
-[App diagnostics](safe-engine/references/app-diagnostics.md) is the shared default for app work, owned by Safe Engine and routed through analysis, planning/coding, Small Change, QA, review and handoff. New apps include app-wide coverage; existing changes automatically fill the minimum shared-module/affected-journey gaps with focused evidence. Privacy, bounded retention and usable log discovery are part of that standard. This adds a reference, not a twelfth skill or a telemetry service.
-
-[App efficiency](safe-engine/references/app-efficiency.md) is the shared early-design default along the same full and lightweight routes: workload-based CPU/memory choices, useful bounded caching/reuse, validity/concurrency/ownership and focused evidence. It adds no skill or automatic optimizer; actual application performance remains an implementation and measurement outcome.
+The 38-skill source catalog is background, not 38 installed skills. [Pilot evidence](../../docs/pilot-verification.md) is dated; packaging a rewritten skill does not demonstrate a new app run.
