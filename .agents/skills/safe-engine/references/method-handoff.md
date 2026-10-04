@@ -4,7 +4,10 @@ Use at intake/resume/context loss/delegation. Read full applicable methods; reus
 
 Analysis-only stops before coding. Requested bounded fixes use complete [Small Change](../../small-change/SKILL.md) and one scoped record. Preserve prior version status; a small handoff cannot refresh whole-version acceptance.
 
-For delivery, read applicable methods and pass:
+For delivery, pass core methods plus references selected from actual requirements/changes. Record applicability; reviewers challenge omissions and request missing evidence. Do not preload unrelated UI/SEO/schema material. Read selected methods fully; this packet never replaces them.
+
+Applicable references:
+- [Delivery Readiness](delivery-readiness.md): actual capabilities, manual/automated/mixed criteria, game/browser lifecycle, durable external effects and authorized release/operations. No early testing or unrequested pilots.
 - [Application Security](app-security.md): exposure, roles/trust boundaries, applicable controls, denial-path evidence, gaps and production readiness. Existing security reviewer; keep local work proportional.
 - [Public Web SEO](../../ux-quality/references/web-seo.md), indexable public pages: route boundaries, metadata/discovery, observed checks, ownership and pending production evidence.
 - [Clear Writing](clear-writing.md), human-facing prose: audience/voice, supported claims, necessary details, clear actions; one finishing pass within existing review.
@@ -23,11 +26,11 @@ These delivery rules do not expand standalone analysis. Summaries, old passes an
 | Plan | [Get Ready to Code](../../get-ready-to-code/SKILL.md) | Files → original stop unless continuation authorized → critique → phases → todos → entire plan. No code. |
 | Research | [Research Market](../../research-market/SKILL.md) | New-product original plan → research → revised five outputs. Existing work: resolve material unknowns in scope. Standalone research stops with findings. |
 | Each todo | Get Ready's complete 0–4 loop | Context → site analysis → apply → inspect → correct; pre/change/post evidence. |
-| Check / improve | [Tests-last order](../../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests) and actual gates | Finish implementation/improvements → manual action QA → author/polish/run final automated tests → fresh review/PR. No early test writing/execution, including by delegates. |
+| Check / improve | [Tests-last order](../../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests) and actual gates | Finish implementation/improvements → final manual/user QA → author/polish/run automated tests → fresh review/PR. No early manual tests/playtests/walkthroughs or test writing/execution, including by delegates. Version 2 seals reviewed acceptance and runs one final gate. |
 | Assess | [Deep Review](../../deep-review/SKILL.md) and [security](../../deep-review/references/theme-security.md), [performance](../../deep-review/references/theme-performance.md), [journey](../../deep-review/references/theme-user-journey.md) lenses | Distinct pass outcomes with supporting evidence; clean findings allowed. |
 | Protect | [Change Guard](../../change-guard/SKILL.md) | Consumers and per-file regression evidence. |
 | Compare | [Compliance](../../compliance-check/SKILL.md) | Request/rule/plan traceability; unknown applicability stays UNKNOWN, exceptions need actual authority. |
-| PR / update | [Create](../../how-to-make-a-pr/SKILL.md), separate-instance [review](../../how-to-review-a-pr/SKILL.md), [adapter](../../../../docs/pr-workflow.md) | Resolved bindings, task, visual context, attribution/history, four themes + synthesis, permitted fixes/checks, current-head evidence and human handoff. |
+| PR / update | [Create](../../how-to-make-a-pr/SKILL.md), remote/cloud [review](../../how-to-review-a-pr/SKILL.md), [adapter](../../../../docs/pr-workflow.md) | Actual remote agent/task, fresh context, exact base/head, resolved bindings, task, visual context, attribution/history, themes + synthesis, permitted fixes/checks and human handoff. Local controller review stays separate; local subagents never count as PR review. |
 
 Read [project bindings](../../how-to-make-a-pr/references/project-bindings.md) with review lenses. Discover actual stack/rules and applicable interaction/exit behavior. Do not substitute PR review for the controller's five passes or vice versa.
 
@@ -38,10 +41,10 @@ Three-option planning belongs to new substantive choices, not an extra PR-review
 Pass one record:
 - Verbatim request, acceptance and session authority/checkpoints/constraints.
 - Approved, rejected and pending decisions; original/revised plans and research.
-- Project/worktree, bundle identity, task/profile, phase, base/head and diff.
+- Project/worktree, bundle identity, original/current task/profile and amendment history, phase, base/head and diff.
 - Full skill paths; analysis, plan, batch and improvement artifacts.
 - Command logs, review results, evidence freshness, diagnostic/resource limits.
-- Manual actions, candidate identity, observed outcomes/limits and completion order before final test authoring/execution. Reviewer checks chronology; a passing suite cannot fill missing manual evidence.
+- Criterion modes and candidate-bound manual receipts: actual actions/environment, outcomes/evidence/limits and final-stage chronology before automated test authoring/execution. Reviewer checks substance; a passing suite cannot fill missing manual evidence.
 - Correction history, demonstrated progress, obstacles and existing PR/task links.
 
 Receiver: read status, current instructions and source. Resume the first unfinished/invalidated step. Never reinitialize, invent artifacts or accept stale evidence.

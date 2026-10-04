@@ -33,7 +33,7 @@ For full delivery, read the whole returned `entrypoint`, its session contract, u
 
 Execute once from bundle root against target. No recursive launcher or controller execution from the target directory. File loading is not completed delivery.
 
-Before dependent work, inspect actual check/interaction tools without running tests. Finish implementation, pass manual action QA, then author/run final tests; no tests during development. Full-version review requires authenticated Codex CLI; no Claude-only adapter exists. Report missing capabilities; installation provisions no other host/cloud environment, hooks, daemon or permissions. Preserve checkpoints, meaningful updates and human release authority.
+Before dependent work, inspect capabilities without launching product tests. Finish implementation, then final manual/user QA, then author/run automated tests; no early playtests/walkthroughs either. New version-2 runs allow draft acceptance and seal reviewed checks at the end. Full local controller review needs authenticated Codex CLI; PR review separately needs an actual remote/cloud agent with fresh context. Local subagents never count as PR review. Report missing capabilities; installation provisions no cloud route, hooks, daemon or permissions. Preserve checkpoints and human release authority; unrequested product pilots stay deferred.
 
 ## Invoke
 

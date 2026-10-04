@@ -18,6 +18,8 @@ From another project, [install the portable Safe Engine skill](install-safe-engi
 
 Requirements: Python 3.11+, Git, authenticated Codex CLI, and the target project's actual check dependencies. Browser work additionally requires a working browser driver and a runnable test application. Use a suitable existing isolated worktree or the host's worktree tool. The demo uses an explicitly created disposable Git worktree.
 
+Before dependent work, use `preflight --profile <profile.json>` to inspect available capabilities without launching an app or test. Record missing interaction/audio/device/integration evidence and the actual remote/cloud PR-review route; the local Codex CLI supplies controller review only. Follow [Delivery Readiness](../.agents/skills/safe-engine/references/delivery-readiness.md). Actual product tests, manual user QA and playtests all wait until implementation finishes. App/game/mobile pilots and simulations remain deferred until specifically requested.
+
 ## Configure a task
 
 Run commands from this bundle's root. On Windows, use the full path of the real Python executable if `python` resolves to the Windows Store launcher.
@@ -28,7 +30,21 @@ python -m safe_engine --project <absolute-project-root> discover
 
 Discovery reads Git and package scripts without executing them. Review the proposed interface and supply real commands. Add `.factory/` to the target project's ignore rules, preserve existing work, and establish a clean committed baseline. Runtime artifacts belong in `.factory/` or an excluded external directory, not in the source candidate.
 
-Example profile for a web project; adjust it to installed tools and actual acceptance files:
+Version 2 is the new-run workflow. `init` accepts draft check definitions and empty `checks`/`protected_paths`; no early test creation. Declare `test_paths` for final test authoring and applicable `review_scopes` (`ui`, `assets`, `persistence`, `research`, `seo`, `security`, `integrations`, `release`). Set actual `exposure`: `local` (default), `public` or `production`. Core methods always apply; explain exclusions. Final `seal` validates complete reviewed task/profile and protected inputs. Review test-path exclusions; never hide production/configuration files there.
+
+Minimal draft shape; replace interface, scopes and paths with actual choices:
+
+```json
+{
+  "version": 2, "interface": "cli", "exposure": "local",
+  "checks": [], "protected_paths": [], "test_paths": ["tests"],
+  "environment_inputs": [], "input_files": [], "review_scopes": []
+}
+```
+
+Task keeps original `request` and `acceptance` entries with `id`, `text`, `mode`, `checks`. `manual` needs `checks: []`; `automated`/`mixed` may start empty but need real check IDs before sealing. No product testing is implied by writing a profile.
+
+The following version-1 profile is a **legacy example**, retained for existing runs. Its fixed tests and two-check sequence are not the new-project default:
 
 ```json
 {
@@ -47,13 +63,13 @@ Example profile for a web project; adjust it to installed tools and actual accep
 
 Commands are argument arrays, not shell strings. `{python}`, `{project}`, and `{run}` expand to the current interpreter, target root, and local runtime directory. Explicitly use the right executable for the platform; npm shell wrappers may need a platform-specific command. Commands are trusted configuration reviewed by the operator, not a sandbox for untrusted test code.
 
-Declare relevant environment variables and ignored/external input files in the profile; their content is hashed, not copied into task records. Include meaningful dependency manifests, browser/runtime configuration, and test-data identity where applicable. Input discovery cannot infer every mutable service, database, or hidden runtime input. The pilot can revalidate a whole unchanged full gate after improvement only when the immutable reviewed profile explicitly sets `reuse_unchanged_checks: true`. Default false preserves fresh final execution for existing profiles. Enable it only when every relevant runtime/service/test-data identity is controlled and declared; volatile backend, clock, hardware or permission state otherwise needs fresh execution. Browser checks use a running app supplied by the configured check. Network service identity remains the adapter's responsibility; source equality alone cannot establish it.
+Declare relevant environment variables and ignored/external inputs; content is hashed, not copied into records. Include dependency manifests, runtime configuration and test-data identity where applicable. Discovery cannot infer every mutable service/database/hidden input. Source equality alone proves no unchanged runtime. Legacy version-1 duplicate-gate reuse requires reviewed `reuse_unchanged_checks: true`, controlled declared identities and unchanged evidence; volatile backend/clock/hardware/permissions require fresh checks. Version 2 has one final gate, so no duplicate execution to optimize away.
 
-`protected_paths` holds existing accepted checks that cannot be changed during the run. Read them during development; execution and further test authoring wait until implementation and manual QA are complete. Add final tests only within the reviewed check contract, in unprotected files. If requirements, commands or protected checks need correction, preserve the run and use a newly reviewed task in a fresh worktree. The same OS user can edit local records, so this is workflow integrity, not hostile-user protection.
+`protected_paths` holds sealed accepted checks. Read them during development; testing waits until implementation and manual QA finish. Version 2 permits independent reviewed contract amendments rather than silent file/state changes: preserve old/new contract digests and protected hashes, reason, reviewer identity/verdict and actual authority. Amendment invalidates acceptance and returns through completed implementation and final manual QA. Never erase failures, revive cancellation or weaken expectations for green. Legacy version-1 contracts retain their original boundary. Same-user records remain workflow integrity, not hostile-user protection.
 
 Optional per-check `artifacts` list generated evidence files under `.factory/outputs/`. The runner removes only those declared output files before the command, requires fresh files afterwards, and verifies their hashes before review and handoff. Configure the check to actually write those paths; old screenshots cannot substitute for a new run.
 
-Task JSON:
+Legacy task JSON; version 2 additionally declares criterion `mode` as `manual`, `automated` or `mixed`. Manual criteria need real structured receipts, not dummy executable checks:
 
 ```json
 {
@@ -64,7 +80,7 @@ Task JSON:
 }
 ```
 
-For new projects, resolve acceptance-shaping research before freezing task/profile where possible. Prepared analysis/plans may then be recorded in stage order. Once initialized, implementation plans may evolve within accepted criteria; changed task/profile/protected checks require a newly reviewed run in a fresh worktree. Preserve old records and lineage.
+Resolve material unknowns before dependent choices. Prepared analysis/plans may be recorded in stage order. Version-2 acceptance stays draft until final sealing; legitimate later changes use `amend` with independent reviewed authority/history. A changed contract is no permission to hide failure or expand product scope.
 
 Initialize with the completion boundary and authority recorded in the [session contract](../.agents/skills/safe-engine/references/session-contract.md). No numerical correction allowance or session deadline is required or invented. Keep actual owner stop/checkpoint and provider/access constraints. Individual check/review timeouts diagnose hung commands; they are not a whole-session limit:
 
@@ -75,57 +91,81 @@ python -m safe_engine --project <project> status
 
 ## Follow the stages
 
-Supported interfaces: `web`, `cli`, `library`, `desktop`, `mobile`, `game`, `service`. Web requires a `browser` check; desktop/mobile/game require an `interaction` check; service requires `api` or `integration`. Choose by the actual delivery interface: a browser game may use `web`, a headless game server `service`. Supported check kinds also include `unit`, `build`, `security`, and `performance`. Configure real commands/tools and evidence paths; labels alone prove nothing. These profiles do not install a browser, game driver, emulator or native automation tool. Inspect mixed surfaces and configure all relevant checks.
+Supported interfaces: `web`, `cli`, `library`, `desktop`, `mobile`, `game`, `service`. Choose by actual delivery: browser game may use `web`, headless game server `service`. Supported check kinds include `unit`, `integration`, `browser`, `interaction`, `api`, `build`, `security`, `performance`. Configure relevant commands and manual/mixed receipts; artistic or actual-use criteria need appropriate observed evidence. Legacy profiles retain interface-specific executable requirements. Labels install no tools and prove no behavior. Inspect mixed surfaces and applicable evidence.
 
 Use the actual procedures, then record their outputs. Honor Get Ready to Code's file-summary stop unless existing user instructions explicitly authorize continuing. Read the Mobile-priority [source map](skill-provenance.md#current-source-map--3-october-2026). For new software, the existing `plan` phase contains original plan → [research-market](../.agents/skills/research-market/SKILL.md) → revised plan; retain and link all three before recording the final plan. Research covers product/UX, current stack/architecture and fitting patterns; inspect applicable resource costs and resolve material unknowns during delivery. Standalone research needs no run. No new CLI stage is introduced. Artifacts can be Markdown with diagrams and tables; the controller validates presence and integrity, while the fresh reviewer assesses substance.
 
+New version-2 sequence:
+
 ```text
-record analysis --file <analysis.md>       analyze-start; no code changes
-record plan --file <plan.md>               get-ready-to-code planning outputs; no code changes
-record batch --file <batch.md>             finished implementation/improvements, manual QA, then final test authoring
-check                                     run ALL configured version checks together
-record improvement --file <improvement.md> record the pre-test improvement assessment; no planned development here
-check                                     validate full final QA; eligible unchanged reuse or full rerun
-review --timeout 600                       fresh read-only Codex CLI process
-handoff                                   validate evidence and write handoff.md
+record analysis --file <analysis.md>
+record plan --file <plan.md>
+record implementation --file <improvement.md>
+record manual --file <receipt.json>
+seal --task <final-task.json> --profile <final-profile.json> --review <contract-review.json>
+record batch --file <final.md>
+check
+review --timeout 600
+handoff
 ```
 
-Prefix every line with `python -m safe_engine --project <project>`. A failed check or finding requires `repair --reason "..."`, a completed surgical correction, manual QA, final test work, a new batch record, checks, improvement record, final checks and fresh review. The correction count is diagnostic history, not a stop condition. `cancel --reason "..."` stops future progression and preserves work. No operation deletes the worktree.
+`record implementation` declares all implementation/improvements finished. Only then perform actual manual/user QA or instruction walkthroughs; record its candidate-bound receipt. Only after that receipt author/polish tests in declared test-only paths. `seal` freezes independently reviewed final acceptance; record the batch and run one complete final gate. Local read-only review follows. `amend --task ... --profile ... --review ... --reason ...` preserves history and invalidates acceptance for legitimate reviewed corrections.
+
+### Final evidence records
+
+Use `status.manual_candidate` after implementation completion. A receipt has the shape below; replace every description with actual observations and existing evidence paths. Never submit fictional PASS evidence. Cover every manual/mixed criterion; automated-only tasks still need relevant final actual-use observation.
+
+```json
+{
+  "candidate": "<current manual_candidate>",
+  "observations": [{
+    "criterion": "A1", "device": "<actual environment/device>",
+    "action": "<performed action>", "result": "<observed outcome and limits>",
+    "status": "PASS", "evidence": [".factory/evidence/manual.md"]
+  }]
+}
+```
+
+At final sealing, `contract-proposal --task <final-task.json> --profile <final-profile.json>` returns exact `old_digest`, `new_digest` and protected hashes for independent inspection. It grants no approval. The actual reviewer records `verdict: "PASS"`, `independent: true`, `reviewer`, `reason`, `authority` and matching digests in the review JSON. Original request cannot change. Seal preserves criterion IDs/text; changes to these through `amend` also need explicit `acceptance_change_authority`. Interface, test paths, declared inputs, scopes and exposure cannot silently change at seal. Amendment preserves snapshots and invalidates final evidence; a draft stays draft, a sealed contract stays sealed.
+
+Legacy version-1 runs retain `analysis → plan → batch → check → improvement → check → review → handoff`. Their second check may reuse exact unchanged evidence only under their reviewed opt-in. No automatic migration.
+
+Prefix every line with `python -m safe_engine --project <project>`. A failed check or blocking finding requires `repair --reason "..."`, completed surgical correction, final manual QA, final test work, valid sealed acceptance, batch, configured gate and fresh review. Follow the saved version's sequence. Correction count is history, not a stop condition. `cancel --reason "..."` stops progression and preserves work. No operation deletes the worktree.
 
 After interruption, use `status`. An incomplete check or review is not acceptance; rerun it on current inputs. A changed candidate after its batch record needs a repair cycle. File locks release when the process exits. To stop an active check or review, interrupt its foreground controller; it terminates its owned process tree. A concurrent cancel command does not bypass the active operation's lock.
 
 ## Feature feedback and version checkpoints
 
-Current policy is [finish work → manual action QA → final test authoring/execution](current-decisions.md#finish-work-use-it-then-automate-tests). Apply it across the whole requested task, not per capability. During `build`, finish implementation and worthwhile improvements, exercise the real behavior manually, then author/polish tests at the final stage. Include candidate identity, actual actions/results and chronology in the batch artifact. Reviewers inspect adherence; the controller has no manual-QA receipt gate.
+Current policy is [finish work → final manual/user QA → final test authoring/execution](current-decisions.md#finish-work-use-it-then-automate-tests), across the whole requested task. No early playtests, manual reproduction or instruction walkthroughs. Source inspection/research/existing-log reading remain allowed. Version 2 records implementation completion and structured manual receipts before final test authoring; production changes invalidate manual evidence. Declared test-only changes do not. Receipts bind criterion/candidate/environment/actions/results/evidence; reviewers judge substance. The controller cannot prove the person acted or intercept arbitrary commands.
 
 The legacy `feature-check --checks <IDs> --file <feature.md>` command still executes partial checks in `build`. Do not use it under current policy. Its availability is not permission; partial results never certify a version. Existing historical feedback remains evidence of its recorded candidate only.
 
 Failed feature feedback is preserved and requires `repair --reason ...` before another feature or version batch. Repair from build is allowed only for actual failed feedback; diagnostic counters remain continuous. Interrupted operations remain incomplete, cannot be recorded as a finished version, and need reconciliation/rerun. Cancellation stays terminal.
 
-After implementation, manual QA and final test authoring, `record batch` then `check` executes **every configured check**. The later `improve` stage records the assessment already completed before manual QA. New production changes require `repair`, renewed manual QA and final tests. At final QA, `check` either executes every command again or, with reviewed `reuse_unchanged_checks: true`, validates the unchanged full gate's exact source, fixed task/profile, declared files/environment, executable and operative factory-input fingerprints plus every required command, log and output hash. It records `checks_reused: true` without replacing original logs. Missing/modified evidence rejects reuse. `check --fresh` forces execution for volatile/runtime concerns. Partial subsets never count as acceptance; fresh independent review follows.
+After implementation, manual QA, final test authoring and sealing, version-2 `record batch` then `check` executes every configured final check once and enters review. The improvement assessment was already recorded at implementation completion. New production changes require repair and fresh affected manual evidence before final tests. Legacy version-1 final-check reuse validates exact source, contract, declared inputs/executable/guidance, logs and output hashes; volatile/runtime concerns require `check --fresh`. Missing/changed evidence prevents reuse. Partial subsets never certify a full version.
 
-Initialization still requires existing protected acceptance files. If a new project lacks them, do not author tests early, add placeholders or invent completed stages. Continue authorized agent-led analysis/planning/implementation and manual QA with the same methods and durable records; write tests only at the final stage. Report that this delivery lacks controller acceptance. A later controller run needs an honestly scoped, reviewed task and preserved lineage; it cannot retroactively certify development performed outside it. Existing runs keep their pins and immutable contracts.
+Greenfield version-2 initialization needs no existing tests. Draft acceptance preserves the original request and planned evidence; final independent sealing protects actual checks. No placeholder tests or invented completed stages. Existing version-1 runs retain their limitations and selected bundle; do not retrofit records or claim the new workflow was used historically.
 
-The factory input owner is [bundle-inputs.json](../safe_engine/bundle-inputs.json). Its required files cover the controller/schema, root rules and README, canonical methods/references/index, portable entry/resolver and guidance docs, including approved decisions and delivery cadence. The fingerprint also discovers `.py`, `.md`, `.json`, `.yaml` and `.yml` additions in its declared source trees. Missing required files, the contract or a source tree block the gate; content changes invalidate previous QA. Update the required list when adding mandatory procedural inputs so deletion cannot silently omit them. Guidance context is hashed conservatively; inclusion does not turn historical proposals into approved requirements.
+The factory input owner is [bundle-inputs.json](../safe_engine/bundle-inputs.json). Required operative files cover controller/schema, rules, canonical methods, portable entries and current guidance. Missing required inputs block acceptance; operative changes invalidate QA. Historical audits, provenance and dated proposals stay available but are excluded from target-run procedural invalidation. Update the contract when adding required guidance. A target's explicitly declared inputs still count even when they are historical documents.
 
 This procedural boundary excludes the factory's own tests, examples, preview and media. When such a resource is an input to a target's acceptance, declare it in that target's profile. An installed launcher outside the selected bundle, external tools/services and hidden runtime state are not inferred; preserve their identity and declare operative files/environment inputs or require fresh checks. The target project's own source fingerprint still includes its tracked and nonignored untracked files. A clean Git revision or portable completeness inspection alone is not QA.
 
-Do not add the reuse flag to a saved profile: the contract is immutable. Older profiles/runs remain supported and default to fresh final commands. A newly reviewed run may opt in when its environment control warrants reuse. This is local workflow integrity, not an administered cache/security boundary or automatic dependency scheduler.
+Never edit saved profiles directly. Legacy version-1 reuse needs its original reviewed opt-in; version 2 uses reviewed amendments and one final gate. This is local workflow integrity, not an administered acceptance service or automatic dependency scheduler.
 
 ## What is enforced
 
-- Original task and profile are fixed for the run; criterion IDs and required checks are validated.
+- Original request/history are preserved. Version-2 draft, independent sealing and reviewed amendments validate criterion evidence modes and protected checks; legacy contracts remain fixed.
 - Source changes during the analysis or planning phase prevent progression.
 - Required acceptance files and recorded artifacts cannot change unnoticed through ordinary controller use.
 - Evidence includes exact source contents, check definitions, declared inputs, executables, and the operative factory inputs defined above. A commit that only records unchanged contents does not itself invalidate evidence.
-- Passing commands, current logs, an improvement artifact, and a fresh successful review are necessary for handoff.
+- Fitting manual/automated evidence, current logs, completed improvement assessment and a fresh local review are necessary for handoff. Blocking findings prevent acceptance; authorized lower-risk deferrals remain explicit.
 - Corrections continue with supported diagnosis and fresh acceptance; cancelled runs cannot continue. New init defaults to continuous; deprecated `--max-repairs` and old saved integers remain historical metadata, never active caps. `status` exposes `repair_policy: continuous`, `max_repairs: null`, `historical_max_repairs`, and preserved `repairs_used`. Compatible old post-QA runs use normal `repair --reason ...`; no manual state edit or acceptance carry-over.
 
 ## Remaining gaps
 
 The controller does not intercept arbitrary agent actions, install host hooks, or protect GitHub merges. Its local records are not signed or isolated from the builder's OS identity. A fresh read-only reviewer supplies context and permission separation, but is not a separately administered acceptance service. Model judgments and tests can miss defects.
 
-PR delivery always uses [how-to-make-a-pr](../.agents/skills/how-to-make-a-pr/SKILL.md) with the [project adapter](pr-workflow.md), followed by the **complete separate-instance** [how-to-review-a-pr](../.agents/skills/how-to-review-a-pr/SKILL.md). This is mandatory for every factory-managed project, including docs/skills and subsequent updates. A successful local `handoff` does not certify those PR steps. Resolve real tracker, human owner, notifications and project check bindings; discover bindings first; missing required bindings block PR completion while independent local owner-test delivery continues. See [PR workflow status](pr-workflow.md). The paired skills are instruction-level requirements, not executable GitHub/host enforcement.
+PR delivery uses [creation](../.agents/skills/how-to-make-a-pr/SKILL.md) and the complete [review](../.agents/skills/how-to-review-a-pr/SKILL.md) through the [adapter](pr-workflow.md). PR review must actually run remotely/in the cloud on a separate agent with fresh context, including docs/skills and updates. Local `handoff` or local subagents cannot satisfy it. Discover actual route, tracker, owner and authorized destinations; missing bindings block dependent completion, not independent local work. These remain instruction-level requirements, not remote enforcement.
 
 The full architecture, UX research beyond the implemented [quality audit](../.agents/skills/ux-quality/SKILL.md), security, idea-assessment, test-quality review, skill-writing, and worktree-management modules are not implemented as independent specialist skills. General review lenses cover only part of those responsibilities. Planning and execution are separate controller phases but still share the original `get-ready-to-code` entrypoint; the selected modular split remains future packaging work.
 

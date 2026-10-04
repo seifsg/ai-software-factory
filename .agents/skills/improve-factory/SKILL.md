@@ -9,7 +9,7 @@ Fix the factory cause. Preserve Seif's methods and project progress.
 
 Bounded instruction/helper fix: use [Small Change](../small-change/SKILL.md)'s six routines instead of the full methods below. Keep checkpoint, isolation, consumer and adoption rules. Analysis/planning stays in phase.
 
-Factory-wide routing, acceptance or interacting procedures need maintenance analysis and an independent behavioral exercise. Check affected consumers, skip unrelated suites. One case, one final independent assessment; combine PR review when scope permits. No recursive maintenance.
+Factory-wide routing, acceptance or interacting procedures need maintenance analysis and a final independent behavioral exercise. Check affected consumers, skip unrelated suites. One case, one local final assessment; authorized PR review remains separately remote/cloud. No recursive maintenance.
 
 Active build: `checkpoint → isolated repair → independent review → compatible resume`. Parallel project work must be independent of the fault/repair. No hook or upgrade service is installed.
 
@@ -23,7 +23,7 @@ Resolve factory/target roots separately. Read both projects' rules, [approved de
 |---|---|
 | Instruction skipped | Recover step; inspect invocation/handoff before adding rules. |
 | Skill unclear/incomplete | Fix canonical owner and callers. |
-| Controller/adapter faulty | Reproduce and fix that layer. |
+| Controller/adapter faulty | Diagnose from source/existing evidence; fix that layer. Reproduction tests wait until the final stage. |
 | Missing tool/access/decision | Record blocker; invent nothing. |
 | Product bug | Return to delivery unless evidence also shows a factory defect. |
 
@@ -31,7 +31,7 @@ Active run: execute [live-session maintenance](references/live-session.md) befor
 
 ## Prepare the correction
 
-1. Execute [Analyze Start](../analyze-start/SKILL.md): source/consumers, flow, evidence versus claims/unknowns, smallest reproduction. Unobserved failure stays unverified. No coding.
+1. Execute [Analyze Start](../analyze-start/SKILL.md): source/consumers, flow, evidence versus claims/unknowns, planned smallest final reproduction. Unobserved failure stays unverified. No coding or testing.
 2. Record changes and invariants: project goal, selected decisions, complete routines, fresh evidence, continuous progress, owner stops, human release. Changing these invariants needs the user's decision. Never weaken failed acceptance.
 3. New substantive choice: compare three credible options; recommend one. Preserve approved choices. Proceed with delegated choices/restoring agreed behavior; wait on owner-reserved choices. Exclude unrelated improvements.
 4. Execute [Get Ready to Code](../get-ready-to-code/SKILL.md): files, critique, phases, todos, full plan. Honor file-summary stop unless existing authority covers continuation. Include reproduction, behavioral checks, consumers, before/after evidence, compatibility and safe resume.
@@ -46,7 +46,7 @@ Fix canonical cause and affected consumers, index, provenance, usage/preview. No
 
 Changed procedure inputs: update [input contract](../../../safe_engine/bundle-inputs.json) and consumer map. Required files detect deletion; declared trees discover added code/guidance. Read [pilot usage](../../../docs/pilot-usage.md) for fingerprint/external-input limits. Preserve the whole candidate too; fingerprints cover a different boundary.
 
-[Tests last](../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests): finish repair/consumers → manually use changed behavior (realistic agent walkthrough for instructions) → only after manual QA passes, author/polish regressions and run relevant final checks. No test files/suites during repair. Syntax/word matching cannot replace use. Preserve failure/candidate evidence; choose relevant [scenarios](references/validation-scenarios.md), no automatic full suite.
+[Tests last](../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests): finish repair/consumers → final manual use (realistic agent walkthrough for instructions) → only after manual QA passes, author/polish regressions and run relevant final checks. No manual reproduction, walkthroughs, test files or suites during implementation. Source inspection/existing-log reading remain allowed. Syntax/word matching cannot replace use. Preserve failure/candidate evidence; choose relevant [scenarios](references/validation-scenarios.md), no automatic full suite.
 
 Execute [Deep Review](../deep-review/SKILL.md), [security](../deep-review/references/theme-security.md), [performance](../deep-review/references/theme-performance.md), [user-journey](../deep-review/references/theme-user-journey.md), then [Change Guard](../change-guard/SKILL.md) and [Compliance Check](../compliance-check/SKILL.md). Check correction and preserved behavior; evidence must support quality/performance claims.
 
@@ -56,7 +56,7 @@ Across retries/delegates, preserve meaningful corrections, diagnostic history, u
 
 ## Deliver and resume
 
-Authorized PR work: execute [creation](../how-to-make-a-pr/SKILL.md), separate-instance [review](../how-to-review-a-pr/SKILL.md) and [project adapter](../../../docs/pr-workflow.md). Local validation cannot replace them. Discover task/owner/notification bindings before asking; missing bindings block PR completion, not local repair/testing. Keep draft status and human ready/merge/release decisions.
+Authorized PR work: execute [creation](../how-to-make-a-pr/SKILL.md), remote/cloud [review](../how-to-review-a-pr/SKILL.md) and [project adapter](../../../docs/pr-workflow.md). Fresh context and remote execution required; local validation/subagents cannot replace PR review. Discover task/owner/notification bindings before asking; missing bindings block PR completion, not local repair/final testing. Keep draft status and human ready/merge/release decisions. Publish approved factory source to main only after actual cloud review and authorized merge; preserve active pins.
 
 Give brief before/after. Save one maintenance record:
 - Report, expected result, reproduced cause/unknown.

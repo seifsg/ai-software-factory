@@ -133,7 +133,8 @@ class FeatureBatchTests(unittest.TestCase):
     def test_changed_bundle_inputs_execute_full_suite(self):
         copied=self.root/'.factory/bundle';copied.mkdir(parents=True)
         source=Path(__file__).resolve().parents[1]
-        for name in bundle_input_paths(source):
+        contract = json.loads((source / 'safe_engine/bundle-inputs.json').read_text(encoding='utf-8'))
+        for name in set(bundle_input_paths(source)) | set(contract.get('historical_files', [])):
             target=copied/name;target.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(source/name,target)
         with patch('safe_engine.project.__file__',str(copied/'safe_engine/project.py')):
             self.full();f=copied/'safe_engine/__init__.py';f.write_text(f.read_text()+'\n# actual changed bundle fixture\n')

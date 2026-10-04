@@ -17,7 +17,7 @@ Public pages meant for search also use [Public Web SEO](references/web-seo.md), 
 
 Read request, design system, actual interface and settled choices. Reuse original analysis/planning; preserve the file-summary checkpoint and 0–4 loop. Record audience, goal, supported devices/inputs, accessibility needs and success/failure states.
 
-Map `intent → entry → actions/decisions/waits → outcome → recovery/exit`. Count steps/repeated entry; find confusion, dead ends and lost work. Minimize total effort, not clicks alone. Preserve consent, safety and comprehension. No deceptive defaults or hidden costs.
+Map `intent → entry → actions/decisions/waits → outcome → recovery/exit`. Count steps/repeated entry; find confusion, dead ends and lost work. Minimize accidental effort, not intended game challenge, mastery or discovery. Preserve consent, safety and comprehension. No deceptive defaults or hidden costs. Use applicable [game/browser lifecycle cases](../safe-engine/references/delivery-readiness.md#games-and-browser-lifecycles); all product testing waits until implementation finishes.
 
 ## 2. Research. Compare. Choose.
 

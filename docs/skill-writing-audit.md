@@ -1,5 +1,13 @@
 # Skill writing audit
 
+## Approved delivery corrections: 4 October 2026
+
+Updated existing guidance for version-2 draft/sealed acceptance, reviewed amendments, manual/automated/mixed criteria, one final gate, conditional review packets and severity versus disposition. Added one [Delivery Readiness](../.agents/skills/safe-engine/references/delivery-readiness.md) reference for capabilities, game/browser lifecycle, integrations and release; no new skill fleet. Four core originals stay untouched.
+
+All testing now waits until implementation/improvements finish, including manual reproduction, user QA, playtests and instruction walkthroughs. Source inspection/research/existing-log reading remain allowed. Local controller review stays separate from required remote/cloud PR review with fresh context; local subagents cannot substitute. [Adaptations and authority](skill-provenance.md#delivery-simulation-decisions-4-october-2026).
+
+At authoring: source inspection only; no validation result claimed here. Root records final factory checks separately after implementation completion. No app/game/mobile build or simulation; those pilots remain deferred. PR preparation is authorized; Seif will arrange cloud review. No cloud approval, merge, installed-skill adoption or live release claimed.
+
 ## Application security addition: 4 October 2026
 
 One compact [reference](../.agents/skills/safe-engine/references/app-security.md) covers Seif's security list, cheap early protections and exposure-based production checks. Existing security code review reads it; planning, bounded fixes, schema, handoff and PR routing agree. No new skill, phase or scanner loop. Mobile's original review purpose/body and four core originals remain preserved. [Sources and adaptations](skill-provenance.md#application-security-4-october-2026).
@@ -251,3 +259,22 @@ Files marked updated include existing local drafting changes. No file was rewrit
 | `tests/test_skill_distribution.py` | Inspected existing fault scenarios; retained. |
 | `tests/test_workflow.py` | Extended affected review-context or required-input coverage; focused checks passed. |
 | `docs/skill-writing-audit.md` | This source, coverage and verification record. |
+
+## Delivery v2 checkpoint: 4 October 2026
+
+Seif's selected audit fixes are implemented. Original four core files unchanged. New runs use draft acceptance, reviewed final sealing/amendments, manual/automated/mixed criteria and one final gate. Existing v1 runs retain their workflow and pins.
+
+All testing waits until implementation/improvements finish: final manual/user QA, then automated test authoring/execution. Separate severity from disposition; high severity/core failures block. Conditional review loads relevant complete methods. Added game/browser lifecycle, durable remote effects, release/operations and capability discovery guidance.
+
+PR review requires a separate remote/cloud agent with fresh context. Seif will arrange it. PR preparation is authorized; cloud review and merge remain pending. No product creation, assimilation or app/game/mobile simulation ran in this iteration. Personal installations and active pins were not changed.
+
+Final evidence:
+
+- Actual factory CLI in a disposable text-only Git fixture: preflight, draft init, early-test rejection, stage transitions, final manual receipt, seal, single final gate and reviewed amendment/history. Contract review fixture explicitly synthetic; no independent approval inferred from it. Repeated affected final CLI steps after source corrections.
+- All six test modules covered: 72 existing/input tests (203.680s), eight checkpoint regressions (3.223s), 17 new v2 regressions (39.525s), one additional v2 distribution test (0.549s). **98 distinct tests passed**. Review receipts in regressions are explicit test doubles.
+- **15 skill entries valid; 417 local links valid.** Generated launchers match their owner; four protected originals unchanged; whitespace checks pass.
+- Local independent source assessment found provenance invalidation and Windows test-path casing defects, plus a missing launcher upgrade note. Corrected all three. Local assessment is not cloud PR review.
+
+Limits: no new real-product pilot, POSIX execution, live deployment, cloud PR approval or remote merge enforcement proved. Same-user receipts enforce workflow consistency, not hostile-user isolation. Older launchers need an explicit refresh before selecting v2; saved v1 selections remain usable. Historical/provenance updates are excluded from operative fingerprints but required files remain present.
+
+Final separate-instance local assessment: PASS across security, source-level performance, factory journey, Change Guard and Compliance; no unresolved concrete finding. Reviewer inspected raw logs for 97 tests plus coordinator-reported additional distribution pass. Manual CLI fixture stops at review; no completed fresh-Codex v2 handoff is claimed. Cloud PR review remains pending.

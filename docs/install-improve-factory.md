@@ -2,7 +2,7 @@
 
 Install **`skills/improve-factory`**, the portable launcher. The canonical procedure in `.agents/skills/improve-factory` depends on the complete factory, so copying that folder alone is insufficient.
 
-The repository is private. Use an agent environment with your authorized GitHub access, Git and Python 3.11 or newer (the resolver alone supports 3.10). The complete factory is merged on `main`; [PR #1](https://github.com/seifsg/ai-software-factory/pull/1) records its source review and merge. To build apps, install [Safe Engine itself](install-safe-engine.md); this guide installs maintenance only. Merge does not imply deployment or production certification.
+The repository is private. Use an agent environment with your authorized GitHub access, Git and Python 3.11 or newer (the resolver alone supports 3.10). `main` holds the published factory; [PR #1](https://github.com/seifsg/ai-software-factory/pull/1) records its initial review/merge. Unmerged changes are not the default install. Current publication waits for Seif-arranged cloud PR review and authorized merge. To build apps, install [Safe Engine itself](install-safe-engine.md); this guide installs maintenance only. Merge proves neither deployment nor production readiness.
 
 ## Codex — paste into another session
 
@@ -61,3 +61,7 @@ Use `py -3` on Windows or another available Python 3 interpreter where needed. P
 Distribution choices: a small launcher (selected under this request) preserves one canonical method; embedding a complete copy duplicates the factory; a plugin marketplace adds host-specific packaging. The launcher is intended for initial reuse/testing through ordinary skill installers.
 
 References checked 2 October 2026: [Codex skills and installer](https://learn.chatgpt.com/docs/build-skills), [Claude Code skill locations](https://code.claude.com/docs/en/skills). Host discovery, authentication and independent-review tooling remain prerequisites. A portable file layout does not demonstrate a complete factory run on every host.
+
+## Version 2 launcher upgrade
+
+Older installed resolvers accept only input-contract v1. Resolving a v2 bundle can fail with `Invalid factory input contract`. Refresh both portable entries from the approved v2 revision before selecting that bundle. Preserve the previous installations and active bundle receipts; do not reset or upgrade existing runs. The current resolver supports both contract versions. Source publication alone does not update personal installations.

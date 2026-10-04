@@ -3,7 +3,7 @@ name: how-to-review-a-pr
 description: >-
   End-to-end handling of an INCOMING pull request — from a
   teammate, a customer, or an agent. Fetches the PR, proves it does what it claims,
-  runs four parallel themed deep reviews (performance, security, user journey,
+  runs remote/cloud themed deep reviews (performance, security, user journey,
   change-guard), synthesizes a verdict, fixes what
   makes sense within authorization, verifies the project's checks,
   pushes, and posts a handoff comment on the PR. Use this whenever the user shares a
@@ -15,9 +15,11 @@ description: >-
 
 **Project adapter:** Read [project bindings](../how-to-make-a-pr/references/project-bindings.md) before acting. Discover actual rules, tools, checks and authority. An explicit analysis-only or review-only request stays read-only; later phases require authorization.
 
+**Execution boundary:** PR review runs on a remote/cloud agent, in a fresh context and checkout of the exact remote base/head. Record actual remote task/provider identity and returned evidence. Local controller review stays separate; local workstation agents/subagents never count as PR review. Missing cloud access blocks this review, not independent local work. Use existing authorized routing; invent no completed cloud run.
+
 **Choose scope first.** Selected [Small Change](../small-change/SKILL.md) uses its six routines instead of the full Analyze Start/Get Ready procedures referenced in Phases 1/4, and one scoped reviewer instead of Phase 2's four sessions. Preserve claims, prior findings, evidence, attribution and action checkpoints. Full mode follows every phase below.
 
-**Host capacity:** Keep four isolated themes. If four cannot run together, use capacity-bounded waves under the [PR adapter](../../../docs/pr-workflow.md); synthesize only after all four return. Record actual execution. The original parallel method below remains the preferred arrangement.
+**Remote capacity:** Keep four isolated themes on the remote/cloud review route. If four cannot run together, use capacity-bounded waves under the [PR adapter](../../../docs/pr-workflow.md); synthesize only after all four return. Record actual execution. The original parallel method below remains the preferred arrangement.
 
 Triggered when the user message starts with **`/pr-review`**, shares a PR URL/number to
 review, or asks to review/vet/analyze/audit an incoming (teammate-, customer-, or agent-authored) PR
@@ -142,12 +144,12 @@ No code in this phase. Reading is fine.
 
 ---
 
-## Phase 2 — Four parallel themed reviews (isolated subagents)
+## Phase 2 — Four parallel themed reviews (remote isolated subagents)
 
 **Selected Small Change:** follow the [scoped adapter](../../../docs/pr-workflow.md#small-direct-changes): one independent reviewer covers the applicable themes together. Carry scoped findings into synthesis; do not claim four sessions. The full-mode method below retains four isolated reviews.
 
-Run **four separate deep-review sessions**, one per theme, as **subagents spawned in a single
-message so they run concurrently**. Isolation is the point: each reviewer thinks about one thing
+Run **four separate remote/cloud deep-review sessions**, one per theme, as **remote subagents spawned in a single
+message when capacity permits**. Isolation is the point: each reviewer thinks about one thing
 and can't dilute its focus.
 
 For each theme, read its rubric file and pass it to the subagent along with the **Context Bundle**:
@@ -158,6 +160,8 @@ For each theme, read its rubric file and pass it to the subagent along with the 
 - Applicable project rules, selected requirements, target workload/platforms, and evidence limits.
   For factory delivery, read and pass applicable [diagnostics](../safe-engine/references/app-diagnostics.md)
   and [efficiency](../safe-engine/references/app-efficiency.md) requirements and evidence. Mark missing evidence; do not assume compliance.
+
+Pass core methods and applicable references only; reviewers inspect scope and request missing evidence. Artistic/manual criteria need real candidate-bound observations; an unrelated green command cannot certify them.
 
 > **Label what you pass.** Mark each item as **verified** (you read the code / ran the grep) or
 > **hypothesis** (a hunch, a metric you eyeballed, an assumption). Subagents anchor hard on
@@ -247,7 +251,7 @@ gaps? does it still satisfy the user journey?) → loop if issues.** Obey
 
 ## Phase 5 — Build gate (must pass before push)
 
-Finish the entire permitted fix-set, then manually exercise its real behavior. Only after manual QA passes, write/adapt/polish tests and run the final gate. No test writing or execution in earlier phases, including existing suites or by delegates. Read-only reviews inspect supplied evidence without running tests. Follow [tests-last order](../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests); keep fixes surgical.
+Finish the entire permitted fix-set, then manually exercise its real behavior. Only after manual QA passes, write/adapt/polish tests and run the final gate. No earlier manual/user testing, reproduction runs, playtests, walkthroughs or automated test writing/execution, including by delegates. Source inspection and existing-log reading remain allowed. Read-only reviews inspect supplied evidence without running tests. Follow [tests-last order](../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests); keep fixes surgical.
 
 Discover the actual gate. Never push a red required gate. Use the project's commands and working directories:
 

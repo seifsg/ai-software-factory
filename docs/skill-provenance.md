@@ -1,5 +1,17 @@
 # Skill sources and adaptations
 
+## Delivery simulation decisions: 4 October 2026
+
+Seif selected the audit improvements, then overrode early manual/playtesting: **all testing waits until implementation/improvements finish**. Source inspection/research/existing-log reading remain allowed. App/game/mobile creation and simulation pilots are deferred until specifically requested. Preserve the four Mobile-priority core originals and deliberate reminders; timing/authority adaptations live in coordinators and PR adapters.
+
+New [Delivery Readiness](../.agents/skills/safe-engine/references/delivery-readiness.md) is conditional: capability discovery, fitting evidence, intended game challenge, browser timing/lifecycle, durable external effects and release/operations. Existing planning/QA/review owns these; no new skill fleet, mandated queue, deployment service or paid monitor. This implements owner-selected scope, not a claim of a demonstrated app.
+
+Version-2 guidance follows the controller's draft/seal/amend API, candidate-bound manual receipts and single final gate. Severity and disposition remain separate; authorized lower-risk deferrals cannot hide core failures. Review packets load relevant methods; history/provenance stays available without automatically invalidating operative target evidence. Legacy runs/pins retain their version.
+
+Local controller review remains; PR review now requires actual remote/cloud execution by a separate fresh-context agent. This supersedes older generic separate-instance/local-subagent wording in the PR adaptations, without removing the four themes or source reminders. Current publication choice: prepare the PR; Seif arranges cloud review. Cloud review and authorized merge to main stay pending; no local replacement, cloud task launch or merge is authorized by that choice.
+
+Sources: Seif's current instructions and the repository audit. No new external-research, product QA or production-readiness claim. Dated validation below describes its own candidate only.
+
 ## Application security: 4 October 2026
 
 Seif requested cheap security protections from the start, stronger checks before production and a suggestive, expandable checklist without local-MVP ceremony. Chose one shared [build reference](../.agents/skills/safe-engine/references/app-security.md) plus the existing security review over a duplicate skill/workflow or review-only guidance that arrives too late. No new phase, review fleet or installed enforcement.

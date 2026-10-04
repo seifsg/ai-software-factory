@@ -8,6 +8,10 @@ After the checkpoint, Seif added mandatory [UX Quality](../.agents/skills/ux-qua
 
 Latest [writing pass](skill-writing-audit.md#compact-owner-style--4-october-2026): eleven edited skill/reference files 18.6% shorter; four core originals unchanged. Brief instructions, preserved details, no duplicate work.
 
+Current implementation adds version-2 draft/sealed acceptance, reviewed amendments, criterion-specific evidence and one final gate. [Usage](pilot-usage.md) records commands/limits; dated results above do not verify this candidate. [Delivery Readiness](../.agents/skills/safe-engine/references/delivery-readiness.md) adds conditional capability, lifecycle, integration and release guidance. App/game/mobile pilots and simulations are deferred until specifically requested.
+
+Current publication boundary: prepare the PR; Seif arranges cloud review. Actual cloud review and authorized merge to main remain pending. Source preparation alone changes no installation or active pin.
+
 ## Current method
 
 Authored output uses [Clear Writing](../.agents/skills/safe-engine/references/clear-writing.md): short, natural, specific; proof beside claims, clear actions, one finishing pass.
@@ -22,7 +26,7 @@ Public indexable pages use [Public Web SEO](../.agents/skills/ux-quality/referen
 4. Make the smallest complete change. Keep shared logging working; inspect detailed, safe success/failure trails.
 5. Finish implementation and improvements. Manually use the changed behavior and fix observed defects.
 6. Only then author/polish automated tests and run final checks.
-7. Obtain fresh review; perform the authorized PR and human handoff.
+7. Obtain fresh local review; perform the authorized PR, actual remote/cloud PR review in fresh context, and human handoff. Local subagents never substitute.
 
 Small changes use six focused routines and one scoped reviewer. Full delivery uses the full methods. Preserve Seif's original wording and deliberate reminders; compress AI filler. See [current decisions](current-decisions.md) for operative rules.
 
@@ -58,11 +62,11 @@ This checkpoint repairs the seven findings recorded on 3 October: unsafe Windows
 
 Still open:
 
-- Tests-last is an instruction rule. The controller cannot prove manual use or prohibit every early test; initialization still needs existing protected acceptance files. Use the [supported mapping](pilot-usage.md#feature-feedback-and-version-checkpoints).
+- All testing is final-stage. Version 2 records implementation completion, manual receipts and reviewed sealing; it cannot prove recorded actions actually occurred or prohibit arbitrary early shell commands. Greenfield runs need no prewritten tests. Legacy runs retain their rules. See [usage](pilot-usage.md#feature-feedback-and-version-checkpoints).
 - Personal installations and existing app pins need deliberate adoption. Publishing this repository does not upgrade them.
-- A complete real app delivery and interrupted maintenance/resume demonstration using this revision remains unverified.
+- A complete real app/game delivery and interrupted maintenance/resume demonstration using this revision remains unverified and deferred until requested.
 - Actual projects must supply tracker, reviewer and notification bindings. This checkpoint claims no external tracker transition or notification.
-- Broader hosts, dedicated future specialists and protected remote merge/release enforcement remain unfinished. No production-performance claim follows from local checks.
+- PR review requires an actual authorized remote/cloud route; local controller review cannot replace it. Broader hosts and protected remote merge/release enforcement remain unfinished. No production-performance claim follows from local checks.
 
 ## Setup and publication
 

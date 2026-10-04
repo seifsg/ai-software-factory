@@ -1,11 +1,13 @@
 ---
 name: how-to-make-a-pr
-description: "Create, update, or correct a factory-managed pull request. Prepare a visual, self-contained draft with task links, human handoff and separate-instance PR review."
+description: "Create, update, or correct a factory-managed pull request. Prepare a visual, self-contained draft with task links, human handoff and remote/cloud PR review."
 ---
 
 # Pull Request erstellen
 
-Vor dem Start: [Projekt-Bindings](references/project-bindings.md) und [PR-Adapter](../../../docs/pr-workflow.md) lesen. Tatsächliches Repo, Branches, Regeln, Tools und Berechtigungen ermitteln. Keine fremden Konten, Dienste oder Projektannahmen übernehmen.
+Vor dem Start: [Projekt-Bindings](references/project-bindings.md) und [PR-Adapter](../../../docs/pr-workflow.md) lesen. Tatsächliches Repo, Branches, Regeln, Tools und Berechtigungen ermitteln. Keine fremden Konten, Dienste oder Projektannahmen übernehmen. PR-Review ausschließlich durch separaten Remote-/Cloud-Agenten mit frischem Kontext und exakt geprüftem Remote-Stand; lokale Subagenten ersetzen sie nicht.
+
+Alle Tests erst nach fertiger Implementierung: zuerst manuelle/User-QA, danach automatisierte Tests. Keine frühen Playtests, manuellen Reproduktionen oder Walkthroughs; Quelltextprüfung und vorhandene Logs bleiben erlaubt.
 
 Ziel: kleine, nachvollziehbare Änderungen, sauber beschrieben, als **Draft-PR zur menschlichen Prüfung**.
 
@@ -179,9 +181,9 @@ gh pr create --draft --base <basis-branch> --head <branch-name> \
 - Private Ziele können in öffentlicher Suche fehlen. Vorhandene verifizierte ID nutzen; Zugriffsbeschränkungen nicht umgehen. Fehlende Zustellung als offen melden.
 - Erinnerungen nur bei tatsächlicher Beauftragung: Dringlichkeit, Frequenz, Stop bei Reaktion/Merge/Schließen und Backoff festlegen. Keine automatische neue Dauererlaubnis.
 
-### Automatisches Self-Review nach dem Draft — separate Instanz
+### Automatisches Self-Review nach dem Draft — separate Cloud-Instanz
 
-Sobald der Draft vollständig vorbereitet ist: [How to Review a PR](../how-to-review-a-pr/SKILL.md) auf einer **separaten Instanz** ausführen.
+Sobald der Draft vollständig vorbereitet ist: [How to Review a PR](../how-to-review-a-pr/SKILL.md) auf einer **separaten Remote-/Cloud-Instanz mit frischem Kontext** ausführen. Tatsächliche Ausführung, Task-ID, Base/Head und Ergebnis festhalten. Lokale Controller-Review bleibt separat; fehlender Cloud-Zugriff ist eine offene Review, kein lokaler Ersatz.
 
 - Tatsächliche Kette lesen: Claim → Analyse ohne Code → vier Themen → Synthese/Compliance → Fragen → autorisierte Fixes → manuelle QA → finale Tests/Projektchecks → autorisierter Push/Kommentar.
 - Für Small Change gilt der ausgewählte fokussierte Modus aus dem [PR-Adapter](../../../docs/pr-workflow.md#small-direct-changes).

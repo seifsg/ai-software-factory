@@ -2,7 +2,7 @@
 
 Seif's software-building skills and **Safe Engine 0.1.0**, the local controller that connects them.
 
-Understand the request. Build the smallest complete change. Use it manually. Write and run tests last. Return evidence.
+Understand the request. Build the smallest complete change. Finish implementation; do all manual/user and automated testing at the end. Return evidence.
 
 **Reading from your phone?** Start with the [factory status and skill links](docs/factory-status.md), then the [current checkpoint report](docs/factory-checkpoint-2026-10-04.md). Both render directly on GitHub. Sign in with an account that can access this private repository.
 
@@ -18,12 +18,14 @@ Ask for analysis and you get analysis. Ask for planning and you get planning. A 
 analyze → original plan → product/UX + technical research → revised plan
         → build with the 0–4 loop → finish in-scope improvements → manual action QA
         → author/polish automated tests → final automated QA → fresh review
-        → checked local handoff → authorized PR creation and review → human
+        → checked local handoff → authorized PR → remote/cloud PR review → human
 ```
 
 The original planning checkpoint remains. Proceed through it only when the user's instructions already authorize that continuation.
 
-[Tests-last rule](docs/current-decisions.md#finish-work-use-it-then-automate-tests): no automated test writing or execution during development. Finish and manually exercise the task first; final tests precede PR preparation. Small fixes stay surgical. Older controller feature-check commands remain available but are outside this method; [pilot limits](docs/pilot-usage.md#feature-feedback-and-version-checkpoints) are explicit.
+[Tests-last rule](docs/current-decisions.md#finish-work-use-it-then-automate-tests): no manual testing, playtests, walkthroughs or automated test authoring/execution during development. Source inspection and existing-log reading remain allowed. Finish implementation, perform final manual QA, then final automated tests. Small fixes stay surgical. [Controller usage](docs/pilot-usage.md#feature-feedback-and-version-checkpoints) distinguishes new version-2 runs from legacy runs.
+
+Version 2 supports draft acceptance for greenfield work, reviewed sealing/amendments, manual/automated/mixed criteria and one final gate. Conditional [Delivery Readiness](.agents/skills/safe-engine/references/delivery-readiness.md) covers capabilities, game/browser lifecycle, durable integrations and release/operations. Product pilots/simulations remain deferred until requested.
 
 Research current stack/architecture choices and useful design patterns against the goal. Plan applicable CPU/GPU, memory, database queries, network, storage, caching and interaction costs. Resolve material unknowns throughout delivery; standalone research returns findings without coding or controller setup. Actual hardware/tool evidence remains required for performance and usability claims.
 
@@ -50,11 +52,11 @@ Use existing authorized GitHub access. A local installation does not install on 
 
 The current Codex session builds; Python saves stages, runs configured checks and rejects stale evidence. A fresh read-only Codex CLI process reviews the candidate before local handoff. The controller does not push, merge, deploy or run as a background service.
 
-The [recorded pilot](docs/pilot-verification.md) demonstrates a local browser fixture and repair. It does not certify this revised wording, every host, or a production app. PR delivery needs actual project settings from the [PR adapter](docs/pr-workflow.md). Claude-native and cloud delivery are unverified.
+The [recorded pilot](docs/pilot-verification.md) demonstrates its dated local browser fixture and repair. It does not certify this revision or a production app. PR delivery requires a separate remote/cloud agent with fresh context and actual remote candidate evidence under the [PR adapter](docs/pr-workflow.md); local review cannot substitute. Claude-native delivery remains unverified. No new product pilot is claimed.
 
-Every app/game needs a working shared [logging module](.agents/skills/safe-engine/references/app-diagnostics.md), including small fixes. Reuse preferred providers or create internal logging with a local destination. Capture detailed safe success/failure trails and read them while debugging. The coordinator also applies [efficiency](.agents/skills/safe-engine/references/app-efficiency.md) from planning onward. Instructions alone prove neither emitted logs nor a faster app.
+Every app/game needs a working shared [logging module](.agents/skills/safe-engine/references/app-diagnostics.md), including small fixes. Reuse preferred providers or create internal logging with a local destination. Implement detailed safe success/failure trails; read existing logs during development. Actual actions and emitted-trail checks wait until final manual QA. The coordinator also applies [efficiency](.agents/skills/safe-engine/references/app-efficiency.md) from planning onward. Instructions alone prove neither emitted logs nor a faster app.
 
-QA binds to declared code, guidance and runtime inputs. Changing a required skill invalidates old evidence. Preserve active pins and use the compatibility procedure before adopting a different factory.
+QA binds to declared code, operative guidance and runtime inputs. Changing a required skill invalidates evidence; dated history/provenance edits alone do not invalidate a target run. Preserve active pins and use the compatibility procedure before adopting a different factory. Publishing source to main, installing a launcher and adopting an active run are separate outcomes.
 
 ## Repository layout
 

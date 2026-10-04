@@ -50,7 +50,7 @@ Logger init/serialization/writes/rotation/export/full disk must not crash, recur
 
 ## Read logs while working
 
-Throughout development/manual use: inspect info/warn/error and relevant debug trails → correlate → diagnose → fix surgically → repeat action/read new trail. Automated tests still wait.
+During development: inspect source and existing info/warn/error/debug trails; correlate and fix surgically. No manual testing, replay or automated checks yet. Once implementation/improvements finish, perform final manual actions and read their new trails; fix defects and recheck affected actions before final automation.
 
 After implementation, manually exercise success/failure, invalid input/type and applicable retry/cancel/recovery with harmless data. Can the trail explain failure without guessing? Where changed, exercise missing/offline sinks and retention/redaction. Disclose unavailable paths; fix gaps and repeat affected actions.
 

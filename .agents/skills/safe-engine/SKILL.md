@@ -9,7 +9,7 @@ Build the requested outcome. Read the complete methods. Keep decisions, work and
 
 For human-facing prose, apply [Clear Writing](references/clear-writing.md): preserve details/voice, ground claims, cut filler. One finishing pass within existing review.
 
-Follow [tests-last order](../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests): finish implementation/improvements → manual action QA → author/polish/run automated tests → final review/PR. No test writing, edits or execution during development. Carry this into delegates, repairs and resumed runs.
+Follow [tests-last order](../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests): finish implementation/improvements → final manual/user QA → author/polish/run automated tests → final review/PR. No manual tests, playtests, instruction walkthroughs, test writing/edits or automated checks during development. Source inspection/research/existing-log reading remain allowed. Carry this into delegates, repairs and resumed runs.
 
 ## Choose the scope
 
@@ -19,9 +19,11 @@ For requested bounded fixes, read [Small Change](../small-change/SKILL.md) befor
 
 New software or substantial features use the flow below. Discover the actual domain, stack, platforms, interfaces, workload and constraints. Games, desktop/mobile/web apps, servers, libraries and tools share the method; their evidence differs.
 
-Read [logging](references/app-diagnostics.md) and [efficiency](references/app-efficiency.md) during delivery analysis/planning. Every app/game needs working shared logging: adequate facilities/preferred provider or internal module/local sink. Discover preferences/access; log detailed successes/failures and read trails throughout development/manual debugging. Plan coverage, resource targets and evidence. Research material unknowns through [Research Market](../research-market/SKILL.md). Required logging stays surgical.
+Read [logging](references/app-diagnostics.md) and [efficiency](references/app-efficiency.md) during delivery analysis/planning. Every app/game needs working shared logging: adequate facilities/preferred provider or internal module/local sink. Discover preferences/access; implement detailed success/failure events. Read existing logs during development; actual actions and emitted-trail checks wait until final manual QA. Plan coverage, resource targets and evidence. Research material unknowns through [Research Market](../research-market/SKILL.md). Required logging stays surgical.
 
 ## Start or resume
+
+Use applicable [Delivery Readiness](references/delivery-readiness.md): inspect capabilities before dependent work; preserve game challenge; plan browser lifecycle, durable external effects and authorized release/operations. Manual/automated/mixed criteria need suitable evidence. No early product tests or automatic pilots.
 
 Use [Application Security](references/app-security.md) from planning: cheap relevant protections now, exposure-based checks before production. Keep local MVPs simple; carry evidence into the existing security review.
 
@@ -39,9 +41,9 @@ python -m safe_engine --project <absolute-target-root> status
 
 Read request, rules and [session contract](references/session-contract.md). Reuse answers/authority; discover tools before asking. No run? Preserve work in a suitable isolated checkout with clean Git baseline and ignored `.factory/`. Commit a minimal new-project baseline before initialization.
 
-Inspect check definitions, protected acceptance files, runtime inputs and interaction tools; author/run no tests. Save original request/criteria in task JSON; map criteria to checks. Use actual browser/native/game/API/CLI interaction; screenshots cannot prove behavior. Missing setup tests: follow the [pilot limitation](../../../docs/pilot-usage.md#feature-feedback-and-version-checkpoints), never write them early. Missing tools/reserved choices block dependent work only.
+Inspect check definitions, runtime inputs and interaction tools; author/run no tests. Save original request/criteria in task JSON; map each to manual, automated or mixed evidence. New version-2 runs may start with draft acceptance and no tests. Declare test-only paths; seal reviewed acceptance at the final stage. Actual browser/native/game/API/CLI interaction waits until implementation is finished; screenshots cannot prove behavior. Missing tools/reserved choices block dependent work only.
 
-Resolve acceptance-shaping unknowns before freezing task/profile where possible. Planning/research can precede initialization; record in stage order. Later plan revisions stay within accepted criteria. Changed criteria/check definitions/protected inputs require a newly reviewed task in a fresh worktree; preserve/link the old run, never patch its contract.
+Resolve material unknowns before dependent choices. Planning/research may precede initialization; record in stage order. Version-2 draft/seal and reviewed amendments preserve contract history and invalidate affected acceptance; use supported commands, never patch state. Legacy runs retain their recorded contract/workflow. Read [pilot usage](../../../docs/pilot-usage.md) for exact schemas and limits.
 
 Initialize once. Resume the saved phase. Follow [control-route recovery](references/session-contract.md#recover-a-failed-control-route) when needed. No invented credits, retry ceilings, session deadlines or permissions. Honor real limits, checkpoints and stops.
 
@@ -55,15 +57,16 @@ With no existing implementation, say so; analyze requirements, available platfor
 |---|---|
 | `analyze` | [Analyze Start](../analyze-start/SKILL.md): actual code, purpose, consumers, ASCII charts, verified claims and unknowns. Save analysis. No code. |
 | `plan` | Compare three credible approaches for new substantive choices; recommend one under session authority. [Get Ready to Code](../get-ready-to-code/SKILL.md): five outputs, original file-summary stop unless continuation is authorized. For new software, preserve the first plan, run [research](../research-market/SKILL.md), revise all five outputs and link evidence/decisions. Research new material unknowns for existing features too. No code. |
-| `build` | Get Ready's 0–4 loop for every todo: context → site analysis → apply → inspect → correct. Finish the whole requested task and worthwhile in-scope improvements. Manually exercise final behavior; fix and re-exercise defects. Only then author/polish useful tests at the final pre-PR stage and record the batch, including pre/change/post observations and manual evidence. No mid-build `feature-check`. |
-| `verify` | After finished work and passing manual QA, run full configured version checks, including planned diagnostic/resource evidence. Read logs; investigate failures. Use `repair` before changing a recorded candidate. Production fixes require manual re-exercise before final tests resume. |
-| `improve` | Record the improvement assessment completed before manual QA; leave sound work unchanged. Newly discovered necessary implementation work uses `repair`, then manual QA and final tests again. Do not plan development after tests. |
-| `final-verify` | Full version QA on the final candidate. Reuse full evidence via `check` only with reviewed `reuse_unchanged_checks: true` and exact matching inputs, logs and outputs, including [required guidance](../../../safe_engine/bundle-inputs.json). Missing guidance blocks acceptance. Changed inputs require full checks; volatile/unresolved runtime concerns require `check --fresh`. Partial feedback never replaces full QA. |
-| `review` | Fresh read-only Codex review: complete methods, diagnostics/efficiency, applicable research evidence, three themed passes plus Change Guard and Compliance. Never supply your own passing review. Repair supported findings, check corrections and obtain fresh assessment. |
-| `ready` | Checked local handoff: results, diagnostic access/coverage, resource evidence, research decisions and remaining limits. Authorized PRs/updates require both [creation](../how-to-make-a-pr/SKILL.md) and separate-instance [review](../how-to-review-a-pr/SKILL.md) through the [project adapter](../../../docs/pr-workflow.md), including skill/docs PRs without controller runs. Preserve selected small/full scope and human ready/merge/release decisions. |
+| `build` | Get Ready's 0–4 source-inspection loop for every todo. Finish requested implementation and worthwhile in-scope improvements; record implementation completion. No testing yet. |
+| `manual` | Final actual-use QA, including relevant failure/recovery paths. Save candidate-bound receipts. Fixes return through completed implementation and affected manual QA before final automation. |
+| `testing` | Author/polish useful tests in declared test-only paths. Seal independently reviewed final task/profile, then record the batch. Production changes invalidate manual evidence. |
+| `verify` | One complete configured final gate, including applicable diagnostic/resource evidence. Read logs; investigate failures. Use supported repair before changing a recorded candidate. |
+| Legacy `improve` / `final-verify` | Existing version-1 runs keep their recorded sequence and exact-input reuse rules. No silent migration. New version-2 runs have no duplicate final gate. |
+| `review` | Fresh local read-only Codex review: core methods plus applicable evidence/references, three themed passes plus Change Guard and Compliance. Severity and blocking/approved-deferral disposition stay distinct. Never supply your own passing review. Repair supported findings, check corrections and obtain fresh assessment. |
+| `ready` | Checked local handoff: results, diagnostic access/coverage, resource evidence, research decisions and limits. Authorized PRs/updates require [creation](../how-to-make-a-pr/SKILL.md) and separate remote/cloud [PR review](../how-to-review-a-pr/SKILL.md), including skill/docs PRs without controller runs. Local review never substitutes for cloud review. Preserve small/full scope and human ready/merge/release decisions. |
 | `cancelled` | Stop. Preserve records and checkout. |
 
-Keep evidence in excluded `.factory/` or equivalent. Report unverified coverage. Never edit protected acceptance files/task records to obtain a pass. Correcting an accepted task/profile requires a newly reviewed task in a fresh worktree; preserve the original run.
+Keep evidence in excluded `.factory/` or equivalent. Report unverified coverage. Never edit protected acceptance files/task records to obtain a pass. Use reviewed amendments with history for legitimate version-2 contract corrections; preserve failures and authority. Legacy corrections follow their supported boundary.
 
 ## Keep the work usable
 

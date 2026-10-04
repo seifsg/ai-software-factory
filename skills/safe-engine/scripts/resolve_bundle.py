@@ -64,8 +64,11 @@ def inspect_bundle(root, expected=None, clean=False, entrypoint="improve-factory
             contract = json.loads(contract_path.read_text(encoding="utf-8-sig"))
         except (OSError, ValueError) as error:
             raise RuntimeError(f"Invalid factory input contract: {error}") from error
-        if (not isinstance(contract, dict) or contract.get("version") != 1
-                or set(contract) != {"version", "required_files", "source_trees"}):
+        version = contract.get("version") if isinstance(contract, dict) else None
+        keys = {"version", "required_files", "source_trees"}
+        if version == 2:
+            keys.add("historical_files")
+        if version not in (1, 2) or set(contract) != keys:
             raise RuntimeError("Invalid factory input contract")
         for key in ("required_files", "source_trees"):
             names = contract[key]
@@ -79,6 +82,17 @@ def inspect_bundle(root, expected=None, clean=False, entrypoint="improve-factory
             if folder.is_symlink() or not folder.is_dir() or not folder.resolve().is_relative_to(root):
                 raise RuntimeError("Incomplete factory source area: " + name)
         required += [contract_name, *contract["required_files"]]
+        if version == 2:
+            historical = contract["historical_files"]
+            if (not isinstance(historical, list) or any(not isinstance(name, str) for name in historical)
+                    or len(historical) != len(set(historical))):
+                raise RuntimeError("Invalid historical_files in factory input contract")
+            for name in historical:
+                if (not name.startswith("docs/") or not name.endswith(".md")
+                        or any(part in ("", ".", "..") for part in name.split("/"))
+                        or "\\" in name or ":" in name or name == "docs/current-decisions.md"):
+                    raise RuntimeError("Invalid historical document in factory input contract")
+            required += historical
     missing = [name for name in required if not (root / name).is_file() or (root / name).is_symlink()]
     if missing:
         raise RuntimeError("Incomplete factory bundle: " + ", ".join(missing))

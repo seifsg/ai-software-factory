@@ -2,6 +2,8 @@
 
 Read when choosing/changing icons, graphics, images, motion, music, voice or effects. Reuse UX Quality's uncertain-choice comparison; no second vote.
 
+Planning may research reference samples and rights. Testing our product's visuals, playback, interaction or performance waits until implementation/improvements finish; then inspect/audition in context before final automation.
+
 ## Choose and inspect
 
 - **Icons:** reuse a coherent family/native set. Compare uncertain families: coverage, meaning at actual size, optical weight, filled/outline consistency, accessibility, themes and license. Label unfamiliar actions. No unrelated sets or random emoji controls.

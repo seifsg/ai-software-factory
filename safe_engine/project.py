@@ -67,15 +67,27 @@ def reject_path_aliases(path, root):
             raise EngineError(f"Generated state must not use symlinks or reparse points: {current}")
 
 
-def validate_profile(profile):
-    if not isinstance(profile, dict) or profile.get("version") != 1:
-        raise EngineError("Profile must be an object with version 1")
+def relative_input_path(value, *, allow_factory=False):
+    """Accept one portable project-relative file/directory name, never a pattern."""
+    if (not isinstance(value, str) or not value or "\\" in value
+            or any(char in value for char in ':*?[]\x00')
+            or any(part in ("", ".", "..") for part in value.split("/"))
+            or any(part.casefold() == ".git" for part in value.split("/"))
+            or (not allow_factory and value.split("/")[0].casefold() == ".factory")):
+        raise EngineError(f"Expected a literal relative project path: {value!r}")
+    return value
+
+
+def validate_profile(profile, draft=False):
+    if not isinstance(profile, dict) or profile.get("version") not in (1, 2):
+        raise EngineError("Profile must be an object with version 1 or 2")
+    version_two = profile["version"] == 2
     if profile.get("interface") not in ("web", "cli", "library", "desktop", "mobile", "game", "service"):
         raise EngineError("Profile interface must be web, cli, library, desktop, mobile, game, or service")
     if "reuse_unchanged_checks" in profile and type(profile["reuse_unchanged_checks"]) is not bool:
         raise EngineError("reuse_unchanged_checks must be an explicit boolean")
     checks = profile.get("checks")
-    if not isinstance(checks, list) or not checks:
+    if not isinstance(checks, list) or (not checks and not version_two):
         raise EngineError("Configure at least one real check in the reviewed profile")
     ids = set()
     outputs = set()
@@ -106,27 +118,46 @@ def validate_profile(profile):
                     or "\\" in name or ":" in name or name.casefold() in outputs):
                 raise EngineError("Artifact paths must be unique files within .factory/outputs/")
             outputs.add(name.casefold())
-    if profile["interface"] == "web" and not any(c["kind"] == "browser" for c in checks):
+    if not version_two and profile["interface"] == "web" and not any(c["kind"] == "browser" for c in checks):
         raise EngineError("A web profile requires a real browser check")
-    if profile["interface"] in ("desktop", "mobile", "game") and not any(c["kind"] == "interaction" for c in checks):
+    if not version_two and profile["interface"] in ("desktop", "mobile", "game") and not any(c["kind"] == "interaction" for c in checks):
         raise EngineError("A desktop, mobile, or game profile requires a real interaction check")
-    if profile["interface"] == "service" and not any(c["kind"] in ("api", "integration") for c in checks):
+    if not version_two and profile["interface"] == "service" and not any(c["kind"] in ("api", "integration") for c in checks):
         raise EngineError("A service profile requires a real API or integration check")
     for key in ("environment_inputs", "input_files", "protected_paths"):
         if not isinstance(profile.get(key), list) or not all(isinstance(x, str) and x for x in profile[key]):
             raise EngineError(f"{key} must be an explicit array of input names or paths")
-    if not profile["protected_paths"]:
+    if not profile["protected_paths"] and (not version_two or (checks and not draft)):
         raise EngineError("Declare the acceptance check files in protected_paths")
+    if version_two:
+        if profile.get("exposure", "local") not in ("local", "public", "production"):
+            raise EngineError("exposure must be local, public, or production")
+        paths = profile.get("test_paths", [])
+        if not isinstance(paths, list):
+            raise EngineError("test_paths must be an array of literal file/directory paths")
+        seen = set()
+        for path in paths:
+            relative_input_path(path)
+            folded = path.casefold()
+            if folded in seen:
+                raise EngineError(f"Duplicate test path: {path}")
+            seen.add(folded)
+        scopes = profile.get("review_scopes", [])
+        allowed = {"ui", "assets", "persistence", "research", "seo", "security", "integrations", "release"}
+        if (not isinstance(scopes, list) or any(not isinstance(scope, str) or scope not in allowed for scope in scopes)
+                or len(scopes) != len(set(scopes))):
+            raise EngineError("review_scopes must contain unique supported scope names")
     return profile
 
 
-def validate_task(task, profile):
+def validate_task(task, profile, draft=False):
     if not isinstance(task, dict) or not isinstance(task.get("request"), str) or not task["request"].strip():
         raise EngineError("Task needs a nonempty original request")
     criteria = task.get("acceptance")
     if not isinstance(criteria, list) or not criteria:
         raise EngineError("Task needs explicit acceptance criteria")
     check_ids = {c["id"] for c in profile["checks"]}
+    version_two = profile.get("version") == 2
     seen = set()
     for criterion in criteria:
         if not isinstance(criterion, dict):
@@ -138,6 +169,19 @@ def validate_task(task, profile):
         if not isinstance(criterion.get("text"), str) or not criterion["text"].strip():
             raise EngineError(f"{identifier}: missing acceptance text")
         checks = criterion.get("checks")
+        if version_two:
+            mode = criterion.get("mode", "automated")
+            if mode not in ("manual", "automated", "mixed"):
+                raise EngineError(f"{identifier}: mode must be manual, automated, or mixed")
+            if not isinstance(checks, list) or not all(isinstance(c, str) and c in check_ids for c in checks):
+                raise EngineError(f"{identifier}: checks must reference configured executable checks")
+            if len(checks) != len(set(checks)):
+                raise EngineError(f"{identifier}: duplicate check references")
+            if mode == "manual" and checks:
+                raise EngineError(f"{identifier}: manual criteria must have an empty checks array")
+            if mode != "manual" and not checks and not draft:
+                raise EngineError(f"{identifier}: automated/mixed criteria need executable checks before sealing")
+            continue
         if not isinstance(checks, list) or not checks or not all(isinstance(c, str) and c in check_ids for c in checks):
             raise EngineError(f"{identifier}: link to configured executable checks")
     return task
@@ -163,8 +207,11 @@ def bundle_input_paths(bundle):
         contract = json.loads(contract_path.read_text(encoding="utf-8-sig"))
     except (OSError, ValueError) as error:
         raise EngineError(f"Cannot read factory input contract: {error}") from error
-    if (not isinstance(contract, dict) or contract.get("version") != 1
-            or set(contract) != {"version", "required_files", "source_trees"}):
+    version = contract.get("version") if isinstance(contract, dict) else None
+    keys = {"version", "required_files", "source_trees"}
+    if version == 2:
+        keys.add("historical_files")
+    if version not in (1, 2) or set(contract) != keys:
         raise EngineError("Unsupported factory input contract")
     for key in ("required_files", "source_trees"):
         names = contract[key]
@@ -190,34 +237,77 @@ def bundle_input_paths(bundle):
                 raise EngineError(f"Symlink factory inputs are unsupported: {path}")
             if path.is_file() and path.suffix.lower() in (".py", ".md", ".json", ".yaml", ".yml"):
                 names.add(path.relative_to(bundle).as_posix())
+    if version == 2:
+        historical = contract["historical_files"]
+        if (not isinstance(historical, list) or any(not isinstance(name, str) for name in historical)
+                or len(historical) != len(set(historical))):
+            raise EngineError("historical_files must be an explicit unique file list")
+        for name in historical:
+            relative_input_path(name)
+            if not name.startswith("docs/") or not name.endswith(".md") or name == "docs/current-decisions.md":
+                raise EngineError("Only reviewed historical Markdown documents may be excluded")
+            if not inside(bundle, name).is_file():
+                raise EngineError(f"Missing historical document: {name}")
+        names.difference_update(historical)
     return sorted(names)
 
 
-def fingerprint(project, profile, task, run_dir):
+def source_inputs(project, excluded=()):
     names = git(project, "ls-files", "--cached", "--others", "--exclude-standard", "-z").split("\0")
+    excluded = [os.path.normcase(path) for path in excluded]
     files = {}
     for name in sorted(set(names)):
         if not name or name == ".factory" or name.startswith(".factory/"):
             continue
+        normalized = os.path.normcase(name)
+        if any(normalized == path or normalized.startswith(path + os.path.normcase("/")) for path in excluded):
+            continue
         path = inside(project, name)
         files[name] = file_hash(path) if path.exists() else "DELETED"
+    return files
+
+
+def production_fingerprint(project, profile):
+    """Bind manual QA to production contents; only reviewed test paths are excluded."""
+    paths = profile.get("test_paths", []) if profile.get("version") == 2 else []
+    for path in paths:
+        relative_input_path(path)
+    return digest({"project": str(project), "files": source_inputs(project, paths),
+                   "declared": declared_inputs(project, profile),
+                   "environment": {name: os.environ.get(name) for name in profile["environment_inputs"]},
+                   "bundle": factory_inputs()})
+
+
+def declared_inputs(project, profile):
     declared = {}
     for name in profile["input_files"]:
         path = Path(name) if Path(name).is_absolute() else inside(project, name)
         declared[name] = file_hash(path)
+    return declared
+
+
+def factory_inputs():
+    bundle = Path(__file__).resolve().parent.parent
+    return {name: file_hash(inside(bundle, name)) for name in bundle_input_paths(bundle)}
+
+
+def fingerprint(project, profile, task, run_dir, draft=False):
+    files = source_inputs(project)
+    declared = declared_inputs(project, profile)
     executables = {}
     for check in profile["checks"]:
         first = command_argv(check, project, run_dir)[0]
         executable = shutil.which(first)
         if not executable:
+            if draft and profile.get("version") == 2:
+                executables[first] = "MISSING"
+                continue
             raise EngineError(f"Check executable unavailable: {first}")
         executables[first] = file_hash(Path(executable))
-    bundle = Path(__file__).resolve().parent.parent
-    bundle_files = {name: file_hash(inside(bundle, name)) for name in bundle_input_paths(bundle)}
     return digest({"project": str(project),
                    "files": files, "profile": profile, "task": task, "declared": declared,
                    "environment": {name: os.environ.get(name) for name in profile["environment_inputs"]},
-                   "executables": executables, "bundle": bundle_files})
+                   "executables": executables, "bundle": factory_inputs()})
 
 
 def discover(project):
@@ -227,6 +317,6 @@ def discover(project):
             "branch": git(project, "branch", "--show-current"),
             "worktrees": git(project, "worktree", "list", "--porcelain"),
             "package_scripts": scripts,
-            "profile_proposal": {"version": 1, "interface": "web" if package.exists() or (project / "index.html").exists() else "library",
+            "profile_proposal": {"version": 2, "interface": "web" if package.exists() or (project / "index.html").exists() else "library",
                                  "checks": [], "environment_inputs": [], "input_files": [], "protected_paths": []},
-            "next": "Review/correct the interface and configure real commands and protected acceptance files. Discovery executes no project scripts."}
+            "next": "Review interface, exposure, scopes and test-only paths. Start draft acceptance now; seal real checks only at the final test phase. Discovery executes no project scripts."}

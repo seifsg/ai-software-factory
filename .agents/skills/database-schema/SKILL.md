@@ -46,6 +46,7 @@ Specify applicable:
 - Keys/identity, cardinality, types/precision/units, timestamps/timezones, collation/case, required/null/default meaning, uniqueness/reference integrity. Enforce invariants in the database where supported; specify application enforcement otherwise.
 - Ownership, tenant isolation, permissions, retention/deletion/cascades. Separate business history from debug logs. No orphans or accidental cross-tenant references.
 - Transactions, isolation, idempotency, simultaneous writes, conflicts, retries/recovery. Show how invariants survive races.
+- State-changing external work: use the [durable-outcome contract](../safe-engine/references/delivery-readiness.md#state-changing-external-work). Local commit and remote effect need explicit ownership/reconciliation; no universal queue.
 - Predicates, projections, order/pagination, indexes/column order. Check selectivity, joins/N+1, scans/sorts, actual plans/row counts and index write/storage cost. Justify scans; never index every field.
 - Partition/shard routing, hot keys, bounded documents/arrays and cross-partition work. Partitions/replicas/caches/materialized views need evidenced benefits and invalidation/refresh costs.
 - Versioned migrations, dirty/duplicate/null data, backfill/batches, old/new clients, locks/downtime, rollout/recovery. Backups need usable restore. Destructive/production execution needs authority; reverse migrations cannot guarantee data recovery.

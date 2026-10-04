@@ -1,6 +1,6 @@
 # Behavioral validation
 
-After substantive skill changes, exercise relevant cases below. Judge decisions/artifacts, not word matching. Isolate fixtures from real project work/secrets. Instruction exercises do not prove end-to-end repair.
+Only after implementation/improvements finish, select relevant final checks below. Judge decisions/artifacts, not word matching. Isolate fixtures from real project work/secrets. Instruction exercises do not prove end-to-end repair. Current iteration: real or simulated app/game/mobile pilots are deferred until specifically requested; factory CLI/source validation remains in scope.
 
 Where practical, give an independent evaluator the skill, realistic request and raw fixtures without expected outcomes. Record actions/tool limits. Finish repair and manual use/walkthrough before authoring/running final automated checks under [tests-last order](../../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests); rerun unchanged suites only with cause.
 
@@ -11,7 +11,7 @@ Where practical, give an independent evaluator the skill, realistic request and 
 | Test/review still running | Verify stable owned-operation boundary before mutation; no falsified pending state or unlocking others. |
 | Skill changes during `plan` | Detect fingerprint incompatibility. Keep old bundle or preserve run and prepare reviewed new worktree. Never edit fingerprints. |
 | Compatible skill change after QA | Old checks/review cannot certify it. Use real repair transition, reload methods, repeat required cycle after adoption. |
-| Version/acceptance changes or plan invalid | Preserve work; use supported fresh-run path, lineage and original requirements. No promised seamless resume. |
+| Version-2 acceptance correction | Reviewed amendment preserves old/new contracts, protected hashes, reasons and authority; invalidate acceptance and repeat final evidence. Legacy/schema-incompatible changes retain supported fresh-run boundary. |
 | Review fails beyond historical max-repairs | Preserve findings/history; diagnose correction; supported repair, fresh checks/review. No state edits, unchanged rerolls or fresh-run bypass. |
 | Owner stops/checkpoints/cancels | Preserve work; honor stop. Continuity cannot revive cancellation. |
 | Repeated lookup failure or uncertain external post | Diagnose new evidence/use supported route; reconcile remote effect before retry. No duplicates or known-impossible actions. |

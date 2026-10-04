@@ -20,11 +20,11 @@ Keep Seif's originals and deliberate reminders. Adapt project assumptions to the
 
 Thirteen canonical skills: seven with originals, six factory-specific. Two portable entries, [Safe Engine](../../skills/safe-engine/SKILL.md) and [Improve Factory](../../skills/improve-factory/SKILL.md), load the same complete bundle. Install using their [delivery](../../docs/install-safe-engine.md) or [maintenance](../../docs/install-improve-factory.md) guide.
 
-A direct analysis/planning/review request keeps its phase. Small Change is for requested implementation. [Mandatory logging](safe-engine/references/app-diagnostics.md) and [efficiency](safe-engine/references/app-efficiency.md) belong to the delivery coordinator; restored originals do not import them automatically. Every app/game, including small fixes, needs a working shared logger and detailed safe journey evidence; inspect logs throughout development/manual debugging.
+A direct analysis/planning/review request keeps its phase. Small Change is for requested implementation. [Mandatory logging](safe-engine/references/app-diagnostics.md) and [efficiency](safe-engine/references/app-efficiency.md) belong to the delivery coordinator; restored originals do not import them automatically. Every app/game, including small fixes, needs a working shared logger and detailed safe journey evidence. Read existing logs during development; actual actions and emitted-trail checks wait until final manual QA.
 
-All delivery and maintenance follows [tests-last order](../../docs/current-decisions.md#finish-work-use-it-then-automate-tests): finish work → manual action QA → write/polish/run final automated tests → review/PR. Keep bounded fixes surgical. This coordination rule preserves the original methods' wording.
+All delivery and maintenance follows [tests-last order](../../docs/current-decisions.md#finish-work-use-it-then-automate-tests): finish work → final manual/user QA → write/polish/run automated tests → review/PR. No early manual tests, playtests or walkthroughs. Source inspection/existing-log reading remain allowed. Keep bounded fixes surgical. This coordination rule preserves the originals' wording.
 
-The controller keeps five acceptance passes. PR review uses four themes and synthesis/compliance. These are separate workflows. Product scope includes games, apps, services and tools; discover applicable interfaces, resources and evidence.
+The local controller keeps five acceptance passes. PR review separately requires a remote/cloud agent with fresh context; full mode uses four themes and synthesis/compliance, small mode one scoped reviewer. Local subagents never count as PR review. Discover applicable interfaces, resources and evidence; do not load unrelated reference packets.
 
 The 38-skill source catalog is background, not 38 installed skills. [Pilot evidence](../../docs/pilot-verification.md) is dated; packaging a rewritten skill does not demonstrate a new app run.
 
@@ -33,3 +33,5 @@ The 38-skill source catalog is background, not 38 installed skills. [Pilot evide
 [Public Web SEO](ux-quality/references/web-seo.md) covers public pages intended for search. Shared checklist from planning through verification; private/staging routes retain exclusions.
 
 [Application Security](safe-engine/references/app-security.md) covers proportional early protections and production checks through the existing security code review.
+
+[Delivery Readiness](safe-engine/references/delivery-readiness.md) covers capabilities, manual/mixed evidence, intended game challenge, browser lifecycle, durable integrations and authorized release/operations. Conditional reference, no new skill or phase. Product pilots/simulations remain deferred until requested.

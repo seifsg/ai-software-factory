@@ -22,6 +22,8 @@ can't reach — they each saw one facet; you see the whole.
 Severity ladder: **CRITICAL > HIGH > MEDIUM > LOW.** Sort by it. Do **not** factor development
 time — rank purely by impact on the product and its users.
 
+Record disposition separately: blocking, before-exposure or accepted-deferral. HIGH/CRITICAL, unmet core criteria and required unknowns cannot be deferred. Lower-risk deferrals need owner, reason, scope, actual authority and revisit trigger. MEDIUM hardening need not block local MVP work; before-exposure obligations still block that boundary. A note alone grants no exception.
+
 ## 3. The 5th lens — what the themes structurally can't judge
 
 The four reviewers are specialists; none of them owns these cross-cutting calls. Make them

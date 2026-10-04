@@ -12,6 +12,8 @@ state **Actual** versus **Expected** for each claimed behavior. Show where they 
 
 ## What to verify
 
+Apply relevant [game/browser lifecycle and external-effect checks](../../safe-engine/references/delivery-readiness.md). Preserve intended challenge; distinguish accidental friction. Read actual final-stage observations for manual/mixed criteria. No early playtests or application simulations; unrequested pilots remain deferred.
+
 For public pages meant for search, apply [Public Web SEO](../../ux-quality/references/web-seo.md): actual crawl/render/indexing evidence, private exclusions and production limits. Reuse this review; no extra fleet.
 
 Every UI/interaction change: read [UX Quality](../../ux-quality/SKILL.md); inspect simple/familiar flow, accessibility, uncertain-choice evidence and rendered/auditioned assets. Preserve decisions/scope. Missing interaction/listening evidence stays unverified. No early automated tests.

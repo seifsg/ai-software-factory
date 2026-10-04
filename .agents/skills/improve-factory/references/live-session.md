@@ -59,7 +59,7 @@ Keep one case, record and authority/completion boundary; no correction allowance
 
 ## Review, adoption and resume
 
-After independent assessment, compare exact candidate, preserved bundle and current project state: version/schema, task/profile/acceptance, methods, decisions and evidence. Read the actual controller/CLI; this table covers 0.1.0.
+After independent assessment, compare exact candidate, preserved bundle and current project state: version/schema, task/profile/acceptance, methods, decisions and evidence. Read actual controller/CLI and saved profile version. Version-2 contract amendments use `amend` with reviewed authority/history; they do not migrate controller schemas or selected bundles.
 
 **0.1.0 has no automatic pause, resume, upgrade or migrate command.** Checkpoints are agent records. Never invent commands or edit `.factory/state.json` to allow adoption.
 
@@ -68,9 +68,10 @@ After independent assessment, compare exact candidate, preserved bundle and curr
 | Skipped instructions; no bundle change | Read full routine; recover missing work; reassess artifacts/evidence. Follow phase rules; use `repair` when required. |
 | Repair not adopted | Continue unchanged old bundle only if the fault cannot undermine next steps/acceptance; otherwise block affected work. |
 | Same version/schema/task/profile; analysis/plan valid; `build` | After authorized adoption, read revised methods, reassess plan/consumers, append compatibility note; produce next real batch. No passing checks carry forward. |
-| Same compatible candidate; `verify`, `improve`, `final-verify`, `review` or `ready` | First `repair --reason ...`: record correction, clear check/review acceptance. Old max-repairs integers stay history. Finish repair, pass manual action QA, then author/run final tests and record new batch, required checks/improvement/final checks, fresh review. |
+| Same compatible candidate; manual/testing or post-QA | First supported `repair --reason ...`: record correction, clear acceptance. Finish repair before any manual/user test, then record final manual evidence, author/run final tests and follow saved version sequence. Version 2 uses one final gate; version 1 retains its historical sequence. Fresh independent review remains. |
 | Inputs change during `analyze`/`plan` | Initial fingerprint blocks changed inputs. Use sound unchanged original, or preserve run and prepare separately reviewed run in a fresh project worktree. Never rewrite fingerprint. |
-| Version/schema/task/profile differs; analysis/plan invalid | No automatic migration. Preserve run/work. Prepare reviewed task/profile and clean baseline in fresh project worktree; carry relevant work/decisions explicitly. Rerun necessary methods/QA. |
+| Version-2 task/profile correction within the existing goal | Use reviewed `amend`; preserve original/revised contracts, protected-input hashes, authority and reason. Acceptance invalidated; repeat necessary final evidence. Never hide a failed gate or revive cancellation. |
+| Controller schema incompatible or legacy contract correction; analysis/plan invalid | No automatic migration. Preserve run/work. Prepare reviewed task/profile and clean baseline in fresh project worktree; carry relevant work/decisions explicitly. Rerun necessary methods/final QA. |
 | Active operation, unexpected protected-acceptance change, missing reviewer, incompatible/unknown state | Block adoption; preserve checkpoint/candidate; resolve cause. Fresh runs cannot bypass failure or revive cancellation. |
 | `cancelled` | Preserve. Restart requires an authorized new task/run; never edit state to revive. |
 

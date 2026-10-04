@@ -43,6 +43,8 @@ Keep active cached bundles unchanged. Repair in a separate worktree from their r
 
 Missing Git, Python, private access, complete files or required independent review: name the prerequisite; preserve project state. Cloud/other hosts need their own authorized tools/checkout.
 
+Finish all repair work before manual walkthroughs or automated tests. Local independent maintenance review and remote/cloud PR review are separate; PR review needs a fresh remote context and exact candidate evidence. A local subagent cannot replace it. No app/game/mobile pilot or simulation unless specifically requested.
+
 Resolver installs no hooks, selects no models, pushes/merges/notifies nothing and launches no product.
 
 ## Invoke

@@ -16,7 +16,8 @@ class BundleInputTests(unittest.TestCase):
         self.addCleanup(self.fixture.tearDown)
         self.bundle = self.fixture.root / '.factory/bundle'
         self.source = Path(__file__).resolve().parents[1]
-        for name in bundle_input_paths(self.source):
+        contract = json.loads((self.source / 'safe_engine/bundle-inputs.json').read_text(encoding='utf-8'))
+        for name in set(bundle_input_paths(self.source)) | set(contract.get('historical_files', [])):
             target = self.bundle / name
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(self.source / name, target)
@@ -124,13 +125,27 @@ class BundleInputTests(unittest.TestCase):
         cases = [dict(valid, required_files=['../outside']), dict(valid, required_files=['/absolute']),
                  dict(valid, required_files=['README.md', 'readme.md']),
                  dict(valid, required_files=[42]), dict(valid, source_trees=['missing-area']),
-                 dict(valid, version=2)]
+                 dict(valid, version=99)]
         for invalid in cases:
             with self.subTest(contract=invalid):
                 path.write_text(json.dumps(invalid), encoding='utf-8')
                 with self.assertRaises(EngineError):
                     bundle_input_paths(self.bundle)
         path.write_bytes(original)
+
+    def test_history_and_provenance_changes_do_not_invalidate_but_remain_required(self):
+        self.fixture.build()
+        before = self.fixture.flow.current(self.fixture.flow.load())
+        for name in ('docs/skill-provenance.md', 'docs/factory-audit-2026-10-03.md'):
+            with self.subTest(input=name):
+                path = self.bundle / name
+                original = path.read_bytes()
+                path.write_bytes(original + b'\nHistorical evidence appendix.\n')
+                self.assertEqual(self.fixture.flow.current(self.fixture.flow.load()), before)
+                path.unlink()
+                with self.assertRaises(EngineError):
+                    bundle_input_paths(self.bundle)
+                path.write_bytes(original)
 
 
 if __name__ == '__main__':

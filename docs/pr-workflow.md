@@ -13,13 +13,13 @@ Public-page changes include affected [SEO evidence](../.agents/skills/ux-quality
 - Analysis/review-only: read-only; no implied repair/push/comment.
 - Bounded implementation/update: [Small Change](../.agents/skills/small-change/SKILL.md) scope below.
 
-Authorized delivery requires both procedures and separate-instance review. Controller review/`ready` cannot complete PR delivery. Open draft; human owns ready/merge/release unless explicitly authorized.
+Authorized delivery requires both procedures and remote/cloud PR review: a separate agent, fresh context and checkout of the exact remote candidate. Verify actual remote execution and record provider/task identity, base/head, evidence and verdict. Local controller review remains separate; local subagents never satisfy PR review. Missing cloud access blocks that review/merge, not independent local work. Open draft; human owns ready/merge/release unless explicitly authorized.
 
 Review: four themes → synthesis/compliance → question gate → permitted fixes → manual action QA → final test authoring/execution → authorized handoff. Controller's five acceptance passes stay separate. No added three-option phase or retry-once ceiling.
 
-Full review: four isolated themes, capacity-bounded waves if needed; synthesize all four. Record actual execution, never call sequential work simultaneous or drop themes. Small Change: one scoped reviewer.
+Full cloud review: four isolated themes, capacity-bounded waves if needed; synthesize all four. Record actual execution, never call sequential work simultaneous or drop themes. Small Change: one scoped cloud reviewer. Supply core methods plus applicable references and raw evidence, not every unrelated checklist; reviewer challenges omissions.
 
-Judge the actual candidate. Proposed fixes mean a **conditional** verdict; list remaining fixes. Read-only review cannot count hypothetical repairs as passed.
+Judge the actual candidate. Proposed fixes mean a **conditional** verdict; list remaining fixes. Read-only review cannot count hypothetical repairs as passed. Separate severity from disposition: unresolved HIGH/CRITICAL, core failures and required unknowns block. Lower-risk accepted deferrals need owner, reason, scope, authority and revisit trigger; before-exposure obligations remain open until that boundary.
 
 ## Resolve project bindings
 
@@ -33,7 +33,7 @@ Save bindings in the existing task/session record. One-time notification/merge p
 
 ## Keep current factory decisions explicit
 
-[Tests last](current-decisions.md#finish-work-use-it-then-automate-tests), including updates/reviewer fixes: finish implementation/improvements → pass manual action QA → write/change/polish/run final tests → prepare/create PR. Read-only review inspects evidence, runs no suites. Final-test production fixes return through manual QA. Missing manual coverage stays unverified.
+[Tests last](current-decisions.md#finish-work-use-it-then-automate-tests), including updates/reviewer fixes: finish implementation/improvements → final manual/user QA → write/change/polish/run final tests → prepare/create PR. No manual reproduction, playtests, walkthroughs or automated checks during development. Read-only review inspects evidence, runs no suites. Final-test production fixes return through completed implementation and manual QA. Missing manual coverage stays unverified.
 
 - No artificial correction/retry/session ceilings. Diagnose useful corrections under [session authority](../.agents/skills/safe-engine/references/session-contract.md); honor stops, command timeouts and access limits.
 - Repairing reviewers need fresh independent assessment.
@@ -56,13 +56,13 @@ Both PR procedures apply within Small Change:
 1. Inspect purpose, base/head and prior review boundary.
 2. Assess delta/consumers; retain unresolved older findings.
 3. Prepare focused draft/update with task links, attribution, handoff.
-4. One independent reviewer covers applicable security, performance, journey, regression and compliance. No automatic fleet/full-version workflow.
+4. One remote/cloud independent PR reviewer covers applicable security, performance, journey, regression and compliance. No automatic fleet/full-version workflow; a local scoped review cannot replace this.
 5. Reuse valid evidence; repeat affected checks when needed. State exact verdict scope.
 
 No automatic broad regression or five-output planning for bounded fixes. Narrow review cannot approve an unreviewed whole PR. Missing checks/permissions remain unresolved.
 
 ## Enforcement and evidence
 
-Instructions only. Controller fingerprints guidance and runs local candidate review; no PR creation, notifications, remote merge enforcement or host hook.
+Instructions only. Controller fingerprints operative guidance and runs local candidate review; no PR creation, notifications, remote merge enforcement or host hook. Factory publication to `main` needs actual cloud PR review and authorized merge; verify the remote result. Use [release/operations](../.agents/skills/safe-engine/references/delivery-readiness.md#authorized-release-and-operation) when shipping. Existing installations/pins do not auto-upgrade.
 
 Historical evidence covers its recorded candidate/scope. Validate changed methods; disclose remaining unknowns.

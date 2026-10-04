@@ -42,6 +42,7 @@ Use [Application Security](../../safe-engine/references/app-security.md) for app
   Verify consequential claims against current authoritative evidence; do not invent vulnerabilities.
 
 ## Calibrate
+- Record severity separately from disposition. HIGH/CRITICAL or core failures block. Lower-risk deferrals need owner, reason, scope, authority and revisit trigger; before-exposure controls block public/production release. MEDIUM hardening alone is not an automatic local-MVP rejection.
 - Client-side "auth" is UX, not a server security boundary. Flag trust in client state, rather than
   absence of a redundant client check. Identify the real authority for local/offline systems too.
 - Intentionally publishable keys with appropriate restrictions may ship. Distinguish them from secrets.

@@ -21,7 +21,7 @@ Scope grants no broad testing. Offer useful affected-area checks; run only when 
 
 ## The six routines
 
-One short record. Surgical changes first. [Tests last](../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests): finish fix → manual action QA → final automated tests → final review/PR. No test authoring, edits or execution during development. Stage-only requests use only that stage.
+One short record. Surgical changes first. [Tests last](../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests): finish fix → final manual action QA → final automated tests → final review/PR. No manual/user tests, playtests, walkthroughs or automated test authoring/edits/execution during development. Source inspection and existing-log reading remain allowed. Stage-only requests use only that stage.
 
 ### 1. Analyze lightly
 
@@ -29,7 +29,7 @@ Read implementation, callers, events, bindings. State cause/evidence; label unce
 
 Use short flow when helpful. Obvious fixes need no architecture chart, repository-wide reading, market survey or invented alternatives. Research unfamiliar behavior, stack/performance constraints in current primary sources only when it can change this fix. Record answer, source, decision. Broader discoveries stay within scope/authority.
 
-Product changes require [logging](../safe-engine/references/app-diagnostics.md): reuse adequate shared module or add missing internal module, even for small fixes. Discover owner's provider, request missing access securely, keep local logging working meanwhile. Wire detailed success/failure events through affected journey; inspect broader coverage, record gaps. Use shared hooks/surgical edits, no unrelated refactors. Read emitted logs while reproducing/fixing.
+Product changes require [logging](../safe-engine/references/app-diagnostics.md): reuse adequate shared module or add missing internal module, even for small fixes. Discover owner's provider, request missing access securely, keep local logging working meanwhile. Wire detailed success/failure events through affected journey; inspect broader coverage, record gaps. Use shared hooks/surgical edits, no unrelated refactors. Read existing logs during development; emit/check final action trails only after implementation finishes.
 
 Apply [efficiency](../safe-engine/references/app-efficiency.md) to affected path: repeated work, resource lifetimes, safe useful reuse, focused evidence. Carry applicable validity, bounds, cancellation, ownership, cold/warm checks through stages. Unaffected resources: record evidence; add no benchmark, cache or app-wide optimization.
 
@@ -43,7 +43,7 @@ Public-page fixes apply affected [SEO checks](../ux-quality/references/web-seo.m
 
 Every UI/interaction change uses [UX Quality](../ux-quality/SKILL.md) on the affected journey through manual QA and this scoped reviewer. Preserve adequate patterns/assets; research uncertain choices, compare three credible options, then select. Inspect changed visuals/audio. No unrelated redesign or second review fleet.
 
-List files, behavior, smallest complete fix, manual actions, final checks. Reproduce through actual use; read existing tests if helpful, never write/run yet. Critique correctness/impact; preserve settled choices, invent no alternatives. This replaces five full planning outputs.
+List files, behavior, smallest complete fix, final manual actions/checks. Use source and supplied/existing evidence for diagnosis; actual-use reproduction waits until implementation is finished. Read existing tests if helpful, never write/run yet. Critique correctness/impact; preserve settled choices, invent no alternatives. This replaces five full planning outputs.
 
 ### 3. Generate code carefully
 
@@ -91,7 +91,7 @@ Before project writes, inspect any controller run. Quiesce dependent operations;
 
 No mid-build `feature-check`; tests wait. Later/after `ready`, newly authorized fixes get labeled handoffs. Mark old full-version evidence stale for changed inputs. No automatic full QA reopening/completion. Original defects, requirements, failed gates remain outstanding.
 
-Requested later version checkpoint: follow original bundle's supported continuation/adoption. Disclose configured checks before broad testing. No selective full-version acceptance command exists. Preserve immutable profiles; resolve scope conflicts before dependent commands.
+Requested later version checkpoint: follow selected bundle's supported continuation/adoption. Disclose configured checks before broad testing. No selective full-version acceptance command exists. Preserve contract history; version-2 corrections use reviewed amendments, legacy runs keep their original boundary. Resolve scope conflicts before dependent commands.
 
 Old pin lacking this method stays selected. Authorized local trial: complete reviewed candidate by explicit path, both identities/evidence limits recorded, old selection unchanged. Never silently upgrade another session or call local draft released.
 
@@ -101,4 +101,4 @@ Read [creation](../how-to-make-a-pr/SKILL.md), [review](../how-to-review-a-pr/SK
 
 Updates: inspect PR metadata, original purpose, review boundary. Review delta/consumers; preserve unresolved findings. Do not re-audit accepted code or claim whole-PR approval from scoped review.
 
-One separate reviewer may cover fix and PR review on same final head. Reuse exact-candidate evidence with limits; publication alone needs no duplicate review.
+Local fix review and PR review are separate. PR review requires a remote/cloud agent with fresh context and the exact published candidate; local subagents never count. Keep the one-reviewer small-change scope in each route; reuse raw exact-candidate evidence, never substitute the local verdict.

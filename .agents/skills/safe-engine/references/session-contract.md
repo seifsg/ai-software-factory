@@ -1,6 +1,6 @@
 # Session authority and continuous progress
 
-Read at intake, resume and delegation; apply [decision ownership](../../../../docs/current-decisions.md#decision-ownership). Save/reuse one ignored `.factory/session-contract.md` or equivalent with stage artifact/handoff links. Preserve fixed task/profile and accepted evidence.
+Read at intake, resume and delegation; apply [decision ownership](../../../../docs/current-decisions.md#decision-ownership). Save/reuse one ignored `.factory/session-contract.md` or equivalent with stage artifact/handoff links. Preserve original request, contract revisions and accepted evidence; amend only through supported reviewed commands.
 
 Bounded fixes use [Small Change](../../small-change/SKILL.md), reusing answers/scoped evidence. The owner chooses broader checkpoints; no automatic broad regression/full-version QA per fix. Analysis stays analysis.
 
@@ -22,8 +22,8 @@ Continue to the agreed checked, independently reviewed outcome or owner stop/che
 Continuous 0.1.0 controller:
 - Omit `--max-repairs` for new runs. Deprecated flags/integers are history; `repairs_used` counts corrections.
 - `status`: `repair_policy: continuous`, `max_repairs: null`, `historical_max_repairs`.
-- Existing runs: `repair --reason ...`, never state edits. Repair clears acceptance; requires a new version batch, full checks, improvement, full final QA and fresh independent review.
-- Follow [tests-last order](../../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests), including after repair: finish implementation, pass manual action QA, then author/polish/run final tests. No early suites or build-only `feature-check`. Missing manual evidence blocks readiness; preserve pins and report controller limitations.
+- Existing runs: `repair --reason ...`, never state edits. Repair clears acceptance; finish correction, record final manual QA, final tests and fresh independent review under the saved profile version. Version 2 uses one final gate; legacy version 1 keeps its sequence.
+- Follow [tests-last order](../../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests), including after repair: finish implementation, then final manual/user QA, then author/polish/run automated tests. No early manual reproduction, playtests, walkthroughs, suites or `feature-check`. Source inspection/existing-log reading remain allowed. Missing manual evidence blocks readiness; preserve pins and report limits.
 - Unchanged full-evidence reuse requires explicit reviewed-profile eligibility and integrity validation: read [usage](../../../../docs/pilot-usage.md#feature-feedback-and-version-checkpoints).
 - No fresh-run bypass of failed gates/cancellation.
 
@@ -63,4 +63,4 @@ Report the condition/attempts; finish useful independent work.
 
 Discover missing PR repository/tracker/owner/notification bindings before asking. They block affected PR steps/completion, not local implementation, QA or owner testing. Execute both PR procedures when possible; never mark blocked steps complete or invent recipients/messaging authority.
 
-Ready/merge/release/deployment require the human unless separately authorized. Controller `ready` means checked local handoff. Autonomy never waives acceptance, independent review, security, permissions or final human product acceptance. Missing QA tools mean unverified coverage, not a finished product.
+Ready/merge/release/deployment require the human unless separately authorized. Controller `ready` means checked local handoff; PR review separately requires an actual remote/cloud agent with fresh context. Local subagents never replace it. Autonomy never waives acceptance, security, permissions or final human product acceptance. Missing QA tools mean unverified coverage. Real product pilots/simulations remain deferred until specifically requested.
