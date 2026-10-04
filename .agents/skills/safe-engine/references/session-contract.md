@@ -2,7 +2,7 @@
 
 Read at intake, resume and delegation; apply [decision ownership](../../../../docs/current-decisions.md#decision-ownership). Save/reuse one ignored `.factory/session-contract.md` or equivalent with stage artifact/handoff links. Preserve original request, contract revisions and accepted evidence; amend only through supported reviewed commands.
 
-Bounded fixes use [Small Change](../../small-change/SKILL.md), reusing answers/scoped evidence. The owner chooses broader checkpoints; no automatic broad regression/full-version QA per fix. Analysis stays analysis.
+New implementation uses [Ticketing](../../ticketing/SKILL.md), including bounded fixes and factory repairs. Owner-confirmed scope lives in the selected tracker; this local contract caches authority/context. Every ticket gets its own session and full cycle. [Small Change](../../small-change/SKILL.md) keeps fixes surgical; six shortcuts remain for legacy unticketed work. Analysis stays analysis.
 
 ## Establish the contract
 
@@ -10,6 +10,8 @@ Read request, prior answers, project rules and contract. Ask only missing essent
 
 Record:
 - Outcome/acceptance; approved choices and sources; rejected/unresolved owner choices.
+- Canonical ticket/provider, latest confirmed scope revision/digest and owner source; original input, before/after, criteria, epic/dependencies and completion boundary.
+- Builder session, run/worktree and ownership. Independent tickets isolate files/runtime effects; shared epic checkouts serialize writers and preserve each history.
 - Granted autonomy: advice, checkpoints or execution. External permissions are separate.
 - Agent/owner decision boundaries, evidence and reasons. Full autonomy covers in-scope product, technical and working-name choices unless reserved/fixed.
 - Handoff, updates and owner stops. Plans/updates are not implicit approval gates.
@@ -28,6 +30,14 @@ Continuous 0.1.0 controller:
 - No fresh-run bypass of failed gates/cancellation.
 
 Watchdogs detect stuck operations, not session deadlines. Diagnose the operation. This contract supplies no scheduler, unlimited quota or host-execution guarantee.
+
+## Keep ticket scope current
+
+For ticketed work, use the [ticket contract](../../ticketing/references/ticket-contract.md) at intake/resume and before dependent implementation, final acceptance, handoff or PR. Refresh the canonical record and meaningful activity through its authorized tool. Local snapshots are cache; failed refresh leaves dependent judgment unverified.
+
+Record owner changes with source, actor/time, old/new scope and concise reasons. Preserve original/superseded input. A proposal stays pending until the owner explicitly confirms its outcome; a direct explicit owner change can supply that confirmation. Agent plans, tracker status and reviewer PASS grant none.
+
+Drift blocks affected progression, not source inspection or unrelated work. Reconcile with the owner and use a supported reviewed rebind/amendment; invalidate affected evidence. Fresh sessions/worktrees cannot hide failures or revive cancelled work. Unchanged scope permits valid evidence reuse; ordinary activity alone does not create a new acceptance contract.
 
 ## Discover, decide and continue
 

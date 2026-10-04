@@ -12,6 +12,7 @@ from .workflow import Workflow
 def main():
     parser = argparse.ArgumentParser(description="Safe Engine local delivery pilot")
     parser.add_argument("--project", required=True, help="Git project/worktree root")
+    parser.add_argument("--ticket", help="Canonical ticket key; select its preserved version 2 run")
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("discover", help="Propose a profile without executing project scripts")
     preflight = commands.add_parser("preflight", help="Inspect tools and bundle identity; no tests or product launch")
@@ -27,6 +28,7 @@ def main():
     init = commands.add_parser("init", help="Start one reviewed task from a clean project")
     init.add_argument("--task", required=True)
     init.add_argument("--profile", required=True)
+    init.add_argument("--session", help="Dedicated builder session identity; required for ticket runs")
     init.add_argument("--max-repairs", type=int,
                       help="Deprecated historical metadata only; repairs have no numerical limit")
     record = commands.add_parser("record", help="Save a method artifact and advance the appropriate phase")
@@ -44,29 +46,62 @@ def main():
         command.add_argument("--reason", required=True)
     commands.add_parser("status", help="Read saved progress and evidence freshness")
     commands.add_parser("handoff", help="Validate current acceptance and write a local report")
+    capture = commands.add_parser("ticket-capture", help="Import a complete actual MCP read; performs no remote action")
+    capture.add_argument("--source", required=True)
+    packet = commands.add_parser("ticket-render", help="Render proposed remote body; performs no remote action")
+    packet.add_argument("--source", required=True)
+    failure = commands.add_parser("ticket-refresh-failed", help="Invalidate a stale capture after failed/uncertain remote read")
+    failure.add_argument("--reason", required=True)
+    commands.add_parser("ticket-status", help="Read imported ticket scope/freshness limits")
+    proof = commands.add_parser("ticket-proof", help="Bind latest expectations to actual before/after evidence before review")
+    proof.add_argument("--file", required=True)
     args = parser.parse_args()
     try:
         project = project_root(args.project)
-        workflow = Workflow(project)
+        workflow = Workflow(project, args.ticket)
         if args.command == "discover":
             result = discover(project)
         elif args.command == "preflight":
             from .project import validate_profile
             from .review_packet import preflight
-            result = preflight(project, validate_profile(read_json(args.profile), draft=True))
+            result = preflight(project, validate_profile(read_json(args.profile), draft=True), workflow.directory)
+        elif args.command.startswith("ticket-") and args.command != "ticket-proof":
+            from .tickets import TicketStore, render_ticket, scope_digest
+            if not args.ticket:
+                raise EngineError("Ticket commands require --ticket")
+            store = TicketStore(project)
+            if args.command == "ticket-capture":
+                try:
+                    supplied = read_json(args.source)
+                    if not isinstance(supplied, dict) or supplied.get("key") != args.ticket:
+                        raise EngineError("Capture key must match --ticket")
+                    result = store.capture(supplied)
+                except (EngineError, OSError, ValueError, TypeError, KeyError) as error:
+                    store.failed(args.ticket, str(error))
+                    raise
+            elif args.command == "ticket-render":
+                contract = read_json(args.source)
+                result = {"body": render_ticket(contract), "scope_digest": scope_digest(contract), "remote_write": False}
+            elif args.command == "ticket-refresh-failed":
+                store.failed(args.ticket, args.reason)
+                result = store.status(args.ticket)
+            else:
+                result = store.status(args.ticket)
         else:
             # The runtime directory must already be excluded from Git by the project owner.
             if args.command == "init":
                 from .project import git
                 try:
-                    git(project, "check-ignore", "-q", ".factory/state.json")
+                    git(project, "check-ignore", "-q", (workflow.directory / "state.json").relative_to(project).as_posix())
                 except EngineError:
                     raise EngineError("Add .factory/ to the project's Git ignore rules before initialization")
             with locked(workflow.directory):
                 if args.command == "init":
-                    result = workflow.initialize(read_json(args.task), read_json(args.profile), args.max_repairs)
+                    result = workflow.initialize(read_json(args.task), read_json(args.profile), args.max_repairs, args.session)
                 elif args.command == "record":
                     result = workflow.record(args.kind, args.file)
+                elif args.command == "ticket-proof":
+                    result = workflow.ticket_proof(args.file)
                 elif args.command == "check":
                     result = workflow.check(fresh=args.fresh)
                 elif args.command == "feature-check":

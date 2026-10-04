@@ -15,9 +15,13 @@ Follow [tests-last order](../../../docs/current-decisions.md#finish-work-use-it-
 
 Analysis, planning and review requests stay in that phase. No implied coding.
 
-For requested bounded fixes, read [Small Change](../small-change/SKILL.md) before loading the full workflow or starting a controller. Its six routines own checks, existing-run handling and scoped PR delivery. A focused handoff does not refresh full-version acceptance.
+New implementation starts with [Ticketing](../ticketing/SKILL.md). Use the chosen tracker/MCP; default to GitHub Issues. Reuse Seif's confirmed GitHub choice. Capture original input, actual before, expected after and criteria; secure owner confirmation before implementation. Split a backlog into complete ticket outcomes, not tiny steps that evade final QA.
 
-New software or substantial features use the flow below. Discover the actual domain, stack, platforms, interfaces, workload and constraints. Games, desktop/mobile/web apps, servers, libraries and tools share the method; their evidence differs.
+Each ticket gets its own builder session and full flow below. Independent tickets use isolated worktrees; related tickets may share an epic checkout serially with separate histories. Read [ticket setup](../../../docs/ticketing.md) for tracker capture, binding, ownership and dependency gates. Tools do not create sessions/worktrees automatically.
+
+[Small Change](../small-change/SKILL.md) supplies surgical tactics for bugs; ticketed fixes keep full methods and final review. Its six light routines remain for legacy unticketed work only. A narrow handoff certifies no whole version.
+
+Discover the actual domain, stack, platforms, interfaces, workload and constraints. Games, desktop/mobile/web apps, servers, libraries and tools share the method; their evidence differs.
 
 Read [logging](references/app-diagnostics.md) and [efficiency](references/app-efficiency.md) during delivery analysis/planning. Every app/game needs working shared logging: adequate facilities/preferred provider or internal module/local sink. Discover preferences/access; implement detailed success/failure events. Read existing logs during development; actual actions and emitted-trail checks wait until final manual QA. Plan coverage, resource targets and evidence. Research material unknowns through [Research Market](../research-market/SKILL.md). Required logging stays surgical.
 
@@ -39,11 +43,11 @@ Resolve this bundle's root. Read [pilot usage](../../../docs/pilot-usage.md) for
 python -m safe_engine --project <absolute-target-root> status
 ```
 
-Read request, rules and [session contract](references/session-contract.md). Reuse answers/authority; discover tools before asking. No run? Preserve work in a suitable isolated checkout with clean Git baseline and ignored `.factory/`. Commit a minimal new-project baseline before initialization.
+Read request, rules and [session contract](references/session-contract.md). Reuse answers/authority; discover tools before asking. When ticketed, refresh canonical scope/activity at intake/resume; select its recorded run, binding and session. Pending scope, drift or unavailable refresh blocks dependent progression. Status remains inspectable. No run? Preserve work in a suitable isolated checkout with clean Git baseline and ignored `.factory/`. Commit a minimal new-project baseline before initialization.
 
-Inspect check definitions, runtime inputs and interaction tools; author/run no tests. Save original request/criteria in task JSON; map each to manual, automated or mixed evidence. New version-2 runs may start with draft acceptance and no tests. Declare test-only paths; seal reviewed acceptance at the final stage. Actual browser/native/game/API/CLI interaction waits until implementation is finished; screenshots cannot prove behavior. Missing tools/reserved choices block dependent work only.
+Inspect check definitions, runtime inputs and interaction tools; author/run no tests. Ticketed task/criteria come from the confirmed revision; keep original input and scope digest. Unbound runs preserve their recorded contract. Map each criterion to manual, automated or mixed evidence. New version-2 runs may start with draft acceptance and no tests. Declare test-only paths; seal reviewed acceptance at the final stage. Actual browser/native/game/API/CLI interaction waits until implementation is finished; screenshots cannot prove behavior. Missing tools/reserved choices block dependent work only.
 
-Resolve material unknowns before dependent choices. Planning/research may precede initialization; record in stage order. Version-2 draft/seal and reviewed amendments preserve contract history and invalidate affected acceptance; use supported commands, never patch state. Legacy runs retain their recorded contract/workflow. Read [pilot usage](../../../docs/pilot-usage.md) for exact schemas and limits.
+Resolve material unknowns before dependent choices. Planning/research may precede initialization; record in stage order. Owner changes go into ticket activity and scope revisions before dependent work. Proposed scope stays pending; explicit owner confirmation binds the new outcome. Rebind through supported reviewed amendments, preserving old/new ticket and contract history and invalidating affected acceptance. Never patch state. Legacy runs retain their recorded contract/workflow. Read [pilot usage](../../../docs/pilot-usage.md) for exact schemas and limits.
 
 Initialize once. Resume the saved phase. Follow [control-route recovery](references/session-contract.md#recover-a-failed-control-route) when needed. No invented credits, retry ceilings, session deadlines or permissions. Honor real limits, checkpoints and stops.
 
@@ -65,7 +69,7 @@ With no existing implementation, say so; analyze requirements, available platfor
 | `verify` | One complete configured final gate, including applicable diagnostic/resource evidence. Read logs; investigate failures. Use supported repair before changing a recorded candidate. |
 | Legacy `improve` / `final-verify` | Existing version-1 runs keep their recorded sequence and exact-input reuse rules. No silent migration. New version-2 runs have no duplicate final gate. |
 | `review` | Fresh local read-only Codex review: core methods plus applicable evidence/references, three themed passes plus Change Guard and Compliance. Severity and blocking/approved-deferral disposition stay distinct. Never supply your own passing review. Repair supported findings, check corrections and obtain fresh assessment. |
-| `ready` | Checked local handoff: results, diagnostic access/coverage, resource evidence, research decisions and limits. Authorized PRs/updates require [creation](../how-to-make-a-pr/SKILL.md) and separate remote/cloud [PR review](../how-to-review-a-pr/SKILL.md), including skill/docs PRs without controller runs. Local review never substitutes for cloud review. Preserve small/full scope and human ready/merge/release decisions. |
+| `ready` | When ticketed, refresh scope; map latest confirmed criteria to changes, actual journey proof and limits. Checked local handoff includes diagnostics, resources and research. Authorized PRs/updates require [creation](../how-to-make-a-pr/SKILL.md) and separate remote/cloud [PR review](../how-to-review-a-pr/SKILL.md), including skill/docs PRs without controller runs. Ticketed work keeps full review; local review never substitutes for cloud review. Preserve human ready/merge/release decisions. |
 | `cancelled` | Stop. Preserve records and checkout. |
 
 Keep evidence in excluded `.factory/` or equivalent. Report unverified coverage. Never edit protected acceptance files/task records to obtain a pass. Use reviewed amendments with history for legitimate version-2 contract corrections; preserve failures and authority. Legacy corrections follow their supported boundary.
@@ -76,4 +80,4 @@ Give brief batch updates. For watch/learn requests, show actual brief, criteria,
 
 For factory faults, use [Improve Factory](../improve-factory/SKILL.md): checkpoint → isolated repair → independent review → compatible resume. No recursive delivery runs or silent upgrades. Reloaded text is not new QA.
 
-For another host/session, read [setup](../../../docs/start-another-session.md). The current session builds; the controller records stages/checks and launches fresh read-only review. It does not provision tools, run a daemon, push, merge or deploy. Verify host capabilities and report limits. Missing PR bindings block that action, while independent local delivery continues. Bounded follow-ups use Small Change; full-version corrections retain their full acceptance requirements.
+For another host/session, read [setup](../../../docs/start-another-session.md). The current session builds; the controller records stages/checks and launches fresh read-only review. It does not provision tools, run a daemon, push, merge or deploy. Verify host capabilities and report limits. Missing PR bindings block that action, while independent local delivery continues. New follow-ups use tickets; surgical scope stays. Existing unticketed runs retain their recorded path, pins and acceptance.

@@ -4,7 +4,9 @@
 
 This route is for requested implementation. An explicit analysis, planning or review request stays in that phase.
 
-Seif selected [small-change](../.agents/skills/small-change/SKILL.md) on 3 October: six lightweight routines, careful implementation, focused checks and one narrow independent assessment. This route precedes the full version workflow described below. No automatic broad regression, full-suite reruns or five-artifact planning for a small fix. Accumulated changes may prompt an offer of affected-area validation; execution waits for the user. It is an agent-operated scoped handoff, not a new controller command or whole-version acceptance. Existing pinned runs retain their bundle/state; see the method for explicit local trials and evidence limits.
+Seif selected [small-change](../.agents/skills/small-change/SKILL.md) on 3 October: six light routines, focused checks and one narrow assessment. Preserve that route for legacy unticketed work. New implementation uses [Ticketing](../.agents/skills/ticketing/SKILL.md) and the full cycle, even bugfixes; keep changes surgical and checks relevant. Existing pins, state and historical acceptance stay intact.
+
+[Ticket usage](ticketing.md) owns exact capture, confirmation, session, dependency and proof commands. Prefer the owner's authorized tracker MCP; GitHub Issues is the default and Seif's current choice. Every ticket needs an actually dispatched dedicated builder session. Use `--ticket <key>` on its commands and `init ... --session <real-builder-session-id>`. State/output live under `.factory/runs/<key>/`; legacy `.factory/state.json` stays unchanged. Start ticket runs in fresh worktrees; shared epic checkouts serialize ticket writers. The controller provisions no sessions, worktrees or host automation.
 
 Safe Engine 0.1.0 is a local, agent-operated delivery loop. The current Codex session builds the feature using Seif's methods. Python records stages and executes checks; a fresh read-only Codex CLI process reviews the final candidate. The controller creates a checked local handoff. It does not push, merge, deploy, or run as an unattended daemon.
 
@@ -67,7 +69,7 @@ Declare relevant environment variables and ignored/external inputs; content is h
 
 `protected_paths` holds sealed accepted checks. Read them during development; testing waits until implementation and manual QA finish. Version 2 permits independent reviewed contract amendments rather than silent file/state changes: preserve old/new contract digests and protected hashes, reason, reviewer identity/verdict and actual authority. Amendment invalidates acceptance and returns through completed implementation and final manual QA. Never erase failures, revive cancellation or weaken expectations for green. Legacy version-1 contracts retain their original boundary. Same-user records remain workflow integrity, not hostile-user protection.
 
-Optional per-check `artifacts` list generated evidence files under `.factory/outputs/`. The runner removes only those declared output files before the command, requires fresh files afterwards, and verifies their hashes before review and handoff. Configure the check to actually write those paths; old screenshots cannot substitute for a new run.
+Optional per-check `artifacts` list generated evidence files under `.factory/outputs/` for unbound runs, or `.factory/runs/<key>/outputs/` for tickets. `{run}` selects that run's namespace. The runner removes only declared outputs before the command, requires fresh files afterwards, and verifies hashes before review/handoff. Configure actual paths; old screenshots cannot substitute for a new run.
 
 Legacy task JSON; version 2 additionally declares criterion `mode` as `manual`, `automated` or `mixed`. Manual criteria need real structured receipts, not dummy executable checks:
 
@@ -88,6 +90,8 @@ Initialize with the completion boundary and authority recorded in the [session c
 python -m safe_engine --project <project> init --task <task.json> --profile <profile.json>
 python -m safe_engine --project <project> status
 ```
+
+Those forms preserve unbound runs. New ticket initialization adds `--ticket <key>` before `init` and `--session <real-builder-session-id>` after its options; capture the confirmed canonical ticket first. Use the same key for all subsequent commands and the [recorded refresh/proof boundaries](ticketing.md).
 
 ## Follow the stages
 
@@ -130,7 +134,7 @@ At final sealing, `contract-proposal --task <final-task.json> --profile <final-p
 
 Legacy version-1 runs retain `analysis → plan → batch → check → improvement → check → review → handoff`. Their second check may reuse exact unchanged evidence only under their reviewed opt-in. No automatic migration.
 
-Prefix every line with `python -m safe_engine --project <project>`. A failed check or blocking finding requires `repair --reason "..."`, completed surgical correction, final manual QA, final test work, valid sealed acceptance, batch, configured gate and fresh review. Follow the saved version's sequence. Correction count is history, not a stop condition. `cancel --reason "..."` stops progression and preserves work. No operation deletes the worktree.
+Prefix every line with `python -m safe_engine --project <project>`, plus `--ticket <key>` when bound. Ticketed work also needs refreshed captures at its boundaries and `ticket-proof --file <proof.json>` after final checks, before review; [ticket usage](ticketing.md) owns that schema. A failed check or blocking finding requires `repair --reason "..."`, completed surgical correction, final manual QA, final test work, valid sealed acceptance, batch, configured gate and fresh review. Follow the saved version's sequence. Correction count is history, not a stop condition. `cancel --reason "..."` stops progression and preserves work. No operation deletes the worktree.
 
 After interruption, use `status`. An incomplete check or review is not acceptance; rerun it on current inputs. A changed candidate after its batch record needs a repair cycle. File locks release when the process exits. To stop an active check or review, interrupt its foreground controller; it terminates its owned process tree. A concurrent cancel command does not bypass the active operation's lock.
 

@@ -11,15 +11,29 @@ Public-page changes include affected [SEO evidence](../.agents/skills/ux-quality
 - Create/update: [How to Make a PR](../.agents/skills/how-to-make-a-pr/SKILL.md).
 - Incoming review: [How to Review a PR](../.agents/skills/how-to-review-a-pr/SKILL.md).
 - Analysis/review-only: read-only; no implied repair/push/comment.
-- Bounded implementation/update: [Small Change](../.agents/skills/small-change/SKILL.md) scope below.
+- New implementation/update: [Ticketing](../.agents/skills/ticketing/SKILL.md), confirmed scope and full cycle. Bounded fixes keep [Small Change](../.agents/skills/small-change/SKILL.md)'s surgical tactics.
+- Existing unticketed work: preserve its recorded small/full path; no silent migration or acceptance refresh.
 
 Authorized delivery requires both procedures and remote/cloud PR review: a separate agent, fresh context and checkout of the exact remote candidate. Verify actual remote execution and record provider/task identity, base/head, evidence and verdict. Local controller review remains separate; local subagents never satisfy PR review. Missing cloud access blocks that review/merge, not independent local work. Open draft; human owns ready/merge/release unless explicitly authorized.
 
 Review: four themes → synthesis/compliance → question gate → permitted fixes → manual action QA → final test authoring/execution → authorized handoff. Controller's five acceptance passes stay separate. No added three-option phase or retry-once ceiling.
 
-Full cloud review: four isolated themes, capacity-bounded waves if needed; synthesize all four. Record actual execution, never call sequential work simultaneous or drop themes. Small Change: one scoped cloud reviewer. Supply core methods plus applicable references and raw evidence, not every unrelated checklist; reviewer challenges omissions.
+Ticketed/full cloud review: four isolated themes, capacity-bounded waves if needed; synthesize all four. Record actual execution, never call sequential work simultaneous or drop themes. Legacy unticketed Small Change: one scoped cloud reviewer. Supply core methods plus applicable references and raw evidence, not every unrelated checklist; reviewer challenges omissions.
 
 Judge the actual candidate. Proposed fixes mean a **conditional** verdict; list remaining fixes. Read-only review cannot count hypothetical repairs as passed. Separate severity from disposition: unresolved HIGH/CRITICAL, core failures and required unknowns block. Lower-risk accepted deferrals need owner, reason, scope, authority and revisit trigger; before-exposure obligations remain open until that boundary.
+
+## Compare the current ticket
+
+Refresh the selected tracker ticket and meaningful activity before PR submission/update and cloud verdict. Use the owner's preferred MCP; GitHub Issues is the default and Seif's current choice. Reuse the existing ticket; read before writing, reconcile uncertain effects and verify remote updates. Local records are cache/evidence.
+
+Pin original input, latest confirmed after/criteria, scope revision/digest, owner source, dependencies and exact PR base/head. Proposed changes remain pending. Resolve drift through owner authority and supported reviewed rebinds; invalidate affected evidence. Failed refresh or unresolved scope blocks dependent acceptance, while independent work continues.
+
+Include one comparison in the existing verification/compliance section:
+
+| Confirmed criterion | Actual change/journey | Candidate-bound proof | Gap/deviation |
+|---|---|---|---|
+
+Explain approved scope changes with actor/source, what, why and result; preserve ticket and PR history. Compare the real owner expectation, not only PR claims or an old plan. Ticket `closed`, controller `ready` and a green suite never prove integrated delivery. Keep awaiting-review state until its recorded review/integration criteria and authorized tracker completion are satisfied. No routine/skill exception bypasses an already ticketed contract.
 
 ## Before/after proof
 
@@ -31,7 +45,7 @@ Plan proof before edits; attach it to the PR before submission/update. Show the 
 
 Baseline screenshot is a narrow capture-only exception to tests-last: minimum safe navigation to the unchanged view, no feature exercise, submission or test suite. Use existing evidence if access would require a side effect; report missing baseline honestly. Never fabricate a before image or reset dirty work to recreate it. Final screenshots, journey tests and videos wait until implementation finishes; reuse that QA session.
 
-Embed labeled Before/After and any chosen clip in the PR, with a brief observed result and base/head identity. Use durable attachments/links the reviewer can open; verify access. No localhost/local-path links or unconfirmed uploads. Keep credentials, private data and notifications out of captures; record safe fixtures. Missing capture/recording/upload access: disclose the gap and available evidence, never claim proof exists. No new media host or public upload implied.
+Embed labeled Before/After and any chosen clip in the PR, with observed result, base/head and applicable ticket revision/criterion. Use durable attachments/links the reviewer can open; verify access. No localhost/local-path links or unconfirmed uploads. Keep credentials, private data and notifications out of captures; record safe fixtures. Missing capture/recording/upload access: disclose the gap and available evidence, never claim proof exists. No new media host or public upload implied.
 
 ## Resolve project bindings
 
@@ -41,7 +55,7 @@ Map risks to actual games, clients, servers/services or tools: platforms, langua
 
 UNKNOWN is neither N/A nor PASS. Justify inapplicability. Missing required bindings block dependent external actions/PR completion; continue independent local work. Use authorized integrations; invent no tracker, recipient or success.
 
-Save bindings in the existing task/session record. One-time notification/merge permission is not standing authority. Source accounts/examples grant none.
+Save bindings in the canonical ticket and local context cache when bound; legacy unticketed work retains its task/session record. One-time notification/merge permission is not standing authority. Source accounts/examples grant none.
 
 ## Keep current factory decisions explicit
 
@@ -58,6 +72,8 @@ Save bindings in the existing task/session record. One-time notification/merge p
 - Material persistence: [Database Schema](../.agents/skills/database-schema/SKILL.md), whole-product access, integrity/isolation, indexes, runtime evidence, safe migration. Reject unsupported O(1)/scale claims. Reuse reviewer, no extra fleet.
 
 ## Small direct changes
+
+New ticketed bugs keep full factory methods and full cloud PR review. Keep implementation surgical, evidence/checks relevant and unrelated cleanup deferred. The light route below applies only to existing unticketed Small Change work; it cannot override a ticket's complete cycle.
 
 Include applicable [security controls/evidence](../.agents/skills/safe-engine/references/app-security.md) in the existing review. Distinguish local development gaps from production blockers; no whole-app hardening for an unrelated small fix.
 

@@ -1,5 +1,7 @@
 # Current factory decisions
 
+4 October factory checkpoint: Seif instructed immediate merge of all current factory PRs. [Ticket #7](https://github.com/seifsg/ai-software-factory/issues/7) preserves the changed authority and prior hold. This delivery exception grants no cloud verdict, deployment or active-bundle adoption; actual protected GitHub gates still apply.
+
 Read this for current operation. Read the [dated history](safe-engine-decisions.md) only for rationale, changed decisions or provenance. Latest owner instructions govern; historical one-time permissions authorize no new external actions.
 
 ## Method and authorship
@@ -12,7 +14,15 @@ Reuse valid work. Fully read applicable methods once while available; reload cha
 
 Analysis/planning/review stays in phase. Planning: files, critique, phases, todos, full plan. Honor the file-summary stop unless existing authority permits continuation. Every implementation todo uses the full 0–4 loop. Size and O(1) questions prompt inspection; workload evidence governs acceptance.
 
-Bounded fixes use six [Small Change](../.agents/skills/small-change/SKILL.md) routines, focused checks and one narrow independent review. No automatic broad suite or change-count trigger; offer useful broader checks and wait for the request unless a real protected gate requires them. Full versions keep full QA and fresh review. Small handoffs cannot certify versions.
+Legacy unticketed bounded fixes use six [Small Change](../.agents/skills/small-change/SKILL.md) routines, focused checks and one narrow independent review. No automatic broad suite or change-count trigger; offer useful broader checks and wait for the request unless a real protected gate requires them. Full versions keep full QA and fresh review. Small handoffs cannot certify versions.
+
+## Ticketed delivery
+
+New implementation uses [Ticketing](../.agents/skills/ticketing/SKILL.md), including factory work and bugfixes. GitHub Issues is Seif's chosen tracker. For another project, prefer its authorized MCP tracker; without a preference, try GitHub Issues. Canonical remote scope preserves original owner input, actual before, confirmed after/journeys/criteria, decisions and activity. Confirm actual owner instructions/delegation; proposals remain pending. Meaningful changes update versioned scope, not chat alone.
+
+Each ticket gets a dedicated builder session and full factory cycle. Separate worktrees may run independent tickets; shared epic checkouts are serial, with separate histories and one writer/runtime owner. Surgical tactics and applicable checks remain. Dependencies require accepted scope and integrated commit; epics require combined acceptance. No artificial microtickets or early tests.
+
+[Supported ticket commands](ticketing.md) bind version-2 runs/fingerprints to exact confirmed scope, reject stale/inactive/pending captures, preserve reviewed amendments and require latest-criterion evidence before review/PR. Activity alone need not invalidate QA. Imported captures do not authenticate MCP/humans or enforce arbitrary host commands. Old unticketed states, pins and originals remain intact; no silent migration or automatic game build.
 
 ## Decision ownership
 

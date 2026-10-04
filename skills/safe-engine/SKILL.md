@@ -9,7 +9,7 @@ Load `https://github.com/seifsg/ai-software-factory`; run its complete methods i
 
 ## Select the bundle
 
-Preserve request, answers, authority and work. Establish the absolute target; read project rules, `.factory/state.json`, selection and session/checkpoint records. Create directories only within requested scope. No second run or substituted demo.
+Preserve request, answers, authority and work. Establish the absolute target; read project rules, legacy `.factory/state.json`, ticket `.factory/runs/<key>/state.json`, selection and session/checkpoint records. Create directories only within requested scope. No second run or substituted demo.
 
 If `references/local-app-diagnostics.md` or `references/local-small-change.md` exists here, read [local trials](references/local-trials.md) before selecting a method. Otherwise skip that reference. Trials never silently upgrade pins.
 
@@ -27,9 +27,11 @@ Verify returned root, revision, dirty status, receipt and entrypoint. Record lau
 
 ## Read and execute
 
-For bounded fixes, read the resolved bundle's whole `.agents/skills/small-change/SKILL.md` and applicable references. Its six routines own scoped checks/review/PR delivery; no full controller run or CLI reviewer needed. If absent in an old pin, use an authorized reviewed trial or obtain missing adoption authority. Never imitate it by skipping gates.
+New implementation: read canonical `.agents/skills/ticketing/SKILL.md` and `docs/ticketing.md` from the resolved bundle. Preferred authorized tracker MCP first; GitHub Issues default, Seif's existing choice. Confirm before/after scope. Every ticket gets an actually dispatched builder session and full cycle, even bounded fixes. Small Change keeps patches surgical; its six shortcuts remain for legacy unticketed work.
 
-For full delivery, read the whole returned `entrypoint`, its session contract, usage guide and method handoff. Read each complete method/reference when its phase needs it. The canonical method owns diagnostics, efficiency, research and PR routing. Missing guidance in an old pin requires an authorized trial/adoption; preserve the pin.
+Ticket commands select `--ticket <key>`; initialization records `--session <real-builder-session-id>`. Preserve namespaced history, legacy state and active pins. Independent ticket worktrees may parallelize independent effects; shared epic checkouts serialize writers. The controller creates neither sessions nor worktrees. Missing ticketing in an old pin needs authorized trial/adoption; never skip gates or silently upgrade.
+
+Read the whole returned `entrypoint`, its session contract, usage guide and method handoff. Read each complete method/reference when its phase needs it. The canonical method owns diagnostics, efficiency, research and PR routing. Missing guidance in an old pin requires an authorized trial/adoption; preserve the pin.
 
 Execute once from bundle root against target. No recursive launcher or controller execution from the target directory. File loading is not completed delivery.
 

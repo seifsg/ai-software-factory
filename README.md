@@ -10,12 +10,12 @@ Understand the request. Build the smallest complete change. Finish implementatio
 
 Keep Seif's original method and deliberate repetition. RepairCheck Mobile remains the primary source; operative skills discover the target project's actual settings. Compress AI-written explanations. The factory covers games, web/mobile/desktop software, services, tools and libraries.
 
-The [skill index](.agents/skills/README.md) lists thirteen canonical skills: seven with originals and six factory-specific skills. Two portable entries load the complete factory from another project. [Provenance](docs/skill-provenance.md) records exact sources, task matches and packaging changes.
+The [skill index](.agents/skills/README.md) lists fourteen canonical skills: seven with originals and seven factory-specific skills. Two portable entries load the complete factory from another project. [Provenance](docs/skill-provenance.md) records exact sources, task matches and packaging changes.
 
-Ask for analysis and you get analysis. Ask for planning and you get planning. A small feature does not turn either request into permission to code. For a requested bounded fix, [Small Change](.agents/skills/small-change/SKILL.md) runs six light routines with focused checks and one independent review. Larger delivery follows the version workflow:
+Ask for analysis and you get analysis. Ask for planning and you get planning. A small feature does not turn either request into permission to code. New implementation uses [Ticketing](.agents/skills/ticketing/SKILL.md): GitHub Issues by default, confirmed before/after scope and a dedicated session/full cycle per ticket, including bugfixes. Keep surgical Small Change tactics; its six replacement routines remain for legacy unticketed work. Ticket delivery follows:
 
 ```text
-analyze → original plan → product/UX + technical research → revised plan
+confirmed ticket → analyze → original plan → product/UX + technical research → revised plan
         → build with the 0–4 loop → finish in-scope improvements → manual action QA
         → author/polish automated tests → final automated QA → fresh review
         → checked local handoff → authorized PR → remote/cloud PR review → human
@@ -24,6 +24,8 @@ analyze → original plan → product/UX + technical research → revised plan
 The original planning checkpoint remains. Proceed through it only when the user's instructions already authorize that continuation.
 
 [Tests-last rule](docs/current-decisions.md#finish-work-use-it-then-automate-tests): no manual testing, playtests, walkthroughs or automated test authoring/execution during development. Source inspection and existing-log reading remain allowed. Finish implementation, perform final manual QA, then final automated tests. Small fixes stay surgical. [Controller usage](docs/pilot-usage.md#feature-feedback-and-version-checkpoints) distinguishes new version-2 runs from legacy runs.
+
+[Ticket usage](docs/ticketing.md) defines captured contracts, namespaced runs, scope amendments, worktree ownership and latest-expectation proof. The host agent uses actual MCP tools; the controller neither creates remote issues nor authenticates their reads. Existing pins/runs remain unchanged.
 
 Version 2 supports draft acceptance for greenfield work, reviewed sealing/amendments, manual/automated/mixed criteria and one final gate. Conditional [Delivery Readiness](.agents/skills/safe-engine/references/delivery-readiness.md) covers capabilities, game/browser lifecycle, durable integrations and release/operations. Product pilots/simulations remain deferred until requested.
 

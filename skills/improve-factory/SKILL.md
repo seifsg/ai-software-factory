@@ -11,7 +11,7 @@ Source: `https://github.com/seifsg/ai-software-factory`, branch `main`, private.
 
 ## Find the right factory version
 
-Preserve report/project goal. Inspect active runs, checkpoints and session contract before fetching.
+Preserve report/project goal. Inspect active legacy/ticket runs, checkpoints and session contract before fetching. Ticket state lives in `.factory/runs/<key>/state.json`; preserve legacy `.factory/state.json` and exact pins.
 
 Existing run: use recorded absolute bundle path and exact revision/dirty state. Inspect evidence; if identity remains unknown, preserve run and stop dependent changes. Never substitute latest.
 
@@ -37,6 +37,8 @@ Current bundles check required guidance through `safe_engine/bundle-inputs.json`
 
 Read the whole returned canonical `entrypoint` and applicable references/methods. Execute once. Analysis/planning stays in phase. No recursive launcher, standalone canonical-folder installation or claim that loading files repaired anything.
 
+New maintenance uses canonical `.agents/skills/ticketing/SKILL.md` and `docs/ticketing.md`: preferred authorized tracker MCP, otherwise GitHub Issues (Seif's current choice). Confirm before/after scope; dispatch a dedicated maintenance builder session and complete the full cycle, even for small repairs. Keep fixes surgical. Select `--ticket <key>` and initialize with `--session <real-builder-session-id>`; preserve separate app/maintenance history and ownership. Old pins need authorized trial/adoption before new methods.
+
 Keep active cached bundles unchanged. Repair in a separate worktree from their revision; follow compatibility/evidence rules before adoption. Never pull/reset active bundles or silently change global settings. Resume this case's recorded selection even when the branch advances.
 
 ## Missing capabilities
@@ -45,7 +47,7 @@ Missing Git, Python, private access, complete files or required independent revi
 
 Finish all repair work before manual walkthroughs or automated tests. Local independent maintenance review and remote/cloud PR review are separate; PR review needs a fresh remote context and exact candidate evidence. A local subagent cannot replace it. No app/game/mobile pilot or simulation unless specifically requested.
 
-Resolver installs no hooks, selects no models, pushes/merges/notifies nothing and launches no product.
+Resolver installs no hooks or host automation, provisions no sessions/worktrees, selects no models, pushes/merges/notifies nothing and launches no product.
 
 ## Invoke
 

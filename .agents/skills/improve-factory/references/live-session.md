@@ -2,7 +2,7 @@
 
 Read before interrupting active project work. Keep its goal active; the parent owns project/user updates and delegates return focused factory evidence.
 
-Keep the selected bundle; optional methods do not force QA on completed/checkpointed work. Authorized [small-change trials](../../small-change/SKILL.md#continue-alongside-a-version-run) record both identities without changing controller state or claiming fresh version acceptance. Use the table below for adoption.
+Keep the selected bundle; optional methods do not force QA on completed/checkpointed work. New maintenance uses its own [ticket](../../ticketing/SKILL.md), confirmed scope and full cycle. Preserve the app ticket/run; repair activity grants no product change. Authorized [small-change trials](../../small-change/SKILL.md#continue-alongside-a-version-run) retain legacy identity/evidence limits. Use the table below for adoption.
 
 ```text
 Project coordinator ── checkpoint ────────────────── revalidate/resume
@@ -21,12 +21,14 @@ Read the [complete method handoff](../../safe-engine/references/method-handoff.m
 | Field | Record |
 |---|---|
 | Original work | Request/acceptance, approved/pending decisions, chart, plan, current todo |
+| Ticket scope | Bound app/maintenance tracker links, original/current confirmed revisions/digests, owner sources, meaningful activity, actual refresh, pending changes and dependencies. Local copies are cache; legacy unbound stays explicit. |
 | Project identity | Absolute root/worktree, branch, base/head, run ID/phase, task/profile digest, actual status, dirty diff, untracked inventory |
 | Preservation | Keep files/uncommitted work intact. For migration, securely preserve needed diffs/untracked files. Never commit secrets. |
 | Factory identity | Bundle root, commit, dirty status, dirty/untracked input hashes. Version labels are insufficient. |
 | Evidence | Artifact/log/review paths and hashes, freshness, pending operations, owners, locks |
 | Authority | Authorized scope/actions, completion boundary, checkpoints/stops, real access/provider constraints, observed tools/delegation/model configuration |
 | Maintenance | Complaint, expected result, affected steps, maintenance worktree, writer/reviewer, next resume action |
+| Session ownership | App/maintenance builder sessions and selected runs; isolated ticket checkout or serial shared epic ownership; shared runtime/service leases. |
 
 Record input names without secret values. Reuse controller fingerprints and a focused request/decision packet, not private transcripts. Inaccessible evidence stays UNKNOWN.
 
@@ -55,11 +57,11 @@ Require complete applicable methods and actual files. Inherited chat cannot repl
 
 Inherit user/host model and reasoning settings; host identity is not guaranteed. No hard-coded models, provider switches, reduced reasoning or purchased fallbacks. For approved role routing, verify model/tools/context capability; record exposed routing, otherwise UNKNOWN. If inadequate, compare three available alternatives and recommend one before a new routing decision.
 
-Keep one case, record and authority/completion boundary; no correction allowances. Parent reconciles completed, failed and in-flight actions before retries. Resume the same cause/checkpoint after interruption; no duplicate/recursive repairs.
+Keep one case, canonical maintenance ticket and authority/completion boundary; no correction allowances. Append decisions and changes to tracker activity, preserving confirmed scope and superseded input. Parent reconciles completed, failed and in-flight actions before retries. Resume the same cause/checkpoint after interruption; no duplicate/recursive repairs.
 
 ## Review, adoption and resume
 
-After independent assessment, compare exact candidate, preserved bundle and current project state: version/schema, task/profile/acceptance, methods, decisions and evidence. Read actual controller/CLI and saved profile version. Version-2 contract amendments use `amend` with reviewed authority/history; they do not migrate controller schemas or selected bundles.
+After independent assessment, refresh bound app/maintenance tickets. Compare exact candidate, preserved bundle and current project state: version/schema, task/profile/acceptance, confirmed scope bindings, methods, decisions and evidence. Pending scope, drift or unavailable refresh blocks dependent adoption. Read actual controller/CLI and saved profile version. Version-2 contract amendments use `amend` with reviewed authority/history; they do not migrate controller schemas or selected bundles.
 
 **0.1.0 has no automatic pause, resume, upgrade or migrate command.** Checkpoints are agent records. Never invent commands or edit `.factory/state.json` to allow adoption.
 
@@ -88,7 +90,7 @@ Blocked adoption preserves the old receipt. Never delete it to fetch latest, cop
 
 Fresh-run handoff preserves dirty/untracked work, lineage, correction history, authority and constraints. Check copied artifacts for secrets/applicability. Never copy verdicts as fresh evidence, redefine requirements, pass unverified work or erase exhausted historical allowances from saved state.
 
-Before resuming, read current status/work and revised methods fully; compare the latest checkpoint. Resume the first unfinished/invalidated step. Project coordinator writes the project; repairer never overwrites it. Return once to existing delivery, goal and PR procedures.
+Before resuming, read current status/work and revised methods fully; compare the latest checkpoint and confirmed app ticket when bound. Resume the first unfinished/invalidated step. Project coordinator writes the project; repairer never overwrites it. Return once to existing delivery, goal and PR procedures. Legacy unticketed app runs retain their recorded path; never fabricate a ticket binding or silently migrate them.
 
 Rollback preserves both bundles and original state; reassess compatibility/evidence because reverting cannot restore QA after project/environment changes. If adoption fails, record it, stop dependent work and use the prior bundle only if valid. Claim resumed only after a supported next step succeeds.
 

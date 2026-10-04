@@ -13,29 +13,86 @@ from .storage import atomic_json, now, read_json, save
 from .acceptance import (contract_candidate_digest, validate_contract_review,
                          validate_manual_receipt)
 from .project import production_fingerprint
+from .tickets import TicketStore, ticket_key
 
 
 PHASES = {"analyze", "plan", "build", "manual", "testing", "verify", "improve", "final-verify", "review", "ready", "cancelled"}
 
 
 class Workflow:
-    def __init__(self, project):
+    def __init__(self, project, ticket=None):
         self.project = project
+        self.ticket_key = ticket_key(ticket) if ticket is not None else None
         self.directory = project / ".factory"
+        if self.ticket_key:
+            self.directory /= "runs/" + self.ticket_key
+        reject_path_aliases(self.directory, self.project)
 
-    def initialize(self, task, profile, max_repairs=None):
+    @staticmethod
+    def contract_digest(task, profile, ticket=None):
+        value = {"task": task, "profile": profile}
+        if ticket is not None:
+            value["ticket"] = ticket
+        return digest(value)
+
+    def ticket_proposal(self, task, profile):
+        prefix = self.directory.relative_to(self.project).as_posix() + "/outputs/"
+        for check in profile.get("checks", []):
+            if any(not name.startswith(prefix) for name in check.get("artifacts", [])):
+                raise EngineError("Output artifacts must belong to the selected run, never another ticket")
+        if not self.ticket_key:
+            return None, None
+        capture, ticket = TicketStore(self.project).ready(self.ticket_key)
+        if profile.get("version") != 2:
+            raise EngineError("Ticket delivery requires the complete version 2 factory cycle")
+        criteria = lambda items: {item["id"]: item["text"] for item in items}
+        if (task["request"] != ticket["scope"]["original_request"]
+                or criteria(task["acceptance"]) != criteria(ticket["scope"]["acceptance"])):
+            raise EngineError("Task request/criteria must match the owner-confirmed canonical ticket")
+        return capture, ticket
+
+    def require_ticket(self, state, fresh=False):
+        store = TicketStore(self.project)
+        if not self.ticket_key:
+            store.block_legacy_writer()
+            return
+        capture, ticket = self.ticket_proposal(state["task"], state["profile"])
+        if ticket != state.get("ticket"):
+            raise EngineError("Confirmed ticket changed; preserve evidence and use reviewed amend before proceeding")
+        if fresh and capture["sequence"] <= state.get("ticket_observation", 0):
+            raise EngineError("This boundary needs a new complete MCP ticket/activity refresh")
+        store.dependencies(self.ticket_key, after=state["updated_at"] if fresh else None)
+        store.claim(self.ticket_key, state["run_id"], self.directory)
+        if fresh:
+            state["ticket_observation"] = capture["sequence"]
+            atomic_json(self.directory / "ticket-observations" / f"{capture['sequence']:06d}.json", capture)
+
+    def initialize(self, task, profile, max_repairs=None, session=None):
         if (self.directory / "state.json").exists():
             raise EngineError("This project already has a run. Resume it; use a fresh worktree for another task.")
+        if any((self.directory / "history").glob("*.json")):
+            raise EngineError("Current state is missing; recover the preserved run history instead of reinitializing")
         modern = isinstance(profile, dict) and profile.get("version") == 2
         validate_profile(profile, draft=modern)
         validate_task(task, profile, draft=modern)
+        capture, ticket = self.ticket_proposal(task, profile)
+        store = TicketStore(self.project)
+        if ticket:
+            if not isinstance(session, str) or not session.strip():
+                raise EngineError("Ticket initialization needs its dedicated builder session identity")
+            legacy = self.project / ".factory/state.json"
+            if legacy.exists():
+                raise EngineError("A legacy run owns this checkout; use an independent worktree")
+            store.dependencies(self.ticket_key)
+        else:
+            store.block_legacy_writer()
         if max_repairs is not None and (type(max_repairs) is not int or max_repairs < 0):
             raise EngineError("Deprecated max-repairs metadata must be a nonnegative integer")
         if git(self.project, "status", "--porcelain", "--untracked-files=normal"):
             raise EngineError("Initialize from a clean, committed project; preserve existing work before starting")
         state = {"schema_version": 1, "bundle_version": __version__, "run_id": str(uuid.uuid4()),
                  "project": str(self.project), "task": task, "profile": profile,
-                 "contract_digest": digest({"task": task, "profile": profile}),
+                 "contract_digest": self.contract_digest(task, profile, ticket),
                  "base_commit": git(self.project, "rev-parse", "HEAD"), "phase": "analyze",
                  "max_repairs": max_repairs, "repairs_used": 0, "sequence": 0, "history": [],
                  "artifacts": {}, "checks": None, "review": None, "pending_operation": None,
@@ -43,8 +100,19 @@ class Workflow:
         if modern:
             state.update(delivery_version=2, contract_sealed=False, contract_revision=0,
                          original_task=task, contract_history=[], manual=None)
+        if ticket:
+            state.update(ticket=ticket, ticket_observation=capture["sequence"], builder_session=session)
         state["initial_fingerprint"] = self.current(state)
-        save(self.directory, state, "Initialized reviewed task and project profile")
+        if ticket:
+            store.claim(self.ticket_key, state["run_id"], self.directory)
+        try:
+            if ticket:
+                atomic_json(self.directory / "ticket-observations" / f"{capture['sequence']:06d}.json", capture)
+            save(self.directory, state, "Initialized reviewed task and project profile")
+        except OSError:
+            if ticket:
+                store.abandon_empty_reservation(self.ticket_key, state["run_id"], self.directory)
+            raise
         return self.status(state)
 
     def load(self):
@@ -56,13 +124,19 @@ class Workflow:
         draft = state.get("delivery_version") == 2 and not state["contract_sealed"]
         validate_profile(state["profile"], draft=draft)
         validate_task(state["task"], state["profile"], draft=draft)
-        if state.get("contract_digest") != digest({"task": state["task"], "profile": state["profile"]}):
+        prefix = self.directory.relative_to(self.project).as_posix() + "/outputs/"
+        if any(not name.startswith(prefix) for check in state["profile"]["checks"] for name in check.get("artifacts", [])):
+            raise EngineError("Saved outputs differ from the selected run namespace")
+        if bool(state.get("ticket")) != bool(self.ticket_key) or (self.ticket_key and state["ticket"]["key"] != self.ticket_key):
+            raise EngineError("Select the saved ticket run with --ticket; never patch its binding")
+        if state.get("contract_digest") != self.contract_digest(state["task"], state["profile"], state.get("ticket")):
             raise EngineError("Task or profile changed after initialization; start a reviewed run in a fresh worktree")
         return state
 
     def current(self, state):
         return fingerprint(self.project, state["profile"], state["task"], self.directory,
-                           draft=state.get("delivery_version") == 2 and not state["contract_sealed"])
+                           draft=state.get("delivery_version") == 2 and not state["contract_sealed"],
+                           ticket=state.get("ticket"))
 
     def require_phase(self, state, *phases):
         if state["phase"] not in phases:
@@ -80,14 +154,25 @@ class Workflow:
         current = self.current(state)
         evidence = state.get("checks")
         feature = state.get("feature_checks")
+        ticket_status, ticket_error, ticket_current = None, None, True
+        if self.ticket_key:
+            try:
+                store = TicketStore(self.project)
+                ticket_status = store.status(self.ticket_key)
+                ticket_current = (ticket_status["valid"] and ticket_status["confirmed"] and not ticket_status["pending"]
+                                  and store.ready(self.ticket_key)[1] == state["ticket"])
+            except EngineError as error:
+                ticket_error, ticket_current = str(error), False
         return {"run_id": state["run_id"], "phase": state["phase"], "project": str(self.project),
+                "ticket": ticket_status, "ticket_error": ticket_error, "ticket_current": bool(ticket_current),
                 "repair_policy": "continuous", "repairs_used": state["repairs_used"],
                 "max_repairs": None, "historical_max_repairs": state.get("max_repairs"),
-                "checks_current": bool(evidence and evidence["fingerprint"] == current),
+                "checks_current": bool(ticket_current and evidence and evidence["fingerprint"] == current),
                 "checks_passed": bool(evidence and evidence["passed"]),
                 "feature_checks_current": bool(feature and feature["fingerprint"] == current),
                 "feature_checks_passed": bool(feature and feature["passed"]),
-                "review_current": bool(state.get("review") and state["review"]["fingerprint"] == current),
+                "review_current": bool(ticket_current and state.get("review") and state["review"]["fingerprint"] == current),
+                "builder_session": state.get("builder_session"),
                 "delivery_version": state.get("delivery_version", 1),
                 "contract_sealed": state.get("contract_sealed", True),
                 "contract_revision": state.get("contract_revision", 0),
@@ -99,6 +184,7 @@ class Workflow:
 
     def record(self, kind, source):
         state = self.load()
+        self.require_ticket(state, fresh=kind in ("plan", "implementation"))
         if state.get("delivery_version") == 2:
             return self.record_delivery(state, kind, source)
         expected = {"analysis": "analyze", "plan": "plan", "batch": "build", "improvement": "improve"}
@@ -130,9 +216,9 @@ class Workflow:
         if kind in ("analysis", "plan") and current != state["initial_fingerprint"]:
             raise EngineError("Code or declared inputs changed during analysis/planning")
         if kind == "implementation":
-            state["manual_candidate"] = production_fingerprint(self.project, state["profile"])
+            state["manual_candidate"] = production_fingerprint(self.project, state["profile"], state.get("ticket"))
         if kind == "manual":
-            if production_fingerprint(self.project, state["profile"]) != state["manual_candidate"]:
+            if production_fingerprint(self.project, state["profile"], state.get("ticket")) != state["manual_candidate"]:
                 raise EngineError("Implementation changed; repair and finish it before manual QA")
             state["manual"] = validate_manual_receipt(
                 read_json(source), state["manual_candidate"], state["task"], self.project)
@@ -151,7 +237,7 @@ class Workflow:
         if state.get("delivery_version") != 2:
             return
         receipt = state.get("manual")
-        if not receipt or receipt["candidate"] != production_fingerprint(self.project, state["profile"]):
+        if not receipt or receipt["candidate"] != production_fingerprint(self.project, state["profile"], state.get("ticket")):
             raise EngineError("Current final manual QA evidence is required; repair changed implementation")
         required = {c["id"] for c in state["task"]["acceptance"] if c.get("mode", "automated") in ("manual", "mixed")}
         covered = {o["criterion"] for o in receipt["observations"] if o["status"] == "PASS"}
@@ -171,12 +257,14 @@ class Workflow:
         validate_profile(profile, draft=draft)
         validate_task(task, profile, draft=draft)
         protected = protected_inputs(self.project, profile)
+        _, ticket = self.ticket_proposal(task, profile)
         return {"old_digest": state["contract_digest"],
-                "new_digest": contract_candidate_digest(task, profile, protected),
-                "protected": protected, "task": task, "profile": profile}
+                "new_digest": contract_candidate_digest(task, profile, protected, ticket),
+                "protected": protected, "task": task, "profile": profile, "ticket": ticket}
 
     def seal(self, task, profile, review):
         state = self.load()
+        self.require_ticket(state)
         self.require_phase(state, "testing")
         if state.get("delivery_version") != 2 or state["contract_sealed"]:
             raise EngineError("Only a draft new-delivery contract can be sealed")
@@ -208,19 +296,22 @@ class Workflow:
         if old != new:
             raise EngineError("Preserve acceptance IDs/text; seal changes only evidence bindings")
 
-    def save_contract(self, state, task, profile, protected, review, event, sealed=True):
+    def save_contract(self, state, task, profile, protected, review, event, sealed=True, ticket=None):
         state["contract_history"].append({"task": state["task"], "profile": state["profile"],
+            **({"ticket": state["ticket"]} if state.get("ticket") else {}),
             "protected": state["protected"], "digest": state["contract_digest"],
             "revision": state["contract_revision"], "review": review, "at": now()})
         state.update(task=task, profile=profile, protected=protected,
-                     contract_digest=digest({"task": task, "profile": profile}),
+                     contract_digest=self.contract_digest(task, profile, ticket or state.get("ticket")),
                      contract_sealed=sealed, contract_revision=state["contract_revision"] + 1,
                      checks=None, review=None)
+        if ticket is not None:
+            state["ticket"] = ticket
         save(self.directory, state, event)
 
     def amend(self, task, profile, review, reason):
         state = self.load()
-        if state.get("delivery_version") != 2 or state["phase"] in ("cancelled", "analyze", "plan"):
+        if state.get("delivery_version") != 2 or state["phase"] == "cancelled" or (not self.ticket_key and state["phase"] in ("analyze", "plan")):
             raise EngineError("Amend a new-delivery build or final-stage contract; preserve cancelled runs")
         if state.get("pending_operation") or not reason.strip():
             raise EngineError("Amendment needs a reason and no pending operation")
@@ -228,6 +319,18 @@ class Workflow:
             raise EngineError("Amendment requires a version 2 profile")
         proposal = self.contract_proposal(task, profile)
         validate_contract_review(review, proposal["old_digest"], proposal["new_digest"])
+        changed_scope = proposal["ticket"] != state.get("ticket")
+        if self.ticket_key:
+            store = TicketStore(self.project)
+            capture, _ = store.ready(self.ticket_key)
+            store.dependencies(self.ticket_key)
+            store.claim(self.ticket_key, state["run_id"], self.directory)
+            if changed_scope:
+                text_authority = review.get("acceptance_change_authority")
+                if not isinstance(text_authority, str) or not text_authority.strip():
+                    raise EngineError("Rebinding a ticket needs explicit owner scope-change authority in the review")
+            state["ticket_observation"] = capture["sequence"]
+            atomic_json(self.directory / "ticket-observations" / f"{capture['sequence']:06d}.json", capture)
         if task["request"] != state["original_task"]["request"]:
             raise EngineError("Amendment cannot replace the original request")
         old_criteria = {c["id"]: c["text"] for c in state["task"]["acceptance"]}
@@ -239,15 +342,76 @@ class Workflow:
         for artifact in state["artifacts"].values():
             if file_hash(self.directory / artifact["path"]) != artifact["sha256"]:
                 raise EngineError("Recorded evidence changed; preserve it before amendment")
-        state["phase"] = "build"
+        restart = changed_scope or state["phase"] in ("analyze", "plan")
+        state["phase"] = "analyze" if restart else "build"
         state["manual"] = None
         state.pop("manual_candidate", None)
         for key in ("implementation", "manual", "batch", "improvement"):
             state["artifacts"].pop(key, None)
+        if restart:
+            for key in ("analysis", "plan"):
+                state["artifacts"].pop(key, None)
+            state["initial_fingerprint"] = self.current({**state, "task": task, "profile": profile,
+                                                        "ticket": proposal["ticket"]})
         state["repairs_used"] += 1
         self.save_contract(state, task, profile, proposal["protected"], review, f"Reviewed amendment: {reason}",
-                           sealed=state["contract_sealed"])
+                           sealed=state["contract_sealed"], ticket=proposal["ticket"])
         return self.status(state)
+
+    def ticket_proof(self, source):
+        state = self.load()
+        self.require_ticket(state)
+        self.require_phase(state, "review")
+        if not self.ticket_key:
+            raise EngineError("Ticket proof requires a bound ticket run")
+        proof = read_json(source)
+        ticket = state["ticket"]
+        if proof.get("scope_digest") != ticket["scope_digest"] or proof.get("revision") != ticket["revision"]:
+            raise EngineError("Proof must map the latest confirmed ticket revision/digest")
+        expected = {c["id"] for c in ticket["scope"]["acceptance"]}
+        rows = proof.get("criteria")
+        if not isinstance(rows, list) or len(rows) != len(expected) or {row.get("id") for row in rows} != expected:
+            raise EngineError("Map every latest ticket criterion exactly once")
+        for row in rows:
+            if row.get("status") != "PASS":
+                raise EngineError("Unmet/unknown ticket expectations block acceptance")
+            for field in ("before", "after", "implementation"):
+                if not isinstance(row.get(field), str) or not row[field].strip():
+                    raise EngineError(f"Ticket proof needs {field} per criterion")
+            evidence = row.get("evidence")
+            if not isinstance(evidence, list) or not evidence:
+                raise EngineError("Ticket proof needs actual evidence files per criterion")
+            from .project import relative_input_path
+            for item in evidence:
+                name = relative_input_path(item["path"], allow_factory=True)
+                path = inside(self.project, name)
+                reject_path_aliases(path, self.project)
+                if file_hash(path) != item.get("sha256"):
+                    raise EngineError("Ticket proof evidence hash differs")
+            deviations = row.get("deviations")
+            if not isinstance(deviations, list):
+                raise EngineError("Declare deviations explicitly, including an empty array")
+            for deviation in deviations:
+                if any(not isinstance(deviation.get(f), str) or not deviation[f].strip()
+                       for f in ("change", "reason", "authority")):
+                    raise EngineError("Approved deviations need change/reason/owner authority")
+        self.capture_artifact(state, "ticket-proof", source, self.current(state))
+        save(self.directory, state, "Mapped latest confirmed ticket expectations to before/after evidence")
+        return self.status(state)
+
+    def require_ticket_proof(self, state):
+        if not self.ticket_key:
+            return
+        artifact = state["artifacts"].get("ticket-proof")
+        if not artifact or artifact["fingerprint"] != self.current(state):
+            raise EngineError("Map current confirmed ticket criteria with ticket-proof before review/handoff")
+        proof = read_json(self.directory / artifact["path"])
+        for row in proof["criteria"]:
+            for item in row["evidence"]:
+                path = inside(self.project, item["path"])
+                reject_path_aliases(path, self.project)
+                if file_hash(path) != item["sha256"]:
+                    raise EngineError("Mapped ticket evidence changed")
 
     def capture_artifact(self, state, kind, source, current):
         content = Path(source).read_text(encoding="utf-8-sig")
@@ -261,6 +425,7 @@ class Workflow:
 
     def check(self, fresh=False):
         state = self.load()
+        self.require_ticket(state)
         self.require_phase(state, "verify", "final-verify")
         if state.get("checks") and not state["checks"]["passed"]:
             raise EngineError("Completed failed checks require correction; use repair before another check batch")
@@ -362,6 +527,7 @@ class Workflow:
 
     def repair(self, reason):
         state = self.load()
+        self.require_ticket(state)
         if state["phase"] == "build":
             if not state.get("feature_checks") or state["feature_checks"]["passed"]:
                 raise EngineError("Build repair requires actual failed feature feedback")
@@ -386,6 +552,7 @@ class Workflow:
         return self.status(state)
 
     def require_checks(self, state):
+        self.require_ticket(state)
         self.integrity(state)
         self.require_manual(state)
         evidence = state.get("checks")
@@ -415,6 +582,7 @@ class Workflow:
         if state.get("review") and not state["review"]["passed"]:
             raise EngineError("Completed review requires correction; use repair before another review")
         self.require_checks(state)
+        self.require_ticket_proof(state)
         if type(timeout) is not int or not 1 <= timeout <= 3600:
             raise EngineError("Specify a review timeout between 1 and 3600 seconds")
         codex = shutil.which("codex")
@@ -554,6 +722,8 @@ class Workflow:
 
     def handoff(self):
         state = self.load()
+        self.require_ticket(state, fresh=True)
+        self.require_ticket_proof(state)
         self.require_phase(state, "ready")
         self.require_checks(state)
         review = state.get("review")
@@ -570,14 +740,32 @@ class Workflow:
                   "", "PR delivery requires how-to-make-a-pr and full how-to-review-a-pr in a separate cloud/remote environment with fresh context. Local review is not PR approval; await the owner's cloud review before merge.",
                   "", "Evidence covers the declared checks and inputs. Local state is not a tamper-resistant receipt."]
         path = self.directory / "handoff.md"
+        if state.get("ticket"):
+            ticket = state["ticket"]
+            lines += ["", "## Confirmed ticket", "", ticket["identity"]["url"],
+                      f"Revision: {ticket['revision']}; scope: {ticket['scope_digest']}",
+                      f"Builder session: {state['builder_session']}",
+                      f"Criterion proof: {self.directory / state['artifacts']['ticket-proof']['path']}",
+                      "Latest confirmed criteria must map to implementation, before/after proof, actual evidence and deviations in the PR.",
+                      "Local handoff is not remote review, integrated dependency acceptance, or ticket closure."]
         path.write_text("\n".join(lines) + "\n", encoding="utf-8")
         save(self.directory, state, "Prepared checked local handoff")
+        if self.ticket_key:
+            TicketStore(self.project).release(self.ticket_key, state["run_id"])
         return {"handoff": str(path), **self.status(state)}
 
     def cancel(self, reason):
         state = self.load()
+        if not isinstance(reason, str) or not reason.strip():
+            raise EngineError("Cancellation needs a reason; retain the ticket's run history")
+        if self.ticket_key:
+            TicketStore(self.project).claim(self.ticket_key, state["run_id"], self.directory)
+        else:
+            TicketStore(self.project).block_legacy_writer()
         state["phase"] = "cancelled"
         state["review"] = None
         state["pending_operation"] = None
         save(self.directory, state, f"Cancelled: {reason}")
+        if self.ticket_key:
+            TicketStore(self.project).release(self.ticket_key, state["run_id"])
         return self.status(state)

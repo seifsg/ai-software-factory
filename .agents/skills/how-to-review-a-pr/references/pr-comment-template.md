@@ -7,9 +7,13 @@ context that **a fresh agent or teammate with zero prior knowledge can take over
 Keep the local report candid; keep this comment constructive. State facts, not verdicts about the
 author. Fill every placeholder — an empty section is better deleted than left as a stub.
 
+Ticketed PR: refresh the canonical ticket and meaningful activity. Use its latest confirmed scope, owner source and exact remote candidate. Full ticket review applies even to a surgical bugfix. Local review, stale scope and tracker status cannot substitute. [Current-ticket comparison](../../../../docs/pr-workflow.md#compare-the-current-ticket).
+
 ```markdown
 ## Review + fixes
 
+**Remote review:** <actual cloud provider/task, fresh context, exact base/head>
+**Ticket:** <canonical link, latest confirmed scope revision/digest, owner source, actual refresh or gap>
 **Verdict:** <APPROVE | APPROVE-WITH-FIXES | REQUEST-CHANGES | BLOCK> — <one-line reason>
 **Manual QA:** <actual actions, candidate and observed outcomes/limits before test work>
 **Final tests:** <tests added/adapted, execution results and remaining gaps>
@@ -19,6 +23,12 @@ author. Fill every placeholder — an empty section is better deleted than left 
 > <the claim, quoted/trimmed from the PR body>
 
 **Does it deliver?** <YES / PARTIAL / NO> — <one sentence, from the user-journey review>
+
+<Ticketed work: use the latest confirmed owner expectation, including approved changes.>
+
+| Confirmed criterion | Actual change/journey | Candidate-bound proof | Gap/deviation |
+|---|---|---|---|
+| <criterion ID/text> | <delivered behavior> | <observed evidence> | <remaining issue or none> |
 
 ---
 
@@ -62,6 +72,7 @@ Omit this whole section if there are none.>
 - **Current state:** <what's verified, what isn't; draft and remaining human decisions>
 - **Done:** <fixes pushed / verified>
 - **Pending:** <flagged findings not fixed, and why (out of scope / needs decision / missing platform or release evidence)>
+- **Scope/history:** <pending owner changes, relevant decision/activity links, dependencies and integration status>
 - **How to resume:** <branch, the gate commands that passed, where the flagged items live>
 <If push failed (fork/protected branch), include the full patch here so it can be applied manually.>
 ```

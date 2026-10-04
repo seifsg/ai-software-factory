@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import stat
 import subprocess
@@ -113,10 +114,11 @@ def validate_profile(profile, draft=False):
         if not isinstance(artifacts, list):
             raise EngineError(f"{identifier}: artifacts must be an array of output paths")
         for name in artifacts:
-            if (not isinstance(name, str) or not name.startswith(".factory/outputs/")
+            if (not isinstance(name, str) or not (name.startswith(".factory/outputs/")
+                    or re.match(r"^\.factory/runs/[a-z][a-z0-9-]{0,63}/outputs/", name))
                     or any(part in ("", ".", "..") for part in name.split("/"))
                     or "\\" in name or ":" in name or name.casefold() in outputs):
-                raise EngineError("Artifact paths must be unique files within .factory/outputs/")
+                raise EngineError("Artifact paths must be unique files within the selected run's outputs/")
             outputs.add(name.casefold())
     if not version_two and profile["interface"] == "web" and not any(c["kind"] == "browser" for c in checks):
         raise EngineError("A web profile requires a real browser check")
@@ -267,15 +269,18 @@ def source_inputs(project, excluded=()):
     return files
 
 
-def production_fingerprint(project, profile):
+def production_fingerprint(project, profile, ticket=None):
     """Bind manual QA to production contents; only reviewed test paths are excluded."""
     paths = profile.get("test_paths", []) if profile.get("version") == 2 else []
     for path in paths:
         relative_input_path(path)
-    return digest({"project": str(project), "files": source_inputs(project, paths),
+    value = {"project": str(project), "files": source_inputs(project, paths),
                    "declared": declared_inputs(project, profile),
                    "environment": {name: os.environ.get(name) for name in profile["environment_inputs"]},
-                   "bundle": factory_inputs()})
+                   "bundle": factory_inputs()}
+    if ticket is not None:
+        value["ticket"] = ticket
+    return digest(value)
 
 
 def declared_inputs(project, profile):
@@ -291,7 +296,7 @@ def factory_inputs():
     return {name: file_hash(inside(bundle, name)) for name in bundle_input_paths(bundle)}
 
 
-def fingerprint(project, profile, task, run_dir, draft=False):
+def fingerprint(project, profile, task, run_dir, draft=False, ticket=None):
     files = source_inputs(project)
     declared = declared_inputs(project, profile)
     executables = {}
@@ -304,10 +309,13 @@ def fingerprint(project, profile, task, run_dir, draft=False):
                 continue
             raise EngineError(f"Check executable unavailable: {first}")
         executables[first] = file_hash(Path(executable))
-    return digest({"project": str(project),
+    value = {"project": str(project),
                    "files": files, "profile": profile, "task": task, "declared": declared,
                    "environment": {name: os.environ.get(name) for name in profile["environment_inputs"]},
-                   "executables": executables, "bundle": factory_inputs()})
+                   "executables": executables, "bundle": factory_inputs()}
+    if ticket is not None:
+        value["ticket"] = ticket
+    return digest(value)
 
 
 def discover(project):
