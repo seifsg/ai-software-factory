@@ -47,6 +47,8 @@ Save bindings in the existing task/session record. One-time notification/merge p
 
 ## Small direct changes
 
+Include applicable [security controls/evidence](../.agents/skills/safe-engine/references/app-security.md) in the existing review. Distinguish local development gaps from production blockers; no whole-app hardening for an unrelated small fix.
+
 Every UI/interaction PR/update includes [UX Quality](../.agents/skills/ux-quality/SKILL.md) in its existing reviewer scope: friction, current patterns, accessibility, visual/audio inspection, uncertain-choice comparisons and manual evidence. Source alone cannot certify unseen/unheard output.
 
 Both PR procedures apply within Small Change:

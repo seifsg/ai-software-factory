@@ -1,6 +1,7 @@
 {
   "version": 1,
   "required_files": [
+    ".agents/skills/safe-engine/references/app-security.md",
     ".agents/skills/ux-quality/SKILL.md",
     ".agents/skills/ux-quality/references/assets-and-sources.md",
     ".agents/skills/ux-quality/references/web-seo.md",

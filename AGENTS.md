@@ -36,6 +36,8 @@ The factory serves games, mobile/desktop/web software, servers, tools and librar
 
 ## Files and verification
 
+Use [Application Security](.agents/skills/safe-engine/references/app-security.md): cheap relevant protections from the start, actual exposure checks before production. Local MVPs stay simple; existing security review owns the assessment. Tests-last and surgical scope remain.
+
 Public pages meant for search use [Public Web SEO](.agents/skills/ux-quality/references/web-seo.md) in planning and final review. Preserve private/staging exclusions; verify actual production state within authority. Keep the checklist scoped.
 
 Every UI/interaction change uses [UX Quality](.agents/skills/ux-quality/SKILL.md): simple, familiar, accessible, responsive. Research uncertain design/assets; compare three credible options, justify/choose within delegation. Inspect visuals; audition sounds. No poor placeholders or unsupported claims. Reuse the reviewer; keep surgical scope and tests-last.

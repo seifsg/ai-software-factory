@@ -23,6 +23,8 @@ Read [logging](references/app-diagnostics.md) and [efficiency](references/app-ef
 
 ## Start or resume
 
+Use [Application Security](references/app-security.md) from planning: cheap relevant protections now, exposure-based checks before production. Keep local MVPs simple; carry evidence into the existing security review.
+
 Public landing/marketing/content pages meant for indexing use [Public Web SEO](../ux-quality/references/web-seo.md). Plan crawlability, metadata and production verification; preserve private/staging boundaries.
 
 Every UI/interaction change uses [UX Quality](../ux-quality/SKILL.md) through planning, manual QA and independent review. Research uncertain patterns/assets; compare three options, justify/choose within delegation. Verify simplicity, accessibility, visuals/audio and interaction. No extra phase or automatic redesign.

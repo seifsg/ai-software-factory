@@ -1,5 +1,13 @@
 # Skill writing audit
 
+## Application security addition: 4 October 2026
+
+One compact [reference](../.agents/skills/safe-engine/references/app-security.md) covers Seif's security list, cheap early protections and exposure-based production checks. Existing security code review reads it; planning, bounded fixes, schema, handoff and PR routing agree. No new skill, phase or scanner loop. Mobile's original review purpose/body and four core originals remain preserved. [Sources and adaptations](skill-provenance.md#application-security-4-october-2026).
+
+Four independent manual instruction exercises covered an offline game, exposed multitenant preview, leaked-secret/CSRF/webhook production prep and a tiny local copy fix. A preview-readiness ambiguity was fixed and reread before automated work; root also checked that untracking `.env` preserves local copies without pretending to erase history. No actual app or deployment was assessed.
+
+Final reference: 847 whitespace words. Six bundle-input tests passed (16.449 s); fifteen entries valid, 403 local links/anchors valid, resolver copies match, four core originals unchanged, security lens unchanged except its adapter and whitespace clean. No full-suite rerun, live security certification or installed-skill/app adoption.
+
 ## Public web SEO addition: 4 October 2026
 
 One conditional [checklist](../.agents/skills/ux-quality/references/web-seo.md) covers Seif's public-page SEO requirements, plus crawl/render behavior, status codes, redirects, locale consistency and honest launch evidence. Planning, UX, Small Change and final review share it. No new skill/stage; protected originals unchanged. [Source comparison](skill-provenance.md#public-web-seo-checklist-4-october-2026).

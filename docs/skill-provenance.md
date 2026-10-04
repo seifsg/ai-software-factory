@@ -1,5 +1,20 @@
 # Skill sources and adaptations
 
+## Application security: 4 October 2026
+
+Seif requested cheap security protections from the start, stronger checks before production and a suggestive, expandable checklist without local-MVP ceremony. Chose one shared [build reference](../.agents/skills/safe-engine/references/app-security.md) plus the existing security review over a duplicate skill/workflow or review-only guidance that arrives too late. No new phase, review fleet or installed enforcement.
+
+Read Mobile `.claude/skills/pr-review/references/theme-security.md` at `8ed32a10034bd78660f761685b81cdd881188c85`. Its trust-boundary review already underpins the generic security lens. Preserve that lens/body and source; add a short conditional adapter. Do not import Expo, Datadog or a fixed storage library into every product. Four original core skills remain unchanged.
+
+Primary guidance checked 4 October 2026; confirm actual versions/platforms when applying:
+
+- OWASP [authorization](https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html), [password storage](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html), [browser storage](https://cheatsheetseries.owasp.org/cheatsheets/HTML5_Security_Cheat_Sheet.html) and [email verification](https://cheatsheetseries.owasp.org/cheatsheets/Email_Validation_and_Verification_Cheat_Sheet.html): trusted enforcement, adaptive hashes, protected sessions and ownership flows.
+- OWASP [REST](https://cheatsheetseries.owasp.org/cheatsheets/REST_Security_Cheat_Sheet.html), [XSS](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html), [CSRF](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html), [uploads](https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html) and [code review](https://cheatsheetseries.owasp.org/cheatsheets/Secure_Code_Review_Cheat_Sheet.html): fitting controls, denial paths and evidence; no scanner-only assurance.
+- [PostgreSQL row security](https://www.postgresql.org/docs/current/ddl-rowsecurity.html): row policies differ from role authorization; privileged accounts can bypass them. Apply supported equivalent controls to the actual engine, not a universal PostgreSQL requirement.
+- [GitHub secret removal](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository): deleting a file leaves exposure/history; revoke/rotate and coordinate authorized cleanup. [Stripe signature verification](https://docs.stripe.com/webhooks/signature): correct secret and unmodified request body; follow the selected provider's actual protocol, not a forced Stripe dependency.
+
+Owner timing governs: source/advisory review during development; final automated security checks only after completed implementation and manual QA. Rate protection covers exposed surfaces with appropriate budgets, not one universal per-request limit. Pure local work needs no invented accounts, CORS service or production certification.
+
 ## Public web SEO checklist: 4 October 2026
 
 Seif requested SEO for public landing/marketing pages, including his listed essentials and relevant gaps. Chose one conditional [UX reference](../.agents/skills/ux-quality/references/web-seo.md) over a duplicate standalone workflow or rules scattered through callers. Existing planning/review handles it; no extra skill, phase or review fleet.

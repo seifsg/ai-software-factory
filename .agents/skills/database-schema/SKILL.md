@@ -35,6 +35,8 @@ Recommend the best fit: why, tradeoff, revisit conditions, rejected options. Cho
 
 ## 3. Write the selected schema
 
+Apply [Application Security](../safe-engine/references/app-security.md) to database roles, row policies, bypass paths and tenant isolation. Verify actual application access; no blanket RLS mandate for unrelated local storage.
+
 Keep one design record in the project's established location: access map, comparison, reasoned choice, ASCII ERD/equivalent, dictionary, index/query plan, migration plan, risks. No duplicate mutable specs.
 
 Every table/collection, field, relationship, dataset, index and derived view needs a purpose/consumer. Remove unjustified copies/speculation. Keep necessary junctions, history, permissions and lookups; fewer tables alone proves nothing. Normalize/embed for the workload. Denormalization needs benefit, authoritative source, update/repair owner and freshness. No relational rules hidden in unbounded JSON.

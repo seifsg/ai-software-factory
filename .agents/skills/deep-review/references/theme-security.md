@@ -9,6 +9,8 @@ input into unauthorized access or actions?**
 
 ## What to hunt for
 
+Use [Application Security](../../safe-engine/references/app-security.md) for applicable controls and local-versus-production readiness. Preserve this review's evidence format; reuse the same reviewer. Cheap protections start early; automated checks still follow manual QA. Review-only grants no fixes or deployment.
+
 ### Secrets & credentials — highest priority
 - **Hardcoded secrets:** tokens, passwords, private endpoints and signing material in source,
   config, generated artifacts or logs. Build-time environment variables are not secret if shipped

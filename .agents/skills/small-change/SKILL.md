@@ -35,6 +35,8 @@ Apply [efficiency](../safe-engine/references/app-efficiency.md) to affected path
 
 ### 2. Prepare lightly
 
+Apply [Application Security](../safe-engine/references/app-security.md) to affected trust boundaries; preserve cheap protections and record unrelated risks. No automatic app-wide hardening or early scans.
+
 Human-facing prose uses [Clear Writing](../safe-engine/references/clear-writing.md); one finishing pass, same scoped reviewer.
 
 Public-page fixes apply affected [SEO checks](../ux-quality/references/web-seo.md), including shared templates. No whole-site rebuild or publication authority implied.

@@ -14,6 +14,8 @@ Authored output uses [Clear Writing](../.agents/skills/safe-engine/references/cl
 
 Public indexable pages use [Public Web SEO](../.agents/skills/ux-quality/references/web-seo.md), including discovery, metadata, performance, Search Console and `llms.txt`.
 
+[Application Security](../.agents/skills/safe-engine/references/app-security.md) covers early protections and production readiness; the original security code review checks applicable evidence.
+
 1. Understand the request and actual code. Analysis-only stays analysis-only.
 2. Use the original plan and checkpoint. Research new products and consequential unknowns; revise the plan.
 3. For material persistence design: whole-product access map → three credible designs → justified choice → written schema → independent audit.
