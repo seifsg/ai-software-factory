@@ -4,6 +4,8 @@ GitHub Issues is Seif's selected backlog. For another project, discover its pref
 
 Each implementation ticket gets a dedicated builder session and full factory cycle, even bugfixes. Keep scope surgical and checks relevant. Separate worktrees can run independent tickets; shared epic checkouts are serial. Isolate shared ports, databases, caches and services too. Parent/coordinator owns scheduling, dependencies and integration acceptance. A closed child list does not prove the combined epic journey.
 
+No detailed-ticket intake requested? Derive context from request/code/prior work and continue under actual authority. Follow the [writing recipe](../.agents/skills/ticketing/references/ticket-contract.md#write-the-ticket): brief titles/body/activity, full cold-agent context, useful visuals, progress and PR links. Markdown tables/bullets/ASCII fit the existing `scope.before`/`scope.after` strings; no schema change. Meaningful expectations stay in confirmed scope. Explicit checkpoints/reserved choices remain.
+
 ## Commands
 
 Use a key starting with a lowercase letter, then lowercase letters/digits/hyphens, at most 64 characters. Windows device names are rejected. One key per native ticket, preserved across its history.

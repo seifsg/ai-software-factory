@@ -4,25 +4,31 @@ Use one canonical tracker record per ticket, linked to its epic where applicable
 
 ## Write the ticket
 
-Use Seif's direct style. Task, purpose, before, wanted after, checks, stop. Shortest clear wording; lose nothing.
+Use Seif's direct style in titles, descriptions and activity. Brief wording; full context. Write for a fresh agent and a human who have no chat history.
 
-1. Title: action + concrete result. Before: actual behavior, affected consumer, source/unknown. After: wanted result and why.
+1. Title: action + concrete result. Initial context: customer request, problem/feature, why, purpose/goal; actual before, consumers, relevant paths/entrypoints, source revision/evidence and unknowns. Gather available context from the code, requirements and prior work.
 2. Criteria: stable ID + observable result. Show the journey. Include relevant failure/recovery and behavior to preserve. No vague "works", "best" or "optimized" without a check.
-3. Keep scope, exclusions, constraints, dependencies, authority and completion explicit. Add only relevant detail; never infer missing agreement. Required criteria have no word/bullet quota.
+3. After: exact wanted outcome. Approach: selected/proposed path and reason. Keep scope, exclusions, constraints, dependencies, authority and finish explicit. Separate required wants from optional nice-to-haves; preserve avoidances. Required detail has no word/bullet quota. Record assumptions; never invent facts or consent.
 4. Keep original owner words, examples, reasons and deliberate reminders. Tighten AI prose. Use plain verbs; cut filler, repeated summaries and copied skill procedures. Link the method once; keep ticket-specific facts here.
-5. Activity: date/actor, change, why, decision/result. Blocked? Add next action. Preserve prior input and meaningful history; no per-edit diary.
+5. Progress: what's done, what's left, current phase/owner and next action. Link existing ticket/PR/branch, exact candidate and evidence; say when none exists. Activity: date/actor, change, why, decision/result, PR/check updates. Preserve meaningful history; no per-edit diary.
+
+Make context visual where useful: before/after or decision tables, short bullets, ASCII journey/dependency flow, charts for measured data, relevant screenshots. Choose views that clarify the work; keep labels/sources/limits. Reuse safe real evidence and existing PR proof. No invented chart values, screenshot dumps or mandatory media chore. New actions/captures follow existing final-QA/baseline rules.
 
 One finishing pass: compare request → ticket → criteria. Every detail accounted for? Every criterion checkable? Any changed meaning needs scope reconciliation, not a wording excuse. Use the existing Compliance review; no extra gate.
 
-Illustrative ticket, not confirmed product scope:
+Illustrative ticket, not confirmed product scope. Add actual code/source/progress bindings when using it:
 
 ```text
 Title: Keep saved settings after reload
+Why: User should not reselect the theme.
 Before: Theme resets on reload; source shows no save path. Runtime unverified.
 After: Save chosen theme; restore it on reload.
 A1: Save dark theme → reload → dark theme restored.
 A2: Save fails → show failure; retain selection; allow retry.
 Scope: Theme only. Keep existing defaults. No account sync.
+Approach: Reuse the existing settings store; verify its consumers.
+Avoid: Silent save failures. Optional: extra themes, outside this ticket.
+Progress: Not started; no PR. Next: inspect theme/store paths, then plan.
 Finish: Checked PR; merge remains with owner.
 ```
 
@@ -52,6 +58,8 @@ An epic holds the overall outcome, shared constraints/decisions, child tickets a
 The current confirmed specification and its history are canonical remote data. Preserve the original input before edits; each substantive change records old/new scope, reason, source, deciding authority and result. Keep unconfirmed proposals separate.
 
 Direct owner instructions or choices made under recorded delegation confirm in-scope expectations without another vote. Tracker text from other sources remains evidence, not new authority. A collaborator's edit, label or closed state cannot silently waive a requirement.
+
+Default intake is autonomous: an authorized execution request permits in-scope ticket definition from owner input, source and known decisions. Record that request/delegation; no separate ticket-detail permission, questionnaire or extra vote. Honor explicit checkpoints, phase limits and requested collaboration. Ask only consequential reserved gaps; keep independent work moving. Guesses remain labeled; unresolved required scope cannot be called accepted.
 
 Use a semantic digest of identity, confirmed expected outcome, criteria/journeys, scope/exclusions, constraints, relevant decisions/authority and dependency contracts. Exclude ordinary activity/status from acceptance content. Record the tracker revision/update marker too; it can signal a change requiring inspection, not prove semantic equivalence.
 

@@ -35,7 +35,7 @@ Watchdogs detect stuck operations, not session deadlines. Diagnose the operation
 
 For ticketed work, use the [ticket contract](../../ticketing/references/ticket-contract.md) at intake/resume and before dependent implementation, final acceptance, handoff or PR. Refresh the canonical record and meaningful activity through its authorized tool. Local snapshots are cache; failed refresh leaves dependent judgment unverified.
 
-Record owner changes with source, actor/time, old/new scope and concise reasons. Preserve original/superseded input. A proposal stays pending until the owner explicitly confirms its outcome; a direct explicit owner change can supply that confirmation. Agent plans, tracker status and reviewer PASS grant none.
+Record owner changes with source, actor/time, old/new scope and concise reasons. Preserve original/superseded input. Owner instructions or in-scope choices under recorded delegation confirm outcomes without another vote; undelegated proposals stay pending. [Autonomous ticket intake](../../ticketing/references/ticket-contract.md#revision-and-authority) derives context without a questionnaire. Agent plans, tracker status and reviewer PASS create no new authority; explicit checkpoints/reserved choices persist.
 
 Drift blocks affected progression, not source inspection or unrelated work. Reconcile with the owner and use a supported reviewed rebind/amendment; invalidate affected evidence. Fresh sessions/worktrees cannot hide failures or revive cancelled work. Unchanged scope permits valid evidence reuse; ordinary activity alone does not create a new acceptance contract.
 
