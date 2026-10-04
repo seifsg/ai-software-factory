@@ -1,74 +1,79 @@
 ---
 name: safe-engine
-description: "Build or resume an app or feature with Seif's Safe Engine methods, saved stages, batched checks, and independent review. Use for requested factory delivery, not ordinary questions or an analysis-only request."
+description: "Build/resume games, apps, services and tools with Seif's methods, saved stages, final checks and independent review. Factory delivery; preserve phase-only requests."
 ---
 
 # Safe Engine
 
-Build what the user asked for. Use Seif's complete methods. Keep the work and its evidence resumable.
+Build the requested outcome. Read the complete methods. Keep decisions, work and evidence resumable.
+
+For human-facing prose, apply [Clear Writing](references/clear-writing.md): preserve details/voice, ground claims, cut filler. One finishing pass within existing review.
+
+Follow [tests-last order](../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests): finish implementation/improvements → final manual/user QA → author/polish/run automated tests → final review/PR. No manual tests, playtests, instruction walkthroughs, test writing/edits or automated checks during development. Source inspection/research/existing-log reading remain allowed. Carry this into delegates, repairs and resumed runs.
 
 ## Choose the scope
 
-For a requested small fix or successive bounded adjustments, read [small-change](../small-change/SKILL.md) and use its six routines. Choose this before starting the controller or loading the full workflow. The user need not name a mode. Follow its rules for existing runs, evidence, and bundle selections. Its result is a focused local handoff, not full-version acceptance.
+Analysis, planning and review requests stay in that phase. No implied coding.
 
-An explicit request to analyze, plan, or review stays in that phase. Do not turn it into a delivery run because the change looks small.
+For requested bounded fixes, read [Small Change](../small-change/SKILL.md) before loading the full workflow or starting a controller. Its six routines own checks, existing-run handling and scoped PR delivery. A focused handoff does not refresh full-version acceptance.
 
-For a new app or substantial feature, use the version workflow below. Do not run broader tests for a small change without the owner's request or an actual non-waivable requirement. Keep the selected scope through PR delivery too.
+New software or substantial features use the flow below. Discover the actual domain, stack, platforms, interfaces, workload and constraints. Games, desktop/mobile/web apps, servers, libraries and tools share the method; their evidence differs.
 
-For app delivery, read [app diagnostics](references/app-diagnostics.md). Plan app-wide logging for a new app. For an existing app, inspect coverage and include the minimum missing module/events for changed journeys. Carry its focused evidence, log discovery, and remaining gaps through checks and handoff. Preserve protected records.
-
-Read [app efficiency](references/app-efficiency.md) during delivery analysis and planning. Plan CPU, memory, resource lifetimes, and reuse of repeated expensive work. Cache only when useful, with explicit validity and bounds. Carry the planned evidence and its limits through QA, review, and handoff. Existing changes stay focused on affected journeys.
-
-Read [pilot usage](../../../docs/pilot-usage.md) for commands, profiles, limits, and recovery. Resolve the bundle root from this skill's location; the target app need not contain the controller.
+Read [logging](references/app-diagnostics.md) and [efficiency](references/app-efficiency.md) during delivery analysis/planning. Every app/game needs working shared logging: adequate facilities/preferred provider or internal module/local sink. Discover preferences/access; implement detailed success/failure events. Read existing logs during development; actual actions and emitted-trail checks wait until final manual QA. Plan coverage, resource targets and evidence. Research material unknowns through [Research Market](../research-market/SKILL.md). Required logging stays surgical.
 
 ## Start or resume
 
-Run from the bundle root:
+Use applicable [Delivery Readiness](references/delivery-readiness.md): inspect capabilities before dependent work; preserve game challenge; plan browser lifecycle, durable external effects and authorized release/operations. Manual/automated/mixed criteria need suitable evidence. No early product tests or automatic pilots.
+
+Use [Application Security](references/app-security.md) from planning: cheap relevant protections now, exposure-based checks before production. Keep local MVPs simple; carry evidence into the existing security review.
+
+Public landing/marketing/content pages meant for indexing use [Public Web SEO](../ux-quality/references/web-seo.md). Plan crawlability, metadata and production verification; preserve private/staging boundaries.
+
+Every UI/interaction change uses [UX Quality](../ux-quality/SKILL.md) through planning, manual QA and independent review. Research uncertain patterns/assets; compare three options, justify/choose within delegation. Verify simplicity, accessibility, visuals/audio and interaction. No extra phase or automatic redesign.
+
+New/material persistence design uses [Database Schema](../database-schema/SKILL.md) before dependent implementation: whole-product access map → three viable designs → reasoned choice → written schema → fresh audit. Preserve engine choices and routine-fix scope; pass query/migration evidence to review. No invented database or controller phase.
+
+Resolve this bundle's root. Read [pilot usage](../../../docs/pilot-usage.md) for supported commands, profile, limits and recovery. Run from the bundle:
 
 ```text
 python -m safe_engine --project <absolute-target-root> status
 ```
 
-If no run exists, discover the project first. Reuse a suitable isolated worktree or the host's worktree tools. Preserve existing work. The initial project needs a clean Git baseline and must ignore `.factory/`. Commit a minimal baseline for a new app before starting its run.
+Read request, rules and [session contract](references/session-contract.md). Reuse answers/authority; discover tools before asking. No run? Preserve work in a suitable isolated checkout with clean Git baseline and ignored `.factory/`. Commit a minimal new-project baseline before initialization.
 
-Read the request, project rules, and proposed profile. Establish the [session contract](references/session-contract.md), reusing answers and explicit delegation. Verify the real check commands, protected acceptance files, runtime inputs, and UI requirements before initialization. Discover available tools and configuration before asking for help.
+Inspect check definitions, runtime inputs and interaction tools; author/run no tests. Save original request/criteria in task JSON; map each to manual, automated or mixed evidence. New version-2 runs may start with draft acceptance and no tests. Declare test-only paths; seal reviewed acceptance at the final stage. Actual browser/native/game/API/CLI interaction waits until implementation is finished; screenshots cannot prove behavior. Missing tools/reserved choices block dependent work only.
 
-If a control route fails, follow [failed-route recovery](references/session-contract.md#recover-a-failed-control-route). Continue toward the agreed verified outcome. Do not invent credits, repair allowances, session deadlines, or permission. Respect actual access limits, owner checkpoints, and stops; historical demo limits do not govern this run.
+Resolve material unknowns before dependent choices. Planning/research may precede initialization; record in stage order. Version-2 draft/seal and reviewed amendments preserve contract history and invalidate affected acceptance; use supported commands, never patch state. Legacy runs retain their recorded contract/workflow. Read [pilot usage](../../../docs/pilot-usage.md) for exact schemas and limits.
 
-Save the original request and explicit acceptance criteria in the task JSON. Link every criterion to real configured checks. Browser apps need real browser interaction and suitable rendered evidence. Missing essential tools or owner-reserved decisions block only dependent work; never record them as passing.
-
-Initialize once. Resume from the saved phase.
+Initialize once. Resume the saved phase. Follow [control-route recovery](references/session-contract.md#recover-a-failed-control-route) when needed. No invented credits, retry ceilings, session deadlines or permissions. Honor real limits, checkpoints and stops.
 
 ## Follow the saved phase
 
-Before a phase, open its entire `SKILL.md` and the references needed for that phase. Knowing the name or reading a summary is not enough.
+PR-bound work: plan [before/after proof](../../../docs/pr-workflow.md#beforeafter-proof) before edits. Capture-only UI baseline now; finished screenshots and optional journey video during final manual QA. Use equivalent output for nonvisual changes; attach accessible proof to the PR.
 
-On resume or delegation, provide the original request, approved and pending decisions, exact candidate, saved artifacts, progress, actual constraints, and canonical skill paths. The receiving agent must read the skills itself. Use [method handoff](references/method-handoff.md) to check nothing was lost. If a required method cannot be accessed, stop that phase.
+Read each phase's full method/applicable references before using it. Reuse fully read, unchanged text while available; names/summaries never suffice. On resume/context loss/delegation, use [method handoff](references/method-handoff.md); receivers read methods themselves. Missing methods block their phase.
 
-When the user wants to watch or learn, show the actual brief and acceptance, analysis chart, plan, running app when available, and real check/review outcomes. Use the chosen example. Clearly distinguish a historical walkthrough from a new run. Give concise updates at meaningful batch boundaries and link the durable records; do not narrate every todo or turn progress updates into approval requests. Pause for a real unresolved decision, missing authority/access, owner stop/checkpoint, or unrecoverable required gate. For a new session elsewhere, read [fresh-session setup](../../../docs/start-another-session.md); verify Claude-native or cloud operation before claiming it works.
+With no existing implementation, say so; analyze requirements, available platform facilities and intended consumers. Never invent code evidence. Preserve Get Ready's O(1) question as a prompt to examine workload-appropriate complexity, not a universal acceptance target; [I5](../../../docs/current-decisions.md#further-improvement-decisions) governs measured performance.
 
-| Phase | What to do |
+| Phase | Do |
 |---|---|
-| `analyze` | Read [analyze-start](../analyze-start/SKILL.md). Read real code, explain purpose, trace consumers, use ASCII charts, and label unknowns. Save the analysis. Do not edit code. |
-| `plan` | Compare three strong approaches and recommend one for a new substantive choice. Preserve selected decisions and delegated/reserved authority. Read [get-ready-to-code](../get-ready-to-code/SKILL.md) and produce its five planning outputs. Honor its file-summary stop unless existing user delegation explicitly covers continuing the plan. For a new app, keep the original plan, run [research-market](../research-market/SKILL.md), then revise all five outputs. Save the final plan with links to the original, research, decisions, and revision matrix. Stay in `plan`; do not edit code. |
-| `build` | Use Get Ready to Code's 0–4 execution loop for every todo: context, change-site analysis, application, inspection, correction. Build coherent feature batches. Write useful tests without watch loops. Use `feature-check --checks <IDs> --file <feature.md>` for completed-feature and consumer feedback, then continue building. It records partial results, never version acceptance. Save the final version batch with every todo's pre/change/post observations before full QA. |
-| `verify` | Run the full configured version check batch, including planned [diagnostic evidence](references/app-diagnostics.md#focused-evidence-and-handoff) for app work. Inspect failures. Use `repair` before changing a recorded candidate and repeat the necessary method. |
-| `improve` | Inspect worthwhile cleanup, reuse, design, security, performance, and agent-maintainability improvements. Apply supported in-scope changes. Leave a sound result unchanged. Record the decision and why. |
-| `final-verify` | Validate full version QA on the resulting candidate. Inspect rendered UI and real user outcomes where applicable. Reuse unchanged full evidence with `check` only when `reuse_unchanged_checks: true` was reviewed and the declared inputs, logs, and outputs match exactly, including [required factory inputs](../../../safe_engine/bundle-inputs.json). Missing required guidance blocks the gate. Changed inputs run the full suite. Use `check --fresh` for volatile or unresolved runtime concerns. Partial feedback does not replace full QA. |
-| `review` | Run the controller's fresh read-only Codex review with the full analysis/planning methods and all five review passes. Do not supply your own passing review. Repair supported in-scope findings, run affected checks, and obtain a fresh assessment. This local review does not complete PR review. |
-| `ready` | Generate the checked local handoff. Include safe log access, demonstrated diagnostic coverage, and gaps for app work. When PR delivery is authorized, use [how-to-make-a-pr](../how-to-make-a-pr/SKILL.md), [how-to-review-a-pr](../how-to-review-a-pr/SKILL.md) on a separate instance, and the [project adapter](../../../docs/pr-workflow.md). Discover bindings before asking. Missing bindings block PR completion; continue independent local owner-test delivery. The controller does not push, create PRs, merge, or release. |
-| `cancelled` | Stop. Preserve the record and worktree. |
+| `analyze` | [Analyze Start](../analyze-start/SKILL.md): actual code, purpose, consumers, ASCII charts, verified claims and unknowns. Save analysis. No code. |
+| `plan` | Compare three credible approaches for new substantive choices; recommend one under session authority. [Get Ready to Code](../get-ready-to-code/SKILL.md): five outputs, original file-summary stop unless continuation is authorized. For new software, preserve the first plan, run [research](../research-market/SKILL.md), revise all five outputs and link evidence/decisions. Research new material unknowns for existing features too. No code. |
+| `build` | Get Ready's 0–4 source-inspection loop for every todo. Finish requested implementation and worthwhile in-scope improvements; record implementation completion. No testing yet. |
+| `manual` | Final actual-use QA, including relevant failure/recovery paths. Save candidate-bound receipts. Fixes return through completed implementation and affected manual QA before final automation. |
+| `testing` | Author/polish useful tests in declared test-only paths. Seal independently reviewed final task/profile, then record the batch. Production changes invalidate manual evidence. |
+| `verify` | One complete configured final gate, including applicable diagnostic/resource evidence. Read logs; investigate failures. Use supported repair before changing a recorded candidate. |
+| Legacy `improve` / `final-verify` | Existing version-1 runs keep their recorded sequence and exact-input reuse rules. No silent migration. New version-2 runs have no duplicate final gate. |
+| `review` | Fresh local read-only Codex review: core methods plus applicable evidence/references, three themed passes plus Change Guard and Compliance. Severity and blocking/approved-deferral disposition stay distinct. Never supply your own passing review. Repair supported findings, check corrections and obtain fresh assessment. |
+| `ready` | Checked local handoff: results, diagnostic access/coverage, resource evidence, research decisions and limits. Authorized PRs/updates require [creation](../how-to-make-a-pr/SKILL.md) and separate remote/cloud [PR review](../how-to-review-a-pr/SKILL.md), including skill/docs PRs without controller runs. Local review never substitutes for cloud review. Preserve small/full scope and human ready/merge/release decisions. |
+| `cancelled` | Stop. Preserve records and checkout. |
 
-Keep artifacts in `.factory/` or another excluded local directory. Read command logs. Report unverified coverage honestly.
+Keep evidence in excluded `.factory/` or equivalent. Report unverified coverage. Never edit protected acceptance files/task records to obtain a pass. Use reviewed amendments with history for legitimate version-2 contract corrections; preserve failures and authority. Legacy corrections follow their supported boundary.
 
-Do not change protected acceptance files or task records to get a pass. A test or reviewer cannot authorize changed requirements. If the accepted task or profile needs correction, preserve the run and start a newly reviewed task in a fresh worktree.
+## Keep the work usable
 
-## Factory problems and delivery boundaries
+Give brief batch updates. For watch/learn requests, show actual brief, criteria, chart, plan, running product and results; label historical walkthroughs. Updates grant no approval gate. Pause only for real authority/access/decision gaps, checkpoints/stops or unrecoverable required gates.
 
-For a factory problem during delivery, use [improve-factory](../improve-factory/SKILL.md). Checkpoint the app before factory changes. Follow its isolation, independent review, and compatibility rules, then return at the supported resume step. Do not start another delivery run recursively or treat reloading a skill as new QA.
+For factory faults, use [Improve Factory](../improve-factory/SKILL.md): checkpoint → isolated repair → independent review → compatible resume. No recursive delivery runs or silent upgrades. Reloaded text is not new QA.
 
-Every factory-managed PR, including skill/docs changes and later updates, uses both PR procedures. Read them and [the project adapter](../../../docs/pr-workflow.md) before preparing the PR, even without an active controller run. Keep the selected full or small-change chain, real project bindings, truthful scope, and session decision authority. Leave the PR draft; Seif keeps reserved decisions and the human release boundary. A local `ready` phase is not a completed PR workflow.
-
-This pilot supports planned feature batches, full-version gates, and fresh review. The current Codex session builds; a fresh read-only CLI process reviews. It does not automatically choose dependencies, schedule arbitrary projects, or run as a background service. It is not a host hook or tamper-resistant security boundary. Do not claim demonstrated production-level autonomous UX quality.
-
-Diagnostic correction counts do not stop work. Version corrections still need their selected method and fresh acceptance. Bounded follow-up fixes use Small Change and must not claim refreshed full-version acceptance.
+For another host/session, read [setup](../../../docs/start-another-session.md). The current session builds; the controller records stages/checks and launches fresh read-only review. It does not provision tools, run a daemon, push, merge or deploy. Verify host capabilities and report limits. Missing PR bindings block that action, while independent local delivery continues. Bounded follow-ups use Small Change; full-version corrections retain their full acceptance requirements.

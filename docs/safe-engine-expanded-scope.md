@@ -1,5 +1,7 @@
 # Safe Engine: expanded capability plan
 
+**Superseded timing — 4 October 2026:** [Current tests-last policy](current-decisions.md#finish-work-use-it-then-automate-tests) replaces the batch-boundary/TDD proposals below. No automated test writing/execution during development. Finish the task and manual action QA first; final tests precede the PR.
+
 Research and proposal, 1 October 2026. **The capabilities below are requested by Seif. Their packaging, names, and new procedural choices remain proposals.** The later Safe Engine 0.1.0 local pilot implements a narrow delivery loop with six entrypoints; see its [verification record](pilot-verification.md). This broader plan is not a claim that every capability is implemented.
 
 The target is a factory that can understand a task, build it, use the resulting application, notice defects and poor experiences, repair them, and produce fresh evidence without Seif repeatedly pointing out what is broken. Seif remains the primary skill author and owns product and design decisions.

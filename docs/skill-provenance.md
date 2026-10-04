@@ -1,5 +1,102 @@
 # Skill sources and adaptations
 
+## Delivery simulation decisions: 4 October 2026
+
+Seif selected the audit improvements, then overrode early manual/playtesting: **all testing waits until implementation/improvements finish**. Source inspection/research/existing-log reading remain allowed. App/game/mobile creation and simulation pilots are deferred until specifically requested. Preserve the four Mobile-priority core originals and deliberate reminders; timing/authority adaptations live in coordinators and PR adapters.
+
+New [Delivery Readiness](../.agents/skills/safe-engine/references/delivery-readiness.md) is conditional: capability discovery, fitting evidence, intended game challenge, browser timing/lifecycle, durable external effects and release/operations. Existing planning/QA/review owns these; no new skill fleet, mandated queue, deployment service or paid monitor. This implements owner-selected scope, not a claim of a demonstrated app.
+
+Version-2 guidance follows the controller's draft/seal/amend API, candidate-bound manual receipts and single final gate. Severity and disposition remain separate; authorized lower-risk deferrals cannot hide core failures. Review packets load relevant methods; history/provenance stays available without automatically invalidating operative target evidence. Legacy runs/pins retain their version.
+
+Local controller review remains; PR review now requires actual remote/cloud execution by a separate fresh-context agent. This supersedes older generic separate-instance/local-subagent wording in the PR adaptations, without removing the four themes or source reminders. Current publication choice: prepare the PR; Seif arranges cloud review. Cloud review and authorized merge to main stay pending; no local replacement, cloud task launch or merge is authorized by that choice.
+
+Sources: Seif's current instructions and the repository audit. No new external-research, product QA or production-readiness claim. Dated validation below describes its own candidate only.
+
+## Application security: 4 October 2026
+
+Seif requested cheap security protections from the start, stronger checks before production and a suggestive, expandable checklist without local-MVP ceremony. Chose one shared [build reference](../.agents/skills/safe-engine/references/app-security.md) plus the existing security review over a duplicate skill/workflow or review-only guidance that arrives too late. No new phase, review fleet or installed enforcement.
+
+Read Mobile `.claude/skills/pr-review/references/theme-security.md` at `8ed32a10034bd78660f761685b81cdd881188c85`. Its trust-boundary review already underpins the generic security lens. Preserve that lens/body and source; add a short conditional adapter. Do not import Expo, Datadog or a fixed storage library into every product. Four original core skills remain unchanged.
+
+Primary guidance checked 4 October 2026; confirm actual versions/platforms when applying:
+
+- OWASP [authorization](https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html), [password storage](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html), [browser storage](https://cheatsheetseries.owasp.org/cheatsheets/HTML5_Security_Cheat_Sheet.html) and [email verification](https://cheatsheetseries.owasp.org/cheatsheets/Email_Validation_and_Verification_Cheat_Sheet.html): trusted enforcement, adaptive hashes, protected sessions and ownership flows.
+- OWASP [REST](https://cheatsheetseries.owasp.org/cheatsheets/REST_Security_Cheat_Sheet.html), [XSS](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html), [CSRF](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html), [uploads](https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html) and [code review](https://cheatsheetseries.owasp.org/cheatsheets/Secure_Code_Review_Cheat_Sheet.html): fitting controls, denial paths and evidence; no scanner-only assurance.
+- [PostgreSQL row security](https://www.postgresql.org/docs/current/ddl-rowsecurity.html): row policies differ from role authorization; privileged accounts can bypass them. Apply supported equivalent controls to the actual engine, not a universal PostgreSQL requirement.
+- [GitHub secret removal](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository): deleting a file leaves exposure/history; revoke/rotate and coordinate authorized cleanup. [Stripe signature verification](https://docs.stripe.com/webhooks/signature): correct secret and unmodified request body; follow the selected provider's actual protocol, not a forced Stripe dependency.
+
+Owner timing governs: source/advisory review during development; final automated security checks only after completed implementation and manual QA. Rate protection covers exposed surfaces with appropriate budgets, not one universal per-request limit. Pure local work needs no invented accounts, CORS service or production certification.
+
+## Public web SEO checklist: 4 October 2026
+
+Seif requested SEO for public landing/marketing pages, including his listed essentials and relevant gaps. Chose one conditional [UX reference](../.agents/skills/ux-quality/references/web-seo.md) over a duplicate standalone workflow or rules scattered through callers. Existing planning/review handles it; no extra skill, phase or review fleet.
+
+No matching Mobile filename found. The previously inspected routines `seo-content-redaktion` at `cbd252632f0218fa2a12161e91282da013c73839` remains unchanged: German site-specific editorial/SEO workflow, credited there to its actual authors. Reuse related content/heading/link concerns and Clear Writing; do not import site paths, fixed title pixel limits, keyword quotas, universal FAQ markup, script-first timing or PR-per-article rules into this generic launch checklist. Owner rules govern originals, scope and tests-last. One H1 is the owner's convention, not a promised ranking factor.
+
+Primary sources checked 4 October 2026; recheck changing requirements for the target:
+
+- [Google SEO basics](https://developers.google.com/search/docs/fundamentals/seo-starter-guide), [sitemaps](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap), [canonicals](https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls), [robots](https://developers.google.com/search/docs/crawling-indexing/robots/intro), [noindex](https://developers.google.com/search/docs/crawling-indexing/block-indexing) and [JavaScript rendering](https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics): discovery/indexing and actual rendered output; robots is no privacy boundary.
+- [Structured data](https://developers.google.com/search/docs/appearance/structured-data/sd-policies), [Web Vitals](https://web.dev/articles/vitals), [decorative alt text](https://www.w3.org/WAI/tutorials/images/decorative/), [Open Graph](https://ogp.me/) and [Search Console verification](https://support.google.com/webmasters/answer/9008080): factual eligible markup, measured quality, accessible images, sharing and genuine ownership.
+- [llms.txt proposal](https://llmstxt.org/) currently describes v2: concise Markdown guidance and public links, not a sitemap replacement. Include the requested file. [Google's AI guidance](https://developers.google.com/search/docs/fundamentals/ai-optimization-guide) says Google Search ignores it; no Google ranking benefit claimed.
+
+## Clear writing rule: 4 October 2026
+
+Seif supplied the anti-robotic wording requirements. One [shared rule](../.agents/skills/safe-engine/references/clear-writing.md) applies during drafting/final review; no new skill, gate or repeated polishing. Preserve originals/details; scope buyer, objection, CTA and first-viewport rules to applicable copy. “2B” is interpreted as weak to-be phrasing alongside formulaic antithesis; necessary grammar stays.
+
+Available Mobile filenames had no matching writing method. Inspected routines `seo-content-redaktion/SKILL.md` and `references/sprachregeln.md` at `cbd252632f0218fa2a12161e91282da013c73839`: related wording guidance, but a distinct German SEO/article workflow. Preserve that source and its credited authors; import no site bindings, pixel thresholds, SEO script loop or PR-per-article rule. Its warnings about repeated templates and softened unsupported claims also inform the generic rule.
+
+Primary guidance checked 4 October 2026: [Microsoft style](https://learn.microsoft.com/en-us/style-guide/top-10-tips-style-voice) supports natural contractions, active wording and key facts first; [GOV.UK buttons](https://design-system.service.gov.uk/components/button/) supports action labels matching actual behavior and a clear primary action; [NN/g writing research](https://www.nngroup.com/articles/applying-writing-guidelines-web-pages/) supports concise, scannable, factual copy; [FTC advertising guidance](https://www.ftc.gov/business-guidance/resources/advertising-faqs-guide-small-business) supports substantiated claims and nearby clear qualifications. These inform writing, not universal conversion promises or jurisdiction-wide legal advice. The no-em-dash preference comes from Seif; it overrides differing source punctuation styles. GOV.UK tone guidance returned a redirect without readable body; it was not used.
+
+## Compact owner style — 4 October 2026
+
+Seif requested shortest clear wording without lost details or needless loops. Compressed factory-specific skills/references and AI adapters; preserved source bodies, deliberate reminders and source checkouts. Added valid-work reuse to repository/session guidance. No new skill, external source or runtime behavior. [Measured scope and evidence](skill-writing-audit.md#compact-owner-style--4-october-2026).
+
+## UX quality method — 4 October 2026
+
+Seif requested a mandatory quality method for every UI change: simple/familiar journeys, excellent visuals/audio, current research, three credible options for uncertain choices, reasoned recommendation and autonomous in-scope execution. Improve Factory and Skill Creator package that request as `ux-quality`, with conditional asset guidance and planning, Small Change, research, handoff and reviewer consumers. No original core file changes. Thirteen canonical skills now; earlier counts below describe their own pass.
+
+The available `Repaircheck/claude-routines` original `.claude/skills/ux-investigation/SKILL.md` was inspected at local revision `cbd252632f0218fa2a12161e91282da013c73839`; no matching Mobile UX method was found in the available source checkout. Its purpose is production-session investigation and backlog suggestions with fixed Datadog/ClickUp/notification bindings. It does not implement this requested build-time quality gate. Preserve it unchanged; do not silently convert it into an autonomous UI repair procedure or import its external actions. The new skill is factory-specific, directly from Seif's request.
+
+Options: expand the existing journey review lens only (too late for design choices); repurpose session investigation (changes its authored purpose); dedicated concise quality method with conditional assets and shared callers (selected). This keeps one canonical audit across planning, manual use and review without an extra review fleet or controller stage.
+
+[Source basis](../.agents/skills/ux-quality/references/assets-and-sources.md#research-starting-points): W3C, Nielsen Norman Group and Microsoft primary guidance checked 4 October 2026. No vendor, asset pack or universal best-design claim is selected. Future uncertain choices must research the then-current platform/version and inspect real output. Required bundle inputs include the skill and asset reference; existing pins remain unchanged. Instruction exercises and final integrity checks do not certify a real product's UX or unheard audio.
+
+## Current generic adaptation — 4 October 2026
+
+Database Schema was requested as a factory-specific skill, authored from Seif's whole-product schema-design instruction. No schema-specific original was found by filename in the supplied Mobile/routines snapshots. It reuses their original Analyze Start and Get Ready to Code unchanged. That addition brought the index to twelve canonical skills; earlier eleven-skill counts below describe prior revisions.
+
+### Database schema method — 4 October 2026
+
+Owner direction: understand the full app, remove meaningless structures without cutting corners, compare three designs, explain/select the best, write it and audit again. The new skill separates design, authorized implementation, manual QA and final automated checks. It is engine-neutral and preserves existing project choices.
+
+Primary sources checked: [SQLite query planning](https://www.sqlite.org/queryplanner.html) grounds the distinction between indexed searches and output-size cost; [PostgreSQL index types](https://www.postgresql.org/docs/current/indexes-types.html) and [multicolumn indexes](https://www.postgresql.org/docs/current/indexes-multicolumn.html) inform access-path tradeoffs; [constraints](https://www.postgresql.org/docs/18/ddl-constraints.html) inform integrity; [EXPLAIN](https://www.postgresql.org/docs/18/sql-explain.html) makes execution side effects explicit. [MongoDB schema patterns](https://www.mongodb.com/docs/manual/data-modeling/design-patterns/) and [DynamoDB modeling foundations](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/data-modeling-foundations.html) support workload-driven document/key design rather than universal normalization or single-table rules. Recheck the actual engine/version when applying. These sources do not prove a chosen application's performance.
+
+### Prior current-policy adaptations
+
+Seif's tests-last instruction governs coordinator, maintenance and PR timing: finish implementation → manual action QA → final test authoring/execution → review/PR. His subsequent logging clarification requires a working shared module for every app/game, including small fixes, superseding the temporary no-backfill exception. Detailed safe event trails and continuous log-led debugging now have one canonical owner. The four source cores remain untouched. PR phase/check wording carries the timing and logging requirements. Older cadence proposals remain dated history.
+
+Second-pass corrections preserve the same original priority: restore actual author credit, distinguish human coauthors from AI/tool trailers, make selected Small Change precedence explicit, and treat inherited architecture examples according to the target paradigm. Four source cores remain unchanged. Narrow research and library diagnostics gain explicit applicability. The new [current decisions](current-decisions.md) is the operative policy view; dated rationale remains historical. Portable local-trial detail moves to a conditionally loaded reference; no selection/authority rule changes.
+
+Seif explicitly authorized genericizing the live methods and compressing AI-written material, while preserving his deliberate repetition. This section supersedes claims below that source-project text must remain unchanged.
+
+Analyze Start, Get Ready to Code, Deep Review and Change Guard remain unchanged from the selected 3 October files. Compliance retains its method/reminders; adapters generalize fixed rule-path discovery and apply current I1/I2: UNKNOWN needs evidence, mandatory exceptions need actual authority. The three short PR rule resources (no-code, issue handling, no AI attribution) remain unchanged.
+
+Mobile-derived PR review retains its phases, guiding principles, repeated checkpoints and four themes. A host-capacity adapter permits isolated theme sessions in bounded waves before synthesis. Rubrics retain risk coverage/calibration while replacing fixed framework, locale and product assumptions. Coding rules use actual language/framework equivalents; the historical `mobile-rules/` path remains for compatibility. The routines-derived PR creation keeps its German voice and complete task/branch/visual/human-handoff method; company accounts, vendor instructions and historical precedents are replaced by actual bindings. The obsolete review-chain recap is corrected to the current method.
+
+The four factory-written procedures, their supporting guidance and two portable entries are condensed. Research Market now covers product/UX plus current stack/architecture/design patterns and standalone research. Efficiency covers applicable CPU/GPU, memory, query/database, network, storage and caching. Source checkouts remain untouched; earlier source revisions below remain the baseline.
+
+Primary sources inspected for this extension on 4 October 2026: [Godot optimization](https://docs.godotengine.org/en/stable/tutorials/performance/general_optimization.html) informs measurement, CPU/GPU distinction and design-stage costs; [PostgreSQL EXPLAIN](https://www.postgresql.org/docs/current/using-explain.html) informs actual query-plan inspection; [Microsoft's pattern catalog](https://learn.microsoft.com/en-us/azure/architecture/patterns/) illustrates context/tradeoff-based pattern selection; [W3C accessibility reference](https://www.w3.org/WAI/WCAG22/quickref/) informs accessible interactions. These are examples, not prescribed engines, databases, clouds or proof of conformance. Future project research must verify the selected versions and relevant primary sources. SRP/GoF coverage follows Seif's request; no claim of reading an entire book is made.
+
+Earlier diagnostics/efficiency source records retain their [OWASP logging](https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html), [OpenTelemetry model](https://opentelemetry.io/docs/specs/otel/logs/data-model/), [Microsoft caching](https://learn.microsoft.com/en-us/aspnet/core/performance/caching/memory?view=aspnetcore-10.0) and [AWS cache strategies](https://aws.amazon.com/builders-library/caching-challenges-and-strategies/) basis. Those references no longer occupy every runtime reading.
+
+
+
+### Mandatory logging research — 4 October 2026
+
+Compared three approaches: provider-only (depends on access), wholly custom logger (unnecessary maintenance), and a thin internal module over a maintained native logger with optional provider adapters. Recommend the third; reuse an adequate existing module and honor the owner's provider. No package was installed or source copied; choose/version-check for the actual runtime.
+
+[OpenTelemetry logs](https://opentelemetry.io/docs/concepts/signals/logs/) support bridges from existing logging libraries; its [language matrix](https://opentelemetry.io/docs/languages/) makes support checks necessary per runtime. Candidate repositories include [Pino](https://github.com/pinojs/pino) for Node.js and [Serilog](https://github.com/serilog/serilog) for .NET; these are examples, not universal engine/mobile defaults. [Datadog collection](https://docs.datadoghq.com/logs/log_collection/) accepts configured log sources; [its .NET guidance](https://docs.datadoghq.com/logs/log_collection/csharp/) documents file-tail and Serilog options. Owner preference for PostHog or any other provider requires verification of actual logging capability, SDK and access; analytics alone is insufficient. [OpenTelemetry sensitive-data guidance](https://opentelemetry.io/docs/security/handling-sensitive-data/) requires explicit handling of emitted data, including automatic instrumentation. These sources inform implementation choices; they do not prove any app is instrumented.
+
 ## Current source map — 3 October 2026
 
 Seif requested a repository-wide pass: use his originals, with RepairCheck Mobile first, and write skills without originals in the same direct style. These are the current sources. Earlier adaptation records below are history where this selection supersedes them.
@@ -103,3 +200,7 @@ Seif supplied the requirement that app-wide logs be a critical default component
 ## Early app efficiency — 3 October 2026
 
 Seif supplied the requirement to optimize CPU/memory, reuse repeated work and consider caching from initial app design, repairing the factory before the app. Improve Factory and Skill Creator structure that request into one `app-efficiency` reference with early analysis/planning, implementation, full/light QA/review and handoff routes. Microsoft Learn memory-caching guidance and AWS Builders' Library caching strategies informed explicit bounds/fallback, coalescing and measured cache behavior; primary links and checked date are in the reference. No external skill, cache library or optimizer is imported. The new contract declares this reference without changing legacy resolver requirements. Local trial routing retains its existing record filename, explicit authority, exact candidate review and rollback; old pins and diagnostics defaults remain. Focused input/structural checks and independent instruction application do not prove current-app performance or refresh its historical QA.
+
+## PR before/after proof: 4 October 2026
+
+Seif requested mandatory applicable before/after screenshots, equivalent nonvisual results and optional meaningful feature-journey videos. One shared rule in docs/pr-workflow.md; creation, full delivery and Small Change route before edits. Narrow capture-only baseline exception to tests-last; final interaction proof stays at the end. No new skill, runtime or product simulation. Preserve original methods, scoped QA, existing pins and pending owner cloud review.

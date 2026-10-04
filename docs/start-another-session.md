@@ -36,25 +36,33 @@ correction allowances, fixed retry ceilings or session deadlines. Honor my expli
 Read each complete skill and its applicable references, not just its name. Honor
 Get Ready to Code's file-summary stop unless I already authorized continuing.
 For new substantive choices, compare three strong approaches and recommend one. Preserve my
-chosen direction and my delegated/reserved decision authority. For a new app,
-save an original plan, research competitors/features/visuals using research-market,
-then revise the plan before coding. Carry these methods,
-decisions, real artifacts, diagnostic progress and actual constraints into every resume or delegation.
-Batch completed capabilities; use affected feature checks as feedback, then full
-version QA. Keep detailed method records durable and progress updates concise.
-Inspect worthwhile improvements, validate final QA,
-and obtain a fresh independent review before the checked handoff.
+chosen direction and my delegated/reserved decision authority. For new software,
+save an original plan, research product/UX plus current stack, architecture and useful
+patterns using research-market, then revise the plan before coding. Resolve material
+unknowns during work. Plan applicable CPU/GPU, memory, queries/database, network,
+storage and caching. Use actual browser/native/game/API/CLI evidence.
+For new/material persistence design, use database-schema: whole-product access map,
+three viable designs, justified choice, written schema and independent audit. Keep real
+query costs, integrity and safe migrations explicit; no universal O(1) claim.
+Carry these methods, decisions, real artifacts, diagnostic progress and actual constraints
+into every resume or delegation.
+Finish the entire task and in-scope improvements; only then do final manual/user QA.
+After that write/polish/run automated tests at the final pre-PR stage. No early manual
+tests, playtests, walkthroughs or automated checks. Source inspection and existing-log
+reading remain allowed. Keep fixes surgical; no unrequested product pilots/simulations.
+Keep method records durable, then obtain fresh independent review before handoff.
 For any authorized PR, always execute how-to-make-a-pr, then the full
-how-to-review-a-pr on a separate instance. Keep its task/owner handoff,
+how-to-review-a-pr on a remote/cloud agent with fresh context and exact remote base/head.
+Local subagents never count as PR review. Keep its task/owner handoff,
 visual description and detailed comment. Read the PR project adapter first.
-Use Mobile's four themed reviews and synthesis; the local controller's five
+Use the four generic themed reviews and synthesis; the local controller's five
 acceptance passes are a separate check.
 The local controller review does not replace the PR review. Missing required
 project settings or access block PR completion after discovery; keep independent
 local build, QA and owner-test delivery moving. Leave the PR draft for me.
 
 Keep the work visible: show the plan before coding, give concise stage updates,
-open the running app when available, and show actual browser results and the
+open the running app at final QA, and show actual browser results and the
 final review. Continue without waiting at routine progress updates. Ask when
 an owner-reserved decision, actual missing access or my explicit stop prevents dependent progress.
 Do not choose a different example or change the product requirements for me.
@@ -71,7 +79,8 @@ Codex discovers repository skills in `.agents/skills` within the repository scop
 - The complete factory bundle, Python 3.11+, Git, and access to the target project.
 - An authenticated `codex` CLI on PATH for the current independent reviewer.
 - The target project's actual test tools. Browser work needs a browser driver and runnable app.
-- An agreed task, observable acceptance, protected check files, and recorded authority and completion boundaries. The first demo's finite allowance is historical and does not govern continuous execution; actual command watchdogs still detect stuck processes.
+- An agreed task, observable manual/automated/mixed acceptance, recorded authority and completion boundaries. Version 2 starts with draft checks; independently seal them at final testing. Real command watchdogs detect stuck processes; historical repair limits do not govern.
+- An actual remote/cloud agent route for PR review, separate from local controller review; record missing access before dependent delivery.
 
 The [session contract](../.agents/skills/safe-engine/references/session-contract.md) preserves delegated and reserved choices. The agent makes in-scope delegated choices; unresolved owner-reserved choices stay yours. A prompt does not install missing dependencies or grant access outside the session's permissions. Keep the factory bundle unchanged during a target run; editing its instructions changes an acceptance input.
 
@@ -86,16 +95,17 @@ the stack; if it is empty and I have not chosen the stack, give me three options
 with one recommendation. Choose within my explicit delegation; otherwise ask
 for the required owner choice. Do not reopen choices I already made.
 
-Define the agreed behavior and check commands before feature implementation.
-Ignore .factory/, establish a clean Git baseline, then initialize Safe Engine.
+Define agreed behavior and planned manual/automated evidence before implementation.
+Ignore .factory/, establish a clean Git baseline, then initialize version-2 draft
+acceptance without early tests. Seal independently reviewed checks at the final stage.
 Show what belongs to bootstrap setup and what belongs to the controlled build.
 ```
 
-The controller requires a Git project with a clean baseline and real configured checks. An empty folder alone cannot pass initialization. The agent performs that setup before the controlled analysis/plan/build cycle. For large apps, plan bounded coherent capabilities; the pilot supports partial feature feedback and full version checkpoints but does not automatically select dependencies or schedule arbitrary projects.
+The controller requires a Git project with a clean baseline. New version-2 runs need no existing tests; draft acceptance proceeds through finished implementation, final manual receipt, test authoring and independent sealing. Existing version-1 runs keep their limitations. Follow [current usage](pilot-usage.md#feature-feedback-and-version-checkpoints); no automatic dependency selection, scheduling or product pilot is implied.
 
 ## Start from another computer or cloud workspace
 
-Obtain the private bundle using your normal authorized GitHub login. The complete factory is merged on `main`. Prefer the regular skill installation above, or clone the full bundle for manual use.
+Obtain the private bundle using your normal authorized GitHub login. `main` contains the published factory, not unmerged candidate changes. Prefer regular skill installation above, or clone the full bundle for manual use.
 
 ```sh
 git clone --branch main --single-branch https://github.com/seifsg/ai-software-factory.git
@@ -127,7 +137,7 @@ Claude Code was not available on PATH when this guide was checked on 2 October 2
 
 ## The first controller commands
 
-On this Windows computer, these read-only commands are complete and runnable against the existing demonstration. They do not begin another build:
+These Windows commands are read-only examples. Replace both paths with your actual factory checkout and target project; the historical demonstration paths need not exist on your computer. They do not begin another build:
 
 ```powershell
 Set-Location 'C:\work\ai-software-factory'
@@ -135,7 +145,7 @@ py -3 -m safe_engine --help
 py -3 -m safe_engine --project 'C:\work\safe-engine-pilot-20261001\app' discover
 ```
 
-For the selected target, the agent checks `status` when `.factory/state.json` exists; otherwise it discovers and prepares the new run. `discover` returns a proposal. It does not write a usable profile or execute the application. The [filled fixture commands](../examples/pilot-commands.md) show initialization and every subsequent operation with concrete paths.
+For the selected target, check `status` when a run exists; otherwise discover and prepare it. `discover` returns a proposal; `preflight --profile <profile.json>` inspects capabilities without launching tests or the app. [Current usage](pilot-usage.md) owns version-2 commands; [fixture commands](../examples/pilot-commands.md) remain a historical version-1 demonstration.
 
 To resume in a fresh chat, paste:
 

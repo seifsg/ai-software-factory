@@ -1,71 +1,80 @@
 # PR workflow and project adapter
 
-Read this before executing the original PR skills in a factory-managed project. Keep the original wording; resolve its project assumptions here.
+Read before factory PR work. Preserve source methods/reminders; resolve actual project bindings. [Provenance](skill-provenance.md).
+
+New PR prose uses [Clear Writing](../.agents/skills/safe-engine/references/clear-writing.md); preserve required evidence, attribution, history and source wording.
+
+Public-page changes include affected [SEO evidence](../.agents/skills/ux-quality/references/web-seo.md) in the same review. Distinguish local checks, live verification and actual indexing.
 
 ## Pick the actual task
 
-- Feature draft: use [How to Make a PR](../.agents/skills/how-to-make-a-pr/SKILL.md). Its original is from Seif's routines repository. Mobile's `release-pr` is a release rollup with version bumps and changelog changes, so it is not a substitute for an ordinary feature draft.
-- PR review: use the Mobile `pr-review` original at [How to Review a PR](../.agents/skills/how-to-review-a-pr/SKILL.md). The existing factory path is retained for callers.
-- Explicit analysis-only or review-only: remain read-only. Do not start repairs, push or comment from an implied later phase.
-- Bounded implementation or PR update: use the [Small Change](../.agents/skills/small-change/SKILL.md) scope below.
+- Create/update: [How to Make a PR](../.agents/skills/how-to-make-a-pr/SKILL.md).
+- Incoming review: [How to Review a PR](../.agents/skills/how-to-review-a-pr/SKILL.md).
+- Analysis/review-only: read-only; no implied repair/push/comment.
+- Bounded implementation/update: [Small Change](../.agents/skills/small-change/SKILL.md) scope below.
 
-For authorized factory PR delivery, both creation and a separate-instance review are required. Local controller review and `ready` are not PR completion. Keep the PR draft; the human owns ready, merge and release.
+Authorized delivery requires both procedures and remote/cloud PR review: a separate agent, fresh context and checkout of the exact remote candidate. Verify actual remote execution and record provider/task identity, base/head, evidence and verdict. Local controller review remains separate; local subagents never satisfy PR review. Missing cloud access blocks that review/merge, not independent local work. Open draft; human owns ready/merge/release unless explicitly authorized.
 
-The creation original contains an older summary of its paired review. Follow the actual Mobile review file: four themes, synthesis/compliance, question gate, permitted fixes, checks and authorized handoff. Do not revive the old three-option PR phase or retry-once limit from that summary. The local controller's five acceptance passes are separate.
+Review: four themes → synthesis/compliance → question gate → permitted fixes → manual action QA → final test authoring/execution → authorized handoff. Controller's five acceptance passes stay separate. No added three-option phase or retry-once ceiling.
 
-For a read-only review, judge the current candidate. Proposed or hypothetical fixes remain unresolved; do not report their future result as a present pass. Label a conditional verdict and its remaining fixes explicitly.
+Full cloud review: four isolated themes, capacity-bounded waves if needed; synthesize all four. Record actual execution, never call sequential work simultaneous or drop themes. Small Change: one scoped cloud reviewer. Supply core methods plus applicable references and raw evidence, not every unrelated checklist; reviewer challenges omissions.
 
-The creation original also refers to `clickup-task`, `how-to-write-a-clickup-task` and `bug-investigation`. They are not bundled here. Resolve them from an authorized target installation when needed; if unavailable, report the dependent step as incomplete. Do not fabricate a local substitute or import the wider library automatically.
+Judge the actual candidate. Proposed fixes mean a **conditional** verdict; list remaining fixes. Read-only review cannot count hypothetical repairs as passed. Separate severity from disposition: unresolved HIGH/CRITICAL, core failures and required unknowns block. Lower-risk accepted deferrals need owner, reason, scope, authority and revisit trigger; before-exposure obligations remain open until that boundary.
+
+## Before/after proof
+
+Plan proof before edits; attach it to the PR before submission/update. Show the changed outcome, not a screenshot dump.
+
+- **Visible/UI change:** capture the affected screen before edits; capture its finished counterpart during final manual QA. Default: one focused before/after pair, same viewport, state and safe sample data. Add views only when needed to explain the change. New UI: show the prior entry/empty state and label what did not exist. Screenshots are required where applicable; video does not replace them.
+- **No useful screenshot:** show equivalent before/after evidence, e.g. the same API request with status/body before and after, CLI output or measured behavior. Preserve existing baseline evidence before edits; if a fresh execution is needed, compare isolated base/head versions during final QA. Label versions, inputs and limits. Documentation-only changes may use a short text diff; no decorative screenshot.
+- **Feature proof:** final manual QA demonstrates the actual journey and outcome. Offer a short computer-use recording when motion or several steps add value; ask once, honor the answer, continue other work. No routine video mandate. When chosen, show relevant entry/sign-in → action → confirmed result. Email example: fill form → send → verify receipt in the test inbox, not merely a success toast. Use authorized test accounts/recipients; recording grants no sending permission.
+
+Baseline screenshot is a narrow capture-only exception to tests-last: minimum safe navigation to the unchanged view, no feature exercise, submission or test suite. Use existing evidence if access would require a side effect; report missing baseline honestly. Never fabricate a before image or reset dirty work to recreate it. Final screenshots, journey tests and videos wait until implementation finishes; reuse that QA session.
+
+Embed labeled Before/After and any chosen clip in the PR, with a brief observed result and base/head identity. Use durable attachments/links the reviewer can open; verify access. No localhost/local-path links or unconfirmed uploads. Keep credentials, private data and notifications out of captures; record safe fixtures. Missing capture/recording/upload access: disclose the gap and available evidence, never claim proof exists. No new media host or public upload implied.
 
 ## Resolve project bindings
 
-Use [project bindings](../.agents/skills/how-to-make-a-pr/references/project-bindings.md) to find the actual repository, branches, rules, commands, tracker, review owner and authorized notification destination. Reuse recorded decisions. Ask only for consequential missing facts after discovery.
+Read [bindings](../.agents/skills/how-to-make-a-pr/references/project-bindings.md). Discover repository, branches, rules, commands, tracker, review owner and authorized destinations. Reuse decisions; ask only consequential remaining gaps.
 
-RepairCheck account names, Slack channels, ClickUp lists, tool names and example PRs in the source are source-project context. Do not send to them or create automations merely because they appear in an original. Existing task authorization still governs external actions.
+Map risks to actual games, clients, servers/services or tools: platforms, languages, persistence, trust boundaries, versions and interfaces. No fixed framework, package manager, locale, vendor, person or channel.
 
-Mobile paths and checks describe Expo/React Native. For another stack, map the same risk to its real code and tools. Report a justified N/A; unknown is not N/A or PASS. The copied Mobile rules are source context; load the target's actual rules. Do not impose NestJS, Expo, German copy, npm or a telemetry vendor where it does not apply.
+UNKNOWN is neither N/A nor PASS. Justify inapplicability. Missing required bindings block dependent external actions/PR completion; continue independent local work. Use authorized integrations; invent no tracker, recipient or success.
 
-Missing required bindings block the affected external action and PR completion. Continue authorized local work. Do not invent a replacement tracker, recipient or evidence.
+Save bindings in the existing task/session record. One-time notification/merge permission is not standing authority. Source accounts/examples grant none.
 
 ## Keep current factory decisions explicit
 
-These are factory policies, separate from the restored source wording:
+[Tests last](current-decisions.md#finish-work-use-it-then-automate-tests), including updates/reviewer fixes: finish implementation/improvements → final manual/user QA → write/change/polish/run final tests → prepare/create PR. No manual reproduction, playtests, walkthroughs or automated checks during development. Read-only review inspects evidence, runs no suites. Final-test production fixes return through completed implementation and manual QA. Missing manual coverage stays unverified.
 
-- Seif removed artificial correction/retry/session ceilings. Diagnose and continue useful authorized corrections under the [session contract](../.agents/skills/safe-engine/references/session-contract.md). Preserve owner stops, command timeouts and actual access limits.
-- If a reviewer repairs a candidate, get a fresh independent assessment of the resulting candidate. Its own repair is not independent approval.
-- Follow Mobile's no-code review phases and push/comment checkpoints. Reuse explicit authorization already given; do not ask again for the same authorized action.
-- For factory acceptance, uncertain rule applicability stays UNKNOWN and blocks the dependent decision. An exception needs actual authority; a written justification alone does not waive a requirement. See decisions I1/I2.
-- Use real evidence. A clean review may have no findings. Do not invent issues or product requirements to fill a table.
-- Preserve honest authorship. Never claim someone authored or tested work they did not. Follow actual project attribution/signing rules.
-- Never force-push or rewrite another author's history. Preserve dirty work in a suitable isolated checkout; do not silently stash or switch it.
+- No artificial correction/retry/session ceilings. Diagnose useful corrections under [session authority](../.agents/skills/safe-engine/references/session-contract.md); honor stops, command timeouts and access limits.
+- Repairing reviewers need fresh independent assessment.
+- Preserve no-code phases and push/comment checkpoints; reuse explicit authorization.
+- Uncertain applicability blocks dependent judgment. Mandatory exceptions need authority, not explanation alone.
+- Evidence only. Clean reviews need no invented findings. Preserve honest authorship/attribution/signing; claim no unperformed tests.
+- No force-push/history rewrite. Preserve dirty work in an isolated checkout.
+- Reviewers read applicable requirements/linked methods and raw evidence, including diagnostics, efficiency and research. Never assume missing evidence.
+- App/game changes, even small: verify [shared logging](../.agents/skills/safe-engine/references/app-diagnostics.md), emitted detailed success/failure trails, provider/local access, redaction/retention and gaps. Module presence proves too little.
+- Material persistence: [Database Schema](../.agents/skills/database-schema/SKILL.md), whole-product access, integrity/isolation, indexes, runtime evidence, safe migration. Reject unsupported O(1)/scale claims. Reuse reviewer, no extra fleet.
 
 ## Small direct changes
 
-Both PR procedures still apply to an authorized small PR. Use their relevant outcomes within the selected [Small Change](../.agents/skills/small-change/SKILL.md) method:
+Include applicable [security controls/evidence](../.agents/skills/safe-engine/references/app-security.md) in the existing review. Distinguish local development gaps from production blockers; no whole-app hardening for an unrelated small fix.
 
-1. Inspect the PR's original purpose, base/head and prior review boundary.
-2. Assess the new delta and affected consumers. Keep unresolved older findings visible.
-3. Prepare a focused draft/update with actual task links, attribution and handoff.
-4. Have one independent reviewer cover the changed behavior and applicable security, performance, journey, regression and compliance concerns together. No automatic fleet or full-version workflow.
-5. Reuse current evidence; rerun affected checks when necessary. Report the verdict's exact scope.
+Every UI/interaction PR/update includes [UX Quality](../.agents/skills/ux-quality/SKILL.md) in its existing reviewer scope: friction, current patterns, accessibility, visual/audio inspection, uncertain-choice comparisons and manual evidence. Source alone cannot certify unseen/unheard output.
 
-No automatic broad regression or five-artifact planning for a bounded fix. A narrow assessment does not turn an unreviewed whole PR green. Missing required checks or permissions stay unresolved.
+Both PR procedures apply within Small Change:
 
-## This repository's bindings
+1. Inspect purpose, base/head and prior review boundary.
+2. Assess delta/consumers; retain unresolved older findings.
+3. Prepare focused draft/update with task links, attribution, handoff.
+4. One remote/cloud independent PR reviewer covers applicable security, performance, journey, regression and compliance. No automatic fleet/full-version workflow; a local scoped review cannot replace this.
+5. Reuse valid evidence; repeat affected checks when needed. State exact verdict scope.
 
-| Binding | Recorded status |
-|---|---|
-| Repository | Private `seifsg/ai-software-factory`. Discover current remote branches when preparing a PR. `main` was the verified default on 2 October. |
-| Task tracker / awaiting-review state | Not selected. Do not invent a tracker or mark local work as a task transition. |
-| Human reviewer / notifications | No permanent binding selected. The one-time Slack notification authorized on 2 October is not standing permission for later messages. GitHub self-review restrictions still apply. |
-| Checks | Relevant Python controller/distribution tests, skill structure and references, affected JavaScript syntax and rendered preview. No npm build/typecheck/lint toolchain is configured for this repository. |
-| Observability | The local pilot had no production session. |
-| Merge / release | Human decision. Prior specific merge instructions do not create standing permission. |
-
-The earlier proposal was GitHub Issues with a human GitHub handoff; an existing team tracker or leaving settings pending were alternatives. No choice is inferred from this writing pass. Discover current project/session evidence before escalating a missing binding.
+No automatic broad regression or five-output planning for bounded fixes. Narrow review cannot approve an unreviewed whole PR. Missing checks/permissions remain unresolved.
 
 ## Enforcement and evidence
 
-The procedures are instructions. The controller fingerprints guidance and runs its own local candidate review; it does not create a PR, notify anyone or enforce GitHub merges. No host hook or protected remote merge gate is implemented.
+Instructions only. Controller fingerprints operative guidance and runs local candidate review; no PR creation, notifications, remote merge enforcement or host hook. Factory publication to `main` needs actual cloud PR review and authorized merge; verify the remote result. Use [release/operations](../.agents/skills/safe-engine/references/delivery-readiness.md#authorized-release-and-operation) when shipping. Existing installations/pins do not auto-upgrade.
 
-[PR #1](https://github.com/seifsg/ai-software-factory/pull/1) and the [pilot verification](pilot-verification.md) are historical evidence. They do not certify the restored Mobile PR procedure or this edited candidate.
+Historical evidence covers its recorded candidate/scope. Validate changed methods; disclose remaining unknowns.

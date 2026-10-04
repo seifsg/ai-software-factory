@@ -1,59 +1,51 @@
-# App efficiency from the first plan
+# Software efficiency from the first plan
 
-Plan CPU, memory and infrastructure costs early. Build useful safe reuse into the feature. Safe Engine owns this default for app delivery; no separate optimization request is needed. An analysis-only request still stops before coding.
+Plan resource costs early across games, clients, services and tools. Analysis-only stays analysis-only.
 
-For new apps, cover significant journeys. For existing changes, inspect affected costs and consumers, fix supported waste within scope and record wider gaps. A small input/copy fix does not require profiling or a cache retrofit. Use the selected method's plan, checks and handoff.
+New products: significant workloads. Existing changes: affected costs/consumers and supported fixes; record wider gaps. Small copy/input fixes need no profiling/cache retrofit.
 
-## Analyze cost and choose the smallest sound design
+## Analyze cost; choose the smallest sound design
 
-Trace `trigger → work → result → release`.
+Trace `trigger → work → result → release`: size, frequency, concurrency, hardware/runtime, resource owner. Include startup, active use and idle/background work. Source can prove repetition; speed/memory claims need runtime evidence.
 
-Identify repeated/expensive work, frequency, input sizes and concurrency. Who owns the memory, workers, connections, timers and subscriptions? When are they released? Include startup, active use and idle/background work where relevant. Code can prove repetition; it cannot prove measured latency, CPU or memory use. Record measurements or unknowns.
+In original/revised plans, record `workload → target → cost → decision/reason → bound/lifetime → evidence/unknown`.
 
-For each material operation, add one row to the original and revised plan:
+Mark targets measured/provisional; choose within delegation and verify before claiming success. Use workload-specific complexity/latency, not universal O(1) or per-function benchmarks. Research material unknowns through [Research Market](../../research-market/SKILL.md).
 
-`workload/target → main cost → decision/reason → resource bound/lifetime → focused evidence`
-
-Mark targets measured or provisional. Choose reasonable provisional targets within delegated authority; verify them in the actual environment before claiming success. Do not impose one complexity target or benchmark every function.
-
-First remove unnecessary calls, duplicate subscriptions, scans, allocations/copies and repeated setup. Then choose the useful approach: existing facilities, batching/indexing, caching, reusable workers/connections, or coalescing identical concurrent work. Serializing calls with a semaphore does not reuse results.
-
-Weigh retained memory against startup cost. Consider lazy initialization and idle disposal. Bound queues/concurrency and response sizes. Keep expensive work off the UI thread. Stop/dispose owned resources on cancellation, replacement and Quit. Prefer events to unnecessary polling; pause invisible animation/idle work when the product allows it.
-
-Inspect useful caching opportunities. Implement them when savings justify validity, memory and maintenance costs. Briefly explain necessary uncached work or rejected opportunities. Do not add distributed caches, precompute every combination, change deployment infrastructure or buy services just to meet this rule. Inspect actual dependency/asset size, data access, initialization and resource lifetimes.
-
-Important: Duplicate work and duplicate user effects are different problems. Reusing audio can avoid synthesis but still play twice if two handlers fire. Trace request/event identity and user intent. Preserve intentional repeated commands. Do not repeat side effects from cached results or treat cached chat/tool output as authority. Changing, personalized or time-sensitive data needs valid freshness/access scope. Cheap one-off work can stay uncached.
-
-## Contract for each cache or reused expensive result
-
-Keep these decisions beside the plan/code. Reuse an adequate library.
-
-| Concern | Decide and check |
+| Area | Inspect when applicable |
 |---|---|
-| Identity and validity | Include every result-changing input, setting and version, plus user/access scope. Invalidate on source/model/config changes. TTL alone cannot detect these or authorize stale/security-sensitive results. Keep integrity checks at the real trust boundary; file metadata may not prove trusted identity. |
-| Capacity and lifetime | Bound entries, inputs, outputs and retained bytes. Define eviction/disposal and process/session/disk lifetime. Count keys, buffers/copies and in-flight work. A dictionary or TTL is not a memory bound. Do not populate unbounded arbitrary-input caches. |
-| Ownership and privacy | Keep private content in memory by default. Persistence needs a product reason and protected retention/deletion. No credentials or cross-user reuse. Define immutable/copy/lease ownership so one consumer cannot mutate or clear another's buffer. Do not log raw keys, prompts, audio or private payloads. |
-| Concurrency and cancellation | Define coalescing, bounded independent work and cleanup. One cancelled waiter must not corrupt shared results or cancel other valid consumers. Release work when no consumers remain where supported. Prevent late old work from repopulating an invalidated generation. |
-| Failure and cold path | Never retain partial/cancelled/failed work as success. Justify negative caching separately with expiry/recovery. On miss, eviction, corruption or unavailability, take a bounded correct primary path or return an actionable error. No retry storm or blocked Quit. |
+| CPU/concurrency | Algorithms, data layout/locality, repeated scans/setup, allocations/copies, hot loops, scheduling, batching/synchronization. Keep heavy work off interaction threads; bound queues/parallelism. |
+| GPU/games/graphics | Separate CPU/GPU frame time, pacing/spikes, draw calls, overdraw, shaders, streaming, simulation/physics, GPU memory. Representative hardware/scenes; averages hide stalls. |
+| Memory/lifetime | Peak/retained memory, buffers/caches/leaks, GC, worker/connection pools, subscriptions/ownership. Weigh warm reuse against residency; lazy-init/dispose where useful. Release on cancellation/replacement/exit. |
+| Database/queries | Actual plans, representative data, N+1, scans/indexes/selectivity/pagination, transactions/locks, connection bounds, index write/storage costs. Execution-based plans may run writes/costly work; no destructive production probes. |
+| Network | Round trips/waterfalls, payloads, compression tradeoffs, deduplication, streaming, timeouts/backoff, offline/reconnect. Preserve ordering/idempotency/authorization. |
+| Storage | Read/write volume/amplification, serialization, file/asset size, buffering/atomicity, migrations, full-disk failure, retention/recovery. Preserve correctness. |
+| Interaction/background | Input latency, rendering/startup/loading, battery/thermal limits, timers/polling/idle work. Prefer events; pause hidden work when valid. CLI/API: responsive output, backpressure, usable errors. |
 
-For repeated speech, inspect synthesis and playback separately. Identity may need exact text, voice, model/engine revision, synthesis options and format. Check playback, consumer buffer disposal and generator call counts. A speech cache does not justify caching context-dependent LLM replies or skipping model integrity checks. This is an example, not a feature to add elsewhere.
+Justify N/A; invent no infrastructure. Remove work before caching. Reuse adequate facilities; batching/indexes/pools/coalescing solve different problems. Semaphores serialize; they do not reuse results.
 
-## Focused evidence and handoff
+Cache when savings justify validity/memory/complexity costs. Explain rejected opportunities/necessary uncached work. No exhaustive precomputation, distributed services, deployment changes or spending without authority.
 
-Run relevant checks after the meaningful batch. Reuse unchanged relevant evidence. For a new/changed cache, check:
-- Cold input, then identical warm input.
-- A result-changing input/version.
-- Applicable capacity, lifecycle and failure behavior.
-- Concurrent callers and cancellation when concurrency exists.
-- Semantic output and user effects, as well as avoided calls.
-- Disabled/empty-cache behavior and enough distinct inputs to verify bounds.
+Distinguish duplicate computation from duplicate user effects. Never replay side effects, suppress intentional repeated commands or treat cached tool/model output as authority. Trace operation identity/intent. Cheap one-off work may stay uncached.
 
-A faster wrong/stale result fails. These checks do not require a full load suite.
+## Contract for each cache or expensive reused result
 
-Use counters to prove avoided work. Measure representative elapsed/CPU/allocation or retained-memory costs that support the claim. Include idle/release evidence for resident/background work. Record workload, environment and cold/warm conditions. A fake costly dependency can prove coalescing/invalidation, not real-model speed or production memory. Report measurements, provisional targets and limits. Percentage claims need comparable evidence.
+Keep decisions beside plan/code; use an adequate library.
 
-Use [app diagnostics](app-diagnostics.md) for useful safe counts/timings and hit/miss/eviction/coalescing events. Bound sampling/aggregation; do not log every frame or hot-loop iteration. Review call sites, keys/validity, memory/ownership, failures and cancellation. A cache class alone proves nothing.
+| Concern | Require |
+|---|---|
+| Identity/validity | All result-changing inputs, settings/versions and user/access scope. Invalidate source/model/config changes. TTL alone proves neither freshness nor authorization. Keep boundary integrity checks; file metadata may be insufficient. |
+| Capacity/lifetime | Bound entries, inputs/outputs, retained bytes, keys/copies and in-flight work. Define eviction/disposal and process/session/disk lifetime. TTL/dictionaries alone cannot bound memory. |
+| Ownership/privacy | Private content stays in memory by default. Persistence needs product purpose, protected retention/deletion. No credentials/cross-user reuse. Immutable/copy/lease ownership prevents consumer corruption. Never log raw keys/prompts/audio/private payloads. |
+| Concurrency/cancellation | Bound/coalesce valid work. One cancelled waiter cannot cancel others. Release abandoned work where supported; old work cannot refill invalidated generations. |
+| Failure/cold path | No partial/failed/cancelled result as success. Negative caching needs expiry/recovery. Miss/eviction/corruption/outage reaches a bounded correct primary path or actionable error. No retry storms/blocked exit. |
 
-Carry decisions, demonstrated reuse/resource evidence and unresolved limits into the normal scoped handoff. Missing material evidence stays unverified. Do not add unrelated regression or claim whole-app optimization from one path.
+Generated media: separate generation reuse from playback/delivery; key all content-changing inputs and verify disposal. This grants no context-dependent model-reply caching or skipped integrity checks.
 
-This implements Seif's 3 October 2026 requirement. Primary guidance checked that day: [Microsoft memory caching](https://learn.microsoft.com/en-us/aspnet/core/performance/caching/memory?view=aspnetcore-10.0) covers capacity and uncached fallback; [AWS caching strategies](https://aws.amazon.com/builders-library/caching-challenges-and-strategies/) covers coalescing, cold behavior and measured sizing. Neither requires a particular runtime or hosted cache. These instructions are not an automatic optimizer or proof of app speedup.
+## Evidence and handoff
+
+Follow [tests-last order](../../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests): finish implementation → manual use → final automated checks/benchmarks. Reuse valid unchanged evidence. Changed caching/reuse: cold/warm and changed inputs/versions, bounds/disposal, failures, concurrency/cancellation, disabled cache and enough distinct inputs for eviction. Separate manual/automated evidence. Check correctness/user effects alongside avoided calls; faster stale/wrong results fail.
+
+Count avoided work. Measure representative timing, CPU/GPU, allocation/retention or query/network/storage costs supporting claims. Include resident-work idle/release, workload/environment and cold/warm conditions. Fake dependencies prove mechanics, not production speed/memory. Percentages need comparable baselines. Report limits/unmet targets.
+
+Use [logging](app-diagnostics.md) for safe counts/timings/cache events; bounded targeted verbosity, breadcrumbs/loss markers, no default frame flood. Review real call sites. Handoff decisions, measurements, provisional targets and limits. One path proves no whole-product optimization.

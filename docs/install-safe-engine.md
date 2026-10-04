@@ -6,7 +6,7 @@ This route is for requested implementation. Explicit analysis, planning and revi
 
 Seif selected [small-change](../.agents/skills/small-change/SKILL.md) on 3 October: six lightweight routines, careful implementation, focused checks and one narrow independent assessment. This route precedes the full version workflow described below. No automatic broad regression, full-suite reruns or five-artifact planning for a small fix. Accumulated changes may prompt an offer of affected-area validation; execution waits for the user. It is an agent-operated scoped handoff, not a new controller command or whole-version acceptance. Existing pinned runs retain their bundle/state; see the method for explicit local trials and evidence limits.
 
-**Install `safe-engine` to build apps.** `improve-factory` repairs the factory and is not required as a separate installation. Both load the same complete factory; Seif's original methods remain canonical.
+**Install `safe-engine` to build software: games, apps, services and tools.** `improve-factory` repairs the factory and is not required as a separate installation. Both load the same complete factory; Seif's original methods remain canonical.
 
 ## Codex: install once, use in any local project
 
@@ -16,7 +16,7 @@ Paste into a Codex session with your authorized GitHub access:
 Use skill-installer to install safe-engine from
 seifsg/ai-software-factory, ref main, path skills/safe-engine.
 Use my existing authorized GitHub login. Install the entire portable folder,
-including scripts. Preserve any existing installation before replacing it.
+including scripts and references. Preserve any existing installation before replacing it.
 ```
 
 Then, in the app's chat:
@@ -51,7 +51,7 @@ Paste into an authenticated session:
 ```text
 Install folder skills/safe-engine from seifsg/ai-software-factory, ref main,
 into my personal ~/.claude/skills/safe-engine directory.
-Include SKILL.md and scripts. Preserve any existing installation and report
+Include SKILL.md, scripts and references. Preserve any existing installation and report
 its identity before replacing it. Use my existing authorized GitHub credentials.
 ```
 
@@ -64,17 +64,17 @@ $safe-engine + your app request
   -> resolve complete private main bundle to one commit
   -> save the app's selected bundle path/revision
   -> read full canonical factory and all methods as each phase requires
-  -> analyze charts -> file-summary checkpoint -> plan -> new-app research -> revised plan
-  -> build coherent batches -> feature feedback -> full QA
-  -> worthwhile improvements -> final QA -> fresh review -> handoff
+  -> analyze charts -> file-summary checkpoint -> plan -> product/UX + technical research -> revised plan
+  -> finish implementation/improvements -> manual action QA
+  -> author/polish automated tests -> final QA -> fresh review -> handoff
   -> both complete PR procedures when PR delivery is authorized
 ```
 
 Honor the original file-summary stop unless the user has already authorized continuing the plan.
 
-The agent creates a missing target directory within the agreed scope, preserves existing work, discovers real project settings, establishes the session contract and clean Git baseline, then initializes once. Your chosen task and product decisions remain yours. Meaningful authorized work continues without artificial correction credits; real permissions, required gates and owner stops remain effective. QA is batched after substantial work. Browser QA needs an actual runnable app/browser driver and observable outcomes.
+The agent creates a missing target directory within scope, preserves work and establishes actual settings, session contract and clean Git baseline. Version-2 initialization allows draft acceptance without tests; independently seal final acceptance after implementation, final manual QA and test authoring. No early manual/user tests, playtests or automated checks. Your decisions and real boundaries remain. Follow [usage](pilot-usage.md#feature-feedback-and-version-checkpoints); browser QA needs a runnable app and permitted controls.
 
-Git, private GitHub access, Python 3.11+, authenticated Codex CLI and the project's check tools are prerequisites. Skills do not grant credentials or install every project dependency. This is an agent-operated workflow; it does not start a background service or install universal hooks.
+Git, private access, Python 3.11+, authenticated Codex CLI for local controller review and actual check tools are prerequisites. PR review separately needs a remote/cloud agent with fresh context and the remote candidate; local subagents cannot replace it. Inspect capabilities before dependent work. Skills grant no credentials, universal dependencies, cloud route or background service.
 
 ## Version-safe resume
 
@@ -100,8 +100,12 @@ Install inside that environment, using its own authorized GitHub login and tools
 
 ## Packaging and verification
 
-`skills/safe-engine` is standalone for installation, while the resolved bundle owns all eleven canonical entrypoints. Both installed skill helpers are generated from `safe_engine/distribution.py`; after editing that owner run `python scripts/package_skill_entries.py`, then `--check` at the pre-push gate. No second independently maintained resolver or duplicated method library exists.
+`skills/safe-engine` is standalone for installation, while the resolved bundle owns all thirteen canonical entrypoints. Both installed skill helpers are generated from `safe_engine/distribution.py`; after editing that owner run `python scripts/package_skill_entries.py`, then `--check` at the final pre-push gate. No second independently maintained resolver or duplicated method library exists.
 
 The existing [pilot record](pilot-verification.md) documents the actual local build and repair. Distribution tests exercise real Git checkout/cache/selection boundaries; a successful install or file-loading smoke test is not proof of a new complete app build or every host's compatibility.
 
 References checked 3 October 2026: [Codex skills](https://learn.chatgpt.com/docs/build-skills), [Claude Code skills](https://code.claude.com/docs/en/skills). See [fresh-session setup](start-another-session.md) for manual bundle use, [pilot usage](pilot-usage.md) for controller commands, and [maintenance installation](install-improve-factory.md) when you want to change the factory.
+
+## Version 2 launcher upgrade
+
+Older installed resolvers accept only input-contract v1. Resolving a v2 bundle can fail with `Invalid factory input contract`. Refresh both portable entries from the approved v2 revision before selecting that bundle. Preserve the previous installations and active bundle receipts; do not reset or upgrade existing runs. The current resolver supports both contract versions. Source publication alone does not update personal installations.

@@ -14,13 +14,23 @@ def main():
     parser.add_argument("--project", required=True, help="Git project/worktree root")
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("discover", help="Propose a profile without executing project scripts")
+    preflight = commands.add_parser("preflight", help="Inspect tools and bundle identity; no tests or product launch")
+    preflight.add_argument("--profile", required=True)
+    for name in ("contract-proposal", "seal", "amend"):
+        transition = commands.add_parser(name, help="Inspect or independently review final acceptance bindings")
+        transition.add_argument("--task", required=True)
+        transition.add_argument("--profile", required=True)
+        if name != "contract-proposal":
+            transition.add_argument("--review", required=True)
+        if name == "amend":
+            transition.add_argument("--reason", required=True)
     init = commands.add_parser("init", help="Start one reviewed task from a clean project")
     init.add_argument("--task", required=True)
     init.add_argument("--profile", required=True)
     init.add_argument("--max-repairs", type=int,
                       help="Deprecated historical metadata only; repairs have no numerical limit")
     record = commands.add_parser("record", help="Save a method artifact and advance the appropriate phase")
-    record.add_argument("kind", choices=("analysis", "plan", "batch", "improvement"))
+    record.add_argument("kind", choices=("analysis", "plan", "implementation", "manual", "batch", "improvement"))
     record.add_argument("--file", required=True)
     check = commands.add_parser("check", help="Validate the full configured version batch")
     check.add_argument("--fresh", action="store_true", help="Execute all commands even when unchanged reuse is eligible")
@@ -40,6 +50,10 @@ def main():
         workflow = Workflow(project)
         if args.command == "discover":
             result = discover(project)
+        elif args.command == "preflight":
+            from .project import validate_profile
+            from .review_packet import preflight
+            result = preflight(project, validate_profile(read_json(args.profile), draft=True))
         else:
             # The runtime directory must already be excluded from Git by the project owner.
             if args.command == "init":
@@ -59,6 +73,12 @@ def main():
                     result = workflow.feature_check(args.checks, args.file)
                 elif args.command == "review":
                     result = workflow.review(args.timeout)
+                elif args.command == "contract-proposal":
+                    result = workflow.contract_proposal(read_json(args.task), read_json(args.profile))
+                elif args.command == "seal":
+                    result = workflow.seal(read_json(args.task), read_json(args.profile), read_json(args.review))
+                elif args.command == "amend":
+                    result = workflow.amend(read_json(args.task), read_json(args.profile), read_json(args.review), args.reason)
                 elif args.command in ("repair", "cancel"):
                     result = getattr(workflow, args.command)(args.reason)
                 else:

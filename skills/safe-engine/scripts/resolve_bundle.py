@@ -3,6 +3,7 @@ import argparse
 import json
 from pathlib import Path
 import re
+import stat
 import subprocess
 import tempfile
 
@@ -10,6 +11,9 @@ import tempfile
 REPOSITORY = "https://github.com/seifsg/ai-software-factory.git"
 DEFAULT_REF = "main"
 ENTRYPOINTS = ("safe-engine", "improve-factory")
+# This documented pilot predates portable entries and the input contract.
+# Do not apply its compatibility path to unknown revisions or later bundles.
+LEGACY_PILOT = "eeb0da9d26092e67ea2e7abb58ec57ffd815df49"
 SKILLS = ("improve-factory", "safe-engine", "analyze-start", "get-ready-to-code",
           "deep-review", "change-guard", "compliance-check", "how-to-make-a-pr",
           "how-to-review-a-pr", "research-market")
@@ -48,6 +52,11 @@ def inspect_bundle(root, expected=None, clean=False, entrypoint="improve-factory
     contract_name = "safe_engine/bundle-inputs.json"
     contract_path = root / contract_name
     tracked_contract = git("ls-tree", "--name-only", "HEAD", "--", contract_name, cwd=root)
+    if (revision == LEGACY_PILOT and entrypoint == "safe-engine"
+            and not contract_path.exists() and not tracked_contract):
+        required = git("ls-tree", "-r", "--name-only", "HEAD", "--",
+                       "AGENTS.md", "README.md", ".agents/skills", "docs",
+                       "safe_engine", cwd=root).splitlines()
     if contract_path.exists() or tracked_contract:
         if contract_path.is_symlink() or not contract_path.is_file():
             raise RuntimeError("Incomplete factory bundle: " + contract_name)
@@ -55,8 +64,11 @@ def inspect_bundle(root, expected=None, clean=False, entrypoint="improve-factory
             contract = json.loads(contract_path.read_text(encoding="utf-8-sig"))
         except (OSError, ValueError) as error:
             raise RuntimeError(f"Invalid factory input contract: {error}") from error
-        if (not isinstance(contract, dict) or contract.get("version") != 1
-                or set(contract) != {"version", "required_files", "source_trees"}):
+        version = contract.get("version") if isinstance(contract, dict) else None
+        keys = {"version", "required_files", "source_trees"}
+        if version == 2:
+            keys.add("historical_files")
+        if version not in (1, 2) or set(contract) != keys:
             raise RuntimeError("Invalid factory input contract")
         for key in ("required_files", "source_trees"):
             names = contract[key]
@@ -70,6 +82,17 @@ def inspect_bundle(root, expected=None, clean=False, entrypoint="improve-factory
             if folder.is_symlink() or not folder.is_dir() or not folder.resolve().is_relative_to(root):
                 raise RuntimeError("Incomplete factory source area: " + name)
         required += [contract_name, *contract["required_files"]]
+        if version == 2:
+            historical = contract["historical_files"]
+            if (not isinstance(historical, list) or any(not isinstance(name, str) for name in historical)
+                    or len(historical) != len(set(historical))):
+                raise RuntimeError("Invalid historical_files in factory input contract")
+            for name in historical:
+                if (not name.startswith("docs/") or not name.endswith(".md")
+                        or any(part in ("", ".", "..") for part in name.split("/"))
+                        or "\\" in name or ":" in name or name == "docs/current-decisions.md"):
+                    raise RuntimeError("Invalid historical document in factory input contract")
+            required += historical
     missing = [name for name in required if not (root / name).is_file() or (root / name).is_symlink()]
     if missing:
         raise RuntimeError("Incomplete factory bundle: " + ", ".join(missing))
@@ -128,8 +151,14 @@ def select_for_project(project, bundle, ref, cache, entrypoint):
         raise RuntimeError("Create or locate the target project directory first")
     directory = project / ".factory"
     receipt = directory / "entry-bundle.json"
-    if directory.is_symlink() or receipt.is_symlink():
-        raise RuntimeError("Factory selection paths must not be symlinks")
+    for path in (directory, receipt):
+        try:
+            info = path.lstat()
+        except FileNotFoundError:
+            continue
+        if (stat.S_ISLNK(info.st_mode)
+                or getattr(info, "st_file_attributes", 0) & stat.FILE_ATTRIBUTE_REPARSE_POINT):
+            raise RuntimeError("Factory selection paths must not be symlinks or reparse points")
     if receipt.exists():
         try:
             saved = json.loads(receipt.read_text(encoding="utf-8"))

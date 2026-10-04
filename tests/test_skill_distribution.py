@@ -167,6 +167,18 @@ class DistributionTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, 'Incomplete.*fast-delivery'):
             resolver.inspect_bundle(self.source)
 
+    def test_v2_contract_preserves_historical_bundle_completeness(self):
+        path = self.add_contract()
+        contract = json.loads(path.read_text(encoding='utf-8'))
+        contract.update(version=2, historical_files=['docs/provenance.md'])
+        history = self.source / 'docs/provenance.md'
+        history.write_text('Historical provenance, not an operative rule.\n', encoding='utf-8')
+        path.write_text(json.dumps(contract), encoding='utf-8')
+        self.assertTrue(resolver.inspect_bundle(self.source)['dirty'])
+        history.unlink()
+        with self.assertRaisesRegex(RuntimeError, 'Incomplete.*provenance'):
+            resolver.inspect_bundle(self.source)
+
     def test_deleted_committed_contract_cannot_fall_back_to_legacy(self):
         path = self.add_contract()
         self.git('add', '--', str(path), cwd=self.source)

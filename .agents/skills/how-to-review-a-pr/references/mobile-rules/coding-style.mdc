@@ -1,6 +1,12 @@
 ---
 alwaysApply: false
 ---
+The directory name records source provenance, not a mobile-only requirement. Read actual project
+rules first. Apply portable principles below; map language syntax, naming, imports and documentation
+to the project's established language/toolchain. JavaScript/TypeScript examples apply only there.
+
+Architecture prescriptions below express the source method's priorities. Apply them to the actual paradigm: require no OO hierarchy, design pattern or step-function scaffolding without a concrete benefit. Preserve responsibility boundaries, correct resource ownership and simple maintainable code; explain justified non-applicability. Actual project rules still govern.
+
 ## Variable Declarations
 - ALWAYS use `const` for immutable values
 - ALWAYS use `let` for mutable values
@@ -26,7 +32,7 @@ alwaysApply: false
 ## Import/Export
 - ALWAYS use named imports when possible
 - ALWAYS order imports: external libraries first, then internal modules
-- ALWAYS use absolute imports for src/ files
+- ALWAYS use the project's established import paths; absolute imports where configured
 
 ## Error Handling
 - ALWAYS use try-catch for async operations
@@ -65,15 +71,15 @@ alwaysApply: false
 - ALWAYS provide production ready code
 - NEVER let files exceed 1000 lines - create new files instead
 
-## Timeline Service Rules
-- ALWAYS use TimelineHelperService for timeline operations
-- ALWAYS import TimelineModule in your module
-- NEVER use TimelineService directly
+## Shared Integration Rules
+- ALWAYS reuse the project's approved helper/adapter for shared integrations
+- ALWAYS register/import its required module through the project's established mechanism
+- NEVER bypass the wrapper that supplies required validation, policy or error handling
 
-### Timeline Event Recording
-- ALWAYS handle timeline errors gracefully with try-catch
-- NEVER let timeline errors break main business logic
-- ALWAYS include meaningful metadata in timeline events
+### Event Recording
+- ALWAYS handle non-critical event-recording errors gracefully
+- NEVER let non-critical event-recording errors break main business logic
+- ALWAYS include meaningful, privacy-safe metadata in events
 - ALWAYS use specific event types over generic ones
 
 
@@ -81,7 +87,7 @@ alwaysApply: false
 - ALWAYS handle errors gracefully
 - ALWAYS continue main business logic when non-critical operations fail
 - ALWAYS log errors with sufficient context
-- NEVER let timeline or TalkJS errors break core functionality
+- NEVER let non-critical history, telemetry or messaging errors break core functionality
 - ALWAYS use try-catch for non-critical integrations
 
 ## Response Style Rules
@@ -90,15 +96,15 @@ alwaysApply: false
 - Always iterate until solution is solved directly without workarounds
 - Appreciate high quality and build systems that outlast their creator
 - Can use curse words and profanity
-- Vary tone: be smart, funny, noble, high class, fun, clever - pick random personas
+- Follow the user's requested voice; keep externally facing artifacts appropriate for their audience
 
-Swagger definitions always in their own separate files. Within a swagger folder.
+Keep API/schema definitions in their established dedicated files when the project uses them.
 
-Controllers need to have paths that are correct and relative to the functions. Put the right function in the right controller path. Create other controllers if we don't fit.
+Where the architecture uses controllers/routes, paths must match their functions. Put each function in the right controller; create another controller when responsibilities do not fit.
 
 No cutting corners.
 
 Talk as brief as possible and always to the point. Only boast when its really something to brag about.
 
 
-Always import the config module and service that we have personalized and created within the project and not the default nestjs config module.
+Always reuse the project's existing configuration wrapper/service where provided; do not bypass its validation, defaults or policy with a framework default.

@@ -7,12 +7,15 @@ import uuid
 
 from . import __version__
 from .project import (EngineError, command_argv, digest, file_hash, fingerprint, git, inside,
-                      protected_inputs, validate_profile, validate_task)
+                      protected_inputs, reject_path_aliases, validate_profile, validate_task)
 from .runner import run_command
 from .storage import atomic_json, now, read_json, save
+from .acceptance import (contract_candidate_digest, validate_contract_review,
+                         validate_manual_receipt)
+from .project import production_fingerprint
 
 
-PHASES = {"analyze", "plan", "build", "verify", "improve", "final-verify", "review", "ready", "cancelled"}
+PHASES = {"analyze", "plan", "build", "manual", "testing", "verify", "improve", "final-verify", "review", "ready", "cancelled"}
 
 
 class Workflow:
@@ -23,8 +26,9 @@ class Workflow:
     def initialize(self, task, profile, max_repairs=None):
         if (self.directory / "state.json").exists():
             raise EngineError("This project already has a run. Resume it; use a fresh worktree for another task.")
-        validate_profile(profile)
-        validate_task(task, profile)
+        modern = isinstance(profile, dict) and profile.get("version") == 2
+        validate_profile(profile, draft=modern)
+        validate_task(task, profile, draft=modern)
         if max_repairs is not None and (type(max_repairs) is not int or max_repairs < 0):
             raise EngineError("Deprecated max-repairs metadata must be a nonnegative integer")
         if git(self.project, "status", "--porcelain", "--untracked-files=normal"):
@@ -36,6 +40,9 @@ class Workflow:
                  "max_repairs": max_repairs, "repairs_used": 0, "sequence": 0, "history": [],
                  "artifacts": {}, "checks": None, "review": None, "pending_operation": None,
                  "protected": protected_inputs(self.project, profile), "created_at": now()}
+        if modern:
+            state.update(delivery_version=2, contract_sealed=False, contract_revision=0,
+                         original_task=task, contract_history=[], manual=None)
         state["initial_fingerprint"] = self.current(state)
         save(self.directory, state, "Initialized reviewed task and project profile")
         return self.status(state)
@@ -46,14 +53,16 @@ class Workflow:
             raise EngineError("Invalid or unsupported task record; inspect the saved history")
         if state.get("project") != str(self.project) or state.get("bundle_version") != __version__:
             raise EngineError("Project or bundle version differs from the saved run")
-        validate_profile(state["profile"])
-        validate_task(state["task"], state["profile"])
+        draft = state.get("delivery_version") == 2 and not state["contract_sealed"]
+        validate_profile(state["profile"], draft=draft)
+        validate_task(state["task"], state["profile"], draft=draft)
         if state.get("contract_digest") != digest({"task": state["task"], "profile": state["profile"]}):
             raise EngineError("Task or profile changed after initialization; start a reviewed run in a fresh worktree")
         return state
 
     def current(self, state):
-        return fingerprint(self.project, state["profile"], state["task"], self.directory)
+        return fingerprint(self.project, state["profile"], state["task"], self.directory,
+                           draft=state.get("delivery_version") == 2 and not state["contract_sealed"])
 
     def require_phase(self, state, *phases):
         if state["phase"] not in phases:
@@ -79,11 +88,19 @@ class Workflow:
                 "feature_checks_current": bool(feature and feature["fingerprint"] == current),
                 "feature_checks_passed": bool(feature and feature["passed"]),
                 "review_current": bool(state.get("review") and state["review"]["fingerprint"] == current),
+                "delivery_version": state.get("delivery_version", 1),
+                "contract_sealed": state.get("contract_sealed", True),
+                "contract_revision": state.get("contract_revision", 0),
+                "manual_candidate": state.get("manual_candidate"),
+                "bundle_root": str(Path(__file__).resolve().parent.parent),
+                "bundle_revision": git(Path(__file__).resolve().parent.parent, "rev-parse", "HEAD"),
                 "pending_operation": state.get("pending_operation"),
                 "history_entries": len(state["history"]), "state": str(self.directory / "state.json")}
 
     def record(self, kind, source):
         state = self.load()
+        if state.get("delivery_version") == 2:
+            return self.record_delivery(state, kind, source)
         expected = {"analysis": "analyze", "plan": "plan", "batch": "build", "improvement": "improve"}
         self.require_phase(state, expected[kind])
         if state.get("pending_operation"):
@@ -98,6 +115,138 @@ class Workflow:
         state["phase"] = {"analysis": "plan", "plan": "build", "batch": "verify", "improvement": "final-verify"}[kind]
         state["review"] = None
         save(self.directory, state, f"Recorded {kind}")
+        return self.status(state)
+
+    def record_delivery(self, state, kind, source):
+        expected = {"analysis": "analyze", "plan": "plan", "implementation": "build",
+                    "manual": "manual", "batch": "testing"}
+        if kind not in expected:
+            raise EngineError("New delivery records improvement within implementation, before all testing")
+        self.require_phase(state, expected[kind])
+        if state.get("pending_operation"):
+            raise EngineError("Reconcile the pending operation before recording a stage")
+        self.integrity(state)
+        current = self.current(state)
+        if kind in ("analysis", "plan") and current != state["initial_fingerprint"]:
+            raise EngineError("Code or declared inputs changed during analysis/planning")
+        if kind == "implementation":
+            state["manual_candidate"] = production_fingerprint(self.project, state["profile"])
+        if kind == "manual":
+            if production_fingerprint(self.project, state["profile"]) != state["manual_candidate"]:
+                raise EngineError("Implementation changed; repair and finish it before manual QA")
+            state["manual"] = validate_manual_receipt(
+                read_json(source), state["manual_candidate"], state["task"], self.project)
+        if kind == "batch":
+            if not state["contract_sealed"]:
+                raise EngineError("Seal the reviewed final acceptance contract before the test batch")
+            self.require_manual(state)
+        self.capture_artifact(state, kind, source, current)
+        state["phase"] = {"analysis": "plan", "plan": "build", "implementation": "manual",
+                          "manual": "testing", "batch": "verify"}[kind]
+        state["review"] = None
+        save(self.directory, state, f"Recorded final-stage {kind}")
+        return self.status(state)
+
+    def require_manual(self, state):
+        if state.get("delivery_version") != 2:
+            return
+        receipt = state.get("manual")
+        if not receipt or receipt["candidate"] != production_fingerprint(self.project, state["profile"]):
+            raise EngineError("Current final manual QA evidence is required; repair changed implementation")
+        required = {c["id"] for c in state["task"]["acceptance"] if c.get("mode", "automated") in ("manual", "mixed")}
+        covered = {o["criterion"] for o in receipt["observations"] if o["status"] == "PASS"}
+        if not required <= covered:
+            raise EngineError("Manual criteria lack current PASS observations")
+        for observation in receipt["observations"]:
+            for evidence in observation["evidence"]:
+                path = inside(self.project, evidence["path"])
+                reject_path_aliases(path, self.project)
+                if file_hash(path) != evidence["sha256"]:
+                    raise EngineError("Manual evidence changed; repeat the affected final QA")
+
+    def contract_proposal(self, task, profile):
+        """Read-only binding for an independent reviewer, not approval by this command."""
+        state = self.load()
+        draft = state.get("delivery_version") == 2 and not state["contract_sealed"]
+        validate_profile(profile, draft=draft)
+        validate_task(task, profile, draft=draft)
+        protected = protected_inputs(self.project, profile)
+        return {"old_digest": state["contract_digest"],
+                "new_digest": contract_candidate_digest(task, profile, protected),
+                "protected": protected, "task": task, "profile": profile}
+
+    def seal(self, task, profile, review):
+        state = self.load()
+        self.require_phase(state, "testing")
+        if state.get("delivery_version") != 2 or state["contract_sealed"]:
+            raise EngineError("Only a draft new-delivery contract can be sealed")
+        if state.get("pending_operation"):
+            raise EngineError("Reconcile the pending operation before sealing")
+        self.integrity(state)
+        self.require_manual(state)
+        if not isinstance(profile, dict) or profile.get("version") != 2:
+            raise EngineError("New delivery requires a version 2 profile")
+        validate_profile(profile)
+        validate_task(task, profile)
+        # The final test contract cannot silently reclassify implementation as tests.
+        for key in ("interface", "test_paths", "environment_inputs", "input_files", "review_scopes", "exposure"):
+            if profile.get(key, []) != state["profile"].get(key, []):
+                raise EngineError(f"Seal cannot change {key}; use a reviewed amendment")
+        self.preserve_requirements(state["task"], task)
+        proposal = self.contract_proposal(task, profile)
+        validate_contract_review(review, proposal["old_digest"], proposal["new_digest"])
+        self.require_manual({**state, "task": task, "profile": profile})
+        self.save_contract(state, task, profile, proposal["protected"], review, "Sealed final acceptance")
+        return self.status(state)
+
+    @staticmethod
+    def preserve_requirements(previous, proposed):
+        if proposed.get("request") != previous["request"]:
+            raise EngineError("Preserve the original request; a new product scope needs a new task")
+        old = {item["id"]: item["text"] for item in previous["acceptance"]}
+        new = {item["id"]: item["text"] for item in proposed.get("acceptance", [])}
+        if old != new:
+            raise EngineError("Preserve acceptance IDs/text; seal changes only evidence bindings")
+
+    def save_contract(self, state, task, profile, protected, review, event, sealed=True):
+        state["contract_history"].append({"task": state["task"], "profile": state["profile"],
+            "protected": state["protected"], "digest": state["contract_digest"],
+            "revision": state["contract_revision"], "review": review, "at": now()})
+        state.update(task=task, profile=profile, protected=protected,
+                     contract_digest=digest({"task": task, "profile": profile}),
+                     contract_sealed=sealed, contract_revision=state["contract_revision"] + 1,
+                     checks=None, review=None)
+        save(self.directory, state, event)
+
+    def amend(self, task, profile, review, reason):
+        state = self.load()
+        if state.get("delivery_version") != 2 or state["phase"] in ("cancelled", "analyze", "plan"):
+            raise EngineError("Amend a new-delivery build or final-stage contract; preserve cancelled runs")
+        if state.get("pending_operation") or not reason.strip():
+            raise EngineError("Amendment needs a reason and no pending operation")
+        if not isinstance(profile, dict) or profile.get("version") != 2:
+            raise EngineError("Amendment requires a version 2 profile")
+        proposal = self.contract_proposal(task, profile)
+        validate_contract_review(review, proposal["old_digest"], proposal["new_digest"])
+        if task["request"] != state["original_task"]["request"]:
+            raise EngineError("Amendment cannot replace the original request")
+        old_criteria = {c["id"]: c["text"] for c in state["task"]["acceptance"]}
+        new_criteria = {c["id"]: c["text"] for c in task["acceptance"]}
+        authority = review.get("acceptance_change_authority")
+        if old_criteria != new_criteria and (not isinstance(authority, str) or not authority.strip()):
+            raise EngineError("Changed requirements need explicit acceptance_change_authority in the review")
+        # A contract correction may repair protected tests; retain their prior hashes/history.
+        for artifact in state["artifacts"].values():
+            if file_hash(self.directory / artifact["path"]) != artifact["sha256"]:
+                raise EngineError("Recorded evidence changed; preserve it before amendment")
+        state["phase"] = "build"
+        state["manual"] = None
+        state.pop("manual_candidate", None)
+        for key in ("implementation", "manual", "batch", "improvement"):
+            state["artifacts"].pop(key, None)
+        state["repairs_used"] += 1
+        self.save_contract(state, task, profile, proposal["protected"], review, f"Reviewed amendment: {reason}",
+                           sealed=state["contract_sealed"])
         return self.status(state)
 
     def capture_artifact(self, state, kind, source, current):
@@ -116,6 +265,7 @@ class Workflow:
         if state.get("checks") and not state["checks"]["passed"]:
             raise EngineError("Completed failed checks require correction; use repair before another check batch")
         self.integrity(state)
+        self.require_manual(state)
         current = self.current(state)
         anchor = "batch" if state["phase"] == "verify" else "improvement"
         if state["artifacts"][anchor]["fingerprint"] != current:
@@ -138,7 +288,8 @@ class Workflow:
         state["checks"] = {"fingerprint": current, "passed": passed, "inputs_unchanged": unchanged, "results": results}
         state["pending_operation"] = None
         if passed:
-            state["phase"] = "improve" if state["phase"] == "verify" else "review"
+            state["phase"] = ("review" if state.get("delivery_version") == 2
+                              else "improve" if state["phase"] == "verify" else "review")
         save(self.directory, state, "Check batch passed" if passed else "Check batch failed; correction required")
         return {**self.status(state), "checks_reused": False, "results": results}
 
@@ -146,9 +297,11 @@ class Workflow:
         results = []
         for check in configured:
             outputs = [inside(self.project, name) for name in check.get("artifacts", [])]
-            output_root = (self.directory / "outputs").resolve()
+            output_root = (self.directory / "outputs").absolute()
+            reject_path_aliases(output_root, self.project)
             for output in outputs:
-                if not output.resolve().is_relative_to(output_root):
+                reject_path_aliases(output, self.project)
+                if not output.absolute().is_relative_to(output_root):
                     raise EngineError("Check output escaped the generated output directory")
                 if output.exists():
                     if not output.is_file():
@@ -159,6 +312,7 @@ class Workflow:
             artifacts = []
             for output in outputs:
                 try:
+                    reject_path_aliases(output, self.project)
                     artifacts.append({"path": str(output), "sha256": file_hash(output)})
                 except EngineError as error:
                     result["passed"] = False
@@ -170,6 +324,8 @@ class Workflow:
     def feature_check(self, check_ids, source):
         """Partial feedback for a completed capability; never version acceptance."""
         state = self.load()
+        if state.get("delivery_version") == 2:
+            raise EngineError("All testing waits until finished implementation and final manual QA")
         self.require_phase(state, "build")
         self.integrity(state)
         if state.get("feature_checks") and not state["feature_checks"]["passed"]:
@@ -210,7 +366,7 @@ class Workflow:
             if not state.get("feature_checks") or state["feature_checks"]["passed"]:
                 raise EngineError("Build repair requires actual failed feature feedback")
         else:
-            self.require_phase(state, "verify", "improve", "final-verify", "review", "ready")
+            self.require_phase(state, "manual", "testing", "verify", "improve", "final-verify", "review", "ready")
         if not reason.strip():
             raise EngineError("Record the reason for correction")
         state["repairs_used"] += 1
@@ -221,11 +377,17 @@ class Workflow:
         state["pending_operation"] = None
         state["artifacts"].pop("batch", None)
         state["artifacts"].pop("improvement", None)
+        if state.get("delivery_version") == 2:
+            state["manual"] = None
+            state.pop("manual_candidate", None)
+            state["artifacts"].pop("implementation", None)
+            state["artifacts"].pop("manual", None)
         save(self.directory, state, f"Repair batch: {reason}")
         return self.status(state)
 
     def require_checks(self, state):
         self.integrity(state)
+        self.require_manual(state)
         evidence = state.get("checks")
         if not evidence or not evidence["passed"] or evidence["fingerprint"] != self.current(state):
             raise EngineError("Passing checks for the current inputs are required; earlier evidence is missing or stale")
@@ -275,7 +437,32 @@ class Workflow:
             f"{skills / 'deep-review' / 'references' / 'theme-performance.md'}, "
             f"{skills / 'deep-review' / 'references' / 'theme-user-journey.md'}, "
             f"{skills / 'how-to-make-a-pr' / 'references' / 'project-bindings.md'}. "
-            "Map source-specific examples to the actual project; do not invent Expo or other stack requirements. "
+            "Read the delivery evidence contracts: "
+            f"{skills / 'safe-engine' / 'references' / 'app-diagnostics.md'}, "
+            f"{skills / 'safe-engine' / 'references' / 'app-efficiency.md'}, "
+            f"{skills / 'safe-engine' / 'references' / 'method-handoff.md'}, "
+            f"{skills / 'research-market' / 'SKILL.md'}, "
+            f"{skills / 'database-schema' / 'SKILL.md'}, "
+            f"{package.parent / 'docs' / 'current-decisions.md'}. "
+            "Verify implementation finished and manual action QA passed before automated tests were authored or run, "
+            "including delegate work and reviewer fixes; missing manual evidence remains unverified. "
+            "For new or materially changed persistence, assess whole-product access patterns, three viable designs "
+            "for new substantive choices, justified selection, written schema and independent audit. "
+            "Check integrity, concurrency, query/index costs and safe evolution; no universal O(1) claims. "
+            "Assess actual diagnostic coverage, privacy, bounds, recovery and owner access. "
+            "Assess relevant CPU/GPU, memory, database/query, network, storage and cache decisions "
+            "against recorded workload-specific evidence; unsupported performance stays unverified. "
+            "For new software, inspect original plan, current product/UX and technical research, "
+            "sources/versions, architecture/pattern tradeoffs, decision matrix and revised five outputs. "
+            "For existing work, assess research only for material changed assumptions or technical unknowns; "
+            "do not invent a new-product research obligation for a routine fix. "
+            "Use the actual product's stack, platforms and interfaces; require no GUI for headless software. "
+            "For UI/interaction changes, read "
+            f"{skills / 'ux-quality' / 'SKILL.md'}; for visual/audio choices also read "
+            f"{skills / 'ux-quality' / 'references' / 'assets-and-sources.md'}. "
+            "Assess journey simplicity, platform patterns, accessibility, current research and three credible "
+            "options for uncertain choices, justified selection, actual interaction and rendered/auditioned "
+            "asset evidence. Unseen or unheard required output remains unverified. "
             "Execute three distinct deep-review passes for security, performance, "
             "and user journey against the original goal, plus change-guard and compliance-check. "
             "Assess every pass even when its findings are empty; record the pass outcomes and evidence in your report. "
@@ -284,7 +471,7 @@ class Workflow:
             "file-set critique, all five planning outputs, and pre/change/post 0-4 execution evidence. "
             "For new substantive choices, assess the coordinator's three alternatives and justified recommendation; "
             "do not require alternatives to an already selected choice. These are local acceptance passes, "
-            "not execution of the separate Mobile PR review pipeline. "
+            "not execution of the separate PR review pipeline. "
             "A word count is not proof of method adherence. Check whether acceptance commands actually exercise "
             "the requested behavior; do not treat a zero exit status as sufficient by itself. "
             "The local state lives at " + str(self.directory / "state.json") + ". "
@@ -299,10 +486,14 @@ class Workflow:
         )
         state["review"] = None
         state["pending_operation"] = "independent-review"
+        modern = state.get("delivery_version") == 2
+        if modern:
+            from .review_packet import prompt_for
+            prompt = prompt_for(state, self.directory, package.parent)
         save(self.directory, state, "Started fresh read-only Codex review")
         log = self.directory / "logs" / f"{state['sequence']:04d}-review.log"
         result = run_command([codex, "exec", "--sandbox", "read-only", "--ephemeral", "-C", str(self.project),
-                              "--output-schema", str(package / "review-schema.json"),
+                              "--output-schema", str(package / ("review-schema-v2.json" if modern else "review-schema.json")),
                               "--output-last-message", str(output), "-"], self.project, timeout, log, prompt)
         state["pending_operation"] = None
         if not result["passed"] or not output.exists() or self.current(state) != current:
@@ -312,12 +503,22 @@ class Workflow:
         self.validate_review(report, state)
         passed = (report["verdict"] == "PASS" and report["method_followed"]
                   and all(c["status"] == "PASS" for c in report["criteria"])
-                  and not any(f["severity"] in ("CRITICAL", "HIGH", "MEDIUM") for f in report["findings"]))
+                  and not any(self.finding_blocks(f, state) for f in report["findings"]))
         state["review"] = {"fingerprint": current, "passed": passed, "report": str(output),
                            "sha256": file_hash(output), "execution": result}
         state["phase"] = "ready" if passed else "review"
         save(self.directory, state, "Independent review passed" if passed else "Independent review requires correction")
         return {**self.status(state), "report": report}
+
+    @staticmethod
+    def finding_blocks(finding, state):
+        if state.get("delivery_version") != 2:
+            return finding["severity"] in ("CRITICAL", "HIGH", "MEDIUM")
+        if finding["severity"] in ("CRITICAL", "HIGH") or finding["disposition"] == "blocking":
+            return True
+        return (finding["disposition"] == "before-exposure"
+                and (state["profile"].get("exposure", "local") != "local"
+                     or "release" in state["profile"].get("review_scopes", [])))
 
     @staticmethod
     def validate_review(report, state):
@@ -341,6 +542,15 @@ class Workflow:
                 raise EngineError("Malformed review finding")
             if not all(isinstance(finding.get(key), str) and finding[key].strip() for key in ("location", "description")):
                 raise EngineError("A finding needs its location and explanation")
+            if state.get("delivery_version") == 2:
+                if finding.get("disposition") not in ("blocking", "before-exposure", "accepted-deferral"):
+                    raise EngineError("Finding needs an explicit disposition")
+                if finding["disposition"] != "blocking":
+                    exception = finding.get("exception")
+                    if (finding["severity"] in ("CRITICAL", "HIGH") or not isinstance(exception, dict)
+                            or not all(isinstance(exception.get(key), str) and exception[key].strip()
+                                       for key in ("owner", "reason", "scope", "revisit", "authority"))):
+                        raise EngineError("Nonblocking findings need bounded actual authority; high severity cannot be deferred")
 
     def handoff(self):
         state = self.load()
@@ -357,7 +567,7 @@ class Workflow:
         for check in state["checks"]["results"]:
             lines.append(f"- {check['id']}: exit {check['exit_code']} in {check['duration_seconds']}s; log {check['log']}")
         lines += ["", f"Independent review: {review['report']}", "", "Ready for the agreed human handoff. No push, merge, release, or deployment was performed by the controller.",
-                  "", "PR delivery still requires how-to-make-a-pr and the full separate-instance how-to-review-a-pr. This local handoff does not certify those steps.",
+                  "", "PR delivery requires how-to-make-a-pr and full how-to-review-a-pr in a separate cloud/remote environment with fresh context. Local review is not PR approval; await the owner's cloud review before merge.",
                   "", "Evidence covers the declared checks and inputs. Local state is not a tamper-resistant receipt."]
         path = self.directory / "handoff.md"
         path.write_text("\n".join(lines) + "\n", encoding="utf-8")

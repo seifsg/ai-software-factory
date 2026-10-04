@@ -1,50 +1,52 @@
 # Preserve Seif's complete working method
 
-Read this on initial load, after context loss, on resume and when handing work to another instance. Read the actual skills. This table is a map, not a substitute.
+Use at intake/resume/context loss/delegation. Read full applicable methods; reuse unchanged text still available. This map is no substitute.
 
-Select the requested scope first. Analysis-only means analyze and stop before coding. A bounded direct fix uses the complete [small-change method](../../small-change/SKILL.md) and one compact record instead of the full delivery table. Carry the request, decisions, exact delta, affected consumers, checks, reviewer and prior version status. A small handoff cannot refresh a whole-version verdict. Do not import files just to reserve future skill names.
+Analysis-only stops before coding. Requested bounded fixes use complete [Small Change](../../small-change/SKILL.md) and one scoped record. Preserve prior version status; a small handoff cannot refresh whole-version acceptance.
 
-For app delivery, carry:
-- [Diagnostics](app-diagnostics.md): coverage inventory, actual module/event sites, safe log location/access/retention, focused evidence and gaps/unknowns. New apps include diagnostics; small changes retain scoped automatic backfill and checks.
-- [Efficiency](app-efficiency.md): material workloads/targets, repeated costs, reuse validity/bounds/lifetime, actual cold/warm/resource evidence and unresolved limits.
+For delivery, pass core methods plus references selected from actual requirements/changes. Record applicability; reviewers challenge omissions and request missing evidence. Do not preload unrelated UI/SEO/schema material. Read selected methods fully; this packet never replaces them.
 
-The receiver reads those references within the selected delivery scope. A summary or old version pass does not prove current coverage or performance. Fake-dependency timing does not prove real app speed. These are app-delivery policies, not extra steps for a standalone Analyze Start request.
+Applicable references:
+- [Delivery Readiness](delivery-readiness.md): actual capabilities, manual/automated/mixed criteria, game/browser lifecycle, durable external effects and authorized release/operations. No early testing or unrequested pilots.
+- [Application Security](app-security.md): exposure, roles/trust boundaries, applicable controls, denial-path evidence, gaps and production readiness. Existing security reviewer; keep local work proportional.
+- [Public Web SEO](../../ux-quality/references/web-seo.md), indexable public pages: route boundaries, metadata/discovery, observed checks, ownership and pending production evidence.
+- [Clear Writing](clear-writing.md), human-facing prose: audience/voice, supported claims, necessary details, clear actions; one finishing pass within existing review.
+- [UX Quality](../../ux-quality/SKILL.md), every UI/interaction change: journey, current standards, comparisons/choice, asset rights/inspection, manual action/audio evidence, unknowns. Same reviewer; tests last.
+- [Logging](app-diagnostics.md), every app/game including small fixes: working module, provider/access or local fallback, detailed safe success/failure journeys/parameters/queries/outputs, coverage/debugging. Pass access steps/correlation IDs, never credentials.
+- [Efficiency](app-efficiency.md): relevant workloads/resources/targets, reuse validity/bounds/ownership, measured evidence and limits.
+- [Research](../../research-market/SKILL.md) when required for new software or material unknowns: original/revised plans, sources/versions, product/UX and technical decisions, rejected options and unresolved assumptions.
+- [Database Schema](../../database-schema/SKILL.md), new/material persistence: access map/invariants, three options, choice/reason, written schema, index/query/migration plans, fresh audit, measured/unverified evidence. Preserve choices; tests last.
 
-| When | Read | Carry forward |
+These delivery rules do not expand standalone analysis. Summaries, old passes and fake-dependency timings prove no current coverage or real product speed.
+
+| When | Full method | Carry |
 |---|---|---|
-| Understand, before coding | [analyze-start](../../analyze-start/SKILL.md) | Purpose, actual source, all consumers, ASCII chart, claims vs code, unknowns |
-| Choose a new approach | Safe Engine's planning rule for a new substantive choice | Three credible alternatives in a table, one recommendation and why; owner/delegated selection or pending reserved choice |
-| Prepare to code | [get-ready-to-code](../../get-ready-to-code/SKILL.md), planning instructions | Files → original stop unless continuation is authorized → critique → phases → all todos → entire plan; no code |
-| New app, after the original plan | [research-market](../../research-market/SKILL.md), then revise the plan | Original plan, primary sources, visual evidence, comparison, decision/change matrix, revised plan |
-| Each implementation todo | Get Ready to Code's 0–4 execution loop | Context → change-site analysis → apply → inspect → correct; pre/change/post |
-| After substantial work | Actual project gates and Safe Engine improvement step | Feature feedback separate from version results; supported cleanup/reuse/security/performance improvements; exact-input final QA and fresh review |
-| Assess candidate | [deep-review](../../deep-review/SKILL.md); applicable factory review lenses | Findings/verdicts for security, performance and the original user journey |
-| Protect existing behavior | [change-guard](../../change-guard/SKILL.md) | All consumers and per-file regression evidence |
-| Check the original ask | [compliance-check](../../compliance-check/SKILL.md) | Requirement/rule/plan traceability; UNKNOWN stays unresolved |
-| Prepare each PR/update | [how-to-make-a-pr](../../how-to-make-a-pr/SKILL.md) | Task, visual draft, base, attribution, history, owner/notification evidence |
-| Review each PR/update | [how-to-review-a-pr](../../how-to-review-a-pr/SKILL.md), separate instance | Mobile's four themed reviews → synthesis/compliance → question gate → permitted fixes/checks → authorized handoff. Carry current-head evidence and the human-owned draft; read the [PR adapter](../../../../docs/pr-workflow.md). |
+| Understand | [Analyze Start](../../analyze-start/SKILL.md) | Purpose, source, all consumers, ASCII chart, claims vs behavior, unknowns. |
+| Choose | Coordinator planning rule | Three credible alternatives for new substantive choices; recommendation, reason, authority and selection/pending decision. Preserve settled choices. |
+| Plan | [Get Ready to Code](../../get-ready-to-code/SKILL.md) | Files → original stop unless continuation authorized → critique → phases → todos → entire plan. No code. |
+| Research | [Research Market](../../research-market/SKILL.md) | New-product original plan → research → revised five outputs. Existing work: resolve material unknowns in scope. Standalone research stops with findings. |
+| Each todo | Get Ready's complete 0–4 loop | Context → site analysis → apply → inspect → correct; pre/change/post evidence. |
+| Check / improve | [Tests-last order](../../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests) and actual gates | Finish implementation/improvements → final manual/user QA → author/polish/run automated tests → fresh review/PR. No early manual tests/playtests/walkthroughs or test writing/execution, including by delegates. Version 2 seals reviewed acceptance and runs one final gate. |
+| Assess | [Deep Review](../../deep-review/SKILL.md) and [security](../../deep-review/references/theme-security.md), [performance](../../deep-review/references/theme-performance.md), [journey](../../deep-review/references/theme-user-journey.md) lenses | Distinct pass outcomes with supporting evidence; clean findings allowed. |
+| Protect | [Change Guard](../../change-guard/SKILL.md) | Consumers and per-file regression evidence. |
+| Compare | [Compliance](../../compliance-check/SKILL.md) | Request/rule/plan traceability; unknown applicability stays UNKNOWN, exceptions need actual authority. |
+| PR / update | [Create](../../how-to-make-a-pr/SKILL.md), remote/cloud [review](../../how-to-review-a-pr/SKILL.md), [adapter](../../../../docs/pr-workflow.md) | Actual remote agent/task, fresh context, exact base/head, resolved bindings, task, visual context, attribution/history, themes + synthesis, permitted fixes/checks and human handoff. Local controller review stays separate; local subagents never count as PR review. |
 
-The factory review lenses are [security](../../deep-review/references/theme-security.md), [performance](../../deep-review/references/theme-performance.md) and [user journey](../../deep-review/references/theme-user-journey.md). They belong to factory delivery; the Mobile Deep Review original remains its own procedure.
+Read [project bindings](../../how-to-make-a-pr/references/project-bindings.md) with review lenses. Discover actual stack/rules and applicable interaction/exit behavior. Do not substitute PR review for the controller's five passes or vice versa.
 
-Load the [target-project and factory review adapter](../../how-to-make-a-pr/references/project-bindings.md) with those lenses. It preserves real stack/rule mappings and the selected app exit/recovery check outside the original rubric.
-
-The planning comparison belongs to the coordinator for new substantive choices. It is not a phase in Mobile PR review. Preserve existing user decisions. Follow the [session contract](session-contract.md): delegated choices can proceed; reserved choices stay with Seif. Review-only stays read-only.
-
-For factory acceptance, apply the selected [I1/I2 policies](../../../../docs/safe-engine-decisions.md#further-improvement-decisions): uncertain applicability stays UNKNOWN and blocks the dependent decision; a rule exception needs actual authority. A written explanation alone does not waive a requirement. These acceptance policies are separate from the restored Compliance original's wording.
+Three-option planning belongs to new substantive choices, not an extra PR-review phase. Follow [session authority](session-contract.md). Review-only stays read-only. [I1/I2](../../../../docs/current-decisions.md#further-improvement-decisions) govern unknowns and exceptions; explanations alone waive nothing.
 
 ## Resume and delegation packet
 
-Pass:
-- The original request verbatim and acceptance criteria.
-- The session contract: delegated/reserved decisions, handoff/checkpoints and actual constraints.
-- Approved, rejected and unresolved choices.
-- Original plan and research/revision artifacts where applicable.
-- Task/profile, saved phase, project path/worktree, base/head and current diff.
-- Canonical skill paths and saved analysis/plan/batch/improvement.
-- Command logs, review results and evidence freshness.
-- Diagnostic correction history, demonstrated progress and actual obstacles.
-- PR/task links when present.
+Pass one record:
+- Verbatim request, acceptance and session authority/checkpoints/constraints.
+- Approved, rejected and pending decisions; original/revised plans and research.
+- Project/worktree, bundle identity, original/current task/profile and amendment history, phase, base/head and diff.
+- Full skill paths; analysis, plan, batch and improvement artifacts.
+- Command logs, review results, evidence freshness, diagnostic/resource limits.
+- Criterion modes and candidate-bound manual receipts: actual actions/environment, outcomes/evidence/limits and final-stage chronology before automated test authoring/execution. Reviewer checks substance; a passing suite cannot fill missing manual evidence.
+- Correction history, demonstrated progress, obstacles and existing PR/task links.
 
-The receiver reads `status`, current instructions and actual code. Resume the first unfinished or invalidated step. Do not initialize again, invent artifacts or accept stale evidence.
+Receiver: read status, current instructions and source. Resume the first unfinished/invalidated step. Never reinitialize, invent artifacts or accept stale evidence.
 
-In existing stage artifacts, state which full skills/references were read and link their actual outputs. Include this evidence in a PR's detailed review comment. Do not invent controller commands or receipts. The controller checks order and input integrity; the independent reviewer checks the method itself. Automatic host injection and universal enforcement are not implemented.
+Record methods/references read and link outputs in existing stage artifacts and applicable PR handoff. The controller checks order/input integrity; the reviewer checks method adherence. No invented commands/receipts or universal host enforcement.
