@@ -13,6 +13,8 @@ New software—games, web/mobile/desktop apps, services, tools, libraries: resea
 
 Read request, constraints, approved/rejected choices and existing evidence. Identify users, core job/play loop, platforms, hardware, scale, interfaces, success criteria. Track unknowns: `question → consequence → source/experiment → result → next decision`.
 
+Delivery: required capability still unknown? Make a bounded [spike ticket](../ticketing/SKILL.md). Follow our full cycle. Stop when answered.
+
 Delivery: preserve original five planning outputs. If missing, use [Get Ready to Code](../get-ready-to-code/SKILL.md); honor checkpoint. Standalone research: findings only; no coding plan, controller or initialization.
 
 Reuse current evidence. Stop when material decisions have support. Change unproductive searches; honor access limits/owner stops. Missing evidence blocks dependent choices only. No invented deadlines/retry allowances.
@@ -20,6 +22,8 @@ Reuse current evidence. Stop when material decisions have support. Change unprod
 ## Gather evidence
 
 Use strands that can change the framed decision; new-product delivery considers each applicable strand. Version lookup needs no competitor survey, pattern catalog or UX screenshots. Record material gaps; invent no irrelevant work.
+
+Compare options with the same inputs, workload and user journey.
 
 1. **Products/experience.** Compare relevant competitors/substitutes, usually three to five; explain selection. Search rank proves no leadership. Use adjacent examples when needed. Study core loops, useful features, navigation, visual hierarchy, feedback, onboarding, loading/empty/error states, recovery, exit. Headless: developer/operator workflows, API/CLI ergonomics; no invented GUI.
 2. **Stack/architecture.** Check current official engine/framework/runtime docs, supported versions, platform limits, repositories, relevant papers. Compare capabilities, compatibility, performance, security, maintainability, distribution, licenses, operating costs against the goal. Preserve choices unless evidence warrants reopening with the owner.

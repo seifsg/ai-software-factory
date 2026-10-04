@@ -40,6 +40,8 @@ The module owns structured events, context propagation, sanitization, levels, si
 
 ## Keep logs usable
 
+Replacing or restoring state? Reset affected counters, timers, caches and diagnostics. Check no stale state survives.
+
 Libraries emit through caller-configured hooks/sinks; no global setup/files on import. The app configures the destination. Standalone library work supplies the contract and demonstrates real consumer use; create no unrelated host app.
 
 Use local files, platform storage or captured stdout with discovery/filtering/retention. Browser/mobile/sandbox storage/export must fit actual capabilities. Owner and agent need severity/time/operation/journey search, exact access steps and sanitized export.

@@ -4,9 +4,9 @@ Keep Seif's originals and deliberate reminders. Adapt project assumptions to the
 
 | Skill | Job | Source / dependencies |
 |---|---|---|
-| [analyze-start](analyze-start/SKILL.md) | Understand the feature and every use. Explain with ASCII charts. No coding. | Mobile original + three approved lines; actual source and read/search tools |
+| [analyze-start](analyze-start/SKILL.md) | Understand the feature and every use. Explain with ASCII charts. No coding. | Mobile original + owner-approved additions; actual source and read/search tools |
 | [get-ready-to-code](get-ready-to-code/SKILL.md) | Prepare files, critique, phases, todos and plan. Define the 0–4 execution loop. | Mobile original; honor its file-summary stop and no-code planning boundary |
-| [deep-review](deep-review/SKILL.md) | Find bugs, oversights, bad implementation and unnecessary complexity. | Mobile original; candidate files and surrounding code |
+| [deep-review](deep-review/SKILL.md) | Find bugs, oversights, bad implementation and unnecessary complexity. | Mobile original + owner-approved state check; candidate files and surrounding code |
 | [change-guard](change-guard/SKILL.md) | Check the change against existing behavior and consumers. | Mobile original; base/diff, consumers and relevant evidence |
 | [compliance-check](compliance-check/SKILL.md) | Check the original request, plan and project rules against the actual result. | Original method; generic rule discovery |
 | [how-to-make-a-pr](how-to-make-a-pr/SKILL.md) | Prepare a feature draft and its task/reviewer handoff. | Routines-derived generic method; [PR adapter](../../docs/pr-workflow.md) |

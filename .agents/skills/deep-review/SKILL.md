@@ -32,6 +32,7 @@ Ruthless code review. No mercy, no shortcuts. Find every damn problem.
 - Incomplete error handling (catch blocks that swallow errors)
 - Missing logging for debugging critical paths
 - Forgotten TODO/FIXME items that should be addressed now
+- Valid actions must leave recoverable state. Check creation, update, save and load limits agree.
 
 #### 3. Anti-Patterns
 - God classes or functions doing too much
