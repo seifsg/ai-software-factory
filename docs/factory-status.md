@@ -14,6 +14,8 @@ On 4 October, Seif instructed immediate merge of all current factory PRs, supers
 
 Ticketing now records durable owner-confirmed scope and activity in the selected tracker, with dedicated full-cycle ticket sessions and isolated/serial workspaces. Seif selected GitHub Issues. [Usage and limits](ticketing.md) distinguish implemented helpers from actual MCP/session/cloud execution; publication and adoption stay separate.
 
+Ticket writing: [brief recipe and example](../.agents/skills/ticketing/references/ticket-contract.md#write-the-ticket). Concrete before/after, checkable criteria, no lost owner detail. Full data folds away; old pinned controllers keep their existing format.
+
 ## Current method
 
 Authored output uses [Clear Writing](../.agents/skills/safe-engine/references/clear-writing.md): short, natural, specific; proof beside claims, clear actions, one finishing pass.

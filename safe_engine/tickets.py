@@ -92,14 +92,19 @@ def scope_digest(contract):
     return digest({"revision": contract["revision"], "scope": contract["scope"]})
 
 
-def render_ticket(contract):
+def render_ticket(contract, *, fold_contract=True):
     """Readable projection and machine contract must agree; no ignored prose edits."""
     validate_contract(contract)
     scope = contract["scope"]
     criteria = "\n".join(f"- {c['id']}: {c['text']}" for c in scope["acceptance"])
-    return (f"## Before\n\n{scope['before']}\n\n## After\n\n{scope['after']}\n\n"
-            f"## Acceptance\n\n{criteria}\n\n{START}\n```json\n"
-            f"{json.dumps(contract, indent=2, ensure_ascii=False)}\n```\n{END}\n")
+    projection = (f"## Before\n\n{scope['before']}\n\n## After\n\n{scope['after']}\n\n"
+                  f"## Acceptance\n\n{criteria}\n\n")
+    payload = (f"{START}\n```json\n{json.dumps(contract, indent=2, ensure_ascii=False)}\n"
+               f"```\n{END}\n")
+    if fold_contract:
+        payload = ("<details>\n<summary>Full contract: owner input, journeys and history</summary>\n\n"
+                   f"{payload}\n</details>\n")
+    return projection + payload
 
 
 def parse_body(body):
@@ -111,7 +116,9 @@ def parse_body(body):
     if not payload.startswith("```json\n") or not payload.endswith("\n```"):
         raise EngineError("Ticket contract must be a fenced JSON block")
     contract = validate_contract(json.loads(payload[8:-4]))
-    if body.replace("\r\n", "\n").strip() != render_ticket(contract).strip():
+    normalized = body.strip()
+    if (normalized != render_ticket(contract).strip()
+            and normalized != render_ticket(contract, fold_contract=False).strip()):
         raise EngineError("Remote prose differs from the contract; reconcile and confirm changed expectations")
     return contract
 

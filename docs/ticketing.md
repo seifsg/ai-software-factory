@@ -20,7 +20,7 @@ These are command templates, not execution evidence. Render returns body/digest,
 
 ## Remote contract
 
-Render, confirm from actual owner instructions/delegation, write through MCP, then read back. Body contains Before, After, Acceptance and one fenced JSON block between `<!-- safe-engine-ticket:v1 -->` and `<!-- /safe-engine-ticket -->`. Keep the rendered projection exact. Independent prose edits block import until reconciled; owner changes cannot hide behind a machine block.
+Write with the [ticket recipe](../.agents/skills/ticketing/references/ticket-contract.md#write-the-ticket): short, specific, complete. Render, confirm from actual owner instructions/delegation, write through MCP, then read back. Before, After and Acceptance stay visible. Full data sits in a collapsed `details` block: one fenced JSON contract between `<!-- safe-engine-ticket:v1 -->` and `<!-- /safe-engine-ticket -->`. The controller also accepts the exact older unfolded format. Keep either projection exact; independent prose edits block import until reconciled. Folding changes presentation only, never scope/digest or authority. An older pinned controller cannot read the folded format; keep its ticket format until supported bundle adoption.
 
 Contract fields:
 
