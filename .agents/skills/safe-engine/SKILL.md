@@ -1,6 +1,6 @@
 ---
 name: safe-engine
-description: "Build or resume software with Seif's methods, saved stages, batched checks and independent review. Covers games, apps, services and tools. Use for factory delivery; preserve analysis-only scope."
+description: "Build/resume games, apps, services and tools with Seif's methods, saved stages, final checks and independent review. Factory delivery; preserve phase-only requests."
 ---
 
 # Safe Engine
@@ -17,13 +17,13 @@ For requested bounded fixes, read [Small Change](../small-change/SKILL.md) befor
 
 New software or substantial features use the flow below. Discover the actual domain, stack, platforms, interfaces, workload and constraints. Games, desktop/mobile/web apps, servers, libraries and tools share the method; their evidence differs.
 
-Read [mandatory logging](references/app-diagnostics.md) and [efficiency](references/app-efficiency.md) during delivery analysis/planning. Every app/game needs a working shared logging module: reuse adequate facilities/preferred provider or create the internal module with a local destination. Discover preferences/access, cover detailed success/failure journeys and read logs throughout development/manual debugging. Include coverage, resource targets and evidence from the start. Research material product/technical unknowns through [Research Market](../research-market/SKILL.md). Keep changes surgical; required logging does not authorize unrelated refactors.
+Read [logging](references/app-diagnostics.md) and [efficiency](references/app-efficiency.md) during delivery analysis/planning. Every app/game needs working shared logging: adequate facilities/preferred provider or internal module/local sink. Discover preferences/access; log detailed successes/failures and read trails throughout development/manual debugging. Plan coverage, resource targets and evidence. Research material unknowns through [Research Market](../research-market/SKILL.md). Required logging stays surgical.
 
 ## Start or resume
 
-Every UI/interaction change uses [UX Quality](../ux-quality/SKILL.md) from planning through manual QA and independent review. Research uncertain patterns/assets, compare three credible options and choose the justified best fit under delegated authority. Verify simplicity, accessibility, visual/audio quality and actual interaction; no extra controller phase or automatic redesign.
+Every UI/interaction change uses [UX Quality](../ux-quality/SKILL.md) through planning, manual QA and independent review. Research uncertain patterns/assets; compare three options, justify/choose within delegation. Verify simplicity, accessibility, visuals/audio and interaction. No extra phase or automatic redesign.
 
-For new persistence models or material schema changes, use [Database Schema](../database-schema/SKILL.md) during planning before dependent implementation: whole-product access map → three viable designs → selected reasoned design → written schema → fresh audit. Preserve engine choices; routine fixes stay scoped. Carry the design and query/migration evidence into review. No database need means no invented database, and no new controller phase.
+New/material persistence design uses [Database Schema](../database-schema/SKILL.md) before dependent implementation: whole-product access map → three viable designs → reasoned choice → written schema → fresh audit. Preserve engine choices and routine-fix scope; pass query/migration evidence to review. No invented database or controller phase.
 
 Resolve this bundle's root. Read [pilot usage](../../../docs/pilot-usage.md) for supported commands, profile, limits and recovery. Run from the bundle:
 
@@ -31,17 +31,17 @@ Resolve this bundle's root. Read [pilot usage](../../../docs/pilot-usage.md) for
 python -m safe_engine --project <absolute-target-root> status
 ```
 
-Read the request, project rules and [session contract](references/session-contract.md). Reuse answers and delegation. Discover tools before asking. Without a run, preserve existing work in a suitable isolated checkout; establish a clean Git baseline and ignored `.factory/`. Commit a minimal new-project baseline before initialization.
+Read request, rules and [session contract](references/session-contract.md). Reuse answers/authority; discover tools before asking. No run? Preserve work in a suitable isolated checkout with clean Git baseline and ignored `.factory/`. Commit a minimal new-project baseline before initialization.
 
-Inspect real check definitions, protected acceptance files, runtime inputs and interaction tools without running or authoring tests. Save the original request and explicit acceptance criteria in task JSON; link each criterion to configured checks. Use actual browser/native/game/API/CLI interaction as applicable. Screenshots alone cannot prove behavior. If initialization needs tests that do not exist, use the [pilot limitation](../../../docs/pilot-usage.md#feature-feedback-and-version-checkpoints); never write tests early to satisfy setup. Missing required tools or reserved decisions remain unresolved; continue independent work.
+Inspect check definitions, protected acceptance files, runtime inputs and interaction tools; author/run no tests. Save original request/criteria in task JSON; map criteria to checks. Use actual browser/native/game/API/CLI interaction; screenshots cannot prove behavior. Missing setup tests: follow the [pilot limitation](../../../docs/pilot-usage.md#feature-feedback-and-version-checkpoints), never write them early. Missing tools/reserved choices block dependent work only.
 
-Resolve acceptance-shaping unknowns before freezing task/profile where possible. Planning/research may be prepared before initialization, then recorded in stage order. After initialization, revise implementation plans within accepted criteria; changed criteria, check definitions or protected inputs require a newly reviewed task in a fresh worktree. Preserve and link the old run; never patch its contract.
+Resolve acceptance-shaping unknowns before freezing task/profile where possible. Planning/research can precede initialization; record in stage order. Later plan revisions stay within accepted criteria. Changed criteria/check definitions/protected inputs require a newly reviewed task in a fresh worktree; preserve/link the old run, never patch its contract.
 
 Initialize once. Resume the saved phase. Follow [control-route recovery](references/session-contract.md#recover-a-failed-control-route) when needed. No invented credits, retry ceilings, session deadlines or permissions. Honor real limits, checkpoints and stops.
 
 ## Follow the saved phase
 
-Before each phase, read its entire skill and applicable references. Names and summaries are insufficient. On resume/context loss/delegation, use [method handoff](references/method-handoff.md); the receiver reads the methods itself. Missing methods block their phase.
+Read each phase's full method/applicable references before using it. Reuse fully read, unchanged text while available; names/summaries never suffice. On resume/context loss/delegation, use [method handoff](references/method-handoff.md); receivers read methods themselves. Missing methods block their phase.
 
 With no existing implementation, say so; analyze requirements, available platform facilities and intended consumers. Never invent code evidence. Preserve Get Ready's O(1) question as a prompt to examine workload-appropriate complexity, not a universal acceptance target; [I5](../../../docs/current-decisions.md#further-improvement-decisions) governs measured performance.
 
@@ -61,7 +61,7 @@ Keep evidence in excluded `.factory/` or equivalent. Report unverified coverage.
 
 ## Keep the work usable
 
-Give concise batch updates. When the user wants to watch/learn, show the actual brief, acceptance, chart, plan, running product and check/review results. Distinguish historical walkthroughs. Updates are not approval gates. Pause only for real authority/access/decision gaps, checkpoints, owner stops or unrecoverable required gates.
+Give brief batch updates. For watch/learn requests, show actual brief, criteria, chart, plan, running product and results; label historical walkthroughs. Updates grant no approval gate. Pause only for real authority/access/decision gaps, checkpoints/stops or unrecoverable required gates.
 
 For factory faults, use [Improve Factory](../improve-factory/SKILL.md): checkpoint → isolated repair → independent review → compatible resume. No recursive delivery runs or silent upgrades. Reloaded text is not new QA.
 

@@ -6,6 +6,8 @@ Read this page on GitHub from your phone. Sign in with access to this private re
 
 After the checkpoint, Seif added mandatory [UX Quality](../.agents/skills/ux-quality/SKILL.md) for every UI/interaction change: current research, three credible uncertain-choice options, justified autonomous selection, and real interaction/visual/audio auditing. The dated checkpoint retains its original test and skill counts.
 
+Latest [writing pass](skill-writing-audit.md#compact-owner-style--4-october-2026): eleven edited skill/reference files 18.6% shorter; four core originals unchanged. Brief instructions, preserved details, no duplicate work.
+
 ## Current method
 
 1. Understand the request and actual code. Analysis-only stays analysis-only.

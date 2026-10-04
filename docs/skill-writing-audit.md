@@ -1,5 +1,15 @@
 # Skill writing audit
 
+## Compact owner style — 4 October 2026
+
+Against `236d5a7`, eleven edited skill/reference files: **9,786 → 7,966 words (18.6% less)**. All 35 skill/reference texts, excluding indexes: **24,162 → 22,342 (7.5% less)**. Whitespace words, not tokens; no text relocated to hide size. PR adapter: 851 → 587 words. Four core originals unchanged.
+
+Shortened all six factory-specific skills, logging, efficiency, asset guidance, handoff and the AI-added UX reviewer paragraph. Preserved source bodies/reminders, detailed requirements, phase gates, surgical scope, logging, three-option decisions, schema/UX audits and tests-last order. Repository rules now require brief owner wording and reuse of valid work; no recursive loading, duplicate reports or repeated votes. Required review/gates remain.
+
+Before final automated checks, independent instruction walkthroughs covered tiny UI fixes with missing logging/provider access, game/audio planning without playback, multitenant schema design-only, research-only lookup, active dirty-bundle maintenance and unchanged-method reuse. One ambiguous approval sentence was corrected and reread. This is instruction evidence, not real-app/audio certification.
+
+Final checks: six bundle-input tests passed (15.936 s); fifteen entries valid, 356 local links/anchors valid, generated resolvers match, four core originals match the main baseline, whitespace clean. No runtime/test changes or full-suite rerun; earlier full-suite evidence stays historical.
+
 ## UX quality addition — 4 October 2026
 
 Added the owner-requested [UX Quality](../.agents/skills/ux-quality/SKILL.md): 854-word core with conditional asset/source guidance. One audit reaches delivery planning, small fixes, research, handoff, journey review and the controller's fresh-review prompt. Both files are required inputs. Thirteen canonical skills now; four original core files unchanged. [Source/purpose comparison](skill-provenance.md#ux-quality-method--4-october-2026) explains why the original session-investigation workflow stays separate.

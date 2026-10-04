@@ -1,5 +1,9 @@
 # Skill sources and adaptations
 
+## Compact owner style — 4 October 2026
+
+Seif requested shortest clear wording without lost details or needless loops. Compressed factory-specific skills/references and AI adapters; preserved source bodies, deliberate reminders and source checkouts. Added valid-work reuse to repository/session guidance. No new skill, external source or runtime behavior. [Measured scope and evidence](skill-writing-audit.md#compact-owner-style--4-october-2026).
+
 ## UX quality method — 4 October 2026
 
 Seif requested a mandatory quality method for every UI change: simple/familiar journeys, excellent visuals/audio, current research, three credible options for uncertain choices, reasoned recommendation and autonomous in-scope execution. Improve Factory and Skill Creator package that request as `ux-quality`, with conditional asset guidance and planning, Small Change, research, handoff and reviewer consumers. No original core file changes. Thirteen canonical skills now; earlier counts below describe their own pass.

@@ -1,15 +1,15 @@
 # Preserve Seif's complete working method
 
-Read on initial load, resume, context loss and delegation. Read the actual methods; this map cannot replace them.
+Use at intake/resume/context loss/delegation. Read full applicable methods; reuse unchanged text still available. This map is no substitute.
 
 Analysis-only stops before coding. Requested bounded fixes use complete [Small Change](../../small-change/SKILL.md) and one scoped record. Preserve prior version status; a small handoff cannot refresh whole-version acceptance.
 
-For delivery, sender and receiver read:
-- [UX Quality](../../ux-quality/SKILL.md) for every UI/interaction change: affected journey, current standards, uncertain-choice comparisons, selected rationale, asset rights/inspection, manual action/audio evidence and unresolved criteria. Keep the existing reviewer and tests-last order.
-- [Mandatory logging](app-diagnostics.md): working shared module for every app/game, including small fixes; preferred provider/access or local fallback, detailed success/failure journeys, safe parameters/queries/outputs, coverage and continuous log-led debugging. Pass log access and correlation IDs, never credentials.
+For delivery, read applicable methods and pass:
+- [UX Quality](../../ux-quality/SKILL.md), every UI/interaction change: journey, current standards, comparisons/choice, asset rights/inspection, manual action/audio evidence, unknowns. Same reviewer; tests last.
+- [Logging](app-diagnostics.md), every app/game including small fixes: working module, provider/access or local fallback, detailed safe success/failure journeys/parameters/queries/outputs, coverage/debugging. Pass access steps/correlation IDs, never credentials.
 - [Efficiency](app-efficiency.md): relevant workloads/resources/targets, reuse validity/bounds/ownership, measured evidence and limits.
 - [Research](../../research-market/SKILL.md) when required for new software or material unknowns: original/revised plans, sources/versions, product/UX and technical decisions, rejected options and unresolved assumptions.
-- [Database Schema](../../database-schema/SKILL.md) for new/material persistence design: full access map/invariants, three alternatives, selected reason, written schema, index/query and migration plans, independent audit and measured/unverified evidence. Preserve settled choices and tests-last order.
+- [Database Schema](../../database-schema/SKILL.md), new/material persistence: access map/invariants, three options, choice/reason, written schema, index/query/migration plans, fresh audit, measured/unverified evidence. Preserve choices; tests last.
 
 These delivery rules do not expand standalone analysis. Summaries, old passes and fake-dependency timings prove no current coverage or real product speed.
 
