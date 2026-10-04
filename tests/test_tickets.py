@@ -228,11 +228,33 @@ class TicketTests(unittest.TestCase):
                               text=True, encoding="utf-8", timeout=30)
 
     def test_canonical_projection_accepts_crlf_but_rejects_ignored_owner_edits(self):
-        body = render_ticket(self.contract)
-        self.assertEqual(parse_body(body), self.contract)
-        self.assertEqual(parse_body(body.replace("\n", "\r\n")), self.contract)
-        for edited in (body.replace("Synthetic outcome", "Owner changed outcome", 1),
-                       body + "Owner adds a new requirement\n", body + body):
+        for folded in (True, False):
+            body = render_ticket(self.contract, fold_contract=folded)
+            with self.subTest(folded=folded):
+                self.assertEqual(parse_body(body), self.contract)
+                self.assertEqual(parse_body(body.replace("\n", "\r\n")), self.contract)
+            for edited in (body.replace("Synthetic outcome", "Owner changed outcome", 1),
+                           body + "Owner adds a new requirement\n", body + body):
+                with self.subTest(folded=folded, edited=edited[:60]), self.assertRaises(EngineError):
+                    parse_body(edited)
+
+    def test_legacy_body_from_original_format_keeps_complete_history(self):
+        contract = deepcopy(self.contract)
+        contract["scope_history"] = [{"revision": 1, "owner_words": "Keep this reminder. Keep it."}]
+        scope = contract["scope"]
+        legacy = (f"## Before\n\n{scope['before']}\n\n## After\n\n{scope['after']}\n\n"
+                  "## Acceptance\n\n" + "\n".join(f"- {c['id']}: {c['text']}" for c in scope["acceptance"])
+                  + "\n\n<!-- safe-engine-ticket:v1 -->\n```json\n"
+                  + json.dumps(contract, indent=2, ensure_ascii=False)
+                  + "\n```\n<!-- /safe-engine-ticket -->\n")
+        folded = render_ticket(parse_body(legacy))
+        self.assertEqual(parse_body(folded), contract)
+        self.assertEqual(scope_digest(parse_body(legacy)), scope_digest(parse_body(folded)))
+        self.assertIn('<details>', folded)
+        self.assertIn('Keep this reminder. Keep it.', folded)
+        for edited in (folded.replace('<details>', '<details open>'),
+                       folded.replace('Full contract: owner input, journeys and history', 'Changed expectation'),
+                       folded.replace('</details>', 'New owner requirement\n</details>')):
             with self.subTest(edited=edited[:60]), self.assertRaises(EngineError):
                 parse_body(edited)
 

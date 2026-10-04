@@ -7,6 +7,8 @@ description: "Keep factory work in durable epics and tickets: preserve owner inp
 
 Keep the request, decisions, work and evidence in the selected tracker. Read the [ticket contract](references/ticket-contract.md) when preparing, changing or reviewing a ticket. [Usage](../../../docs/ticketing.md) owns controller commands and limits.
 
+Write tickets in Seif's words: shortest clear wording, complete intent. Use the contract's [writing recipe](references/ticket-contract.md#write-the-ticket). No extra writing phase.
+
 ## Select the tracker
 
 GitHub Issues is Seif's current choice. Reuse it; do not ask again. For another project, discover the preferred tracker and available authorized MCP tools first. Ask only an unresolved preference; without one, try GitHub Issues. Resolve the actual repository, access and privacy before writing.

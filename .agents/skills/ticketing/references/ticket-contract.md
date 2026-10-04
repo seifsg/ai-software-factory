@@ -2,6 +2,32 @@
 
 Use one canonical tracker record per ticket, linked to its epic where applicable. Keep provider-specific mechanics in the actual tracker binding. Unsupported native epic/dependency fields may use explicit links in the specification; do not claim an integration exists.
 
+## Write the ticket
+
+Use Seif's direct style. Task, purpose, before, wanted after, checks, stop. Shortest clear wording; lose nothing.
+
+1. Title: action + concrete result. Before: actual behavior, affected consumer, source/unknown. After: wanted result and why.
+2. Criteria: stable ID + observable result. Show the journey. Include relevant failure/recovery and behavior to preserve. No vague "works", "best" or "optimized" without a check.
+3. Keep scope, exclusions, constraints, dependencies, authority and completion explicit. Add only relevant detail; never infer missing agreement. Required criteria have no word/bullet quota.
+4. Keep original owner words, examples, reasons and deliberate reminders. Tighten AI prose. Use plain verbs; cut filler, repeated summaries and copied skill procedures. Link the method once; keep ticket-specific facts here.
+5. Activity: date/actor, change, why, decision/result. Blocked? Add next action. Preserve prior input and meaningful history; no per-edit diary.
+
+One finishing pass: compare request → ticket → criteria. Every detail accounted for? Every criterion checkable? Any changed meaning needs scope reconciliation, not a wording excuse. Use the existing Compliance review; no extra gate.
+
+Illustrative ticket, not confirmed product scope:
+
+```text
+Title: Keep saved settings after reload
+Before: Theme resets on reload; source shows no save path. Runtime unverified.
+After: Save chosen theme; restore it on reload.
+A1: Save dark theme → reload → dark theme restored.
+A2: Save fails → show failure; retain selection; allow retry.
+Scope: Theme only. Keep existing defaults. No account sync.
+Finish: Checked PR; merge remains with owner.
+```
+
+Attach sourced owner input/confirmation and applicable execution/evidence fields from the record below. This example is no substitute for the complete contract. Fold machine data/history for scanning; never delete it to shorten the page.
+
 ## Canonical record
 
 | Part | Preserve |
