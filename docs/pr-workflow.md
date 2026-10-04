@@ -2,6 +2,8 @@
 
 Read before factory PR work. Preserve source methods/reminders; resolve actual project bindings. [Provenance](skill-provenance.md).
 
+New PR prose uses [Clear Writing](../.agents/skills/safe-engine/references/clear-writing.md); preserve required evidence, attribution, history and source wording.
+
 ## Pick the actual task
 
 - Create/update: [How to Make a PR](../.agents/skills/how-to-make-a-pr/SKILL.md).

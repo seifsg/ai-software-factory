@@ -7,6 +7,8 @@ description: "Build/resume games, apps, services and tools with Seif's methods, 
 
 Build the requested outcome. Read the complete methods. Keep decisions, work and evidence resumable.
 
+For human-facing prose, apply [Clear Writing](references/clear-writing.md): preserve details/voice, ground claims, cut filler. One finishing pass within existing review.
+
 Follow [tests-last order](../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests): finish implementation/improvements → manual action QA → author/polish/run automated tests → final review/PR. No test writing, edits or execution during development. Carry this into delegates, repairs and resumed runs.
 
 ## Choose the scope

@@ -11,6 +11,8 @@ Every UI/interaction change: games, web/mobile/desktop apps and human-facing too
 
 ## 1. Understand the job
 
+Apply [Clear Writing](../safe-engine/references/clear-writing.md) to UI/page copy: specific headlines, supported claims, clear actions. Inspect text in the real layout.
+
 Read request, design system, actual interface and settled choices. Reuse original analysis/planning; preserve the file-summary checkpoint and 0–4 loop. Record audience, goal, supported devices/inputs, accessibility needs and success/failure states.
 
 Map `intent → entry → actions/decisions/waits → outcome → recovery/exit`. Count steps/repeated entry; find confusion, dead ends and lost work. Minimize total effort, not clicks alone. Preserve consent, safety and comprehension. No deceptive defaults or hidden costs.

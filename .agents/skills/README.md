@@ -27,3 +27,5 @@ All delivery and maintenance follows [tests-last order](../../docs/current-decis
 The controller keeps five acceptance passes. PR review uses four themes and synthesis/compliance. These are separate workflows. Product scope includes games, apps, services and tools; discover applicable interfaces, resources and evidence.
 
 The 38-skill source catalog is background, not 38 installed skills. [Pilot evidence](../../docs/pilot-verification.md) is dated; packaging a rewritten skill does not demonstrate a new app run.
+
+[Clear Writing](safe-engine/references/clear-writing.md) applies to authored output: brief, natural, specific, evidenced. One shared rule; no extra skill or review stage.

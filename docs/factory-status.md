@@ -10,6 +10,8 @@ Latest [writing pass](skill-writing-audit.md#compact-owner-style--4-october-2026
 
 ## Current method
 
+Authored output uses [Clear Writing](../.agents/skills/safe-engine/references/clear-writing.md): short, natural, specific; proof beside claims, clear actions, one finishing pass.
+
 1. Understand the request and actual code. Analysis-only stays analysis-only.
 2. Use the original plan and checkpoint. Research new products and consequential unknowns; revise the plan.
 3. For material persistence design: whole-product access map → three credible designs → justified choice → written schema → independent audit.

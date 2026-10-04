@@ -4,6 +4,8 @@ Read [README](README.md), the [skill index](.agents/skills/README.md) and [curre
 
 ## Write in Seif's words
 
+Apply [Clear Writing](.agents/skills/safe-engine/references/clear-writing.md) to authored prose: brief, specific, natural, evidenced. No em dashes or stock rhetorical formulas. Use one finishing pass; preserve source originals and useful details.
+
 Use the original when one exists. RepairCheck Mobile is the first source; use another original only when Mobile has no equivalent for that task. [Provenance](docs/skill-provenance.md) records the mapping. Preserve Seif's wording, order, emphasis, checkpoints and deliberate repetition: reminders protect against context loss. Analyze Start keeps its three approved additions. Remove source-project assumptions from operative methods; discover the actual target's stack, rules, users and integrations. Record adaptations; preserve source checkouts.
 
 No original? Use Seif's brief, direct wording: task, priorities, outputs, necessary steps/checks, stop. No gimmicky voice, filler or explanations the agent already knows. Number ordered steps. Compare requirements before/after; lose no detail or behavior. Links must not quietly import another workflow.

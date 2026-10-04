@@ -1,5 +1,13 @@
 # Skill sources and adaptations
 
+## Clear writing rule: 4 October 2026
+
+Seif supplied the anti-robotic wording requirements. One [shared rule](../.agents/skills/safe-engine/references/clear-writing.md) applies during drafting/final review; no new skill, gate or repeated polishing. Preserve originals/details; scope buyer, objection, CTA and first-viewport rules to applicable copy. “2B” is interpreted as weak to-be phrasing alongside formulaic antithesis; necessary grammar stays.
+
+Available Mobile filenames had no matching writing method. Inspected routines `seo-content-redaktion/SKILL.md` and `references/sprachregeln.md` at `cbd252632f0218fa2a12161e91282da013c73839`: related wording guidance, but a distinct German SEO/article workflow. Preserve that source and its credited authors; import no site bindings, pixel thresholds, SEO script loop or PR-per-article rule. Its warnings about repeated templates and softened unsupported claims also inform the generic rule.
+
+Primary guidance checked 4 October 2026: [Microsoft style](https://learn.microsoft.com/en-us/style-guide/top-10-tips-style-voice) supports natural contractions, active wording and key facts first; [GOV.UK buttons](https://design-system.service.gov.uk/components/button/) supports action labels matching actual behavior and a clear primary action; [NN/g writing research](https://www.nngroup.com/articles/applying-writing-guidelines-web-pages/) supports concise, scannable, factual copy; [FTC advertising guidance](https://www.ftc.gov/business-guidance/resources/advertising-faqs-guide-small-business) supports substantiated claims and nearby clear qualifications. These inform writing, not universal conversion promises or jurisdiction-wide legal advice. The no-em-dash preference comes from Seif; it overrides differing source punctuation styles. GOV.UK tone guidance returned a redirect without readable body; it was not used.
+
 ## Compact owner style — 4 October 2026
 
 Seif requested shortest clear wording without lost details or needless loops. Compressed factory-specific skills/references and AI adapters; preserved source bodies, deliberate reminders and source checkouts. Added valid-work reuse to repository/session guidance. No new skill, external source or runtime behavior. [Measured scope and evidence](skill-writing-audit.md#compact-owner-style--4-october-2026).

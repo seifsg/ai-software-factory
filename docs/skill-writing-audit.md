@@ -1,5 +1,13 @@
 # Skill writing audit
 
+## Clear Writing addition: 4 October 2026
+
+Added a 466-word shared rule from Seif's anti-robotic copy request: no em dashes, generic openers, stock antithesis/aphorisms or fabricated claims. Specific headlines, supported proof, readable sections and clear actions; sales copy adds one buyer, benefit first, relevant objection before CTA and a useful first viewport. Preserve source text, exact terms and every needed detail. One finishing pass; no extra skill/stage/reviewer.
+
+Delivery, Small Change, UX, handoff, PR prose, repository rules and the required-input contract use the same file. Before automated work, independent writing exercises covered a sales hero with unsupported claims, upload recovery copy and a five-requirement skill with a protected quote. All retained supplied facts/constraints; no actual product or viewport was certified. [Research/source basis](skill-provenance.md#clear-writing-rule-4-october-2026).
+
+Final checks: six bundle-input tests passed (15.295 s), including changed/missing writing guidance; fifteen entries valid, 368 local links/anchors valid, resolver copies match, four core originals unchanged and whitespace clean. No full-suite rerun or installed-skill/app adoption.
+
 ## Compact owner style — 4 October 2026
 
 Against `236d5a7`, eleven edited skill/reference files: **9,786 → 7,966 words (18.6% less)**. All 35 skill/reference texts, excluding indexes: **24,162 → 22,342 (7.5% less)**. Whitespace words, not tokens; no text relocated to hide size. PR adapter: 851 → 587 words. Four core originals unchanged.
