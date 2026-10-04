@@ -1,5 +1,17 @@
 # Skill sources and adaptations
 
+## Public web SEO checklist: 4 October 2026
+
+Seif requested SEO for public landing/marketing pages, including his listed essentials and relevant gaps. Chose one conditional [UX reference](../.agents/skills/ux-quality/references/web-seo.md) over a duplicate standalone workflow or rules scattered through callers. Existing planning/review handles it; no extra skill, phase or review fleet.
+
+No matching Mobile filename found. The previously inspected routines `seo-content-redaktion` at `cbd252632f0218fa2a12161e91282da013c73839` remains unchanged: German site-specific editorial/SEO workflow, credited there to its actual authors. Reuse related content/heading/link concerns and Clear Writing; do not import site paths, fixed title pixel limits, keyword quotas, universal FAQ markup, script-first timing or PR-per-article rules into this generic launch checklist. Owner rules govern originals, scope and tests-last. One H1 is the owner's convention, not a promised ranking factor.
+
+Primary sources checked 4 October 2026; recheck changing requirements for the target:
+
+- [Google SEO basics](https://developers.google.com/search/docs/fundamentals/seo-starter-guide), [sitemaps](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap), [canonicals](https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls), [robots](https://developers.google.com/search/docs/crawling-indexing/robots/intro), [noindex](https://developers.google.com/search/docs/crawling-indexing/block-indexing) and [JavaScript rendering](https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics): discovery/indexing and actual rendered output; robots is no privacy boundary.
+- [Structured data](https://developers.google.com/search/docs/appearance/structured-data/sd-policies), [Web Vitals](https://web.dev/articles/vitals), [decorative alt text](https://www.w3.org/WAI/tutorials/images/decorative/), [Open Graph](https://ogp.me/) and [Search Console verification](https://support.google.com/webmasters/answer/9008080): factual eligible markup, measured quality, accessible images, sharing and genuine ownership.
+- [llms.txt proposal](https://llmstxt.org/) currently describes v2: concise Markdown guidance and public links, not a sitemap replacement. Include the requested file. [Google's AI guidance](https://developers.google.com/search/docs/fundamentals/ai-optimization-guide) says Google Search ignores it; no Google ranking benefit claimed.
+
 ## Clear writing rule: 4 October 2026
 
 Seif supplied the anti-robotic wording requirements. One [shared rule](../.agents/skills/safe-engine/references/clear-writing.md) applies during drafting/final review; no new skill, gate or repeated polishing. Preserve originals/details; scope buyer, objection, CTA and first-viewport rules to applicable copy. “2B” is interpreted as weak to-be phrasing alongside formulaic antithesis; necessary grammar stays.

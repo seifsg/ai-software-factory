@@ -37,6 +37,8 @@ Apply [efficiency](../safe-engine/references/app-efficiency.md) to affected path
 
 Human-facing prose uses [Clear Writing](../safe-engine/references/clear-writing.md); one finishing pass, same scoped reviewer.
 
+Public-page fixes apply affected [SEO checks](../ux-quality/references/web-seo.md), including shared templates. No whole-site rebuild or publication authority implied.
+
 Every UI/interaction change uses [UX Quality](../ux-quality/SKILL.md) on the affected journey through manual QA and this scoped reviewer. Preserve adequate patterns/assets; research uncertain choices, compare three credible options, then select. Inspect changed visuals/audio. No unrelated redesign or second review fleet.
 
 List files, behavior, smallest complete fix, manual actions, final checks. Reproduce through actual use; read existing tests if helpful, never write/run yet. Critique correctness/impact; preserve settled choices, invent no alternatives. This replaces five full planning outputs.

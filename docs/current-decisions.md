@@ -24,6 +24,8 @@ External permissions remain separate. Discover actual project/task/owner/notific
 
 ## Delivery and maintenance
 
+Public indexable pages use [Public Web SEO](../.agents/skills/ux-quality/references/web-seo.md): discovery, metadata, useful content, performance, sharing, Search Console and requested `llms.txt`. Preserve private/staging exclusions, scoped authority and tests-last. Readiness proves no ranking.
+
 Every UI/interaction change applies [UX Quality](../.agents/skills/ux-quality/SKILL.md): simple/familiar journeys, minimal unnecessary steps, accessible controls, coherent visuals and high-quality contextual audio where used. Research uncertainty using current sources; list three credible options, recommend with evidence/tradeoffs and use the chosen best fit autonomously within delegated scope. Preserve settled choices. Inspect rendered assets, audition sounds and manually exercise interactions before final automated tests. Required unknowns prevent a UX-ready claim; reuse the existing independent reviewer. No fixed year, vendor, paid asset or redesign mandate.
 
 ### Finish work, use it, then automate tests

@@ -23,6 +23,8 @@ Read [logging](references/app-diagnostics.md) and [efficiency](references/app-ef
 
 ## Start or resume
 
+Public landing/marketing/content pages meant for indexing use [Public Web SEO](../ux-quality/references/web-seo.md). Plan crawlability, metadata and production verification; preserve private/staging boundaries.
+
 Every UI/interaction change uses [UX Quality](../ux-quality/SKILL.md) through planning, manual QA and independent review. Research uncertain patterns/assets; compare three options, justify/choose within delegation. Verify simplicity, accessibility, visuals/audio and interaction. No extra phase or automatic redesign.
 
 New/material persistence design uses [Database Schema](../database-schema/SKILL.md) before dependent implementation: whole-product access map → three viable designs → reasoned choice → written schema → fresh audit. Preserve engine choices and routine-fix scope; pass query/migration evidence to review. No invented database or controller phase.

@@ -1,5 +1,13 @@
 # Skill writing audit
 
+## Public web SEO addition: 4 October 2026
+
+One conditional [checklist](../.agents/skills/ux-quality/references/web-seo.md) covers Seif's public-page SEO requirements, plus crawl/render behavior, status codes, redirects, locale consistency and honest launch evidence. Planning, UX, Small Change and final review share it. No new skill/stage; protected originals unchanged. [Source comparison](skill-provenance.md#public-web-seo-checklist-4-october-2026).
+
+Before automated work, four independent instruction exercises covered public versus private/staging routes, SPA indexing/render/link defects, missing Search Console access/field data and a typo-only fix. All preserved scope, authority and tests-last. These are instruction walkthroughs, not live-site certification.
+
+Final checklist: 812 whitespace words. Six bundle-input tests passed (15.631 s), including changed/deleted SEO guidance; fifteen entries valid, 386 local links/anchors valid, resolver copies match, four core originals unchanged and whitespace clean. No full-suite rerun or installed-skill/app adoption.
+
 ## Clear Writing addition: 4 October 2026
 
 Added a 466-word shared rule from Seif's anti-robotic copy request: no em dashes, generic openers, stock antithesis/aphorisms or fabricated claims. Specific headlines, supported proof, readable sections and clear actions; sales copy adds one buyer, benefit first, relevant objection before CTA and a useful first viewport. Preserve source text, exact terms and every needed detail. One finishing pass; no extra skill/stage/reviewer.

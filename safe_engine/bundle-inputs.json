@@ -3,6 +3,7 @@
   "required_files": [
     ".agents/skills/ux-quality/SKILL.md",
     ".agents/skills/ux-quality/references/assets-and-sources.md",
+    ".agents/skills/ux-quality/references/web-seo.md",
     ".agents/skills/README.md",
     ".agents/skills/analyze-start/SKILL.md",
     ".agents/skills/change-guard/SKILL.md",

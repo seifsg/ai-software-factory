@@ -5,6 +5,7 @@ Use at intake/resume/context loss/delegation. Read full applicable methods; reus
 Analysis-only stops before coding. Requested bounded fixes use complete [Small Change](../../small-change/SKILL.md) and one scoped record. Preserve prior version status; a small handoff cannot refresh whole-version acceptance.
 
 For delivery, read applicable methods and pass:
+- [Public Web SEO](../../ux-quality/references/web-seo.md), indexable public pages: route boundaries, metadata/discovery, observed checks, ownership and pending production evidence.
 - [Clear Writing](clear-writing.md), human-facing prose: audience/voice, supported claims, necessary details, clear actions; one finishing pass within existing review.
 - [UX Quality](../../ux-quality/SKILL.md), every UI/interaction change: journey, current standards, comparisons/choice, asset rights/inspection, manual action/audio evidence, unknowns. Same reviewer; tests last.
 - [Logging](app-diagnostics.md), every app/game including small fixes: working module, provider/access or local fallback, detailed safe success/failure journeys/parameters/queries/outputs, coverage/debugging. Pass access steps/correlation IDs, never credentials.

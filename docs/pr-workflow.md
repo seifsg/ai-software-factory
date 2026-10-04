@@ -4,6 +4,8 @@ Read before factory PR work. Preserve source methods/reminders; resolve actual p
 
 New PR prose uses [Clear Writing](../.agents/skills/safe-engine/references/clear-writing.md); preserve required evidence, attribution, history and source wording.
 
+Public-page changes include affected [SEO evidence](../.agents/skills/ux-quality/references/web-seo.md) in the same review. Distinguish local checks, live verification and actual indexing.
+
 ## Pick the actual task
 
 - Create/update: [How to Make a PR](../.agents/skills/how-to-make-a-pr/SKILL.md).

@@ -36,6 +36,7 @@ Research grants no new accounts, purchases, private-data disclosure or protected
 New substantive decisions: compare three credible options, recommend one. Use delegated authority; preserve owner-reserved/settled choices. No fabricated alternatives. Record retained/adopted/deferred/rejected ideas and reasons.
 
 Route applicable evidence once; no recursive research:
+- Public pages meant for search: current engine/framework evidence and search intent → [Public Web SEO](../ux-quality/references/web-seo.md). Preserve private routes; no ranking promises.
 - Interface/interaction/media: current standards, examples, three-option comparison → [UX Quality](../ux-quality/SKILL.md), which owns quality audit/asset inspection. Research screenshots cannot prove product QA.
 - New/material persistence: engine/version evidence, access patterns → [Database Schema](../database-schema/SKILL.md), which owns design alternatives/audit. Do not invent persistence.
 

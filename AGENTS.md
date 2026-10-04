@@ -36,6 +36,8 @@ The factory serves games, mobile/desktop/web software, servers, tools and librar
 
 ## Files and verification
 
+Public pages meant for search use [Public Web SEO](.agents/skills/ux-quality/references/web-seo.md) in planning and final review. Preserve private/staging exclusions; verify actual production state within authority. Keep the checklist scoped.
+
 Every UI/interaction change uses [UX Quality](.agents/skills/ux-quality/SKILL.md): simple, familiar, accessible, responsive. Research uncertain design/assets; compare three credible options, justify/choose within delegation. Inspect visuals; audition sounds. No poor placeholders or unsupported claims. Reuse the reviewer; keep surgical scope and tests-last.
 
 For new or materially changed persistence, use [Database Schema](.agents/skills/database-schema/SKILL.md): whole-product journeys/invariants → three viable designs → reasoned choice → written schema → fresh audit. Every structure needs a purpose. Optimize measured workloads, not universal O(1) claims. Preserve original Get Ready wording, settled decisions, surgical scope and tests-last order.

@@ -61,6 +61,7 @@ class BundleInputTests(unittest.TestCase):
                      '.agents/skills/safe-engine/references/clear-writing.md',
                      '.agents/skills/ux-quality/SKILL.md',
                      '.agents/skills/ux-quality/references/assets-and-sources.md',
+                     '.agents/skills/ux-quality/references/web-seo.md',
                      '.agents/skills/database-schema/SKILL.md',
                      'skills/improve-factory/scripts/resolve_bundle.py'):
             with self.subTest(input=name):
@@ -83,6 +84,7 @@ class BundleInputTests(unittest.TestCase):
                      '.agents/skills/safe-engine/references/clear-writing.md',
                      '.agents/skills/ux-quality/SKILL.md',
                      '.agents/skills/ux-quality/references/assets-and-sources.md',
+                     '.agents/skills/ux-quality/references/web-seo.md',
                      '.agents/skills/database-schema/SKILL.md',
                      'skills/safe-engine/references/local-trials.md',
                      'safe_engine/workflow.py', '.agents/skills/deep-review/references/theme-security.md',

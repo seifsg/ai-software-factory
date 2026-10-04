@@ -29,3 +29,5 @@ The controller keeps five acceptance passes. PR review uses four themes and synt
 The 38-skill source catalog is background, not 38 installed skills. [Pilot evidence](../../docs/pilot-verification.md) is dated; packaging a rewritten skill does not demonstrate a new app run.
 
 [Clear Writing](safe-engine/references/clear-writing.md) applies to authored output: brief, natural, specific, evidenced. One shared rule; no extra skill or review stage.
+
+[Public Web SEO](ux-quality/references/web-seo.md) covers public pages intended for search. Shared checklist from planning through verification; private/staging routes retain exclusions.
