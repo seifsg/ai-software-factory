@@ -17,6 +17,7 @@ from .storage import atomic_json, locked, now, read_json
 
 START = "<!-- safe-engine-ticket:v1 -->"
 END = "<!-- /safe-engine-ticket -->"
+WRITING_FIELDS = ("purpose", "goal", "context", "approach")
 
 
 def ticket_key(value):
@@ -52,6 +53,23 @@ def validate_contract(contract):
         raise EngineError("Ticket contract needs scope")
     for name in ("original_request", "before", "after", "completion"):
         text(scope.get(name), name)
+    if contract.get("presentation") == "visual":
+        for name in WRITING_FIELDS:
+            text(scope.get(name), name)
+        text(contract.get("progress"), "progress")
+        activity = contract.get("activity", [])
+        if not isinstance(activity, list):
+            raise EngineError("Ticket activity must be a list")
+        for item in activity:
+            if not isinstance(item, dict):
+                raise EngineError("Ticket activity needs dated actions and results")
+            for name in ("at", "actor", "what", "why", "result"):
+                text(item.get(name), f"activity {name}")
+        if "flow" in scope:
+            text(scope["flow"], "flow")
+        if "optional" in scope and (not isinstance(scope["optional"], list)
+                or any(not isinstance(v, str) or not v.strip() for v in scope["optional"])):
+            raise EngineError("Ticket optional wants must be an explicit text array")
     inputs = scope.get("owner_input")
     if not isinstance(inputs, list) or not inputs:
         raise EngineError("Preserve owner input with its source")
@@ -92,13 +110,56 @@ def scope_digest(contract):
     return digest({"revision": contract["revision"], "scope": contract["scope"]})
 
 
-def render_ticket(contract, *, fold_contract=True):
+def table_cell(value):
+    return value.replace("\r\n", "\n").replace("\r", "\n").replace("|", "\\|").replace("\n", "<br>")
+
+
+def visual_projection(contract):
+    scope = contract["scope"]
+    sections = [
+        f"## 🎯 Purpose & goal\n\n- **Purpose:** {scope['purpose']}\n- **Goal:** {scope['goal']}",
+        f"## 📍 Context\n\n{scope['context']}",
+        ("## 🔧 What & why\n\n| Before | After |\n|---|---|\n"
+         f"| {table_cell(scope['before'])} | {table_cell(scope['after'])} |\n\n"
+         f"- **Approach:** {scope['approach']}"),
+    ]
+    journeys = "\n".join(f"- {value}" for value in scope["journeys"])
+    flow = f"```text\n{scope['flow']}\n```\n\n" if "flow" in scope else ""
+    sections.append(f"## 🔀 Journey\n\n{flow}{journeys}")
+    criteria = "\n".join(f"- **{c['id']}:** {c['text']}" for c in scope["acceptance"])
+    sections.append(f"## ✅ Done when\n\n{criteria}")
+    guards = []
+    for label, values in (("Keep", scope["constraints"]), ("Avoid / out", scope["exclusions"]),
+                          ("Nice to have", scope.get("optional", [])), ("Depends on", scope["dependencies"])):
+        guards.extend(f"- **{label}:** {value}" for value in values)
+    guards.append(f"- **Finish:** {scope['completion']}")
+    if scope.get("epic"):
+        guards.append(f"- **Epic:** {scope['epic']}")
+    sections.append("## 🧱 Scope & guardrails\n\n" + "\n".join(guards))
+    sections.append(f"## 🚦 Progress\n\n{contract['progress']}")
+    if contract.get("activity"):
+        rows = []
+        for item in contract["activity"]:
+            rows.append(f"| {table_cell(item['at'])}<br>{table_cell(item['actor'])} | "
+                        f"{table_cell(item['what'])}<br>**Reason:** {table_cell(item['why'])} | "
+                        f"{table_cell(item['result'])} |")
+        sections.append("## 📝 Activity\n\n| When / who | Change / reason | Result / next |\n|---|---|---|\n"
+                        + "\n".join(rows))
+    return "\n\n".join(sections) + "\n\n"
+
+
+def render_ticket(contract, *, fold_contract=True, layout="auto"):
     """Readable projection and machine contract must agree; no ignored prose edits."""
     validate_contract(contract)
     scope = contract["scope"]
-    criteria = "\n".join(f"- {c['id']}: {c['text']}" for c in scope["acceptance"])
-    projection = (f"## Before\n\n{scope['before']}\n\n## After\n\n{scope['after']}\n\n"
-                  f"## Acceptance\n\n{criteria}\n\n")
+    if layout not in ("auto", "legacy"):
+        raise EngineError("Ticket layout must be auto or legacy")
+    if layout == "auto" and contract.get("presentation") == "visual":
+        projection = visual_projection(contract)
+    else:
+        criteria = "\n".join(f"- {c['id']}: {c['text']}" for c in scope["acceptance"])
+        projection = (f"## Before\n\n{scope['before']}\n\n## After\n\n{scope['after']}\n\n"
+                      f"## Acceptance\n\n{criteria}\n\n")
     payload = (f"{START}\n```json\n{json.dumps(contract, indent=2, ensure_ascii=False)}\n"
                f"```\n{END}\n")
     if fold_contract:
@@ -117,8 +178,8 @@ def parse_body(body):
         raise EngineError("Ticket contract must be a fenced JSON block")
     contract = validate_contract(json.loads(payload[8:-4]))
     normalized = body.strip()
-    if (normalized != render_ticket(contract).strip()
-            and normalized != render_ticket(contract, fold_contract=False).strip()):
+    if not any(normalized == render_ticket(contract, fold_contract=folded, layout=layout).strip()
+               for layout in ("auto", "legacy") for folded in (True, False)):
         raise EngineError("Remote prose differs from the contract; reconcile and confirm changed expectations")
     return contract
 

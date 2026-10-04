@@ -241,6 +241,7 @@ class TicketTests(unittest.TestCase):
     def test_legacy_body_from_original_format_keeps_complete_history(self):
         contract = deepcopy(self.contract)
         contract["scope_history"] = [{"revision": 1, "owner_words": "Keep this reminder. Keep it."}]
+        contract["scope"]["purpose"] = {"older_custom_metadata": True}
         scope = contract["scope"]
         legacy = (f"## Before\n\n{scope['before']}\n\n## After\n\n{scope['after']}\n\n"
                   "## Acceptance\n\n" + "\n".join(f"- {c['id']}: {c['text']}" for c in scope["acceptance"])
@@ -267,6 +268,94 @@ class TicketTests(unittest.TestCase):
                 changed["scope"][field] = value
                 with self.assertRaises(EngineError):
                     render_ticket(changed)
+
+    def visual_contract(self):
+        contract = deepcopy(self.contract)
+        contract["presentation"] = "visual"
+        contract["scope"].update(
+            purpose="Synthetic reader must retain the document",
+            goal="Synthetic sentence survives unchanged",
+            context="Synthetic source: README.md; no app observation",
+            approach="Preserve the existing sentence; no new writer",
+            before="Synthetic `left|right`\nKeep this reminder. Keep it.",
+            flow="reader -> document -> unchanged sentence",
+            optional=["Synthetic follow-up; not required"])
+        contract["progress"] = "Synthetic fixture only; no real PR or review"
+        contract["activity"] = [{"at": self.initial_at, "actor": SYNTHETIC,
+            "what": "Synthetic inspection", "why": "Verify retained input",
+            "result": "Synthetic planning; no live action"}]
+        return self.confirm(contract)
+
+    def test_visual_and_legacy_layouts_preserve_complete_confirmed_contract(self):
+        contract = self.visual_contract()
+        contract["scope_history"] = [{"owner_words": "Keep this reminder. Keep it."}]
+        expected = scope_digest(contract)
+        for layout in ("auto", "legacy"):
+            for folded in (True, False):
+                with self.subTest(layout=layout, folded=folded):
+                    body = render_ticket(contract, layout=layout, fold_contract=folded)
+                    self.assertEqual(parse_body(body.replace("\n", "\r\n")), contract)
+                    self.assertEqual(scope_digest(parse_body(body)), expected)
+                    self.assertEqual(binding({**self.supplied(contract),
+                        "contract": parse_body(body)})["scope"], contract["scope"])
+
+    def test_visual_prose_edits_cannot_change_or_hide_the_bound_record(self):
+        contract = self.visual_contract()
+        for folded in (True, False):
+            body = render_ticket(contract, fold_contract=folded)
+            for field in ("purpose", "goal", "context", "approach", "flow"):
+                with self.subTest(folded=folded, field=field), self.assertRaises(EngineError):
+                    parse_body(body.replace(contract["scope"][field], "Changed owner expectation", 1))
+            for edited in (body.replace(contract["progress"], "Claimed merged", 1),
+                           body.replace("Synthetic inspection", "Claimed review", 1),
+                           body + "New requirement outside contract\n"):
+                with self.subTest(folded=folded, edited=edited[:50]), self.assertRaises(EngineError):
+                    parse_body(edited)
+
+    def test_new_visual_scope_fields_require_exact_confirmation(self):
+        contract = self.visual_contract()
+        for field in ("purpose", "goal", "context", "approach", "flow", "optional"):
+            changed = deepcopy(contract)
+            changed["scope"][field] = ["Changed optional scope"] if field == "optional" else "Changed scope"
+            with self.subTest(field=field):
+                self.assertNotEqual(scope_digest(changed), scope_digest(contract))
+                with self.assertRaises(EngineError):
+                    binding({"contract": parse_body(render_ticket(changed)), "observed_at": self.initial_at})
+
+    def test_visual_progress_activity_refresh_keeps_scope_and_prior_history(self):
+        contract = self.visual_contract()
+        self.refresh(contract)
+        original = scope_digest(contract)
+        changed = deepcopy(contract)
+        changed["progress"] = "Synthetic final check; still no real PR"
+        changed["activity"].append({"at": self.initial_at, "actor": SYNTHETIC,
+            "what": "Synthetic result", "why": "Preserve history", "result": "Synthetic only"})
+        self.refresh(changed)
+        captured = self.store.get("alpha")
+        self.assertEqual(captured["contract"], changed)
+        self.assertEqual(scope_digest(captured["contract"]), original)
+        self.assertEqual(captured["contract"]["activity"][0], contract["activity"][0])
+        self.assertTrue(self.store.status("alpha")["valid"])
+
+    def test_partial_or_invalid_visual_fields_do_not_silently_fall_back(self):
+        contract = self.visual_contract()
+        for field in ("purpose", "goal", "context", "approach"):
+            changed = deepcopy(contract)
+            del changed["scope"][field]
+            with self.subTest(field=field), self.assertRaises(EngineError):
+                render_ticket(changed, layout="legacy")
+        for field, value in (("flow", []), ("optional", "not an array"), ("optional", [""])):
+            changed = deepcopy(contract)
+            changed["scope"][field] = value
+            with self.subTest(field=field, value=value), self.assertRaises(EngineError):
+                render_ticket(changed)
+        for field, value in (("progress", ""), ("activity", {}), ("activity", [{}])):
+            changed = deepcopy(contract)
+            changed[field] = value
+            with self.subTest(field=field), self.assertRaises(EngineError):
+                render_ticket(changed)
+        with self.assertRaises(EngineError):
+            render_ticket(contract, layout="unknown")
 
     def test_reserved_or_escaping_keys_are_rejected_before_paths_are_created(self):
         for key in ("con", "prn", "aux", "nul", "com1", "lpt9", "Alpha", "../alpha", "a/b", "1alpha", "a" * 65):

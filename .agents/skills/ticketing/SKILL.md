@@ -7,7 +7,7 @@ description: "Keep factory work in durable epics and tickets: preserve owner inp
 
 Keep the request, decisions, work and evidence in the selected tracker. Read the [ticket contract](references/ticket-contract.md) when preparing, changing or reviewing a ticket. [Usage](../../../docs/ticketing.md) owns controller commands and limits.
 
-Write tickets in Seif's words: shortest clear wording, complete intent. Use the contract's [writing recipe](references/ticket-contract.md#write-the-ticket). No extra writing phase.
+Write tickets in Seif's words: shortest clear wording, complete intent. Use the contract's [writing recipe](references/ticket-contract.md#write-the-ticket): separate purpose/goal, context, change/reason, proof and progress; labeled emojis, bullets, tables and flow. No extra writing phase.
 
 Default: build the ticket from the request, actual code and available context; keep execution moving within authority. The user need not supply/review a detailed ticket. Honor requested detail/checkpoints; ask only consequential reserved gaps. Give a fresh agent complete, visual context.
 

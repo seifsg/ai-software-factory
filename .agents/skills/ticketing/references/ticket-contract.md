@@ -6,33 +6,13 @@ Use one canonical tracker record per ticket, linked to its epic where applicable
 
 Use Seif's direct style in titles, descriptions and activity. Brief wording; full context. Write for a fresh agent and a human who have no chat history.
 
-1. Title: action + concrete result. Initial context: customer request, problem/feature, why, purpose/goal; actual before, consumers, relevant paths/entrypoints, source revision/evidence and unknowns. Gather available context from the code, requirements and prior work.
-2. Criteria: stable ID + observable result. Show the journey. Include relevant failure/recovery and behavior to preserve. No vague "works", "best" or "optimized" without a check.
-3. After: exact wanted outcome. Approach: selected/proposed path and reason. Keep scope, exclusions, constraints, dependencies, authority and finish explicit. Separate required wants from optional nice-to-haves; preserve avoidances. Required detail has no word/bullet quota. Record assumptions; never invent facts or consent.
-4. Keep original owner words, examples, reasons and deliberate reminders. Tighten AI prose. Use plain verbs; cut filler, repeated summaries and copied skill procedures. Link the method once; keep ticket-specific facts here.
-5. Progress: what's done, what's left, current phase/owner and next action. Link existing ticket/PR/branch, exact candidate and evidence; say when none exists. Activity: date/actor, change, why, decision/result, PR/check updates. Preserve meaningful history; no per-edit diary.
+Use the shared [ticket/PR layout](../../safe-engine/references/work-writing.md). Purpose/goal, source context, behavior change and progress have separate homes. Use meaningful emojis, bullets, comparison tables and flow diagrams; avoid dense blocks. Gather actual code, requirements and prior work; no context loss or invented details.
 
-Make context visual where useful: before/after or decision tables, short bullets, ASCII journey/dependency flow, charts for measured data, relevant screenshots. Choose views that clarify the work; keep labels/sources/limits. Reuse safe real evidence and existing PR proof. No invented chart values, screenshot dumps or mandatory media chore. New actions/captures follow existing final-QA/baseline rules.
+New tickets: set top-level `presentation: "visual"`; fill `scope.purpose`, `goal`, `context`, `approach` together. Purpose explains need/impact; goal defines success. Context holds code/consumer/baseline/source facts. Before/after holds behavior only; approach explains choice/reason. Optional `flow` holds raw ASCII; `optional` lists nice-to-haves. Put ordinary progress/PR updates in top-level `progress`, dated changes in `activity`. Meaningful expectations remain in scope. [Field/format rules](../../../../docs/ticketing.md#remote-contract).
 
-One finishing pass: compare request → ticket → criteria. Every detail accounted for? Every criterion checkable? Any changed meaning needs scope reconciliation, not a wording excuse. Use the existing Compliance review; no extra gate.
+Criteria: stable ID + observable result; relevant journey/failure/recovery/preserved behavior. No vague "works", "best" or "optimized" without a check. Keep authority, scope, exclusions, dependencies and finish explicit. No word/bullet quota. Preserve original words/reminders; link methods rather than copying them.
 
-Illustrative ticket, not confirmed product scope. Add actual code/source/progress bindings when using it:
-
-```text
-Title: Keep saved settings after reload
-Why: User should not reselect the theme.
-Before: Theme resets on reload; source shows no save path. Runtime unverified.
-After: Save chosen theme; restore it on reload.
-A1: Save dark theme → reload → dark theme restored.
-A2: Save fails → show failure; retain selection; allow retry.
-Scope: Theme only. Keep existing defaults. No account sync.
-Approach: Reuse the existing settings store; verify its consumers.
-Avoid: Silent save failures. Optional: extra themes, outside this ticket.
-Progress: Not started; no PR. Next: inspect theme/store paths, then plan.
-Finish: Checked PR; merge remains with owner.
-```
-
-Attach sourced owner input/confirmation and applicable execution/evidence fields from the record below. This example is no substitute for the complete contract. Fold machine data/history for scanning; never delete it to shorten the page.
+Use the shared illustration, then add real source, owner/confirmation, execution/evidence and completion bindings below. Compare request → ticket → criteria once in existing Compliance review. Wording cannot excuse changed meaning. Old exact formats stay readable; never rewrite confirmed scope or active pins just to restyle history.
 
 ## Canonical record
 
