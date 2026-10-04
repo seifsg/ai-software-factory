@@ -1,6 +1,6 @@
 # Synthesis, verdict & fix-set selection
 
-For selected Small Change, synthesize the one independent review's scoped evidence under the [adapter](../../../../docs/pr-workflow.md#small-direct-changes). Keep unresolved prior findings; never imply whole-PR approval. The four-report instructions below describe full mode.
+Ticketed work uses full review, including small bugs. Only legacy unticketed Small Change synthesizes one independent scoped review under the [adapter](../../../../docs/pr-workflow.md#small-direct-changes). Keep unresolved prior findings; never imply whole-PR approval. The four-report instructions below describe full mode.
 
 You now hold four themed reports (performance, security, user-journey, change-guard) plus your own
 Phase-1 analysis. Turn them into one decision. This is the judgment layer the individual reviewers
@@ -37,6 +37,8 @@ explicitly:
 - **Compliance with the author's request** — are we staying in their lane? We harden and correct;
   we do not redirect their feature, change its intent, or bolt on things they didn't ask for. If a
   finding would require overstepping, it's a *flag for the team*, not a *fix now*.
+
+For ticketed work, refresh the canonical record/activity and compare the latest confirmed scope with actual changes and candidate-bound proof. Use one criterion mapping in the existing compliance output; preserve original input, scope changes, owner sources and reasons. PR claims and old plans cannot override it. Pending changes, drift, missing proof or failed refresh block dependent approval. [Comparison contract](../../../../docs/pr-workflow.md#compare-the-current-ticket).
 
 ## 4. Fix-set selection — "fix all that makes sense"
 

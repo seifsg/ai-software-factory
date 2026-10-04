@@ -1,15 +1,17 @@
 ---
 name: small-change
-description: "Deliver bounded fixes through six light routines, focused checks and independent review. Analysis/planning/review stays in phase. New products and substantial features use the version workflow."
+description: "Keep bounded fixes surgical. Ticketed work uses the full factory cycle; six light routines preserve legacy unticketed delivery. Phase-only requests stay in phase."
 ---
 
 # Small Change
 
-Read this whole file. These six routines replace full analysis, planning, coding-record, review, change-guard and compliance for bounded changes. Do not load them recursively.
+Read this whole file. New implementation first uses [Ticketing](../ticketing/SKILL.md). Every ticket gets full Analyze Start, Get Ready, 0–4 implementation, final manual QA, final tests, independent review and PR comparison against latest confirmed scope. Use the surgical tactics here; never substitute the six shortcuts for a ticket's complete cycle.
+
+The six routines below preserve legacy unticketed delivery: they replace full analysis, planning, coding-record, review, change-guard and compliance only for that recorded path. Do not load them recursively or silently migrate existing runs.
 
 ## Check the scope
 
-Requested direct fix, identifiable behavior/consumers: input, copy, layout, local handlers or bounded non-UI defects. Analysis/planning/review stays in phase; small scope grants no coding authority.
+Requested direct fix, identifiable behavior/consumers: input, copy, layout, local handlers or bounded non-UI defects. Keep the patch narrow even when its ticket runs full methods. Analysis/planning/review stays in phase; small scope grants no coding authority or automatic tracker issue.
 
 Read project rules, working changes, relevant source/decisions; reuse the [session contract](../safe-engine/references/session-contract.md). Record symptom, intended result, patch boundary, consumers.
 

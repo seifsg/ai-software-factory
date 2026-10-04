@@ -72,7 +72,11 @@
     "skills/improve-factory/scripts/resolve_bundle.py",
     "skills/safe-engine/SKILL.md",
     "skills/safe-engine/references/local-trials.md",
-    "skills/safe-engine/scripts/resolve_bundle.py"
+    "skills/safe-engine/scripts/resolve_bundle.py",
+    "safe_engine/tickets.py",
+    ".agents/skills/ticketing/SKILL.md",
+    ".agents/skills/ticketing/references/ticket-contract.md",
+    "docs/ticketing.md"
   ],
   "historical_files": [
     "docs/skill-provenance.md",

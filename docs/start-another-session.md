@@ -4,7 +4,9 @@
 
 This route is for requested implementation. Explicit analysis, planning and review stay in their phase.
 
-Seif selected [small-change](../.agents/skills/small-change/SKILL.md) on 3 October: six lightweight routines, careful implementation, focused checks and one narrow independent assessment. This route precedes the full version workflow described below. No automatic broad regression, full-suite reruns or five-artifact planning for a small fix. Accumulated changes may prompt an offer of affected-area validation; execution waits for the user. It is an agent-operated scoped handoff, not a new controller command or whole-version acceptance. Existing pinned runs retain their bundle/state; see the method for explicit local trials and evidence limits.
+Seif selected [small-change](../.agents/skills/small-change/SKILL.md) on 3 October. Its six light routines remain for legacy unticketed work. New implementation uses [Ticketing](../.agents/skills/ticketing/SKILL.md) and the complete cycle, even bugfixes; retain surgical scope and relevant checks. Preserve existing pins, state and historical evidence.
+
+[Ticket usage](ticketing.md) owns confirmed scope, captures, dependencies and proof. Prefer the owner's authorized tracker MCP; GitHub Issues is the default and Seif's current choice. Dispatch a real dedicated builder session per ticket; a label or local record is insufficient. Use isolated worktrees for independent tickets, serial ownership for a shared epic. Commands use `--ticket <key>`; initialization records `--session <real-builder-session-id>`. Ticket state is `.factory/runs/<key>/state.json`; legacy `.factory/state.json` stays intact. No controller daemon, session provisioner or host automation is installed.
 
 The first thing to give the agent is the Safe Engine entry skill and your actual task. The agent then runs the controller commands. There is no `safe-engine start` daemon or one shell command that independently builds an app.
 
@@ -23,10 +25,14 @@ and its linked usage guide. Use that existing factory bundle.
 Target project: [absolute project directory]
 Task: [the app or feature I want, and what success looks like]
 
-First inspect the real project and any .factory/state.json. Resume an existing
-run instead of initializing it again. For a new run, discover the project,
-prepare the acceptance criteria and real check commands, and show me the brief
-and any product or design decisions that still need my choice.
+First inspect the real project, selected bundle, legacy .factory/state.json
+and ticket state in .factory/runs/<key>/state.json. Resume the recorded run.
+For new implementation, use ticketing: preserve owner input, inspect actual before,
+confirm expected after/criteria and refresh the canonical tracker. Work one ticket
+per dedicated builder session; record its actual ID with --session at init and
+use --ticket <key> throughout. Prepare real checks without authoring/running tests.
+Show the brief and only unresolved owner choices. Never mix legacy/ticket state
+or silently upgrade its pin.
 
 Follow analyze-start, including the ASCII charts, then get-ready-to-code and
 the per-todo 0–4 loop. Work autonomously within the agreed scope and recorded session contract.
@@ -80,6 +86,7 @@ Codex discovers repository skills in `.agents/skills` within the repository scop
 - An authenticated `codex` CLI on PATH for the current independent reviewer.
 - The target project's actual test tools. Browser work needs a browser driver and runnable app.
 - An agreed task, observable manual/automated/mixed acceptance, recorded authority and completion boundaries. Version 2 starts with draft checks; independently seal them at final testing. Real command watchdogs detect stuck processes; historical repair limits do not govern.
+- For new delivery: canonical tracker access, confirmed ticket revision and a real dedicated builder session/workspace. Preserve missing capability as a dependent blocker; labels do not dispatch sessions.
 - An actual remote/cloud agent route for PR review, separate from local controller review; record missing access before dependent delivery.
 
 The [session contract](../.agents/skills/safe-engine/references/session-contract.md) preserves delegated and reserved choices. The agent makes in-scope delegated choices; unresolved owner-reserved choices stay yours. A prompt does not install missing dependencies or grant access outside the session's permissions. Keep the factory bundle unchanged during a target run; editing its instructions changes an acceptance input.
@@ -145,7 +152,7 @@ py -3 -m safe_engine --help
 py -3 -m safe_engine --project 'C:\work\safe-engine-pilot-20261001\app' discover
 ```
 
-For the selected target, check `status` when a run exists; otherwise discover and prepare it. `discover` returns a proposal; `preflight --profile <profile.json>` inspects capabilities without launching tests or the app. [Current usage](pilot-usage.md) owns version-2 commands; [fixture commands](../examples/pilot-commands.md) remain a historical version-1 demonstration.
+For the selected target, check `status` when a run exists; add `--ticket <key>` for its namespaced state. Otherwise discover and prepare it. `discover` returns a proposal; `preflight --profile <profile.json>` inspects capabilities without launching tests or the app. [Current usage](pilot-usage.md) and [ticket usage](ticketing.md) own version-2 commands; [fixture commands](../examples/pilot-commands.md) remain a historical version-1 demonstration.
 
 To resume in a fresh chat, paste:
 
@@ -155,6 +162,8 @@ Resume the existing Safe Engine run in [absolute target project directory].
 Read the saved original task, profile, phase, history and artifacts. Check
 evidence freshness and continue from the next valid step. Do not replace the
 task record, reinitialize the run or treat old passing evidence as current.
+When ticketed, select its key/session and refresh canonical scope/activity;
+compare the confirmed revision before dependent work. Preserve legacy pins/state.
 Show me the saved progress and remaining work before continuing.
 ```
 

@@ -204,3 +204,7 @@ Seif supplied the requirement to optimize CPU/memory, reuse repeated work and co
 ## PR before/after proof: 4 October 2026
 
 Seif requested mandatory applicable before/after screenshots, equivalent nonvisual results and optional meaningful feature-journey videos. One shared rule in docs/pr-workflow.md; creation, full delivery and Small Change route before edits. Narrow capture-only baseline exception to tests-last; final interaction proof stays at the end. No new skill, runtime or product simulation. Preserve original methods, scoped QA, existing pins and pending owner cloud review.
+
+## Ticketing: 4 October 2026
+
+Seif requested durable backlog/epics/tickets, owner-confirmed before/after journeys, complete ticket sessions/cycles, isolated worktrees or serial epic ownership, evolving activity/revisions and PR verification against the latest expectation. He selected GitHub Issues; other projects prefer their authorized MCP tracker. Improve Factory and Skill Creator structure this request into one Ticketing method, actual callers and version-2 scope/namespace/proof helpers. No Mobile originals, installed launcher or active app pin changed. Actual MCP writes/reads, session dispatch, manual factory use, final tests, independent local assessment and cloud PR review are separate evidence; no game upgrade or product pilot is implied.

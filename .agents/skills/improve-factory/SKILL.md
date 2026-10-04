@@ -7,7 +7,7 @@ description: "Repair Safe Engine skills, controller or workflow. Preserve projec
 
 Fix the factory cause. Preserve Seif's methods and project progress.
 
-Bounded instruction/helper fix: use [Small Change](../small-change/SKILL.md)'s six routines instead of the full methods below. Keep checkpoint, isolation, consumer and adoption rules. Analysis/planning stays in phase.
+New factory implementation uses [Ticketing](../ticketing/SKILL.md): canonical tracker, owner-confirmed before/after and a dedicated maintenance session. Every ticket follows the complete methods below. [Small Change](../small-change/SKILL.md) keeps bounded repairs surgical; its six shortcuts remain for legacy unticketed work. Analysis/planning stays in phase and creates no coding obligation.
 
 Factory-wide routing, acceptance or interacting procedures need maintenance analysis and a final independent behavioral exercise. Check affected consumers, skip unrelated suites. One case, one local final assessment; authorized PR review remains separately remote/cloud. No recursive maintenance.
 
@@ -15,7 +15,7 @@ Active build: `checkpoint → isolated repair → independent review → compati
 
 ## Understand the report
 
-Record report, expected behavior, example, artifacts, source, commands and factory version. Reuse authority/choices under the [session contract](../safe-engine/references/session-contract.md); ask only consequential gaps.
+Record report, expected behavior, example, artifacts, source, commands and factory version in the authorized ticket or phase artifact. Implementation uses the canonical ticket. Prefer the owner's chosen MCP; GitHub Issues is Seif's current choice/default. Reuse authority/choices under the [session contract](../safe-engine/references/session-contract.md); confirm missing outcome scope, ask only consequential gaps.
 
 Resolve factory/target roots separately. Read both projects' rules, [approved decisions](../../../docs/current-decisions.md) and working status.
 
@@ -27,7 +27,7 @@ Resolve factory/target roots separately. Read both projects' rules, [approved de
 | Missing tool/access/decision | Record blocker; invent nothing. |
 | Product bug | Return to delivery unless evidence also shows a factory defect. |
 
-Active run: execute [live-session maintenance](references/live-session.md) before workspace changes/delegation. Otherwise use an isolated factory branch/worktree; no resume needed. Never silently stash, reset, switch or upgrade the target.
+Active run: execute [live-session maintenance](references/live-session.md) before workspace changes/delegation. Preserve the app ticket/run separately from the maintenance ticket; factory repair grants no product scope change. Otherwise use an isolated factory branch/worktree; no resume needed. Never silently stash, reset, switch or upgrade the target.
 
 ## Prepare the correction
 
@@ -38,7 +38,7 @@ Active run: execute [live-session maintenance](references/live-session.md) befor
 
 ## Repair and check
 
-One writer owns the isolated candidate; project coordinator owns project changes/state. Assign paths/tools: delegation gives no isolation. Active runs use the live-session delegation contract.
+One writer owns the isolated candidate; project coordinator owns project changes/state. Independent tickets use separate worktrees; a shared maintenance epic checkout is serial with separate histories. Assign paths/tools: delegation gives no isolation. Active runs use the live-session delegation contract.
 
 Apply Get Ready's full 0–4 loop and pre/change/post inspection per todo. Use Skill Creator for skill edits; if unavailable, retain structural/behavioral checks and disclose the limit.
 
@@ -56,10 +56,13 @@ Across retries/delegates, preserve meaningful corrections, diagnostic history, u
 
 ## Deliver and resume
 
+When ticketed, refresh the maintenance ticket before final acceptance/handoff and authorized PR work. Compare latest confirmed criteria with the correction, preserved behavior, final evidence and limits. Record decisions/scope changes in canonical activity; use reviewed amendments for legitimate rebinds. Pending changes, drift or failed refresh block dependent acceptance.
+
 Authorized PR work: execute [creation](../how-to-make-a-pr/SKILL.md), remote/cloud [review](../how-to-review-a-pr/SKILL.md) and [project adapter](../../../docs/pr-workflow.md). Fresh context and remote execution required; local validation/subagents cannot replace PR review. Discover task/owner/notification bindings before asking; missing bindings block PR completion, not local repair/final testing. Keep draft status and human ready/merge/release decisions. Publish approved factory source to main only after actual cloud review and authorized merge; preserve active pins.
 
 Give brief before/after. Save one maintenance record:
 - Report, expected result, reproduced cause/unknown.
+- Canonical maintenance ticket, original/current confirmed scope and owner source, revision/digest, meaningful activity, latest refresh and criterion proof/deviations. Local record is cache/evidence, not a second tracker.
 - Approved/pending choices, invariants, methods read, analysis, plan.
 - Active app checkpoint; exact old/new commits; dirty manifest/diff; evidence; actual reviewer identity.
 - Checks/limits, diagnostic progress, constraints, blockers, PR links.

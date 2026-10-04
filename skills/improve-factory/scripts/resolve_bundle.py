@@ -175,7 +175,15 @@ def select_for_project(project, bundle, ref, cache, entrypoint):
         result = inspect_bundle(saved["bundle_root"], expected=saved["revision"], entrypoint=entrypoint)
         result["selection_record"] = str(receipt)
         return result
-    if (directory / "state.json").exists() and not bundle:
+    named_runs = directory / "runs"
+    if named_runs.exists():
+        for path in (named_runs, *named_runs.iterdir()):
+            info = path.lstat()
+            if (stat.S_ISLNK(info.st_mode)
+                    or getattr(info, "st_file_attributes", 0) & stat.FILE_ATTRIBUTE_REPARSE_POINT):
+                raise RuntimeError("Named runs must not use symlinks or reparse points")
+    existing_runs = (directory / "state.json").exists() or (named_runs.exists() and any(named_runs.glob("*/state.json")))
+    if existing_runs and not bundle:
         raise RuntimeError("Existing run has no bundle path record; establish its original bundle and use --bundle")
     result = (inspect_bundle(bundle, entrypoint=entrypoint) if bundle
               else resolve_bundle(cache, ref or DEFAULT_REF, entrypoint=entrypoint))

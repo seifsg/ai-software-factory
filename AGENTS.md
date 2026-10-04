@@ -18,7 +18,9 @@ Spend steps where they change decisions, results or evidence. Reuse valid analys
 
 An analysis, planning or review request stays in that phase. A small subject does not authorize coding. Honor the original file-summary stop unless existing user instructions explicitly authorize continuing through it.
 
-For a requested small implementation or fix, use [Small Change](.agents/skills/small-change/SKILL.md). Surgical changes take precedence; defer unrelated refactors, instrumentation and optimization. Its six light routines replace full version procedures for that change. Keep the 0–4 discipline, focused checks and one narrow independent assessment. Offer broader affected-area checks when useful; run them only at the final stage when requested or required by a real protected gate.
+New implementation uses [Ticketing](.agents/skills/ticketing/SKILL.md): canonical tracker, owner-confirmed before/after, one complete delivery unit and its own builder session. Prefer the owner's chosen MCP; GitHub Issues is the default and Seif's current choice. Phase-only requests grant no coding or tracker-write authority; explicitly requested ticket intake still applies.
+
+Every ticket runs full analysis, planning, 0–4 implementation, final manual QA, final tests and independent review. [Small Change](.agents/skills/small-change/SKILL.md) supplies surgical tactics; its six shortcuts apply only to legacy unticketed work. Keep fix scope narrow, checks relevant and unrelated refactors deferred. Separate worktrees for independent tickets; a shared epic checkout has one writer at a time. Preserve ticket/run history and active pins.
 
 For larger factory changes, use [Improve Factory](.agents/skills/improve-factory/SKILL.md). Preserve existing work and active app state. Use a suitable branch or isolated worktree. Keep one writer per file; subagents do not have automatic filesystem isolation.
 
@@ -61,5 +63,7 @@ For new or materially changed persistence, use [Database Schema](.agents/skills/
 For every authorized PR or update, use the original [creation](.agents/skills/how-to-make-a-pr/SKILL.md) and [review](.agents/skills/how-to-review-a-pr/SKILL.md) procedures with the [project adapter](docs/pr-workflow.md). PR review runs on a remote/cloud agent with fresh context and exact remote base/head. Local controller review stays separate; local subagents never count as PR review. Record actual remote task/identity/evidence. Missing cloud access blocks dependent review/merge, not independent local work.
 
 Source company names, accounts, channels, tracker lists and tool names are not this project's settings. Discover actual bindings before asking. Missing bindings block the affected external action; keep authorized local work moving. Local review and controller `ready` do not complete the PR workflow.
+
+For ticketed work, refresh the canonical ticket before PR completion. Compare its latest confirmed criteria with actual changes, journey proof and limits; unresolved scope drift or failed refresh blocks dependent acceptance. Keep original input, revisions, owner authority and decision activity. Local records cache context/evidence; they never become a second tracker.
 
 Keep task links, truthful attribution, visual context, adjustment history and human handoff. Leave PRs draft unless explicitly authorized otherwise. Do not infer authority to notify, merge, release, deploy or spend money. Factory publication reaches main only after actual cloud PR review and authorized merge; verify remote state and preserve installed/active pins. No host hook or protected remote gate is installed by these instructions.

@@ -10,13 +10,16 @@ facts still missing. The [PR adapter](../../../../docs/pr-workflow.md) defines s
 | Project rules | Actual AGENTS/rules/configuration. Bundled language examples and historical directory names are not target settings. |
 | Stack and checks | Actual build, lint, types, tests, cycle tools and required gates. Map runtime/platform/version risks to real components. Missing evidence stays unverified. |
 | Product and language | Actual journey, platforms, input methods and locales. Games, clients, services and tools have different interfaces and constraints. |
-| Task tracking | Real tracker, dedup method, destination, reverse links and exact awaiting-review state. A local note is not a tracker update. |
-| Routine-only exception | Confirm designated repository and eligible paths against the full diff. Documentation alone does not establish an exception. |
+| Task tracking | [Ticketing](../../ticketing/SKILL.md): owner's preferred available MCP, otherwise GitHub Issues. Seif already selected GitHub; do not ask again. Actual project/repository, dedup, destination, reverse links and supported review state. A local note is not a tracker update. |
+| Ticket contract | Original input, actual before, latest confirmed after/criteria, scope revision/digest and owner source. Refresh meaningful activity; resolve pending changes/drift before dependent acceptance. Record builder/run/worktree, epic/dependencies and completion boundary. |
+| Routine-only exception | Confirm designated repository and eligible paths against the full diff. Documentation alone does not establish an exception; an existing ticket's contract still applies. |
 | Human handoff | Actual owner/account and supported review request. Do not guess recipients or request unsupported self-review. |
 | Notification/reminders | Authorized destination/audience/source thread; requested cadence and stop condition. A procedure does not authorize messaging or scheduling. |
 | Evidence | Request, base/head, decisions, real logs/screenshots/measurements and limits. Share only authorized, privacy-safe evidence. |
 
 Use available equivalent tools; report unavailable dependent steps. Do not fabricate success.
+
+Read/write/verify the canonical ticket through its authorized tool; local records cache context/evidence. Unknown update outcomes need reconciliation before retry. Keep new ticketed work on the full factory/PR route, including small bugs; preserve legacy unticketed paths.
 
 Keep credentials outside Git. Preserve dirty work in an isolated checkout; never silently stash
 or switch. Review-only stays read-only. Existing explicit authorization remains valid for push,

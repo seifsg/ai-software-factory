@@ -5,8 +5,11 @@ from pathlib import Path
 from .project import EngineError, digest, file_hash, inside, reject_path_aliases, relative_input_path
 
 
-def contract_candidate_digest(task, profile, protected):
-    return digest({"task": task, "profile": profile, "protected": protected})
+def contract_candidate_digest(task, profile, protected, ticket=None):
+    value = {"task": task, "profile": profile, "protected": protected}
+    if ticket is not None:
+        value["ticket"] = ticket
+    return digest(value)
 
 
 def validate_contract_review(review, old_digest, new_digest):
