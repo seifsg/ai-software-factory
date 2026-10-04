@@ -88,7 +88,7 @@ Betreff knapp und imperativ. Optionaler Body erklärt **warum**, nicht die einze
 
 **Immer als Draft öffnen.** Der Reviewer muss Wirkung und Grund ohne Code-Lesen verstehen.
 
-> **PFLICHT — Why zuerst.** Nach einem erforderlichen Header/Attribution-Block folgt **Why / Warum**: ursprüngliches Problem, Kontext und Entscheidung. Vorhandene Diskussion lesen; wesentliche Lücken klären. Ist der Grund nicht verfügbar, die Lücke benennen statt erfinden.
+> **PFLICHT: Zweck & Ziel zuerst.** Nach Header/Attribution: **🎯 Purpose & goal**. Problem, Betroffene, Folgen, warum nötig; konkretes Erfolgsziel. Code-/Quellenkontext separat unter **📍 Context**, Verhaltensänderung und Entscheidung/Grund unter **🔧 What & why**. Vorhandene Diskussion lesen; fehlenden Grund benennen, nicht erfinden.
 
 - **Vorher / Nachher:** sichtbare Verhaltensänderung in einfacher Sprache.
 - **Wie:** kurze technische Erklärung.
@@ -124,21 +124,20 @@ Drei Ziele, in dieser Reihenfolge:
 | Dateien, Checks, Events | ausgerichteter Monospace-Block |
 | Einzelner Fakt | ein Satz; Schlüsselbegriff fett |
 
-**Standard-Reihenfolge:** Erst tatsächliches PR-Template erfüllen. Unzutreffende Abschnitte weglassen, relevante Details erhalten.
+**Standard-Reihenfolge:** [Gemeinsames Ticket/PR-Layout](../safe-engine/references/work-writing.md). Erst tatsächliches PR-Template erfüllen. Kurze Bullets, passende Emojis, schmale Tabellen, Flows. Unzutreffende Abschnitte weglassen; relevante Details erhalten. Zweck/Kontext/Stand nie in Vorher verstecken.
 
 ```
 <erforderlicher Header / wahrheitsgemäße Attribution>
-## Why / Warum                 Kontext + Entscheidung
-### What & why                 Before/After
-### Flow                       Zustände / Verzweigungen
-### Design                     Optionen + Begründung
-### Files                      NEW/M/D + Pfad + Zweck
-### Guards / Fixes             Severity → Problem → Status
-### Observability              relevante Events + sichere Payload-Felder
-### Verification               tatsächlicher Befehl → Ergebnis
-### Not covered / follow-ups   Lücken, Grenzen, nächste Schritte
-### Adjustment History         WAS / WARUM / WER / Ergebnis
-### Kontext                    selbsttragender Stand + sichtbare Quellen/Task-Links
+## 🎯 Purpose & goal           Problem/Folgen/warum nötig + Erfolgsziel
+## 📍 Context                  Code/Quellen/Basis/Task; Fakten und Unbekanntes
+## 🔧 What & why               Verhalten Before/After + Entscheidung/Grund
+## 🔀 Flow                     Zustände / Verzweigungen
+## 🧩 Design / files           Optionen/Grund; NEW/M/D + Pfad + Zweck
+## 🧱 Guards / scope           Severity → Problem → Status; Grenzen
+## 🔎 Observability            relevante Events + sichere Payload-Felder
+## ✅ Verification             Kriterium → Änderung → tatsächlicher Beleg → Lücke
+## 🚦 Progress / next          Stand, PR/Kandidat, offene Schritte/Blocker
+## 📝 Adjustment History       WAS / WARUM / WER / Ergebnis
 ```
 
 **Bausteine:**
@@ -202,7 +201,7 @@ Sobald der Draft vollständig vorbereitet ist: [How to Review a PR](../how-to-re
 ## 6. PR-Template beachten
 
 Vor dem Schreiben `.github/pull_request_template.md`, `.github/PULL_REQUEST_TEMPLATE/` oder Host-Äquivalent prüfen.
-Vorhandene Struktur ausfüllen; Why, Vorher/Nachher, Kontext und Nachweise darin unterbringen.
+Vorhandene Struktur ausfüllen; Zweck/Ziel, Kontext, Vorher/Nachher/Grund und Nachweise klar trennen.
 
 ## 7. Signaturen & frische Branches
 
@@ -221,7 +220,7 @@ Vorhandene Struktur ausfüllen; Why, Vorher/Nachher, Kontext und Nachweise darin
 - [ ] Projekt-Template verwendet; Draft auf richtiger Basis. Hotfix-Paar vollständig, verlinkt, synchron.
 - [ ] Tatsächlicher Review-Owner angefragt; autorisierte Benachrichtigung zugestellt oder offen gemeldet. Keine unbestellte Erinnerung.
 - [ ] Separate Review ausgeführt; unabhängige Bewertung nach Review-Reparaturen; PR bleibt Draft.
-- [ ] Why zuerst; Vorher/Nachher/Wie; visuelle Darstellung; alle relevanten Details.
+- [ ] Zweck/Ziel zuerst; Kontext getrennt; Vorher/Nachher/Wie/Grund; visuelle Darstellung; alle relevanten Details.
 - [ ] Selbsttragender Kontext: Anfrage, Entscheidungen, Fakten/Links, Stand, offene Schritte.
 - [ ] Auftraggeber und tatsächlichen Autor zusätzlich zu Requested-by gewürdigt; Original/Anpassung unterschieden; Anpassungs-Historie und sichere Beobachtungsnachweise erhalten.
 - [ ] Keine erfundenen Ergebnisse, AI-Trailer, fremden Konten oder stillen Merge-/Release-Aktionen.

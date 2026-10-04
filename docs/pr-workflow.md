@@ -4,6 +4,8 @@ Read before factory PR work. Preserve source methods/reminders; resolve actual p
 
 New PR prose uses [Clear Writing](../.agents/skills/safe-engine/references/clear-writing.md); preserve required evidence, attribution, history and source wording.
 
+Use the shared [ticket/PR layout](../.agents/skills/safe-engine/references/work-writing.md): concrete title; 🎯 Purpose & goal, 📍 Context, 🔧 What & why, proof and progress in separate blocks. Brief bullets, comparison tables, fitting flows/emojis. State need/impact and exact success; Before/After describes behavior only. Preserve all required facts/history. No decorative chart or extra writing gate.
+
 Public-page changes include affected [SEO evidence](../.agents/skills/ux-quality/references/web-seo.md) in the same review. Distinguish local checks, live verification and actual indexing.
 
 ## Pick the actual task

@@ -32,6 +32,8 @@ The 38-skill source catalog is background, not 38 installed skills. [Pilot evide
 
 [Clear Writing](safe-engine/references/clear-writing.md) applies to authored output: brief, natural, specific, evidenced. One shared rule; no extra skill or review stage.
 
+[Ticket/PR writing](safe-engine/references/work-writing.md): clear purpose/goal, context, change/reason, proof and progress; concise bullets, emojis, tables and flows. Shared layout, no new phase.
+
 [Public Web SEO](ux-quality/references/web-seo.md) covers public pages intended for search. Shared checklist from planning through verification; private/staging routes retain exclusions.
 
 [Application Security](safe-engine/references/app-security.md) covers proportional early protections and production checks through the existing security code review.
