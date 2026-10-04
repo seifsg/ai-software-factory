@@ -35,6 +35,8 @@ Apply [efficiency](../safe-engine/references/app-efficiency.md) to affected path
 
 ### 2. Prepare lightly
 
+PR-bound work: plan [before/after proof](../../../docs/pr-workflow.md#beforeafter-proof) now. Capture the unchanged UI before edits; final counterpart/journey proof waits until final QA. One focused pair where applicable; equivalent output otherwise, optional useful video.
+
 Apply [Application Security](../safe-engine/references/app-security.md) to affected trust boundaries; preserve cheap protections and record unrelated risks. No automatic app-wide hardening or early scans.
 
 Human-facing prose uses [Clear Writing](../safe-engine/references/clear-writing.md); one finishing pass, same scoped reviewer.

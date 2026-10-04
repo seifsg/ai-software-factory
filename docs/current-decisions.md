@@ -34,6 +34,8 @@ Every UI/interaction change applies [UX Quality](../.agents/skills/ux-quality/SK
 
 ### Finish work, use it, then automate tests
 
+PR evidence: [before/after proof](pr-workflow.md#beforeafter-proof) is required where applicable. One focused UI screenshot pair by default; equivalent output for nonvisual changes. Seif permits a capture-only baseline before edits with minimum safe navigation, no feature exercise or submission. This narrow exception does not permit early testing. Finished screenshots and optional useful journey videos belong to final manual QA; publish accessible, sanitized evidence with the PR.
+
 Surgical changes take precedence. Fix the cause and affected consumers; defer unrelated refactors and optimization. Mandatory logging below is part of the task, including small fixes; implement it with the smallest adequate change.
 
 For features, bug fixes and factory maintenance:

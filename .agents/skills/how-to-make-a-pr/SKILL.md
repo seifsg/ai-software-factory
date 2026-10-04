@@ -19,6 +19,8 @@ Bei jedem autorisierten Code-, Dokumentations- oder Skill-PR: neu anlegen, aktua
 
 ## 1. Wann öffnen & vom richtigen Basis-Branch abzweigen
 
+Vor Änderungen [Vorher/Nachher-Belege](../../../docs/pr-workflow.md#beforeafter-proof) sichern: bei UI ein gezieltes Screenshot-Paar; sonst vergleichbare Ergebnisse. Nachher-Beleg und optionale Journey-Aufnahme erst in finaler manueller QA. Belege im PR zugänglich einbetten/verlinken; fehlende Belege offen nennen.
+
 - Änderungen über einen eigenen Feature-Branch und PR; nicht direkt auf den Basis-Branch committen.
 - Ziel anhand tatsächlicher Branch-/Release-Policy bestimmen. Vorhandenen Integrations-/Dev-Branch standardmäßig nutzen; ohne solchen Branch den bestätigten Default-Branch. Abweichungen im PR nennen.
 - **Remote prüfen**, nicht die lokale Branch-Liste:

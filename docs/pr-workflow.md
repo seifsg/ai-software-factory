@@ -21,6 +21,18 @@ Full cloud review: four isolated themes, capacity-bounded waves if needed; synth
 
 Judge the actual candidate. Proposed fixes mean a **conditional** verdict; list remaining fixes. Read-only review cannot count hypothetical repairs as passed. Separate severity from disposition: unresolved HIGH/CRITICAL, core failures and required unknowns block. Lower-risk accepted deferrals need owner, reason, scope, authority and revisit trigger; before-exposure obligations remain open until that boundary.
 
+## Before/after proof
+
+Plan proof before edits; attach it to the PR before submission/update. Show the changed outcome, not a screenshot dump.
+
+- **Visible/UI change:** capture the affected screen before edits; capture its finished counterpart during final manual QA. Default: one focused before/after pair, same viewport, state and safe sample data. Add views only when needed to explain the change. New UI: show the prior entry/empty state and label what did not exist. Screenshots are required where applicable; video does not replace them.
+- **No useful screenshot:** show equivalent before/after evidence, e.g. the same API request with status/body before and after, CLI output or measured behavior. Preserve existing baseline evidence before edits; if a fresh execution is needed, compare isolated base/head versions during final QA. Label versions, inputs and limits. Documentation-only changes may use a short text diff; no decorative screenshot.
+- **Feature proof:** final manual QA demonstrates the actual journey and outcome. Offer a short computer-use recording when motion or several steps add value; ask once, honor the answer, continue other work. No routine video mandate. When chosen, show relevant entry/sign-in → action → confirmed result. Email example: fill form → send → verify receipt in the test inbox, not merely a success toast. Use authorized test accounts/recipients; recording grants no sending permission.
+
+Baseline screenshot is a narrow capture-only exception to tests-last: minimum safe navigation to the unchanged view, no feature exercise, submission or test suite. Use existing evidence if access would require a side effect; report missing baseline honestly. Never fabricate a before image or reset dirty work to recreate it. Final screenshots, journey tests and videos wait until implementation finishes; reuse that QA session.
+
+Embed labeled Before/After and any chosen clip in the PR, with a brief observed result and base/head identity. Use durable attachments/links the reviewer can open; verify access. No localhost/local-path links or unconfirmed uploads. Keep credentials, private data and notifications out of captures; record safe fixtures. Missing capture/recording/upload access: disclose the gap and available evidence, never claim proof exists. No new media host or public upload implied.
+
 ## Resolve project bindings
 
 Read [bindings](../.agents/skills/how-to-make-a-pr/references/project-bindings.md). Discover repository, branches, rules, commands, tracker, review owner and authorized destinations. Reuse decisions; ask only consequential remaining gaps.

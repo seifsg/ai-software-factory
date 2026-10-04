@@ -49,6 +49,8 @@ Initialize once. Resume the saved phase. Follow [control-route recovery](referen
 
 ## Follow the saved phase
 
+PR-bound work: plan [before/after proof](../../../docs/pr-workflow.md#beforeafter-proof) before edits. Capture-only UI baseline now; finished screenshots and optional journey video during final manual QA. Use equivalent output for nonvisual changes; attach accessible proof to the PR.
+
 Read each phase's full method/applicable references before using it. Reuse fully read, unchanged text while available; names/summaries never suffice. On resume/context loss/delegation, use [method handoff](references/method-handoff.md); receivers read methods themselves. Missing methods block their phase.
 
 With no existing implementation, say so; analyze requirements, available platform facilities and intended consumers. Never invent code evidence. Preserve Get Ready's O(1) question as a prompt to examine workload-appropriate complexity, not a universal acceptance target; [I5](../../../docs/current-decisions.md#further-improvement-decisions) governs measured performance.
