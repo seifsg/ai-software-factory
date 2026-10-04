@@ -10,7 +10,7 @@ Understand the request. Build the smallest complete change. Use it manually. Wri
 
 Keep Seif's original method and deliberate repetition. RepairCheck Mobile remains the primary source; operative skills discover the target project's actual settings. Compress AI-written explanations. The factory covers games, web/mobile/desktop software, services, tools and libraries.
 
-The [skill index](.agents/skills/README.md) lists twelve canonical skills: seven with originals and five factory-specific skills. Two portable entries load the complete factory from another project. [Provenance](docs/skill-provenance.md) records exact sources, task matches and packaging changes.
+The [skill index](.agents/skills/README.md) lists thirteen canonical skills: seven with originals and six factory-specific skills. Two portable entries load the complete factory from another project. [Provenance](docs/skill-provenance.md) records exact sources, task matches and packaging changes.
 
 Ask for analysis and you get analysis. Ask for planning and you get planning. A small feature does not turn either request into permission to code. For a requested bounded fix, [Small Change](.agents/skills/small-change/SKILL.md) runs six light routines with focused checks and one independent review. Larger delivery follows the version workflow:
 
@@ -28,6 +28,8 @@ The original planning checkpoint remains. Proceed through it only when the user'
 Research current stack/architecture choices and useful design patterns against the goal. Plan applicable CPU/GPU, memory, database queries, network, storage, caching and interaction costs. Resolve material unknowns throughout delivery; standalone research returns findings without coding or controller setup. Actual hardware/tool evidence remains required for performance and usability claims.
 
 For new or material persistence design, use [Database Schema](.agents/skills/database-schema/SKILL.md): whole-product access patterns → three credible designs → justified choice → written schema → independent audit. No purposeless tables or unsupported O(1) promises. Keep safe evolution, real query costs and tests-last order explicit.
+
+Every UI/interaction change uses [UX Quality](.agents/skills/ux-quality/SKILL.md): simple journeys, familiar patterns, accessibility, coherent visuals and good contextual sound. Research uncertainty, compare three credible choices, justify the winner and proceed within delegated authority. Manually use it, inspect visuals and audition audio before final tests; carry evidence into independent review.
 
 ## Start or resume
 

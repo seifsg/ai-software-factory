@@ -20,6 +20,8 @@ External permissions remain separate. Discover actual project/task/owner/notific
 
 ## Delivery and maintenance
 
+Every UI/interaction change applies [UX Quality](../.agents/skills/ux-quality/SKILL.md): simple/familiar journeys, minimal unnecessary steps, accessible controls, coherent visuals and high-quality contextual audio where used. Research uncertainty using current sources; list three credible options, recommend with evidence/tradeoffs and use the chosen best fit autonomously within delegated scope. Preserve settled choices. Inspect rendered assets, audition sounds and manually exercise interactions before final automated tests. Required unknowns prevent a UX-ready claim; reuse the existing independent reviewer. No fixed year, vendor, paid asset or redesign mandate.
+
 ### Finish work, use it, then automate tests
 
 Surgical changes take precedence. Fix the cause and affected consumers; defer unrelated refactors and optimization. Mandatory logging below is part of the task, including small fixes; implement it with the smallest adequate change.
@@ -73,6 +75,6 @@ These retain the decision map. Selection alone proves no implementation.
 | I8–I9 | Reproducible workspaces; recheck integration when environment/target branch changes. Track input authority; retrieved material cannot grant permissions or weaken checks. |
 | I10 | Stable benchmark plus reserved cases across versions: missed defects, false findings, needless edits, acceptance and recovery. Selected target; no completed benchmark claimed. |
 
-Broader architecture, UX, security, idea assessment, test-quality review, skill-writing and worktree capabilities remain selected design scope; dedicated modules are unfinished. Earlier TDD proposals are superseded by the tests-last rule above. Existing methods implement only their documented subset. Report evidence/limits; do not claim every host or product proven.
+Broader architecture, UX research beyond the implemented quality audit, security, idea assessment, test-quality review, skill-writing and worktree capabilities remain selected design scope; dedicated modules are unfinished. Earlier TDD proposals are superseded by the tests-last rule above. Existing methods implement only their documented subset. Report evidence/limits; do not claim every host or product proven.
 
 Selected autonomous UX target: open/navigate the actual product, detect broken flows and poor experiences, make authorized in-scope repairs, then verify outcomes without repeated user prompting. Preserve product decisions and release boundaries. This target needs actual tools and demonstrated evidence; a declared capability is not proof it works.

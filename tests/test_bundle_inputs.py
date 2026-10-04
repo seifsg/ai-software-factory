@@ -58,6 +58,8 @@ class BundleInputTests(unittest.TestCase):
         self.fixture.full()
         before = self.fixture.flow.current(self.fixture.flow.load())
         for name in ('docs/safe-engine-fast-delivery.md', 'README.md',
+                     '.agents/skills/ux-quality/SKILL.md',
+                     '.agents/skills/ux-quality/references/assets-and-sources.md',
                      '.agents/skills/database-schema/SKILL.md',
                      'skills/improve-factory/scripts/resolve_bundle.py'):
             with self.subTest(input=name):
@@ -77,6 +79,8 @@ class BundleInputTests(unittest.TestCase):
         self.fixture.flow.record('improvement', self.fixture.draft('improvement'))
         before = self.fixture.flow.load()
         for name in ('docs/current-decisions.md', 'docs/safe-engine-decisions.md', 'safe_engine/bundle-inputs.json',
+                     '.agents/skills/ux-quality/SKILL.md',
+                     '.agents/skills/ux-quality/references/assets-and-sources.md',
                      '.agents/skills/database-schema/SKILL.md',
                      'skills/safe-engine/references/local-trials.md',
                      'safe_engine/workflow.py', '.agents/skills/deep-review/references/theme-security.md',

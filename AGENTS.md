@@ -32,6 +32,8 @@ The factory serves games, mobile/desktop/web software, servers, tools and librar
 
 ## Files and verification
 
+Every UI/interaction change uses [UX Quality](.agents/skills/ux-quality/SKILL.md), including small fixes. Keep journeys simple, familiar, accessible and responsive. Research uncertain design/asset choices in current sources; compare three credible options, justify the best fit and proceed under delegated authority. Inspect actual visuals and audition sounds; no poor placeholders or unsupported quality claims. Reuse the existing reviewer, preserve surgical scope and run automated tests only after finished implementation/manual QA.
+
 For new or materially changed persistence, use [Database Schema](.agents/skills/database-schema/SKILL.md): whole-product journeys/invariants → three viable designs → reasoned choice → written schema → fresh audit. Every structure needs a purpose. Optimize measured workloads, not universal O(1) claims. Preserve original Get Ready wording, settled decisions, surgical scope and tests-last order.
 
 - Use Skill Creator for new or substantially revised skills.

@@ -1,8 +1,18 @@
 # Skill sources and adaptations
 
+## UX quality method — 4 October 2026
+
+Seif requested a mandatory quality method for every UI change: simple/familiar journeys, excellent visuals/audio, current research, three credible options for uncertain choices, reasoned recommendation and autonomous in-scope execution. Improve Factory and Skill Creator package that request as `ux-quality`, with conditional asset guidance and planning, Small Change, research, handoff and reviewer consumers. No original core file changes. Thirteen canonical skills now; earlier counts below describe their own pass.
+
+The available `Repaircheck/claude-routines` original `.claude/skills/ux-investigation/SKILL.md` was inspected at local revision `cbd252632f0218fa2a12161e91282da013c73839`; no matching Mobile UX method was found in the available source checkout. Its purpose is production-session investigation and backlog suggestions with fixed Datadog/ClickUp/notification bindings. It does not implement this requested build-time quality gate. Preserve it unchanged; do not silently convert it into an autonomous UI repair procedure or import its external actions. The new skill is factory-specific, directly from Seif's request.
+
+Options: expand the existing journey review lens only (too late for design choices); repurpose session investigation (changes its authored purpose); dedicated concise quality method with conditional assets and shared callers (selected). This keeps one canonical audit across planning, manual use and review without an extra review fleet or controller stage.
+
+[Source basis](../.agents/skills/ux-quality/references/assets-and-sources.md#research-starting-points): W3C, Nielsen Norman Group and Microsoft primary guidance checked 4 October 2026. No vendor, asset pack or universal best-design claim is selected. Future uncertain choices must research the then-current platform/version and inspect real output. Required bundle inputs include the skill and asset reference; existing pins remain unchanged. Instruction exercises and final integrity checks do not certify a real product's UX or unheard audio.
+
 ## Current generic adaptation — 4 October 2026
 
-Database Schema is a newly requested factory-specific skill, authored from Seif's whole-product schema-design instruction. No schema-specific original was found by filename in the supplied Mobile/routines snapshots. It reuses their original Analyze Start and Get Ready to Code unchanged. The live index now has twelve canonical skills; earlier eleven-skill counts below describe prior revisions.
+Database Schema was requested as a factory-specific skill, authored from Seif's whole-product schema-design instruction. No schema-specific original was found by filename in the supplied Mobile/routines snapshots. It reuses their original Analyze Start and Get Ready to Code unchanged. That addition brought the index to twelve canonical skills; earlier eleven-skill counts below describe prior revisions.
 
 ### Database schema method — 4 October 2026
 

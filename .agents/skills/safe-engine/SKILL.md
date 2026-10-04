@@ -21,6 +21,8 @@ Read [mandatory logging](references/app-diagnostics.md) and [efficiency](referen
 
 ## Start or resume
 
+Every UI/interaction change uses [UX Quality](../ux-quality/SKILL.md) from planning through manual QA and independent review. Research uncertain patterns/assets, compare three credible options and choose the justified best fit under delegated authority. Verify simplicity, accessibility, visual/audio quality and actual interaction; no extra controller phase or automatic redesign.
+
 For new persistence models or material schema changes, use [Database Schema](../database-schema/SKILL.md) during planning before dependent implementation: whole-product access map → three viable designs → selected reasoned design → written schema → fresh audit. Preserve engine choices; routine fixes stay scoped. Carry the design and query/migration evidence into review. No database need means no invented database, and no new controller phase.
 
 Resolve this bundle's root. Read [pilot usage](../../../docs/pilot-usage.md) for supported commands, profile, limits and recovery. Run from the bundle:

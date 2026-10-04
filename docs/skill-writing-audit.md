@@ -1,5 +1,11 @@
 # Skill writing audit
 
+## UX quality addition — 4 October 2026
+
+Added the owner-requested [UX Quality](../.agents/skills/ux-quality/SKILL.md): 854-word core with conditional asset/source guidance. One audit reaches delivery planning, small fixes, research, handoff, journey review and the controller's fresh-review prompt. Both files are required inputs. Thirteen canonical skills now; four original core files unchanged. [Source/purpose comparison](skill-provenance.md#ux-quality-method--4-october-2026) explains why the original session-investigation workflow stays separate.
+
+Before automated work: independent instruction exercises covered a surgical focus fix, game UI/audio planning without playback access, and screenshot-only account-flow review. Manual preview use checked pointer/keyboard expansion, visible focus and 390×844 copy layout. Then seven affected bundle/prompt tests passed (20.893 s), fifteen skill entries validated and local links/packaging/JavaScript/whitespace checks passed. The prior 79-test checkpoint remains historical; no full-suite rerun or real-app/audio certification is claimed for this addition.
+
 ## Repository checkpoint — 4 October 2026
 
 The [current checkpoint report](factory-checkpoint-2026-10-04.md) supersedes earlier current-state claims below. It records runtime repairs, source preservation, four-theme review, manual QA and final checks. Same 32 skill files: 26,592 → 21,925 words (17.6% less); with two new references/skills, 34 files total 23,202 words. Earlier measurements describe their own pass. These are whitespace words, not token counts.

@@ -15,9 +15,10 @@ Keep Seif's originals and deliberate reminders. Adapt project assumptions to the
 | [improve-factory](improve-factory/SKILL.md) | Repair the factory while preserving active app work. | Factory-specific; isolation, affected checks and independent review |
 | [research-market](research-market/SKILL.md) | Research product/UX, stack, architecture and patterns; resolve material unknowns. | Factory-specific; original/revised plans for delivery, findings only for standalone research |
 | [database-schema](database-schema/SKILL.md) | Map the whole product, compare three schema designs, choose, write and audit. | Factory-specific; original analysis/planning methods, real access patterns, engine constraints and scoped review |
+| [ux-quality](ux-quality/SKILL.md) | Audit every UI change for simple, familiar, accessible interaction and high-quality visuals/audio. | Factory-specific; current research, three-option uncertain choices, real inspection and scoped independent review |
 | [small-change](small-change/SKILL.md) | Deliver a requested bounded fix with six light routines. | Factory-specific; affected code, focused checks and narrow independent review |
 
-Twelve canonical skills: seven with originals, five factory-specific. Two portable entries, [Safe Engine](../../skills/safe-engine/SKILL.md) and [Improve Factory](../../skills/improve-factory/SKILL.md), load the same complete bundle. Install using their [delivery](../../docs/install-safe-engine.md) or [maintenance](../../docs/install-improve-factory.md) guide.
+Thirteen canonical skills: seven with originals, six factory-specific. Two portable entries, [Safe Engine](../../skills/safe-engine/SKILL.md) and [Improve Factory](../../skills/improve-factory/SKILL.md), load the same complete bundle. Install using their [delivery](../../docs/install-safe-engine.md) or [maintenance](../../docs/install-improve-factory.md) guide.
 
 A direct analysis/planning/review request keeps its phase. Small Change is for requested implementation. [Mandatory logging](safe-engine/references/app-diagnostics.md) and [efficiency](safe-engine/references/app-efficiency.md) belong to the delivery coordinator; restored originals do not import them automatically. Every app/game, including small fixes, needs a working shared logger and detailed safe journey evidence; inspect logs throughout development/manual debugging.
 

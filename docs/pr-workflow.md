@@ -65,6 +65,8 @@ Follow [tests-last order](current-decisions.md#finish-work-use-it-then-automate-
 
 ## Small direct changes
 
+Every UI/interaction PR or update includes the [UX Quality](../.agents/skills/ux-quality/SKILL.md) audit in its existing reviewer scope: journey friction, current patterns, accessibility, visual/audio inspection, three-option decisions for uncertainty and observed manual evidence. A source-only review cannot certify unseen or unheard output.
+
 Both PR procedures apply to an authorized small PR, within the selected Small Change method:
 
 1. Inspect original purpose, base/head and prior review boundary.

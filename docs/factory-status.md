@@ -1,8 +1,10 @@
 # Factory status
 
-Current checkpoint: **4 October 2026**. Twelve canonical skills, two portable launchers. The [checkpoint report](factory-checkpoint-2026-10-04.md) records repairs, evidence and remaining gaps. The [3 October audit](factory-audit-2026-10-03.md) is history, not the current defect list.
+Current checkpoint: **4 October 2026**. Thirteen canonical skills, two portable launchers. The [checkpoint report](factory-checkpoint-2026-10-04.md) records repairs, evidence and remaining gaps. The [3 October audit](factory-audit-2026-10-03.md) is history, not the current defect list.
 
 Read this page on GitHub from your phone. Sign in with access to this private repository. Links below need no localhost server. Running the controller still requires a configured computer.
+
+After the checkpoint, Seif added mandatory [UX Quality](../.agents/skills/ux-quality/SKILL.md) for every UI/interaction change: current research, three credible uncertain-choice options, justified autonomous selection, and real interaction/visual/audio auditing. The dated checkpoint retains its original test and skill counts.
 
 ## Current method
 
@@ -38,6 +40,7 @@ Factory-specific methods:
 10. [Research Market](../.agents/skills/research-market/SKILL.md)
 11. [Small Change](../.agents/skills/small-change/SKILL.md)
 12. [Database Schema](../.agents/skills/database-schema/SKILL.md)
+13. [UX Quality](../.agents/skills/ux-quality/SKILL.md)
 
 Each skill links its supporting files. Browse the [whole directory](../.agents/skills), [source map](skill-provenance.md) or [writing audit](skill-writing-audit.md).
 

@@ -294,6 +294,8 @@ class WorkflowTests(unittest.TestCase):
                              "safe-engine/references/app-efficiency.md",
                              "safe-engine/references/method-handoff.md",
                              "database-schema/SKILL.md",
+                             "ux-quality/SKILL.md",
+                             "ux-quality/references/assets-and-sources.md",
                              "research-market/SKILL.md",
                              "how-to-make-a-pr/references/project-bindings.md"):
                 required = skills / relative

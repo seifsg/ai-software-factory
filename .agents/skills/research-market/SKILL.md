@@ -33,6 +33,8 @@ No new accounts, purchases, private-data disclosure or protected-asset reuse mer
 
 ## Decide and return
 
+For interface, interaction or media choices, feed current standards, relevant examples and the three-option comparison into [UX Quality](../ux-quality/SKILL.md). It owns the quality audit and asset inspection. Reuse evidence; do not recurse between skills or treat research screenshots as product QA.
+
 For new or materially changed persistence, feed engine/version evidence and access patterns into [Database Schema](../database-schema/SKILL.md). It owns design alternatives and the schema audit. Reuse this research; do not recurse between skills or invent persistence for a product that needs none.
 
 Compare three credible alternatives for new substantive decisions; recommend one. Use delegated authority; retain owner-reserved choices. Do not manufacture alternatives to settled choices. Record retained/adopted/deferred/rejected ideas with reasons.

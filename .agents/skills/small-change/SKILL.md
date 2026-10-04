@@ -37,6 +37,8 @@ Apply [app efficiency](../safe-engine/references/app-efficiency.md) to the affec
 
 ### 2. Prepare lightly
 
+For every UI/interaction change, apply [UX Quality](../ux-quality/SKILL.md) to the affected journey through manual QA and this skill's scoped reviewer. Preserve adequate patterns/assets; research uncertain choices and compare three credible options before selecting. Check actual visuals/audio when changed. Quality is required; unrelated redesign and a second review fleet are not.
+
 List files, behavior, smallest complete fix, manual actions and final check scope. Reproduce through actual use; read existing tests when helpful, but do not write/run them yet. Critique correctness/impact; preserve settled choices without invented alternatives. This replaces the five full planning outputs.
 
 ### 3. Generate code carefully

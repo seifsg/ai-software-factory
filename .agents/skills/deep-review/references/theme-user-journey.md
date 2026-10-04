@@ -12,6 +12,8 @@ state **Actual** versus **Expected** for each claimed behavior. Show where they 
 
 ## What to verify
 
+For every UI/interaction change, read [UX Quality](../../ux-quality/SKILL.md) and inspect its actual audit evidence. Check simple/familiar flow, accessibility, uncertain-choice research/comparison and rendered/auditioned asset quality. Respect existing decisions and scoped fixes. Missing actual interaction or listening evidence stays unverified; run no early automated tests.
+
 ### The claim is actually delivered
 - Trace input/event → interface/API → domain logic → dependencies/storage → state/output.
   Include game loops, jobs, notifications and navigation where present. Each hop must carry the change.
