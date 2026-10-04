@@ -2,26 +2,32 @@
 
 Seif's software-building skills and **Safe Engine 0.1.0**, the local controller that connects them.
 
-Understand the request. Prepare the work. Build it. Check it. Return the result with evidence.
+Understand the request. Build the smallest complete change. Use it manually. Write and run tests last. Return evidence.
 
-**Reading from your phone?** Start with the [factory status and skill links](docs/factory-status.md), then the [full audit](docs/factory-audit-2026-10-03.md). Both render directly on GitHub. Sign in with an account that can access this private repository.
+**Reading from your phone?** Start with the [factory status and skill links](docs/factory-status.md), then the [current checkpoint report](docs/factory-checkpoint-2026-10-04.md). Both render directly on GitHub. Sign in with an account that can access this private repository.
 
 ## The skills
 
-Use Seif's originals where they exist. RepairCheck Mobile comes first. Write the remaining skills in the same direct style. Keep real requirements; remove needless explanation and hidden workflow changes.
+Keep Seif's original method and deliberate repetition. RepairCheck Mobile remains the primary source; operative skills discover the target project's actual settings. Compress AI-written explanations. The factory covers games, web/mobile/desktop software, services, tools and libraries.
 
-The [skill index](.agents/skills/README.md) lists eleven canonical skills: seven with originals and four factory-specific skills. Two portable entries load the complete factory from another project. [Provenance](docs/skill-provenance.md) records exact sources, task matches and packaging changes.
+The [skill index](.agents/skills/README.md) lists twelve canonical skills: seven with originals and five factory-specific skills. Two portable entries load the complete factory from another project. [Provenance](docs/skill-provenance.md) records exact sources, task matches and packaging changes.
 
 Ask for analysis and you get analysis. Ask for planning and you get planning. A small feature does not turn either request into permission to code. For a requested bounded fix, [Small Change](.agents/skills/small-change/SKILL.md) runs six light routines with focused checks and one independent review. Larger delivery follows the version workflow:
 
 ```text
-analyze → original plan → market research for new apps → revised plan
-        → build with the 0–4 loop → feature feedback
-        → full version QA → useful improvements → final QA → fresh review
+analyze → original plan → product/UX + technical research → revised plan
+        → build with the 0–4 loop → finish in-scope improvements → manual action QA
+        → author/polish automated tests → final automated QA → fresh review
         → checked local handoff → authorized PR creation and review → human
 ```
 
 The original planning checkpoint remains. Proceed through it only when the user's instructions already authorize that continuation.
+
+[Tests-last rule](docs/current-decisions.md#finish-work-use-it-then-automate-tests): no automated test writing or execution during development. Finish and manually exercise the task first; final tests precede PR preparation. Small fixes stay surgical. Older controller feature-check commands remain available but are outside this method; [pilot limits](docs/pilot-usage.md#feature-feedback-and-version-checkpoints) are explicit.
+
+Research current stack/architecture choices and useful design patterns against the goal. Plan applicable CPU/GPU, memory, database queries, network, storage, caching and interaction costs. Resolve material unknowns throughout delivery; standalone research returns findings without coding or controller setup. Actual hardware/tool evidence remains required for performance and usability claims.
+
+For new or material persistence design, use [Database Schema](.agents/skills/database-schema/SKILL.md): whole-product access patterns → three credible designs → justified choice → written schema → independent audit. No purposeless tables or unsupported O(1) promises. Keep safe evolution, real query costs and tests-last order explicit.
 
 ## Start or resume
 
@@ -44,7 +50,7 @@ The current Codex session builds; Python saves stages, runs configured checks an
 
 The [recorded pilot](docs/pilot-verification.md) demonstrates a local browser fixture and repair. It does not certify this revised wording, every host, or a production app. PR delivery needs actual project settings from the [PR adapter](docs/pr-workflow.md). Claude-native and cloud delivery are unverified.
 
-During app delivery, the coordinator applies [diagnostics](.agents/skills/safe-engine/references/app-diagnostics.md) and [efficiency](.agents/skills/safe-engine/references/app-efficiency.md). New apps plan these from the start; existing changes address affected paths. Instructions alone do not prove useful logs or a faster app.
+Every app/game needs a working shared [logging module](.agents/skills/safe-engine/references/app-diagnostics.md), including small fixes. Reuse preferred providers or create internal logging with a local destination. Capture detailed safe success/failure trails and read them while debugging. The coordinator also applies [efficiency](.agents/skills/safe-engine/references/app-efficiency.md) from planning onward. Instructions alone prove neither emitted logs nor a faster app.
 
 QA binds to declared code, guidance and runtime inputs. Changing a required skill invalidates old evidence. Preserve active pins and use the compatibility procedure before adopting a different factory.
 
@@ -67,6 +73,6 @@ Both portable resolvers come from `safe_engine/distribution.py`. After editing i
 
 ## Keep building together
 
-Read [repository rules](AGENTS.md) and [selected decisions](docs/safe-engine-decisions.md) before editing. Restore originals faithfully. For a new procedure, start from Seif's actual request, compare requirements before and after editing, then verify affected behavior.
+Read [repository rules](AGENTS.md) and [selected decisions](docs/current-decisions.md) before editing. Preserve authored reminders; record generic adaptations. For a new procedure, start from Seif's actual request, compare requirements before and after editing, then verify affected behavior.
 
 The [visual map](preview/index.html) explains the flow. The [lifecycle map](docs/skill-lifecycle-map.md) catalogs all 38 supplied source skills; seven source skills are imported here. The [expanded plan](docs/safe-engine-expanded-scope.md), [build plan](docs/safe-engine-build-plan.md) and [delivery design](docs/safe-engine-fast-delivery.md) preserve earlier proposals and choices. They do not authorize importing the rest of the library.

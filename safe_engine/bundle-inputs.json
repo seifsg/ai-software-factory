@@ -10,6 +10,7 @@
     ".agents/skills/deep-review/references/theme-security.md",
     ".agents/skills/deep-review/references/theme-user-journey.md",
     ".agents/skills/get-ready-to-code/SKILL.md",
+    ".agents/skills/database-schema/SKILL.md",
     ".agents/skills/how-to-make-a-pr/SKILL.md",
     ".agents/skills/how-to-make-a-pr/references/pr-body-template.md",
     ".agents/skills/how-to-make-a-pr/references/project-bindings.md",
@@ -35,6 +36,7 @@
     "README.md",
     "docs/install-improve-factory.md",
     "docs/install-safe-engine.md",
+    "docs/current-decisions.md",
     "docs/pilot-implementation.md",
     "docs/pilot-usage.md",
     "docs/pilot-verification.md",
@@ -60,6 +62,7 @@
     "skills/improve-factory/SKILL.md",
     "skills/improve-factory/scripts/resolve_bundle.py",
     "skills/safe-engine/SKILL.md",
+    "skills/safe-engine/references/local-trials.md",
     "skills/safe-engine/scripts/resolve_bundle.py"
   ],
   "source_trees": [

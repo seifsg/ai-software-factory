@@ -1,50 +1,59 @@
-# App diagnostics by default
+# Mandatory application logging
 
-Build enough logs to explain what failed, where, why, and what recovery did. This is part of app delivery. Use the existing logger if it is adequate. Otherwise add the smallest shared module the app needs. Scattered console messages are not proof of coverage.
+Every app, game, service and tool must have a working shared logging module. New or existing; any language/platform; small fixes included. Reuse an adequate module or create the missing internal module. An installed SDK, scattered console messages or an unused wrapper is not enough. Standalone analysis stays read-only and records missing logging.
 
-Safe Engine owns this requirement for new apps and app changes. An analysis-only request stays analysis-only; this reference does not authorize coding.
+## Choose the destination
 
-## Plan coverage and fill the current gap
+Inspect existing logging, project preferences and authorized integrations first. Reuse recorded answers. If preference is unknown, ask whether the owner uses a provider such as PostHog or Datadog. If yes, request missing project/region and access through the host's secure credential/integration flow; never ask for secrets in chat. Verify actual log ingestion and read/search access, not just analytics events or an installed SDK.
 
-For a new app, include diagnostics in the original plan, revised plan, code, checks and handoff. Map each applicable area below to real events. Explain any N/A. Build it with the app.
+No provider, pending answer or unavailable access: build/use the internal module with a working local/platform destination now. Missing cloud access cannot leave the app without logs. Keep the selected provider pending; do not silently switch vendors, buy services or enable new remote collection. Use existing authorized access; record remaining access needs.
 
-For an existing app:
-- Inspect the logger, destinations and actual event sites first.
-- Make a compact app-wide inventory: covered, missing, unknown. A logger's existence does not prove coverage.
-- Add the minimum missing shared module and events for changed journeys and directly affected consumers. This is already part of the authorized app change, including small fixes.
-- Keep small changes small. Do not rewrite the app, instrument unrelated areas or run broad regression automatically.
-- Record wider gaps, their impact and next step. Report a real scope/authority boundary. Do not claim app-wide coverage without evidence.
+Prefer a thin application module over a maintained native logger; add provider/OTLP adapters when useful and supported. Research the actual language, engine, runtime and deployment before choosing. Check license, maintenance, supported versions, security and cost; prefer a versioned package over copying a random repository. A provider SDK can back the same module. Do not write a cross-language logging engine or force a collector into a small app. See [research basis](../../../../docs/skill-provenance.md#mandatory-logging-research--4-october-2026).
 
-Use the existing plan/change record:
+## Cover the application
 
-`area/journey → source/event sites → safe useful context → check/evidence → gap or supported N/A`
+New products: plan logging before feature work and wire it from startup. Existing products: inspect coverage, reuse adequate facilities, fill the missing module and wire relevant boundaries. Mandatory logging is part of delivery scope, including surgical fixes; use shared middleware/hooks to avoid unrelated restructuring. A tiny fix does not exempt the module. Record legacy coverage gaps and their impact; never claim complete coverage from the changed path alone.
 
-One record is enough. No new controller schema or task tree is needed.
+Use one record:
 
-| Area | What the events must explain |
+`area/journey → start/success/failure events → source/sink → evidence → gap`
+
+| Area | Record |
 |---|---|
-| Lifecycle and configuration | Startup/build identity, initialization/config validation, dependencies, shutdown and cleanup. Log safe state flags, not configuration values. |
-| User actions and state | Significant commands/navigation, state changes, rejection, cancellation and the UI result. Locate a stuck journey without recording typing or content. |
-| External operations | Start/outcome, provider/service, safe route identity, status/error category, duration, timeout, retries/backoff, fallback and cancellation. Link attempts to one operation. |
-| Persistence and recovery | Load/save/migration, conflict/corruption, draft/recording recovery, retries and unsaved-state decisions. Do not record document or media contents. |
-| Background work and resources | Task/queue/stream/device changes, permissions, concurrency conflicts, resource acquisition/release, failures and unexpected exceptions at real app boundaries. |
+| Lifecycle/configuration | Build/runtime/platform, startup, initialization, configuration validation, dependency availability, shutdown and cleanup. |
+| User/consumer journey | Intended action, entry point, prior steps/state, transitions, validation/rejection, successful outcome, cancellation and recovery. Infer intent only from observed actions; label inference. |
+| Functions/background work | Component, source file/line/function, operation, named inputs, relevant branches, output, jobs/queues, permissions, resource acquisition/release and handled/unhandled exceptions. |
+| Network/providers | Request operation/route, parameters, response/status, latency, timeout, attempt, retries/backoff, fallback and cancellation. Link caller and downstream work. |
+| Files/documents/data | Logical file name/path, operation, detected/declared type, size, encoding/parser/version, validation, read/write/save/migration/conflict and recovery. |
+| Database | Query/template, bound parameter names/types/values, transaction, duration, affected rows and result/outcome. Apply the detail rules below before emission. |
+| Games/resources | Scene/entity or job identity, input/state transitions, asset loading, simulation failures, frame/resource anomalies and recovery; correlate with CPU/GPU/memory evidence. |
 
-Log successful transitions when they establish the last known good state. Do not log every function, render or poll. Keep useful error handling and user feedback. A silent failure is still broken even if a log explains it.
+Log successes as well as failures. Use trace/debug/info/warn/error/fatal as supported; severity and outcome are separate. Treat unexpected warnings as evidence to investigate. Never swallow an error because it was logged.
 
-## Shared module contract
+## One readable event trail
 
-- Use structured events: UTC time, severity, app/build, component, stable event name, outcome and opaque session/operation ID. Add duration, attempt, safe error code/category/status and sanitized technical detail where useful. Carry correlation across UI, background and service boundaries. Distinguish a retry from a new operation. Include handled failures and safe unexpected-exception details.
-- Allowlist fields. Sanitize and bound untrusted values before writing. Do not log credentials, authorization headers, secret/config values, raw requests/responses, private conversations/prompts, documents, audio/recordings or personal data by default. Errors/stacks, URLs/queries and paths can leak these too. Select safe detail; do not dump exception objects. Use harmless fixtures, never real API keys. Keep diagnostics out of Git.
-- Use a discoverable local destination. State size/age/count retention; bound events and queues. Stdout is enough only if capture, retention and discovery actually work. Protect access, rotate/expire safely, limit repeated noise and avoid blocking hot paths. Reuse existing facilities. New telemetry, uploads, analytics or paid dependencies need applicable authority.
-- A logger initialization/write/rotation/export failure must not crash the app, recurse, stall an action or block Quit. Use a bounded safe fallback or visible diagnostic-health signal where feasible. Preserve the underlying error; never claim an unsaved log was saved. Failed flush/cleanup must still allow exit with explicit unsaved-data consequences.
-- Let the owner find/view or export safe logs. Give the location, retention and relevant correlation ID. Sanitize before every destination or export. Sharing requires separate authority.
+The module owns structured events, context propagation, sanitization, levels, sinks and configuration. Keep a human-readable view plus machine-readable records.
 
-## Focused evidence and handoff
+- **Identity/order:** UTC timestamp, sequence/duration, severity, stable event name, outcome, app/build/environment, component and source file/line/function. Capture real locations; never invent them.
+- **Journey:** opaque session/action/operation IDs, trace/span or parent IDs, previous steps, attempted action and before/after state. Propagate context across async work, threads/jobs and services; keep concurrent users isolated. Bounded breadcrumbs preserve the lead-up to an error.
+- **Detail:** named parameters with values/types, validation decision, expected versus actual result, output, error type/code/message, sanitized stack/cause chain, retries and recovery. Record missing, redacted or truncated fields explicitly. One trail should explain what happened, where, with which inputs, and why it failed.
+- **Exact reproduction:** preserve complete non-sensitive queries, separate bindings and safe inputs/outputs within explicit size limits. Do not interpolate secrets into SQL or dump whole objects. For a bad character, capture escaped value/code point, position, encoding and normalization; for a document mismatch, capture declared/detected MIME/extension, parser, size and rejection reason. Use minimal harmless reproductions when real content is private. Redaction must preserve diagnostic types/shapes/reasons.
+- **Sensitive detail:** never log passwords, API keys, tokens, cookies, authorization headers, private keys or connection credentials. Redact before every destination, including local buffers and SDK auto-capture. Private documents/messages, personal data and full bodies need scoped diagnostic capture with explicit owner authority, minimum necessary content, restricted access and short retention; no automatic upload. Prefer synthetic inputs. Inspect URLs, paths, stacks and queries for embedded data. Mark omissions; do not promise exact payload recovery after redaction.
 
-After the coherent batch, use isolated safe fixtures to exercise a representative success and the changed journey's failure/recovery/cancel path. Read the emitted logs. Do they explain the sequence? Does correlation stay consistent?
+## Keep logs usable
 
-When adding or changing the module, check secret/content canaries, bounded retention/event size and an unavailable or failing destination. Reuse valid checks for an unchanged logger. Test the actual patch, not every possible fault or an unrelated suite. Mark unavailable interaction/failure coverage honestly.
+Libraries emit through caller-configured hooks/sinks; no global setup or files on import. The consuming app must configure a working destination. Standalone library work delivers the integration contract and demonstrates real consumer use; it does not create a host app as unrelated scope.
 
-Use the existing review to check actual coverage/event sites, privacy, retention/resources, failure tolerance and owner discovery. Include log access, demonstrated coverage, gaps/unknowns and check limits in the normal handoff. A module or syntax check does not prove coverage. These instructions install no host hook or telemetry enforcement.
+Provide local files, platform storage or captured stdout with working discovery, filtering and retention. Browsers/mobile/sandboxed runtimes use supported storage/export; do not assume filesystem access. Owner and agent must be able to inspect logs by severity, time and operation/journey ID. Give exact access steps and a sanitized export path.
 
-This implements Seif's 3 October 2026 request. [OWASP logging guidance](https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html) supports event selection, exclusions and failure checks. The [OpenTelemetry log data model](https://opentelemetry.io/docs/specs/otel/logs/data-model/) informs structure/correlation. Neither requires OpenTelemetry or a remote collector.
+Bound event/body/stack size, queue/memory/disk, retention and retries. Escape untrusted text to prevent forged log lines. Use async/batched writes and lazy serialization; logging must not freeze input or a game frame. Support targeted verbose diagnostics for function-level/hot-loop detail. Keep operational successes, warnings/errors and failure breadcrumbs; aggregate/rate-limit repetitive frame/poll events with counts and explicit dropped/truncated markers. Report coverage lost to limits, never silently claim exhaustive capture.
+
+Logger initialization, serialization, writes, rotation, exports or full disks must not crash, recurse, stall the app or block exit. Provide bounded fallback and logger-health visibility. A provider outage retains local diagnostics where supported. State lost/unsaved records honestly; preserve original failures and the owner's unsaved-work choice.
+
+## Read logs while working
+
+During development and actual app use: inspect info/warn/error and relevant debug trails → correlate the journey → diagnose → fix the cause surgically → repeat the action and read the new trail. Logging and manual debugging run throughout development; automated tests still wait until the end.
+
+After implementation is finished, manually exercise success, failure, invalid input/type and applicable retry/cancel/recovery paths with harmless data. Read the resulting trail: can it explain the failure without guessing? Exercise missing/offline destinations and retention/redaction behavior where changed; disclose unavailable paths. Fix gaps, then repeat affected actions.
+
+Only after finished implementation and passing manual QA, author/polish/run relevant final tests under [tests-last order](../../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests). Review real event sites and emitted records, not module presence alone. Handoff: module/backend, access status, log location/query, correlation example, observed coverage, redactions/bounds, unresolved gaps and actual evidence. Instructions do not install instrumentation or enforce host behavior.

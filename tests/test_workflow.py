@@ -253,6 +253,32 @@ class WorkflowTests(unittest.TestCase):
         with self.assertRaisesRegex(EngineError, "IDs"):
             self.flow.validate_review(report, self.flow.load())
 
+    def test_product_profiles_require_matching_behavior_evidence(self):
+        for interface in ("desktop", "mobile", "game", "service"):
+            with self.subTest(interface=interface):
+                profile = json.loads(json.dumps(self.profile))
+                profile["interface"] = interface
+                with self.assertRaises(EngineError):
+                    validate_profile(profile)
+                profile["checks"][0]["kind"] = "api" if interface == "service" else "interaction"
+                validate_profile(profile)
+                profile["checks"][0]["kind"] = "performance"
+                with self.assertRaises(EngineError):
+                    validate_profile(profile)
+
+    def test_game_profile_runs_configured_interaction_and_resource_checks(self):
+        # Synthetic check transport only; this does not demonstrate a real game.
+        self.profile["interface"] = "game"
+        self.profile["checks"][0]["kind"] = "interaction"
+        self.profile["checks"].append({"id": "resources", "kind": "performance",
+                                        "argv": ["{python}", "acceptance.py"], "timeout_seconds": 10})
+        self.task["acceptance"][0]["checks"].append("resources")
+        self.built()
+        self.assertEqual(self.flow.check()["phase"], "improve")
+        (self.root / "app.py").write_text("value = 2\n")
+        with self.assertRaises(EngineError):
+            self.flow.require_checks(self.flow.load())
+
     def test_review_and_handoff_use_fresh_process_result(self):
         self.reviewed_input()
         report = {"verdict": "PASS", "summary": "Test double; not a real review", "method_followed": True,
@@ -264,10 +290,16 @@ class WorkflowTests(unittest.TestCase):
             for relative in ("deep-review/references/theme-security.md",
                              "deep-review/references/theme-performance.md",
                              "deep-review/references/theme-user-journey.md",
+                             "safe-engine/references/app-diagnostics.md",
+                             "safe-engine/references/app-efficiency.md",
+                             "safe-engine/references/method-handoff.md",
+                             "database-schema/SKILL.md",
+                             "research-market/SKILL.md",
                              "how-to-make-a-pr/references/project-bindings.md"):
                 required = skills / relative
                 self.assertTrue(required.is_file(), relative)
                 self.assertIn(str(required), stdin)
+            self.assertIn(str(skills.parents[1] / "docs/current-decisions.md"), stdin)
             Path(argv[argv.index("--output-last-message") + 1]).write_text(json.dumps(report))
             log.write_text("explicit test double")
             return {"passed": True, "exit_code": 0}

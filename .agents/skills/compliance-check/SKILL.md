@@ -5,7 +5,9 @@ description: Verify implementation against intended requirements, accepted plan,
 
 # Compliance Check
 
-**Project adapter:** Where this original refers to `.cursor/rules/`, read the target project's actual applicable rule sources, including `AGENTS.md`, `CLAUDE.md`, or its rules directory. Follow the host's instruction precedence.
+**Project adapter:** Discover the target project's actual rule sources and follow the host's instruction precedence. Preserve the complete checks and reminders below.
+
+**Current decisions override:** Uncertain applicability stays UNKNOWN pending evidence. Mandatory exceptions require an authorized owner, scope and record; explanation alone cannot waive a rule. Apply [I1–I2](../../../docs/current-decisions.md#further-improvement-decisions) to the original checks below.
 
 Did we build the right thing? Does it follow our rules? Prove it.
 
@@ -24,7 +26,7 @@ Gather these before reviewing:
 - **User request** - the original task prompt or ask
 - **Accepted plan** - agreed-upon intended behavior for the task
 - **Specs / constraints** - issue text, documented requirements, explicit specs
-- **Workspace rules** - read all files in `.cursor/rules/`
+- **Workspace rules** - read all applicable project instruction/rule files
 - **User rules** - active session rules provided by the user
 - **Assumptions** - anything unclear, missing, or inferred
 
@@ -57,7 +59,7 @@ If the implementation fundamentally misses the requirements, say so immediately.
 
 ### 2. Rules Compliance
 
-- Read all `.cursor/rules/*.mdc` files dynamically
+- Discover and read all applicable project instruction/rule files dynamically
 - Read active user rules from the session context
 - Cross-reference each applicable rule against the changed code
 - Distinguish mandatory (always-applied) from conditional (domain-specific) rules

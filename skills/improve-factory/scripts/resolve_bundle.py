@@ -3,6 +3,7 @@ import argparse
 import json
 from pathlib import Path
 import re
+import stat
 import subprocess
 import tempfile
 
@@ -10,6 +11,9 @@ import tempfile
 REPOSITORY = "https://github.com/seifsg/ai-software-factory.git"
 DEFAULT_REF = "main"
 ENTRYPOINTS = ("safe-engine", "improve-factory")
+# This documented pilot predates portable entries and the input contract.
+# Do not apply its compatibility path to unknown revisions or later bundles.
+LEGACY_PILOT = "eeb0da9d26092e67ea2e7abb58ec57ffd815df49"
 SKILLS = ("improve-factory", "safe-engine", "analyze-start", "get-ready-to-code",
           "deep-review", "change-guard", "compliance-check", "how-to-make-a-pr",
           "how-to-review-a-pr", "research-market")
@@ -48,6 +52,11 @@ def inspect_bundle(root, expected=None, clean=False, entrypoint="improve-factory
     contract_name = "safe_engine/bundle-inputs.json"
     contract_path = root / contract_name
     tracked_contract = git("ls-tree", "--name-only", "HEAD", "--", contract_name, cwd=root)
+    if (revision == LEGACY_PILOT and entrypoint == "safe-engine"
+            and not contract_path.exists() and not tracked_contract):
+        required = git("ls-tree", "-r", "--name-only", "HEAD", "--",
+                       "AGENTS.md", "README.md", ".agents/skills", "docs",
+                       "safe_engine", cwd=root).splitlines()
     if contract_path.exists() or tracked_contract:
         if contract_path.is_symlink() or not contract_path.is_file():
             raise RuntimeError("Incomplete factory bundle: " + contract_name)
@@ -128,8 +137,14 @@ def select_for_project(project, bundle, ref, cache, entrypoint):
         raise RuntimeError("Create or locate the target project directory first")
     directory = project / ".factory"
     receipt = directory / "entry-bundle.json"
-    if directory.is_symlink() or receipt.is_symlink():
-        raise RuntimeError("Factory selection paths must not be symlinks")
+    for path in (directory, receipt):
+        try:
+            info = path.lstat()
+        except FileNotFoundError:
+            continue
+        if (stat.S_ISLNK(info.st_mode)
+                or getattr(info, "st_file_attributes", 0) & stat.FILE_ATTRIBUTE_REPARSE_POINT):
+            raise RuntimeError("Factory selection paths must not be symlinks or reparse points")
     if receipt.exists():
         try:
             saved = json.loads(receipt.read_text(encoding="utf-8"))

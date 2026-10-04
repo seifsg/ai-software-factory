@@ -1,5 +1,41 @@
 # Skill sources and adaptations
 
+## Current generic adaptation — 4 October 2026
+
+Database Schema is a newly requested factory-specific skill, authored from Seif's whole-product schema-design instruction. No schema-specific original was found by filename in the supplied Mobile/routines snapshots. It reuses their original Analyze Start and Get Ready to Code unchanged. The live index now has twelve canonical skills; earlier eleven-skill counts below describe prior revisions.
+
+### Database schema method — 4 October 2026
+
+Owner direction: understand the full app, remove meaningless structures without cutting corners, compare three designs, explain/select the best, write it and audit again. The new skill separates design, authorized implementation, manual QA and final automated checks. It is engine-neutral and preserves existing project choices.
+
+Primary sources checked: [SQLite query planning](https://www.sqlite.org/queryplanner.html) grounds the distinction between indexed searches and output-size cost; [PostgreSQL index types](https://www.postgresql.org/docs/current/indexes-types.html) and [multicolumn indexes](https://www.postgresql.org/docs/current/indexes-multicolumn.html) inform access-path tradeoffs; [constraints](https://www.postgresql.org/docs/18/ddl-constraints.html) inform integrity; [EXPLAIN](https://www.postgresql.org/docs/18/sql-explain.html) makes execution side effects explicit. [MongoDB schema patterns](https://www.mongodb.com/docs/manual/data-modeling/design-patterns/) and [DynamoDB modeling foundations](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/data-modeling-foundations.html) support workload-driven document/key design rather than universal normalization or single-table rules. Recheck the actual engine/version when applying. These sources do not prove a chosen application's performance.
+
+### Prior current-policy adaptations
+
+Seif's tests-last instruction governs coordinator, maintenance and PR timing: finish implementation → manual action QA → final test authoring/execution → review/PR. His subsequent logging clarification requires a working shared module for every app/game, including small fixes, superseding the temporary no-backfill exception. Detailed safe event trails and continuous log-led debugging now have one canonical owner. The four source cores remain untouched. PR phase/check wording carries the timing and logging requirements. Older cadence proposals remain dated history.
+
+Second-pass corrections preserve the same original priority: restore actual author credit, distinguish human coauthors from AI/tool trailers, make selected Small Change precedence explicit, and treat inherited architecture examples according to the target paradigm. Four source cores remain unchanged. Narrow research and library diagnostics gain explicit applicability. The new [current decisions](current-decisions.md) is the operative policy view; dated rationale remains historical. Portable local-trial detail moves to a conditionally loaded reference; no selection/authority rule changes.
+
+Seif explicitly authorized genericizing the live methods and compressing AI-written material, while preserving his deliberate repetition. This section supersedes claims below that source-project text must remain unchanged.
+
+Analyze Start, Get Ready to Code, Deep Review and Change Guard remain unchanged from the selected 3 October files. Compliance retains its method/reminders; adapters generalize fixed rule-path discovery and apply current I1/I2: UNKNOWN needs evidence, mandatory exceptions need actual authority. The three short PR rule resources (no-code, issue handling, no AI attribution) remain unchanged.
+
+Mobile-derived PR review retains its phases, guiding principles, repeated checkpoints and four themes. A host-capacity adapter permits isolated theme sessions in bounded waves before synthesis. Rubrics retain risk coverage/calibration while replacing fixed framework, locale and product assumptions. Coding rules use actual language/framework equivalents; the historical `mobile-rules/` path remains for compatibility. The routines-derived PR creation keeps its German voice and complete task/branch/visual/human-handoff method; company accounts, vendor instructions and historical precedents are replaced by actual bindings. The obsolete review-chain recap is corrected to the current method.
+
+The four factory-written procedures, their supporting guidance and two portable entries are condensed. Research Market now covers product/UX plus current stack/architecture/design patterns and standalone research. Efficiency covers applicable CPU/GPU, memory, query/database, network, storage and caching. Source checkouts remain untouched; earlier source revisions below remain the baseline.
+
+Primary sources inspected for this extension on 4 October 2026: [Godot optimization](https://docs.godotengine.org/en/stable/tutorials/performance/general_optimization.html) informs measurement, CPU/GPU distinction and design-stage costs; [PostgreSQL EXPLAIN](https://www.postgresql.org/docs/current/using-explain.html) informs actual query-plan inspection; [Microsoft's pattern catalog](https://learn.microsoft.com/en-us/azure/architecture/patterns/) illustrates context/tradeoff-based pattern selection; [W3C accessibility reference](https://www.w3.org/WAI/WCAG22/quickref/) informs accessible interactions. These are examples, not prescribed engines, databases, clouds or proof of conformance. Future project research must verify the selected versions and relevant primary sources. SRP/GoF coverage follows Seif's request; no claim of reading an entire book is made.
+
+Earlier diagnostics/efficiency source records retain their [OWASP logging](https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html), [OpenTelemetry model](https://opentelemetry.io/docs/specs/otel/logs/data-model/), [Microsoft caching](https://learn.microsoft.com/en-us/aspnet/core/performance/caching/memory?view=aspnetcore-10.0) and [AWS cache strategies](https://aws.amazon.com/builders-library/caching-challenges-and-strategies/) basis. Those references no longer occupy every runtime reading.
+
+
+
+### Mandatory logging research — 4 October 2026
+
+Compared three approaches: provider-only (depends on access), wholly custom logger (unnecessary maintenance), and a thin internal module over a maintained native logger with optional provider adapters. Recommend the third; reuse an adequate existing module and honor the owner's provider. No package was installed or source copied; choose/version-check for the actual runtime.
+
+[OpenTelemetry logs](https://opentelemetry.io/docs/concepts/signals/logs/) support bridges from existing logging libraries; its [language matrix](https://opentelemetry.io/docs/languages/) makes support checks necessary per runtime. Candidate repositories include [Pino](https://github.com/pinojs/pino) for Node.js and [Serilog](https://github.com/serilog/serilog) for .NET; these are examples, not universal engine/mobile defaults. [Datadog collection](https://docs.datadoghq.com/logs/log_collection/) accepts configured log sources; [its .NET guidance](https://docs.datadoghq.com/logs/log_collection/csharp/) documents file-tail and Serilog options. Owner preference for PostHog or any other provider requires verification of actual logging capability, SDK and access; analytics alone is insufficient. [OpenTelemetry sensitive-data guidance](https://opentelemetry.io/docs/security/handling-sensitive-data/) requires explicit handling of emitted data, including automatic instrumentation. These sources inform implementation choices; they do not prove any app is instrumented.
+
 ## Current source map — 3 October 2026
 
 Seif requested a repository-wide pass: use his originals, with RepairCheck Mobile first, and write skills without originals in the same direct style. These are the current sources. Earlier adaptation records below are history where this selection supersedes them.

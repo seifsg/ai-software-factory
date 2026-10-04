@@ -46,7 +46,7 @@ class BundleInputTests(unittest.TestCase):
 
     def test_mandatory_decision_change_runs_every_real_command(self):
         self.fixture.full()
-        path = self.bundle / 'docs/safe-engine-decisions.md'
+        path = self.bundle / 'docs/current-decisions.md'
         path.write_text(path.read_text(encoding='utf-8') + '\nChanged approved guidance fixture.\n', encoding='utf-8')
         result = self.fixture.final()
         self.assertFalse(result['checks_reused'])
@@ -58,6 +58,7 @@ class BundleInputTests(unittest.TestCase):
         self.fixture.full()
         before = self.fixture.flow.current(self.fixture.flow.load())
         for name in ('docs/safe-engine-fast-delivery.md', 'README.md',
+                     '.agents/skills/database-schema/SKILL.md',
                      'skills/improve-factory/scripts/resolve_bundle.py'):
             with self.subTest(input=name):
                 path = self.bundle / name
@@ -75,7 +76,9 @@ class BundleInputTests(unittest.TestCase):
         self.fixture.full()
         self.fixture.flow.record('improvement', self.fixture.draft('improvement'))
         before = self.fixture.flow.load()
-        for name in ('docs/safe-engine-decisions.md', 'safe_engine/bundle-inputs.json',
+        for name in ('docs/current-decisions.md', 'docs/safe-engine-decisions.md', 'safe_engine/bundle-inputs.json',
+                     '.agents/skills/database-schema/SKILL.md',
+                     'skills/safe-engine/references/local-trials.md',
                      'safe_engine/workflow.py', '.agents/skills/deep-review/references/theme-security.md',
                      '.agents/skills/how-to-review-a-pr/references/theme-change-guard.md',
                      '.agents/skills/how-to-review-a-pr/references/mobile-rules/dont-code.mdc'):

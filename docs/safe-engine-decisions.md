@@ -1,5 +1,21 @@
 # Safe Engine design decisions
 
+**Historical record.** Use [current decisions](current-decisions.md) for operative rules. Read this log when investigating rationale, source selection or a changed decision; superseded sections are not concurrent instructions. Update the current record and relevant history together when the owner changes a lasting decision.
+
+## Generic, concise methods — 4 October 2026
+
+Seif clarified that repetition in his personally written originals is intentional protection against context loss. Preserve those reminders, method order and checkpoints. Compress AI-written explanations. Remove source-company and fixed-stack assumptions from operative skills; discover each target's actual bindings. This supersedes the 3 October requirement to retain project-specific wording unchanged.
+
+The factory covers games, mobile/desktop/web apps, services, tools and libraries. New-product research now includes current product/UX, stack, architecture and fitting software/design patterns; SRP and Gang of Four are tools, not mandatory decorations. Inspect relevant original books/literature and current primary documentation. Preserve selected technology; resolve consequential unknowns during work.
+
+Plan applicable CPU/GPU, memory, database/query, network, storage, cache, interaction and lifecycle costs. Record workload-specific targets and evidence. Do not introduce unnecessary infrastructure or claim performance from prose. Standalone research returns findings without a coding plan/controller.
+
+Implementation keeps existing methods and paths. The coordinator owns applicability outside authored cores. Current controller profiles add desktop/mobile/game/service and interaction/API/performance check types; actual tools and recorded evidence remain required. Existing task/profile contracts stay immutable. Acceptance-shaping research may precede initialization; changed accepted contracts require a new reviewed run with preserved lineage.
+
+Three structures considered: separate domain skills; one universal exhaustive manual; existing concise methods with domain-specific discovery and applicable evidence. The third is selected within Seif's rewrite delegation: preserves one method, avoids unnecessary skill loading, and supports new domains without hardcoded stacks. No automatic engine choice, hosted service, paid purchase, deployment or remote publication follows.
+
+
+
 ## Whole-repository originals and writing pass — 3 October 2026
 
 Seif authorized revisiting the entire repository: use his originals wherever they exist, prioritizing RepairCheck Mobile, and rewrite skills without originals in the same plainspoken style. Preserve requirements and real checkpoints. Shorter instructions must not mean shallower work or hidden workflow changes.

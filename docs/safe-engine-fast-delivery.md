@@ -1,5 +1,7 @@
 # Safe Engine fast feature delivery
 
+**Superseded timing — 4 October 2026:** [Current tests-last policy](current-decisions.md#finish-work-use-it-then-automate-tests) replaces this record's batch tests, feature feedback and early test authoring/TDD options. Finish the whole task, pass manual action QA, then author/run final tests before the PR. The older decisions below are history.
+
 **Dated design record.** Preserve the selected batching rationale and the proposals below as recorded. Current skill wording and checkpoints follow the [Mobile-priority originals](skill-provenance.md#current-source-map--3-october-2026); this record does not replace those files.
 
 ## Small direct changes

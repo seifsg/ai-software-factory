@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 import tempfile
 
-from .project import EngineError
+from .project import EngineError, reject_path_aliases
 
 
 def now():
@@ -38,11 +38,11 @@ def atomic_json(path, value):
 
 @contextmanager
 def locked(run_dir):
+    reject_path_aliases(run_dir, run_dir.parent)
     run_dir.mkdir(parents=True, exist_ok=True)
-    if run_dir.is_symlink():
-        raise EngineError("Run directory must not be a symlink")
-    if any(path.is_symlink() for path in run_dir.rglob("*")):
-        raise EngineError("Run state must not contain symlinks")
+    for directory, folders, files in os.walk(run_dir, followlinks=False):
+        for name in folders + files:
+            reject_path_aliases(Path(directory) / name, run_dir.parent)
     with (run_dir / "lock").open("a+b") as lock:
         lock.seek(0)
         if os.fstat(lock.fileno()).st_size == 0:

@@ -7,7 +7,7 @@ import uuid
 
 from . import __version__
 from .project import (EngineError, command_argv, digest, file_hash, fingerprint, git, inside,
-                      protected_inputs, validate_profile, validate_task)
+                      protected_inputs, reject_path_aliases, validate_profile, validate_task)
 from .runner import run_command
 from .storage import atomic_json, now, read_json, save
 
@@ -146,9 +146,11 @@ class Workflow:
         results = []
         for check in configured:
             outputs = [inside(self.project, name) for name in check.get("artifacts", [])]
-            output_root = (self.directory / "outputs").resolve()
+            output_root = (self.directory / "outputs").absolute()
+            reject_path_aliases(output_root, self.project)
             for output in outputs:
-                if not output.resolve().is_relative_to(output_root):
+                reject_path_aliases(output, self.project)
+                if not output.absolute().is_relative_to(output_root):
                     raise EngineError("Check output escaped the generated output directory")
                 if output.exists():
                     if not output.is_file():
@@ -159,6 +161,7 @@ class Workflow:
             artifacts = []
             for output in outputs:
                 try:
+                    reject_path_aliases(output, self.project)
                     artifacts.append({"path": str(output), "sha256": file_hash(output)})
                 except EngineError as error:
                     result["passed"] = False
@@ -275,7 +278,26 @@ class Workflow:
             f"{skills / 'deep-review' / 'references' / 'theme-performance.md'}, "
             f"{skills / 'deep-review' / 'references' / 'theme-user-journey.md'}, "
             f"{skills / 'how-to-make-a-pr' / 'references' / 'project-bindings.md'}. "
-            "Map source-specific examples to the actual project; do not invent Expo or other stack requirements. "
+            "Read the delivery evidence contracts: "
+            f"{skills / 'safe-engine' / 'references' / 'app-diagnostics.md'}, "
+            f"{skills / 'safe-engine' / 'references' / 'app-efficiency.md'}, "
+            f"{skills / 'safe-engine' / 'references' / 'method-handoff.md'}, "
+            f"{skills / 'research-market' / 'SKILL.md'}, "
+            f"{skills / 'database-schema' / 'SKILL.md'}, "
+            f"{package.parent / 'docs' / 'current-decisions.md'}. "
+            "Verify implementation finished and manual action QA passed before automated tests were authored or run, "
+            "including delegate work and reviewer fixes; missing manual evidence remains unverified. "
+            "For new or materially changed persistence, assess whole-product access patterns, three viable designs "
+            "for new substantive choices, justified selection, written schema and independent audit. "
+            "Check integrity, concurrency, query/index costs and safe evolution; no universal O(1) claims. "
+            "Assess actual diagnostic coverage, privacy, bounds, recovery and owner access. "
+            "Assess relevant CPU/GPU, memory, database/query, network, storage and cache decisions "
+            "against recorded workload-specific evidence; unsupported performance stays unverified. "
+            "For new software, inspect original plan, current product/UX and technical research, "
+            "sources/versions, architecture/pattern tradeoffs, decision matrix and revised five outputs. "
+            "For existing work, assess research only for material changed assumptions or technical unknowns; "
+            "do not invent a new-product research obligation for a routine fix. "
+            "Use the actual product's stack, platforms and interfaces; require no GUI for headless software. "
             "Execute three distinct deep-review passes for security, performance, "
             "and user journey against the original goal, plus change-guard and compliance-check. "
             "Assess every pass even when its findings are empty; record the pass outcomes and evidence in your report. "
@@ -284,7 +306,7 @@ class Workflow:
             "file-set critique, all five planning outputs, and pre/change/post 0-4 execution evidence. "
             "For new substantive choices, assess the coordinator's three alternatives and justified recommendation; "
             "do not require alternatives to an already selected choice. These are local acceptance passes, "
-            "not execution of the separate Mobile PR review pipeline. "
+            "not execution of the separate PR review pipeline. "
             "A word count is not proof of method adherence. Check whether acceptance commands actually exercise "
             "the requested behavior; do not treat a zero exit status as sufficient by itself. "
             "The local state lives at " + str(self.directory / "state.json") + ". "
