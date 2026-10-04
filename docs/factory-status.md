@@ -16,6 +16,8 @@ Ticketing now records durable owner-confirmed scope and activity in the selected
 
 Ticket writing: [brief recipe and example](../.agents/skills/ticketing/references/ticket-contract.md#write-the-ticket). Concrete before/after, checkable criteria, no lost owner detail. Full data folds away; old pinned controllers keep their existing format.
 
+Ticket intake keeps moving by default: derive complete visual context from request/code/prior work under real delegation. Include progress, PR links and next action; retain explicit owner checkpoints.
+
 ## Current method
 
 Authored output uses [Clear Writing](../.agents/skills/safe-engine/references/clear-writing.md): short, natural, specific; proof beside claims, clear actions, one finishing pass.

@@ -9,6 +9,8 @@ Keep the request, decisions, work and evidence in the selected tracker. Read the
 
 Write tickets in Seif's words: shortest clear wording, complete intent. Use the contract's [writing recipe](references/ticket-contract.md#write-the-ticket). No extra writing phase.
 
+Default: build the ticket from the request, actual code and available context; keep execution moving within authority. The user need not supply/review a detailed ticket. Honor requested detail/checkpoints; ask only consequential reserved gaps. Give a fresh agent complete, visual context.
+
 ## Select the tracker
 
 GitHub Issues is Seif's current choice. Reuse it; do not ask again. For another project, discover the preferred tracker and available authorized MCP tools first. Ask only an unresolved preference; without one, try GitHub Issues. Resolve the actual repository, access and privacy before writing.
@@ -21,8 +23,8 @@ The remote ticket is canonical. Local snapshots preserve context and exact revis
 
 1. Preserve the original owner input before compressing it into a plan. Include why, examples, supplied evidence, source/date and decision authority. Retain later corrections and superseded input.
 2. State actual before behavior and consumers from source and existing evidence. Label facts, inference and unknowns. No early reproduction or walkthrough. PR baseline capture follows the existing [narrow exception](../../../docs/pr-workflow.md#beforeafter-proof).
-3. Write the expected after, acceptance criteria, applicable success/failure/recovery journeys, scope, exclusions, constraints and dependencies. For a new capability, say what does not exist yet. For nonvisual work, define the observable consumer/result.
-4. Confirm the expectation from the owner's instructions or recorded delegation. Preserve approved, rejected and pending choices. A direct correction needs no repeated vote; a proposal is not confirmed scope. Ask only consequential remaining gaps.
+3. Derive the expected after, acceptance criteria, applicable success/failure/recovery journeys, scope, exclusions, constraints and dependencies from the request/source. Record purpose, goal, approach, relevant code/consumers, required/optional wants and existing progress/PRs. Use the contract's visual recipe. For a new capability, say what does not exist yet; nonvisual work needs an observable consumer/result.
+4. Confirm from actual owner instructions or recorded delegation; record the source and deciding actor. In-scope delegated choices need no new vote. Preserve approved, rejected and pending choices; label assumptions/unknowns. Ask only a consequential unresolved owner choice and continue independent work. Undelegated proposals stay pending; explicit stops persist.
 5. Create/reuse the epic and complete delivery tickets. Keep the overall outcome and integration owner in the epic; give each ticket one accountable owner, deliverable and completion boundary. Do not split incomplete risky work to evade full methods or tests-last.
 
 Version the confirmed contract. Keep the original input and what changed, why, who decided and what resulted. Record meaningful activity as work proceeds: decisions, assignment, implementation completion, QA/tests, review, blockers, PR updates and handoffs. Update the tracker and refresh the local snapshot; no per-edit diary or duplicated report.

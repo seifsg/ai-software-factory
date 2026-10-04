@@ -20,6 +20,8 @@ An analysis, planning or review request stays in that phase. A small subject doe
 
 New implementation uses [Ticketing](.agents/skills/ticketing/SKILL.md): canonical tracker, owner-confirmed before/after, one complete delivery unit and its own builder session. Prefer the owner's chosen MCP; GitHub Issues is the default and Seif's current choice. Phase-only requests grant no coding or tracker-write authority; explicitly requested ticket intake still applies.
 
+Default ticket intake derives complete, brief, visual context from the request/code/prior work and continues within authority. No detailed-ticket questionnaire or repeated vote on delegated scope. Preserve explicit stops and reserved choices; record progress/PRs and a clear cold-agent handoff under the ticket contract.
+
 Every ticket runs full analysis, planning, 0–4 implementation, final manual QA, final tests and independent review. [Small Change](.agents/skills/small-change/SKILL.md) supplies surgical tactics; its six shortcuts apply only to legacy unticketed work. Keep fix scope narrow, checks relevant and unrelated refactors deferred. Separate worktrees for independent tickets; a shared epic checkout has one writer at a time. Preserve ticket/run history and active pins.
 
 For larger factory changes, use [Improve Factory](.agents/skills/improve-factory/SKILL.md). Preserve existing work and active app state. Use a suitable branch or isolated worktree. Keep one writer per file; subagents do not have automatic filesystem isolation.
