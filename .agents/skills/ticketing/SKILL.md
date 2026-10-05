@@ -29,7 +29,7 @@ Order complete outcome tickets by user value and proven dependencies. Each unloc
 4. Confirm from actual owner instructions or recorded delegation; record the source and deciding actor. In-scope delegated choices need no new vote. Preserve approved, rejected and pending choices; label assumptions/unknowns. Ask only a consequential unresolved owner choice and continue independent work. Undelegated proposals stay pending; explicit stops persist.
 5. Create/reuse the epic and complete delivery tickets. Keep the overall outcome and integration owner in the epic; give each ticket one accountable owner, deliverable and completion boundary. Do not split incomplete risky work to evade full methods or tests-last.
 
-Version the confirmed contract. Keep the original input and what changed, why, who decided and what resulted. Record meaningful activity as work proceeds: decisions, assignment, implementation completion, QA/tests, review, blockers, PR updates and handoffs. Update the tracker and refresh the local snapshot; no per-edit diary or duplicated report.
+Version the confirmed contract. Keep the original input and what changed, why, who decided and what resulted. Record meaningful activity: decisions, assignment, implementation completion, QA/tests, review, blockers, PR updates and handoffs. Combine unchanged progress into boundary updates; no per-edit diary or extra capture after each local note. Preserve required refreshes below.
 
 ## Assign a ticket session
 
@@ -48,7 +48,7 @@ A dependency is satisfied by its accepted contract/result at the recorded integr
 
 Use [Safe Engine](../safe-engine/SKILL.md) for delivery and [Improve Factory](../improve-factory/SKILL.md) for maintenance. Ticketing owns intake, durable scope and coordination; those methods own execution. No recursive ticketing runs, duplicate analysis or extra reviewer fleet.
 
-Bind the run to a captured confirmed contract. Re-read canonical scope at intake/resume, before starting an affected batch and at final review/PR boundaries. Reuse an unchanged refresh within the batch; new input, conflict or handoff needs reconciliation. Compare semantic contract digests, not activity timestamps alone. A cached snapshot cannot establish current remote scope.
+Bind the run to a captured confirmed contract. Refresh at intake/resume and selected-controller boundaries: before `record plan`, after finished implementation before `record implementation`, and after local review before `handoff`/PR. Read before remote writes; review/proof require current scope. New owner input, conflict, failed refresh, changed dependencies or handoff needs reconciliation before dependent work. Reuse unchanged captures within a batch; preserve any stricter selected version/dependency guards. Compare semantic digests, not activity timestamps alone. A cache cannot establish current remote scope.
 
 Later input: preserve it, resolve authority, confirm or leave pending, record reasons and refresh the versioned specification. Reassess affected plans/consumers. Legitimate version-2 contract changes use independently reviewed `amend` and ticket rebinding; preserve original request, revisions, protected inputs and failures. Never edit state, weaken acceptance or revive cancellation. A changed goal may need a linked replacement ticket/run; preserve lineage.
 

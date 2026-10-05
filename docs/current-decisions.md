@@ -52,7 +52,7 @@ Every UI/interaction change applies [UX Quality](../.agents/skills/ux-quality/SK
 
 Seif's 5 October clarification: use **complete useful outcome iterations**, across tiny bugs, tools and production products. Complete outcome tickets are the acceptance boundary; intermediate pieces cannot pass separately. Required quality and overall acceptance stay. Working iterations owns delivery order and shared rules.
 
-Scope validation to the complete ticket. Ordinary repair repeats all configured checks. Reviewed v2 records-only correction preserves exact unchanged valid proof and requires fresh assessment. No changed-code selective reuse.
+Scope validation prospectively by effect/consumers: guidance-only instruction use and fitting structural checks; runtime/config/policy changes need affected behavioral proof; mixed covers both. Keep the full method and required gates. One compact work record retains all five planning outputs/0–4; controller snapshots/raw proof stay immutable. Tracker updates combine meaningful progress at required fresh boundaries. Ordinary repair repeats all configured checks. Reviewed v2 records-only correction preserves exact unchanged valid proof and requires fresh assessment. No changed-code selective reuse.
 
 PR evidence: [before/after proof](pr-workflow.md#beforeafter-proof) is required where applicable. One focused UI screenshot pair by default; equivalent output for nonvisual changes. Seif permits a capture-only baseline before edits with minimum safe navigation, no feature exercise or submission. This narrow exception does not permit early testing. Finished screenshots and optional useful journey videos belong to final manual QA; publish accessible, sanitized evidence with the PR.
 

@@ -43,6 +43,8 @@ Fetch every activity/comment page. Each entry needs unique `id`, `at`, `author`,
 
 Refresh at intake/resume, before build (`record plan`), after finished implementation (`record implementation`), and after local review before `handoff`/PR. Controller boundaries need a new complete observation after the saved phase, including dependencies. Reuse unchanged captures within a batch. Pending changes, inactive tickets, failed reads or changed confirmation block progression. Status remains inspectable when scope drifts/cache is missing.
 
+Combine unchanged progress at these boundaries; local notes need no extra capture. Read before remote writes. New owner input, conflicts or changed dependencies need reconciliation before dependent work. Preserve the selected controller's actual guards.
+
 ## Runs and changes
 
 Use complete outcome tickets as iterations. One run accepts the whole confirmed ticket. Planned intermediate pieces have no separate controller gate. Order by user value and proven required dependencies; keep overall epic criteria/combined acceptance. Scope each validation profile to the complete outcome and consumers from the start. Do not narrow a failed gate or criteria after the fact.

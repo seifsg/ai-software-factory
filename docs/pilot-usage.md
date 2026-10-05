@@ -34,6 +34,8 @@ Discovery reads Git and package scripts without executing them. Review the propo
 
 Version 2 is the new-run workflow. `init` accepts draft check definitions and empty `checks`/`protected_paths`; no early test creation. Declare `test_paths` for final test authoring and applicable `review_scopes` (`ui`, `assets`, `persistence`, `research`, `seo`, `security`, `integrations`, `release`). Set actual `exposure`: `local` (default), `public` or `production`. Core methods always apply; explain exclusions. Final `seal` validates complete reviewed task/profile and protected inputs. Review test-path exclusions; never hide production/configuration files there.
 
+Choose checks before coding from changed effects/consumers, under Delivery Readiness. Guidance-only work needs real instruction use and fitting structural checks; runtime/config/policy or mixed work needs affected behavioral evidence. Every configured check runs. Saved/failed profiles cannot be narrowed to avoid checks; legitimate changes keep reviewed amendment rules.
+
 Minimal draft shape; replace interface, scopes and paths with actual choices:
 
 ```json

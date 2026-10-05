@@ -11,7 +11,7 @@ Use [Working iterations](../safe-engine/references/delivery-readiness.md#working
 
 New factory implementation uses [Ticketing](../ticketing/SKILL.md): canonical tracker, owner-confirmed before/after and a dedicated maintenance session. Every ticket follows the complete methods below. [Small Change](../small-change/SKILL.md) keeps bounded repairs surgical; its six shortcuts remain for legacy unticketed work. Analysis/planning stays in phase and creates no coding obligation.
 
-Factory-wide routing, acceptance or interacting procedures need maintenance analysis and a final independent behavioral exercise. Check affected consumers, skip unrelated suites. One case, one local final assessment; authorized PR review remains separately remote/cloud. No recursive maintenance.
+Factory-wide routing, acceptance or interacting procedures need maintenance analysis and a final independent behavioral exercise. Choose prospective validation before initialization: instruction changes need actual instruction use and fitting structural checks; runtime/config/policy changes need affected behavioral proof. Mixed changes cover both. Check affected consumers, skip unrelated suites; retain required saved gates. One case, one local final assessment; authorized PR review remains separately remote/cloud. No recursive maintenance.
 
 Active build: `checkpoint → isolated repair → independent review → compatible resume`. Parallel project work must be independent of the fault/repair. No hook or upgrade service is installed.
 
@@ -62,7 +62,7 @@ When ticketed, refresh the maintenance ticket before final acceptance/handoff an
 
 Authorized PR work: execute [creation](../how-to-make-a-pr/SKILL.md), remote/cloud [review](../how-to-review-a-pr/SKILL.md) and [project adapter](../../../docs/pr-workflow.md). Fresh context and remote execution required; local validation/subagents cannot replace PR review. Discover task/owner/notification bindings before asking; missing bindings block PR completion, not local repair/final testing. Keep draft status and human ready/merge/release decisions. Publish approved factory source to main only after actual cloud review and authorized merge; preserve active pins.
 
-Give brief before/after. Save one maintenance record:
+Give brief before/after. Maintain one ignored work record from analysis through handoff; all five plan outputs, 0–4 notes and proof links. Keep required immutable controller snapshots/raw evidence separately; no duplicate narrative. Carry:
 - Report, expected result, reproduced cause/unknown.
 - Canonical maintenance ticket, original/current confirmed scope and owner source, revision/digest, meaningful activity, latest refresh and criterion proof/deviations. Local record is cache/evidence, not a second tracker.
 - Approved/pending choices, invariants, methods read, analysis, plan.

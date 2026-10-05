@@ -21,6 +21,8 @@ Use labeled emojis, short bullets and narrow tables. Diagram flows; table compar
 
 Keep original words, reasons, examples and deliberate reminders. Fold machine data/long supporting evidence; keep purpose, outcome, proof/gaps and next action visible. Never compress away context. Label facts, inference, unknowns and illustrative examples. No fabricated benefits, tests, visuals or consent.
 
+Reuse the working record and raw proof in tracker/handoff/PR. Each surface carries its required context plus fitting links; no repeated validation essay. Preserve immutable snapshots, provenance and meaningful history.
+
 One finishing pass: can a cold reader say what, why, before, after and next? Does every requested detail have a home? Use existing review; no writing loop.
 
 ## Example: settings change

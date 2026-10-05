@@ -21,7 +21,15 @@ Repair: classify product, evidence or report defect. Second related failure? Tra
 
 Validation: change -> affected behavior/consumers -> required evidence.
 
-Scope the reviewed profile to the complete ticket from the start; keep protected gates. Reuse raw proof only with valid inputs/context/scope/hashes. Changed shared behavior, config, environment, dependencies, scope or unresolved risk needs affected revalidation.
+Scope the reviewed profile before coding by changed behavior, consumers and risk. File extension proves no impact boundary.
+
+| Change | Plan final proof |
+|---|---|
+| Guidance only; runtime/config unchanged | Real instruction use, affected callers and relevant structure/reference/package checks. No unrelated runtime suite. |
+| Runtime, configuration, policy or shared assumptions | Actual affected success/failure/recovery plus relevant regressions. Broaden for changed shared behavior, trust boundaries or unresolved risk. |
+| Mixed | Both affected surfaces; shared evidence may support several criteria. |
+
+Keep required gates and quality. Separate a complete guidance outcome from optional runtime enhancement; coupled changes stay together. Every configured check runs. Never shrink saved/failed acceptance. Reuse raw proof only with valid inputs/context/scope/hashes; changed environment, dependencies or scope needs affected revalidation.
 
 Ordinary controller repair reruns all configured checks. Reviewed v2 [records-only correction](../../../../docs/pilot-usage.md#records-only-corrections) keeps exact unchanged evidence; replace the cleared criterion mapping or append a correction note, never hashed originals. Any tracked documentation/source/test change invalidates reuse; no changed-code selective reuse. Missing/challenged proof needs fresh actions. Never relabel an old pass as fresh, reclassify a defect to bypass checks or weaken required gates/evidence.
 

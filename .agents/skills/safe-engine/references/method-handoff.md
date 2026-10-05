@@ -41,12 +41,12 @@ Three-option planning belongs to new substantive choices, not an extra PR-review
 
 Carry current iteration, working/missing behavior, next result and remaining full-product criteria. Include integration/deferral owners, shared contracts, exact evidence context/provenance and unresolved repair diagnosis.
 
-Pass one record:
+Pass the existing work record with proof links; no separate retelling. Keep immutable controller snapshots/raw evidence intact. Select criterion evidence that supports the claim; each criterion need not link every artifact. Carry:
 - Verbatim request, acceptance and session authority/checkpoints/constraints.
 - Canonical ticket/provider/link, original/current confirmed scope, revision/digest, owner source, meaningful activity and last actual refresh. Pending changes, dependencies and completion boundary.
 - Approved, rejected and pending decisions; original/revised plans and research.
 - Builder session, project/worktree/epic ownership, selected run and bundle identity; original/current task/profile, ticket rebind/amendment history, phase, base/head and diff.
-- Full skill paths; analysis, plan, batch and improvement artifacts.
+- Full skill paths; one analysis/plan/0–4 work record and required stage snapshots.
 - Command logs, review results, evidence freshness, diagnostic/resource limits.
 - Criterion modes and candidate-bound manual receipts: actual actions/environment, outcomes/evidence/limits and final-stage chronology before automated test authoring/execution. Reviewer checks substance; a passing suite cannot fill missing manual evidence.
 - Correction history, demonstrated progress, obstacles and existing PR/task links.

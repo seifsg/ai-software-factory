@@ -21,6 +21,8 @@ Prepare a :
 - The entire list of to do.
 - The entire plan.
 
+Keep these five outputs in one compact work record. Full depth, original stop and every 0–4 step stay. Reuse source/decisions; link proof. Within step 3, finish affected callers, counts and links before recording completion. No extra finishing gate.
+
 ##ULTRA EXTRA IMPORTANT
 
 The plan execution will be based on the following logic:

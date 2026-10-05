@@ -2,6 +2,8 @@
 
 ## Working iterations: 5 October 2026
 
+Seif's process optimization continuation: choose prospective checks by effect/consumers; keep five plan outputs and 0–4 in one work record; reuse raw proof and combine progress at required ticket boundaries. Existing scoped v2 profiles suffice. No new links/skills/helpers or runtime/schema/test changes; saved gates, independence and active pins remain. Final instruction use and checks certify their own candidate only.
+
 Seif authorized the all-skill adjustment map, short Get Ready/caveman wording and every affected supporting file. Applies to bugs, small tools and production products. Complete useful outcomes first; required quality remains. Finish each complete outcome ticket before manual use, final tests and independent review. Optional enhancement/polish follows; full-product acceptance remains separate.
 
 Read Mobile Analyze Start/Get Ready originals at `8ed32a10034bd78660f761685b81cdd881188c85`; preserve their bodies, order, original stops, 0-4 checks and repeated quality reminders. Brief owner adaptations now sit beside the responsible steps in all fourteen canonical skills and both launchers. Earlier unchanged-core claims describe their dated revision. Source checkouts remain unchanged.

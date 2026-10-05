@@ -25,6 +25,8 @@ The original planning checkpoint remains. Proceed through it only when the user'
 
 Working iterations owns delivery order, shared constraints and evidence. Complete outcome tickets are the acceptance boundary. Ordinary repair reruns configured checks; records-only correction permits exact-input reuse with fresh proof/review.
 
+Before coding, choose validation by effect: guidance only, runtime/config or mixed. Full method, fitting proof. Use one compact work record with all five planning outputs and 0–4 notes; retain controller snapshots/raw evidence. Refresh tickets at required boundaries and new input.
+
 [Tests-last rule](docs/current-decisions.md#finish-work-use-it-then-automate-tests): no manual testing, playtests, walkthroughs or automated test authoring/execution during development. Source inspection and existing-log reading remain allowed. Finish implementation, perform final manual QA, then final automated tests. Small fixes stay surgical. [Controller usage](docs/pilot-usage.md#feature-feedback-and-version-checkpoints) distinguishes new version-2 runs from legacy runs.
 
 [Ticket usage](docs/ticketing.md) defines captured contracts, namespaced runs, scope amendments, worktree ownership and latest-expectation proof. The host agent uses actual MCP tools; the controller neither creates remote issues nor authenticates their reads. Existing pins/runs remain unchanged.
