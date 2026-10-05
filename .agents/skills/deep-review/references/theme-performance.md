@@ -9,6 +9,8 @@ slow queries, memory growth or wasted CPU, GPU, network, storage and battery?**
 
 ## What to hunt for
 
+Review the confirmed iteration. Required protections/budgets precede applicable use; optional enhancements tracked separately.
+
 ### Rendering & updates — where present
 - **Update storms** — state changes redraw large trees/scenes or repeatedly schedule work.
   Unstable object/function identities defeat reuse; broad subscriptions invalidate unrelated consumers.
@@ -55,6 +57,8 @@ A findings table, most severe first, then one verdict line.
 | # | Severity | File:Line | Finding | Impact | Recommendation | Confidence |
 |---|----------|-----------|---------|--------|----------------|------------|
 ```
+
+In each row: Finding starts with `product`, `evidence` or `report` and links raw proof. Recommendation gives the clear action. Missing or challenged proof stays explicit; a layer label cannot cure it.
 
 - **Severity:** CRITICAL (freeze, OOM or unusable latency at real use) · HIGH (clear regression at scale)
   · MEDIUM (wasteful, fix soon) · LOW (minor).

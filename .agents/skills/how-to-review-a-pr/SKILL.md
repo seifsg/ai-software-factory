@@ -41,6 +41,8 @@ Discover the product and architecture: game, client, server, service, tool or mi
 
 ## Guiding principles (hold these through every phase)
 
+Judge the confirmed iteration and affected consumers; keep overall acceptance separate. Findings need layer, severity, impact, evidence and action. Repair the affected layer; proof gaps need actual verification. Reassess afresh.
+
 We are judging *someone else's* work that we may ship to real users and systems. Optimize for:
 
 1. **Highest quality & correctness** — does it actually work, end to end, in its target environment.
@@ -184,6 +186,8 @@ Each subagent returns a structured findings table (schema defined in every rubri
 ```
 | # | Severity | File:Line | Finding | Impact | Recommendation | Confidence |
 ```
+
+Finding starts with the layer (`product`, `evidence`, `report`) and links raw proof. Recommendation gives the clear action. Keep missing/challenged proof explicit.
 
 plus a one-line theme verdict. Collect all four. Do not fix anything yet.
 

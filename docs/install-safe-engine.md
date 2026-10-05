@@ -2,9 +2,11 @@
 
 ## Small direct changes
 
+New implementation uses complete outcome tickets and the full cycle, including tiny fixes. Apply Working iterations in current bundles; older pins retain their method. The six-routine route below is legacy unticketed work only.
+
 This route is for requested implementation. Explicit analysis, planning and review remain in their phase.
 
-Seif selected [small-change](../.agents/skills/small-change/SKILL.md) on 3 October: six lightweight routines, careful implementation, focused checks and one narrow independent assessment. This route precedes the full version workflow described below. No automatic broad regression, full-suite reruns or five-artifact planning for a small fix. Accumulated changes may prompt an offer of affected-area validation; execution waits for the user. It is an agent-operated scoped handoff, not a new controller command or whole-version acceptance. Existing pinned runs retain their bundle/state; see the method for explicit local trials and evidence limits.
+Seif selected [small-change](../.agents/skills/small-change/SKILL.md) on 3 October: six lightweight routines, careful implementation, focused checks and one narrow independent assessment. This legacy route does not replace the full ticket cycle described below. No automatic broad regression, full-suite reruns or five-artifact planning for a small fix. Accumulated changes may prompt an offer of affected-area validation; execution waits for the user. It is an agent-operated scoped handoff, not a new controller command or whole-version acceptance. Existing pinned runs retain their bundle/state; see the method for explicit local trials and evidence limits.
 
 **Install `safe-engine` to build software: games, apps, services and tools.** `improve-factory` repairs the factory and is not required as a separate installation. Both load the same complete factory; Seif's original methods remain canonical.
 
@@ -100,7 +102,7 @@ Install inside that environment, using its own authorized GitHub login and tools
 
 ## Packaging and verification
 
-`skills/safe-engine` is standalone for installation, while the resolved bundle owns all thirteen canonical entrypoints. Both installed skill helpers are generated from `safe_engine/distribution.py`; after editing that owner run `python scripts/package_skill_entries.py`, then `--check` at the final pre-push gate. No second independently maintained resolver or duplicated method library exists.
+`skills/safe-engine` is standalone for installation, while the resolved bundle owns all fourteen canonical entrypoints. Both installed skill helpers are generated from `safe_engine/distribution.py`; after editing that owner run `python scripts/package_skill_entries.py`, then `--check` at the final pre-push gate. No second independently maintained resolver or duplicated method library exists.
 
 The existing [pilot record](pilot-verification.md) documents the actual local build and repair. Distribution tests exercise real Git checkout/cache/selection boundaries; a successful install or file-loading smoke test is not proof of a new complete app build or every host's compatibility.
 

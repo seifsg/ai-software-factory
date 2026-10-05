@@ -11,6 +11,8 @@ New software—games, web/mobile/desktop apps, services, tools, libraries: resea
 
 ## Frame the questions
 
+Prioritize unknowns affecting the next complete iteration or required whole-product constraints. Optional enhancement research waits. Experiments keep a bounded question/stopping condition and permitted final-stage timing.
+
 Read request, constraints, approved/rejected choices and existing evidence. Identify users, core job/play loop, platforms, hardware, scale, interfaces, success criteria. Track unknowns: `question → consequence → source/experiment → result → next decision`.
 
 Delivery: required capability still unknown? Make a bounded [spike ticket](../ticketing/SKILL.md). Follow our full cycle. Stop when answered.

@@ -24,11 +24,13 @@ New implementation uses [Ticketing](.agents/skills/ticketing/SKILL.md): canonica
 
 Default ticket intake derives complete, brief, visual context from the request/code/prior work and continues within authority. No detailed-ticket questionnaire or repeated vote on delegated scope. Preserve explicit stops and reserved choices; record progress/PRs and a clear cold-agent handoff under the ticket contract.
 
-Every ticket runs full analysis, planning, 0–4 implementation, final manual QA, final tests and independent review. [Small Change](.agents/skills/small-change/SKILL.md) supplies surgical tactics; its six shortcuts apply only to legacy unticketed work. Keep fix scope narrow, checks relevant and unrelated refactors deferred. Separate worktrees for independent tickets; a shared epic checkout has one writer at a time. Preserve ticket/run history and active pins.
+Every ticket runs full analysis, planning, 0–4 implementation, final manual QA, final tests and independent review. Choose checks prospectively by effect/consumers, not file extension. One compact work record; immutable controller snapshots/raw proof remain. [Small Change](.agents/skills/small-change/SKILL.md) supplies surgical tactics; its six shortcuts apply only to legacy unticketed work. Keep fix scope narrow, checks relevant and unrelated refactors deferred. Separate worktrees for independent tickets; a shared epic checkout has one writer at a time. Preserve ticket/run history and active pins.
 
 For larger factory changes, use [Improve Factory](.agents/skills/improve-factory/SKILL.md). Preserve existing work and active app state. Use a suitable branch or isolated worktree. Keep one writer per file; subagents do not have automatic filesystem isolation.
 
 ## Decisions and quality
+
+Build in complete working iterations: next useful outcome ticket first, required quality intact. Keep overall acceptance open. Optional follow-ups tracked; repeated failure needs shared-cause diagnosis.
 
 Give 100% minimum. Aim higher through correct, useful work within scope.
 

@@ -1,5 +1,23 @@
 # Skill sources and adaptations
 
+## Working iterations: 5 October 2026
+
+Seif's process optimization continuation: choose prospective checks by effect/consumers; keep five plan outputs and 0–4 in one work record; reuse raw proof and combine progress at required ticket boundaries. Existing scoped v2 profiles suffice. No new links/skills/helpers or runtime/schema/test changes; saved gates, independence and active pins remain. Final instruction use and checks certify their own candidate only.
+
+Seif authorized the all-skill adjustment map, short Get Ready/caveman wording and every affected supporting file. Applies to bugs, small tools and production products. Complete useful outcomes first; required quality remains. Finish each complete outcome ticket before manual use, final tests and independent review. Optional enhancement/polish follows; full-product acceptance remains separate.
+
+Read Mobile Analyze Start/Get Ready originals at `8ed32a10034bd78660f761685b81cdd881188c85`; preserve their bodies, order, original stops, 0-4 checks and repeated quality reminders. Brief owner adaptations now sit beside the responsible steps in all fourteen canonical skills and both launchers. Earlier unchanged-core claims describe their dated revision. Source checkouts remain unchanged.
+
+One shared Working iterations section owns dependencies, shared contracts, repeated-cause diagnosis, evidence scope, exact demo, integration, deferrals and low-cost measurements. No new skill/phase/fleet. Get Ready quality-first reminders remain: user-value ordering cannot justify a weaker design chosen for coding effort.
+
+Evidence design compared wording-only, conservative exact-input record reuse, and per-check dependency-manifest reuse across source changes. Selected the second. V2 opt-in keeps verified original manual/check provenance only for eligible records; invalidates proof/review, requires fresh assessment and rejects product/actual-evidence gaps. Ordinary changes keep all configured checks. New finding fields preserve old report compatibility; active bundles/runs keep exact pins. No arbitrary changed-code selective reuse, cloud verdict, product pilot, performance result or adoption is implied.
+
+Canonical [ticket #18](https://github.com/seifsg/ai-software-factory/issues/18) preserves owner input/authority. Separate issue #15/PR #16 remains its own unmerged five-rule change; none was cherry-picked. This entry records adaptation scope; final evidence must be reported separately.
+
+Pre-merge audit: shortened new caller prose; clarified conditional readiness/scenarios, older pins, immutable correction records and integration timing. Original methods/reminders and runtime defaults/gates remain. Correction evidence is separate from earlier observations.
+
+Owner's link correction: removed39 redundant introduced hrefs; kept2 coordinator-owner links, the exact command-procedure route and this ticket citation. Original method/conditional-contract links and local role/leaf evidence instructions remain. The stopped earlier instruction exercise certifies no later candidate.
+
 ## Five generic lessons: 4 October 2026
 
 Seif approved five trimmed rules, then requested Improve Factory implementation. Research owns bounded full-cycle spike tickets and equal comparison inputs/workloads/journeys. Analyze Start plans unseen-content proof and distinguishes data extensions from code changes; Deep Review checks recoverability and matching state limits. Diagnostics owns state-reset checks; Delivery Readiness links them for final manual QA.

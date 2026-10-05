@@ -10,6 +10,8 @@ Apply the rows that fit. New products cover their surfaces; small fixes cover af
 
 ## Build safely
 
+Required protections precede exposure. Never defer required denial paths/production obligations as polish. Optional follow-ups: owner/ticket/acceptance condition. Finish iteration before manual QA/automation.
+
 | Surface | Check |
 |---|---|
 | Admin/permissions | Authenticate and authorize at the server or actual trusted boundary on every protected action. Deny by default; check role, object ownership, tenant and allowed fields. Hidden routes/buttons prove nothing. No client-supplied role escalation; least-privilege service/database accounts. |

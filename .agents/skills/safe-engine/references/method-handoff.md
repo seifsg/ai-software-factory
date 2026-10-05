@@ -7,7 +7,7 @@ Analysis-only stops before coding. New implementation uses [Ticketing](../../tic
 For delivery, pass core methods plus references selected from actual requirements/changes. Record applicability; reviewers challenge omissions and request missing evidence. Do not preload unrelated UI/SEO/schema material. Read selected methods fully; this packet never replaces them.
 
 Applicable references:
-- [Delivery Readiness](delivery-readiness.md): actual capabilities, manual/automated/mixed criteria, game/browser lifecycle, durable external effects and authorized release/operations. No early testing or unrequested pilots.
+- [Delivery Readiness](delivery-readiness.md): Working iterations always applies; capabilities/evidence, lifecycle, external effects and release sections apply when relevant. No early testing or unrequested pilots.
 - [Application Security](app-security.md): exposure, roles/trust boundaries, applicable controls, denial-path evidence, gaps and production readiness. Existing security reviewer; keep local work proportional.
 - [Public Web SEO](../../ux-quality/references/web-seo.md), indexable public pages: route boundaries, metadata/discovery, observed checks, ownership and pending production evidence.
 - [Clear Writing](clear-writing.md), human-facing prose: audience/voice, supported claims, necessary details, clear actions; one finishing pass within existing review.
@@ -39,12 +39,14 @@ Three-option planning belongs to new substantive choices, not an extra PR-review
 
 ## Resume and delegation packet
 
-Pass one record:
+Carry current iteration, working/missing behavior, next result and remaining full-product criteria. Include integration/deferral owners, shared contracts, exact evidence context/provenance and unresolved repair diagnosis.
+
+Pass the existing work record with proof links; no separate retelling. Keep immutable controller snapshots/raw evidence intact. Select criterion evidence that supports the claim; each criterion need not link every artifact. Carry:
 - Verbatim request, acceptance and session authority/checkpoints/constraints.
 - Canonical ticket/provider/link, original/current confirmed scope, revision/digest, owner source, meaningful activity and last actual refresh. Pending changes, dependencies and completion boundary.
 - Approved, rejected and pending decisions; original/revised plans and research.
 - Builder session, project/worktree/epic ownership, selected run and bundle identity; original/current task/profile, ticket rebind/amendment history, phase, base/head and diff.
-- Full skill paths; analysis, plan, batch and improvement artifacts.
+- Full skill paths; one analysis/plan/0–4 work record and required stage snapshots.
 - Command logs, review results, evidence freshness, diagnostic/resource limits.
 - Criterion modes and candidate-bound manual receipts: actual actions/environment, outcomes/evidence/limits and final-stage chronology before automated test authoring/execution. Reviewer checks substance; a passing suite cannot fill missing manual evidence.
 - Correction history, demonstrated progress, obstacles and existing PR/task links.

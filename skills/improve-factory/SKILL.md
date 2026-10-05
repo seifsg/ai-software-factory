@@ -31,6 +31,8 @@ The resolver selects the branch once into a complete detached `~/.safe-engine/bu
 
 ## Read the result and use the method
 
+Follow Working iterations where present in the selected canonical method. Older pins keep their recorded method; no silent upgrade.
+
 Check JSON against intended identity; record `bundle_root`, `revision`, dirty state and entrypoint. Dirty active checkout: use canonical checkpointing to capture actual diff/untracked-input hashes; commit alone is insufficient.
 
 Current bundles check required guidance through `safe_engine/bundle-inputs.json`; old bundles retain legacy completeness inspection. Record launcher identity separately; declare it as a profile input when used in acceptance. Resolver checks identity/files, not behavior, compatibility or permission.

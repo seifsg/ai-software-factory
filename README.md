@@ -2,7 +2,7 @@
 
 Seif's software-building skills and **Safe Engine 0.1.0**, the local controller that connects them.
 
-Understand the request. Build the smallest complete change. Finish implementation; do all manual/user and automated testing at the end. Return evidence.
+Understand the request. Build the next complete useful outcome. Show working behavior early. Finish that iteration, manually use it, then run relevant final tests and independent review. Required quality stays. Enhance/polish later; keep the full requested outcome visible.
 
 **Reading from your phone?** Start with the [factory status and skill links](docs/factory-status.md), then the [current checkpoint report](docs/factory-checkpoint-2026-10-04.md). Both render directly on GitHub. Sign in with an account that can access this private repository.
 
@@ -16,12 +16,16 @@ Ask for analysis and you get analysis. Ask for planning and you get planning. A 
 
 ```text
 confirmed ticket → analyze → original plan → product/UX + technical research → revised plan
-        → build with the 0–4 loop → finish in-scope improvements → manual action QA
+        → build with the 0–4 loop → finish the complete outcome iteration → manual action QA
         → author/polish automated tests → final automated QA → fresh review
         → checked local handoff → authorized PR → remote/cloud PR review → human
 ```
 
 The original planning checkpoint remains. Proceed through it only when the user's instructions already authorize that continuation.
+
+Working iterations owns delivery order, shared constraints and evidence. Complete outcome tickets are the acceptance boundary. Ordinary repair reruns configured checks; records-only correction permits exact-input reuse with fresh proof/review.
+
+Before coding, choose validation by effect: guidance only, runtime/config or mixed. Full method, fitting proof. Use one compact work record with all five planning outputs and 0–4 notes; retain controller snapshots/raw evidence. Refresh tickets at required boundaries and new input.
 
 [Tests-last rule](docs/current-decisions.md#finish-work-use-it-then-automate-tests): no manual testing, playtests, walkthroughs or automated test authoring/execution during development. Source inspection and existing-log reading remain allowed. Finish implementation, perform final manual QA, then final automated tests. Small fixes stay surgical. [Controller usage](docs/pilot-usage.md#feature-feedback-and-version-checkpoints) distinguishes new version-2 runs from legacy runs.
 

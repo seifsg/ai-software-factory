@@ -11,6 +11,8 @@ The six routines below preserve legacy unticketed delivery: they replace full an
 
 ## Check the scope
 
+One useful complete fix can be one iteration. Show corrected behavior/output at final manual QA. Scale detail/checks to impact; keep full ticket methods and required gates.
+
 Requested direct fix, identifiable behavior/consumers: input, copy, layout, local handlers or bounded non-UI defects. Keep the patch narrow even when its ticket runs full methods. Analysis/planning/review stays in phase; small scope grants no coding authority or automatic tracker issue.
 
 Read project rules, working changes, relevant source/decisions; reuse the [session contract](../safe-engine/references/session-contract.md). Record symptom, intended result, patch boundary, consumers.

@@ -15,6 +15,8 @@ However, also focus on all other aspects linekd to this feature and know everywh
 Use ASCII charts to explain.
 
 Explain what it does, why it exists, and what success means.
+
+Name the next complete useful result, required dependencies and shared constraints. Keep the whole requested outcome visible.
 Read actual code. Verify claims. Label guesses and unknowns.
 For a PR, check each claimed behavior against code and actual wiring.
 

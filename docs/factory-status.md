@@ -1,5 +1,7 @@
 # Factory status
 
+5 October candidate: Working iterations. Useful outcome first, required quality intact. Dated evidence below certifies its original candidate; publication/adoption needs separate proof.
+
 Current checkpoint: **4 October 2026**. Fourteen canonical skills, two portable launchers. The [checkpoint report](factory-checkpoint-2026-10-04.md) records repairs, evidence and remaining gaps. The [3 October audit](factory-audit-2026-10-03.md) is history, not the current defect list.
 
 Read this page on GitHub from your phone. Sign in with access to this private repository. Links below need no localhost server. Running the controller still requires a configured computer.

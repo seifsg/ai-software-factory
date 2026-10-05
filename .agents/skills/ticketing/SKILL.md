@@ -21,13 +21,15 @@ The remote ticket is canonical. Local snapshots preserve context and exact revis
 
 ## Capture the work early
 
+Order complete outcome tickets by user value and proven dependencies. Each unlocks an observable result. Keep overall criteria and one integration owner. Each deferral names an owner, destination ticket and acceptance or revisit condition.
+
 1. Preserve the original owner input before compressing it into a plan. Include why, examples, supplied evidence, source/date and decision authority. Retain later corrections and superseded input.
 2. State actual before behavior and consumers from source and existing evidence. Label facts, inference and unknowns. No early reproduction or walkthrough. PR baseline capture follows the existing [narrow exception](../../../docs/pr-workflow.md#beforeafter-proof).
 3. Derive the expected after, acceptance criteria, applicable success/failure/recovery journeys, scope, exclusions, constraints and dependencies from the request/source. Record purpose, goal, approach, relevant code/consumers, required/optional wants and existing progress/PRs. Use the contract's visual recipe. For a new capability, say what does not exist yet; nonvisual work needs an observable consumer/result.
 4. Confirm from actual owner instructions or recorded delegation; record the source and deciding actor. In-scope delegated choices need no new vote. Preserve approved, rejected and pending choices; label assumptions/unknowns. Ask only a consequential unresolved owner choice and continue independent work. Undelegated proposals stay pending; explicit stops persist.
 5. Create/reuse the epic and complete delivery tickets. Keep the overall outcome and integration owner in the epic; give each ticket one accountable owner, deliverable and completion boundary. Do not split incomplete risky work to evade full methods or tests-last.
 
-Version the confirmed contract. Keep the original input and what changed, why, who decided and what resulted. Record meaningful activity as work proceeds: decisions, assignment, implementation completion, QA/tests, review, blockers, PR updates and handoffs. Update the tracker and refresh the local snapshot; no per-edit diary or duplicated report.
+Version the confirmed contract. Keep the original input and what changed, why, who decided and what resulted. Record meaningful activity: decisions, assignment, implementation completion, QA/tests, review, blockers, PR updates and handoffs. Combine unchanged progress into boundary updates; no per-edit diary or extra capture after each local note. Preserve required refreshes below.
 
 ## Assign a ticket session
 
@@ -46,7 +48,7 @@ A dependency is satisfied by its accepted contract/result at the recorded integr
 
 Use [Safe Engine](../safe-engine/SKILL.md) for delivery and [Improve Factory](../improve-factory/SKILL.md) for maintenance. Ticketing owns intake, durable scope and coordination; those methods own execution. No recursive ticketing runs, duplicate analysis or extra reviewer fleet.
 
-Bind the run to a captured confirmed contract. Re-read canonical scope at intake/resume, before starting an affected batch and at final review/PR boundaries. Reuse an unchanged refresh within the batch; new input, conflict or handoff needs reconciliation. Compare semantic contract digests, not activity timestamps alone. A cached snapshot cannot establish current remote scope.
+Bind the run to a captured confirmed contract. Refresh at intake/resume and selected-controller boundaries: before `record plan`, after finished implementation before `record implementation`, and after local review before `handoff`/PR. Read before remote writes; review/proof require current scope. New owner input, conflict, failed refresh, changed dependencies or handoff needs reconciliation before dependent work. Reuse unchanged captures within a batch; preserve any stricter selected version/dependency guards. Compare semantic digests, not activity timestamps alone. A cache cannot establish current remote scope.
 
 Later input: preserve it, resolve authority, confirm or leave pending, record reasons and refresh the versioned specification. Reassess affected plans/consumers. Legitimate version-2 contract changes use independently reviewed `amend` and ticket rebinding; preserve original request, revisions, protected inputs and failures. Never edit state, weaken acceptance or revive cancellation. A changed goal may need a linked replacement ticket/run; preserve lineage.
 

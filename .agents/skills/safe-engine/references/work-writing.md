@@ -2,6 +2,8 @@
 
 Brief words. Full meaning. A human or fresh agent must understand without chat.
 
+Progress: working -> missing -> next result, then blockers/proof. Demo: exact build/environment/profile/data/scenario. Keep overall acceptance open; deferrals need owner/ticket/acceptance condition.
+
 **Title:** concrete change + outcome. Attribution/source link when required. Use the reader's language; explain necessary jargon.
 
 | Section | Put here |
@@ -18,6 +20,8 @@ Brief words. Full meaning. A human or fresh agent must understand without chat.
 Use labeled emojis, short bullets and narrow tables. Diagram flows; table comparisons/files/checks. Charts need measured values. Screenshots need real relevant proof. Reuse existing evidence; follow baseline/final-QA rules. Fit the project's template; skip inapplicable blocks. No decoration quota, copied workflow, new media chore or extra vote.
 
 Keep original words, reasons, examples and deliberate reminders. Fold machine data/long supporting evidence; keep purpose, outcome, proof/gaps and next action visible. Never compress away context. Label facts, inference, unknowns and illustrative examples. No fabricated benefits, tests, visuals or consent.
+
+Reuse the working record and raw proof in tracker/handoff/PR. Each surface carries its required context plus fitting links; no repeated validation essay. Preserve immutable snapshots, provenance and meaningful history.
 
 One finishing pass: can a cold reader say what, why, before, after and next? Does every requested detail have a home? Use existing review; no writing loop.
 
