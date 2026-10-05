@@ -10,7 +10,7 @@ Apply the rows that fit. New products cover their surfaces; small fixes cover af
 
 ## Build safely
 
-Required protections belong in the first iteration that needs them, before actual exposure. Optional hardening can follow with owner/ticket/acceptance condition; never defer a required denial path or production obligation as polish. Finish each complete iteration before manual QA and final automated checks.
+Required protections precede exposure. Never defer required denial paths/production obligations as polish. Optional follow-ups: owner/ticket/acceptance condition. Finish iteration before manual QA/automation.
 
 | Surface | Check |
 |---|---|

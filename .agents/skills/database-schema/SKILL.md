@@ -9,7 +9,7 @@ Put the whole app in front of us. Get the model right before dependent features 
 
 Optimize the real workload; plan safe evolution. No perfect-schema or universal O(1) promises.
 
-Whole-product map first; implement the model needed by the current complete journey. Set shared ownership, invariants, limits, compatibility and failure behavior before dependent work. Required integrity/recovery stays early. Speculative structures wait. [Working iterations](../safe-engine/references/delivery-readiness.md#working-iterations).
+Map the whole product; implement the current journey's model. Agree shared invariants before dependent work. Required integrity/recovery stays early; speculative structures wait.
 
 ## 1. Understand the whole picture
 

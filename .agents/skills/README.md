@@ -22,7 +22,7 @@ Keep Seif's originals and deliberate reminders. Adapt project assumptions to the
 
 Fourteen canonical skills: seven with originals, seven factory-specific.
 
-[Working iterations](safe-engine/references/delivery-readiness.md#working-iterations) applies to all fourteen skills and both launchers. Complete useful outcome -> finish -> manual use -> relevant configured checks -> fresh assessment. Full-product acceptance stays open. No new skill, phase or microticket fleet. Two portable entries, [Safe Engine](../../skills/safe-engine/SKILL.md) and [Improve Factory](../../skills/improve-factory/SKILL.md), load the same complete bundle. Install using their [delivery](../../docs/install-safe-engine.md) or [maintenance](../../docs/install-improve-factory.md) guide.
+Working iterations applies to all fourteen skills; launchers follow their selected canonical method. No new skill or phase. Two portable entries, [Safe Engine](../../skills/safe-engine/SKILL.md) and [Improve Factory](../../skills/improve-factory/SKILL.md), load the same complete bundle. Install using their [delivery](../../docs/install-safe-engine.md) or [maintenance](../../docs/install-improve-factory.md) guide.
 
 A direct analysis/planning/review request keeps its phase. New implementation follows Ticketing and the full cycle; legacy unticketed fixes retain Small Change. [Mandatory logging](safe-engine/references/app-diagnostics.md) and [efficiency](safe-engine/references/app-efficiency.md) belong to the delivery coordinator; restored originals do not import them automatically. Every app/game, including small fixes, needs a working shared logger and detailed safe journey evidence. Read existing logs during development; actual actions and emitted-trail checks wait until final manual QA.
 

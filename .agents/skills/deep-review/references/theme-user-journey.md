@@ -51,7 +51,7 @@ Every UI/interaction change: read [UX Quality](../../ux-quality/SKILL.md); inspe
 
 ## Calibrate
 
-Assess the complete confirmed iteration and usable presentation. Keep remaining overall journeys visible; foundation/check passes alone cannot prove the promise. Read exact build/environment/profile/data/scenario. Combined acceptance needs its integration owner and actual combined-journey proof.
+Prove the complete iteration's journey/presentation in its exact demo context. Keep remaining overall journeys visible; combined acceptance needs actual integration proof.
 - Judge against the **claim**, not what you personally would have built. A feature doing exactly
   what was asked is correct. Don't replace the author's goal.
 - Distinguish "missing because broken" from "missing because out of scope."

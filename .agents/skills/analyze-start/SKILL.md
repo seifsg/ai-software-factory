@@ -16,7 +16,7 @@ Use ASCII charts to explain.
 
 Explain what it does, why it exists, and what success means.
 
-Name the next complete useful result and real dependencies. What must work now? What can wait? Trace shared state, limits and failure behavior before dependent work. Keep the whole requested outcome visible. [Working iterations](../safe-engine/references/delivery-readiness.md#working-iterations).
+Name the next complete useful result, required dependencies and shared constraints. Keep the whole requested outcome visible.
 Read actual code. Verify claims. Label guesses and unknowns.
 For a PR, check each claimed behavior against code and actual wiring.
 

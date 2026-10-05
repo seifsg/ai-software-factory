@@ -7,7 +7,7 @@ description: "Build/resume games, apps, services and tools with Seif's methods, 
 
 Build the requested outcome. Read the complete methods. Keep decisions, work and evidence resumable.
 
-Use [Working iterations](references/delivery-readiness.md#working-iterations) for every scope. Deliver the next complete visible/observable result early. Required quality stays; optional enhancement/polish follows. Keep full-product acceptance and combined journey open.
+Use [Working iterations](references/delivery-readiness.md#working-iterations): next complete useful result first, required quality intact. Keep full-product acceptance open.
 
 For human-facing prose, apply [Clear Writing](references/clear-writing.md): preserve details/voice, ground claims, cut filler. One finishing pass within existing review.
 

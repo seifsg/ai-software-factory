@@ -1,6 +1,6 @@
 # Use the actual project's settings
 
-Bind complete outcome ticket, remaining full-product requirements and integration owner. Scope checks to affected consumers; keep protected gates. Demo/evidence names build/environment/profile/data/scenario. Records-only reuse needs reviewed stable context and exact unchanged raw proof; source/input changes still use ordinary repair.
+Bind the complete outcome ticket and integration owner. Record exact demo/evidence context and required validation scope.
 
 Read the procedure fully. Before acting, resolve project settings from user decisions, repository
 rules, remote metadata and authorized integrations. Record the source; ask only for consequential

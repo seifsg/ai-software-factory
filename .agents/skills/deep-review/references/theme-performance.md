@@ -9,7 +9,7 @@ slow queries, memory growth or wasted CPU, GPU, network, storage and battery?**
 
 ## What to hunt for
 
-Review the complete confirmed iteration. Findings name product/evidence/report layer, impact, raw evidence and action; use linked details when the table is too wide. Required protections/resource budgets stay before applicable use. Optional enhancements need tracked deferral, not a false blocker. [Working iterations](../../safe-engine/references/delivery-readiness.md#working-iterations).
+Review the confirmed iteration. Required protections/budgets precede applicable use; optional enhancements tracked separately.
 
 ### Rendering & updates — where present
 - **Update storms** — state changes redraw large trees/scenes or repeatedly schedule work.

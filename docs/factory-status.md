@@ -1,6 +1,6 @@
 # Factory status
 
-5 October candidate method: [Working iterations](../.agents/skills/safe-engine/references/delivery-readiness.md#working-iterations). Complete useful outcome first; required quality stays. Optional polish follows. Exact-input record corrections may reuse valid raw proof with reviewed v2 opt-in; fresh assessment remains. Existing dated evidence below certifies only its original candidate; publication/adoption needs separate proof.
+5 October candidate: Working iterations. Useful outcome first, required quality intact. Dated evidence below certifies its original candidate; publication/adoption needs separate proof.
 
 Current checkpoint: **4 October 2026**. Fourteen canonical skills, two portable launchers. The [checkpoint report](factory-checkpoint-2026-10-04.md) records repairs, evidence and remaining gaps. The [3 October audit](factory-audit-2026-10-03.md) is history, not the current defect list.
 

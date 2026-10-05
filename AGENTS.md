@@ -30,7 +30,7 @@ For larger factory changes, use [Improve Factory](.agents/skills/improve-factory
 
 ## Decisions and quality
 
-Build in [complete working iterations](.agents/skills/safe-engine/references/delivery-readiness.md#working-iterations). Next useful journey first; required quality stays. Complete outcome tickets are the acceptance boundary. Finish iteration -> manual use -> final tests -> independent review. Keep overall requirements/integration open. Optional polish later, explicitly tracked. Second related failure: shared cause, prior-fix explanation, recurrence prevention.
+Build in complete working iterations: next useful outcome ticket first, required quality intact. Keep overall acceptance open. Optional follow-ups tracked; repeated failure needs shared-cause diagnosis.
 
 Give 100% minimum. Aim higher through correct, useful work within scope.
 

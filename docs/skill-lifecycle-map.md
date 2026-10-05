@@ -1,6 +1,6 @@
 # Seif's skills in the software factory
 
-Current delivery: [Working iterations](../.agents/skills/safe-engine/references/delivery-readiness.md#working-iterations), complete outcome tickets, finished implementation -> manual use -> final tests/review. Remaining map/proposals are historical design, not new acceptance stages.
+Current delivery: Working iterations, complete outcome tickets, finished implementation -> manual use -> final tests/review. Remaining map/proposals are historical design, not new acceptance stages.
 
 Historical routines catalog; current packaged skills follow the [Mobile-priority source map](skill-provenance.md#current-source-map--3-october-2026).
 

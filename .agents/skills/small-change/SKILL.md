@@ -11,7 +11,7 @@ The six routines below preserve legacy unticketed delivery: they replace full an
 
 ## Check the scope
 
-One complete useful fix can be one iteration. Show the corrected behavior/output at final manual QA. Scale reading, plan detail and checks to impact; keep full ticket methods and required gates. Reuse valid decisions/evidence. Optional polish stays a tracked follow-up. [Working iterations](../safe-engine/references/delivery-readiness.md#working-iterations).
+One useful complete fix can be one iteration. Show corrected behavior/output at final manual QA. Scale detail/checks to impact; keep full ticket methods and required gates.
 
 Requested direct fix, identifiable behavior/consumers: input, copy, layout, local handlers or bounded non-UI defects. Keep the patch narrow even when its ticket runs full methods. Analysis/planning/review stays in phase; small scope grants no coding authority or automatic tracker issue.
 

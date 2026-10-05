@@ -7,7 +7,7 @@ description: "Repair Safe Engine skills, controller or workflow. Preserve projec
 
 Fix the factory cause. Preserve Seif's methods and project progress.
 
-Use [Working iterations](../safe-engine/references/delivery-readiness.md#working-iterations) here too. First useful complete correction, then enhancements. Second related failure: diagnose shared cause and prior-fix failure. Reuse actual timestamps/logs for building/checking/repairing, repair rounds and first useful demonstration; disclose missing measurements. No extra reporting gate.
+Use [Working iterations](../safe-engine/references/delivery-readiness.md#working-iterations). Complete useful correction first. Repeated failure: shared cause, prior-fix failure, prevention. Audit time from existing logs; no extra reporting gate.
 
 New factory implementation uses [Ticketing](../ticketing/SKILL.md): canonical tracker, owner-confirmed before/after and a dedicated maintenance session. Every ticket follows the complete methods below. [Small Change](../small-change/SKILL.md) keeps bounded repairs surgical; its six shortcuts remain for legacy unticketed work. Analysis/planning stays in phase and creates no coding obligation.
 

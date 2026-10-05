@@ -11,7 +11,7 @@ Alle Tests erst nach fertiger Implementierung: zuerst manuelle/User-QA, danach a
 
 Ziel: kleine, nachvollziehbare Änderungen, sauber beschrieben, als **Draft-PR zur menschlichen Prüfung**.
 
-Vollständige nutzbare Iteration liefern. Funktioniert jetzt -> fehlt noch -> nächstes sichtbares Ergebnis. Erst fertige Iteration manuell nutzen, dann relevante finale Tests. Gesamtes Produkt bleibt offen bis zur vollständigen Abnahme. Demo: exakter Build, Umgebung/Profil, Daten und Szenario. Nur gültige Rohbelege wiederverwenden; frische Bewertung behalten. [Working iterations](../safe-engine/references/delivery-readiness.md#working-iterations).
+Nutzbare Iteration zeigen: funktioniert -> fehlt -> nächstes sichtbares Ergebnis. Exakten Demo-Kontext nennen. Gesamtabnahme offen halten; frische Bewertung bleibt nötig.
 
 > **Grundhaltung:** Ein PR ist ein **Vorschlag zur Review**, kein Selbstzweck. Als **Draft** öffnen; ein Mensch prüft, verfeinert und merged oder verwirft. Explizite Nutzerfreigaben gelten weiter. Aus diesem Skill entsteht keine Merge-, Release- oder Benachrichtigungsfreigabe.
 

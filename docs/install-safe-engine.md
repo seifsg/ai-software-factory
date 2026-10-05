@@ -2,7 +2,7 @@
 
 ## Small direct changes
 
-New implementation uses complete outcome tickets and the full cycle, including tiny fixes. The six-routine route below is legacy unticketed work only. [Working iterations](../.agents/skills/safe-engine/references/delivery-readiness.md#working-iterations): useful result early, finish iteration -> manual use -> final tests/review. Keep required quality and full-product acceptance; optional enhancement/polish follows.
+New implementation uses complete outcome tickets and the full cycle, including tiny fixes. Apply Working iterations in current bundles; older pins retain their method. The six-routine route below is legacy unticketed work only.
 
 This route is for requested implementation. Explicit analysis, planning and review remain in their phase.
 

@@ -12,6 +12,10 @@ Evidence design compared wording-only, conservative exact-input record reuse, an
 
 Canonical [ticket #18](https://github.com/seifsg/ai-software-factory/issues/18) preserves owner input/authority. Separate issue #15/PR #16 remains its own unmerged five-rule change; none was cherry-picked. This entry records adaptation scope; final evidence must be reported separately.
 
+Pre-merge audit: shortened new caller prose; clarified conditional readiness/scenarios, older pins, immutable correction records and integration timing. Original methods/reminders and runtime defaults/gates remain. Correction evidence is separate from earlier observations.
+
+Owner's link correction: removed39 redundant introduced hrefs; kept2 coordinator-owner links, the exact command-procedure route and this ticket citation. Original method/conditional-contract links and local role/leaf evidence instructions remain. The stopped earlier instruction exercise certifies no later candidate.
+
 ## Delivery simulation decisions: 4 October 2026
 
 Seif selected the audit improvements, then overrode early manual/playtesting: **all testing waits until implementation/improvements finish**. Source inspection/research/existing-log reading remain allowed. App/game/mobile creation and simulation pilots are deferred until specifically requested. Preserve the four Mobile-priority core originals and deliberate reminders; timing/authority adaptations live in coordinators and PR adapters.

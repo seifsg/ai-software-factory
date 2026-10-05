@@ -28,4 +28,4 @@ Where practical, give an independent evaluator the skill, realistic request and 
 
 Report structural validity, behavioral exercises, controller checks, project adoption, independent assessment and PR delivery separately.
 
-Also cover complete tiny fix, new headless tool, incremental production feature, required shared schema/state constraints, usable first UI, repeated product/report repairs and resume/integration. Records-only: unchanged valid proof may survive; changed source/config/environment/scope, tampered/failed evidence, pending operations, old unclassified findings and challenged actual use must reject reuse. No product pilot implied. One pass cannot stand for another.
+Working-iteration changes: select affected cases, not this whole menu. Tiny fix, headless tool, production increment, shared schema/state, first usable UI, repeated product/report repair, resume/integration. Records-only changes cover eligible reuse and rejection for changed inputs, failed/tampered/challenged proof, pending operations and unclassified findings. No product pilot implied. One pass cannot stand for another.

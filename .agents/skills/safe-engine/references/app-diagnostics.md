@@ -12,7 +12,7 @@ Prefer a thin app module over a maintained native logger; provider SDK/OTLP adap
 
 ## Cover the application
 
-Wire bounded working diagnostics into the first complete useful journey. Keep required module/coverage; do not let an optional provider or speculative dashboard block the result. Define bounds/failure behavior before shared consumers. Final emitted-trail checks follow completed-iteration timing; report wider gaps honestly.
+Wire bounded diagnostics into the first useful journey. Optional providers/dashboards must not delay it. Required coverage stays; verify emitted trails at final manual QA.
 
 New products: plan logging before features; wire from startup. Existing products: inspect coverage, reuse facilities, fill missing module/boundaries. Mandatory logging stays in surgical scope; use shared middleware/hooks, no unrelated restructuring. Record legacy gaps/impact; one changed path cannot prove complete coverage.
 

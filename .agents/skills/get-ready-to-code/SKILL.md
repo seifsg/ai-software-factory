@@ -14,8 +14,6 @@ Build in complete working iterations. Tiny bug or full product, same logic.
 - Required quality stays. Optional polish/enhancements later: owner, ticket, acceptance condition.
 - Complete outcome ticket -> finish iteration -> manual QA -> relevant final tests/review. Full requested outcome stays open until delivered.
 
-[Working iterations](../safe-engine/references/delivery-readiness.md#working-iterations).
-
 Prepare a :
 - summary of files about to change then stop.
 - next step, criticize our suggested summary of files, is it optimal, is that the best path for our plan

@@ -27,7 +27,7 @@ Verify returned root, revision, dirty status, receipt and entrypoint. Record lau
 
 ## Read and execute
 
-Use the selected canonical method's Working iterations rule. Complete useful outcome first; required quality stays. Finish that iteration before manual QA, then final checks/review. Preserve full-product acceptance, original methods and exact active pins. No duplicate launcher workflow.
+Follow Working iterations where present in the selected canonical method. Older pins keep their recorded method; no silent upgrade.
 
 New implementation: read canonical `.agents/skills/ticketing/SKILL.md` and `docs/ticketing.md` from the resolved bundle. Preferred authorized tracker MCP first; GitHub Issues default, Seif's existing choice. Confirm before/after scope. Every ticket gets an actually dispatched builder session and full cycle, even bounded fixes. Small Change keeps patches surgical; its six shortcuts remain for legacy unticketed work.
 

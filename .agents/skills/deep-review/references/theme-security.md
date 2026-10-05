@@ -9,7 +9,7 @@ input into unauthorized access or actions?**
 
 ## What to hunt for
 
-Review the complete confirmed iteration. Findings name product/evidence/report layer, impact, raw evidence and action; use linked details when the table is too wide. Required protections/resource budgets stay before applicable use. Optional enhancements need tracked deferral, not a false blocker. [Working iterations](../../safe-engine/references/delivery-readiness.md#working-iterations).
+Review the confirmed iteration. Required protections/budgets precede applicable use; optional enhancements tracked separately.
 
 Use [Application Security](../../safe-engine/references/app-security.md) for applicable controls and local-versus-production readiness. Preserve this review's evidence format; reuse the same reviewer. Cheap protections start early; automated checks still follow manual QA. Review-only grants no fixes or deployment.
 

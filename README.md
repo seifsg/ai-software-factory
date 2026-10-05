@@ -23,7 +23,7 @@ confirmed ticket → analyze → original plan → product/UX + technical resear
 
 The original planning checkpoint remains. Proceed through it only when the user's instructions already authorize that continuation.
 
-[Working iterations](.agents/skills/safe-engine/references/delivery-readiness.md#working-iterations): user value, proven dependencies, brief shared contracts, usable presentation, repeated-failure diagnosis and exact demo context. Complete outcome tickets are the supported acceptance boundary. Combined product acceptance stays separate. Validation profiles stay scoped; ordinary repairs rerun all configured checks. Reviewed v2 opt-in allows records-only exact-input reuse with fresh proof/review.
+Working iterations owns delivery order, shared constraints and evidence. Complete outcome tickets are the acceptance boundary. Ordinary repair reruns configured checks; records-only correction permits exact-input reuse with fresh proof/review.
 
 [Tests-last rule](docs/current-decisions.md#finish-work-use-it-then-automate-tests): no manual testing, playtests, walkthroughs or automated test authoring/execution during development. Source inspection and existing-log reading remain allowed. Finish implementation, perform final manual QA, then final automated tests. Small fixes stay surgical. [Controller usage](docs/pilot-usage.md#feature-feedback-and-version-checkpoints) distinguishes new version-2 runs from legacy runs.
 

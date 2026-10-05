@@ -61,7 +61,7 @@ Keep one case, canonical maintenance ticket and authority/completion boundary; n
 
 ## Review, adoption and resume
 
-Carry current complete iteration, remaining overall outcome, next observable result and integration owner. [Working iterations](../../safe-engine/references/delivery-readiness.md#working-iterations) does not authorize changing active pins/criteria. Bundle adoption changes operative inputs; ordinary repair applies. Records-only reuse cannot certify a newly adopted bundle.
+Carry the current iteration and remaining outcome. Bundle adoption changes operative inputs; records-only reuse cannot certify it.
 
 After independent assessment, refresh bound app/maintenance tickets. Compare exact candidate, preserved bundle and current project state: version/schema, task/profile/acceptance, confirmed scope bindings, methods, decisions and evidence. Pending scope, drift or unavailable refresh blocks dependent adoption. Read actual controller/CLI and saved profile version. Version-2 contract amendments use `amend` with reviewed authority/history; they do not migrate controller schemas or selected bundles.
 

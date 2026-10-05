@@ -4,7 +4,7 @@ Use for public landing, marketing and content pages meant for search, including 
 
 ## Set the boundary
 
-Complete useful public-page iteration first. Required crawl/privacy/content behavior and launch obligations stay in scope; optional SEO expansion follows. Final manual checks then automation per completed outcome. Deployment/indexing evidence remains separate.
+Useful public page first; required crawl/privacy/content and launch obligations stay. Optional expansion follows. Final manual QA then automation; deployment/indexing proof stays separate.
 
 - Record production domain, audience/search intent, languages, public routes, private routes, staging and existing SEO setup. Reuse CMS/framework features. No duplicate sitemap/metadata generators.
 - New site: cover all public templates and key pages. Existing fix: affected pages, shared templates and consumers. Research material unknowns in current primary guidance; extend this checklist for actual gaps, not speculative work.

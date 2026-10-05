@@ -39,7 +39,7 @@ Explain approved scope changes with actor/source, what, why and result; preserve
 
 ## Before/after proof
 
-For each complete outcome iteration, show working behavior and exact build/environment/profile/data/scenario. Keep required quality and whole-product acceptance. Repair evidence/report records only when raw proof is valid for unchanged exact inputs; any real evidence gap or product/input change needs affected final QA and all required configured checks. [Working iterations](../.agents/skills/safe-engine/references/delivery-readiness.md#working-iterations).
+Show the complete iteration in its exact demo context. Keep overall acceptance open and raw proof provenance explicit.
 
 Plan proof before edits; attach it to the PR before submission/update. Show the changed outcome, not a screenshot dump.
 

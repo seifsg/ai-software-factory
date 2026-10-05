@@ -2,36 +2,36 @@
 
 ## Working iterations
 
-Applies to tiny bugs, small tools and full products. Keep the whole requested outcome visible. Build the next complete useful result. Show it as soon as it works; then enhance it.
+Tiny bug, tool or full product: build the next complete useful result and show it early. Keep the whole requested outcome visible; optional enhancement follows.
 
-1. Name the main promise and next useful result. Real entry -> action -> result. Required failure/recovery and usable presentation. Headless: real consumer/output. No canned proof.
+1. Name the promise and next result: real entry -> action -> result. Include required failure/recovery and usable presentation. Headless: real consumer/output. No canned proof.
 2. Order by user value. Dependencies: required now, useful later, unrelated. Explain what fails without each blocker. Challenge supporting work that delays the promise.
-3. Before dependent work: state owner/source of truth, interfaces, limits/budgets, compatibility, failure/recovery. Keep it brief. Current journey first; safe evolution for later work.
+3. Before dependent work: state owner/source of truth, interfaces, limits/budgets, compatibility, failure/recovery. Brief shared rules; current journey and safe evolution.
 4. Complete outcome ticket -> finish implementation/improvements -> manual use/demo -> relevant final tests -> independent assessment. Keep original 0-4/checkpoints. One bounded fix may be one iteration.
-5. Feedback and remaining requirements choose the next result. Optional polish/enhancement later. Deferrals: owner, destination ticket, acceptance/revisit condition. No vague later.
-6. One integration owner verifies the combined journey at the exact candidate. Accepted children alone cannot certify the product.
+5. Feedback and remaining requirements choose the next result. Deferrals need owner, destination ticket and acceptance/revisit condition. No vague later.
+6. At integration/whole-product acceptance, one owner verifies the combined journey at the exact candidate. Accepted children alone cannot certify the product.
 
-Required integrity, safety, compatibility, accessibility, logging and agreed quality stay in scope. Reduce iteration size; keep the quality bar. Production protections belong before applicable exposure.
+Required integrity, safety, compatibility, accessibility, logging and agreed quality stay. Reduce iteration size, keep quality. Production protections precede exposure.
 
-A controller run accepts its entire confirmed ticket. Intermediate pieces have no separate acceptance. Split complete outcomes before initialization or use reviewed scope changes. No microticket quota, extra phase or silent criteria reduction.
+A controller run accepts its whole confirmed ticket; intermediate pieces cannot pass separately. Split complete outcomes before initialization or use reviewed scope changes. No microticket quota, extra phase or silent criteria reduction.
 
-Keep existing behavior, full-product criteria and exposure/release obligations open. Accepted requirements stay until delivered or explicitly changed under owner authority.
+Preserve existing behavior. Full-product criteria and exposure/release obligations stay open until delivered or explicitly changed under owner authority.
 
-Repair: classify product, evidence or report defect. Second related failure? Stop symptom patches; trace the shared cause/consumers. Explain why the previous fix failed, change the plan/contract where needed and state what prevents recurrence. Keep diagnostic/failure history; no retry cap.
+Repair: classify product, evidence or report defect. Second related failure? Trace the shared cause/consumers and prior-fix failure. Revise plan/contract where needed; explain recurrence prevention. Keep failure/diagnostic history, no retry cap.
 
-Validation: map change -> affected behavior/consumers -> required evidence.
+Validation: change -> affected behavior/consumers -> required evidence.
 
-Scope the reviewed profile to the complete ticket from the start; retain actual protected gates. Reuse raw evidence only while its inputs, context, scope and hashes remain valid. Changed shared behavior, config, environment, dependencies, scope or unresolved risk needs affected revalidation.
+Scope the reviewed profile to the complete ticket from the start; keep protected gates. Reuse raw proof only with valid inputs/context/scope/hashes. Changed shared behavior, config, environment, dependencies, scope or unresolved risk needs affected revalidation.
 
-The controller reruns all configured checks after ordinary repair. Its optional records-only route repairs private records/mappings with exact unchanged evidence only; any tracked documentation/source/test change invalidates reuse; no changed-code selective reuse is implemented. Missing or challenged behavioral proof needs fresh actions, not a new classification. Never copy an old pass as a new action, weaken a gate or skip required evidence.
+Ordinary controller repair reruns all configured checks. Reviewed v2 [records-only correction](../../../../docs/pilot-usage.md#records-only-corrections) keeps exact unchanged evidence; replace the cleared criterion mapping or append a correction note, never hashed originals. Any tracked documentation/source/test change invalidates reuse; no changed-code selective reuse. Missing/challenged proof needs fresh actions. Never relabel an old pass as fresh, reclassify a defect to bypass checks or weaken required gates/evidence.
 
 Progress: working now -> missing now -> next observable result. Then blockers and proof.
 
-Checks support the outcome; passing checks alone is insufficient.
+Passing checks alone cannot prove the outcome.
 
-Demo names exact source/build, environment/device/profile, data/save identity and scenario/actions/result. Same URL proves no same context. State unavailable parts; measurements prove only the measured conditions.
+Demo: exact source/build, environment/device/profile, data/save identity, scenario/actions/result. Same URL proves no same context. State unavailable parts; measurements prove only measured conditions.
 
-Factory audit: reuse timestamps/logs to record time to first useful demonstration, building/checking/repairing time and repair rounds. Separate active work from wall time/waits; label estimates and missing data. Compare similar scope, find the bottleneck, remove ceremony that adds no confidence. No new reporting chore or invented timings.
+Factory audit: reuse timestamps/logs for first useful demonstration, build/check/repair time and repair rounds. Separate active time from wall time/waits; label estimates/missing data. Compare similar scope; remove ceremony that adds no confidence. No reporting chore or invented timings.
 
 Load applicable rows once. Reuse the plan, evidence and reviewer; no new skill fleet. Local MVPs stay small. All manual/user testing, playtesting and automated checks wait until the complete iteration's implementation/improvements finish. Source inspection, research and existing-log reading may happen earlier.
 

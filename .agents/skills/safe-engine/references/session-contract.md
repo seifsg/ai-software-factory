@@ -6,7 +6,7 @@ New implementation uses [Ticketing](../../ticketing/SKILL.md), including bounded
 
 ## Establish the contract
 
-Keep current complete outcome, remaining whole-product work, next observable result and integration owner. Pass exact demo/evidence context and tracked deferrals. Apply [Working iterations](delivery-readiness.md#working-iterations).
+Carry current outcome, remaining work and integration owner.
 
 Read request, prior answers, project rules and contract. Ask only missing essential preferences: completion boundary, delegated/reserved choices, checkpoints/update cadence and real time/cost constraints. Group questions without re-asking settled ones; continue independent discovery while waiting.
 
@@ -33,7 +33,7 @@ Continuous 0.1.0 controller:
 
 Watchdogs detect stuck operations, not session deadlines. Diagnose the operation. This contract supplies no scheduler, unlimited quota or host-execution guarantee.
 
-Version-2 records-only correction requires reviewed opt-in and exact unchanged valid raw evidence/context. Preserve original receipt/log provenance; clear proof/review and reassess. Failed/challenged/missing proof, product findings, changed inputs or volatile runtime need ordinary repair. [Supported boundary](../../../../docs/pilot-usage.md#records-only-corrections).
+Version-2 records-only correction: reviewed opt-in, exact unchanged proof, fresh assessment. Never modify hashed originals.
 
 ## Keep ticket scope current
 

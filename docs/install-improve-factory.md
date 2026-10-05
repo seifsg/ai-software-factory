@@ -37,7 +37,7 @@ Then invoke `/improve-factory`. An agent can use an authenticated checkout and c
 
 ## What first use does
 
-The selected canonical method applies complete working iterations. Finish useful correction -> actual instruction/CLI use -> final checks -> independent assessment. Exact-input record reuse is opt-in; ordinary repairs keep all configured checks. Active project pins stay unchanged; installation never proves adoption.
+Follow Working iterations where present in the selected canonical method. Older pins retain their recorded method; installation never proves adoption.
 
 ```text
 Installed portable skill

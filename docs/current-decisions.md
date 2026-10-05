@@ -50,9 +50,9 @@ Every UI/interaction change applies [UX Quality](../.agents/skills/ux-quality/SK
 
 ### Finish work, use it, then automate tests
 
-Seif's 5 October clarification: this order applies per **complete useful outcome iteration**, across tiny bugs, tools and production products. Use complete outcome tickets; intermediate pieces inside a ticket have no separate controller acceptance. Show useful behavior early; optional polish/enhancement follows. Keep required quality, existing behavior, overall requirements and combined final acceptance. No silent scope reduction. [Working iterations](../.agents/skills/safe-engine/references/delivery-readiness.md#working-iterations) owns ordering, dependencies, shared rules, repairs, demos and measurements.
+Seif's 5 October clarification: use **complete useful outcome iterations**, across tiny bugs, tools and production products. Complete outcome tickets are the acceptance boundary; intermediate pieces cannot pass separately. Required quality and overall acceptance stay. Working iterations owns delivery order and shared rules.
 
-The configured validation profile covers the complete ticket and affected consumers. Ordinary repair repeats all required configured checks. Version 2 may opt into exact-input `repair --records-only` for record corrections with already valid raw proof; missing/challenged evidence, product failures or changed inputs require ordinary repair. Fresh criterion proof/review stays required. No changed-code selective reuse is implemented.
+Scope validation to the complete ticket. Ordinary repair repeats all configured checks. Reviewed v2 records-only correction preserves exact unchanged valid proof and requires fresh assessment. No changed-code selective reuse.
 
 PR evidence: [before/after proof](pr-workflow.md#beforeafter-proof) is required where applicable. One focused UI screenshot pair by default; equivalent output for nonvisual changes. Seif permits a capture-only baseline before edits with minimum safe navigation, no feature exercise or submission. This narrow exception does not permit early testing. Finished screenshots and optional useful journey videos belong to final manual QA; publish accessible, sanitized evidence with the PR.
 

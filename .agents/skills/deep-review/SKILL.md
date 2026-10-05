@@ -7,7 +7,7 @@ description: Deep code analysis and review that hunts for bugs, oversights, anti
 
 Ruthless code review. No mercy, no shortcuts. Find every damn problem.
 
-Review the complete iteration and affected consumers. Does its real journey work? Keep remaining whole-product requirements visible. Every finding: severity, impact, evidence, clear action and layer (product, evidence, report). Separate blockers from optional polish; deferrals need owner, destination ticket and acceptance/revisit condition. Repair the affected layer. Size/style prompts inspection; prove impact before blocking. [Working iterations](../safe-engine/references/delivery-readiness.md#working-iterations).
+Review the complete iteration and affected consumers. Does the journey work? Every finding: severity, impact, evidence, action and layer (product, evidence, report). Separate blockers from polish; preserve overall requirements. Deferrals: owner, ticket, acceptance/revisit condition. Size/style prompts inspection; prove impact before blocking.
 
 ## Instructions
 

@@ -1,6 +1,6 @@
 # PR body template
 
-Show delivered iteration, remaining product behavior and next observable result. Demo binds build/environment/profile/data/scenario. Findings/deferrals keep evidence, action, owner, destination and acceptance/revisit condition. Reused raw proof keeps provenance; no new-pass claim.
+Show delivered iteration, remaining behavior and next result. Keep exact demo context and original proof provenance.
 
 Use the shared [ticket/PR layout](../../safe-engine/references/work-writing.md) and the original's **PR-Beschreibungsstil — visuell zuerst** section in [How to make a PR](../SKILL.md).
 

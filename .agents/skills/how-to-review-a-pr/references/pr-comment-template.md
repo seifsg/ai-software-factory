@@ -1,6 +1,6 @@
 # PR comment template — the handoff context dump
 
-Lead with working/missing behavior and next observable result. Keep exact demo context and remaining overall acceptance. Findings name product/evidence/report layer, impact, raw evidence and action. Reused proof keeps original chronology; fresh assessment remains required. Deferrals need owner, destination ticket and acceptance/revisit condition.
+Lead with working/missing behavior and next result. Keep exact context, original proof chronology and remaining overall acceptance. Deferrals: owner/ticket/acceptance condition. The findings table carries evidence/action.
 
 This is the **only author-visible artifact**, so it must be professional, specific, and self-
 contained. Its job is twofold: (1) tell the author what we changed and why, and (2) carry enough

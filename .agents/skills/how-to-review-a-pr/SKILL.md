@@ -41,7 +41,7 @@ Discover the product and architecture: game, client, server, service, tool or mi
 
 ## Guiding principles (hold these through every phase)
 
-Judge the complete confirmed iteration and affected consumers. Keep overall requirements/integration separate. Findings need layer (product/evidence/report), severity, impact, evidence and action. Repair only that layer; required proof gaps need real verification. Second related failure: diagnose shared cause and why the previous fix failed. Reuse valid raw evidence with original provenance; obtain fresh assessment. [Working iterations](../safe-engine/references/delivery-readiness.md#working-iterations).
+Judge the confirmed iteration and affected consumers; keep overall acceptance separate. Findings need layer, severity, impact, evidence and action. Repair the affected layer; proof gaps need actual verification. Reassess afresh.
 
 We are judging *someone else's* work that we may ship to real users and systems. Optimize for:
 

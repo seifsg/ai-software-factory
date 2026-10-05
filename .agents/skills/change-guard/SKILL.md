@@ -7,7 +7,7 @@ description: Post-change verification guard that checks if recent code changes b
 
 Post-implementation verification. Run this after every code change to catch damage before it ships.
 
-Per edit: inspect source/diff. Actual actions and automated checks wait until the complete iteration is finished. Map change -> affected consumers -> checks -> valid prior evidence. Broaden for shared behavior, changed inputs or unresolved risk. Keep required gates. Ordinary controller repair runs all configured checks; records-only reuse needs exact unchanged inputs/provenance. [Working iterations](../safe-engine/references/delivery-readiness.md#working-iterations).
+Per edit: inspect source/diff. Actual actions/checks wait until the complete iteration is finished. Map change -> consumers -> required evidence. Ordinary repair runs all configured checks; records-only requires exact unchanged proof.
 
 ## Instructions
 

@@ -1,6 +1,6 @@
 # Start Safe Engine in another session
 
-Carry working/missing behavior, next complete useful outcome, full-product criteria, shared contracts, integration owner and deferral tickets. Reuse valid raw evidence with exact build/environment/profile/data/scenario and original chronology. Second related repair needs shared-cause diagnosis. Preserve active pins and authority.
+Carry current iteration, remaining outcome and exact context. Preserve active pins and authority.
 
 ## Small direct changes
 

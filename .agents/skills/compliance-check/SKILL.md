@@ -11,7 +11,7 @@ description: Verify implementation against intended requirements, accepted plan,
 
 Did we build the right thing? Does it follow our rules? Prove it.
 
-Compare the confirmed iteration and real journey with actual evidence. Keep full-product criteria separate: delivered, incomplete or explicitly deferred with owner, destination ticket and acceptance/revisit condition. An iteration cannot certify the whole product or redefine requirements. Required unknowns block dependent acceptance. [Working iterations](../safe-engine/references/delivery-readiness.md#working-iterations).
+Prove the confirmed iteration. Keep full-product criteria delivered, incomplete or explicitly deferred. Iteration acceptance cannot redefine requirements or certify the product; required unknowns block acceptance.
 
 ## Instructions
 

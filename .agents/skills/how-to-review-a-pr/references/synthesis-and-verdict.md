@@ -14,7 +14,7 @@ can't reach — they each saw one facet; you see the whole.
 
 ## 2. Master findings table (severity-ranked)
 
-Each finding needs layer (product/evidence/report), severity, impact, evidence and clear action. Valid raw proof versus missing/challenged proof stays explicit. A report typo/mapping error can reuse valid evidence; an actual coverage gap needs fresh verification. Product/source/input changes need affected manual QA and all configured required checks. Second related failure: diagnose shared cause, prior-fix failure and prevention.
+Record layer, severity, impact, evidence and action in the table. Missing/challenged proof needs verification; valid proof keeps provenance. Repair the affected layer; ordinary repair runs all configured checks. Reuse needs exact unchanged valid proof.
 
 ```
 | # | Sev | Layer / theme | File:Line | Finding / impact | Evidence | Action / disposition | Confidence |

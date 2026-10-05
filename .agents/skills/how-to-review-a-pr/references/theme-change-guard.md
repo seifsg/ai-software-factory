@@ -48,7 +48,7 @@ just pull the rug out?**
 
 ## Method
 
-Map change -> affected consumers -> relevant checks -> evidence still valid. Recheck shared behavior, environment/config/dependency/scope changes and unresolved risks. Record-only corrections need unchanged exact inputs and raw proof; ordinary controller repair still runs every configured check.
+Map change -> affected consumers -> required evidence. Reuse needs exact unchanged valid proof; ordinary repair runs all configured checks.
 1. For each changed symbol/prop/param/key, list **everywhere it's used** and check each still holds.
 2. For each changed file, compare **before vs. after behavior** of every function/component.
 3. Prefer search/read over assumption — confirm rather than assuming no regression.
