@@ -16,6 +16,8 @@ Use the shared illustration, then add real source, owner/confirmation, execution
 
 ## Canonical record
 
+Each ticket unlocks a complete useful result. Name its first demonstration. Put required dependencies/shared rules in existing scope/constraint fields; keep overall criteria/integration owner in the epic. No new schema or microticket quota.
+
 | Part | Preserve |
 |---|---|
 | Identity | Tracker/provider, workspace/repository, native ID/URL, epic, title, accountable owner, lifecycle state and completion boundary. |

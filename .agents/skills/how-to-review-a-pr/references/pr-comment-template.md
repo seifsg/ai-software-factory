@@ -1,5 +1,7 @@
 # PR comment template — the handoff context dump
 
+Lead with working/missing behavior and next result. Keep exact context, original proof chronology and remaining overall acceptance. Deferrals: owner/ticket/acceptance condition. The findings table carries evidence/action.
+
 This is the **only author-visible artifact**, so it must be professional, specific, and self-
 contained. Its job is twofold: (1) tell the author what we changed and why, and (2) carry enough
 context that **a fresh agent or teammate with zero prior knowledge can take over the job**.
@@ -52,9 +54,9 @@ Ticketed PR: refresh the canonical ticket and meaningful activity. Use its lates
 <Actual review scope and reviewers: performance · security · user journey · change-guard.
 State focused Small Change scope when selected; never claim four sessions that did not run.>
 
-| # | Sev | Theme | File:Line | Finding | Status |
-|---|-----|-------|-----------|---------|--------|
-| <n> | <actual severity> | <theme> | <file:line> | <finding> | <verified status> |
+| # | Sev | Layer / theme | File:Line | Finding / impact | Evidence / action | Status |
+|---|-----|---------------|-----------|------------------|-------------------|--------|
+| <n> | <severity> | <layer/theme> | <file:line> | <finding/impact> | <raw proof/action> | <status> |
 
 <Include actual findings only; a clean review has no finding rows. Full detail lives in our local report.>
 

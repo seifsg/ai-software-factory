@@ -87,6 +87,9 @@ def validate_profile(profile, draft=False):
         raise EngineError("Profile interface must be web, cli, library, desktop, mobile, game, or service")
     if "reuse_unchanged_checks" in profile and type(profile["reuse_unchanged_checks"]) is not bool:
         raise EngineError("reuse_unchanged_checks must be an explicit boolean")
+    if "reuse_record_evidence" in profile:
+        if not version_two or type(profile["reuse_record_evidence"]) is not bool:
+            raise EngineError("reuse_record_evidence requires a version 2 profile and explicit boolean")
     checks = profile.get("checks")
     if not isinstance(checks, list) or (not checks and not version_two):
         raise EngineError("Configure at least one real check in the reviewed profile")

@@ -6,6 +6,8 @@ New implementation uses [Ticketing](../../ticketing/SKILL.md), including bounded
 
 ## Establish the contract
 
+Carry current outcome, remaining work and integration owner.
+
 Read request, prior answers, project rules and contract. Ask only missing essential preferences: completion boundary, delegated/reserved choices, checkpoints/update cadence and real time/cost constraints. Group questions without re-asking settled ones; continue independent discovery while waiting.
 
 Record:
@@ -24,12 +26,14 @@ Continue to the agreed checked, independently reviewed outcome or owner stop/che
 Continuous 0.1.0 controller:
 - Omit `--max-repairs` for new runs. Deprecated flags/integers are history; `repairs_used` counts corrections.
 - `status`: `repair_policy: continuous`, `max_repairs: null`, `historical_max_repairs`.
-- Existing runs: `repair --reason ...`, never state edits. Repair clears acceptance; finish correction, record final manual QA, final tests and fresh independent review under the saved profile version. Version 2 uses one final gate; legacy version 1 keeps its sequence.
+- Existing runs: `repair --reason ...`, never state edits. Ordinary repair clears acceptance; finish correction, record final manual QA, final tests and fresh independent review under the saved profile version. Version 2 uses one final gate; legacy version 1 keeps its sequence.
 - Follow [tests-last order](../../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests), including after repair: finish implementation, then final manual/user QA, then author/polish/run automated tests. No early manual reproduction, playtests, walkthroughs, suites or `feature-check`. Source inspection/existing-log reading remain allowed. Missing manual evidence blocks readiness; preserve pins and report limits.
 - Unchanged full-evidence reuse requires explicit reviewed-profile eligibility and integrity validation: read [usage](../../../../docs/pilot-usage.md#feature-feedback-and-version-checkpoints).
 - No fresh-run bypass of failed gates/cancellation.
 
 Watchdogs detect stuck operations, not session deadlines. Diagnose the operation. This contract supplies no scheduler, unlimited quota or host-execution guarantee.
+
+Version-2 records-only correction: reviewed opt-in, exact unchanged proof, fresh assessment. Never modify hashed originals.
 
 ## Keep ticket scope current
 

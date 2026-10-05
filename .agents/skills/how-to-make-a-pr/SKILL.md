@@ -11,6 +11,8 @@ Alle Tests erst nach fertiger Implementierung: zuerst manuelle/User-QA, danach a
 
 Ziel: kleine, nachvollziehbare Änderungen, sauber beschrieben, als **Draft-PR zur menschlichen Prüfung**.
 
+Nutzbare Iteration zeigen: funktioniert -> fehlt -> nächstes sichtbares Ergebnis. Exakten Demo-Kontext nennen. Gesamtabnahme offen halten; frische Bewertung bleibt nötig.
+
 > **Grundhaltung:** Ein PR ist ein **Vorschlag zur Review**, kein Selbstzweck. Als **Draft** öffnen; ein Mensch prüft, verfeinert und merged oder verwirft. Explizite Nutzerfreigaben gelten weiter. Aus diesem Skill entsteht keine Merge-, Release- oder Benachrichtigungsfreigabe.
 
 ## Wann diesen Skill nutzen

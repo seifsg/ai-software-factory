@@ -26,4 +26,6 @@ Where practical, give an independent evaluator the skill, realistic request and 
 | Bounded fix encounters unfamiliar platform/API behavior | Research consequential unknown with current primary evidence. Keep scope; no automatic market survey, full plan or broad suite. |
 | Factory guidance changes for another domain | Exercise relevant game, mobile, desktop, server or CLI case. Discover actual tooling/workload; never import source-project bindings. Preserve applicable UX/resource evidence and explicit unknowns. |
 
-Report structural validity, behavioral exercises, controller checks, project adoption, independent assessment and PR delivery separately. One pass cannot stand for another.
+Report structural validity, behavioral exercises, controller checks, project adoption, independent assessment and PR delivery separately.
+
+Working-iteration changes: select affected cases, not this whole menu. Tiny fix, headless tool, production increment, shared schema/state, first usable UI, repeated product/report repair, resume/integration. Records-only changes cover eligible reuse and rejection for changed inputs, failed/tampered/challenged proof, pending operations and unclassified findings. No product pilot implied. One pass cannot stand for another.

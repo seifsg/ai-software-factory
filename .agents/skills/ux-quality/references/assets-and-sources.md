@@ -6,6 +6,8 @@ Planning may research reference samples and rights. Testing our product's visual
 
 ## Choose and inspect
 
+Use coherent assets in the first usable iteration. Optional variants wait; required legibility, accessibility, rights and promised audio quality stay. Inspect finished output before automation.
+
 - **Icons:** reuse a coherent family/native set. Compare uncertain families: coverage, meaning at actual size, optical weight, filled/outline consistency, accessibility, themes and license. Label unfamiliar actions. No unrelated sets or random emoji controls.
 - **Graphics:** inspect actual size/density, crop, transparency, color and light/dark backgrounds. Check compression, legibility, artifacts and style. Meet measured load/decode/memory budgets; maximum resolution is not the goal.
 - **Audio:** audition in-product at representative volume/output, including repetition. Check clarity, noise, clipping/distortion, cut clicks, loop seams, onset latency, abrupt tails, loudness consistency, speech/cue masking and fatigue. Match voice/music/effects to intent. Codec/bitrate/loudness choices need target-platform evidence.

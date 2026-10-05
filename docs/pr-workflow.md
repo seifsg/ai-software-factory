@@ -39,6 +39,8 @@ Explain approved scope changes with actor/source, what, why and result; preserve
 
 ## Before/after proof
 
+Show the complete iteration in its exact demo context. Keep overall acceptance open and raw proof provenance explicit.
+
 Plan proof before edits; attach it to the PR before submission/update. Show the changed outcome, not a screenshot dump.
 
 - **Visible/UI change:** capture the affected screen before edits; capture its finished counterpart during final manual QA. Default: one focused before/after pair, same viewport, state and safe sample data. Add views only when needed to explain the change. New UI: show the prior entry/empty state and label what did not exist. Screenshots are required where applicable; video does not replace them.
@@ -61,7 +63,7 @@ Save bindings in the canonical ticket and local context cache when bound; legacy
 
 ## Keep current factory decisions explicit
 
-[Tests last](current-decisions.md#finish-work-use-it-then-automate-tests), including updates/reviewer fixes: finish implementation/improvements → final manual/user QA → write/change/polish/run final tests → prepare/create PR. No manual reproduction, playtests, walkthroughs or automated checks during development. Read-only review inspects evidence, runs no suites. Final-test production fixes return through completed implementation and manual QA. Missing manual coverage stays unverified.
+[Tests last](current-decisions.md#finish-work-use-it-then-automate-tests), including updates/reviewer fixes: finish the complete iteration's implementation/improvements → final manual/user QA → write/change/polish/run final tests → prepare/create PR. No manual reproduction, playtests, walkthroughs or automated checks during development. Read-only review inspects evidence, runs no suites. Final-test production fixes return through completed implementation and manual QA. Missing manual coverage stays unverified.
 
 - No artificial correction/retry/session ceilings. Diagnose useful corrections under [session authority](../.agents/skills/safe-engine/references/session-contract.md); honor stops, command timeouts and access limits.
 - Repairing reviewers need fresh independent assessment.

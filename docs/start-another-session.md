@@ -1,5 +1,7 @@
 # Start Safe Engine in another session
 
+Carry current iteration, remaining outcome and exact context. Preserve active pins and authority.
+
 ## Small direct changes
 
 This route is for requested implementation. Explicit analysis, planning and review stay in their phase.
@@ -52,7 +54,7 @@ three viable designs, justified choice, written schema and independent audit. Ke
 query costs, integrity and safe migrations explicit; no universal O(1) claim.
 Carry these methods, decisions, real artifacts, diagnostic progress and actual constraints
 into every resume or delegation.
-Finish the entire task and in-scope improvements; only then do final manual/user QA.
+Finish the complete outcome iteration and its required improvements; then do final manual/user QA. Keep the whole requested product visible. Optional polish/enhancement follows in later complete outcome tickets.
 After that write/polish/run automated tests at the final pre-PR stage. No early manual
 tests, playtests, walkthroughs or automated checks. Source inspection and existing-log
 reading remain allowed. Keep fixes surgical; no unrequested product pilots/simulations.

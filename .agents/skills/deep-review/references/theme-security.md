@@ -9,6 +9,8 @@ input into unauthorized access or actions?**
 
 ## What to hunt for
 
+Review the confirmed iteration. Required protections/budgets precede applicable use; optional enhancements tracked separately.
+
 Use [Application Security](../../safe-engine/references/app-security.md) for applicable controls and local-versus-production readiness. Preserve this review's evidence format; reuse the same reviewer. Cheap protections start early; automated checks still follow manual QA. Review-only grants no fixes or deployment.
 
 ### Secrets & credentials — highest priority
@@ -54,6 +56,8 @@ Use [Application Security](../../safe-engine/references/app-security.md) for app
 | # | Severity | File:Line | Finding | Impact | Recommendation | Confidence |
 |---|----------|-----------|---------|--------|----------------|------------|
 ```
+
+In each row: Finding starts with `product`, `evidence` or `report` and links raw proof. Recommendation gives the clear action. Missing or challenged proof stays explicit; a layer label cannot cure it.
 
 - **Severity:** CRITICAL (real secret exposed, sensitive data exposed through insecure storage/logs,
   account/data compromise) · HIGH (exploitable with conditions) · MEDIUM (hardening) · LOW (hygiene).

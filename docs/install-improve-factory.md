@@ -37,6 +37,8 @@ Then invoke `/improve-factory`. An agent can use an authenticated checkout and c
 
 ## What first use does
 
+Follow Working iterations where present in the selected canonical method. Older pins retain their recorded method; installation never proves adoption.
+
 ```text
 Installed portable skill
   -> existing app run? use its recorded bundle; do not upgrade

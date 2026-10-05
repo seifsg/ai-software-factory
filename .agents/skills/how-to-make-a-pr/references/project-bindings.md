@@ -1,5 +1,7 @@
 # Use the actual project's settings
 
+Bind the complete outcome ticket and integration owner. Record exact demo/evidence context and required validation scope.
+
 Read the procedure fully. Before acting, resolve project settings from user decisions, repository
 rules, remote metadata and authorized integrations. Record the source; ask only for consequential
 facts still missing. The [PR adapter](../../../../docs/pr-workflow.md) defines scope and review policy.
