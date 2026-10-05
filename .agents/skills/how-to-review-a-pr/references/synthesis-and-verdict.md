@@ -14,15 +14,17 @@ can't reach — they each saw one facet; you see the whole.
 
 ## 2. Master findings table (severity-ranked)
 
+Each finding needs layer (product/evidence/report), severity, impact, evidence and clear action. Valid raw proof versus missing/challenged proof stays explicit. A report typo/mapping error can reuse valid evidence; an actual coverage gap needs fresh verification. Product/source/input changes need affected manual QA and all configured required checks. Second related failure: diagnose shared cause, prior-fix failure and prevention.
+
 ```
-| # | Sev | Theme(s) | File:Line | Finding | Impact | Fix now? | Confidence |
-|---|-----|----------|-----------|---------|--------|----------|------------|
+| # | Sev | Layer / theme | File:Line | Finding / impact | Evidence | Action / disposition | Confidence |
+|---|-----|---------------|-----------|------------------|----------|----------------------|------------|
 ```
 
 Severity ladder: **CRITICAL > HIGH > MEDIUM > LOW.** Sort by it. Do **not** factor development
 time — rank purely by impact on the product and its users.
 
-Record disposition separately: blocking, before-exposure or accepted-deferral. HIGH/CRITICAL, unmet core criteria and required unknowns cannot be deferred. Lower-risk deferrals need owner, reason, scope, actual authority and revisit trigger. MEDIUM hardening need not block local MVP work; before-exposure obligations still block that boundary. A note alone grants no exception.
+Record disposition separately: blocking, before-exposure or accepted-deferral. HIGH/CRITICAL, unmet core criteria and required unknowns cannot be deferred. Lower-risk deferrals need owner, reason, scope, destination ticket, actual authority and acceptance/revisit condition. MEDIUM hardening need not block local MVP work; before-exposure obligations still block that boundary. A note alone grants no exception.
 
 ## 3. The 5th lens — what the themes structurally can't judge
 

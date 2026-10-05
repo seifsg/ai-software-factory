@@ -39,6 +39,8 @@ Three-option planning belongs to new substantive choices, not an extra PR-review
 
 ## Resume and delegation packet
 
+Carry current complete iteration, working/missing behavior, next observable result and remaining full-product criteria. Name integration owner, shared contracts and deferred owner/ticket/acceptance condition. Demo: exact build/environment/profile/data/scenario. For repeats: shared cause, prior-fix failure, prevention. Reused evidence retains original context/hashes/chronology; no copied pass. [Working iterations](delivery-readiness.md#working-iterations).
+
 Pass one record:
 - Verbatim request, acceptance and session authority/checkpoints/constraints.
 - Canonical ticket/provider/link, original/current confirmed scope, revision/digest, owner source, meaningful activity and last actual refresh. Pending changes, dependencies and completion boundary.

@@ -20,7 +20,9 @@ Keep Seif's originals and deliberate reminders. Adapt project assumptions to the
 
 | [ticketing](ticketing/SKILL.md) | Preserve confirmed outcomes, revisions, isolated sessions and latest-scope proof. | Factory-specific; selected MCP tracker, GitHub Issues default, full ticket cycles |
 
-Fourteen canonical skills: seven with originals, seven factory-specific. Two portable entries, [Safe Engine](../../skills/safe-engine/SKILL.md) and [Improve Factory](../../skills/improve-factory/SKILL.md), load the same complete bundle. Install using their [delivery](../../docs/install-safe-engine.md) or [maintenance](../../docs/install-improve-factory.md) guide.
+Fourteen canonical skills: seven with originals, seven factory-specific.
+
+[Working iterations](safe-engine/references/delivery-readiness.md#working-iterations) applies to all fourteen skills and both launchers. Complete useful outcome -> finish -> manual use -> relevant configured checks -> fresh assessment. Full-product acceptance stays open. No new skill, phase or microticket fleet. Two portable entries, [Safe Engine](../../skills/safe-engine/SKILL.md) and [Improve Factory](../../skills/improve-factory/SKILL.md), load the same complete bundle. Install using their [delivery](../../docs/install-safe-engine.md) or [maintenance](../../docs/install-improve-factory.md) guide.
 
 A direct analysis/planning/review request keeps its phase. New implementation follows Ticketing and the full cycle; legacy unticketed fixes retain Small Change. [Mandatory logging](safe-engine/references/app-diagnostics.md) and [efficiency](safe-engine/references/app-efficiency.md) belong to the delivery coordinator; restored originals do not import them automatically. Every app/game, including small fixes, needs a working shared logger and detailed safe journey evidence. Read existing logs during development; actual actions and emitted-trail checks wait until final manual QA.
 
@@ -38,4 +40,4 @@ The 38-skill source catalog is background, not 38 installed skills. [Pilot evide
 
 [Application Security](safe-engine/references/app-security.md) covers proportional early protections and production checks through the existing security code review.
 
-[Delivery Readiness](safe-engine/references/delivery-readiness.md) covers capabilities, manual/mixed evidence, intended game challenge, browser lifecycle, durable integrations and authorized release/operations. Conditional reference, no new skill or phase. Product pilots/simulations remain deferred until requested.
+[Delivery Readiness](safe-engine/references/delivery-readiness.md) owns baseline Working iterations. Other sections apply conditionally: capabilities, manual/mixed evidence, intended game challenge, browser lifecycle, durable integrations and authorized release/operations. No new skill or phase. Product pilots/simulations remain deferred until requested.

@@ -2,6 +2,8 @@
 
 Brief words. Full meaning. A human or fresh agent must understand without chat.
 
+Progress leads with working behavior, missing behavior and next observable result. Then blockers/proof. Demo names exact build, environment/profile, data/save and scenario. Keep iteration and full-product acceptance separate. Deferrals need owner, destination ticket and acceptance/revisit condition.
+
 **Title:** concrete change + outcome. Attribution/source link when required. Use the reader's language; explain necessary jargon.
 
 | Section | Put here |

@@ -1,6 +1,39 @@
 # Delivery readiness
 
-Load applicable rows once. Reuse the plan, evidence and reviewer; no new skill fleet. Local MVPs stay small. All manual/user testing, playtesting and automated checks wait until implementation/improvements finish. Source inspection, research and existing-log reading may happen earlier.
+## Working iterations
+
+Applies to tiny bugs, small tools and full products. Keep the whole requested outcome visible. Build the next complete useful result. Show it as soon as it works; then enhance it.
+
+1. Name the main promise and next useful result. Real entry -> action -> result. Required failure/recovery and usable presentation. Headless: real consumer/output. No canned proof.
+2. Order by user value. Dependencies: required now, useful later, unrelated. Explain what fails without each blocker. Challenge supporting work that delays the promise.
+3. Before dependent work: state owner/source of truth, interfaces, limits/budgets, compatibility, failure/recovery. Keep it brief. Current journey first; safe evolution for later work.
+4. Complete outcome ticket -> finish implementation/improvements -> manual use/demo -> relevant final tests -> independent assessment. Keep original 0-4/checkpoints. One bounded fix may be one iteration.
+5. Feedback and remaining requirements choose the next result. Optional polish/enhancement later. Deferrals: owner, destination ticket, acceptance/revisit condition. No vague later.
+6. One integration owner verifies the combined journey at the exact candidate. Accepted children alone cannot certify the product.
+
+Required integrity, safety, compatibility, accessibility, logging and agreed quality stay in scope. Reduce iteration size; keep the quality bar. Production protections belong before applicable exposure.
+
+A controller run accepts its entire confirmed ticket. Intermediate pieces have no separate acceptance. Split complete outcomes before initialization or use reviewed scope changes. No microticket quota, extra phase or silent criteria reduction.
+
+Keep existing behavior, full-product criteria and exposure/release obligations open. Accepted requirements stay until delivered or explicitly changed under owner authority.
+
+Repair: classify product, evidence or report defect. Second related failure? Stop symptom patches; trace the shared cause/consumers. Explain why the previous fix failed, change the plan/contract where needed and state what prevents recurrence. Keep diagnostic/failure history; no retry cap.
+
+Validation: map change -> affected behavior/consumers -> required evidence.
+
+Scope the reviewed profile to the complete ticket from the start; retain actual protected gates. Reuse raw evidence only while its inputs, context, scope and hashes remain valid. Changed shared behavior, config, environment, dependencies, scope or unresolved risk needs affected revalidation.
+
+The controller reruns all configured checks after ordinary repair. Its optional records-only route repairs private records/mappings with exact unchanged evidence only; any tracked documentation/source/test change invalidates reuse; no changed-code selective reuse is implemented. Missing or challenged behavioral proof needs fresh actions, not a new classification. Never copy an old pass as a new action, weaken a gate or skip required evidence.
+
+Progress: working now -> missing now -> next observable result. Then blockers and proof.
+
+Checks support the outcome; passing checks alone is insufficient.
+
+Demo names exact source/build, environment/device/profile, data/save identity and scenario/actions/result. Same URL proves no same context. State unavailable parts; measurements prove only the measured conditions.
+
+Factory audit: reuse timestamps/logs to record time to first useful demonstration, building/checking/repairing time and repair rounds. Separate active work from wall time/waits; label estimates and missing data. Compare similar scope, find the bottleneck, remove ceremony that adds no confidence. No new reporting chore or invented timings.
+
+Load applicable rows once. Reuse the plan, evidence and reviewer; no new skill fleet. Local MVPs stay small. All manual/user testing, playtesting and automated checks wait until the complete iteration's implementation/improvements finish. Source inspection, research and existing-log reading may happen earlier.
 
 ## Before dependent work
 

@@ -7,6 +7,8 @@ description: Deep code analysis and review that hunts for bugs, oversights, anti
 
 Ruthless code review. No mercy, no shortcuts. Find every damn problem.
 
+Review the complete iteration and affected consumers. Does its real journey work? Keep remaining whole-product requirements visible. Every finding: severity, impact, evidence, clear action and layer (product, evidence, report). Separate blockers from optional polish; deferrals need owner, destination ticket and acceptance/revisit condition. Repair the affected layer. Size/style prompts inspection; prove impact before blocking. [Working iterations](../safe-engine/references/delivery-readiness.md#working-iterations).
+
 ## Instructions
 
 1. **Identify the scope** - all files modified/created in the current task
@@ -93,9 +95,9 @@ Ruthless code review. No mercy, no shortcuts. Find every damn problem.
 [List files reviewed]
 
 ### Summary Table
-| # | Category | Severity | File:Line | Finding | Impact |
-|---|----------|----------|-----------|---------|--------|
-| 1 | Bug | CRITICAL/HIGH/MEDIUM/LOW | file.ts:42 | Description | What breaks |
+| # | Category / layer | Severity | File:Line | Finding / impact | Evidence | Action |
+|---|------------------|----------|-----------|------------------|----------|--------|
+| 1 | Bug / product | CRITICAL/HIGH/MEDIUM/LOW | file.ts:42 | Description / what breaks | Raw proof | Clear fix |
 
 ### Severity Guide
 - CRITICAL: Will cause failures in production

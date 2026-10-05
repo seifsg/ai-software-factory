@@ -31,6 +31,8 @@ The resolver selects the branch once into a complete detached `~/.safe-engine/bu
 
 ## Read the result and use the method
 
+Use the selected canonical method's Working iterations rule. Complete useful outcome first; required quality stays. Finish that iteration before manual QA, then final checks/review. Preserve full-product acceptance, original methods and exact active pins. No duplicate launcher workflow.
+
 Check JSON against intended identity; record `bundle_root`, `revision`, dirty state and entrypoint. Dirty active checkout: use canonical checkpointing to capture actual diff/untracked-input hashes; commit alone is insufficient.
 
 Current bundles check required guidance through `safe_engine/bundle-inputs.json`; old bundles retain legacy completeness inspection. Record launcher identity separately; declare it as a profile input when used in acceptance. Resolver checks identity/files, not behavior, compatibility or permission.

@@ -1,5 +1,7 @@
 # Use the actual project's settings
 
+Bind complete outcome ticket, remaining full-product requirements and integration owner. Scope checks to affected consumers; keep protected gates. Demo/evidence names build/environment/profile/data/scenario. Records-only reuse needs reviewed stable context and exact unchanged raw proof; source/input changes still use ordinary repair.
+
 Read the procedure fully. Before acting, resolve project settings from user decisions, repository
 rules, remote metadata and authorized integrations. Record the source; ask only for consequential
 facts still missing. The [PR adapter](../../../../docs/pr-workflow.md) defines scope and review policy.

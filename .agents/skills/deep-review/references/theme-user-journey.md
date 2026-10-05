@@ -50,6 +50,8 @@ Every UI/interaction change: read [UX Quality](../../ux-quality/SKILL.md); inspe
   recovery and observability. Missing UI is not a defect when no UI is required.
 
 ## Calibrate
+
+Assess the complete confirmed iteration and usable presentation. Keep remaining overall journeys visible; foundation/check passes alone cannot prove the promise. Read exact build/environment/profile/data/scenario. Combined acceptance needs its integration owner and actual combined-journey proof.
 - Judge against the **claim**, not what you personally would have built. A feature doing exactly
   what was asked is correct. Don't replace the author's goal.
 - Distinguish "missing because broken" from "missing because out of scope."
@@ -61,6 +63,8 @@ Every UI/interaction change: read [UX Quality](../../ux-quality/SKILL.md); inspe
 | # | Severity | File:Line | Finding | Impact | Recommendation | Confidence |
 |---|----------|-----------|---------|--------|----------------|------------|
 ```
+
+In each row: Finding starts with `product`, `evidence` or `report` and links raw proof. Recommendation gives the clear action. Missing or challenged proof stays explicit; a layer label cannot cure it.
 
 - **Severity:** CRITICAL (claim not delivered, existing journey broken, crash) · HIGH (happy-path
   only, real scenario fails) · MEDIUM (rough edge, poor feedback) · LOW (polish).

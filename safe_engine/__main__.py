@@ -44,6 +44,9 @@ def main():
     for name in ("repair", "cancel"):
         command = commands.add_parser(name)
         command.add_argument("--reason", required=True)
+        if name == "repair":
+            command.add_argument("--records-only", action="store_true",
+                                 help="Reassess records using eligible exact-input raw evidence; version 2 opt-in only")
     commands.add_parser("status", help="Read saved progress and evidence freshness")
     commands.add_parser("handoff", help="Validate current acceptance and write a local report")
     capture = commands.add_parser("ticket-capture", help="Import a complete actual MCP read; performs no remote action")
@@ -114,8 +117,10 @@ def main():
                     result = workflow.seal(read_json(args.task), read_json(args.profile), read_json(args.review))
                 elif args.command == "amend":
                     result = workflow.amend(read_json(args.task), read_json(args.profile), read_json(args.review), args.reason)
-                elif args.command in ("repair", "cancel"):
-                    result = getattr(workflow, args.command)(args.reason)
+                elif args.command == "repair":
+                    result = workflow.repair(args.reason, records_only=args.records_only)
+                elif args.command == "cancel":
+                    result = workflow.cancel(args.reason)
                 else:
                     result = getattr(workflow, args.command)()
         print(json.dumps(result, indent=2, ensure_ascii=False))

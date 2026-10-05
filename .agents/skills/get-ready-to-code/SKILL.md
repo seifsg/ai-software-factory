@@ -7,6 +7,15 @@ Prepare to start building based on our plan and analysis.
 Important: We do not care about effort time or code that would take to build. We only care about quality. Do not factor code effort or time to develop at all within the plan. AI will develop and write it.
 The next steps are the following:
 
+Build in complete working iterations. Tiny bug or full product, same logic.
+
+- First: smallest real user journey we can see and use. Order by user value; explain required blockers.
+- Before dependent work: shared state owner, limits, compatibility and failure behavior.
+- Required quality stays. Optional polish/enhancements later: owner, ticket, acceptance condition.
+- Complete outcome ticket -> finish iteration -> manual QA -> relevant final tests/review. Full requested outcome stays open until delivered.
+
+[Working iterations](../safe-engine/references/delivery-readiness.md#working-iterations).
+
 Prepare a :
 - summary of files about to change then stop.
 - next step, criticize our suggested summary of files, is it optimal, is that the best path for our plan
@@ -32,6 +41,8 @@ The plan execution will be based on the following logic:
 - Check and double check. Extremely and highly important: NO CIRCULAR DEPs!!!
 - Does this satisfy our user journey? EXTRMELEY IMPORTANT!!
 4- if we detect issues from step 3, start our processes over again from step 1 and follow steps again.
+
+Second related failure? Find the shared cause. Why did the previous fix fail? Fix the cause and affected consumers. State what prevents recurrence. Preserve failures; no endless symptom patches or retry cap.
 
 Important: We do not care about effort time or code that would take to build. We only care about quality. Do not factor code effort or time to develop at all within the plan. AI will develop and write it.
 

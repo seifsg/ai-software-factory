@@ -7,6 +7,8 @@ description: Post-change verification guard that checks if recent code changes b
 
 Post-implementation verification. Run this after every code change to catch damage before it ships.
 
+Per edit: inspect source/diff. Actual actions and automated checks wait until the complete iteration is finished. Map change -> affected consumers -> checks -> valid prior evidence. Broaden for shared behavior, changed inputs or unresolved risk. Keep required gates. Ordinary controller repair runs all configured checks; records-only reuse needs exact unchanged inputs/provenance. [Working iterations](../safe-engine/references/delivery-readiness.md#working-iterations).
+
 ## Instructions
 
 1. **Identify all files modified** in the current session or diff
@@ -59,6 +61,8 @@ Change Guard Report:
 - Verify error messages are accurate and helpful
 
 ## Output Format
+
+In each issue row, Description names layer (`product`, `evidence`, `report`), impact, raw proof and clear action. Link details if needed. Keep missing/challenged proof explicit.
 
 ```markdown
 ## Change Guard Report

@@ -16,6 +16,8 @@ Use the shared illustration, then add real source, owner/confirmation, execution
 
 ## Canonical record
 
+Each ticket unlocks one complete useful result. Name the first demonstration. Order by value; dependencies say required now/useful later/unrelated and why. Shared ownership/limits/compatibility/failure behavior belong in scope/constraints. Keep overall criteria and integration owner in the epic. Deferrals: owner, destination ticket, acceptance/revisit condition. Reuse existing fields; no new schema or microtickets.
+
 | Part | Preserve |
 |---|---|
 | Identity | Tracker/provider, workspace/repository, native ID/URL, epic, title, accountable owner, lifecycle state and completion boundary. |

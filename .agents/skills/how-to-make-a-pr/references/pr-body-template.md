@@ -1,5 +1,7 @@
 # PR body template
 
+Show delivered iteration, remaining product behavior and next observable result. Demo binds build/environment/profile/data/scenario. Findings/deferrals keep evidence, action, owner, destination and acceptance/revisit condition. Reused raw proof keeps provenance; no new-pass claim.
+
 Use the shared [ticket/PR layout](../../safe-engine/references/work-writing.md) and the original's **PR-Beschreibungsstil — visuell zuerst** section in [How to make a PR](../SKILL.md).
 
 Read the target repository's template first. Separate 🎯 Purpose & goal, 📍 Context, 🔧 What & why, proof and progress. Concrete title; brief bullets; comparison tables/flows; meaningful emojis. Preserve attribution, actual behavior, decisions/reasons, files/guards/observability, checks, gaps, history and handoff. Use actual [project bindings](project-bindings.md). No copied claims or media quota.

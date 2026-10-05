@@ -21,6 +21,8 @@ The remote ticket is canonical. Local snapshots preserve context and exact revis
 
 ## Capture the work early
 
+Order complete outcome tickets by user value. Each unlocks a visible/observable result. Dependencies: required now, useful later, unrelated. Explain required blockers; challenge them. Keep overall criteria and one integration owner. Deferrals need owner, destination ticket and acceptance/revisit condition. [Working iterations](../safe-engine/references/delivery-readiness.md#working-iterations).
+
 1. Preserve the original owner input before compressing it into a plan. Include why, examples, supplied evidence, source/date and decision authority. Retain later corrections and superseded input.
 2. State actual before behavior and consumers from source and existing evidence. Label facts, inference and unknowns. No early reproduction or walkthrough. PR baseline capture follows the existing [narrow exception](../../../docs/pr-workflow.md#beforeafter-proof).
 3. Derive the expected after, acceptance criteria, applicable success/failure/recovery journeys, scope, exclusions, constraints and dependencies from the request/source. Record purpose, goal, approach, relevant code/consumers, required/optional wants and existing progress/PRs. Use the contract's visual recipe. For a new capability, say what does not exist yet; nonvisual work needs an observable consumer/result.

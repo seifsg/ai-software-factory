@@ -12,6 +12,7 @@ def method_paths(bundle, profile, ticket=False):
     core = [skills / name / "SKILL.md" for name in
             ("analyze-start", "get-ready-to-code", "deep-review", "change-guard", "compliance-check")]
     core += [bundle / "docs/current-decisions.md"]
+    core += [skills / "safe-engine/references/delivery-readiness.md"]
     if ticket:
         core += [skills / "ticketing/SKILL.md", skills / "ticketing/references/ticket-contract.md"]
     core += [skills / "deep-review/references" / name for name in
@@ -25,8 +26,6 @@ def method_paths(bundle, profile, ticket=False):
               "persistence": "database-schema/SKILL.md", "research": "research-market/SKILL.md",
               "seo": "ux-quality/references/web-seo.md"}
     core += [skills / path for scope, path in routes.items() if scope in scopes]
-    if scopes & {"integrations", "release"} or profile["interface"] in ("web", "game"):
-        core.append(skills / "safe-engine/references/delivery-readiness.md")
     return core
 
 
@@ -45,8 +44,10 @@ evidence; assess changes/history/dependencies/isolation. A local imported captur
 MCP execution or a human. Local handoff cannot mark cloud review or integration complete.
 Assess separate security, performance, journey, Change Guard and Compliance outcomes. Retain original
 methods/checkpoints and deliberate reminders, but do not repeat unchanged reading or invent scope.
-Confirm implementation and improvements finished before ALL manual/user/automated testing, including
-repairs. Verify manual actions, devices, outcomes and evidence hashes. Test-only exclusions must not
+Confirm the entire confirmed outcome iteration finished before ALL manual/user/automated testing,
+including repairs. Intermediate pieces inside a ticket cannot certify its criteria or the whole product.
+Judge early useful outcomes, proven dependencies and required quality. Verify manual actions, devices,
+outcomes and evidence hashes. Test-only exclusions must not
 hide production/configuration changes. A receipt or green command alone is not proof of behavior.
 Verify independent sealing/amendment reviews bind exact contracts and preserve original requirements,
 history and authority. Check selected review scopes against actual code; a missing flag cannot waive
@@ -56,8 +57,15 @@ Manual, automated and mixed criteria need their actual evidence, never dummy exe
 Assess every criterion exactly once, PASS/FAIL/UNKNOWN. Core failures/unknowns and missing required
 manual evidence block PASS. Judge logging, safe detail, lifecycle, resource costs and applicable
 research/schema/UX/security evidence. No unsupported speed, safety, sound or live-release claims.
+Findings name layer (product/evidence/report), impact in description, evidence and clear action.
+evidence_status is valid only when existing raw proof truly covers the behavior; missing/challenged
+means fresh verification is needed. Report/mapping defects may reference already valid raw proof.
+Never reclassify a product defect or disputed actual-use evidence to enable records-only repair.
+If record_correction exists, inspect original reports/raw proof and provenance; assess afresh, never
+copy its former verdict. Second related failure needs shared-cause/prior-fix diagnosis and prevention.
 Findings retain severity separately from disposition. CRITICAL/HIGH block. MEDIUM/LOW may use an
-accepted-deferral only with real owner, reason, scope, revisit trigger and authority. Before-exposure
+accepted-deferral only with real owner, reason, scope, destination ticket, acceptance/revisit condition
+and authority. Before-exposure
 findings block public/production or release scope; otherwise retain their follow-up record. Mandatory
 rules require actual exception authority. Clean reviews need no findings. Do not lower severity to pass.
 Exposure: {state['profile'].get('exposure', 'local')}; scopes: {state['profile'].get('review_scopes', [])}.

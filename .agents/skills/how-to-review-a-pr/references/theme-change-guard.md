@@ -47,6 +47,8 @@ just pull the rug out?**
   artifacts or platform bindings out of sync.
 
 ## Method
+
+Map change -> affected consumers -> relevant checks -> evidence still valid. Recheck shared behavior, environment/config/dependency/scope changes and unresolved risks. Record-only corrections need unchanged exact inputs and raw proof; ordinary controller repair still runs every configured check.
 1. For each changed symbol/prop/param/key, list **everywhere it's used** and check each still holds.
 2. For each changed file, compare **before vs. after behavior** of every function/component.
 3. Prefer search/read over assumption — confirm rather than assuming no regression.
@@ -62,6 +64,8 @@ just pull the rug out?**
 | # | Severity | File:Line | Finding | Impact | Recommendation | Confidence |
 |---|----------|-----------|---------|--------|----------------|------------|
 ```
+
+In each row: Finding starts with `product`, `evidence` or `report` and links raw proof. Recommendation gives the clear action. Missing or challenged proof stays explicit; a layer label cannot cure it.
 
 - **Severity:** CRITICAL (definite existing-behavior break, incompatible-runtime crash, release hazard)
   · HIGH (likely break, unverified caller) · MEDIUM (risky, needs guard/test) · LOW (minor).

@@ -7,9 +7,11 @@ description: "Build/resume games, apps, services and tools with Seif's methods, 
 
 Build the requested outcome. Read the complete methods. Keep decisions, work and evidence resumable.
 
+Use [Working iterations](references/delivery-readiness.md#working-iterations) for every scope. Deliver the next complete visible/observable result early. Required quality stays; optional enhancement/polish follows. Keep full-product acceptance and combined journey open.
+
 For human-facing prose, apply [Clear Writing](references/clear-writing.md): preserve details/voice, ground claims, cut filler. One finishing pass within existing review.
 
-Follow [tests-last order](../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests): finish implementation/improvements → final manual/user QA → author/polish/run automated tests → final review/PR. No manual tests, playtests, instruction walkthroughs, test writing/edits or automated checks during development. Source inspection/research/existing-log reading remain allowed. Carry this into delegates, repairs and resumed runs.
+Follow [tests-last order](../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests): finish the complete iteration's implementation/improvements → final manual/user QA → author/polish/run automated tests → final review/PR. No manual tests, playtests, instruction walkthroughs, test writing/edits or automated checks during development. Source inspection/research/existing-log reading remain allowed. Carry this into delegates, repairs and resumed runs.
 
 ## Choose the scope
 

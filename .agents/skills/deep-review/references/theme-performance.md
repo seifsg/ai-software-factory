@@ -9,6 +9,8 @@ slow queries, memory growth or wasted CPU, GPU, network, storage and battery?**
 
 ## What to hunt for
 
+Review the complete confirmed iteration. Findings name product/evidence/report layer, impact, raw evidence and action; use linked details when the table is too wide. Required protections/resource budgets stay before applicable use. Optional enhancements need tracked deferral, not a false blocker. [Working iterations](../../safe-engine/references/delivery-readiness.md#working-iterations).
+
 ### Rendering & updates — where present
 - **Update storms** — state changes redraw large trees/scenes or repeatedly schedule work.
   Unstable object/function identities defeat reuse; broad subscriptions invalidate unrelated consumers.
@@ -55,6 +57,8 @@ A findings table, most severe first, then one verdict line.
 | # | Severity | File:Line | Finding | Impact | Recommendation | Confidence |
 |---|----------|-----------|---------|--------|----------------|------------|
 ```
+
+In each row: Finding starts with `product`, `evidence` or `report` and links raw proof. Recommendation gives the clear action. Missing or challenged proof stays explicit; a layer label cannot cure it.
 
 - **Severity:** CRITICAL (freeze, OOM or unusable latency at real use) · HIGH (clear regression at scale)
   · MEDIUM (wasteful, fix soon) · LOW (minor).

@@ -7,6 +7,8 @@ description: "Plan and audit every UI change, including small fixes: interaction
 
 Make the user's job easy. Clean. Familiar. Fast. No confusing steps or unfinished graphics/sounds sold as finished work.
 
+First complete iteration needs usable presentation: clear action/result, truthful feedback, accessibility and recovery. Optional aesthetic refinement/enhancement follows. Keep agreed quality and scope; label unfinished work. [Working iterations](../safe-engine/references/delivery-readiness.md#working-iterations).
+
 Every UI/interaction change: games, web/mobile/desktop apps and human-facing tools. Cover the affected journey and shared consumers. Tiny fixes stay tiny; headless internals need no invented UI/audio. Analysis/design/review keeps its phase.
 
 ## 1. Understand the job

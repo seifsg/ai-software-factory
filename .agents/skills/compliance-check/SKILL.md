@@ -11,6 +11,8 @@ description: Verify implementation against intended requirements, accepted plan,
 
 Did we build the right thing? Does it follow our rules? Prove it.
 
+Compare the confirmed iteration and real journey with actual evidence. Keep full-product criteria separate: delivered, incomplete or explicitly deferred with owner, destination ticket and acceptance/revisit condition. An iteration cannot certify the whole product or redefine requirements. Required unknowns block dependent acceptance. [Working iterations](../safe-engine/references/delivery-readiness.md#working-iterations).
+
 ## Instructions
 
 1. **Identify the scope** - all files modified/created in the current task
@@ -92,6 +94,8 @@ If the implementation fundamentally misses the requirements, say so immediately.
 - Clean code that solves the wrong problem is still a `FAIL`
 
 ## Output Format
+
+In each issue row, Finding names layer (`product`, `evidence`, `report`), impact, raw proof and clear action. Link details if needed. Keep missing/challenged proof explicit.
 
 ```markdown
 ## Compliance Check Report

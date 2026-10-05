@@ -4,6 +4,8 @@ Use for public landing, marketing and content pages meant for search, including 
 
 ## Set the boundary
 
+Complete useful public-page iteration first. Required crawl/privacy/content behavior and launch obligations stay in scope; optional SEO expansion follows. Final manual checks then automation per completed outcome. Deployment/indexing evidence remains separate.
+
 - Record production domain, audience/search intent, languages, public routes, private routes, staging and existing SEO setup. Reuse CMS/framework features. No duplicate sitemap/metadata generators.
 - New site: cover all public templates and key pages. Existing fix: affected pages, shared templates and consumers. Research material unknowns in current primary guidance; extend this checklist for actual gaps, not speculative work.
 - Preserve login/access controls and deliberate exclusions. Public search scope never authorizes indexing accounts, admin, personal data or previews. Existing authority covers approved actions; DNS, ownership verification, submissions and deployment need actual project access/authority.

@@ -6,6 +6,8 @@ New products: significant workloads. Existing changes: affected costs/consumers 
 
 ## Analyze cost; choose the smallest sound design
 
+Set applicable shared budgets, ownership and failure behavior before consumers harden. Support the current useful journey; optional optimization follows evidence. Operation timing proves that operation under measured conditions; it proves no smooth frames, phone performance, sound quality or whole-product speed.
+
 Trace `trigger → work → result → release`: size, frequency, concurrency, hardware/runtime, resource owner. Include startup, active use and idle/background work. Source can prove repetition; speed/memory claims need runtime evidence.
 
 In original/revised plans, record `workload → target → cost → decision/reason → bound/lifetime → evidence/unknown`.

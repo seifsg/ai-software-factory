@@ -45,6 +45,8 @@ Refresh at intake/resume, before build (`record plan`), after finished implement
 
 ## Runs and changes
 
+Use complete outcome tickets as iterations. One run accepts the whole confirmed ticket. Planned intermediate pieces have no separate controller gate. Order by user value and proven required dependencies; keep overall epic criteria/combined acceptance. Scope each validation profile to the complete outcome and consumers from the start. Do not narrow a failed gate or criteria after the fact.
+
 Version-2 task request/criterion IDs/text must match the confirmed ticket. Binding includes identity, revision, scope digest, confirmation and full scope in acceptance and manual fingerprints. State: `.factory/runs/<key>/state.json`. Outputs: `.factory/runs/<key>/outputs/`; `{run}` resolves to that namespace. Record the real dedicated builder session with `--session`.
 
 Changed scope: refresh, preserve input/activity, then use `contract-proposal`, independent exact old/new review and `amend --task ... --profile ... --review ... --reason ...`. Rebinding needs explicit `acceptance_change_authority`. Keep the original request, old contracts and failures. Changed scope restarts affected analysis/planning and invalidates manual/tests/review. No state patch, acceptance shrink or cancelled-run revival. Legacy runs retain `.factory/state.json` and pins; start ticket runs in a fresh worktree, never mix both in one checkout.

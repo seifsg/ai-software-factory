@@ -113,7 +113,7 @@ review --timeout 600
 handoff
 ```
 
-`record implementation` declares all implementation/improvements finished. Only then perform actual manual/user QA or instruction walkthroughs; record its candidate-bound receipt. Only after that receipt author/polish tests in declared test-only paths. `seal` freezes independently reviewed final acceptance; record the batch and run one complete final gate. Local read-only review follows. `amend --task ... --profile ... --review ... --reason ...` preserves history and invalidates acceptance for legitimate reviewed corrections.
+`record implementation` declares the complete confirmed outcome iteration's implementation/improvements finished. Only then perform actual manual/user QA or instruction walkthroughs; record its candidate-bound receipt. Only after that receipt author/polish tests in declared test-only paths. `seal` freezes independently reviewed final acceptance; record the batch and run one complete final gate. Local read-only review follows. `amend --task ... --profile ... --review ... --reason ...` preserves history and invalidates acceptance for legitimate reviewed corrections.
 
 ### Final evidence records
 
@@ -138,9 +138,19 @@ Prefix every line with `python -m safe_engine --project <project>`, plus `--tick
 
 After interruption, use `status`. An incomplete check or review is not acceptance; rerun it on current inputs. A changed candidate after its batch record needs a repair cycle. File locks release when the process exits. To stop an active check or review, interrupt its foreground controller; it terminates its owned process tree. A concurrent cancel command does not bypass the active operation's lock.
 
+## Records-only corrections
+
+Optional reviewed v2 profile field: `reuse_record_evidence: true` (default absent/false). Choose only when declared runtime/context inputs are stable and complete enough for exact evidence reuse. Volatile external state, missing context or unresolved risk requires fresh ordinary repair.
+
+`repair --records-only --reason "record defect, affected record and why raw proof remains valid"` keeps original manual/check evidence. It requires sealed v2 opt-in, fresh unchanged ticket scope, intact exact-input checks/manual/artifacts, reconciled operations and an intact current review. All criteria must PASS, method followed, and every finding must be evidence/report with `evidence_status: valid`, evidence and action. Missing legacy classifications, product findings, missing/challenged proof or FAIL/UNKNOWN criteria are ineligible.
+
+Use before changing records. Preserve originals; correct supporting records in ignored storage. The command clears local review and ticket proof, records original review/manual provenance and stays in review. Regenerate criterion proof, then obtain a fresh independent assessment. No command or manual action is relabeled as freshly run. Any tracked documentation/source/test change, profile/config/environment/contract, dependency or operative bundle change require ordinary repair and all configured checks. Per-check reuse across changed inputs is not implemented. Old v1/v2 profiles and active pins keep their behavior.
+
+New review findings include `layer: product|evidence|report`, `evidence_status: valid|missing|challenged`, raw `evidence` and clear `action`. Severity/disposition stays separate. Old reports remain readable; absent fields cannot grant reuse. Existing raw proof that the reviewer challenges needs fresh verification, not a label change.
+
 ## Feature feedback and version checkpoints
 
-Current policy is [finish work → final manual/user QA → final test authoring/execution](current-decisions.md#finish-work-use-it-then-automate-tests), across the whole requested task. No early playtests, manual reproduction or instruction walkthroughs. Source inspection/research/existing-log reading remain allowed. Version 2 records implementation completion and structured manual receipts before final test authoring; production changes invalidate manual evidence. Declared test-only changes do not. Receipts bind criterion/candidate/environment/actions/results/evidence; reviewers judge substance. The controller cannot prove the person acted or intercept arbitrary commands.
+Current policy is [finish work → final manual/user QA → final test authoring/execution](current-decisions.md#finish-work-use-it-then-automate-tests), per complete confirmed outcome ticket. Intermediate pieces have no separate controller acceptance; full-product criteria remain open. No early playtests, manual reproduction or instruction walkthroughs. Source inspection/research/existing-log reading remain allowed. Version 2 records implementation completion and structured manual receipts before final test authoring; production changes invalidate manual evidence. Declared test-only changes do not. Receipts bind criterion/candidate/environment/actions/results/evidence; reviewers judge substance. The controller cannot prove the person acted or intercept arbitrary commands.
 
 The legacy `feature-check --checks <IDs> --file <feature.md>` command still executes partial checks in `build`. Do not use it under current policy. Its availability is not permission; partial results never certify a version. Existing historical feedback remains evidence of its recorded candidate only.
 

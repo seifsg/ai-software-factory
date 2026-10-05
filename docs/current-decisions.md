@@ -50,13 +50,17 @@ Every UI/interaction change applies [UX Quality](../.agents/skills/ux-quality/SK
 
 ### Finish work, use it, then automate tests
 
+Seif's 5 October clarification: this order applies per **complete useful outcome iteration**, across tiny bugs, tools and production products. Use complete outcome tickets; intermediate pieces inside a ticket have no separate controller acceptance. Show useful behavior early; optional polish/enhancement follows. Keep required quality, existing behavior, overall requirements and combined final acceptance. No silent scope reduction. [Working iterations](../.agents/skills/safe-engine/references/delivery-readiness.md#working-iterations) owns ordering, dependencies, shared rules, repairs, demos and measurements.
+
+The configured validation profile covers the complete ticket and affected consumers. Ordinary repair repeats all required configured checks. Version 2 may opt into exact-input `repair --records-only` for record corrections with already valid raw proof; missing/challenged evidence, product failures or changed inputs require ordinary repair. Fresh criterion proof/review stays required. No changed-code selective reuse is implemented.
+
 PR evidence: [before/after proof](pr-workflow.md#beforeafter-proof) is required where applicable. One focused UI screenshot pair by default; equivalent output for nonvisual changes. Seif permits a capture-only baseline before edits with minimum safe navigation, no feature exercise or submission. This narrow exception does not permit early testing. Finished screenshots and optional useful journey videos belong to final manual QA; publish accessible, sanitized evidence with the PR.
 
 Surgical changes take precedence. Fix the cause and affected consumers; defer unrelated refactors and optimization. Mandatory logging below is part of the task, including small fixes; implement it with the smallest adequate change.
 
 For features, bug fixes and factory maintenance:
 
-1. Finish implementation and worthwhile in-scope improvements. Inspect source/diffs; research and read existing tests/logs if useful. No manual/user testing, playtesting, instruction walkthroughs, test authoring/edits or automated checks during development. No TDD, watchers, baseline suites or mid-build `feature-check`.
+1. Finish the complete iteration's implementation and worthwhile in-scope improvements. Inspect source/diffs; research and read existing tests/logs if useful. No manual/user testing, playtesting, instruction walkthroughs, test authoring/edits or automated checks during development. No TDD, watchers, baseline suites or mid-build `feature-check`.
 2. Manually exercise the finished behavior through real actions: browser/native/game controls, CLI/API use or a library's actual consumer. Check the affected journey and failure/recovery paths. For instructions, use a realistic agent walkthrough. Fix observed defects, finish the work, then exercise it again. Record actions, candidate, outcome and limits; source inspection or an automated suite cannot replace this.
 3. Only after implementation is done and manual QA passes, enter the final pre-PR test phase: add/adapt useful automated tests, polish them and run the relevant checks. Existing local-only completion boundaries use the same final phase. Test failures need diagnosis: fix production defects surgically, manually recheck changed behavior, then finish and rerun the affected tests. Correct faulty tests; never weaken valid expectations to get green.
 4. Review the final candidate and prepare/create the authorized PR. Apply the same order to reviewer fixes and PR updates.

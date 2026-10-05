@@ -11,6 +11,8 @@ New software—games, web/mobile/desktop apps, services, tools, libraries: resea
 
 ## Frame the questions
 
+Prioritize unknowns that can change the next complete useful iteration or a shared rule it depends on. Put research for later optional enhancements later. Required whole-product constraints stay visible. Stop when the decision has enough evidence. Experiments need a bounded question/stopping condition and permitted final-stage timing. [Working iterations](../safe-engine/references/delivery-readiness.md#working-iterations).
+
 Read request, constraints, approved/rejected choices and existing evidence. Identify users, core job/play loop, platforms, hardware, scale, interfaces, success criteria. Track unknowns: `question → consequence → source/experiment → result → next decision`.
 
 Delivery: preserve original five planning outputs. If missing, use [Get Ready to Code](../get-ready-to-code/SKILL.md); honor checkpoint. Standalone research: findings only; no coding plan, controller or initialization.

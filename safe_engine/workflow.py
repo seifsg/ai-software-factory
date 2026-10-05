@@ -345,6 +345,7 @@ class Workflow:
         restart = changed_scope or state["phase"] in ("analyze", "plan")
         state["phase"] = "analyze" if restart else "build"
         state["manual"] = None
+        state.pop("record_correction", None)
         state.pop("manual_candidate", None)
         for key in ("implementation", "manual", "batch", "improvement"):
             state["artifacts"].pop(key, None)
@@ -525,9 +526,11 @@ class Workflow:
         return {**self.status(state), "feature_checks_passed": evidence["passed"],
                 "missing_required_checks": evidence["missing_required_checks"], "results": results}
 
-    def repair(self, reason):
+    def repair(self, reason, records_only=False):
         state = self.load()
         self.require_ticket(state)
+        if records_only:
+            return self.repair_records(state, reason)
         if state["phase"] == "build":
             if not state.get("feature_checks") or state["feature_checks"]["passed"]:
                 raise EngineError("Build repair requires actual failed feature feedback")
@@ -543,6 +546,7 @@ class Workflow:
         state["pending_operation"] = None
         state["artifacts"].pop("batch", None)
         state["artifacts"].pop("improvement", None)
+        state.pop("record_correction", None)
         if state.get("delivery_version") == 2:
             state["manual"] = None
             state.pop("manual_candidate", None)
@@ -551,10 +555,53 @@ class Workflow:
         save(self.directory, state, f"Repair batch: {reason}")
         return self.status(state)
 
+    def repair_records(self, state, reason):
+        """Keep original exact-input proof; discard its assessment, never mint a new pass."""
+        self.require_phase(state, "review", "ready")
+        if (state.get("delivery_version") != 2 or not state.get("contract_sealed")
+                or state["profile"].get("reuse_record_evidence") is not True):
+            raise EngineError("Records-only repair requires sealed version 2 reviewed-profile opt-in")
+        if not reason.strip() or state.get("pending_operation"):
+            raise EngineError("Records-only repair needs a reason and reconciled operations")
+        self.require_ticket(state, fresh=True)
+        self.require_checks(state)
+        review = state.get("review")
+        current = self.current(state)
+        if (not review or review.get("fingerprint") != current
+                or file_hash(Path(review["report"])) != review["sha256"]):
+            raise EngineError("Records-only repair needs intact review evidence for exact current inputs")
+        report = read_json(review["report"])
+        self.validate_review(report, state)
+        if (report["method_followed"] is not True
+                or (report["verdict"] == "FAIL" and not report["findings"])
+                or any(criterion["status"] != "PASS" for criterion in report["criteria"])
+                or any(finding.get("layer", "product") not in ("evidence", "report")
+                       or finding.get("evidence_status") != "valid"
+                       or not all(isinstance(finding.get(key), str) and finding[key].strip()
+                                  for key in ("evidence", "action"))
+                       for finding in report["findings"])):
+            raise EngineError("Product findings, challenged proof or failed/unknown criteria need ordinary repair")
+        # History retains the old report; these references expose reuse provenance to the next reviewer.
+        state["record_correction"] = {"reason": reason, "fingerprint": current,
+                                      "prior_review": review, "origin_sequence": state["sequence"],
+                                      "manual_artifact": state["artifacts"].get("manual")}
+        state["repairs_used"] += 1
+        state["phase"] = "review"
+        state["review"] = None
+        state["artifacts"].pop("ticket-proof", None)
+        save(self.directory, state, f"Records-only correction; original raw evidence retained: {reason}")
+        return self.status(state)
+
     def require_checks(self, state):
         self.require_ticket(state)
         self.integrity(state)
         self.require_manual(state)
+        correction = state.get("record_correction")
+        if correction:
+            prior = correction["prior_review"]
+            if (correction["fingerprint"] != self.current(state)
+                    or file_hash(Path(prior["report"])) != prior["sha256"]):
+                raise EngineError("Records-only provenance changed; ordinary repair is required")
         evidence = state.get("checks")
         if not evidence or not evidence["passed"] or evidence["fingerprint"] != self.current(state):
             raise EngineError("Passing checks for the current inputs are required; earlier evidence is missing or stale")
@@ -711,6 +758,13 @@ class Workflow:
             if not all(isinstance(finding.get(key), str) and finding[key].strip() for key in ("location", "description")):
                 raise EngineError("A finding needs its location and explanation")
             if state.get("delivery_version") == 2:
+                for field in ("layer", "evidence_status"):
+                    allowed = ("product", "evidence", "report") if field == "layer" else ("valid", "missing", "challenged")
+                    if field in finding and finding[field] not in allowed:
+                        raise EngineError(f"Malformed finding {field}")
+                for field in ("evidence", "action"):
+                    if field in finding and (not isinstance(finding[field], str) or not finding[field].strip()):
+                        raise EngineError(f"Finding needs nonempty {field}")
                 if finding.get("disposition") not in ("blocking", "before-exposure", "accepted-deferral"):
                     raise EngineError("Finding needs an explicit disposition")
                 if finding["disposition"] != "blocking":
@@ -719,6 +773,8 @@ class Workflow:
                             or not all(isinstance(exception.get(key), str) and exception[key].strip()
                                        for key in ("owner", "reason", "scope", "revisit", "authority"))):
                         raise EngineError("Nonblocking findings need bounded actual authority; high severity cannot be deferred")
+                    if "destination" in exception and (not isinstance(exception["destination"], str) or not exception["destination"].strip()):
+                        raise EngineError("Deferral needs a destination ticket")
 
     def handoff(self):
         state = self.load()
