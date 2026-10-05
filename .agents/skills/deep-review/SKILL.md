@@ -34,6 +34,7 @@ Review the complete iteration and affected consumers. Does the journey work? Eve
 - Incomplete error handling (catch blocks that swallow errors)
 - Missing logging for debugging critical paths
 - Forgotten TODO/FIXME items that should be addressed now
+- Valid actions must leave recoverable state. Check creation, update, save and load limits agree.
 
 #### 3. Anti-Patterns
 - God classes or functions doing too much

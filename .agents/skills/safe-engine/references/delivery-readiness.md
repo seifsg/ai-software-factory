@@ -49,6 +49,8 @@ Record actual capabilities: runtime/build tools, browser/native controls, audio 
 
 Map acceptance to `manual`, `automated` or `mixed` evidence. Artistic quality, gameplay feel and actual interaction need honest observations; don't attach an irrelevant passing script. Name the criterion, candidate, environment/device, action, result, evidence and limits. Missing required evidence stays UNKNOWN. One receipt may support several explicitly mapped criteria; never fabricate a tester or infer completion from a screenshot.
 
+State replacement/restore: check the [reset rule](app-diagnostics.md#keep-logs-usable) during final manual QA.
+
 ## Games and browser lifecycles
 
 Games: preserve intended challenge, mastery, discovery, pacing and reward. Remove accidental friction; don't turn difficulty into a defect or add hints/automation that defeat the approved game. Define intended experience and supported input/device targets in planning; playtest only at the final stage.

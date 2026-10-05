@@ -18,6 +18,12 @@ Pre-merge audit: shortened new caller prose; clarified conditional readiness/sce
 
 Owner's link correction: removed39 redundant introduced hrefs; kept2 coordinator-owner links, the exact command-procedure route and this ticket citation. Original method/conditional-contract links and local role/leaf evidence instructions remain. The stopped earlier instruction exercise certifies no later candidate.
 
+## Five generic lessons: 4 October 2026
+
+Seif approved five trimmed rules, then requested Improve Factory implementation. Research owns bounded full-cycle spike tickets and equal comparison inputs/workloads/journeys. Analyze Start plans unseen-content proof and distinguishes data extensions from code changes; Deep Review checks recoverability and matching state limits. Diagnostics owns state-reset checks; Delivery Readiness links them for final manual QA.
+
+Preserve all Mobile body wording, order, emphasis and reminders. These additions supersede current whole-file equality claims for Analyze Start and Deep Review only; Get Ready and Change Guard stay unchanged. No new skill, checklist, controller stage, product pilot, cloud verdict or active-bundle adoption. [Maintenance ticket](https://github.com/seifsg/ai-software-factory/issues/15).
+
 ## Delivery simulation decisions: 4 October 2026
 
 Seif selected the audit improvements, then overrode early manual/playtesting: **all testing waits until implementation/improvements finish**. Source inspection/research/existing-log reading remain allowed. App/game/mobile creation and simulation pilots are deferred until specifically requested. Preserve the four Mobile-priority core originals and deliberate reminders; timing/authority adaptations live in coordinators and PR adapters.
@@ -97,7 +103,7 @@ Second-pass corrections preserve the same original priority: restore actual auth
 
 Seif explicitly authorized genericizing the live methods and compressing AI-written material, while preserving his deliberate repetition. This section supersedes claims below that source-project text must remain unchanged.
 
-Analyze Start, Get Ready to Code, Deep Review and Change Guard remain unchanged from the selected 3 October files. Compliance retains its method/reminders; adapters generalize fixed rule-path discovery and apply current I1/I2: UNKNOWN needs evidence, mandatory exceptions need actual authority. The three short PR rule resources (no-code, issue handling, no AI attribution) remain unchanged.
+Analyze Start and Deep Review retain the selected Mobile bodies with the owner-approved additions above. Get Ready to Code and Change Guard remain unchanged from the selected 3 October files. Compliance retains its method/reminders; adapters generalize fixed rule-path discovery and apply current I1/I2: UNKNOWN needs evidence, mandatory exceptions need actual authority. The three short PR rule resources (no-code, issue handling, no AI attribution) remain unchanged.
 
 Mobile-derived PR review retains its phases, guiding principles, repeated checkpoints and four themes. A host-capacity adapter permits isolated theme sessions in bounded waves before synthesis. Rubrics retain risk coverage/calibration while replacing fixed framework, locale and product assumptions. Coding rules use actual language/framework equivalents; the historical `mobile-rules/` path remains for compatibility. The routines-derived PR creation keeps its German voice and complete task/branch/visual/human-handoff method; company accounts, vendor instructions and historical precedents are replaced by actual bindings. The obsolete review-chain recap is corrected to the current method.
 
@@ -121,9 +127,9 @@ Seif requested a repository-wide pass: use his originals, with RepairCheck Mobil
 
 | Factory file | Original in RepairCheck Mobile |
 |---|---|
-| `analyze-start/SKILL.md` | `.cursor/rules/analyze-start.mdc` + the three approved purpose/evidence/PR-wiring lines |
+| `analyze-start/SKILL.md` | `.cursor/rules/analyze-start.mdc` + approved purpose/evidence/PR-wiring and extension-proof lines |
 | `get-ready-to-code/SKILL.md` | `.cursor/rules/get-ready-to-code.mdc` |
-| `deep-review/SKILL.md` | `.cursor/skills/deep-review/SKILL.md` |
+| `deep-review/SKILL.md` | `.cursor/skills/deep-review/SKILL.md` + approved state-recovery check |
 | `change-guard/SKILL.md` | `.cursor/skills/change-guard/SKILL.md` |
 | `compliance-check/SKILL.md` | `.cursor/skills/compliance-check/SKILL.md` |
 | `how-to-review-a-pr/SKILL.md` | `.cursor/skills/pr-review/SKILL.md`; existing factory name retained for callers |

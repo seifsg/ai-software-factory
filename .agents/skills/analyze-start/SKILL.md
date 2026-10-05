@@ -20,4 +20,6 @@ Name the next complete useful result, required dependencies and shared constrain
 Read actual code. Verify claims. Label guesses and unknowns.
 For a PR, check each claimed behavior against code and actual wiring.
 
+For extensions, state what data can change and what needs code. Plan final proof with content absent from the build.
+
 Do not code yet. This is fully analysis phase.

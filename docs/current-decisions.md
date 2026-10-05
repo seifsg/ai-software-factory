@@ -8,7 +8,7 @@ Read this for current operation. Read the [dated history](safe-engine-decisions.
 
 Authored output follows [Clear Writing](../.agents/skills/safe-engine/references/clear-writing.md): no em dashes, fabricated claims or stock formulas. Keep voice/details; one finishing pass. Sales rules apply to sales copy.
 
-Seif owns the methods. Use his originals, prioritizing Mobile sources; preserve wording, order, emphasis, checkpoints and intentional reminders. Analyze Start keeps its three approved additions. Generalize project assumptions; compress AI prose into Seif's shortest clear instructions, never dropping details. Preserve source checkouts/[provenance](skill-provenance.md). No placeholders or unapproved library expansion.
+Seif owns the methods. Use his originals, prioritizing Mobile sources; preserve wording, order, emphasis, checkpoints and intentional reminders. Analyze Start keeps its owner-approved additions. Generalize project assumptions; compress AI prose into Seif's shortest clear instructions, never dropping details. Preserve source checkouts/[provenance](skill-provenance.md). No placeholders or unapproved library expansion.
 
 Reuse valid work. Fully read applicable methods once while available; reload changed/lost context, not every cross-link. Load conditional references only as needed. Repeat for changed inputs, failures or unresolved material concerns. No duplicate reports, repeated votes, recursive skills or low-value loops. Required gates, independent review, original checkpoints and 0–4 corrections remain.
 
