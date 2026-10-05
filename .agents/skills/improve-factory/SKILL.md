@@ -7,7 +7,7 @@ description: "Repair Safe Engine skills, controller or workflow. Preserve projec
 
 Fix the factory cause. Preserve Seif's methods and project progress.
 
-Use [Working iterations](../safe-engine/references/delivery-readiness.md#working-iterations). Complete useful correction first. Repeated failure: shared cause, prior-fix failure, prevention. Audit time from existing logs; no extra reporting gate.
+Use [Working iterations](../safe-engine/references/delivery-readiness.md#working-iterations). Default: smallest complete useful correction, existing capabilities, impact-scoped proof, one record. Required quality stays. Short Get Ready wording; necessary links only. New skill, gate, helper or report needs a demonstrated gap. Repeated failure: shared cause, prior-fix failure, prevention. Audit time from existing logs; no extra reporting gate.
 
 New factory implementation uses [Ticketing](../ticketing/SKILL.md): canonical tracker, owner-confirmed before/after and a dedicated maintenance session. Every ticket follows the complete methods below. [Small Change](../small-change/SKILL.md) keeps bounded repairs surgical; its six shortcuts remain for legacy unticketed work. Analysis/planning stays in phase and creates no coding obligation.
 
@@ -44,7 +44,7 @@ One writer owns the isolated candidate; project coordinator owns project changes
 
 Apply Get Ready's full 0–4 loop and pre/change/post inspection per todo. Use Skill Creator for skill edits; if unavailable, retain structural/behavioral checks and disclose the limit.
 
-Fix canonical cause and affected consumers, index, provenance, usage/preview. No duplicate procedures or universal rules for isolated complaints.
+Fix canonical cause and affected consumers, index, provenance, usage/preview. Persist confirmed lasting owner preferences or demonstrated recurring lessons at the canonical owner and affected callers, with source/reason. Remove stale/duplicate prose and unnecessary links; preserve original reminders. One-off context/permissions stay dated and scoped. No universal rules for isolated complaints.
 
 Changed procedure inputs: update [input contract](../../../safe_engine/bundle-inputs.json) and consumer map. Required files detect deletion; declared trees discover added code/guidance. Read [pilot usage](../../../docs/pilot-usage.md) for fingerprint/external-input limits. Preserve the whole candidate too; fingerprints cover a different boundary.
 
