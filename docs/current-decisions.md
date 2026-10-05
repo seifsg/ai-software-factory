@@ -12,6 +12,8 @@ Seif owns the methods. Use his originals, prioritizing Mobile sources; preserve 
 
 Reuse valid work. Fully read applicable methods once while available; reload changed/lost context, not every cross-link. Load conditional references only as needed. Repeat for changed inputs, failures or unresolved material concerns. No duplicate reports, repeated votes, recursive skills or low-value loops. Required gates, independent review, original checkpoints and 0–4 corrections remain.
 
+Factory enhancement default: smallest complete correction, existing capabilities, fitting proof, one record. Persist confirmed lasting preferences/demonstrated recurring lessons at their canonical owner/callers; remove stale duplication/links. New machinery needs a demonstrated gap. One-off permissions remain dated/scoped.
+
 Analysis/planning/review stays in phase. Planning: files, critique, phases, todos, full plan. Honor the file-summary stop unless existing authority permits continuation. Every implementation todo uses the full 0–4 loop. Size and O(1) questions prompt inspection; workload evidence governs acceptance.
 
 Legacy unticketed bounded fixes use six [Small Change](../.agents/skills/small-change/SKILL.md) routines, focused checks and one narrow independent review. No automatic broad suite or change-count trigger; offer useful broader checks and wait for the request unless a real protected gate requires them. Full versions keep full QA and fresh review. Small handoffs cannot certify versions.

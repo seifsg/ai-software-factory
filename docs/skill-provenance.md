@@ -1,5 +1,9 @@
 # Skill sources and adaptations
 
+## Preferred factory enhancements: 5 October 2026
+
+After actual PR19/PR16 merges, Seif required Improve Factory to retain the preferred approach as a rule. Smallest complete correction, existing capabilities, fitting proof, one record, short Get Ready wording and necessary links. Lasting preferences/demonstrated recurring lessons update canonical owners/callers; remove stale duplication. No new machinery without a demonstrated gap. Issue21 preserves exact owner input. No runtime change, recurring merge exception, cloud verdict or active-bundle adoption; final evidence remains separate.
+
 ## Working iterations: 5 October 2026
 
 Seif's process optimization continuation: choose prospective checks by effect/consumers; keep five plan outputs and 0–4 in one work record; reuse raw proof and combine progress at required ticket boundaries. Existing scoped v2 profiles suffice. No new links/skills/helpers or runtime/schema/test changes; saved gates, independence and active pins remain. Final instruction use and checks certify their own candidate only.
