@@ -39,7 +39,7 @@ Current bundles check required guidance through `safe_engine/bundle-inputs.json`
 
 Read the whole returned canonical `entrypoint` and applicable references/methods. Execute once. Analysis/planning stays in phase. No recursive launcher, standalone canonical-folder installation or claim that loading files repaired anything.
 
-New maintenance uses canonical `.agents/skills/ticketing/SKILL.md` and `docs/ticketing.md`: preferred authorized tracker MCP, otherwise GitHub Issues (Seif's current choice). Confirm before/after scope; dispatch a dedicated maintenance builder session and complete the full cycle, even for small repairs. Keep fixes surgical. Select `--ticket <key>` and initialize with `--session <real-builder-session-id>`; preserve separate app/maintenance history and ownership. Old pins need authorized trial/adoption before new methods.
+Mode: Fast by default; read canonical `.agents/skills/safe-engine/references/speed-modes.md` when the pin has it. Safe maintenance uses canonical `.agents/skills/ticketing/SKILL.md` and `docs/ticketing.md`: preferred authorized tracker MCP, otherwise GitHub Issues (Seif's current choice). Confirm before/after scope; dispatch a dedicated maintenance builder session and complete the full cycle, even for small repairs. Keep fixes surgical. Select `--ticket <key>` and initialize with `--session <real-builder-session-id>`; preserve separate app/maintenance history and ownership. Old pins need authorized trial/adoption before new methods.
 
 Keep active cached bundles unchanged. Repair in a separate worktree from their revision; follow compatibility/evidence rules before adoption. Never pull/reset active bundles or silently change global settings. Resume this case's recorded selection even when the branch advances.
 

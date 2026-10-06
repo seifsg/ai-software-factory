@@ -177,6 +177,7 @@ Never edit saved profiles directly. Legacy version-1 reuse needs its original re
 - Required acceptance files and recorded artifacts cannot change unnoticed through ordinary controller use.
 - Evidence includes exact source contents, check definitions, declared inputs, executables, and the operative factory inputs defined above. A commit that only records unchanged contents does not itself invalidate evidence.
 - Fitting manual/automated evidence, current logs, completed improvement assessment and a fresh local review are necessary for handoff. Blocking findings prevent acceptance; authorized lower-risk deferrals remain explicit.
+- After 3 failed reviews, `review` refuses until Seif decides; record it with `extend-reviews --rounds <1-3> --reason ...`, or amend/cancel.
 - Corrections continue with supported diagnosis and fresh acceptance; cancelled runs cannot continue. New init defaults to continuous; deprecated `--max-repairs` and old saved integers remain historical metadata, never active caps. `status` exposes `repair_policy: continuous`, `max_repairs: null`, `historical_max_repairs`, and preserved `repairs_used`. Compatible old post-QA runs use normal `repair --reason ...`; no manual state edit or acceptance carry-over.
 
 ## Remaining gaps

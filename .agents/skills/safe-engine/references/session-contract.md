@@ -21,11 +21,11 @@ Record:
 
 Where required, compare three credible approaches; recommend one. Explicitly delegated choices proceed without another vote.
 
-Continue to the agreed checked, independently reviewed outcome or owner stop/checkpoint. Stops persist until changed. No invented credits, repair allowances, deadlines or exhaustion gates. Reuse authorized tools; clarify missing authority, including purchases/paid fallbacks.
+Continue to the agreed checked, independently reviewed outcome or owner stop/checkpoint. Stops persist until changed. No invented credits, repair allowances, deadlines or exhaustion gates, except the [review round cap](#review-rounds). Reuse authorized tools; clarify missing authority, including purchases/paid fallbacks.
 
 Continuous 0.1.0 controller:
 - Omit `--max-repairs` for new runs. Deprecated flags/integers are history; `repairs_used` counts corrections.
-- `status`: `repair_policy: continuous`, `max_repairs: null`, `historical_max_repairs`.
+- `status`: `repair_policy: continuous`, `max_repairs: null`, `historical_max_repairs`, `failed_reviews`, `review_rounds`.
 - Existing runs: `repair --reason ...`, never state edits. Ordinary repair clears acceptance; finish correction, record final manual QA, final tests and fresh independent review under the saved profile version. Version 2 uses one final gate; legacy version 1 keeps its sequence.
 - Follow [tests-last order](../../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests), including after repair: finish implementation, then final manual/user QA, then author/polish/run automated tests. No early manual reproduction, playtests, walkthroughs, suites or `feature-check`. Source inspection/existing-log reading remain allowed. Missing manual evidence blocks readiness; preserve pins and report limits.
 - Unchanged full-evidence reuse requires explicit reviewed-profile eligibility and integrity validation: read [usage](../../../../docs/pilot-usage.md#feature-feedback-and-version-checkpoints).
@@ -34,6 +34,10 @@ Continuous 0.1.0 controller:
 Watchdogs detect stuck operations, not session deadlines. Diagnose the operation. This contract supplies no scheduler, unlimited quota or host-execution guarantee.
 
 Version-2 records-only correction: reviewed opt-in, exact unchanged proof, fresh assessment. Never modify hashed originals.
+
+## Review rounds
+
+Seif, 6 October. One round = independent review, fixes, fresh review. Max **3 failed rounds** per review loop: local controller review, Safe check, seal/amend review and cloud PR review. After the third, stop that loop and ask Seif once with a short packet: findings per round (new vs repeated), shared cause, options (extend 1-3 rounds, defer with owner record, amend scope, cancel). Keep independent work moving. The controller enforces it: `review` refuses after 3 failed rounds until `extend-reviews --rounds N --reason "<Seif's decision>"`. Build corrections and the 0–4 loop stay uncapped under the shared-cause rule. For review rounds this supersedes "no retry ceilings" wording anywhere else.
 
 ## Keep ticket scope current
 

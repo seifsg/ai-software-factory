@@ -40,7 +40,8 @@ Follow analyze-start, including the ASCII charts, then get-ready-to-code and
 the per-todo 0–4 loop. Work autonomously within the agreed scope and recorded session contract.
 Ask essential preferences once only when not already answered. Under delegated
 autonomy, continue until the agreed verified outcome without artificial credits,
-correction allowances, fixed retry ceilings or session deadlines. Honor my explicit stops.
+correction allowances or session deadlines. Review loops stop after 3 failed
+rounds and ask me. Honor my explicit stops.
 Read each complete skill and its applicable references, not just its name. Honor
 Get Ready to Code's file-summary stop unless I already authorized continuing.
 For new substantive choices, compare three strong approaches and recommend one. Preserve my

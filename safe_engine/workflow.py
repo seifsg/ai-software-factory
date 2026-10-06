@@ -16,6 +16,7 @@ from .project import production_fingerprint
 from .tickets import TicketStore, ticket_key
 
 
+REVIEW_ROUNDS = 3  # Seif, 6 Oct: failed reviews before the owner decides
 PHASES = {"analyze", "plan", "build", "manual", "testing", "verify", "improve", "final-verify", "review", "ready", "cancelled"}
 
 
@@ -167,6 +168,8 @@ class Workflow:
                 "ticket": ticket_status, "ticket_error": ticket_error, "ticket_current": bool(ticket_current),
                 "repair_policy": "continuous", "repairs_used": state["repairs_used"],
                 "max_repairs": None, "historical_max_repairs": state.get("max_repairs"),
+                "failed_reviews": state.get("failed_reviews", 0),
+                "review_rounds": state.get("review_rounds", REVIEW_ROUNDS),
                 "checks_current": bool(ticket_current and evidence and evidence["fingerprint"] == current),
                 "checks_passed": bool(evidence and evidence["passed"]),
                 "feature_checks_current": bool(feature and feature["fingerprint"] == current),
@@ -628,6 +631,8 @@ class Workflow:
         self.require_phase(state, "review")
         if state.get("review") and not state["review"]["passed"]:
             raise EngineError("Completed review requires correction; use repair before another review")
+        if state.get("failed_reviews", 0) >= state.get("review_rounds", REVIEW_ROUNDS):
+            raise EngineError("Review round cap reached; Seif decides: extend-reviews, amend or cancel")
         self.require_checks(state)
         self.require_ticket_proof(state)
         if type(timeout) is not int or not 1 <= timeout <= 3600:
@@ -722,6 +727,8 @@ class Workflow:
         state["review"] = {"fingerprint": current, "passed": passed, "report": str(output),
                            "sha256": file_hash(output), "execution": result}
         state["phase"] = "ready" if passed else "review"
+        if not passed:
+            state["failed_reviews"] = state.get("failed_reviews", 0) + 1
         save(self.directory, state, "Independent review passed" if passed else "Independent review requires correction")
         return {**self.status(state), "report": report}
 
@@ -809,6 +816,18 @@ class Workflow:
         if self.ticket_key:
             TicketStore(self.project).release(self.ticket_key, state["run_id"])
         return {"handoff": str(path), **self.status(state)}
+
+    def extend_reviews(self, rounds, reason):
+        """Owner-approved extra review rounds after the cap; the reason stays in history."""
+        state = self.load()
+        self.require_ticket(state)
+        if state["phase"] == "cancelled":
+            raise EngineError("Cancelled runs cannot be extended")
+        if type(rounds) is not int or not 1 <= rounds <= 3 or not isinstance(reason, str) or not reason.strip():
+            raise EngineError("Extend by 1-3 rounds with the owner's reason")
+        state["review_rounds"] = state.get("failed_reviews", 0) + rounds
+        save(self.directory, state, f"Owner extended review rounds by {rounds}: {reason}")
+        return self.status(state)
 
     def cancel(self, reason):
         state = self.load()

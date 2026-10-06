@@ -2,7 +2,7 @@
 
 Use at intake/resume/context loss/delegation. Read full applicable methods; reuse unchanged text still available. This map is no substitute.
 
-Analysis-only stops before coding. Carry the [speed mode](speed-modes.md); Fast and Lucky use only the methods its table keeps. Safe implementation uses [Ticketing](../../ticketing/SKILL.md), one confirmed delivery unit/session and the full methods below. Bounded fixes retain [Small Change](../../small-change/SKILL.md)'s surgical tactics; its six shortcuts apply only to legacy unticketed work. Preserve prior version status; narrow evidence cannot refresh whole-version acceptance.
+Route delegates by [agent routing](agent-routing.md). Analysis-only stops before coding. Carry the [speed mode](speed-modes.md); Fast and Lucky use only the methods its table keeps. Safe implementation uses [Ticketing](../../ticketing/SKILL.md), one confirmed delivery unit/session and the full methods below. Bounded fixes retain [Small Change](../../small-change/SKILL.md)'s surgical tactics; its six shortcuts apply only to legacy unticketed work. Preserve prior version status; narrow evidence cannot refresh whole-version acceptance.
 
 For delivery, pass core methods plus references selected from actual requirements/changes. Record applicability; reviewers challenge omissions and request missing evidence. Do not preload unrelated UI/SEO/schema material. Read selected methods fully; this packet never replaces them.
 

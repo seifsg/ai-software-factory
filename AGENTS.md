@@ -20,7 +20,7 @@ Spend steps where they change decisions, results or evidence. Reuse valid analys
 
 An analysis, planning or review request stays in that phase. A small subject does not authorize coding. Honor the original file-summary stop unless existing user instructions explicitly authorize continuing through it.
 
-Delivery uses [speed modes](.agents/skills/safe-engine/references/speed-modes.md): **Fast** by default, Lucky or Safe on request. In Fast and Lucky that table overrides any conflicting rule here or in linked methods: stops, tickets, research and comparisons, tests-last, logging depth, controller, before/after baselines, PR gates and review. Everything it keeps still applies.
+Every factory activity (delivery, tickets, PRs, factory maintenance) uses [speed modes](.agents/skills/safe-engine/references/speed-modes.md): **Fast** by default, Lucky or Safe on request. Before a Fast/Lucky PR, offer an optional Safe check once. In every mode, delegate independent work to parallel subagents on fitting models by [agent routing](.agents/skills/safe-engine/references/agent-routing.md). In Fast and Lucky that table overrides any conflicting rule here or in linked methods: stops, tickets, research and comparisons, tests-last, logging depth, controller, before/after baselines, PR gates and review. Everything it keeps still applies.
 
 Safe implementation uses [Ticketing](.agents/skills/ticketing/SKILL.md): canonical tracker, owner-confirmed before/after, one complete delivery unit and its own builder session. Prefer the owner's chosen MCP; GitHub Issues is the default and Seif's current choice. Phase-only requests grant no coding or tracker-write authority; explicitly requested ticket intake still applies.
 
@@ -38,7 +38,7 @@ Give 100% minimum. Aim higher through correct, useful work within scope.
 
 Preserve selected options. For a new substantive choice, compare three credible alternatives and recommend one. Choose when delegated; ask only for an unresolved owner choice. Do not reopen settled decisions.
 
-Use the [session contract](.agents/skills/safe-engine/references/session-contract.md) for authority, continuation and recovery. Continue to the agreed outcome without invented correction credits, retry ceilings or session deadlines. Honor access limits, protected gates and owner stops. Discover permitted alternatives when a UI/control route fails.
+Use the [session contract](.agents/skills/safe-engine/references/session-contract.md) for authority, continuation and recovery. Continue to the agreed outcome without invented correction credits or session deadlines. Review loops stop after 3 failed rounds and go to Seif ([review rounds](.agents/skills/safe-engine/references/session-contract.md#review-rounds)). Honor access limits, protected gates and owner stops. Discover permitted alternatives when a UI/control route fails.
 
 Delivery uses [diagnostics](.agents/skills/safe-engine/references/app-diagnostics.md) and [efficiency](.agents/skills/safe-engine/references/app-efficiency.md). Every app/game needs working shared logging, including small fixes: preferred provider/access or internal module/local sink. Implement detailed safe success/failure journeys, parameters/queries/outputs/source. Read existing logs during development; actual actions and emitted-trail checks wait until final manual QA. Never credentials. Required logging stays surgical; analysis stays read-only.
 
