@@ -350,6 +350,23 @@ class ProofDraftAndHandoffTests(Base):
         self.assertEqual(f.record_proof(draft)["phase"], "review")
         self.assertEqual(f.local_review()["phase"], "ready")
 
+    def test_proof_that_changes_while_recorded_is_refused(self):
+        f = self.ticket_fixture()
+        f.verified()
+        out = f.flow.directory / "synthetic-draft.json"
+        f.flow.ticket_proof_draft(out)
+        draft = read_json(out)
+        draft["criteria"][0].update(before="Synthetic baseline", after="Synthetic outcome")
+        original = type(f.flow).capture_artifact
+
+        def swap(flow, state, kind, source, current):
+            atomic_json(Path(source), {**draft, "revision": draft["revision"] + 1})
+            return original(flow, state, kind, source, current)
+        with patch.object(type(f.flow), "capture_artifact", swap), \
+                self.assertRaisesRegex(EngineError, "changed while it was recorded"):
+            f.record_proof(draft)
+        self.assertNotIn("ticket-proof", f.flow.load()["artifacts"])
+
     def test_status_is_unknown_when_receipt_or_checks_do_not_support_the_criterion(self):
         f = self.ticket_fixture()
         f.verified()
@@ -689,25 +706,27 @@ class ExternalReviewerTests(Base):
         f = self.to_review()
         run, root = f.flow.directory, f.root
         for path, pattern in ((run / "state.json ", "reserved"), (run / "state.json.", "reserved"),
-                              (root / "src /a.json", "extended-length|Use a path under"),
+                              (root / "src /a.json", "space or dot|extended-length|Use a path under"),
                               (Path("\\\\?\\" + str(root / "x.json")), "extended-length|Use a path under"),
                               (Path("\\\\?\\" + str(run / "nul")), "extended-length|not a file")):  # 3.9 drops the prefix
             with self.subTest(path=str(path)), self.assertRaisesRegex(EngineError, pattern):
                 self.packet(f, str(path))
-        for path in (run / "history /x.json", run / "outputs /x.md"):  # never lands in the real folder
-            with self.subTest(path=str(path)), self.assertRaises((EngineError, OSError)):
+        for path in (run / "history /x.json", run / "outputs /x.md", run / "logs./x.md"):
+            with self.subTest(path=str(path)), self.assertRaisesRegex(EngineError, "reserved|space or dot|extended-length"):
                 self.packet(f, str(path))
-        self.assertFalse((run / "history" / "x.json").exists() or (run / "outputs" / "x.md").exists())
+        self.assertFalse((run / "history" / "x.json").exists() or (run / "outputs").exists()
+                         or (run / "logs").exists())  # nothing written, no empty reserved folder created
         self.assertFalse((root / "src").exists())
 
     @unittest.skipUnless(os.name == "nt", "Windows trailing-space folders")
-    def test_a_real_trailing_space_folder_stays_a_different_folder(self):
+    def test_a_real_trailing_space_folder_is_refused_not_mapped(self):
         f = self.to_review()
         real = Path("\\\\?\\" + str(f.flow.directory / "p "))
         os.mkdir(real)
         self.addCleanup(os.rmdir, real)
-        checked = f.flow.outside_inputs(str(f.flow.directory / "p " / "x.json"))
-        self.assertEqual(checked.parent.name, "p ")  # no silent mapping onto a sibling "p"
+        (f.flow.directory / "p").mkdir()
+        with self.assertRaisesRegex(EngineError, "space or dot"):
+            f.flow.outside_inputs(str(f.flow.directory / "p " / "x.json"))
 
     def test_symlinked_packet_file_refuses_the_report(self):
         f = self.to_review()
@@ -718,8 +737,12 @@ class ExternalReviewerTests(Base):
         issued.unlink()
         try:
             os.symlink(copy, issued)
-        except (OSError, NotImplementedError):
-            self.skipTest("symlinks need extra privileges here")
+        except (OSError, NotImplementedError):  # no symlink rights: exercise the same branch through is_symlink
+            copy.replace(issued)
+            real = Path.is_symlink
+            patcher = patch.object(Path, "is_symlink", lambda p: p == issued or real(p))
+            patcher.start()
+            self.addCleanup(patcher.stop)
         with self.assertRaisesRegex(EngineError, "Review packet changed or missing"):
             self.external(f, report())
 

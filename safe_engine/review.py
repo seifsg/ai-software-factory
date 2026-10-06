@@ -91,6 +91,8 @@ class ReviewMixin:
     def outside_inputs(self, path):
         """Packets/reports inside the project would change its fingerprint; keep them under .factory or outside."""
         path = Path(os.path.abspath(path))  # applies the OS's own trailing space/dot trimming, nothing more
+        if os.name == "nt" and any(part != part.rstrip(" .") for part in path.parts[1:]):
+            raise EngineError(f"Folder names cannot end in a space or dot: {path}")  # Windows maps them oddly
         try:
             path = path.resolve()
         except OSError as error:
