@@ -41,11 +41,11 @@ Demo: exact source/build, environment/device/profile, data/save identity, scenar
 
 Factory audit: reuse timestamps/logs for first useful demonstration, build/check/repair time and repair rounds. Separate active time from wall time/waits; label estimates/missing data. Compare similar scope; remove ceremony that adds no confidence. No reporting chore or invented timings.
 
-Load applicable rows once. Reuse the plan, evidence and reviewer; no new skill fleet. Local MVPs stay small. All manual/user testing, playtesting and automated checks wait until the complete iteration's implementation/improvements finish. Source inspection, research and existing-log reading may happen earlier.
+Load applicable rows once. Reuse the plan, evidence and reviewer; no new skill fleet. Local MVPs stay small. Testing follows [tests-last order](../../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests).
 
 ## Before dependent work
 
-Record actual capabilities: runtime/build tools, browser/native controls, audio inspection, representative devices, safe data/accounts, dependencies and authorized integration access. Full delivery also needs local controller review; PR delivery separately needs a remote/cloud agent with a fresh context and checkout. Verify the actual route exists; a local subagent never counts as cloud review. Identify blockers early; continue independent work. Metadata/tool discovery is not a product test. No purchases, installs or new credentials implied.
+Record actual capabilities: runtime/build tools, browser/native controls, audio inspection, representative devices, safe data/accounts, dependencies and authorized integration access. Full delivery also needs local controller review; PR delivery separately needs [cloud PR review](../../../../docs/pr-workflow.md#cloud-pr-review). Verify the actual route exists. Identify blockers early; continue independent work. Metadata/tool discovery is not a product test. No purchases, installs or new credentials implied.
 
 Map acceptance to `manual`, `automated` or `mixed` evidence. Artistic quality, gameplay feel and actual interaction need honest observations; don't attach an irrelevant passing script. Name the criterion, candidate, environment/device, action, result, evidence and limits. Missing required evidence stays UNKNOWN. One receipt may support several explicitly mapped criteria; never fabricate a tester or infer completion from a screenshot.
 
@@ -81,4 +81,4 @@ Local `ready`, cloud PR approval, merge and live release are distinct. Reuse exp
 - Relevant security, UX, SEO and integration evidence; actual live health and critical journey checks after deployment. Record failure threshold, recovery action and responsible owner. No local-only evidence called production proof.
 - Log access, essential failure/stalled-job/capacity signals, authorized destination/operator and data retention/recovery. Reuse existing facilities; no automatic paid monitor, new notifications or perpetual polling.
 
-For factory publication, approved source reaches `main` only after actual cloud PR review and authorized merge. Verify remote commit and distributed inputs; report published, locally adopted and active-run adopted separately. Preserve old pins. Pilots remain deferred until requested; a guidance update is no end-to-end product proof.
+Factory publication follows the PR adapter's [enforcement](../../../../docs/pr-workflow.md#enforcement-and-evidence). Verify remote commit and distributed inputs; report published, locally adopted and active-run adopted separately. Preserve old pins. Pilots remain deferred until requested; a guidance update is no end-to-end product proof.

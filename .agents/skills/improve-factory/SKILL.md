@@ -35,8 +35,8 @@ Active run: execute [live-session maintenance](references/live-session.md) befor
 
 1. Execute [Analyze Start](../analyze-start/SKILL.md): source/consumers, flow, evidence versus claims/unknowns, planned smallest final reproduction. Unobserved failure stays unverified. No coding or testing.
 2. Record changes and invariants: project goal, selected decisions, complete routines, fresh evidence, continuous progress, owner stops, human release. Changing these invariants needs the user's decision. Never weaken failed acceptance.
-3. New substantive choice: compare three credible options; recommend one. Preserve approved choices. Proceed with delegated choices/restoring agreed behavior; wait on owner-reserved choices. Exclude unrelated improvements.
-4. Execute [Get Ready to Code](../get-ready-to-code/SKILL.md): files, critique, phases, todos, full plan. Honor file-summary stop unless existing authority covers continuation. Include reproduction, behavioral checks, consumers, before/after evidence, compatibility and safe resume.
+3. New substantive choices follow [decision ownership](../../../docs/current-decisions.md#decision-ownership); restoring agreed behavior needs no new choice. Exclude unrelated improvements.
+4. Execute [Get Ready to Code](../get-ready-to-code/SKILL.md): files, critique, phases, todos, full plan. Honor its [file-summary stop](../safe-engine/references/speed-modes.md#safe). Include reproduction, behavioral checks, consumers, before/after evidence, compatibility and safe resume.
 
 ## Repair and check
 
@@ -48,19 +48,19 @@ Fix canonical cause and affected consumers, index, provenance, usage/preview. Pe
 
 Changed procedure inputs: update [input contract](../../../safe_engine/bundle-inputs.json) and consumer map. Required files detect deletion; declared trees discover added code/guidance. Read [pilot usage](../../../docs/pilot-usage.md) for fingerprint/external-input limits. Preserve the whole candidate too; fingerprints cover a different boundary.
 
-[Tests last](../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests): finish repair/consumers → final manual use (realistic agent walkthrough for instructions) → only after manual QA passes, author/polish regressions and run relevant final checks. No manual reproduction, walkthroughs, test files or suites during implementation. Source inspection/existing-log reading remain allowed. Syntax/word matching cannot replace use. Preserve failure/candidate evidence; choose relevant [scenarios](references/validation-scenarios.md), no automatic full suite.
+Follow [tests-last order](../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests) for repair/consumers; for instructions, manual use is a realistic agent walkthrough. Syntax/word matching cannot replace use. Preserve failure/candidate evidence; choose relevant [scenarios](references/validation-scenarios.md), no automatic full suite.
 
 Execute [Deep Review](../deep-review/SKILL.md), [security](../deep-review/references/theme-security.md), [performance](../deep-review/references/theme-performance.md), [user-journey](../deep-review/references/theme-user-journey.md), then [Change Guard](../change-guard/SKILL.md) and [Compliance Check](../compliance-check/SKILL.md). Check correction and preserved behavior; evidence must support quality/performance claims.
 
-Separate instance: freshly assess exact candidate from raw evidence/context, no prescribed verdict. Reviewer repairs need fresh assessment; missing independence blocks acceptance. Changed gates also need old rule/reproduction and independent assessment; their own pass proves too little.
+Separate instance: freshly assess exact candidate from raw evidence/context, no prescribed verdict. Reviewer repairs need [fresh assessment](../../../docs/pr-workflow.md#keep-current-factory-decisions-explicit); missing independence blocks acceptance. Changed gates also need old rule/reproduction and independent assessment; their own pass proves too little.
 
-Across retries/delegates, preserve meaningful corrections, diagnostic history, uncertain-effect reconciliation and permitted alternatives. No invented credits/deadlines/retry ceilings or fresh-run bypass. Missing authority/access blocks dependent work only.
+Across retries/delegates, preserve meaningful corrections, diagnostic history, uncertain-effect reconciliation and permitted alternatives. Limits and review rounds follow the [session contract](../safe-engine/references/session-contract.md#review-rounds); no fresh-run bypass. Missing authority/access blocks dependent work only.
 
 ## Deliver and resume
 
 When ticketed, refresh the maintenance ticket before final acceptance/handoff and authorized PR work. Compare latest confirmed criteria with the correction, preserved behavior, final evidence and limits. Record decisions/scope changes in canonical activity; use reviewed amendments for legitimate rebinds. Pending changes, drift or failed refresh block dependent acceptance.
 
-Authorized PR work: execute [creation](../how-to-make-a-pr/SKILL.md), remote/cloud [review](../how-to-review-a-pr/SKILL.md) and [project adapter](../../../docs/pr-workflow.md). Fresh context and remote execution required; local validation/subagents cannot replace PR review. Discover task/owner/notification bindings before asking; missing bindings block PR completion, not local repair/final testing. Keep draft status and human ready/merge/release decisions. Publish approved factory source to main only after actual cloud review and authorized merge; preserve active pins.
+Authorized PR work: execute [creation](../how-to-make-a-pr/SKILL.md), [review](../how-to-review-a-pr/SKILL.md) and the [project adapter](../../../docs/pr-workflow.md#cloud-pr-review). Discover task/owner/notification bindings before asking; missing bindings block PR completion, not local repair/final testing. Keep draft status and human ready/merge/release decisions. Factory publication follows the adapter's [enforcement](../../../docs/pr-workflow.md#enforcement-and-evidence); preserve active pins.
 
 Give brief before/after. Maintain one ignored work record from analysis through handoff; all five plan outputs, 0–4 notes and proof links. Keep required immutable controller snapshots/raw evidence separately; no duplicate narrative. Carry:
 - Report, expected result, reproduced cause/unknown.

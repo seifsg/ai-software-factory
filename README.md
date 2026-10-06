@@ -14,7 +14,7 @@ The [skill index](.agents/skills/README.md) lists fourteen canonical skills: sev
 
 Ask for analysis and you get analysis. Ask for planning and you get planning. A small feature does not turn either request into permission to code.
 
-Delivery has three [speed modes](.agents/skills/safe-engine/references/speed-modes.md): 🏃 **Fast** (default) keeps the methods and skips build/run/tests/review until done or `verify`; 🍀 **Lucky** one-shots it with no research, comparisons or checks; 🛡️ **Safe** is the full cycle below. `promote` moves a run to Safe.
+Delivery has three [speed modes](.agents/skills/safe-engine/references/speed-modes.md): 🏃 **Fast** (default), 🍀 **Lucky** and 🛡️ **Safe**, the full cycle below. `promote` moves a run to Safe.
 
 Safe implementation uses [Ticketing](.agents/skills/ticketing/SKILL.md): GitHub Issues by default, confirmed before/after scope and a dedicated session/full cycle per ticket, including bugfixes. Keep surgical Small Change tactics; its six replacement routines remain for legacy unticketed work. Ticket delivery follows:
 
@@ -25,13 +25,13 @@ confirmed ticket → analyze → original plan → product/UX + technical resear
         → checked local handoff → authorized PR → remote/cloud PR review → human
 ```
 
-The original planning checkpoint remains. Proceed through it only when the user's instructions already authorize that continuation.
+The original planning checkpoint remains. Proceed through it only when the user's instructions already authorize that continuation, or in Safe when the owner confirmed the ticket's before/after.
 
 Working iterations owns delivery order, shared constraints and evidence. Complete outcome tickets are the acceptance boundary. Ordinary repair reruns configured checks; records-only correction permits exact-input reuse with fresh proof/review.
 
 Before coding, choose validation by effect: guidance only, runtime/config or mixed. Full method, fitting proof. Use one compact work record with all five planning outputs and 0–4 notes; retain controller snapshots/raw evidence. Refresh tickets at required boundaries and new input.
 
-[Tests-last rule](docs/current-decisions.md#finish-work-use-it-then-automate-tests): no manual testing, playtests, walkthroughs or automated test authoring/execution during development. Source inspection and existing-log reading remain allowed. Finish implementation, perform final manual QA, then final automated tests. Small fixes stay surgical. [Controller usage](docs/pilot-usage.md#feature-feedback-and-version-checkpoints) distinguishes new version-2 runs from legacy runs.
+[Tests-last rule](docs/current-decisions.md#finish-work-use-it-then-automate-tests) sets the order. Small fixes stay surgical. [Controller usage](docs/pilot-usage.md#feature-feedback-and-version-checkpoints) distinguishes new version-2 runs from legacy runs.
 
 [Ticket usage](docs/ticketing.md) defines captured contracts, namespaced runs, scope amendments, worktree ownership and latest-expectation proof. The host agent uses actual MCP tools; the controller neither creates remote issues nor authenticates their reads. Existing pins/runs remain unchanged.
 
@@ -39,9 +39,9 @@ Version 2 supports draft acceptance for greenfield work, reviewed sealing/amendm
 
 Research current stack/architecture choices and useful design patterns against the goal. Plan applicable CPU/GPU, memory, database queries, network, storage, caching and interaction costs. Resolve material unknowns throughout delivery; standalone research returns findings without coding or controller setup. Actual hardware/tool evidence remains required for performance and usability claims.
 
-For new or material persistence design, use [Database Schema](.agents/skills/database-schema/SKILL.md): whole-product access patterns → three credible designs → justified choice → written schema → independent audit. No purposeless tables or unsupported O(1) promises. Keep safe evolution, real query costs and tests-last order explicit.
+For new or material persistence design, use [Database Schema](.agents/skills/database-schema/SKILL.md). No purposeless tables or unsupported O(1) promises.
 
-Every UI/interaction change uses [UX Quality](.agents/skills/ux-quality/SKILL.md): simple journeys, familiar patterns, accessibility, coherent visuals and good contextual sound. Research uncertainty, compare three credible choices, justify the winner and proceed within delegated authority. Manually use it, inspect visuals and audition audio before final tests; carry evidence into independent review.
+Every UI/interaction change uses [UX Quality](.agents/skills/ux-quality/SKILL.md): simple journeys, familiar patterns, accessibility, coherent visuals and good contextual sound. Research uncertainty, choose per decision ownership and proceed within delegated authority. Inspect visuals and audition audio; carry evidence into independent review.
 
 ## Start or resume
 
@@ -64,9 +64,9 @@ Use existing authorized GitHub access. A local installation does not install on 
 
 The current Codex session builds; Python saves stages, runs configured checks and rejects stale evidence. A fresh read-only Codex CLI process reviews the candidate before local handoff. The controller does not push, merge, deploy or run as a background service.
 
-The [recorded pilot](docs/pilot-verification.md) demonstrates its dated local browser fixture and repair. It does not certify this revision or a production app. PR delivery requires a separate remote/cloud agent with fresh context and actual remote candidate evidence under the [PR adapter](docs/pr-workflow.md); local review cannot substitute. Claude-native delivery remains unverified. No new product pilot is claimed.
+The [recorded pilot](docs/pilot-verification.md) demonstrates its dated local browser fixture and repair. It does not certify this revision or a production app. PR delivery requires [remote/cloud PR review](docs/pr-workflow.md#cloud-pr-review). Claude-native delivery remains unverified. No new product pilot is claimed.
 
-Every app/game needs a working shared [logging module](.agents/skills/safe-engine/references/app-diagnostics.md), including small fixes. Reuse preferred providers or create internal logging with a local destination. Implement detailed safe success/failure trails; read existing logs during development. Actual actions and emitted-trail checks wait until final manual QA. The coordinator also applies [efficiency](.agents/skills/safe-engine/references/app-efficiency.md) from planning onward. Instructions alone prove neither emitted logs nor a faster app.
+Every app/game needs a working shared [logging module](.agents/skills/safe-engine/references/app-diagnostics.md), including small fixes. The coordinator also applies [efficiency](.agents/skills/safe-engine/references/app-efficiency.md) from planning onward. Instructions alone prove neither emitted logs nor a faster app.
 
 QA binds to declared code, operative guidance and runtime inputs. Changing a required skill invalidates evidence; dated history/provenance edits alone do not invalidate a target run. Preserve active pins and use the compatibility procedure before adopting a different factory. Publishing source to main, installing a launcher and adopting an active run are separate outcomes.
 

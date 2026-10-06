@@ -7,13 +7,28 @@ description: "Load the complete private Safe Engine factory to build or resume g
 
 Load `https://github.com/seifsg/ai-software-factory`; run its complete methods in the target project. This folder only launches them. Analysis/planning/review requests keep their phase.
 
+## Get the requirements
+
+Needs Git and Python 3.9+. Safe local review uses the Codex CLI when present, otherwise the controller's review-packet fallback. Set them up on any OS without asking Seif to prepare the machine:
+
+1. Find them: `git --version`; Python through `python3`, `python` or Windows `py -3`. Use the first that reports 3.9+, by full path, for every later command.
+2. Missing or too old: install from the official source, user scope when possible.
+   - Windows: `winget install -e --id Python.Python.3.12` and `winget install -e --id Git.Git`.
+   - macOS: `brew install python git`. No Homebrew: `xcode-select --install` for Git, the python.org installer for Python.
+   - Linux: the distro manager (`apt-get`, `dnf`, `pacman`, `zypper` or `apk`).
+   - No admin or package manager: install [uv](https://docs.astral.sh/uv/getting-started/installation/) (`winget install astral-sh.uv`, `brew install uv` or its official installer), run `uv python install 3.12`, then `uv run --python 3.12 python ...`.
+   - Codex CLI, Safe only and optional: [openai/codex](https://github.com/openai/codex) (`npm install -g @openai/codex` or `brew install --cask codex`).
+3. Check the versions again. Report what was installed, from where.
+4. Host asks before installs: ask once, naming each tool and source. Still blocked (no network, admin or approval): say what is missing. Fast and Lucky continue with Git alone: `git ls-remote https://github.com/seifsg/ai-software-factory main`, clone that SHA into `~/.safe-engine/bundles/<sha>`, detach, read it only. Safe waits for Python.
+5. Official sources only. No system settings beyond the install. No credentials in commands.
+
 ## Select the bundle
 
 Preserve request, answers, authority and work. Establish the absolute target; read project rules, legacy `.factory/state.json`, ticket `.factory/runs/<key>/state.json`, selection and session/checkpoint records. Create directories only within requested scope. No second run or substituted demo.
 
 If `references/local-app-diagnostics.md` or `references/local-small-change.md` exists here, read [local trials](references/local-trials.md) before selecting a method. Otherwise skip that reference. Trials never silently upgrade pins.
 
-Use available Python 3.11+ and authorized Git access. Locate the resolver beside this installed file; quote paths/use argument arrays:
+Use the Python and Git from [Get the requirements](#get-the-requirements) and authorized GitHub access. Locate the resolver beside this installed file; quote paths/use argument arrays:
 
 ```text
 python3 <installed-skill>/scripts/resolve_bundle.py --entrypoint safe-engine --project <absolute-target>
@@ -39,7 +54,7 @@ Read the whole returned `entrypoint`, its session contract, usage guide and meth
 
 Execute once from bundle root against target. No recursive launcher or controller execution from the target directory. File loading is not completed delivery.
 
-Before dependent work, inspect capabilities without launching product tests. Finish implementation, then final manual/user QA, then author/run automated tests; no early playtests/walkthroughs either. New version-2 runs allow draft acceptance and seal reviewed checks at the end. Full local controller review needs authenticated Codex CLI; PR review separately needs an actual remote/cloud agent with fresh context. Local subagents never count as PR review. Report missing capabilities; installation provisions no cloud route, hooks, daemon or permissions. Preserve checkpoints and human release authority; unrequested product pilots stay deferred.
+Before dependent work, inspect capabilities without launching product tests. Follow the tests-last order in canonical `docs/current-decisions.md`. New version-2 runs allow draft acceptance and seal reviewed checks at the end. Full local controller review needs authenticated Codex CLI; PR review separately follows canonical `docs/pr-workflow.md`. Report missing capabilities; installation provisions no cloud route, hooks, daemon or permissions. Preserve checkpoints and human release authority; unrequested product pilots stay deferred.
 
 ## Invoke
 

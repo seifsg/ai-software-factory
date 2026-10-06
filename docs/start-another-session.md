@@ -39,34 +39,27 @@ or silently upgrade its pin.
 Follow analyze-start, including the ASCII charts, then get-ready-to-code and
 the per-todo 0–4 loop. Work autonomously within the agreed scope and recorded session contract.
 Ask essential preferences once only when not already answered. Under delegated
-autonomy, continue until the agreed verified outcome without artificial credits,
-correction allowances or session deadlines. Review loops stop after 3 failed
-rounds and ask me. Honor my explicit stops.
+autonomy, continue until the agreed verified outcome per
+.agents/skills/safe-engine/references/session-contract.md (including #review-rounds).
+Honor my explicit stops.
 Read each complete skill and its applicable references, not just its name. Honor
-Get Ready to Code's file-summary stop unless I already authorized continuing.
-For new substantive choices, compare three strong approaches and recommend one. Preserve my
-chosen direction and my delegated/reserved decision authority. For new software,
+Get Ready to Code's file-summary stop (speed-modes.md#safe). Follow
+docs/current-decisions.md#decision-ownership for new substantive choices. For new software,
 save an original plan, research product/UX plus current stack, architecture and useful
 patterns using research-market, then revise the plan before coding. Resolve material
 unknowns during work. Plan applicable CPU/GPU, memory, queries/database, network,
 storage and caching. Use actual browser/native/game/API/CLI evidence.
-For new/material persistence design, use database-schema: whole-product access map,
-three viable designs, justified choice, written schema and independent audit. Keep real
-query costs, integrity and safe migrations explicit; no universal O(1) claim.
+For new/material persistence design, use database-schema; no universal O(1) claim.
 Carry these methods, decisions, real artifacts, diagnostic progress and actual constraints
 into every resume or delegation.
-Finish the complete outcome iteration and its required improvements; then do final manual/user QA. Keep the whole requested product visible. Optional polish/enhancement follows in later complete outcome tickets.
-After that write/polish/run automated tests at the final pre-PR stage. No early manual
-tests, playtests, walkthroughs or automated checks. Source inspection and existing-log
-reading remain allowed. Keep fixes surgical; no unrequested product pilots/simulations.
+Finish the complete outcome iteration and its required improvements. Keep the whole requested product visible. Optional polish/enhancement follows in later complete outcome tickets.
+Follow the tests-last order in docs/current-decisions.md#finish-work-use-it-then-automate-tests.
+Keep fixes surgical; no unrequested product pilots/simulations.
 Keep method records durable, then obtain fresh independent review before handoff.
-For any authorized PR, always execute how-to-make-a-pr, then the full
-how-to-review-a-pr on a remote/cloud agent with fresh context and exact remote base/head.
-Local subagents never count as PR review. Keep its task/owner handoff,
+For any authorized PR, always execute how-to-make-a-pr, then how-to-review-a-pr as
+docs/pr-workflow.md directs (remote/cloud review). Keep its task/owner handoff,
 visual description and detailed comment. Read the PR project adapter first.
-Use the four generic themed reviews and synthesis; the local controller's five
-acceptance passes are a separate check.
-The local controller review does not replace the PR review. Missing required
+Missing required
 project settings or access block PR completion after discovery; keep independent
 local build, QA and owner-test delivery moving. Leave the PR draft for me.
 
@@ -85,12 +78,12 @@ Codex discovers repository skills in `.agents/skills` within the repository scop
 
 ## What the agent needs before it can proceed
 
-- The complete factory bundle, Python 3.11+, Git, and access to the target project.
-- An authenticated `codex` CLI on PATH for the current independent reviewer.
+- The complete factory bundle, Python 3.9+, Git, and access to the target project. The launcher installs missing Git/Python from official sources.
+- An authenticated `codex` CLI on PATH for the independent reviewer, or the fallback: `review-packet` to a fresh read-only subagent, then `review --report`.
 - The target project's actual test tools. Browser work needs a browser driver and runnable app.
 - An agreed task, observable manual/automated/mixed acceptance, recorded authority and completion boundaries. Version 2 starts with draft checks; independently seal them at final testing. Real command watchdogs detect stuck processes; historical repair limits do not govern.
 - For new delivery: canonical tracker access, confirmed ticket revision and a real dedicated builder session/workspace. Preserve missing capability as a dependent blocker; labels do not dispatch sessions.
-- An actual remote/cloud agent route for PR review, separate from local controller review; record missing access before dependent delivery.
+- A remote/cloud agent route for [PR review](pr-workflow.md#cloud-pr-review); record missing access before dependent delivery.
 
 The [session contract](../.agents/skills/safe-engine/references/session-contract.md) preserves delegated and reserved choices. The agent makes in-scope delegated choices; unresolved owner-reserved choices stay yours. A prompt does not install missing dependencies or grant access outside the session's permissions. Keep the factory bundle unchanged during a target run; editing its instructions changes an acceptance input.
 
@@ -130,8 +123,8 @@ A remote workspace cannot read `C:/work/...` on this PC. It needs its own checko
 | Session | First action | Current status |
 |---|---|---|
 | Codex, local | Paste the explicit-path starter, or invoke `$safe-engine` when discovered | The local delivery cycle was demonstrated on the recorded fixture. |
-| Claude Code, local, with Codex CLI installed | Add the factory directory, then ask Claude to read the same entry skill by its path | Documented manual loading route. No complete Claude-builder run has been verified here. Review still uses Codex. |
-| Claude Code without Codex CLI | Can read the methods, but the current controller cannot complete its independent review | A Claude-native review adapter is not implemented. |
+| Claude Code, local, with Codex CLI installed | Add the factory directory, then ask Claude to read the same entry skill by its path | Documented manual loading route. No complete Claude-builder run has been verified here. Review uses Codex when present. |
+| Claude Code without Codex CLI | Builds normally; Safe review uses `review-packet` with a fresh read-only Claude subagent, then `review --report` | Controller labels it external; it cannot verify the reviewer's independence. |
 | Cloud-hosted session | Provision both repositories and the required tools inside that environment | Not demonstrated; local installation does not establish cloud compatibility. |
 
 For an installed Claude Code CLI, launch from your target project:

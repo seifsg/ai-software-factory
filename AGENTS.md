@@ -8,19 +8,19 @@ Apply [Clear Writing](.agents/skills/safe-engine/references/clear-writing.md) to
 
 Tickets/PRs use the shared [work layout](.agents/skills/safe-engine/references/work-writing.md): clear title; purpose/goal, context, behavior change/reason, proof and progress separate. Brief bullets, useful emojis, narrow tables and fitting flows. Before is actual behavior only; never bury purpose or context there. Complete detail, no decoration quota or added writing gate.
 
-Use the original when one exists. RepairCheck Mobile is the first source; use another original only when Mobile has no equivalent for that task. [Provenance](docs/skill-provenance.md) records the mapping. Preserve Seif's wording, order, emphasis, checkpoints and deliberate repetition: reminders protect against context loss. Analyze Start keeps its owner-approved additions. Remove source-project assumptions from operative methods; discover the actual target's stack, rules, users and integrations. Record adaptations; preserve source checkouts.
+Use the original when one exists. RepairCheck Mobile is the first source; use another original only when Mobile has no equivalent for that task. [Provenance](docs/skill-provenance.md) records the mapping. Preserve Seif's wording, order, emphasis, checkpoints and deliberate repetition: reminders protect against context loss. Analyze Start keeps its owner-approved additions. Remove source-project assumptions from operative methods; discover the actual target's stack, rules, users and integrations. Record adaptations; preserve source checkouts. Where an original conflicts with a decision in current decisions, speed modes or the PR adapter, that decision governs; originals stay unedited.
 
 No original? Use Seif's brief, direct wording: task, priorities, outputs, necessary steps/checks, stop. No gimmicky voice, filler or explanations the agent already knows. Number ordered steps. Compare requirements before/after; lose no detail or behavior. Links must not quietly import another workflow.
 
 Seif is the primary author. Compress AI prose; preserve his deliberate reminders. Keep bindings/coordination explicit. No invented library or placeholders. Generic methods and product/technical research are authorized.
 
-Spend steps where they change decisions, results or evidence. Reuse valid analysis, choices, records and checks. Read applicable methods fully once while available; reread changed/lost context, not every cross-link. Load conditional references only when needed. Reassess changed inputs, failures or unresolved material concerns; no recursive skills, duplicate reports, repeated votes or busywork. Preserve required gates, independent review and original checkpoints/0–4 corrections.
+Spend steps where they change decisions, results or evidence. Reuse valid analysis, choices, records and checks. Read each method fully once when its phase starts; delegates get only their role's methods plus the agent-routing brief. Reread changed/lost context, not every cross-link. Load conditional references only when needed. Reassess changed inputs, failures or unresolved material concerns; no recursive skills, duplicate reports, repeated votes or busywork. Preserve required gates, independent review and original checkpoints/0–4 corrections.
 
 ## Keep the requested scope
 
-An analysis, planning or review request stays in that phase. A small subject does not authorize coding. Honor the original file-summary stop unless existing user instructions explicitly authorize continuing through it.
+An analysis, planning or review request stays in that phase. A small subject does not authorize coding. File-summary stop: [speed modes](.agents/skills/safe-engine/references/speed-modes.md#safe).
 
-Every factory activity (delivery, tickets, PRs, factory maintenance) uses [speed modes](.agents/skills/safe-engine/references/speed-modes.md): **Fast** by default, Lucky or Safe on request. Before a Fast/Lucky PR, offer an optional Safe check once. In every mode, delegate independent work to parallel subagents on fitting models by [agent routing](.agents/skills/safe-engine/references/agent-routing.md). In Fast and Lucky that table overrides any conflicting rule here or in linked methods: stops, tickets, research and comparisons, tests-last, logging depth, controller, before/after baselines, PR gates and review. Everything it keeps still applies.
+Every factory activity (delivery, tickets, PRs, factory maintenance) uses [speed modes](.agents/skills/safe-engine/references/speed-modes.md): **Fast** by default, Lucky or Safe on request. In Fast and Lucky that file overrides any conflicting rule here or in linked methods. In every mode, delegate independent work to parallel subagents on fitting models by [agent routing](.agents/skills/safe-engine/references/agent-routing.md).
 
 Safe implementation uses [Ticketing](.agents/skills/ticketing/SKILL.md): canonical tracker, owner-confirmed before/after, one complete delivery unit and its own builder session. Prefer the owner's chosen MCP; GitHub Issues is the default and Seif's current choice. Phase-only requests grant no coding or tracker-write authority; explicitly requested ticket intake still applies.
 
@@ -36,11 +36,11 @@ Build in complete working iterations: next useful outcome ticket first, required
 
 Give 100% minimum. Aim higher through correct, useful work within scope.
 
-Preserve selected options. For a new substantive choice, compare three credible alternatives and recommend one. Choose when delegated; ask only for an unresolved owner choice. Do not reopen settled decisions.
+Preserve selected options. New substantive choices follow [decision ownership](docs/current-decisions.md#decision-ownership).
 
-Use the [session contract](.agents/skills/safe-engine/references/session-contract.md) for authority, continuation and recovery. Continue to the agreed outcome without invented correction credits or session deadlines. Review loops stop after 3 failed rounds and go to Seif ([review rounds](.agents/skills/safe-engine/references/session-contract.md#review-rounds)). Honor access limits, protected gates and owner stops. Discover permitted alternatives when a UI/control route fails.
+Use the [session contract](.agents/skills/safe-engine/references/session-contract.md) for authority, continuation, recovery and the [review round cap](.agents/skills/safe-engine/references/session-contract.md#review-rounds). Honor access limits, protected gates and owner stops. Discover permitted alternatives when a UI/control route fails.
 
-Delivery uses [diagnostics](.agents/skills/safe-engine/references/app-diagnostics.md) and [efficiency](.agents/skills/safe-engine/references/app-efficiency.md). Every app/game needs working shared logging, including small fixes: preferred provider/access or internal module/local sink. Implement detailed safe success/failure journeys, parameters/queries/outputs/source. Read existing logs during development; actual actions and emitted-trail checks wait until final manual QA. Never credentials. Required logging stays surgical; analysis stays read-only.
+Delivery uses [diagnostics](.agents/skills/safe-engine/references/app-diagnostics.md) and [efficiency](.agents/skills/safe-engine/references/app-efficiency.md). Every app/game needs working shared logging, including small fixes.
 
 Use applicable [Delivery Readiness](.agents/skills/safe-engine/references/delivery-readiness.md): capabilities, criterion evidence, game/browser lifecycle, durable integrations and release/operations. Preserve intended game challenge. Product pilots/simulations are deferred until specifically requested; no app/game/mobile build or simulation as a factory check this iteration.
 
@@ -48,13 +48,13 @@ The factory serves games, mobile/desktop/web software, servers, tools and librar
 
 ## Files and verification
 
-Use [Application Security](.agents/skills/safe-engine/references/app-security.md): cheap relevant protections from the start, actual exposure checks before production. Local MVPs stay simple; existing security review owns the assessment. Tests-last and surgical scope remain.
+Use [Application Security](.agents/skills/safe-engine/references/app-security.md): cheap relevant protections from the start, actual exposure checks before production. Local MVPs stay simple; existing security review owns the assessment.
 
 Public pages meant for search use [Public Web SEO](.agents/skills/ux-quality/references/web-seo.md) in planning and final review. Preserve private/staging exclusions; verify actual production state within authority. Keep the checklist scoped.
 
-Every UI/interaction change uses [UX Quality](.agents/skills/ux-quality/SKILL.md): simple, familiar, accessible, responsive. Research uncertain design/assets; compare three credible options, justify/choose within delegation. Inspect visuals; audition sounds. No poor placeholders or unsupported claims. Reuse the reviewer; keep surgical scope and tests-last.
+Every UI/interaction change uses [UX Quality](.agents/skills/ux-quality/SKILL.md): simple, familiar, accessible, responsive. Research uncertain design/assets and choose per decision ownership. Inspect visuals; audition sounds. No poor placeholders or unsupported claims. Reuse the reviewer; keep surgical scope.
 
-For new or materially changed persistence, use [Database Schema](.agents/skills/database-schema/SKILL.md): whole-product journeys/invariants → three viable designs → reasoned choice → written schema → fresh audit. Every structure needs a purpose. Optimize measured workloads, not universal O(1) claims. Preserve original Get Ready wording, settled decisions, surgical scope and tests-last order.
+For new or materially changed persistence, use [Database Schema](.agents/skills/database-schema/SKILL.md). Every structure needs a purpose. Optimize measured workloads, not universal O(1) claims. Preserve original Get Ready wording, settled decisions and surgical scope.
 
 - Use Skill Creator for new or substantially revised skills.
 - Keep canonical skills in `.agents/skills/<name>/SKILL.md`, with matching YAML `name` and useful `description`.
@@ -62,16 +62,16 @@ For new or materially changed persistence, use [Database Schema](.agents/skills/
 - Keep each procedure in one canonical place. Declare real dependencies and preserve links.
 - Update affected callers, index, source records and current usage/preview statements together. Preserve dated evidence as history.
 - Check frontmatter, references and changed helpers. Exercise realistic behavior when instructions or executable behavior change. Wording checks alone do not prove method adherence.
-- Follow [tests-last order](docs/current-decisions.md#finish-work-use-it-then-automate-tests): finish implementation/improvements → final manual/user QA → author/polish/run automated tests → final review/PR. No manual reproduction, playtests, instruction walkthroughs or automated test authoring/edits/execution during development. Source inspection, research and existing-log reading remain allowed. Apply to delegates and reviewer fixes. Manual gaps stay unverified; automation cannot replace them.
+- Follow [tests-last order](docs/current-decisions.md#finish-work-use-it-then-automate-tests), including delegates and reviewer fixes.
 - Distinguish implemented, checked, independently reviewed, adopted and released. Report incomplete or unverified work plainly.
 - Keep secrets, client data, transcripts and runtime artifacts out of Git. Preserve unrelated edits.
 
 ## PRs and external actions
 
-For every authorized PR or update, use the original [creation](.agents/skills/how-to-make-a-pr/SKILL.md) and [review](.agents/skills/how-to-review-a-pr/SKILL.md) procedures with the [project adapter](docs/pr-workflow.md). PR review runs on a remote/cloud agent with fresh context and exact remote base/head. Local controller review stays separate; local subagents never count as PR review. Record actual remote task/identity/evidence. Missing cloud access blocks dependent review/merge, not independent local work.
+For every authorized PR or update, use the original [creation](.agents/skills/how-to-make-a-pr/SKILL.md) and [review](.agents/skills/how-to-review-a-pr/SKILL.md) procedures with the [project adapter](docs/pr-workflow.md). The adapter owns [remote/cloud PR review](docs/pr-workflow.md#cloud-pr-review). Self-review of our own draft PR is [pre-authorized](docs/pr-workflow.md#self-review-of-our-own-draft-pr).
 
 Source company names, accounts, channels, tracker lists and tool names are not this project's settings. Discover actual bindings before asking. Missing bindings block the affected external action; keep authorized local work moving. Local review and controller `ready` do not complete the PR workflow.
 
-For ticketed work, refresh the canonical ticket before PR completion. Compare its latest confirmed criteria with actual changes, journey proof and limits; unresolved scope drift or failed refresh blocks dependent acceptance. Keep original input, revisions, owner authority and decision activity. Local records cache context/evidence; they never become a second tracker.
+For ticketed work, refresh the canonical ticket before PR completion ([cheap refresh](.agents/skills/ticketing/SKILL.md#execute-and-keep-the-contract-current)). Compare its latest confirmed criteria with actual changes, journey proof and limits; unresolved scope drift or failed refresh blocks dependent acceptance. Keep original input, revisions, owner authority and decision activity. Local records cache context/evidence; they never become a second tracker.
 
-Keep task links, truthful attribution, visual context, adjustment history and human handoff. Leave PRs draft unless explicitly authorized otherwise. Do not infer authority to notify, merge, release, deploy or spend money. Factory publication reaches main only after actual cloud PR review and authorized merge; verify remote state and preserve installed/active pins. No host hook or protected remote gate is installed by these instructions.
+Keep task links, truthful attribution, visual context, adjustment history and human handoff. Leave PRs draft unless explicitly authorized otherwise. Do not infer authority to notify, merge, release, deploy or spend money. Factory publication to main follows the adapter's [enforcement](docs/pr-workflow.md#enforcement-and-evidence); preserve installed/active pins.

@@ -46,7 +46,7 @@ Generated media: separate generation reuse from playback/delivery; key all conte
 
 ## Evidence and handoff
 
-Follow [tests-last order](../../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests): finish implementation → manual use → final automated checks/benchmarks. Reuse valid unchanged evidence. Changed caching/reuse: cold/warm and changed inputs/versions, bounds/disposal, failures, concurrency/cancellation, disabled cache and enough distinct inputs for eviction. Separate manual/automated evidence. Check correctness/user effects alongside avoided calls; faster stale/wrong results fail.
+Follow [tests-last order](../../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests). Reuse valid unchanged evidence. Changed caching/reuse: cold/warm and changed inputs/versions, bounds/disposal, failures, concurrency/cancellation, disabled cache and enough distinct inputs for eviction. Separate manual/automated evidence. Check correctness/user effects alongside avoided calls; faster stale/wrong results fail.
 
 Count avoided work. Measure representative timing, CPU/GPU, allocation/retention or query/network/storage costs supporting claims. Include resident-work idle/release, workload/environment and cold/warm conditions. Fake dependencies prove mechanics, not production speed/memory. Percentages need comparable baselines. Report limits/unmet targets.
 

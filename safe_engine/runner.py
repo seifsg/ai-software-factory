@@ -50,7 +50,8 @@ def stop_process(process):
     process.wait(timeout=20)
 
 
-def run_command(argv, cwd, timeout, log_path, stdin=None):
+def run_command(argv, cwd, timeout, log_path, stdin=None, stop=None):
+    """stop: optional threading.Event; when set, the process tree is stopped like a timeout."""
     started = now()
     clock = time.monotonic()
     log_path.parent.mkdir(parents=True, exist_ok=True)
@@ -84,7 +85,7 @@ def run_command(argv, cwd, timeout, log_path, stdin=None):
                         output.extend(chunk)
                         del output[:-LOG_LIMIT]
                     break
-                if time.monotonic() - clock >= timeout:
+                if time.monotonic() - clock >= timeout or (stop is not None and stop.is_set()):
                     timed_out = True
                     stop_process(process)
                 elif not chunk:

@@ -2,7 +2,7 @@
 
 Install **`skills/improve-factory`**, the portable launcher. The canonical procedure in `.agents/skills/improve-factory` depends on the complete factory, so copying that folder alone is insufficient.
 
-The repository is private. Use an agent environment with your authorized GitHub access, Git and Python 3.11 or newer (the resolver alone supports 3.10). `main` holds the published factory; [PR #1](https://github.com/seifsg/ai-software-factory/pull/1) records its initial review/merge. Unmerged changes are not the default install. Current publication waits for Seif-arranged cloud PR review and authorized merge. To build apps, install [Safe Engine itself](install-safe-engine.md); this guide installs maintenance only. Merge proves neither deployment nor production readiness.
+The repository is private. Use an agent environment with your authorized GitHub access, Git and Python 3.9+. The launcher finds or installs them from official sources. `main` holds the published factory; [PR #1](https://github.com/seifsg/ai-software-factory/pull/1) records its initial review/merge. Unmerged changes are not the default install. Current publication waits for Seif-arranged cloud PR review and authorized merge. To build apps, install [Safe Engine itself](install-safe-engine.md); this guide installs maintenance only. Merge proves neither deployment nor production readiness.
 
 ## Codex — paste into another session
 

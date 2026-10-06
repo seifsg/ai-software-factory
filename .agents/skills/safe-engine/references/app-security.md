@@ -35,6 +35,6 @@ Then author/run relevant final regressions and secret/dependency/static checks u
 
 Use the existing independent [security code review](../../deep-review/references/theme-security.md). Trace input → authority → data/effect; inspect config, dependencies and evidence, not scanner scores alone. No extra review fleet.
 
-Record `surface → control → evidence → PASS / FAIL / UNKNOWN / justified N/A`. Local development can continue with documented gaps. Before public exposure or production, fix demonstrated compromise risks or isolate/disable affected paths; unresolved material checks prevent a ready claim. Lower-risk deferrals need reason, owner and revisit trigger; mandatory exceptions retain existing authority rules. No blanket enterprise checklist or security guarantee.
+Record `surface → control → evidence → PASS / FAIL / UNKNOWN / justified N/A`. Local development can continue with documented gaps. Before public exposure or production, fix demonstrated compromise risks or isolate/disable affected paths; unresolved material checks prevent a ready claim. Lower-risk deferrals follow the [severity and disposition rule](../../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests); mandatory exceptions retain existing authority rules. No blanket enterprise checklist or security guarantee.
 
 [Sources and original adaptation](../../../../docs/skill-provenance.md#application-security-4-october-2026).
