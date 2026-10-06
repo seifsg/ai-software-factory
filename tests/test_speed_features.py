@@ -8,6 +8,7 @@ locks, hashes and state files are real; no product, tracker or cloud acceptance 
 from copy import deepcopy
 from datetime import datetime, timedelta, timezone
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -644,7 +645,7 @@ class ExternalReviewerTests(Base):
     def test_extension_keeps_the_open_packet_usable(self):
         f = self.to_review()
         self.packet(f)
-        for expected in (1, 2):
+        for _ in (1, 2):
             self.packet(f)
         with self.assertRaisesRegex(EngineError, "round cap"):
             self.packet(f)
@@ -676,6 +677,78 @@ class ExternalReviewerTests(Base):
                      "Review-0099.json", "OUTPUTS/p.md"):
             with self.subTest(name), self.assertRaisesRegex(EngineError, "reserved"):
                 self.packet(f, name)
+
+    def test_reserved_names_include_the_entry_bundle_and_legacy_runs_folder(self):
+        f = self.to_review()
+        for name in ("entry-bundle.json", "Entry-Bundle.json", "runs", "runs/x.md", "RUNS/x.md"):
+            with self.subTest(name), self.assertRaisesRegex(EngineError, "reserved"):
+                self.packet(f, name)
+
+    @unittest.skipUnless(os.name == "nt", "Windows drops trailing spaces and dots from path parts")
+    def test_trailing_space_and_extended_length_paths_are_refused(self):
+        f = self.to_review()
+        run, root = f.flow.directory, f.root
+        for path, pattern in ((run / "history /x.json", "reserved"), (run / "outputs /x.md", "reserved"),
+                              (run / "state.json ", "reserved"), (run / "state.json.", "reserved"),
+                              (root / "src /a.json", "Use a path under"),
+                              (root / "src." / "a.json", "Use a path under"),
+                              (Path("\\\\?\\" + str(root / "x.json")), "extended-length|Use a path under"),
+                              (Path("\\\\?\\" + str(run / "nul")), "extended-length|not a file")):  # 3.9 drops the prefix
+            with self.subTest(path=str(path)), self.assertRaisesRegex(EngineError, pattern):
+                self.packet(f, str(path))
+        self.assertFalse((root / "src").exists())
+
+    @unittest.skipUnless(os.name == "nt", "Windows extended-length namespaces")
+    def test_unresolvable_extended_length_path_is_an_engine_error(self):
+        f = self.to_review()
+        with self.assertRaises(EngineError):
+            self.packet(f, r"\\?\GLOBALROOT\x")
+
+    def test_edited_or_deleted_packet_file_refuses_the_report(self):
+        f = self.to_review()
+        issued = f.flow.directory / "packet.md"
+        for name, damage in (("edited", lambda: issued.write_text("tampered", encoding="utf-8")),
+                             ("deleted", issued.unlink)):
+            with self.subTest(name):
+                self.packet(f)
+                damage()
+                with self.assertRaisesRegex(EngineError, "Review packet changed or missing"):
+                    self.external(f, report())
+                self.assertIsNotNone(f.flow.load()["review_packet"])
+        self.packet(f)  # A fresh packet restores the route.
+        self.assertEqual(self.external(f, report())["phase"], "ready")
+
+    def test_legacy_packet_without_records_falls_back_to_the_sequence_check(self):
+        f = self.to_review()
+        for name, offset, accepted in (("different sequence", 5, False), ("matching sequence", 0, True)):
+            with self.subTest(name):
+                self.packet(f)
+                legacy_packet = {k: v for k, v in f.flow.load()["review_packet"].items() if k != "records"}
+                legacy_packet["sequence"] += offset
+                self.set_state(f, review_packet=legacy_packet)
+                if accepted:
+                    self.assertEqual(self.external(f, report())["phase"], "ready")
+                else:
+                    with self.assertRaisesRegex(EngineError, "changed since the review packet"):
+                        self.external(f, report())
+
+    def test_patching_workflow_seams_reaches_the_mixin_modules(self):
+        f = self.to_review()
+        with patch("safe_engine.workflow.shutil.which", return_value=None) as which:
+            with self.assertRaisesRegex(EngineError, "review-packet"):
+                f.flow.review(10)  # review.py asked the patched lookup, not the real PATH
+        which.assert_called_once_with("codex")
+        with patch("safe_engine.workflow.save") as saved:
+            self.packet(f)
+        saved.assert_called_once()  # persist() in review.py resolves save through workflow
+        def double(argv, cwd, timeout, log):
+            log.parent.mkdir(parents=True, exist_ok=True)
+            log.write_text(DOUBLE, encoding="utf-8")
+            return {"passed": True, "synthetic": DOUBLE}
+        with patch("safe_engine.workflow.run_command", side_effect=double) as launched:
+            results = f.flow.execute_checks({"sequence": 7}, [command("alpha", "seam.py")])
+        launched.assert_called_once()  # checks.py launches through workflow.run_command
+        self.assertEqual([r["id"] for r in results], ["alpha"])
 
     def test_reissuing_an_unsubmitted_packet_counts_as_a_failed_review_and_can_hit_the_cap(self):
         f = self.to_review()

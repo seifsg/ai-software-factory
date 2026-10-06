@@ -5,11 +5,10 @@ from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
-import stat
 import tempfile
 import time
 
-from .project import EngineError, reject_path_aliases
+from .project import EngineError, reject_alias, reject_path_aliases
 
 
 def now():
@@ -50,12 +49,11 @@ def atomic_json(path, value):
 
 
 def reject_tree_aliases(folder):
-    """Use cached DirEntry data; Windows needs no extra call per entry."""
+    """Use cached DirEntry data; Windows needs no extra call per entry, POSIX lstats only links."""
     with os.scandir(folder) as entries:
         for entry in entries:
-            attributes = entry.stat(follow_symlinks=False).st_file_attributes if os.name == "nt" else 0
-            if entry.is_symlink() or attributes & stat.FILE_ATTRIBUTE_REPARSE_POINT:
-                raise EngineError(f"Generated state must not use symlinks or reparse points: {entry.path}")
+            if os.name == "nt" or entry.is_symlink():
+                reject_alias(entry.path, entry.stat(follow_symlinks=False))
             if entry.is_dir(follow_symlinks=False):
                 reject_tree_aliases(entry.path)
 

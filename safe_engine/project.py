@@ -116,7 +116,14 @@ def inside(project, value):
 
 
 def aliased(info):
+    """Symlink or Windows reparse point (junction, mount point) in lstat data."""
     return stat.S_ISLNK(info.st_mode) or getattr(info, "st_file_attributes", 0) & REPARSE
+
+
+def reject_alias(path, info):
+    """The one generated-state alias rule, shared with storage.reject_tree_aliases."""
+    if aliased(info):
+        raise EngineError(f"Generated state must not use symlinks or reparse points: {path}")
 
 
 def escapes(root, name):
@@ -181,9 +188,7 @@ def reject_path_aliases(path, root):
             info = current.lstat()
         except FileNotFoundError:
             continue
-        if (stat.S_ISLNK(info.st_mode)
-                or getattr(info, "st_file_attributes", 0) & stat.FILE_ATTRIBUTE_REPARSE_POINT):
-            raise EngineError(f"Generated state must not use symlinks or reparse points: {current}")
+        reject_alias(current, info)
 
 
 def relative_input_path(value, *, allow_factory=False):
