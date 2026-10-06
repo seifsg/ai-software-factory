@@ -565,7 +565,7 @@ class ReviewRoundCapTests(Base):
     def test_an_early_extension_never_lowers_the_cap(self):
         f = self.fixture()
         f.flow.initialize(f.task, f.profile)
-        self.assertGreaterEqual(f.flow.extend_reviews(1, "Extended before any review failed")["review_rounds"], 3)
+        self.assertEqual(f.flow.extend_reviews(1, "Extended before any review failed")["review_rounds"], 4)
 
     def test_invalid_extensions_are_rejected_without_changing_the_run(self):
         f = self.to_review()
@@ -640,6 +640,42 @@ class ExternalReviewerTests(Base):
         with self.assertRaisesRegex(EngineError, "nonce"):
             self.external(f, report() | {"summary": f"{old} {DOUBLE}"}, nonce=False)
         self.assertEqual(self.external(f, report())["phase"], "ready")
+
+    def test_extension_keeps_the_open_packet_usable(self):
+        f = self.to_review()
+        self.packet(f)
+        for expected in (1, 2):
+            self.packet(f)
+        with self.assertRaisesRegex(EngineError, "round cap"):
+            self.packet(f)
+        self.assertEqual(f.flow.extend_reviews(1, "Seif: one more round")["review_rounds"], 4)
+        self.assertEqual(self.external(f, report())["phase"], "ready")
+        self.assertEqual(f.flow.status()["failed_reviews"], 2)
+
+    def test_extension_never_revives_a_stale_packet(self):
+        f = self.to_review()
+        self.packet(f)
+        self.set_state(f, review_packet={**f.flow.load()["review_packet"], "records": "stale"})
+        f.flow.extend_reviews(1, "Seif: one more round")
+        with self.assertRaisesRegex(EngineError, "changed since the review packet"):
+            self.external(f, report())
+
+    def test_records_change_stales_the_packet_but_cap_bookkeeping_does_not(self):
+        f = self.to_review()
+        self.packet(f)
+        self.set_state(f, contract_revision=f.flow.load().get("contract_revision", 0) + 1)
+        with self.assertRaisesRegex(EngineError, "changed since the review packet"):
+            self.external(f, report())
+        self.packet(f, "second.md")
+        self.set_state(f, failed_reviews=1, review_rounds=5)
+        self.assertEqual(self.external(f, report())["phase"], "ready")
+
+    def test_reserved_run_files_are_refused(self):
+        f = self.to_review()
+        for name in ("state.json", "lock", "history/x.json", "review-0009.json", "outputs/p.md",
+                     "Review-0099.json", "OUTPUTS/p.md"):
+            with self.subTest(name), self.assertRaisesRegex(EngineError, "reserved"):
+                self.packet(f, name)
 
     def test_reissuing_an_unsubmitted_packet_counts_as_a_failed_review_and_can_hit_the_cap(self):
         f = self.to_review()
@@ -719,7 +755,8 @@ class ExternalReviewerTests(Base):
     def test_report_is_rejected_when_inputs_or_records_changed_since_the_packet(self):
         f = self.to_review()
         self.packet(f)
-        f.flow.extend_reviews(3, "Any saved record change")  # Records changed.
+        packet = f.flow.load()["review_packet"]
+        self.set_state(f, review_packet={**packet, "records": "stale"})  # Records changed.
         with self.assertRaisesRegex(EngineError, "changed since the review packet"):
             self.external(f, report())
         self.packet(f, "second.md")

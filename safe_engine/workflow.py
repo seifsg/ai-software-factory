@@ -19,6 +19,9 @@ from .review_packet import review_prompt, schema_errors
 from .tickets import TicketStore, ticket_key
 
 
+VOLATILE = {"sequence", "history", "updated_at", "review_packet", "review_rounds", "failed_reviews",
+            "pending_operation"}  # save counters and cap bookkeeping; not reviewed records
+RESERVED = {"state.json", "lock", "handoff.md", "history", "outputs", "logs", "artifacts", "ticket-observations"}
 REVIEW_ROUNDS = 3  # Seif, 6 Oct: failed reviews before the owner decides
 DELEGATION = "Seif 6 Oct delegation"  # LOW, and MEDIUM at local exposure, may be deferred
 EXTERNAL = "external reviewer; independence not verified by the controller"
@@ -389,7 +392,9 @@ class Workflow:
         self.require_phase(state, "review")
         if not self.ticket_key:
             raise EngineError("Ticket proof requires a bound ticket run")
-        proof = read_json(source)
+        proof = read_json(self.outside_inputs(source))
+        if not isinstance(proof, dict):
+            raise EngineError("Ticket proof must be a JSON object")
         ticket = state["ticket"]
         if proof.get("scope_digest") != ticket["scope_digest"] or proof.get("revision") != ticket["revision"]:
             raise EngineError("Proof must map the latest confirmed ticket revision/digest")
@@ -745,9 +750,15 @@ class Workflow:
                    f"Start your summary with review nonce {nonce}.\n")
         out.write_text(prompt, encoding="utf-8")
         state["review_packet"] = {"fingerprint": self.current(state), "sha256": file_hash(out), "nonce": nonce,
-                                  "path": str(out), "sequence": state["sequence"] + 1}
+                                  "path": str(out), "sequence": state["sequence"] + 1,
+                                  "records": self.records_digest(state)}
         save(self.directory, state, "Issued external review packet")
         return {**self.status(state), "packet": str(out)}
+
+    @staticmethod
+    def records_digest(state):
+        """Binds a review packet to the run records it judged, not to the save counter."""
+        return digest({key: value for key, value in state.items() if key not in VOLATILE})
 
     def outside_inputs(self, path):
         """Packets/reports inside the project would change its fingerprint; keep them under .factory or outside."""
@@ -755,6 +766,10 @@ class Workflow:
         project, run = self.project.resolve(), self.directory.resolve()
         if (path == project or project in path.parents) and run not in path.parents:
             raise EngineError(f"Use a path under {run} or outside the project: {path}")
+        if run in path.parents:
+            top = path.relative_to(run).parts[0].lower()
+            if top in RESERVED or top.startswith("review-"):
+                raise EngineError(f"{top} is reserved for the controller; pick another name in {run}")
         return path
 
     def external_review(self, state, source, reviewer, codex):
@@ -766,7 +781,9 @@ class Workflow:
         current = self.current(state)
         if not packet:
             raise EngineError("Issue review-packet first and hand it to a fresh read-only subagent")
-        if packet["sequence"] != state["sequence"] or packet["fingerprint"] != current:
+        stale = (packet["records"] != self.records_digest(state) if "records" in packet
+                 else packet["sequence"] != state["sequence"])
+        if stale or packet["fingerprint"] != current:
             raise EngineError("Inputs or records changed since the review packet; issue a fresh review-packet")
         report = read_json(self.outside_inputs(source))
         if not isinstance(report, dict):
