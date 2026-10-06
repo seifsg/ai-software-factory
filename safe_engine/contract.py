@@ -123,7 +123,8 @@ class ContractMixin:
         self.require_phase(state, "review")
         if not self.ticket_key:
             raise EngineError("Ticket proof requires a bound ticket run")
-        proof = read_json(self.outside_inputs(source))
+        source = self.outside_inputs(source)  # check and capture the same file
+        proof = read_json(source)
         if not isinstance(proof, dict):
             raise EngineError("Ticket proof must be a JSON object")
         ticket = state["ticket"]
@@ -156,6 +157,8 @@ class ContractMixin:
                        for f in ("change", "reason", "authority")):
                     raise EngineError("Approved deviations need change/reason/owner authority")
         self.capture_artifact(state, "ticket-proof", source, self.current(state))
+        if read_json(self.directory / state["artifacts"]["ticket-proof"]["path"]) != proof:
+            raise EngineError("Ticket proof changed while it was recorded; record it again")
         self.persist(state, "Mapped latest confirmed ticket expectations to before/after evidence")
         return self.status(state)
 

@@ -90,9 +90,7 @@ class ReviewMixin:
 
     def outside_inputs(self, path):
         """Packets/reports inside the project would change its fingerprint; keep them under .factory or outside."""
-        path = Path(os.path.abspath(path))
-        if os.name == "nt":  # Windows opens "src /a.json" as src/a.json; normalize before resolve()
-            path = Path(*(part.rstrip(" .") or part for part in path.parts))
+        path = Path(os.path.abspath(path))  # applies the OS's own trailing space/dot trimming, nothing more
         try:
             path = path.resolve()
         except OSError as error:
