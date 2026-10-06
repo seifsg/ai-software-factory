@@ -9,7 +9,7 @@ Load `https://github.com/seifsg/ai-software-factory`; run its complete methods i
 
 ## Get the requirements
 
-Needs Git and Python 3.9+. Safe local review also needs the Codex CLI. Set them up on any OS without asking Seif to prepare the machine:
+Needs Git and Python 3.9+. Safe local review uses the Codex CLI when present, otherwise the controller's review-packet fallback. Set them up on any OS without asking Seif to prepare the machine:
 
 1. Find them: `git --version`; Python through `python3`, `python` or Windows `py -3`. Use the first that reports 3.9+, by full path, for every later command.
 2. Missing or too old: install from the official source, user scope when possible.
@@ -17,7 +17,7 @@ Needs Git and Python 3.9+. Safe local review also needs the Codex CLI. Set them 
    - macOS: `brew install python git`. No Homebrew: `xcode-select --install` for Git, the python.org installer for Python.
    - Linux: the distro manager (`apt-get`, `dnf`, `pacman`, `zypper` or `apk`).
    - No admin or package manager: install [uv](https://docs.astral.sh/uv/getting-started/installation/) (`winget install astral-sh.uv`, `brew install uv` or its official installer), run `uv python install 3.12`, then `uv run --python 3.12 python ...`.
-   - Codex CLI, Safe only: [openai/codex](https://github.com/openai/codex) (`npm install -g @openai/codex` or `brew install --cask codex`).
+   - Codex CLI, Safe only and optional: [openai/codex](https://github.com/openai/codex) (`npm install -g @openai/codex` or `brew install --cask codex`).
 3. Check the versions again. Report what was installed, from where.
 4. Host asks before installs: ask once, naming each tool and source. Still blocked (no network, admin or approval): say what is missing. Fast and Lucky continue with Git alone: `git ls-remote https://github.com/seifsg/ai-software-factory main`, clone that SHA into `~/.safe-engine/bundles/<sha>`, detach, read it only. Safe waits for Python.
 5. Official sources only. No system settings beyond the install. No credentials in commands.

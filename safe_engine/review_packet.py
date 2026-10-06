@@ -51,7 +51,7 @@ hide production/configuration changes. A receipt or green command alone is not p
 Verify independent sealing/amendment reviews bind exact contracts and preserve original requirements,
 history and authority. Check selected review scopes against actual code; a missing flag cannot waive
 an applicable method. Load missing conditional guidance from {bundle / '.agents/skills'} only when
-needed: UX/assets, persistence, research, SEO, integration/release, ticketing. No irrelevant database method.
+needed: analysis, UX/assets, persistence, research, SEO, integration/release, ticketing. No irrelevant database method.
 Manual, automated and mixed criteria need their actual evidence, never dummy executable checks.
 Assess every criterion exactly once, PASS/FAIL/UNKNOWN. Core failures/unknowns and missing required
 manual evidence block PASS. Judge logging, safe detail, lifecycle, resource costs and applicable
@@ -67,7 +67,8 @@ Seif's 6 Oct delegation: LOW findings, and MEDIUM at local exposure, may be acce
 exception owner "Seif", authority "Seif 6 Oct delegation", reason, scope, revisit trigger and a
 follow-up ticket as destination. Other deferrals need real owner authority. Before-exposure
 findings block public/production or release scope; otherwise retain their follow-up record. Mandatory
-rules require actual exception authority. Clean reviews need no findings. Do not lower severity to pass.
+rules require actual exception authority. Carried manual PASSes must be justified against the repair
+diff; a doubtful carry is UNKNOWN. Clean reviews need no findings. Do not lower severity to pass.
 Exposure: {state['profile'].get('exposure', 'local')}; scopes: {state['profile'].get('review_scopes', [])}.
 Return the structured report. Local acceptance cannot approve a PR. PR review requires a separate
 cloud/remote system with fresh context and exact remote head; the owner arranges that route.

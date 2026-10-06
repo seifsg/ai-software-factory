@@ -447,7 +447,7 @@ class Workflow:
             raise EngineError("Ticket proof requires a bound ticket run")
         self.require_checks(state)
         draft = proof_draft(state, self.project)
-        atomic_json(Path(out).absolute(), draft)
+        atomic_json(self.outside_inputs(out), draft)
         return {"draft": str(out), "complete": ["before", "after"],
                 "unknown": [row["id"] for row in draft["criteria"] if row["status"] != "PASS"]}
 
@@ -734,14 +734,28 @@ class Workflow:
         """Prompt for a host subagent when no Codex CLI exists; binds the current inputs and state."""
         state = self.load()
         self.require_reviewable(state)
+        out = self.outside_inputs(out)
+        if state.get("review_packet"):
+            state["failed_reviews"] = state.get("failed_reviews", 0) + 1  # an unsubmitted verdict counts as failed
+            self.require_reviewable(state)
+        nonce = uuid.uuid4().hex
         prompt = review_prompt(state, self.directory, Path(__file__).resolve().parent.parent)
         prompt += (f"\nReturn only JSON matching the schema at {self.schema_path(state)}. "
-                   "Run as a fresh, read-only, separately spawned reviewer.\n")
-        Path(out).write_text(prompt, encoding="utf-8")
-        state["review_packet"] = {"fingerprint": self.current(state), "sha256": file_hash(Path(out)),
-                                  "path": str(Path(out).resolve()), "sequence": state["sequence"] + 1}
+                   "Run as a fresh, read-only, separately spawned reviewer. "
+                   f"Start your summary with review nonce {nonce}.\n")
+        out.write_text(prompt, encoding="utf-8")
+        state["review_packet"] = {"fingerprint": self.current(state), "sha256": file_hash(out), "nonce": nonce,
+                                  "path": str(out), "sequence": state["sequence"] + 1}
         save(self.directory, state, "Issued external review packet")
         return {**self.status(state), "packet": str(out)}
+
+    def outside_inputs(self, path):
+        """Packets/reports inside the project would change its fingerprint; keep them under .factory or outside."""
+        path = Path(path).resolve()
+        project, run = self.project.resolve(), self.directory.resolve()
+        if (path == project or project in path.parents) and run not in path.parents:
+            raise EngineError(f"Use a path under {run} or outside the project: {path}")
+        return path
 
     def external_review(self, state, source, reviewer, codex):
         if codex:
@@ -754,7 +768,11 @@ class Workflow:
             raise EngineError("Issue review-packet first and hand it to a fresh read-only subagent")
         if packet["sequence"] != state["sequence"] or packet["fingerprint"] != current:
             raise EngineError("Inputs or records changed since the review packet; issue a fresh review-packet")
-        report = read_json(source)
+        report = read_json(self.outside_inputs(source))
+        if not isinstance(report, dict):
+            raise EngineError("Review report must be a JSON object")
+        if packet.get("nonce") and packet["nonce"] not in str(report.get("summary", "")):
+            raise EngineError("Report lacks this packet's review nonce; old or foreign reports are rejected")
         errors = schema_errors(report, read_json(self.schema_path(state)))
         if errors:
             raise EngineError("Review report does not match its schema: " + "; ".join(errors[:5]))
@@ -888,7 +906,7 @@ class Workflow:
             raise EngineError("Cancelled runs cannot be extended")
         if type(rounds) is not int or not 1 <= rounds <= 3 or not isinstance(reason, str) or not reason.strip():
             raise EngineError("Extend by 1-3 rounds with the owner's reason")
-        state["review_rounds"] = state.get("failed_reviews", 0) + rounds
+        state["review_rounds"] = max(state.get("review_rounds", REVIEW_ROUNDS), state.get("failed_reviews", 0)) + rounds
         save(self.directory, state, f"Owner extended review rounds by {rounds}: {reason}")
         return self.status(state)
 

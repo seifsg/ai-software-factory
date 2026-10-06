@@ -79,7 +79,7 @@ Codex discovers repository skills in `.agents/skills` within the repository scop
 ## What the agent needs before it can proceed
 
 - The complete factory bundle, Python 3.9+, Git, and access to the target project. The launcher installs missing Git/Python from official sources.
-- An authenticated `codex` CLI on PATH for the current independent reviewer.
+- An authenticated `codex` CLI on PATH for the independent reviewer, or the fallback: `review-packet` to a fresh read-only subagent, then `review --report`.
 - The target project's actual test tools. Browser work needs a browser driver and runnable app.
 - An agreed task, observable manual/automated/mixed acceptance, recorded authority and completion boundaries. Version 2 starts with draft checks; independently seal them at final testing. Real command watchdogs detect stuck processes; historical repair limits do not govern.
 - For new delivery: canonical tracker access, confirmed ticket revision and a real dedicated builder session/workspace. Preserve missing capability as a dependent blocker; labels do not dispatch sessions.
@@ -123,8 +123,8 @@ A remote workspace cannot read `C:/work/...` on this PC. It needs its own checko
 | Session | First action | Current status |
 |---|---|---|
 | Codex, local | Paste the explicit-path starter, or invoke `$safe-engine` when discovered | The local delivery cycle was demonstrated on the recorded fixture. |
-| Claude Code, local, with Codex CLI installed | Add the factory directory, then ask Claude to read the same entry skill by its path | Documented manual loading route. No complete Claude-builder run has been verified here. Review still uses Codex. |
-| Claude Code without Codex CLI | Can read the methods, but the current controller cannot complete its independent review | A Claude-native review adapter is not implemented. |
+| Claude Code, local, with Codex CLI installed | Add the factory directory, then ask Claude to read the same entry skill by its path | Documented manual loading route. No complete Claude-builder run has been verified here. Review uses Codex when present. |
+| Claude Code without Codex CLI | Builds normally; Safe review uses `review-packet` with a fresh read-only Claude subagent, then `review --report` | Controller labels it external; it cannot verify the reviewer's independence. |
 | Cloud-hosted session | Provision both repositories and the required tools inside that environment | Not demonstrated; local installation does not establish cloud compatibility. |
 
 For an installed Claude Code CLI, launch from your target project:
