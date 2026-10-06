@@ -72,11 +72,11 @@ $safe-engine + your app request
   -> both complete PR procedures when PR delivery is authorized
 ```
 
-Honor the original file-summary stop unless the user has already authorized continuing the plan.
+File-summary stop: [speed modes](../.agents/skills/safe-engine/references/speed-modes.md#safe).
 
-The agent creates a missing target directory within scope, preserves work and establishes actual settings, session contract and clean Git baseline. Version-2 initialization allows draft acceptance without tests; independently seal final acceptance after implementation, final manual QA and test authoring. No early manual/user tests, playtests or automated checks. Your decisions and real boundaries remain. Follow [usage](pilot-usage.md#feature-feedback-and-version-checkpoints); browser QA needs a runnable app and permitted controls.
+The agent creates a missing target directory within scope, preserves work and establishes actual settings, session contract and clean Git baseline. Version-2 initialization allows draft acceptance without tests; independently seal final acceptance after implementation, final manual QA and test authoring ([tests-last order](current-decisions.md#finish-work-use-it-then-automate-tests)). Your decisions and real boundaries remain. Follow [usage](pilot-usage.md#feature-feedback-and-version-checkpoints); browser QA needs a runnable app and permitted controls.
 
-Git, private access, Python 3.11+, authenticated Codex CLI for local controller review and actual check tools are prerequisites. PR review separately needs a remote/cloud agent with fresh context and the remote candidate; local subagents cannot replace it. Inspect capabilities before dependent work. Skills grant no credentials, universal dependencies, cloud route or background service.
+Git, private access, Python 3.9+ (the launcher finds or installs Git and Python), authenticated Codex CLI for local controller review and actual check tools are prerequisites. PR review separately needs [cloud PR review](pr-workflow.md#cloud-pr-review). Inspect capabilities before dependent work. Skills grant no credentials, universal dependencies, cloud route or background service.
 
 ## Version-safe resume
 

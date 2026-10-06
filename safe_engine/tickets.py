@@ -6,12 +6,10 @@ nor prove a connector call occurred. They bind the supplied evidence, not the ho
 
 from datetime import datetime, timezone
 import json
-import os
-from pathlib import Path
 import re
 from urllib.parse import urlsplit
 
-from .project import EngineError, digest, git, reject_path_aliases
+from .project import EngineError, digest, git, git_dirs, reject_path_aliases
 from .storage import atomic_json, locked, now, read_json
 
 
@@ -35,7 +33,10 @@ def text(value, name):
 
 def timestamp(value):
     try:
-        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        # Python 3.9/3.10 parse only 3 or 6 fractional digits; pad 1-6 to six.
+        value = re.sub(r"\.(\d{1,6})(?=[+-]|$)", lambda match: "." + match[1].ljust(6, "0"),
+                       value.replace("Z", "+00:00"))
+        parsed = datetime.fromisoformat(value)
         if parsed.tzinfo is None or parsed > datetime.now(timezone.utc):
             raise ValueError()
         return parsed
@@ -201,8 +202,7 @@ def binding(capture):
 class TicketStore:
     def __init__(self, project):
         self.project = project
-        common = Path(git(project, "rev-parse", "--git-common-dir"))
-        self.common = Path(os.path.abspath(project / common if not common.is_absolute() else common))
+        self.common = git_dirs(project)[1]
         self.root = self.common / "safe-engine" / "tickets"
         reject_path_aliases(self.root, self.common)
 
@@ -309,18 +309,57 @@ class TicketStore:
                 record = {**supplied, "contract": contract, "pending": pending,
                           "sequence": sequence, "valid": True, "captured_at": now(),
                           "raw_digest": digest({name: supplied[name] for name in ("body", "activity", "title", "status", "identity")})}
-                history_path = history / f"{sequence:06d}.json"
-                reject_path_aliases(history_path, self.common)
-                if history_path.exists():
-                    raise EngineError("Preserve numbered ticket history; reconcile sequence before importing")
+                self.history_path(key, sequence)
                 index[identity_id] = key
                 atomic_json(index_path, index)
-                atomic_json(history_path, record)
-                atomic_json(path, record)
-                return self.status(key)
+                return self.append(key, record)
         except (EngineError, ValueError, KeyError, TypeError) as error:
             self.failed(key, str(error))
             raise EngineError(str(error)) from error
+
+    def unchanged(self, supplied):
+        """Cheap refresh: remote updated_at/status equal the current capture's; any change needs a full capture."""
+        key = ticket_key(supplied.get("key"))
+        try:
+            if supplied.get("version") != 1 or supplied.get("unchanged") is not True:
+                raise EngineError("Unchanged observation needs version 1 and unchanged: true")
+            observed = timestamp(supplied.get("observed_at"))
+            updated = timestamp(supplied.get("remote_updated_at"))
+            transport = supplied.get("transport")
+            if not isinstance(transport, dict):
+                raise EngineError("Observation needs actual tool and source provenance")
+            text(transport.get("tool"), "transport tool")
+            text(transport.get("source"), "transport source")
+            with locked(self.root / "coordination"):
+                if not self.path(key).exists():
+                    raise EngineError("No current capture; import a complete capture first")
+                previous = read_json(self.path(key))
+                if not previous["valid"] or previous["pending"]:
+                    raise EngineError("Invalid or pending captures need a complete capture")
+                if updated != timestamp(previous["remote_updated_at"]) or supplied.get("status") != previous["status"]:
+                    raise EngineError("Remote ticket changed since its capture; import a complete capture")
+                if observed <= timestamp(previous["observed_at"]):
+                    raise EngineError("Older/replayed remote observations cannot replace the current snapshot")
+                sequence = previous["sequence"] + 1
+                return self.append(key, {**previous, "observed_at": supplied["observed_at"], "transport": transport,
+                                         "sequence": sequence, "captured_at": now(),
+                                         "unchanged_from": previous["sequence"]})
+        except (EngineError, ValueError, KeyError, TypeError) as error:
+            self.failed(key, str(error))
+            raise EngineError(str(error)) from error
+
+    def history_path(self, key, sequence):
+        path = self.root / "history" / key / f"{sequence:06d}.json"
+        reject_path_aliases(path, self.common)
+        if path.exists():
+            raise EngineError("Preserve numbered ticket history; reconcile sequence before importing")
+        return path
+
+    def append(self, key, record):
+        """Numbered immutable history, then the current snapshot; the caller holds the lock."""
+        atomic_json(self.history_path(key, record["sequence"]), record)
+        atomic_json(self.path(key), record)
+        return self.status(key)
 
     def status(self, key):
         record = self.get(key)

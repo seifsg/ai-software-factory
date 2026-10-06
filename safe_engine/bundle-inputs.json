@@ -4,6 +4,7 @@
     ".agents/skills/safe-engine/references/delivery-readiness.md",
     "safe_engine/acceptance.py",
     "safe_engine/review_packet.py",
+    "safe_engine/proof.py",
     "safe_engine/review-schema-v2.json",
     ".agents/skills/safe-engine/references/app-security.md",
     ".agents/skills/ux-quality/SKILL.md",

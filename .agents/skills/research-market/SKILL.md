@@ -19,7 +19,7 @@ Delivery: required capability still unknown? Make a bounded [spike ticket](../ti
 
 Delivery: preserve original five planning outputs. If missing, use [Get Ready to Code](../get-ready-to-code/SKILL.md); honor checkpoint. Standalone research: findings only; no coding plan, controller or initialization.
 
-Reuse current evidence. Stop when material decisions have support. Change unproductive searches; honor access limits/owner stops. Missing evidence blocks dependent choices only. No invented deadlines/retry allowances.
+Reuse current evidence. Stop when material decisions have support. Change unproductive searches; honor access limits/owner stops. Missing evidence blocks dependent choices only.
 
 ## Gather evidence
 
@@ -33,7 +33,7 @@ Compare options with the same inputs, workload and user journey.
 4. **Resources.** Apply [efficiency](../safe-engine/references/app-efficiency.md): CPU/GPU, memory, database/query plans, network, storage, caches, startup, background work, ownership. Set applicable areas, provisional targets, validation tools. No database/cache/server just to fill a checklist.
 5. **UX/UI.** Study usable, accessible interaction for actual audience, inputs/display: responsiveness, navigation, readability, focus, feedback, recovery, localization. Games: controls, HUD, pause/save/resume where applicable. Capture important states using authorized tools or official screenshots/demos; record URL, date, platform/version, image reference/path, visible state, insight. Vendor imagery proves neither hands-on use nor shipping rights.
 
-Research is not early testing of our unfinished product. Preserve intended game challenge; actual playtests, manual/user QA and automated checks happen only after implementation/improvements finish.
+Research is not early testing of our unfinished product ([tests-last order](../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests)). Preserve intended game challenge.
 
 Per material claim: source URL/title, access date, version/edition, supporting observation. Separate observation, vendor claim, inference. Cross-check consequential claims; benchmarks need workload/hardware/method. Prefer primary sources and relevant chapters/sections; do not copy manuals into context.
 
@@ -41,7 +41,7 @@ Research grants no new accounts, purchases, private-data disclosure or protected
 
 ## Decide and return
 
-New substantive decisions: compare three credible options, recommend one. Use delegated authority; preserve owner-reserved/settled choices. No fabricated alternatives. Record retained/adopted/deferred/rejected ideas and reasons.
+New substantive decisions follow [decision ownership](../../../docs/current-decisions.md#decision-ownership). Record retained/adopted/deferred/rejected ideas and reasons.
 
 Route applicable evidence once; no recursive research:
 - Public pages meant for search: current engine/framework evidence and search intent → [Public Web SEO](../ux-quality/references/web-seo.md). Preserve private routes; no ranking promises.

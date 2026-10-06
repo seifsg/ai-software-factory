@@ -1,5 +1,8 @@
 """Discover projects and bind evidence to explicit inputs."""
 
+from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
+from functools import lru_cache
 import hashlib
 import json
 import os
@@ -11,12 +14,54 @@ import subprocess
 import sys
 
 
+REPARSE = stat.FILE_ATTRIBUTE_REPARSE_POINT
+WORKERS = min(32, (os.cpu_count() or 1) * 4)
+_scope = None  # Per-command scan memo; None outside snapshot().
+
+
 class EngineError(Exception):
     """An actionable workflow or configuration problem."""
 
 
+@contextmanager
+def snapshot():
+    """Share one project/bundle scan per command; nested scopes reuse it."""
+    global _scope
+    if _scope is not None:
+        yield
+        return
+    _scope = {}
+    try:
+        yield
+    finally:
+        _scope = None
+
+
+def cached(key, compute):
+    if _scope is None:
+        return compute()
+    if key not in _scope:
+        _scope[key] = compute()
+    return _scope[key]
+
+
+def rescan():
+    """Forget scans after a check or reviewer process may have changed files."""
+    if _scope is not None:
+        _scope.clear()
+
+
 def digest(value):
     return hashlib.sha256(json.dumps(value, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+
+
+def sha256_file(path):
+    """Chunked SHA-256; Python 3.9 has no hashlib.file_digest. 64 KiB: larger reads cost an allocation per file."""
+    value = hashlib.sha256()
+    with open(path, "rb") as stream:
+        for block in iter(lambda: stream.read(1 << 16), b""):
+            value.update(block)
+    return value.hexdigest()
 
 
 def file_hash(path):
@@ -24,20 +69,40 @@ def file_hash(path):
         raise EngineError(f"Symlink inputs are unsupported in this pilot: {path}")
     if not path.is_file():
         raise EngineError(f"Required input is not a file: {path}")
-    with path.open("rb") as stream:
-        return hashlib.file_digest(stream, "sha256").hexdigest()
+    return sha256_file(path)
 
 
 def git(project, *args):
-    result = subprocess.run(["git", "-C", str(project), *args], capture_output=True, timeout=30)
+    try:
+        result = subprocess.run(["git", "-C", str(project), *args], capture_output=True, timeout=30)
+    except subprocess.TimeoutExpired as error:
+        raise EngineError(f"Git timed out after 30s: git {' '.join(args[:2])}") from error
     if result.returncode:
         raise EngineError(result.stderr.decode(errors="replace").strip() or "Git command failed")
     return result.stdout.decode("utf-8", errors="surrogateescape").rstrip("\r\n")
 
 
+def git_dirs(path):
+    """Top-level and common Git directories from one rev-parse."""
+    path = Path(path)
+
+    def read():
+        lines = git(path, "rev-parse", "--show-toplevel", "--git-common-dir").splitlines()
+        if len(lines) != 2:
+            raise EngineError("Unexpected git rev-parse output")
+        return Path(lines[0]).resolve(), Path(os.path.abspath(path / lines[1]))
+    return cached(("git-dirs", str(path)), read)
+
+
+@lru_cache(maxsize=None)
+def bundle_revision(bundle):
+    """Informational bundle HEAD, read once per process."""
+    return git(bundle, "rev-parse", "HEAD")
+
+
 def project_root(path):
     path = Path(path).resolve()
-    root = Path(git(path, "rev-parse", "--show-toplevel")).resolve()
+    root = git_dirs(path)[0]
     if root != path:
         raise EngineError(f"Use the project root: {root}")
     return root
@@ -48,6 +113,59 @@ def inside(project, value):
     if path.is_symlink() or not path.resolve().is_relative_to(project):
         raise EngineError(f"Path must remain within the project: {value}")
     return path
+
+
+def aliased(info):
+    return stat.S_ISLNK(info.st_mode) or getattr(info, "st_file_attributes", 0) & REPARSE
+
+
+def escapes(root, name):
+    return not Path(root, name).resolve().is_relative_to(root)
+
+
+def check_directories(root, names):
+    """lstat each ancestor directory once; an alias must still resolve inside root."""
+    seen = set()
+    for name in names:
+        parts = name.split("/")[:-1]
+        for depth in range(1, len(parts) + 1):
+            relative = "/".join(parts[:depth])
+            if relative in seen:
+                continue
+            seen.add(relative)
+            try:
+                info = os.lstat(os.path.join(root, relative))
+            except (FileNotFoundError, NotADirectoryError):
+                break
+            if aliased(info) and escapes(root, relative):
+                raise EngineError(f"Path must remain within the project: {relative}")
+
+
+def hash_entry(root, name, missing):
+    """One lstat + one open; rejects what inside() and file_hash() reject."""
+    path = os.path.join(root, name)
+    try:
+        info = os.lstat(path)
+    except (FileNotFoundError, NotADirectoryError):
+        if missing is None:
+            raise EngineError(f"Required input is not a file: {path}") from None
+        return missing
+    if stat.S_ISLNK(info.st_mode) or (aliased(info) and escapes(root, name)):
+        raise EngineError(f"Path must remain within the project: {name}")
+    if not stat.S_ISREG(info.st_mode):
+        raise EngineError(f"Required input is not a file: {path}")
+    return sha256_file(path)
+
+
+def scan_hashes(root, names, missing="DELETED"):
+    """Hash root-relative files in parallel; missing=None makes absence an error."""
+    root, names = Path(root), sorted(set(names))
+    check_directories(root, names)
+    pool = ThreadPoolExecutor(WORKERS)
+    try:
+        return dict(zip(names, pool.map(lambda name: hash_entry(root, name, missing), names)))
+    finally:
+        pool.shutdown(cancel_futures=True)
 
 
 def reject_path_aliases(path, root):
@@ -87,6 +205,8 @@ def validate_profile(profile, draft=False):
         raise EngineError("Profile interface must be web, cli, library, desktop, mobile, game, or service")
     if "reuse_unchanged_checks" in profile and type(profile["reuse_unchanged_checks"]) is not bool:
         raise EngineError("reuse_unchanged_checks must be an explicit boolean")
+    if "parallel_checks" in profile and type(profile["parallel_checks"]) is not bool:
+        raise EngineError("parallel_checks must be an explicit boolean")
     if "reuse_record_evidence" in profile:
         if not version_two or type(profile["reuse_record_evidence"]) is not bool:
             raise EngineError("reuse_record_evidence requires a version 2 profile and explicit boolean")
@@ -201,6 +321,20 @@ def protected_inputs(project, profile):
     return {name: file_hash(inside(project, name)) for name in profile["protected_paths"]}
 
 
+def tree_files(bundle, folder):
+    """Guidance/code files under a source area from cached DirEntry data; symlinks are rejected."""
+    with os.scandir(folder) as entries:
+        for entry in entries:
+            if entry.name == "__pycache__":
+                continue
+            if entry.is_symlink():
+                raise EngineError(f"Symlink factory inputs are unsupported: {entry.path}")
+            if entry.is_dir():
+                yield from tree_files(bundle, entry.path)
+            elif entry.is_file() and os.path.splitext(entry.name)[1].lower() in (".py", ".md", ".json", ".yaml", ".yml"):
+                yield Path(entry.path).relative_to(bundle).as_posix()
+
+
 def bundle_input_paths(bundle):
     """The required procedural contract plus added code/guidance in its areas."""
     contract_name = "safe_engine/bundle-inputs.json"
@@ -228,20 +362,18 @@ def bundle_input_paths(bundle):
     names = set(contract["required_files"])
     names.add(contract_name)
     for name in sorted(names):
-        path = inside(bundle, name)
-        if not path.is_file():
-            raise EngineError(f"Required factory input is not a file: {path}")
+        # One lstat each; hashing later applies the full alias rules.
+        try:
+            regular = stat.S_ISREG(os.lstat(bundle / name).st_mode)
+        except OSError:
+            regular = False
+        if not regular:
+            raise EngineError(f"Required factory input is not a file: {bundle / name}")
     for name in contract["source_trees"]:
         folder = inside(bundle, name)
         if not folder.is_dir():
             raise EngineError(f"Required factory source area is not a directory: {folder}")
-        for path in folder.rglob("*"):
-            if "__pycache__" in path.parts:
-                continue
-            if path.is_symlink():
-                raise EngineError(f"Symlink factory inputs are unsupported: {path}")
-            if path.is_file() and path.suffix.lower() in (".py", ".md", ".json", ".yaml", ".yml"):
-                names.add(path.relative_to(bundle).as_posix())
+        names.update(tree_files(bundle, folder))
     if version == 2:
         historical = contract["historical_files"]
         if (not isinstance(historical, list) or any(not isinstance(name, str) for name in historical)
@@ -257,19 +389,21 @@ def bundle_input_paths(bundle):
     return sorted(names)
 
 
+def project_files(project):
+    """Tracked and nonignored untracked contents, scanned once per command scope."""
+    def scan():
+        names = git(project, "ls-files", "--cached", "--others", "--exclude-standard", "-z").split("\0")
+        return scan_hashes(project, [name for name in names
+                                     if name and name != ".factory" and not name.startswith(".factory/")])
+    return cached(("files", str(project)), scan)
+
+
 def source_inputs(project, excluded=()):
-    names = git(project, "ls-files", "--cached", "--others", "--exclude-standard", "-z").split("\0")
     excluded = [os.path.normcase(path) for path in excluded]
-    files = {}
-    for name in sorted(set(names)):
-        if not name or name == ".factory" or name.startswith(".factory/"):
-            continue
-        normalized = os.path.normcase(name)
-        if any(normalized == path or normalized.startswith(path + os.path.normcase("/")) for path in excluded):
-            continue
-        path = inside(project, name)
-        files[name] = file_hash(path) if path.exists() else "DELETED"
-    return files
+    separator = os.path.normcase("/")
+    return {name: value for name, value in project_files(project).items()
+            if not any(os.path.normcase(name) == path or os.path.normcase(name).startswith(path + separator)
+                       for path in excluded)}
 
 
 def production_fingerprint(project, profile, ticket=None):
@@ -296,7 +430,13 @@ def declared_inputs(project, profile):
 
 def factory_inputs():
     bundle = Path(__file__).resolve().parent.parent
-    return {name: file_hash(inside(bundle, name)) for name in bundle_input_paths(bundle)}
+    return cached(("bundle", str(bundle)),
+                  lambda: scan_hashes(bundle, bundle_input_paths(bundle), missing=None))
+
+
+def executable_hash(name):
+    found = shutil.which(name)
+    return file_hash(Path(found)) if found else None
 
 
 def fingerprint(project, profile, task, run_dir, draft=False, ticket=None):
@@ -305,13 +445,11 @@ def fingerprint(project, profile, task, run_dir, draft=False, ticket=None):
     executables = {}
     for check in profile["checks"]:
         first = command_argv(check, project, run_dir)[0]
-        executable = shutil.which(first)
-        if not executable:
-            if draft and profile.get("version") == 2:
-                executables[first] = "MISSING"
-                continue
-            raise EngineError(f"Check executable unavailable: {first}")
-        executables[first] = file_hash(Path(executable))
+        executables[first] = cached(("executable", first), lambda: executable_hash(first))
+        if not executables[first]:
+            if not draft or profile.get("version") != 2:
+                raise EngineError(f"Check executable unavailable: {first}")
+            executables[first] = "MISSING"
     value = {"project": str(project),
                    "files": files, "profile": profile, "task": task, "declared": declared,
                    "environment": {name: os.environ.get(name) for name in profile["environment_inputs"]},

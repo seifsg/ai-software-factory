@@ -55,9 +55,9 @@ Give delegates the handoff packet: report, expected behavior/invariants, exact p
 
 Require complete applicable methods and actual files. Inherited chat cannot replace verified state. Give reviewers requirements/evidence without prescribing verdicts.
 
-Inherit user/host model and reasoning settings; host identity is not guaranteed. No hard-coded models, provider switches, reduced reasoning or purchased fallbacks. For approved role routing, verify model/tools/context capability; record exposed routing, otherwise UNKNOWN. If inadequate, compare three available alternatives and recommend one before a new routing decision.
+Inherit user/host model and reasoning settings; host identity is not guaranteed. No hard-coded models, provider switches, reduced reasoning or purchased fallbacks. For approved role routing, verify model/tools/context capability; record exposed routing, otherwise UNKNOWN. If inadequate, decide per [decision ownership](../../../../docs/current-decisions.md#decision-ownership) before a new routing decision.
 
-Keep one case, canonical maintenance ticket and authority/completion boundary; no correction allowances. Append decisions and changes to tracker activity, preserving confirmed scope and superseded input. Parent reconciles completed, failed and in-flight actions before retries. Resume the same cause/checkpoint after interruption; no duplicate/recursive repairs.
+Keep one case, canonical maintenance ticket and authority/completion boundary; correction limits follow the [session contract](../../safe-engine/references/session-contract.md#review-rounds). Append decisions and changes to tracker activity, preserving confirmed scope and superseded input. Parent reconciles completed, failed and in-flight actions before retries. Resume the same cause/checkpoint after interruption; no duplicate/recursive repairs.
 
 ## Review, adoption and resume
 
@@ -72,7 +72,7 @@ After independent assessment, refresh bound app/maintenance tickets. Compare exa
 | Skipped instructions; no bundle change | Read full routine; recover missing work; reassess artifacts/evidence. Follow phase rules; use `repair` when required. |
 | Repair not adopted | Continue unchanged old bundle only if the fault cannot undermine next steps/acceptance; otherwise block affected work. |
 | Same version/schema/task/profile; analysis/plan valid; `build` | After authorized adoption, read revised methods, reassess plan/consumers, append compatibility note; produce next real batch. No passing checks carry forward. |
-| Same compatible candidate; manual/testing or post-QA | First supported `repair --reason ...`: record correction, clear acceptance. Finish repair before any manual/user test, then record final manual evidence, author/run final tests and follow saved version sequence. Version 2 uses one final gate; version 1 retains its historical sequence. Fresh independent review remains. |
+| Same compatible candidate; manual/testing or post-QA | First supported `repair --reason ...`: record correction, clear acceptance. Follow [tests-last order](../../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests) and the saved version sequence; manual evidence is effect-scoped (unaffected PASS may be `carried` with a reason). Version 2 uses one final gate; version 1 retains its historical sequence. Fresh independent review remains. |
 | Inputs change during `analyze`/`plan` | Initial fingerprint blocks changed inputs. Use sound unchanged original, or preserve run and prepare separately reviewed run in a fresh project worktree. Never rewrite fingerprint. |
 | Version-2 task/profile correction within the existing goal | Use reviewed `amend`; preserve original/revised contracts, protected-input hashes, authority and reason. Acceptance invalidated; repeat necessary final evidence. Never hide a failed gate or revive cancellation. |
 | Controller schema incompatible or legacy contract correction; analysis/plan invalid | No automatic migration. Preserve run/work. Prepare reviewed task/profile and clean baseline in fresh project worktree; carry relevant work/decisions explicitly. Rerun necessary methods/final QA. |

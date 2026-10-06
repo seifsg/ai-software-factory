@@ -25,15 +25,15 @@ Include critical writes, failures and retries. Local fixes map affected paths/wi
 
 ## 2. Plan and compare three designs
 
-Use [Get Ready to Code](../get-ready-to-code/SKILL.md): files → original checkpoint → critique → phases → todos → whole plan. Stop unless continuation is already authorized. Reuse the delivery plan's five outputs; keep design and execution separate.
+Use [Get Ready to Code](../get-ready-to-code/SKILL.md): files → original checkpoint → critique → phases → todos → whole plan. Honor its [file-summary stop](../safe-engine/references/speed-modes.md#safe). Reuse the delivery plan's five outputs; keep design and execution separate.
 
 Research consequential unknowns through [Research Market](../research-market/SKILL.md), using current primary engine/version docs. The [source basis](../../../docs/skill-provenance.md#database-schema-method--4-october-2026) prescribes no stack.
 
-For new substantive choices, compare three credible designs: modeling, ownership, access paths or consistency—not necessarily three brands. Preserve settled engine/product choices. If fewer are viable, explain rejected alternatives; invent none.
+Apply the three-option rule ([decision ownership](../../../docs/current-decisions.md#decision-ownership)) to designs: modeling, ownership, access paths or consistency, not necessarily three brands. Preserve settled engine/product choices.
 
 Compare correctness, complete journeys, read/write cost, consistency, security, storage, growth, operations and migration risk. Coding effort cannot justify weaker quality; runtime/operational costs still matter.
 
-Recommend the best fit: why, tradeoff, revisit conditions, rejected options. Choose when delegated; resolve owner-reserved choices before dependent work. No repeated votes.
+Recommend the best fit: why, tradeoff, revisit conditions, rejected options. Resolve owner-reserved choices before dependent work.
 
 ## 3. Write the selected schema
 

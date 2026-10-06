@@ -19,15 +19,13 @@ Record:
 - Handoff, updates and owner stops. Plans/updates are not implicit approval gates.
 - Real access/provider limits, attempts and progress across delegates, maintenance and resume. Preserve superseded allowances/deadlines as history with the superseding user instruction.
 
-Where required, compare three credible approaches; recommend one. Explicitly delegated choices proceed without another vote.
-
 Continue to the agreed checked, independently reviewed outcome or owner stop/checkpoint. Stops persist until changed. No invented credits, repair allowances, deadlines or exhaustion gates, except the [review round cap](#review-rounds). Reuse authorized tools; clarify missing authority, including purchases/paid fallbacks.
 
 Continuous 0.1.0 controller:
 - Omit `--max-repairs` for new runs. Deprecated flags/integers are history; `repairs_used` counts corrections.
 - `status`: `repair_policy: continuous`, `max_repairs: null`, `historical_max_repairs`, `failed_reviews`, `review_rounds`.
-- Existing runs: `repair --reason ...`, never state edits. Ordinary repair clears acceptance; finish correction, record final manual QA, final tests and fresh independent review under the saved profile version. Version 2 uses one final gate; legacy version 1 keeps its sequence.
-- Follow [tests-last order](../../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests), including after repair: finish implementation, then final manual/user QA, then author/polish/run automated tests. No early manual reproduction, playtests, walkthroughs, suites or `feature-check`. Source inspection/existing-log reading remain allowed. Missing manual evidence blocks readiness; preserve pins and report limits.
+- Existing runs: `repair --reason ...`, never state edits. Ordinary repair clears acceptance; finish correction, record effect-scoped manual QA (affected criteria and their failure/recovery paths re-observed; unaffected PASS may be `carried` with a reason), final tests and fresh independent review under the saved profile version. Version 2 uses one final gate; legacy version 1 keeps its sequence.
+- Follow [tests-last order](../../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests), including after repair. Preserve pins and report limits.
 - Unchanged full-evidence reuse requires explicit reviewed-profile eligibility and integrity validation: read [usage](../../../../docs/pilot-usage.md#feature-feedback-and-version-checkpoints).
 - No fresh-run bypass of failed gates/cancellation.
 
@@ -41,7 +39,7 @@ Seif, 6 October. One round = independent review, fixes, fresh review. Max **3 fa
 
 ## Keep ticket scope current
 
-For ticketed work, use the [ticket contract](../../ticketing/references/ticket-contract.md) at intake/resume and before dependent implementation, final acceptance, handoff or PR. Refresh the canonical record and meaningful activity through its authorized tool. Local snapshots are cache; failed refresh leaves dependent judgment unverified.
+For ticketed work, use the [ticket contract](../../ticketing/references/ticket-contract.md) at intake/resume and before dependent implementation, final acceptance, handoff or PR. Refresh the canonical record and meaningful activity through its authorized tool, cheaply: fully only when the remote ticket's updated time changed, otherwise record an unchanged observation, and none at the plan boundary within the same session ([rule](../../ticketing/SKILL.md#execute-and-keep-the-contract-current), [commands](../../../../docs/ticketing.md)). Local snapshots are cache; failed refresh leaves dependent judgment unverified.
 
 Record owner changes with source, actor/time, old/new scope and concise reasons. Preserve original/superseded input. Owner instructions or in-scope choices under recorded delegation confirm outcomes without another vote; undelegated proposals stay pending. [Autonomous ticket intake](../../ticketing/references/ticket-contract.md#revision-and-authority) derives context without a questionnaire. Agent plans, tracker status and reviewer PASS create no new authority; explicit checkpoints/reserved choices persist.
 
@@ -81,4 +79,4 @@ Report the condition/attempts; finish useful independent work.
 
 Discover missing PR repository/tracker/owner/notification bindings before asking. They block affected PR steps/completion, not local implementation, QA or owner testing. Execute both PR procedures when possible; never mark blocked steps complete or invent recipients/messaging authority.
 
-Ready/merge/release/deployment require the human unless separately authorized. Controller `ready` means checked local handoff; PR review separately requires an actual remote/cloud agent with fresh context. Local subagents never replace it. Autonomy never waives acceptance, security, permissions or final human product acceptance. Missing QA tools mean unverified coverage. Real product pilots/simulations remain deferred until specifically requested.
+Ready/merge/release/deployment require the human unless separately authorized. Self-review of our own draft PR is [pre-authorized](../../../../docs/pr-workflow.md#self-review-of-our-own-draft-pr). Controller `ready` means checked local handoff; PR review is separate ([cloud PR review](../../../../docs/pr-workflow.md#cloud-pr-review)). Autonomy never waives acceptance, security, permissions or final human product acceptance. Missing QA tools mean unverified coverage. Real product pilots/simulations remain deferred until specifically requested.

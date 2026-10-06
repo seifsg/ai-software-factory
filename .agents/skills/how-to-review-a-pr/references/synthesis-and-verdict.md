@@ -1,6 +1,6 @@
 # Synthesis, verdict & fix-set selection
 
-Ticketed work uses full review, including small bugs. Only legacy unticketed Small Change synthesizes one independent scoped review under the [adapter](../../../../docs/pr-workflow.md#small-direct-changes). Keep unresolved prior findings; never imply whole-PR approval. The four-report instructions below describe full mode.
+Ticketed work uses full review, including small bugs. Only legacy unticketed Small Change synthesizes one independent scoped review under the [adapter](../../../../docs/pr-workflow.md#small-direct-changes). Keep unresolved prior findings; never imply whole-PR approval. The four-report instructions below describe full mode; after a local PASS on the same candidate, one reviewer covers the four themes on the delta ([adapter](../../../../docs/pr-workflow.md#cloud-pr-review)).
 
 You now hold four themed reports (performance, security, user-journey, change-guard) plus your own
 Phase-1 analysis. Turn them into one decision. This is the judgment layer the individual reviewers
@@ -24,7 +24,7 @@ Record layer, severity, impact, evidence and action in the table. Missing/challe
 Severity ladder: **CRITICAL > HIGH > MEDIUM > LOW.** Sort by it. Do **not** factor development
 time — rank purely by impact on the product and its users.
 
-Record disposition separately: blocking, before-exposure or accepted-deferral. HIGH/CRITICAL, unmet core criteria and required unknowns cannot be deferred. Lower-risk deferrals need owner, reason, scope, destination ticket, actual authority and acceptance/revisit condition. MEDIUM hardening need not block local MVP work; before-exposure obligations still block that boundary. A note alone grants no exception.
+Record disposition separately: blocking, before-exposure or accepted-deferral, per the [deferral rule](../../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests). A note alone grants no exception.
 
 ## 3. The 5th lens — what the themes structurally can't judge
 
@@ -77,5 +77,5 @@ State the verdict in one line with the single most important reason.
 
 ## 6. Open questions
 
-Collect everything ambiguous. These go through the **Phase 3.5 question gate** (ask the user first);
+Collect everything ambiguous. These go through the **Phase 3.5 question gate** (ask the user first, except for our own draft PR: [pre-authorized](../../../../docs/pr-workflow.md#self-review-of-our-own-draft-pr));
 whatever survives unanswered goes into the PR comment as open questions for the team.

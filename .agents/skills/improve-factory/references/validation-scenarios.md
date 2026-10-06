@@ -22,7 +22,7 @@ Where practical, give an independent evaluator the skill, realistic request and 
 | Independent review or PR binding unavailable | Name blocker; never claim release/complete PR delivery. |
 | Parallel independent project work | Verify disjoint writes/effects and fixed original bundle. Recheckpoint before adoption; never overwrite newer work with stale snapshot. |
 | Maintenance loses context | Read case/actual state; resume same case; reconcile before retry. |
-| Changed owner decision or weaker check proposed | Compare three alternatives; recommend one. Owner decides; proposal is not approval. |
+| Changed owner decision or weaker check proposed | Follow [decision ownership](../../../../docs/current-decisions.md#decision-ownership); the owner decides, a proposal is not approval. |
 | Bounded fix encounters unfamiliar platform/API behavior | Research consequential unknown with current primary evidence. Keep scope; no automatic market survey, full plan or broad suite. |
 | Factory guidance changes for another domain | Exercise relevant game, mobile, desktop, server or CLI case. Discover actual tooling/workload; never import source-project bindings. Preserve applicable UX/resource evidence and explicit unknowns. |
 
