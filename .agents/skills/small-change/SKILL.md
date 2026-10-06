@@ -5,7 +5,7 @@ description: "Keep bounded fixes surgical. Ticketed work uses the full factory c
 
 # Small Change
 
-Read this whole file. New implementation first uses [Ticketing](../ticketing/SKILL.md). Every ticket gets full Analyze Start, Get Ready, 0–4 implementation, final manual QA, final tests, independent review and PR comparison against latest confirmed scope. Use the surgical tactics here; never substitute the six shortcuts for a ticket's complete cycle.
+Read this whole file. Fast and Lucky follow [speed modes](../safe-engine/references/speed-modes.md). Safe implementation first uses [Ticketing](../ticketing/SKILL.md). Every ticket gets full Analyze Start, Get Ready, 0–4 implementation, final manual QA, final tests, independent review and PR comparison against latest confirmed scope. Use the surgical tactics here; never substitute the six shortcuts for a ticket's complete cycle.
 
 The six routines below preserve legacy unticketed delivery: they replace full analysis, planning, coding-record, review, change-guard and compliance only for that recorded path. Do not load them recursively or silently migrate existing runs.
 

@@ -1,6 +1,6 @@
 ---
 name: safe-engine
-description: "Build/resume games, apps, services and tools with Seif's methods, saved stages, final checks and independent review. Factory delivery; preserve phase-only requests."
+description: "Build/resume games, apps, services and tools with Seif's methods. Fast by default, Lucky one-shot, or Safe with saved stages, final checks and independent review. Factory delivery; preserve phase-only requests."
 ---
 
 # Safe Engine
@@ -17,7 +17,9 @@ Follow [tests-last order](../../../docs/current-decisions.md#finish-work-use-it-
 
 Analysis, planning and review requests stay in that phase. No implied coding.
 
-New implementation starts with [Ticketing](../ticketing/SKILL.md). Use the chosen tracker/MCP; default to GitHub Issues. Reuse Seif's confirmed GitHub choice. Capture original input, actual before, expected after and criteria; secure owner confirmation before implementation. Split a backlog into complete ticket outcomes, not tiny steps that evade final QA.
+Read [speed modes](references/speed-modes.md) first. No mode named means **Fast**. Fast and Lucky follow that table, which overrides conflicting rules in this file; tickets, controller commands, the phase table and Codex review are Safe only.
+
+Safe implementation starts with [Ticketing](../ticketing/SKILL.md). Use the chosen tracker/MCP; default to GitHub Issues. Reuse Seif's confirmed GitHub choice. Capture original input, actual before, expected after and criteria; secure owner confirmation before implementation. Split a backlog into complete ticket outcomes, not tiny steps that evade final QA.
 
 Each ticket gets its own builder session and full flow below. Independent tickets use isolated worktrees; related tickets may share an epic checkout serially with separate histories. Read [ticket setup](../../../docs/ticketing.md) for tracker capture, binding, ownership and dependency gates. Tools do not create sessions/worktrees automatically.
 

@@ -1,6 +1,6 @@
 ---
 name: safe-engine
-description: "Load the complete private Safe Engine factory to build or resume games, apps, services and tools. Factory maintenance uses improve-factory."
+description: "Load the complete private Safe Engine factory to build or resume games, apps, services and tools. Fast by default; lucky or safe on request. Factory maintenance uses improve-factory."
 ---
 
 # Safe Engine
@@ -29,7 +29,9 @@ Verify returned root, revision, dirty status, receipt and entrypoint. Record lau
 
 Follow Working iterations where present in the selected canonical method. Older pins keep their recorded method; no silent upgrade.
 
-New implementation: read canonical `.agents/skills/ticketing/SKILL.md` and `docs/ticketing.md` from the resolved bundle. Preferred authorized tracker MCP first; GitHub Issues default, Seif's existing choice. Confirm before/after scope. Every ticket gets an actually dispatched builder session and full cycle, even bounded fixes. Small Change keeps patches surgical; its six shortcuts remain for legacy unticketed work.
+Mode: read canonical `.agents/skills/safe-engine/references/speed-modes.md` when the pin has it. No mode named means Fast; Fast and Lucky still read the returned `entrypoint` and the methods their table names; tickets, controller commands, checks and Codex review below are Safe only. Older pins without it keep their recorded method.
+
+Safe implementation: read canonical `.agents/skills/ticketing/SKILL.md` and `docs/ticketing.md` from the resolved bundle. Preferred authorized tracker MCP first; GitHub Issues default, Seif's existing choice. Confirm before/after scope. Every ticket gets an actually dispatched builder session and full cycle, even bounded fixes. Small Change keeps patches surgical; its six shortcuts remain for legacy unticketed work.
 
 Ticket commands select `--ticket <key>`; initialization records `--session <real-builder-session-id>`. Preserve namespaced history, legacy state and active pins. Independent ticket worktrees may parallelize independent effects; shared epic checkouts serialize writers. The controller creates neither sessions nor worktrees. Missing ticketing in an old pin needs authorized trial/adoption; never skip gates or silently upgrade.
 
@@ -44,6 +46,8 @@ Before dependent work, inspect capabilities without launching product tests. Fin
 Codex: `$safe-engine Build [software/feature] in [absolute project path]. Success means [outcome].`
 
 Claude Code: `/safe-engine Build [software/feature] in [absolute project path]. Success means [outcome].`
+
+Modes: add `lucky` or `safe` after the command, e.g. `$safe-engine lucky Build ...`. Then `verify` or `promote` any time.
 
 Resume: `$safe-engine Resume [absolute project path]. Preserve decisions, bundle and evidence.`
 

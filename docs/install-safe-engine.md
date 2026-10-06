@@ -2,7 +2,7 @@
 
 ## Small direct changes
 
-New implementation uses complete outcome tickets and the full cycle, including tiny fixes. Apply Working iterations in current bundles; older pins retain their method. The six-routine route below is legacy unticketed work only.
+Fast is the default [speed mode](../.agents/skills/safe-engine/references/speed-modes.md). Safe implementation uses complete outcome tickets and the full cycle, including tiny fixes. Apply Working iterations in current bundles; older pins retain their method. The six-routine route below is legacy unticketed work only.
 
 This route is for requested implementation. Explicit analysis, planning and review remain in their phase.
 

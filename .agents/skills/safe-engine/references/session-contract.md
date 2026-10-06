@@ -2,7 +2,7 @@
 
 Read at intake, resume and delegation; apply [decision ownership](../../../../docs/current-decisions.md#decision-ownership). Save/reuse one ignored `.factory/session-contract.md` or equivalent with stage artifact/handoff links. Preserve original request, contract revisions and accepted evidence; amend only through supported reviewed commands.
 
-New implementation uses [Ticketing](../../ticketing/SKILL.md), including bounded fixes and factory repairs. Owner-confirmed scope lives in the selected tracker; this local contract caches authority/context. Every ticket gets its own session and full cycle. [Small Change](../../small-change/SKILL.md) keeps fixes surgical; six shortcuts remain for legacy unticketed work. Analysis stays analysis.
+Delivery uses [speed modes](speed-modes.md); Fast is the default. Safe implementation uses [Ticketing](../../ticketing/SKILL.md), including bounded fixes and factory repairs. Owner-confirmed scope lives in the selected tracker; this local contract caches authority/context. Every ticket gets its own session and full cycle. [Small Change](../../small-change/SKILL.md) keeps fixes surgical; six shortcuts remain for legacy unticketed work. Analysis stays analysis.
 
 ## Establish the contract
 

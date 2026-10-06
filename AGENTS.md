@@ -20,7 +20,9 @@ Spend steps where they change decisions, results or evidence. Reuse valid analys
 
 An analysis, planning or review request stays in that phase. A small subject does not authorize coding. Honor the original file-summary stop unless existing user instructions explicitly authorize continuing through it.
 
-New implementation uses [Ticketing](.agents/skills/ticketing/SKILL.md): canonical tracker, owner-confirmed before/after, one complete delivery unit and its own builder session. Prefer the owner's chosen MCP; GitHub Issues is the default and Seif's current choice. Phase-only requests grant no coding or tracker-write authority; explicitly requested ticket intake still applies.
+Delivery uses [speed modes](.agents/skills/safe-engine/references/speed-modes.md): **Fast** by default, Lucky or Safe on request. In Fast and Lucky that table overrides any conflicting rule here or in linked methods: stops, tickets, research and comparisons, tests-last, logging depth, controller, before/after baselines, PR gates and review. Everything it keeps still applies.
+
+Safe implementation uses [Ticketing](.agents/skills/ticketing/SKILL.md): canonical tracker, owner-confirmed before/after, one complete delivery unit and its own builder session. Prefer the owner's chosen MCP; GitHub Issues is the default and Seif's current choice. Phase-only requests grant no coding or tracker-write authority; explicitly requested ticket intake still applies.
 
 Default ticket intake derives complete, brief, visual context from the request/code/prior work and continues within authority. No detailed-ticket questionnaire or repeated vote on delegated scope. Preserve explicit stops and reserved choices; record progress/PRs and a clear cold-agent handoff under the ticket contract.
 

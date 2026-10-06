@@ -1,5 +1,9 @@
 # Skill sources and adaptations
 
+## Speed modes: 6 October 2026
+
+Seif asked for Fast and Lucky modes, picked approach B (instruction-only modes, controller kept for Safe) and made Fast the default. Factory-specific; no original exists. One shared [speed modes](../.agents/skills/safe-engine/references/speed-modes.md) table, selected through the existing Safe Engine entry instead of two new skills, so installed launchers need no new entry. Originals unchanged. Measured fingerprinting at about 0.3s for this repo; Python was kept for Safe only.
+
 ## Preferred factory enhancements: 5 October 2026
 
 After actual PR19/PR16 merges, Seif required Improve Factory to retain the preferred approach as a rule. Smallest complete correction, existing capabilities, fitting proof, one record, short Get Ready wording and necessary links. Lasting preferences/demonstrated recurring lessons update canonical owners/callers; remove stale duplication. No new machinery without a demonstrated gap. Issue21 preserves exact owner input. No runtime change, recurring merge exception, cloud verdict or active-bundle adoption; final evidence remains separate.

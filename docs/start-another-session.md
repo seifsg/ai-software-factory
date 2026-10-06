@@ -6,7 +6,7 @@ Carry current iteration, remaining outcome and exact context. Preserve active pi
 
 This route is for requested implementation. Explicit analysis, planning and review stay in their phase.
 
-Seif selected [small-change](../.agents/skills/small-change/SKILL.md) on 3 October. Its six light routines remain for legacy unticketed work. New implementation uses [Ticketing](../.agents/skills/ticketing/SKILL.md) and the complete cycle, even bugfixes; retain surgical scope and relevant checks. Preserve existing pins, state and historical evidence.
+Seif selected [small-change](../.agents/skills/small-change/SKILL.md) on 3 October. Its six light routines remain for legacy unticketed work. Fast is the default [speed mode](../.agents/skills/safe-engine/references/speed-modes.md). Safe implementation uses [Ticketing](../.agents/skills/ticketing/SKILL.md) and the complete cycle, even bugfixes; retain surgical scope and relevant checks. Preserve existing pins, state and historical evidence.
 
 [Ticket usage](ticketing.md) owns confirmed scope, captures, dependencies and proof. Prefer the owner's authorized tracker MCP; GitHub Issues is the default and Seif's current choice. Dispatch a real dedicated builder session per ticket; a label or local record is insufficient. Use isolated worktrees for independent tickets, serial ownership for a shared epic. Commands use `--ticket <key>`; initialization records `--session <real-builder-session-id>`. Ticket state is `.factory/runs/<key>/state.json`; legacy `.factory/state.json` stays intact. No controller daemon, session provisioner or host automation is installed.
 
@@ -29,7 +29,7 @@ Task: [the app or feature I want, and what success looks like]
 
 First inspect the real project, selected bundle, legacy .factory/state.json
 and ticket state in .factory/runs/<key>/state.json. Resume the recorded run.
-For new implementation, use ticketing: preserve owner input, inspect actual before,
+For Safe implementation, use ticketing: preserve owner input, inspect actual before,
 confirm expected after/criteria and refresh the canonical tracker. Work one ticket
 per dedicated builder session; record its actual ID with --session at init and
 use --ticket <key> throughout. Prepare real checks without authoring/running tests.

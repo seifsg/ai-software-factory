@@ -12,7 +12,11 @@ Keep Seif's original method and deliberate repetition. RepairCheck Mobile remain
 
 The [skill index](.agents/skills/README.md) lists fourteen canonical skills: seven with originals and seven factory-specific skills. Two portable entries load the complete factory from another project. [Provenance](docs/skill-provenance.md) records exact sources, task matches and packaging changes.
 
-Ask for analysis and you get analysis. Ask for planning and you get planning. A small feature does not turn either request into permission to code. New implementation uses [Ticketing](.agents/skills/ticketing/SKILL.md): GitHub Issues by default, confirmed before/after scope and a dedicated session/full cycle per ticket, including bugfixes. Keep surgical Small Change tactics; its six replacement routines remain for legacy unticketed work. Ticket delivery follows:
+Ask for analysis and you get analysis. Ask for planning and you get planning. A small feature does not turn either request into permission to code.
+
+Delivery has three [speed modes](.agents/skills/safe-engine/references/speed-modes.md): 🏃 **Fast** (default) keeps the methods and skips build/run/tests/review until done or `verify`; 🍀 **Lucky** one-shots it with no research, comparisons or checks; 🛡️ **Safe** is the full cycle below. `promote` moves a run to Safe.
+
+Safe implementation uses [Ticketing](.agents/skills/ticketing/SKILL.md): GitHub Issues by default, confirmed before/after scope and a dedicated session/full cycle per ticket, including bugfixes. Keep surgical Small Change tactics; its six replacement routines remain for legacy unticketed work. Ticket delivery follows:
 
 ```text
 confirmed ticket → analyze → original plan → product/UX + technical research → revised plan
@@ -47,6 +51,8 @@ Every UI/interaction change uses [UX Quality](.agents/skills/ux-quality/SKILL.md
 $safe-engine Build [app or feature] in [absolute project directory].
 Success means [observable outcomes].
 ```
+
+That runs Fast. Write `$safe-engine lucky ...` or `$safe-engine safe ...` for the other modes.
 
 To continue, ask it to resume the existing run. Keep the selected bundle, decisions and evidence. [Fresh-session setup](docs/start-another-session.md) covers manual loading and other hosts. [Pilot usage](docs/pilot-usage.md) contains actual commands and prerequisites.
 

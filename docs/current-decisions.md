@@ -4,6 +4,12 @@
 
 Read this for current operation. Read the [dated history](safe-engine-decisions.md) only for rationale, changed decisions or provenance. Latest owner instructions govern; historical one-time permissions authorize no new external actions.
 
+## Speed modes
+
+Seif's 6 October choice: delivery runs in [speed modes](../.agents/skills/safe-engine/references/speed-modes.md). **Fast** is the default: full methods, no build/run/tests/review until done or `verify`. **Lucky** one-shots the outcome with no research, comparisons or checks. **Safe** keeps the ticketed full cycle and the Python controller below. Fast and Lucky keep spec, rules, cheap security and logging, and never claim unchecked quality. In Fast and Lucky that table overrides any conflicting rule in the sections below or in linked methods: stops, tickets, research and comparisons, tests-last, logging depth, controller, before/after baselines, PR gates and review. Everything it keeps still applies.
+
+Measured on 6 October: fingerprinting this repo takes about 0.3s. The slow part is the Safe process itself, not Python CPU. The controller stays, used only by Safe.
+
 ## Method and authorship
 
 Authored output follows [Clear Writing](../.agents/skills/safe-engine/references/clear-writing.md): no em dashes, fabricated claims or stock formulas. Keep voice/details; one finishing pass. Sales rules apply to sales copy.
@@ -20,7 +26,7 @@ Legacy unticketed bounded fixes use six [Small Change](../.agents/skills/small-c
 
 ## Ticketed delivery
 
-New implementation uses [Ticketing](../.agents/skills/ticketing/SKILL.md), including factory work and bugfixes. GitHub Issues is Seif's chosen tracker. For another project, prefer its authorized MCP tracker; without a preference, try GitHub Issues. Canonical remote scope preserves original owner input, actual before, confirmed after/journeys/criteria, decisions and activity. Confirm actual owner instructions/delegation; proposals remain pending. Meaningful changes update versioned scope, not chat alone.
+Safe implementation uses [Ticketing](../.agents/skills/ticketing/SKILL.md), including factory work and bugfixes. GitHub Issues is Seif's chosen tracker. For another project, prefer its authorized MCP tracker; without a preference, try GitHub Issues. Canonical remote scope preserves original owner input, actual before, confirmed after/journeys/criteria, decisions and activity. Confirm actual owner instructions/delegation; proposals remain pending. Meaningful changes update versioned scope, not chat alone.
 
 Tickets use the [short writing recipe](../.agents/skills/ticketing/references/ticket-contract.md#write-the-ticket): concrete before/after, checkable criteria, complete owner intent. Keep original words/reminders and meaningful history. Fold machine data; preserve exact scope. No quotas, copied workflows or extra writing gate. Old pinned controllers keep their existing ticket format until adoption.
 

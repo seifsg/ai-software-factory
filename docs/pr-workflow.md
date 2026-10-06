@@ -13,7 +13,8 @@ Public-page changes include affected [SEO evidence](../.agents/skills/ux-quality
 - Create/update: [How to Make a PR](../.agents/skills/how-to-make-a-pr/SKILL.md).
 - Incoming review: [How to Review a PR](../.agents/skills/how-to-review-a-pr/SKILL.md).
 - Analysis/review-only: read-only; no implied repair/push/comment.
-- New implementation/update: [Ticketing](../.agents/skills/ticketing/SKILL.md), confirmed scope and full cycle. Bounded fixes keep [Small Change](../.agents/skills/small-change/SKILL.md)'s surgical tactics.
+- Fast/Lucky: PRs and cloud review only when asked ([speed modes](../.agents/skills/safe-engine/references/speed-modes.md)).
+- Safe implementation/update: [Ticketing](../.agents/skills/ticketing/SKILL.md), confirmed scope and full cycle. Bounded fixes keep [Small Change](../.agents/skills/small-change/SKILL.md)'s surgical tactics.
 - Existing unticketed work: preserve its recorded small/full path; no silent migration or acceptance refresh.
 
 Authorized delivery requires both procedures and remote/cloud PR review: a separate agent, fresh context and checkout of the exact remote candidate. Verify actual remote execution and record provider/task identity, base/head, evidence and verdict. Local controller review remains separate; local subagents never satisfy PR review. Missing cloud access blocks that review/merge, not independent local work. Open draft; human owns ready/merge/release unless explicitly authorized.
