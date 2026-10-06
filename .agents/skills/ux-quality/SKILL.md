@@ -25,9 +25,9 @@ Map `intent → entry → actions/decisions/waits → outcome → recovery/exit`
 
 Before an uncertain interaction, visual, icon, sound or tool choice, use [Research Market](../research-market/SKILL.md): current official platform/design/accessibility guidance and relevant leading products. Record URLs, date, versions and observations. Verify leadership claims; popularity or novelty alone proves no fit. Keep useful proven patterns; no frozen year.
 
-Compare three credible options: clarity, steps/effort, familiarity, accessibility, visual/audio fit, runtime cost, compatibility and rights. Show available samples/demos; distinguish inspected evidence from hearsay. Fewer viable options? Explain why. No fake contenders, reopened settled choices or replacement of adequate assets just to compare.
+Compare three credible options ([decision ownership](../../../docs/current-decisions.md#decision-ownership)): clarity, steps/effort, familiarity, accessibility, visual/audio fit, runtime cost, compatibility and rights. Show available samples/demos; distinguish inspected evidence from hearsay. No replacement of adequate assets just to compare.
 
-Recommend one; explain the win, tradeoff and evidence that would change it. Use delegated authority. Ask only for reserved decisions, missing access or consequential ambiguity. No implied purchase, account, rights exception or release. Inaccessible sources stay unverified; seek permitted alternatives.
+Recommend one; explain the win, tradeoff and evidence that would change it. Ask only for reserved decisions, missing access or consequential ambiguity. No implied purchase, account, rights exception or release. Inaccessible sources stay unverified; seek permitted alternatives.
 
 ## 3. Apply the quality rules
 

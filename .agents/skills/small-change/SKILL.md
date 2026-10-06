@@ -5,7 +5,7 @@ description: "Keep bounded fixes surgical. Ticketed work uses the full factory c
 
 # Small Change
 
-Read this whole file. New implementation first uses [Ticketing](../ticketing/SKILL.md). Every ticket gets full Analyze Start, Get Ready, 0–4 implementation, final manual QA, final tests, independent review and PR comparison against latest confirmed scope. Use the surgical tactics here; never substitute the six shortcuts for a ticket's complete cycle.
+Read this whole file. Fast and Lucky follow [speed modes](../safe-engine/references/speed-modes.md). Safe implementation first uses [Ticketing](../ticketing/SKILL.md). Every ticket gets the full cycle ([Ticketing](../ticketing/SKILL.md)). Use the surgical tactics here; never substitute the six shortcuts for a ticket's complete cycle.
 
 The six routines below preserve legacy unticketed delivery: they replace full analysis, planning, coding-record, review, change-guard and compliance only for that recorded path. Do not load them recursively or silently migrate existing runs.
 
@@ -25,7 +25,7 @@ Scope grants no broad testing. Offer useful affected-area checks; run only when 
 
 ## The six routines
 
-One short record. Surgical changes first. [Tests last](../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests): finish fix → final manual action QA → final automated tests → final review/PR. No manual/user tests, playtests, walkthroughs or automated test authoring/edits/execution during development. Source inspection and existing-log reading remain allowed. Stage-only requests use only that stage.
+One short record. Surgical changes first. [Tests last](../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests) applies. Stage-only requests use only that stage.
 
 ### 1. Analyze lightly
 
@@ -33,13 +33,13 @@ Read implementation, callers, events, bindings. State cause/evidence; label unce
 
 Use short flow when helpful. Obvious fixes need no architecture chart, repository-wide reading, market survey or invented alternatives. Research unfamiliar behavior, stack/performance constraints in current primary sources only when it can change this fix. Record answer, source, decision. Broader discoveries stay within scope/authority.
 
-Product changes require [logging](../safe-engine/references/app-diagnostics.md): reuse adequate shared module or add missing internal module, even for small fixes. Discover owner's provider, request missing access securely, keep local logging working meanwhile. Wire detailed success/failure events through affected journey; inspect broader coverage, record gaps. Use shared hooks/surgical edits, no unrelated refactors. Read existing logs during development; emit/check final action trails only after implementation finishes.
+Product changes require [logging](../safe-engine/references/app-diagnostics.md), even for small fixes. Wire it through the affected journey; inspect broader coverage, record gaps. Use shared hooks/surgical edits, no unrelated refactors.
 
 Apply [efficiency](../safe-engine/references/app-efficiency.md) to affected path: repeated work, resource lifetimes, safe useful reuse, focused evidence. Carry applicable validity, bounds, cancellation, ownership, cold/warm checks through stages. Unaffected resources: record evidence; add no benchmark, cache or app-wide optimization.
 
 ### 2. Prepare lightly
 
-PR-bound work: plan [before/after proof](../../../docs/pr-workflow.md#beforeafter-proof) now. Capture the unchanged UI before edits; final counterpart/journey proof waits until final QA. One focused pair where applicable; equivalent output otherwise, optional useful video.
+PR-bound work: plan [before/after proof](../../../docs/pr-workflow.md#beforeafter-proof) now and capture the baseline before edits.
 
 Apply [Application Security](../safe-engine/references/app-security.md) to affected trust boundaries; preserve cheap protections and record unrelated risks. No automatic app-wide hardening or early scans.
 
@@ -47,7 +47,7 @@ Human-facing prose uses [Clear Writing](../safe-engine/references/clear-writing.
 
 Public-page fixes apply affected [SEO checks](../ux-quality/references/web-seo.md), including shared templates. No whole-site rebuild or publication authority implied.
 
-Every UI/interaction change uses [UX Quality](../ux-quality/SKILL.md) on the affected journey through manual QA and this scoped reviewer. Preserve adequate patterns/assets; research uncertain choices, compare three credible options, then select. Inspect changed visuals/audio. No unrelated redesign or second review fleet.
+Every UI/interaction change uses [UX Quality](../ux-quality/SKILL.md) on the affected journey through manual QA and this scoped reviewer. Preserve adequate patterns/assets; research uncertain choices and select per [decision ownership](../../../docs/current-decisions.md#decision-ownership). Inspect changed visuals/audio. No unrelated redesign or second review fleet.
 
 List files, behavior, smallest complete fix, final manual actions/checks. Use source and supplied/existing evidence for diagnosis; actual-use reproduction waits until implementation is finished. Read existing tests if helpful, never write/run yet. Critique correctness/impact; preserve settled choices, invent no alternatives. This replaces five full planning outputs.
 
@@ -61,7 +61,7 @@ Apply 0–4 within the batch:
 3. Inspect diff and user outcome.
 4. Correct supported defects; repeat affected steps.
 
-Preserve error handling, security, state, contracts. No per-edit transcripts. Record unrelated discoveries separately; continue. Diagnose without artificial correction/exhaustion limits.
+Preserve error handling, security, state, contracts. No per-edit transcripts. Record unrelated discoveries separately; continue. Corrections follow the [session contract](../safe-engine/references/session-contract.md#review-rounds).
 
 ### 4. Review lightly
 
@@ -71,11 +71,11 @@ Brief findings/verdict. No whole-project audit, alternative-design exercise, ful
 
 For bounded delegated analysis/review, user permits an available capable fast/light model. Verify tools/capability; provide request, exact diff/base, paths, dependencies, raw evidence, no prescribed verdict. Preserve main coding configuration/quality. If unavailable, inherit current model; no provider install, purchase or preference blocker. Record exposed model identity; escalate capability when needed, no automatic fleet.
 
-Reuse valid evidence. Repeat only for changed code/runtime inputs, failures or unresolved concerns. Reviewer repairs need fresh independent assessment, no factory restart. Disclose missing independent execution; never claim independent approval.
+Reuse valid evidence. Repeat only for changed code/runtime inputs, failures or unresolved concerns. Reviewer repairs need [fresh assessment](../../../docs/pr-workflow.md#keep-current-factory-decisions-explicit), no factory restart. Disclose missing independent execution; never claim independent approval.
 
 ### 5. Guard the change lightly
 
-Finish implementation → manually exercise changed behavior/consumers → fix defects and repeat affected actions → after manual QA passes, add/adapt useful tests and run final focused batch before PR preparation. Reviewer/final-test fixes follow this order. Inspect umbrella scripts; use supported filters. Build/start for manual use must not trigger tests.
+Follow [tests-last order](../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests), including reviewer/final-test fixes, ending in a final focused batch before PR preparation. Inspect umbrella scripts; use supported filters. Build/start for manual use must not trigger tests.
 
 Input defects: real focus, typing, paste through permitted controls using harmless dummy data. Property assignment cannot prove keyboard input. Check Save/downstream only when affected. Never use/log real API keys as fixtures. Disclose missing interaction coverage; unrelated tests cannot replace it.
 
@@ -107,4 +107,4 @@ Read [creation](../how-to-make-a-pr/SKILL.md), [review](../how-to-review-a-pr/SK
 
 Updates: inspect PR metadata, original purpose, review boundary. Review delta/consumers; preserve unresolved findings. Do not re-audit accepted code or claim whole-PR approval from scoped review.
 
-Local fix review and PR review are separate. PR review requires a remote/cloud agent with fresh context and the exact published candidate; local subagents never count. Keep the one-reviewer small-change scope in each route; reuse raw exact-candidate evidence, never substitute the local verdict.
+Local fix review and PR review are separate ([cloud PR review](../../../docs/pr-workflow.md#cloud-pr-review)). Keep the one-reviewer small-change scope in each route; reuse raw exact-candidate evidence, never substitute the local verdict.

@@ -6,17 +6,29 @@ import json
 import os
 from pathlib import Path
 import tempfile
+import time
 
-from .project import EngineError, reject_path_aliases
+from .project import EngineError, reject_alias, reject_path_aliases
 
 
 def now():
     return datetime.now(timezone.utc).isoformat()
 
 
+def windows_retry(action):
+    """Windows briefly denies access while a lock-free reader or a replace holds the file."""
+    for attempt in range(20):
+        try:
+            return action()
+        except PermissionError:
+            if os.name != "nt" or attempt == 19:
+                raise
+            time.sleep(0.05)
+
+
 def read_json(path):
     try:
-        return json.loads(Path(path).read_text(encoding="utf-8-sig"))
+        return json.loads(windows_retry(lambda: Path(path).read_text(encoding="utf-8-sig")))
     except (OSError, ValueError) as exc:
         raise EngineError(f"Cannot read JSON at {path}: {exc}") from exc
 
@@ -30,19 +42,27 @@ def atomic_json(path, value):
             stream.write("\n")
             stream.flush()
             os.fsync(stream.fileno())
-        os.replace(temp, path)
+        windows_retry(lambda: os.replace(temp, path))
     finally:
         if os.path.exists(temp):
             os.unlink(temp)
+
+
+def reject_tree_aliases(folder):
+    """Use cached DirEntry data; Windows needs no extra call per entry, POSIX lstats only links."""
+    with os.scandir(folder) as entries:
+        for entry in entries:
+            if os.name == "nt" or entry.is_symlink():
+                reject_alias(entry.path, entry.stat(follow_symlinks=False))
+            if entry.is_dir(follow_symlinks=False):
+                reject_tree_aliases(entry.path)
 
 
 @contextmanager
 def locked(run_dir):
     reject_path_aliases(run_dir, run_dir.parent)
     run_dir.mkdir(parents=True, exist_ok=True)
-    for directory, folders, files in os.walk(run_dir, followlinks=False):
-        for name in folders + files:
-            reject_path_aliases(Path(directory) / name, run_dir.parent)
+    reject_tree_aliases(run_dir)
     with (run_dir / "lock").open("a+b") as lock:
         lock.seek(0)
         if os.fstat(lock.fileno()).st_size == 0:

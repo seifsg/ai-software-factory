@@ -208,7 +208,12 @@ class TicketTests(unittest.TestCase):
             self.assertIn("read-only", argv)
             self.assertIn("Confirmed ticket:", stdin)
             self.assertIn("cannot authenticate", stdin)
-            self.assertIn(str(BUNDLE / ".agents/skills/ticketing/SKILL.md"), stdin)
+            skills = BUNDLE / ".agents/skills"
+            for trimmed in (skills / "analyze-start/SKILL.md", BUNDLE / "docs/current-decisions.md",
+                            skills / "ticketing/SKILL.md", skills / "ticketing/references/ticket-contract.md"):
+                self.assertNotIn(str(trimmed), stdin)
+            self.assertIn(str(skills / "compliance-check/SKILL.md"), stdin)
+            self.assertIn("Seif 6 Oct delegation", stdin)
             Path(argv[argv.index("--output-last-message") + 1]).write_text(json.dumps(report), encoding="utf-8")
             log.parent.mkdir(parents=True, exist_ok=True)
             log.write_text(SYNTHETIC, encoding="utf-8")
@@ -540,16 +545,27 @@ class TicketTests(unittest.TestCase):
         self.start()
         self.refresh()  # New capture, but deliberately observed before the next saved phase.
         self.artifact("analysis")
+        # Seif, 6 Oct: `record plan` no longer needs a new capture, so it succeeds on the stale one.
+        self.assertEqual(self.artifact("plan")["phase"], "build")
         unchanged = self.flow.load()
         with self.assertRaisesRegex(EngineError, "after the saved phase"):
-            self.artifact("plan")
+            self.artifact("implementation")  # Still observed before the saved plan phase.
         self.assertEqual(self.flow.load(), unchanged)
         self.refresh()
+        self.assertEqual(self.artifact("implementation")["phase"], "manual")
+        # Records-only repair and handoff keep the same rule: test_record_repairs
+        # (ticket freshness) and test_full_ticket_cycle assert their "fresh capture" refusals.
+
+    def test_plan_needs_no_new_capture_but_implementation_still_does(self):
+        self.start()
+        self.artifact("analysis")
         self.assertEqual(self.artifact("plan")["phase"], "build")
+        before = self.flow.load()
         with self.assertRaisesRegex(EngineError, "new complete"):
             self.artifact("implementation")
+        self.assertEqual(self.flow.load(), before)
         self.refresh()
-        self.assertEqual(self.artifact("implementation")["phase"], "manual")
+        self.artifact("implementation")
 
     def test_testing_and_stage_skips_cannot_advance_unfinished_ticket(self):
         self.build()

@@ -54,8 +54,8 @@ Logger init/serialization/writes/rotation/export/full disk must not crash, recur
 
 ## Read logs while working
 
-During development: inspect source and existing info/warn/error/debug trails; correlate and fix surgically. No manual testing, replay or automated checks yet. Once implementation/improvements finish, perform final manual actions and read their new trails; fix defects and recheck affected actions before final automation.
+During development: inspect source and existing info/warn/error/debug trails; correlate and fix surgically. Once implementation/improvements finish, perform final manual actions and read their new trails; fix defects and recheck affected actions before final automation.
 
 After implementation, manually exercise success/failure, invalid input/type and applicable retry/cancel/recovery with harmless data. Can the trail explain failure without guessing? Where changed, exercise missing/offline sinks and retention/redaction. Disclose unavailable paths; fix gaps and repeat affected actions.
 
-After passing manual QA, author/polish/run relevant final tests under [tests-last order](../../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests). Review real event sites/emitted records, not module presence. Handoff: module/backend, access status, location/query, correlation example, observed coverage, redactions/bounds, gaps/evidence. Instructions install no instrumentation or host enforcement.
+Final tests follow [tests-last order](../../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests). Review real event sites/emitted records, not module presence. Handoff: module/backend, access status, location/query, correlation example, observed coverage, redactions/bounds, gaps/evidence. Instructions install no instrumentation or host enforcement.

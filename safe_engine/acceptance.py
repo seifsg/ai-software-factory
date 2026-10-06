@@ -27,8 +27,23 @@ def validate_contract_review(review, old_digest, new_digest):
             ("verdict", "independent", "reviewer", "reason", "authority", "old_digest", "new_digest")}
 
 
-def validate_manual_receipt(receipt, expected_candidate, task, project):
-    """Read evidence without writes. Content presence is not independent verification."""
+def carried_observation(identifier, carried, prior):
+    """Reuse a PASS only from a receipt recorded earlier in this run (effect-scoped re-QA)."""
+    if (not isinstance(carried, dict)
+            or not all(isinstance(carried.get(key), str) and carried[key].strip() for key in ("receipt_sha256", "reason"))):
+        raise EngineError(f"{identifier}: carried evidence needs receipt_sha256 and reason")
+    for receipt in prior:
+        if receipt["sha256"] == carried["receipt_sha256"]:
+            for old in receipt["observations"]:
+                if old["criterion"] == identifier and old["status"] == "PASS":
+                    return {**old, "carried": {"receipt_sha256": carried["receipt_sha256"], "reason": carried["reason"]}}
+    raise EngineError(f"{identifier}: carry needs a prior receipt recorded in this run where it passed")
+
+
+def validate_manual_receipt(receipt, expected_candidate, task, project, prior=()):
+    """Read evidence without writes. Content presence is not independent verification.
+
+    prior: receipts archived by repair; an observation may carry one of their PASSes."""
     if not isinstance(receipt, dict) or receipt.get("candidate") != expected_candidate:
         raise EngineError("Manual QA receipt must name the current production candidate")
     if not isinstance(expected_candidate, str) or not expected_candidate:
@@ -48,6 +63,12 @@ def validate_manual_receipt(receipt, expected_candidate, task, project):
         identifier = observation.get("criterion")
         if not isinstance(identifier, str) or identifier not in criteria:
             raise EngineError("Manual observations must name an accepted criterion")
+        if "carried" in observation:
+            if observation.get("status") != "PASS":
+                raise EngineError(f"{identifier}: only a PASS can be carried")
+            normalized.append(carried_observation(identifier, observation["carried"], prior))
+            covered.add(identifier)
+            continue
         for field in ("device", "action", "result"):
             if not isinstance(observation.get(field), str) or not observation[field].strip():
                 raise EngineError(f"{identifier}: manual observation needs {field}")
@@ -70,6 +91,8 @@ def validate_manual_receipt(receipt, expected_candidate, task, project):
                            "action": observation["action"], "result": observation["result"],
                            "status": "PASS", "evidence": hashes})
         covered.add(identifier)
+    if all("carried" in observation for observation in normalized):
+        raise EngineError("Manual QA needs at least one freshly observed criterion after a repair")
     missing = required - covered
     if missing:
         raise EngineError(f"Manual QA missing criteria: {', '.join(sorted(missing))}")

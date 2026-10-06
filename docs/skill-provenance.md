@@ -1,5 +1,17 @@
 # Skill sources and adaptations
 
+## Single-sourced rules: 6 October 2026
+
+Seif, "do all the recommendations": tests-last order, cloud PR review, mandatory logging, the three-option rule, review rounds, fresh assessment after reviewer repair, the file-summary stop and speed modes each keep their full text in one home and are linked elsewhere. Originals and dated history untouched; no rule dropped.
+
+## Speed recommendations A-G: 6 October 2026
+
+Seif, "do all the recommendations". A: self-review of our own draft PR pre-authorizes the question gate, push and comment checkpoints (own branch, no force-push; humans own ready/merge/release). B: LOW, and local-exposure MEDIUM, findings may be `accepted-deferral` under "Seif 6 Oct delegation" with a follow-up ticket; HIGH/CRITICAL, unmet criteria and required UNKNOWNs still block. C: one remote reviewer for all four themes on the delta after a local PASS on the same candidate; four reviewers only without a PASS or for security/release/public exposure. D: manual re-QA after a repair is effect-scoped, unaffected criteria may be `carried`; the automated gate still reruns in full. E: Safe skips Get Ready's file-summary stop when the ticket's before/after is owner-confirmed. F: ticket refresh is full only when the remote updated time changed, none at the plan boundary in the same session. G: each method is read fully once when its phase starts; delegates get only their role's methods plus the agent-routing brief. Seif's originals are unedited; [AGENTS.md](../AGENTS.md), [current decisions](current-decisions.md) and the [PR adapter](pr-workflow.md) carry the precedence. Nothing here is a runtime change or a checked result.
+
+## Speed modes: 6 October 2026
+
+Seif asked for Fast and Lucky modes, picked approach B (instruction-only modes, controller kept for Safe) and made Fast the default. Factory-specific; no original exists. One shared [speed modes](../.agents/skills/safe-engine/references/speed-modes.md) table, selected through the existing Safe Engine entry instead of two new skills, so installed launchers need no new entry. Originals unchanged. Measured fingerprinting at about 0.3s for this repo; Python was kept for Safe only.
+
 ## Preferred factory enhancements: 5 October 2026
 
 After actual PR19/PR16 merges, Seif required Improve Factory to retain the preferred approach as a rule. Smallest complete correction, existing capabilities, fitting proof, one record, short Get Ready wording and necessary links. Lasting preferences/demonstrated recurring lessons update canonical owners/callers; remove stale duplication. No new machinery without a demonstrated gap. Issue21 preserves exact owner input. No runtime change, recurring merge exception, cloud verdict or active-bundle adoption; final evidence remains separate.

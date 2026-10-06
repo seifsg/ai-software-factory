@@ -30,11 +30,10 @@ Public indexable pages use [Public Web SEO](../.agents/skills/ux-quality/referen
 
 1. Preserve owner input in the canonical ticket; confirm before/after scope. Understand the request and actual code. Analysis-only stays analysis-only.
 2. Use the original plan and checkpoint. Research new products and consequential unknowns; revise the plan.
-3. For material persistence design: whole-product access map → three credible designs → justified choice → written schema → independent audit.
-4. Make the smallest complete change. Keep shared logging working; inspect detailed, safe success/failure trails.
-5. Finish implementation and improvements. Manually use the changed behavior and fix observed defects.
-6. Only then author/polish automated tests and run final checks.
-7. Obtain fresh local review; perform the authorized PR, actual remote/cloud PR review in fresh context, and human handoff. Local subagents never substitute.
+3. For material persistence design, use [Database Schema](../.agents/skills/database-schema/SKILL.md).
+4. Make the smallest complete change. Keep [shared logging](../.agents/skills/safe-engine/references/app-diagnostics.md) working.
+5. Follow [tests-last order](current-decisions.md#finish-work-use-it-then-automate-tests).
+6. Obtain fresh local review; perform the authorized PR, [cloud PR review](pr-workflow.md#cloud-pr-review) and human handoff.
 
 Ticketed work uses the full cycle; keep bugfixes surgical. Legacy unticketed small changes retain six routines and one scoped reviewer. Full delivery uses the full methods. Preserve Seif's original wording and deliberate reminders; compress AI filler. See [current decisions](current-decisions.md) for operative rules.
 

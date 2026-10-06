@@ -13,6 +13,7 @@ Use a key starting with a lowercase letter, then lowercase letters/digits/hyphen
 ```text
 python -m safe_engine --project <absolute-target-root> --ticket <key> ticket-render --source <contract.json>
 python -m safe_engine --project <absolute-target-root> --ticket <key> ticket-capture --source <capture.json>
+python -m safe_engine --project <absolute-target-root> --ticket <key> ticket-capture --unchanged --source <observation.json>
 python -m safe_engine --project <absolute-target-root> --ticket <key> ticket-status
 python -m safe_engine --project <absolute-target-root> --ticket <key> init --task <task.json> --profile <profile.json> --session <real-builder-session-id>
 python -m safe_engine --project <absolute-target-root> --ticket <key> status
@@ -41,7 +42,9 @@ Capture fields: `version: 1`, `key`, exact `identity: {provider, workspace, id, 
 
 Fetch every activity/comment page. Each entry needs unique `id`, `at`, `author`, `text`, `disposition: "non-scope" | "resolved" | "pending"`. Resolved/non-scope entries need a sourced `reason`. Unreviewed owner scope stays pending. Preserve deleted entries through explicit reconciled history; known activity cannot silently vanish. No future timestamps, replayed reads or identity aliases.
 
-Refresh at intake/resume, before build (`record plan`), after finished implementation (`record implementation`), and after local review before `handoff`/PR. Controller boundaries need a new complete observation after the saved phase, including dependencies. Reuse unchanged captures within a batch. Pending changes, inactive tickets, failed reads or changed confirmation block progression. Status remains inspectable when scope drifts/cache is missing.
+Refresh at intake/resume, after finished implementation (`record implementation`), before `repair --records-only`, and after local review before `handoff`/PR. `record plan` needs no new observation (Seif, 6 Oct). Controller boundaries need a new observation after the saved phase, including dependencies.
+
+Cheap refresh: when the tracker's `updated_at` and status still equal the current capture's, record `ticket-capture --unchanged --source <observation.json>` with `{version: 1, unchanged: true, key, observed_at, remote_updated_at, status, transport: {tool, source}}`. It appends a numbered observation that counts as fresh; the body and activity stay from the last full capture. Any mismatch invalidates the capture and needs a complete capture. Use it only where the provider's `updated_at` changes on body, comment and status edits (GitHub Issues does); otherwise capture fully. Reuse unchanged captures within a batch. Pending changes, inactive tickets, failed reads or changed confirmation block progression. Status remains inspectable when scope drifts/cache is missing.
 
 Combine unchanged progress at these boundaries; local notes need no extra capture. Read before remote writes. New owner input, conflicts or changed dependencies need reconciliation before dependent work. Preserve the selected controller's actual guards.
 
@@ -60,6 +63,8 @@ Keep execution/evidence in ignored `.factory/`. Shared immutable captures, ident
 Finish implementation/improvements → final manual action QA → useful final test authoring/execution → fresh independent assessment. No early tests/walkthroughs. Baseline capture uses the existing narrow [before/after exception](pr-workflow.md#beforeafter-proof). No game/app pilot is implied by checking this factory.
 
 After final checks, before local review, use `ticket-proof --file <proof.json>`. Match `revision`/`scope_digest`; map every latest criterion exactly once in `criteria` as `{id, status: "PASS", before, after, implementation, evidence: [{path, sha256}], deviations: []}`. Evidence paths name actual project/run files. Approved deviations need `{change, reason, authority}`. Missing/unknown results, changed candidate or altered evidence block review/handoff. The reviewer inspects mapping and raw evidence; a recorded PASS cannot prove an action occurred.
+
+`ticket-proof-draft --out <proof.json>` (review phase, after passing checks) pre-fills that file: revision/digest, each criterion's manual evidence and linked check logs/outputs with their recorded hashes, changed files as `implementation`, and `deviations: []`. Status is `PASS` only where the recorded receipt and checks support it, else `UNKNOWN`. Write the actual `before`/`after`, refine `implementation` per criterion, then run `ticket-proof`. After review, `handoff` turns the mapping into a criterion → change → proof → gap table in `handoff.md`; paste it into the PR verification section.
 
 Refresh the real tracker before each PR/update and compare latest confirmed expectation with implementation, before/after proof, evidence and deviations in the existing Compliance/journey pass. Include ticket/epic links, exact revision/digest, decisions/activity, checks/limits and resume step. Applicable UI screenshot pairs are mandatory; equivalent output covers nonvisual work. Optional useful journey video stays final-stage.
 

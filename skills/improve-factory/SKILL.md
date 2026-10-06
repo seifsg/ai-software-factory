@@ -9,13 +9,28 @@ Load the complete factory; execute canonical Improve Factory. This launcher does
 
 Source: `https://github.com/seifsg/ai-software-factory`, branch `main`, private. Use existing authorized Git access. Never request tokens in chat or make it public.
 
+## Get the requirements
+
+Needs Git and Python 3.9+. Safe local review uses the Codex CLI when present, otherwise the controller's review-packet fallback. Set them up on any OS without asking Seif to prepare the machine:
+
+1. Find them: `git --version`; Python through `python3`, `python` or Windows `py -3`. Use the first that reports 3.9+, by full path, for every later command.
+2. Missing or too old: install from the official source, user scope when possible.
+   - Windows: `winget install -e --id Python.Python.3.12` and `winget install -e --id Git.Git`.
+   - macOS: `brew install python git`. No Homebrew: `xcode-select --install` for Git, the python.org installer for Python.
+   - Linux: the distro manager (`apt-get`, `dnf`, `pacman`, `zypper` or `apk`).
+   - No admin or package manager: install [uv](https://docs.astral.sh/uv/getting-started/installation/) (`winget install astral-sh.uv`, `brew install uv` or its official installer), run `uv python install 3.12`, then `uv run --python 3.12 python ...`.
+   - Codex CLI, Safe only and optional: [openai/codex](https://github.com/openai/codex) (`npm install -g @openai/codex` or `brew install --cask codex`).
+3. Check the versions again. Report what was installed, from where.
+4. Host asks before installs: ask once, naming each tool and source. Still blocked (no network, admin or approval): say what is missing. Fast and Lucky continue with Git alone: `git ls-remote https://github.com/seifsg/ai-software-factory main`, clone that SHA into `~/.safe-engine/bundles/<sha>`, detach, read it only. Safe waits for Python.
+5. Official sources only. No system settings beyond the install. No credentials in commands.
+
 ## Find the right factory version
 
 Preserve report/project goal. Inspect active legacy/ticket runs, checkpoints and session contract before fetching. Ticket state lives in `.factory/runs/<key>/state.json`; preserve legacy `.factory/state.json` and exact pins.
 
 Existing run: use recorded absolute bundle path and exact revision/dirty state. Inspect evidence; if identity remains unknown, preserve run and stop dependent changes. Never substitute latest.
 
-Find `scripts/resolve_bundle.py` beside this installed file. Use available Python 3 (`python3`, `python`, Windows `py -3`); quote paths/use argument arrays.
+Find `scripts/resolve_bundle.py` beside this installed file. Use the Python from [Get the requirements](#get-the-requirements); quote paths/use argument arrays.
 
 Existing run or supplied checkout:
 ```text
@@ -39,7 +54,7 @@ Current bundles check required guidance through `safe_engine/bundle-inputs.json`
 
 Read the whole returned canonical `entrypoint` and applicable references/methods. Execute once. Analysis/planning stays in phase. No recursive launcher, standalone canonical-folder installation or claim that loading files repaired anything.
 
-New maintenance uses canonical `.agents/skills/ticketing/SKILL.md` and `docs/ticketing.md`: preferred authorized tracker MCP, otherwise GitHub Issues (Seif's current choice). Confirm before/after scope; dispatch a dedicated maintenance builder session and complete the full cycle, even for small repairs. Keep fixes surgical. Select `--ticket <key>` and initialize with `--session <real-builder-session-id>`; preserve separate app/maintenance history and ownership. Old pins need authorized trial/adoption before new methods.
+Mode: Fast by default; read canonical `.agents/skills/safe-engine/references/speed-modes.md` when the pin has it. Safe maintenance uses canonical `.agents/skills/ticketing/SKILL.md` and `docs/ticketing.md`: preferred authorized tracker MCP, otherwise GitHub Issues (Seif's current choice). Confirm before/after scope; dispatch a dedicated maintenance builder session and complete the full cycle, even for small repairs. Keep fixes surgical. Select `--ticket <key>` and initialize with `--session <real-builder-session-id>`; preserve separate app/maintenance history and ownership. Old pins need authorized trial/adoption before new methods.
 
 Keep active cached bundles unchanged. Repair in a separate worktree from their revision; follow compatibility/evidence rules before adoption. Never pull/reset active bundles or silently change global settings. Resume this case's recorded selection even when the branch advances.
 
@@ -47,7 +62,7 @@ Keep active cached bundles unchanged. Repair in a separate worktree from their r
 
 Missing Git, Python, private access, complete files or required independent review: name the prerequisite; preserve project state. Cloud/other hosts need their own authorized tools/checkout.
 
-Finish all repair work before manual walkthroughs or automated tests. Local independent maintenance review and remote/cloud PR review are separate; PR review needs a fresh remote context and exact candidate evidence. A local subagent cannot replace it. No app/game/mobile pilot or simulation unless specifically requested.
+Follow the tests-last order in canonical `docs/current-decisions.md`. Local independent maintenance review and PR review are separate; PR review follows canonical `docs/pr-workflow.md`. No app/game/mobile pilot or simulation unless specifically requested.
 
 Resolver installs no hooks or host automation, provisions no sessions/worktrees, selects no models, pushes/merges/notifies nothing and launches no product.
 
