@@ -1,6 +1,6 @@
 ---
 name: get-ready-to-code
-description: "Prepare the files, self-critique, phases, todos and full plan from completed analysis. Defines the per-todo 0-4 execution loop. No coding during planning."
+description: "Plans the build from a finished analysis: summary of files to change, self-critique, phases, full todo list and whole plan, plus the 0-4 loop every todo runs through. Use after analysis and before coding. No coding during planning."
 ---
 
 Prepare to start building based on our plan and analysis.
@@ -15,15 +15,15 @@ Build in complete working iterations. Tiny bug or full product, same logic.
 - Complete outcome ticket -> finish iteration -> manual QA -> relevant final tests/review. Full requested outcome stays open until delivered.
 
 Prepare a :
-- summary of files about to change then stop.
+- summary of files about to change then stop. (Continue without stopping only when your instructions already authorize it.)
 - next step, criticize our suggested summary of files, is it optimal, is that the best path for our plan
 - steps or phases.
 - The entire list of to do.
 - The entire plan.
 
-Keep these five outputs in one compact work record. Full depth, original stop and every 0–4 step stay. Reuse source/decisions; link proof. Within step 3, finish affected callers, counts and links before recording completion. No extra finishing gate.
+Keep these five outputs in one compact work record. Full depth, the file-summary stop and every 0–4 step stay. Reuse source/decisions; link proof. Within step 3, finish affected callers, counts and links before recording completion. No extra finishing gate.
 
-##ULTRA EXTRA IMPORTANT
+## ULTRA EXTRA IMPORTANT
 
 The plan execution will be based on the following logic:
 
@@ -39,7 +39,7 @@ The plan execution will be based on the following logic:
 - Is this o(1) or as close?
 - are there any critical gaps to what we did?
 - Check and double check. Extremely and highly important: NO CIRCULAR DEPs!!!
-- Does this satisfy our user journey? EXTRMELEY IMPORTANT!!
+- Does this satisfy our user journey? EXTREMELY IMPORTANT!!
 4- if we detect issues from step 3, start our processes over again from step 1 and follow steps again.
 
 Second related failure? Find the shared cause. Why did the previous fix fail? Fix the cause and affected consumers. State what prevents recurrence. Preserve failures; no endless symptom patches or retry cap.

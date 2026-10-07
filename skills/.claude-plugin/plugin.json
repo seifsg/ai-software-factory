@@ -1,0 +1,61 @@
+{
+  "name": "safe-engine",
+  "description": "Agent-agnostic AI Software Factory: Fast (default), Lucky and Safe delivery with tickets, research, owner questions, a product bar and hook-enforced steps.",
+  "homepage": "https://github.com/seifsg/ai-software-factory",
+  "repository": "https://github.com/seifsg/ai-software-factory",
+  "keywords": [
+    "factory",
+    "delivery",
+    "tickets",
+    "workflow",
+    "hooks"
+  ],
+  "skills": "./",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit|Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/safe-engine/scripts/run-gate.sh\" claude",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/safe-engine/scripts/run-gate.sh\" claude",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/safe-engine/scripts/run-gate.sh\" claude",
+            "timeout": 20
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/safe-engine/scripts/run-gate.sh\" claude",
+            "timeout": 20
+          }
+        ]
+      }
+    ]
+  }
+}

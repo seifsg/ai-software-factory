@@ -44,15 +44,18 @@ def finding(severity="HIGH", disposition="blocking", exception=None):
             "evidence_status": "valid", "evidence": DOUBLE, "action": "Synthetic action"}
 
 
-def deferral(owner="Seif", authority=DELEGATION):
+def deferral(owner="owner", authority=DELEGATION):
     return {"owner": owner, "reason": "Synthetic reason", "scope": "local", "revisit": "Before release",
             "authority": authority, "destination": "synthetic:followup-1"}
 
 
+REVIEWER_BINARIES = {"codex", "claude", "agent", "cursor-agent"}
+
+
 def codex(present):
-    """Make shutil.which see (or not see) a Codex CLI; every other lookup stays real."""
+    """Make shutil.which see (or not see) a Codex CLI and no other reviewer agent; other lookups stay real."""
     return patch("shutil.which", side_effect=lambda name, *a, **k: sys.executable if name == "codex" and present
-                 else None if name == "codex" else REAL_WHICH(name, *a, **k))
+                 else None if name in REVIEWER_BINARIES else REAL_WHICH(name, *a, **k))
 
 
 class Base(unittest.TestCase):
@@ -451,7 +454,7 @@ class ProofDraftAndHandoffTests(Base):
         self.assertNotIn("## Deferred findings", Path(f.flow.handoff()["handoff"]).read_text(encoding="utf-8"))
 
 
-class SeifDelegationTests(Base):
+class OwnerDelegationTests(Base):
     def blocks(self, severity, exception, exposure="local", scopes=()):
         state = {"delivery_version": 2, "profile": {"exposure": exposure, "review_scopes": list(scopes)}}
         return Workflow.finding_blocks(finding(severity, "accepted-deferral", exception), state)
@@ -566,9 +569,9 @@ class ReviewRoundCapTests(Base):
                 f.flow.review_packet(f.root / ".factory/capped-packet.md")
             reviewer.assert_not_called()
         self.assertFalse((f.root / ".factory/capped-packet.md").exists())
-        status = f.flow.extend_reviews(2, "Seif decided two more rounds")
+        status = f.flow.extend_reviews(2, "The owner decided two more rounds")
         self.assertEqual((status["failed_reviews"], status["review_rounds"]), (3, 5))
-        self.assertIn("Seif decided two more rounds", f.flow.load()["history"][-1]["event"])
+        self.assertIn("The owner decided two more rounds", f.flow.load()["history"][-1]["event"])
         self.assertEqual(self.codex_review(f, report())["phase"], "ready")
 
     def test_extension_grants_exactly_the_requested_extra_rounds(self):
@@ -666,7 +669,7 @@ class ExternalReviewerTests(Base):
             self.packet(f)
         with self.assertRaisesRegex(EngineError, "round cap"):
             self.packet(f)
-        self.assertEqual(f.flow.extend_reviews(1, "Seif: one more round")["review_rounds"], 4)
+        self.assertEqual(f.flow.extend_reviews(1, "Owner: one more round")["review_rounds"], 4)
         self.assertEqual(self.external(f, report())["phase"], "ready")
         self.assertEqual(f.flow.status()["failed_reviews"], 2)
 
@@ -674,7 +677,7 @@ class ExternalReviewerTests(Base):
         f = self.to_review()
         self.packet(f)
         self.set_state(f, review_packet={**f.flow.load()["review_packet"], "records": "stale"})
-        f.flow.extend_reviews(1, "Seif: one more round")
+        f.flow.extend_reviews(1, "Owner: one more round")
         with self.assertRaisesRegex(EngineError, "changed since the review packet"):
             self.external(f, report())
 
@@ -785,7 +788,7 @@ class ExternalReviewerTests(Base):
         with patch("safe_engine.workflow.shutil.which", return_value=None) as which:
             with self.assertRaisesRegex(EngineError, "review-packet"):
                 f.flow.review(10)  # review.py asked the patched lookup, not the real PATH
-        which.assert_called_once_with("codex")
+        self.assertEqual({call.args[0] for call in which.call_args_list}, REVIEWER_BINARIES)  # every preset probed
         with patch("safe_engine.workflow.save") as saved:
             self.packet(f)
         saved.assert_called_once()  # persist() in review.py resolves save through workflow
@@ -839,13 +842,10 @@ class ExternalReviewerTests(Base):
             again.flow.review_packet(Path(outside.name) / "packet.md")
         self.assertTrue((Path(outside.name) / "packet.md").is_file())
 
-    def test_codex_on_path_stays_the_reviewer_and_report_is_refused(self):
-        f = self.to_review()
+    def test_packet_report_is_accepted_even_with_a_reviewer_agent_installed(self):
+        f = self.to_review()  # no agent is privileged; the packet route always stays open
         self.packet(f)
-        before = f.flow.load()
-        with self.assertRaisesRegex(EngineError, "Codex CLI is available"):
-            self.external(f, report(), present=True)
-        self.assertEqual(f.flow.load(), before)
+        self.assertEqual(self.external(f, report(), present=True)["phase"], "ready")
 
     def test_report_needs_a_packet_a_reviewer_identity_and_the_schema(self):
         f = self.to_review()
@@ -913,7 +913,7 @@ class ExternalReviewerTests(Base):
                 f.flow.review(None, str(f.flow.directory / "external-report.json"), "host/agent")
         self.assertFalse((f.flow.directory / "over-cap.md").exists())
 
-    def test_without_codex_or_report_review_points_to_the_packet_route(self):
+    def test_without_any_agent_or_report_review_points_to_the_packet_route(self):
         f = self.to_review()
         with codex(False), self.assertRaisesRegex(EngineError, "review-packet"):
             f.flow.review(10)

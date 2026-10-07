@@ -48,8 +48,6 @@ HINTS = {
     "done-run": ">=1 PASS line, a Logs line; UI runs >=1 existing screenshot path",
     "handoff": "Run, Unverified, Follow-ups lines; sign-in runs a Dev sign-in line",
 }
-EDIT_TOOLS = {"Write", "Edit", "MultiEdit", "NotebookEdit", "apply_patch"}
-SHELL_TOOLS = {"Bash", "PowerShell"}
 HERE = Path(__file__).resolve().parent  # sibling modules: fast_record.py (step checks), fast_shell.py (commands)
 
 
@@ -203,7 +201,7 @@ def skeleton(run):
 
 
 def bundle_receipt(project):
-    """The entry resolver's selection for this project, if any (fast-run.md step 0)."""
+    """The entry resolver's selection for this project, if any (fast-run.md#the-gate)."""
     try:
         receipt = load(Path(project) / ".factory" / "entry-bundle.json")
         return {"root": receipt["bundle_root"], "revision": receipt["revision"]}
@@ -229,17 +227,24 @@ def ignore_factory(project):
     return "added .factory/ to .gitignore"
 
 
-def hook_status():
-    """Installed hosts that will call this gate. Settings-file hooks are not detected."""
-    plugins = Path(os.environ.get("CLAUDE_CODE_PLUGIN_CACHE_DIR") or Path.home() / ".claude" / "plugins")
+def hook_status(project):
+    """Hosts wired to call this gate: an enabled Claude Code plugin, or factory entries in Codex/Cursor hook files."""
+    home = Path.home()
     found = []
-    for name, path, needle in (("Claude Code plugin", plugins / "installed_plugins.json", '"safe-engine@'),
-                               ("Codex hooks.json", Path.home() / ".codex" / "hooks.json", "gate")):
-        try:
-            if needle in path.read_text(encoding="utf-8"):
+    try:
+        plugins = json.loads((home / ".claude" / "settings.json").read_text(encoding="utf-8")).get("enabledPlugins", {})
+        if any(name.startswith("safe-engine@") and value is True for name, value in plugins.items()):
+            found.append("Claude Code")
+    except (OSError, ValueError, AttributeError):
+        pass
+    for name, folder in (("Codex", ".codex"), ("Cursor", ".cursor")):
+        for base in (home, Path(project)):
+            try:
+                text = (base / folder / "hooks.json").read_text(encoding="utf-8")
+            except OSError:
+                continue
+            if name not in found and ("fast_gate" in text or "run-gate" in text):
                 found.append(name)
-        except OSError:
-            pass
     return ", ".join(found) or "none detected: the gate records steps but nothing blocks; follow the order yourself"
 
 
@@ -254,7 +259,7 @@ def cmd_start(args):
     except OSError as error:
         fail(f"Cannot read the request file: {error}")
     if not request.strip():
-        fail("Give Seif's request verbatim with --request or --request-file")
+        fail("Give the owner's request verbatim with --request or --request-file")
     ledger = ledger_path(project)
     if ledger.exists():
         old = load(ledger)
@@ -275,7 +280,7 @@ def cmd_start(args):
     if not record.exists():
         record.write_text(skeleton(run), encoding="utf-8")
     save(registry_path(project), {"project": str(project), "key": args.key, "sessions": []})
-    git_note, hooks = ignore_factory(project), hook_status()
+    git_note, hooks = ignore_factory(project), hook_status(project)
     log("run.start", key=args.key, project=str(project), mode=args.mode, kind=args.kind, bundle=run["bundle"], hooks=hooks)
     bundle = (f"{run['bundle']['root']} @ {run['bundle']['revision'][:12]}" if run["bundle"] else
               "no .factory/entry-bundle.json; run the entry's resolver first (skip only for factory maintenance)")
@@ -326,7 +331,7 @@ def cmd_pause(args, reason):
 def cmd_close(args):
     project, run = open_run(args.project)
     if "handoff" not in run["done"] and not args.abandon:
-        fail("Record the handoff first, or close --abandon '<Seif's reason>'")
+        fail("Record the handoff first, or close --abandon \"<the owner's reason>\"")
     run.update(closed=True, closed_at=now(), abandoned=args.abandon, paused=None)
     save(ledger_path(project), run)
     try:
@@ -337,7 +342,7 @@ def cmd_close(args):
     print(status_text(run))
 
 
-# ---- hooks (Claude Code plugin, Codex hooks.json) ------------------------------
+# ---- hooks (every host; dialects in fast_hosts.py, wiring in fast_install.py) ----
 
 def active_runs():
     """Open runs from the registry. One bad or unreachable entry never disables the others."""
@@ -395,16 +400,6 @@ def bind(item, session):
         log("hook.bind_failed", error=repr(error))
 
 
-def edit_paths(tool, tool_input, cwd):
-    if tool == "apply_patch":
-        patch = tool_input.get("command") or tool_input.get("input") or ""
-        patch = "\n".join(map(str, patch)) if isinstance(patch, list) else str(patch)
-        names = re.findall(r"^\*\*\* (?:Add|Update|Delete) File: (.+)$|^\*\*\* Move to: (.+)$", patch, re.M)
-        return [norm((first or second).strip(), cwd) for first, second in names]
-    path = tool_input.get("file_path") or tool_input.get("notebook_path") or tool_input.get("path")
-    return [norm(path, cwd)] if path else []
-
-
 def refusal(item, path):
     """Why a write to path must wait, or None. Only this script ever writes the ledger."""
     project = item[2]["project"]
@@ -415,24 +410,21 @@ def refusal(item, path):
     return None
 
 
-def deny(run, what):
+def deny_reason(run, what):
     blocked = open_before_build(run)
     steps = (f" Record these steps first: {', '.join(blocked)}. Fill .factory/fast/work-record.md and run "
              "`fast_gate.py done <step>` (fast-run.md). .factory/ stays writable.") if blocked else ""
     log("hook.deny", key=run["key"], what=what, blocked=blocked)
-    return {"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny",
-                                   "permissionDecisionReason": f"Factory {run['mode']} run '{run['key']}' blocks {what}.{steps}"}}
+    return f"Factory {run['mode']} run '{run['key']}' blocks {what}.{steps}"
 
 
 def pre_tool(event, runs, cwd, session):
-    """Deny project writes before the gate opens. Sessions bind only through real project work."""
-    tool, tool_input = event.get("tool_name", ""), event.get("tool_input") or {}
-    if tool in EDIT_TOOLS:
-        targets = edit_paths(tool, tool_input, cwd)
-    elif tool in SHELL_TOOLS:
+    """Deny reason for a project write before the gate opens, or None. Sessions bind only through real work."""
+    if event["tool"] == "edit":
+        targets = [norm(path, cwd) for path in event["paths"]]
+    elif event["tool"] == "shell":
         shell = sibling("fast_shell")
-        command = str(tool_input.get("command", ""))
-        targets = [norm(name, cwd) for name in shell.writes(command)]
+        targets = [norm(name, cwd) for name in shell.writes(event["command"])]
     else:
         return None
     for path in targets:
@@ -441,15 +433,15 @@ def pre_tool(event, runs, cwd, session):
             bind(item, session)
             reason = refusal(item, path)
             if reason:
-                return deny(item[2], reason)
-    if tool in SHELL_TOOLS:
+                return deny_reason(item[2], reason)
+    if event["tool"] == "shell":
         item = owner(runs, cwd)
         if item:
             bind(item, session)
-        item = item or mentioned(runs, command)
-        if item and open_before_build(item[2]) and shell.scaffolds(command):
+        item = item or mentioned(runs, event["command"])
+        if item and open_before_build(item[2]) and shell.scaffolds(event["command"]):
             bind(item, session)
-            return deny(item[2], "scaffold and install commands")
+            return deny_reason(item[2], "scaffold and install commands")
     return None
 
 
@@ -462,16 +454,16 @@ def mine(runs, cwd, session):
 
 
 def stop(event, runs, cwd, session):
-    if event.get("stop_hook_active"):
+    """Reason to keep working when a run is unfinished; once per stop, never for paused runs."""
+    if event["again"]:
         return None  # one reminder per stop; never trap the session
     for _, _, run in mine(runs, cwd, session):
         if not run.get("paused"):
             step = next_step(run)
             log("hook.block_stop", key=run["key"], next=step)
-            return {"decision": "block", "reason": (
-                f"Factory {run['mode']} run '{run['key']}' is not finished. Next: "
-                f"{step or 'close'}. Continue it. Waiting on Seif? `fast_gate.py pause --reason \"...\"`. "
-                "Seif stopped it? `fast_gate.py close --abandon \"<his reason>\"`.")}
+            return (f"Factory {run['mode']} run '{run['key']}' is not finished. Next: "
+                    f"{step or 'close'}. Continue it. Waiting on the owner? `fast_gate.py pause --reason \"...\"`. "
+                    "The owner stopped it? `fast_gate.py close --abandon \"<their reason>\"`.")
     return None
 
 
@@ -483,24 +475,40 @@ def context(event, runs, cwd, session):
         if run.get("paused"):
             line += f"; paused: {run['paused']['reason']}"
         lines.append(line + ". Method: .agents/skills/safe-engine/references/fast-run.md.")
-    if not lines:
-        return None
-    return {"hookSpecificOutput": {"hookEventName": event.get("hook_event_name"), "additionalContext": "\n".join(lines)}}
+    return "\n".join(lines) or None
 
 
-def cmd_hook(_args):
-    """Answer one host hook event from stdin. Fail open: a broken gate never breaks the session."""
+def cmd_hook(host="claude"):
+    """Answer one host hook event from stdin in that host's dialect. Fail open: never break the session."""
     try:
-        event = json.loads(sys.stdin.buffer.read().decode("utf-8-sig") or "{}")  # hosts send UTF-8
         runs = active_runs()
-        if runs:
-            name, cwd, session = event.get("hook_event_name"), norm(event.get("cwd") or os.getcwd()), event.get("session_id")
-            handler = {"PreToolUse": pre_tool, "Stop": stop, "UserPromptSubmit": context, "SessionStart": context}.get(name)
-            output = handler(event, runs, cwd, session) if handler else None
-            if output:
-                print(json.dumps(output))
+        if not runs:
+            return 0
+        hosts = sibling("fast_hosts")
+        raw = json.loads(sys.stdin.buffer.read().decode("utf-8-sig") or "{}")  # hosts send UTF-8
+        event = hosts.read(host, raw if isinstance(raw, dict) else {})
+        cwd, session = norm(event["cwd"] or os.getcwd()), event["session"]
+        if event["kind"] == "pre_tool":
+            reason = pre_tool(event, runs, cwd, session)
+            if reason:
+                out, code = hosts.deny(host, reason)
+                print(out) if out else print(reason, file=sys.stderr)
+                log("hook.answer", host=host, hook_event=event["name"], answer="deny", exit=code)
+                return code
+        elif event["kind"] == "stop":
+            reason = stop(event, runs, cwd, session)
+            out = hosts.keep_going(host, reason) if reason else None
+            if out:
+                print(out)
+                log("hook.answer", host=host, hook_event=event["name"], answer="keep_going")
+        elif event["kind"] in ("prompt", "session"):
+            text = context(event, runs, cwd, session)
+            out = hosts.context(host, event["name"], text) if text else None
+            if out:
+                print(out)
     except Exception as error:  # noqa: BLE001 - any failure must leave the host session working
-        log("hook.error", error=repr(error))
+        log("hook.error", host=host, error=repr(error))
+    return 0
 
 
 def main():
@@ -508,8 +516,10 @@ def main():
         sys.exit("fast_gate.py needs Python 3.9+")  # non-zero: the hook launcher tries the next Python
     for stream in (sys.stdout, sys.stderr):
         stream.reconfigure(errors="backslashreplace")  # any path prints, whatever the console code page
-    if sys.argv[1:] == ["hook"]:
-        return cmd_hook(None)  # hot path: skip argparse
+    if sys.argv[1:2] == ["hook"] and not {"-h", "--help"} & set(sys.argv):  # hot path: skip argparse
+        flags = " ".join(sys.argv[2:]).replace("--host=", "--host ").split()
+        host = flags[flags.index("--host") + 1] if "--host" in flags[:-1] else "claude"
+        sys.exit(cmd_hook(host))
     import argparse
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     common = argparse.ArgumentParser(add_help=False)
@@ -529,14 +539,20 @@ def main():
     done.add_argument("step", choices=list(TITLES))
     done.add_argument("--offline", help="Record tickets without gh verification, with the reason")
     sub.add_parser("status", parents=[common])
-    pause = sub.add_parser("pause", parents=[common], help="Waiting on Seif; lets the session stop")
+    pause = sub.add_parser("pause", parents=[common], help="Waiting on the owner; lets the session stop")
     pause.add_argument("--reason", required=True)
     sub.add_parser("resume", parents=[common])
     close = sub.add_parser("close", parents=[common])
-    close.add_argument("--abandon", help="Seif stopped the run: his reason")
-    sub.add_parser("hook", help="Read one host hook event from stdin")
+    close.add_argument("--abandon", help="The owner stopped the run: their reason")
+    install = sub.add_parser("install", help="Install the entry skills and gate hooks for one host")
+    install.add_argument("--host", required=True, choices=("claude", "codex", "cursor", "other"),
+                         help="other: entry skills only, for agents you wire by hand")
+    install.add_argument("--project", help="Install into this project instead of your user folders")
+    hook = sub.add_parser("hook", help="Answer one host hook event from stdin")
+    hook.add_argument("--host", default="claude", help="claude, codex, cursor, or any other hook-capable agent")
     args = parser.parse_args()
-    actions = {"start": cmd_start, "done": cmd_done, "status": cmd_status, "close": cmd_close, "hook": cmd_hook,
+    actions = {"start": cmd_start, "done": cmd_done, "status": cmd_status, "close": cmd_close, "hook": lambda a: sys.exit(cmd_hook(a.host)),
+               "install": lambda a: sibling("fast_install").install(a.host, a.project, log=lambda line: (print(line), log("install.write", line=line))),
                "pause": lambda a: cmd_pause(a, a.reason), "resume": lambda a: cmd_pause(a, None)}
     actions[args.command](args)
 

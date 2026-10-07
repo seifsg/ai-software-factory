@@ -1,75 +1,33 @@
 ---
 name: improve-factory
-description: "Load the complete private Safe Engine factory for isolated maintenance and independent review. Preserve active project progress. Product defects stay in delivery."
+description: "Launches the AI Software Factory's maintenance method to repair or improve the factory itself (skills, gate, controller, adapters) in isolation, preserving any active project run. Use when the factory misbehaved or needs a change. Product bugs stay in delivery."
 ---
 
 # Improve Factory
 
-Load the complete factory; execute canonical Improve Factory. This launcher does not replace the user's methods.
+This folder only launches the factory's maintenance method. The method lives in the factory bundle.
 
-Source: `https://github.com/seifsg/ai-software-factory`, branch `main`, private. Use existing authorized Git access. Never request tokens in chat or make it public.
+## Requirements
 
-## Get the requirements
+Git and Python 3.9+. Find them by full path (`python3`, `python` or the platform launcher). Missing or too old: install from the official source with the platform's package manager, user scope when possible, asking first if your agent requires it. No credentials in commands.
 
-Needs Git and Python 3.9+. Safe local review uses the Codex CLI when present, otherwise the controller's review-packet fallback. Set them up on any OS without asking Seif to prepare the machine:
+## Select the bundle
 
-1. Find them: `git --version`; Python through `python3`, `python` or Windows `py -3`. Use the first that reports 3.9+, by full path, for every later command.
-2. Missing or too old: install from the official source, user scope when possible.
-   - Windows: `winget install -e --id Python.Python.3.12` and `winget install -e --id Git.Git`.
-   - macOS: `brew install python git`. No Homebrew: `xcode-select --install` for Git, the python.org installer for Python.
-   - Linux: the distro manager (`apt-get`, `dnf`, `pacman`, `zypper` or `apk`).
-   - No admin or package manager: install [uv](https://docs.astral.sh/uv/getting-started/installation/) (`winget install astral-sh.uv`, `brew install uv` or its official installer), run `uv python install 3.12`, then `uv run --python 3.12 python ...`.
-   - Codex CLI, Safe only and optional: [openai/codex](https://github.com/openai/codex) (`npm install -g @openai/codex` or `brew install --cask codex`).
-3. Check the versions again. Report what was installed, from where.
-4. Host asks before installs: ask once, naming each tool and source. Still blocked (no network, admin or approval): say what is missing. Fast and Lucky can read the bundle with Git alone: `git ls-remote https://github.com/seifsg/ai-software-factory main`, clone that SHA into `~/.safe-engine/bundles/<sha>`, detach, read it only; record steps by hand and report the gate as unavailable. Safe waits for Python.
-5. Official sources only. No system settings beyond the install. No credentials in commands.
+1. Preserve the report and any active project run: read its `.factory/` records and recorded bundle first.
+2. Run the resolver beside this file (quote paths):
 
-## Find the right factory version
-
-Preserve report/project goal. Inspect active legacy/ticket runs, checkpoints and session contract before fetching. Ticket state lives in `.factory/runs/<key>/state.json`; preserve legacy `.factory/state.json` and exact pins.
-
-Existing run: use recorded absolute bundle path and exact revision/dirty state. Inspect evidence; if identity remains unknown, preserve run and stop dependent changes. Never substitute latest.
-
-Find `scripts/resolve_bundle.py` beside this installed file. Use the Python from [Get the requirements](#get-the-requirements); quote paths/use argument arrays.
-
-Existing run or supplied checkout:
 ```text
-python3 <skill-dir>/scripts/resolve_bundle.py --bundle <absolute-factory-root>
+python scripts/resolve_bundle.py --entrypoint improve-factory --bundle <absolute-factory-root>
+python scripts/resolve_bundle.py --entrypoint improve-factory
 ```
 
-New maintenance case without active run:
-```text
-python3 <skill-dir>/scripts/resolve_bundle.py
-```
+   Active run or a local factory checkout: the first, on that checkout. Otherwise the second: it pins a fresh checkout of main in `~/.safe-engine/bundles/<commit>`; `--ref <full-sha>` pins another commit.
+3. Check the returned root, revision, dirty status and entrypoint. Never pull, reset or edit an active run's bundle; repair in a separate worktree.
 
-The resolver selects the branch once into a complete detached `~/.safe-engine/bundles/<commit>` checkout. For a user-pinned new case, add `--ref <full-commit-sha>`. Pins cannot authorize active-run upgrades.
+## Run
 
-## Read the result and use the method
-
-Follow Working iterations where present in the selected canonical method. Older pins keep their recorded method; no silent upgrade.
-
-Check JSON against intended identity; record `bundle_root`, `revision`, dirty state and entrypoint. Dirty active checkout: use canonical checkpointing to capture actual diff/untracked-input hashes; commit alone is insufficient.
-
-Current bundles check required guidance through `safe_engine/bundle-inputs.json`; old bundles retain legacy completeness inspection. Record launcher identity separately; declare it as a profile input when used in acceptance. Resolver checks identity/files, not behavior, compatibility or permission.
-
-Read the whole returned canonical `entrypoint` and applicable references/methods. Execute once. Analysis/planning stays in phase. No recursive launcher, standalone canonical-folder installation or claim that loading files repaired anything.
-
-Mode: Fast by default; read canonical `.agents/skills/safe-engine/references/speed-modes.md` when the pin has it. Fast maintenance is a `change` run of canonical `fast-run.md`: one ticket, recorded steps and the bundle's `skills/safe-engine/scripts/fast_gate.py`. Safe maintenance uses canonical `.agents/skills/ticketing/SKILL.md` and `docs/ticketing.md`: preferred authorized tracker MCP, otherwise GitHub Issues (Seif's current choice). Confirm before/after scope; dispatch a dedicated maintenance builder session and complete the full cycle, even for small repairs. Keep fixes surgical. Select `--ticket <key>` and initialize with `--session <real-builder-session-id>`; preserve separate app/maintenance history and ownership. Old pins need authorized trial/adoption before new methods.
-
-Keep active cached bundles unchanged. Repair in a separate worktree from their revision; follow compatibility/evidence rules before adoption. Never pull/reset active bundles or silently change global settings. Resume this case's recorded selection even when the branch advances.
-
-## Missing capabilities
-
-Missing Git, Python, private access, complete files or required independent review: name the prerequisite; preserve project state. Cloud/other hosts need their own authorized tools/checkout.
-
-Follow the tests-last order in canonical `docs/current-decisions.md`. Local independent maintenance review and PR review are separate; PR review follows canonical `docs/pr-workflow.md`. No app/game/mobile pilot or simulation unless specifically requested.
-
-Resolver installs no hooks or host automation, provisions no sessions/worktrees, selects no models, pushes/merges/notifies nothing and launches no product. Gate hooks come only from the Claude Code plugin or a Codex `hooks.json` the user installed (canonical `docs/install-safe-engine.md`).
+Read the returned `entrypoint` (`.agents/skills/improve-factory/SKILL.md`) fully and follow it. Analysis or planning requests keep their phase.
 
 ## Invoke
 
-Codex: `$improve-factory The factory did X; expected Y. Preserve project progress.`
-
-Claude Code, with the `safe-engine` plugin or a personal installation: `/improve-factory The factory did X; expected Y. Preserve project progress.`
-
-See source `docs/install-improve-factory.md` for installation/GitHub references. Host discovery/permissions still apply; if discovery fails, read this installed file by explicit path.
+`improve-factory The factory did [observed]; expected [result]. Preserve project progress.`

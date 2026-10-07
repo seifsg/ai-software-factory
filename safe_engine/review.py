@@ -1,12 +1,13 @@
-"""Independent review: Codex launch, external packets/reports, verdict rules and the round cap."""
+"""Independent review: any installed agent launched read-only, external packets/reports, verdict rules, round cap."""
 
 import os
 from pathlib import Path
-import shutil
 import uuid
 
+from . import reviewers
+
 from .project import EngineError, digest, file_hash, rescan
-from .review_packet import review_prompt, schema_errors
+from .review_packet import DELEGATION, review_prompt, schema_errors
 from .storage import atomic_json, read_json
 
 
@@ -14,8 +15,7 @@ VOLATILE = {"sequence", "history", "updated_at", "review_packet", "review_rounds
             "pending_operation"}  # save counters and cap bookkeeping; not reviewed records
 RESERVED = {"state.json", "lock", "handoff.md", "history", "outputs", "logs", "artifacts", "ticket-observations",
             "entry-bundle.json", "runs"}  # runs: legacy runs use .factory itself as the run dir
-REVIEW_ROUNDS = 3  # Seif, 6 Oct: failed reviews before the owner decides
-DELEGATION = "Seif 6 Oct delegation"  # LOW, and MEDIUM at local exposure, may be deferred
+REVIEW_ROUNDS = 3  # failed reviews before the owner decides
 EXTERNAL = "external reviewer; independence not verified by the controller"
 
 
@@ -25,32 +25,32 @@ class ReviewMixin:
         if state.get("review") and not state["review"]["passed"]:
             raise EngineError("Completed review requires correction; use repair before another review")
         if state.get("failed_reviews", 0) >= state.get("review_rounds", REVIEW_ROUNDS):
-            raise EngineError("Review round cap reached; Seif decides: extend-reviews, amend or cancel")
+            raise EngineError("Review round cap reached; the owner decides: extend-reviews, amend or cancel")
         self.require_checks(state)
         self.require_ticket_proof(state)
 
-    def review(self, timeout=None, report=None, reviewer=None):
+    def review(self, timeout=None, report=None, reviewer=None, agent=None, builder=None):
+        """Launch a fresh read-only reviewer agent (auto: installed, not the builder), or accept a packet report."""
         state = self.load()
         self.require_reviewable(state)
-        codex = shutil.which("codex")
         if report is not None or reviewer is not None:
-            return self.external_review(state, report, reviewer, codex)
+            return self.external_review(state, report, reviewer)
         if type(timeout) is not int or not 1 <= timeout <= 3600:
             raise EngineError("Specify a review timeout between 1 and 3600 seconds")
-        if not codex:
-            raise EngineError("Codex CLI is unavailable; issue review-packet to a fresh read-only host subagent, "
-                              "then review --report <file.json> --reviewer <id>")
+        name, executable = reviewers.choose(agent, builder)
         current = self.current(state)
         package = Path(__file__).resolve().parent
         output = self.directory / f"review-{state['sequence'] + 1:04d}.json"
         state["review"] = None
         state["pending_operation"] = "independent-review"
         prompt = review_prompt(state, self.directory, package.parent)
-        self.persist(state, "Started fresh read-only Codex review")
+        self.persist(state, f"Started fresh read-only {name} review")
         log = self.directory / "logs" / f"{state['sequence']:04d}-review.log"
-        result = self.launch([codex, "exec", "--sandbox", "read-only", "--ephemeral", "-C", str(self.project),
-                             "--output-schema", str(self.schema_path(state)),
-                             "--output-last-message", str(output), "-"], self.project, timeout, log, prompt)
+        command = reviewers.argv(name, executable, self.project, package.parent, self.schema_path(state), output)
+        result = self.launch(command, self.project, timeout, log, prompt)
+        result["agent"] = name
+        if result["passed"]:
+            reviewers.capture(name, log, output)
         rescan()
         state["pending_operation"] = None
         if not result["passed"] or not output.exists() or self.current(state) != current:
@@ -64,7 +64,7 @@ class ReviewMixin:
         return package / ("review-schema-v2.json" if state.get("delivery_version") == 2 else "review-schema.json")
 
     def review_packet(self, out):
-        """Prompt for a host subagent when no Codex CLI exists; binds the current inputs and state."""
+        """Prompt for any host's fresh read-only subagent; binds the current inputs and state."""
         state = self.load()
         self.require_reviewable(state)
         out = self.outside_inputs(out)
@@ -108,9 +108,7 @@ class ReviewMixin:
                 raise EngineError(f"{top} is reserved for the controller; pick another name in {run}")
         return path
 
-    def external_review(self, state, source, reviewer, codex):
-        if codex:
-            raise EngineError("Codex CLI is available and stays the default; run review --timeout <seconds>")
+    def external_review(self, state, source, reviewer):
         if source is None or not isinstance(reviewer, str) or not reviewer.strip():
             raise EngineError("External review needs --report <file.json> and --reviewer <host/agent id/model>")
         packet = state.get("review_packet")
@@ -159,7 +157,7 @@ class ReviewMixin:
         execution = review.get("execution") or {}
         if execution.get("kind") == "external":
             return f"{execution['reviewer']}: {EXTERNAL}"
-        return "codex"
+        return execution.get("agent", "codex")  # older records predate agent choice and were always Codex
 
     @staticmethod
     def finding_blocks(finding, state):
@@ -171,7 +169,7 @@ class ReviewMixin:
                    or "release" in state["profile"].get("review_scopes", []))
         exception = finding.get("exception") or {}
         if exception.get("authority") == DELEGATION and (
-                exception.get("owner") != "Seif" or (finding["severity"] == "MEDIUM" and exposed)):
+                exception.get("owner") != "owner" or (finding["severity"] == "MEDIUM" and exposed)):
             return True  # The delegation covers LOW, and MEDIUM only at local exposure.
         return finding["disposition"] == "before-exposure" and exposed
 

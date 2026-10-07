@@ -1,57 +1,27 @@
-# Fast and Lucky runs
+# Fast run: record and gate
 
-Seif, 7 October 2026: Fast must be fast, never thin. Tickets, quick research, owner questions, the full analyze/plan/0–4 method and a production-grade result stay. Speed comes from parallel agents and no controller ceremony, not from skipped steps. [Speed modes](speed-modes.md) owns what each mode keeps; this file owns how a Fast or Lucky run executes.
+Contents: kickoff questions · work record · the gate · hooks · keep it fast
 
-Every run records its steps in one work record and passes [the gate](#the-gate). Hooks hold the run to it.
-
-Read at start: [speed modes](speed-modes.md), this file and the [product bar](product-bar.md). Read each step's linked method fully when that step starts, not before.
-
-## Pick the kind
-
-| Kind | When | Asks Seif |
-|---|---|---|
-| `product` | New app, game, site, tool, service or library | ✅ after quick research |
-| `feature` | Big feature with product choices in an existing product | ✅ after quick research |
-| `change` | Bug fix, small change, factory maintenance | ❌ goes straight through |
-
-Unsure between `feature` and `change`? Product choices (what users get, how it looks, what it costs) make it a `feature`.
-
-## Steps
-
-Fast runs every applicable step. Lucky runs `tickets`, a short `analysis` and `plan`, `build` and `handoff`; it asks nothing, researches nothing and takes the [product bar](product-bar.md) defaults.
-
-| # | Step | Kinds | Do | Record section |
-|---|---|---|---|---|
-| 0 | bundle | all | Select the factory bundle with the Safe Engine entry's resolver (`resolve_bundle.py --project`); it writes `.factory/entry-bundle.json`. Skip only when the run maintains the factory itself. | none |
-| 1 | start | all | `fast_gate.py start` creates `.factory/fast/run.json` and the work record skeleton, keeps `.factory/` out of Git, notes the bundle receipt and hook status, and registers the run for hooks. | none |
-| 2 | research | product, feature | Quick [research](../../research-market/SKILL.md#fast-kickoff-research) as parallel agents, one per competitor plus one for stacks: 3 top competitors, feature matrix, opportunities, 3 stack options (product runs). Show Seif a short summary. | `## Research` |
-| 3 | kickoff | product, feature | One question round (below). `fast_gate.py pause` while waiting in chat. Record answers verbatim. | `## Kickoff` |
-| 4 | tickets | all | [Fast/Lucky tickets](../../ticketing/SKILL.md#fast-and-lucky-tickets): epic + 3–6 outcome sub-issues (`change`: one ticket) in the product's repository tracker. | `## Tickets` |
-| 5 | analysis | all | [Analyze Start](../../analyze-start/SKILL.md) in full: purpose, consumers, ASCII charts, success, unknowns. | `## Analysis` |
-| 6 | plan | all | [Get Ready](../../get-ready-to-code/SKILL.md) five outputs, todos `T1..Tn`, logging map and efficiency budget. No file-summary stop. | `## Plan` |
-| 7 | design | Fast, UI | Design brief per the [product bar](product-bar.md#visual-system) and [UX Quality](../../ux-quality/SKILL.md). | `## Design` |
-| 8 | schema | Fast, persistence | Short [Database Schema](../../database-schema/SKILL.md): access map, 3 designs, choice, ERD/DDL, indexes. | `## Schema` |
-| 9 | build | all | Every todo through the 0–4 loop; one log line per todo: `T3 pre: … do: … post: …`. Delegates return their lines; the coordinator writes the record. Copy the design brief and schema decision into the product's `docs/`. Gate opens source edits here. | `## Build log` |
-| 10 | done-run | Fast | Start the app once; use the main journey and its most likely failure through real controls; copy UI screenshots (the browser tool's saved image, or a fresh capture) into `.factory/fast/shots/` and cite those relative paths; read the logs; fix blockers. | `## Done-run` |
-| 11 | handoff | all | How to run, dev sign-in, what is verified and unverified, follow-up tickets, ticket updates. Then `close`. | `## Handoff` |
-
-Steps run in order; the gate refuses a step while an earlier applicable one is open. Design and schema follow the plan but precede source edits.
+Every Fast or Lucky run records each step in one work record and passes the gate. Step ids: `research`, `kickoff`, `tickets`, `analysis`, `plan`, `design`, `schema`, `build`, `done-run`, `handoff`; the gate skips those a run's kind does not need. The gate proves a step was recorded, not that it was good. Quality stays with each method and the done-run.
 
 ## Kickoff questions
 
-One round, after research, for `product` and `feature`. Use the host's question tool (Claude Code: AskUserQuestion, at most 4 questions with 4 options each; otherwise one short chat message). Recommended option first, each with a one-line tradeoff. Ask only what the request and earlier answers leave open:
+One round after research, `product` and `feature` only. Use your agent's question tool when it has one (multiple choice, recommended option first, one-line tradeoff each); otherwise one short message. Ask only what the request leaves open:
 
-1. **Features:** multi-select of up to four feature groups from the matrix; must-haves stated in the question, not asked.
+1. **Features:** multi-select of up to four feature groups from the matrix. State must-haves in the question; don't ask them.
 2. **Size:** POC (one core journey, seeded data), MVP (first sellable slice) or production slice.
-3. **Approach:** three distinct ways to deliver it, from the research (positioning, scope, build route).
-4. **Stack:** three options from the product bar's [stack rules](product-bar.md#stack); recommendation first.
-5. **Tracker:** only when the product has no repository yet: where its tickets live (recommend a new private GitHub repository).
+3. **Approach:** three distinct ways to deliver it (positioning, scope, build route).
+4. **Stack:** three options from the product bar; recommendation first.
+5. **Shape:** product name, public landing or private-only, who signs in. Only when the request leaves them open.
+6. **Tracker:** only when the product has no repository yet. This answers the tracker question for the whole run.
 
-More than four open: ask the rest in a second call of the same round. Record each answer with source (`Seif via AskUserQuestion, <date>`; `from the request` for answers the request already gave). Answers bind the run; later changes go to the epic's activity table. Owner-reserved choices outside these still follow [decision ownership](../../../../docs/current-decisions.md#decision-ownership).
+More than four open: ask the rest in a second call of the same round.
+
+Pause the gate while waiting. Record each answer with its source (`owner via question tool`, `from the request`). Answers bind the run; later changes go to the epic's activity.
 
 ## Work record
 
-`.factory/fast/work-record.md`, one file, sections in step order. `start` writes the skeleton; the [filled sample](../../../../examples/fast-run/work-record.sample.md) shows every marker for a different product. Never copy its content; research and decide fresh. The gate checks these markers:
+`.factory/fast/work-record.md`, one file, sections in step order. `start` writes the skeleton. The [sample](work-record-sample.md) shows every marker for an unrelated product; never copy its content. The gate checks:
 
 | Section | Must contain |
 |---|---|
@@ -60,42 +30,48 @@ More than four open: ask the rest in a second call of the same round. Record eac
 | Tickets | `**Epic:** <url>`; product and feature runs ≥1 `**Sub-issue:** <url>` |
 | Analysis | `**Success:**` line and a fenced ASCII chart |
 | Plan | `### Files`, `### Critique`, `### Phases`, `### Todos` (with `T1`…), `### Whole plan`, `**Logging:**`, `**Efficiency:**` |
-| Design | ≥4 hex colors, `**UI kit:**`, `**Font:**`, `**Logo:**`, `**Icons:**`, `**Layout:**`, `**Theme:**` naming light mode |
+| Design | ≥4 `#RRGGBB` hex colors, `**UI kit:**`, `**Font:**`, `**Logo:**`, `**Icons:**`, `**Layout:**`, `**Theme:**` naming light mode |
 | Schema | a 3-option table, `**Chosen:**`, a fenced ERD or DDL |
-| Build log | every plan todo ID with `pre:`, `do:` and `post:` |
-| Done-run | ≥1 `PASS` line, `**Logs:**`; UI runs ≥1 existing screenshot path |
+| Build log | every plan todo ID with `pre:`, `do:` and `post:` on one line |
+| Done-run | ≥1 `PASS` line, `**Logs:**`; UI runs ≥1 existing screenshot path under `.factory/fast/shots/` |
 | Handoff | `**Run:**`, `**Unverified:**`, `**Follow-ups:**`; sign-in runs `**Dev sign-in:**` |
 
-Markers prove the step was recorded, not that it was good. Method quality stays with each method and the done-run.
+Labels end with the colon inside the bold: `**Epic:**`. Delegates return their log lines; the coordinator writes the record. During build, copy the design brief and schema decision into the product's `docs/`.
 
 ## The gate
 
-`fast_gate.py` (step checks in `fast_record.py`, shell command analysis in `fast_shell.py`) lives in `skills/safe-engine/scripts/` of the bundle and beside the installed Safe Engine entry. Python 3.9+, stdlib only.
+`fast_gate.py` (checks in `fast_record.py`, shell analysis in `fast_shell.py`) sits in `scripts/` beside the installed launcher and in `skills/safe-engine/scripts/` of the factory bundle. Python 3.9+, standard library only.
+
+Before `start` on a product: select the factory bundle with the launcher's `resolve_bundle.py --project <abs>`; it writes `.factory/entry-bundle.json`. Skip when the run maintains the factory itself.
 
 ```text
 python fast_gate.py start --project <abs> --key <slug> --mode fast|lucky --kind product|feature|change [--no-ui] [--no-data] [--auth] --request-file <file>
 python fast_gate.py done <step> [--project <abs>] [--offline "<reason>"]
 python fast_gate.py status | pause --reason "<why>" | resume | close [--abandon "<reason>"]
+python fast_gate.py install --host <host> [--project <abs>]
 ```
 
-- `--project` defaults to the nearest folder holding `.factory/fast/run.json`.
-- Product runs default to UI and persistence; pass `--no-ui`/`--no-data` only when true. `--auth` marks sign-in.
-- `done tickets` checks GitHub URLs and sub-issue links with `gh`; `--offline` records an unverified reason.
-- `pause` before waiting on Seif; the next `done` or `resume` clears it. `close` needs `handoff`, or `--abandon` with Seif's reason.
+- `start` creates `.factory/fast/run.json` and the record, keeps `.factory/` out of Git, notes the bundle and hook status, and registers the run for hooks.
+- Always pass `--project`. Write the request verbatim to a file first (`.factory/request.md`).
+- `start` keeps `.factory/` out of Git only inside a Git repository: `git init` first.
+- Product runs default to UI and persistence; pass `--no-ui` or `--no-data` only when true. `--auth` marks sign-in: pass it when anyone signs in or roles exist. These are fixed at `start`; decide them from the request.
+- Steps run in order; `done` refuses a step while an earlier applicable one is open.
+- `done tickets` verifies GitHub issue URLs and sub-issue links online; other trackers or no network: `--offline "<reason>"` records them unverified.
+- `pause` before waiting on the owner; the next `done` or `resume` clears it. `close` needs `handoff`, or `--abandon` with the owner's reason.
 
 ## Hooks
 
-The Claude Code plugin ([install](../../../../docs/install-safe-engine.md#claude-code)) and optional Codex hooks call the gate:
+`install --host claude|codex|cursor|other` wires the hooks for agents that need it; the factory's `docs/hosts.md` lists each agent's route.
 
-- Source edits (Write/Edit/apply_patch), shell writes (`>`, `>>`, `&>`, `>|`, piped `tee`) and scaffold or install commands in the run's project are denied until every step before `build` passes. Quoted text, heredoc bodies and here-strings never count, so ticket bodies pass. `.factory/` stays writable, except `run.json`, which only the gate writes.
+- Source edits, shell writes (`>`, `>>`, `&>`, `>|`, piped `tee`) and scaffold or install commands in the run's project are denied until every step before `build` passes. Quoted text, heredoc bodies and here-strings never count, so ticket bodies pass. `.factory/` stays writable, except `run.json`, which only the gate writes.
 - Stopping mid-run is blocked once with the next step, unless the run is paused or closed.
-- Each prompt and session start gets one line: run, next step, pause reason.
-- No active run anywhere: the hook exits before Python starts.
+- Each prompt and session start gets one status line: run, next step, pause reason.
+- No active run anywhere: hooks exit at once.
 
-`start` reports whether hooks are installed. Without them the gate still records and checks steps; nothing blocks, so follow the order yourself. Hooks see tool calls, not intent: files written from inside scripts (Python, Node) and other projects pass; the record and the done-run carry the rest.
+Without hooks the gate still records and checks steps; follow the order yourself. Hooks see tool calls, not intent: files written from inside scripts pass; the record and the done-run carry the rest.
 
 ## Keep it fast
 
-- Parallel agents per [agent routing](agent-routing.md): research strands together, independent todos in separate files together, one writer per file.
-- No controller, capture, seal or Codex review. `verify` adds manual QA of failure journeys and tests; `promote` moves to Safe.
+- Parallel agents: research strands together, independent todos in separate files together, one writer per file.
 - One question round, one record, ticket updates only at boundaries.
+- No controller, capture, seal or independent review in Fast or Lucky. `verify` adds manual QA and tests; `promote` moves to Safe.

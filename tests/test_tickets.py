@@ -20,7 +20,7 @@ from unittest.mock import patch
 from safe_engine.project import EngineError, digest, file_hash, production_fingerprint
 from safe_engine.storage import atomic_json, locked, read_json
 from safe_engine.tickets import TicketStore, binding, parse_body, render_ticket, scope_digest, ticket_key
-from safe_engine.workflow import Workflow
+from safe_engine.workflow import DELEGATION, Workflow
 
 
 BUNDLE = Path(__file__).resolve().parents[1]
@@ -209,11 +209,11 @@ class TicketTests(unittest.TestCase):
             self.assertIn("Confirmed ticket:", stdin)
             self.assertIn("cannot authenticate", stdin)
             skills = BUNDLE / ".agents/skills"
-            for trimmed in (skills / "analyze-start/SKILL.md", BUNDLE / "docs/current-decisions.md",
-                            skills / "ticketing/SKILL.md", skills / "ticketing/references/ticket-contract.md"):
-                self.assertNotIn(str(trimmed), stdin)
-            self.assertIn(str(skills / "compliance-check/SKILL.md"), stdin)
-            self.assertIn("Seif 6 Oct delegation", stdin)
+            self.assertNotIn(str(BUNDLE / "AGENTS.md"), stdin)  # factory rules are not product methods
+            for method in (skills / "analyze-start/SKILL.md", skills / "ticketing/SKILL.md",
+                           skills / "deep-review/references/compliance.md", skills / "safe-engine/references/controller.md"):
+                self.assertIn(str(method), stdin)
+            self.assertIn(f'owner "owner", authority "{DELEGATION}"', stdin)
             Path(argv[argv.index("--output-last-message") + 1]).write_text(json.dumps(report), encoding="utf-8")
             log.parent.mkdir(parents=True, exist_ok=True)
             log.write_text(SYNTHETIC, encoding="utf-8")
@@ -545,7 +545,7 @@ class TicketTests(unittest.TestCase):
         self.start()
         self.refresh()  # New capture, but deliberately observed before the next saved phase.
         self.artifact("analysis")
-        # Seif, 6 Oct: `record plan` no longer needs a new capture, so it succeeds on the stale one.
+        # `record plan` needs no new capture, so it succeeds on the stale one.
         self.assertEqual(self.artifact("plan")["phase"], "build")
         unchanged = self.flow.load()
         with self.assertRaisesRegex(EngineError, "after the saved phase"):

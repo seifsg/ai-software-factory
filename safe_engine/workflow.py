@@ -1,4 +1,4 @@
-"""Explicit delivery transitions around Seif's analysis and execution methods."""
+"""Explicit delivery transitions around the analysis and execution methods."""
 
 from pathlib import Path
 import shutil  # noqa: F401 - patch seam: tests patch safe_engine.workflow.shutil.which
@@ -379,7 +379,7 @@ class Workflow(ContractMixin, CheckMixin, ReviewMixin):
         lines += ["", "## Criterion → change → proof → gap", "", *handoff_table(state, self.project, proof)]
         lines += deferred_findings(read_json(review["report"]))
         lines += ["", f"Independent review: {review['report']} ({self.review_kind(review)})", "", "Ready for the agreed human handoff. No push, merge, release, or deployment was performed by the controller.",
-                  "", "PR delivery requires how-to-make-a-pr and full how-to-review-a-pr in a separate cloud/remote environment with fresh context. Local review is not PR approval; await the owner's cloud review before merge.",
+                  "", "PR delivery requires how-to-make-a-pr and a full deep-review PR review in a separate cloud/remote environment with fresh context. Local review is not PR approval; await the owner's cloud review before merge.",
                   "", "Evidence covers the declared checks and inputs. Local state is not a tamper-resistant receipt."]
         path = self.directory / "handoff.md"
         if state.get("ticket"):

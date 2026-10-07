@@ -1,8 +1,0 @@
-{
-  "name": "safe-engine",
-  "description": "Seif's AI Software Factory: Fast (default), Lucky and Safe delivery with tickets, quick research, owner questions, a product bar and hook-enforced steps.",
-  "author": {"name": "Seif Sgayer"},
-  "homepage": "https://github.com/seifsg/ai-software-factory",
-  "repository": "https://github.com/seifsg/ai-software-factory",
-  "keywords": ["factory", "delivery", "tickets", "workflow", "hooks"]
-}

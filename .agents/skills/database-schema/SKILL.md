@@ -1,70 +1,62 @@
 ---
 name: database-schema
-description: "Design or revise persistence from whole-product journeys, invariants and query workloads. Compare three viable designs, record the choice and audit it. Routine fixes stay scoped."
+description: "Designs or revises persistence from the whole product's journeys, invariants and query workloads: compares three designs, writes the schema, plans indexes and migrations, and audits the result. Use when adding or materially changing tables, collections, indexes or migrations. Routine fixes stay scoped."
 ---
 
 # Database Schema
 
-Put the whole app in front of us. Get the model right before dependent features harden. No meaningless tables, missing relationships or quality cuts to save coding effort.
+Put the whole product in front of us. Get the model right before dependent features harden.
+No meaningless tables, missing relationships or quality cuts to save coding effort.
+Optimize the measured workload. No perfect-schema or universal O(1) promises.
+Do not code during design.
 
-Optimize the real workload; plan safe evolution. No perfect-schema or universal O(1) promises.
+## 1. Map the whole product
 
-Map the whole product; implement the current journey's model. Agree shared invariants before dependent work. Required integrity/recovery stays early; speculative structures wait.
+Read the request, schema, migrations, queries, callers, product plan and settled choices. Reuse completed analysis (`analyze-start`).
 
-## 1. Understand the whole picture
+- Map users and roles, ownership, journeys, state changes, business rules, data lifetime, consumers (clients, jobs, integrations, admin, search, reports). Include game saves, inventory, progression, offline sync where they apply. Invent no features to justify tables.
+- Record entities, cardinality, source of truth, tenant and access boundaries, volumes, growth, skew, read and write rates, concurrency, consistency and latency targets. Label assumptions. Missing facts block dependent choices only.
+- No persistence need? Say so. Add no database.
+- Build the access map: `journey → invariant → read/write → filters/order/page → rows/size/rate → consistency → target → evidence/unknown`. Include critical writes, failures, retries.
+- Local fix: map the affected paths and wider dependencies. Awareness grants no redesign.
+- Required integrity and recovery come early. Speculative structures wait.
 
-Read request, schema/migrations, queries, callers, product plan and settled decisions. Use [Analyze Start](../analyze-start/SKILL.md); reuse completed analysis. No coding here.
+## 2. Compare three designs
 
-Map users/roles, ownership, journeys, state changes, business rules, data lifetime and consumers: clients, jobs, integrations, admin, search, reports. Include applicable game saves/inventory/progression and offline/sync. Invent no features to justify tables.
+- Plan with `get-ready-to-code`. Keep design and execution separate. Reuse the delivery plan.
+- Research consequential unknowns in current primary docs for the engine and version. Settled engine choices stay.
+- Compare three credible designs: modeling, ownership, access paths or consistency, not necessarily three brands. Judge correctness, complete journeys, read and write cost, consistency, security, storage, growth, operations, migration risk. Coding effort never justifies lower quality. Runtime and operating cost do count.
+- Fewer than three viable: say why. Invent none.
+- Choose one: why, tradeoff, revisit conditions, rejected options. Owner-reserved choices are settled before dependent work.
+- Record: a 3-option table, a `**Chosen:**` line, a fenced ERD or DDL.
 
-Record entities, cardinality, source of truth, tenant/access boundaries, volumes/growth/skew, read/write rates, concurrency, consistency and latency targets. Label assumptions; missing facts block dependent choices only. No persistence need? Say so; add no database.
+## 3. Write the schema
 
-Map `journey → invariant → read/write → filters/order/page → rows/size/rate → consistency → target → evidence/unknown`.
+One design record in the project's usual location: access map, comparison, choice, ERD (ASCII or equivalent), data dictionary, index and query plan, migration plan, risks. No duplicate mutable specs.
 
-Include critical writes, failures and retries. Local fixes map affected paths/wider dependencies; whole-product awareness grants no redesign.
+- Every table, field, relationship, index and derived view has a purpose and a consumer. Remove speculation and unjustified copies. Keep needed junctions, history, permissions, lookups. Fewer tables alone proves nothing. Normalize or embed for the workload.
+- Denormalize only with a benefit, an authoritative source, an owner for update and repair, and a freshness rule. No relational rules hidden in unbounded JSON.
+- Keys, cardinality, types, precision, units, timestamps and timezones, collation, null and default meaning, uniqueness, referential integrity. Enforce invariants in the database where supported. Otherwise specify the application check.
+- Ownership, tenant isolation, least-privilege roles, row policies, retention, deletion, cascades. Verify the real application access paths and any bypass. No orphans. No cross-tenant references. Business history is not debug logs.
+- Transactions, isolation, idempotency, concurrent writes, conflicts, retries. Show how invariants survive races. Bound connections.
+- Local commit plus remote effect (payment, email, webhook): name which side owns the truth and how they reconcile. No universal queue.
+- Indexes come from the actual predicates, projections, order and pagination. Check selectivity, joins, N+1, scans, sorts, real plans and row counts, write and storage cost. Justify every scan. Never index every field.
+- Partitions, shards, replicas, caches, materialized views need an evidenced benefit and a stated invalidation or refresh cost. Watch hot keys, unbounded documents and arrays, cross-partition work.
+- Migrations: versioned. Handle dirty, duplicate and null data. Backfill in batches. Old and new clients. Locks and downtime. Rollout and recovery. Backups need a usable restore. A reverse migration does not guarantee data recovery. Writing a migration grants no right to run it. Destructive or production runs need authority.
+- Complexity: define N and result size K. Say expected, amortized or worst case. Indexes do not guarantee O(1); returning K rows costs K. Measure latency and throughput at realistic size, skew, concurrency, cold and warm. Label estimates and unmeasured targets.
 
-## 2. Plan and compare three designs
-
-Use [Get Ready to Code](../get-ready-to-code/SKILL.md): files → original checkpoint → critique → phases → todos → whole plan. Honor its [file-summary stop](../safe-engine/references/speed-modes.md#safe). Reuse the delivery plan's five outputs; keep design and execution separate.
-
-Research consequential unknowns through [Research Market](../research-market/SKILL.md), using current primary engine/version docs. The [source basis](../../../docs/skill-provenance.md#database-schema-method--4-october-2026) prescribes no stack.
-
-Apply the three-option rule ([decision ownership](../../../docs/current-decisions.md#decision-ownership)) to designs: modeling, ownership, access paths or consistency, not necessarily three brands. Preserve settled engine/product choices.
-
-Compare correctness, complete journeys, read/write cost, consistency, security, storage, growth, operations and migration risk. Coding effort cannot justify weaker quality; runtime/operational costs still matter.
-
-Recommend the best fit: why, tradeoff, revisit conditions, rejected options. Resolve owner-reserved choices before dependent work.
-
-## 3. Write the selected schema
-
-Apply [Application Security](../safe-engine/references/app-security.md) to database roles, row policies, bypass paths and tenant isolation. Verify actual application access; no blanket RLS mandate for unrelated local storage.
-
-Keep one design record in the project's established location: access map, comparison, reasoned choice, ASCII ERD/equivalent, dictionary, index/query plan, migration plan, risks. No duplicate mutable specs.
-
-Every table/collection, field, relationship, dataset, index and derived view needs a purpose/consumer. Remove unjustified copies/speculation. Keep necessary junctions, history, permissions and lookups; fewer tables alone proves nothing. Normalize/embed for the workload. Denormalization needs benefit, authoritative source, update/repair owner and freshness. No relational rules hidden in unbounded JSON.
-
-Specify applicable:
-
-- Keys/identity, cardinality, types/precision/units, timestamps/timezones, collation/case, required/null/default meaning, uniqueness/reference integrity. Enforce invariants in the database where supported; specify application enforcement otherwise.
-- Ownership, tenant isolation, permissions, retention/deletion/cascades. Separate business history from debug logs. No orphans or accidental cross-tenant references.
-- Transactions, isolation, idempotency, simultaneous writes, conflicts, retries/recovery. Show how invariants survive races.
-- State-changing external work: use the [durable-outcome contract](../safe-engine/references/delivery-readiness.md#state-changing-external-work). Local commit and remote effect need explicit ownership/reconciliation; no universal queue.
-- Predicates, projections, order/pagination, indexes/column order. Check selectivity, joins/N+1, scans/sorts, actual plans/row counts and index write/storage cost. Justify scans; never index every field.
-- Partition/shard routing, hot keys, bounded documents/arrays and cross-partition work. Partitions/replicas/caches/materialized views need evidenced benefits and invalidation/refresh costs.
-- Versioned migrations, dirty/duplicate/null data, backfill/batches, old/new clients, locks/downtime, rollout/recovery. Backups need usable restore. Destructive/production execution needs authority; reverse migrations cannot guarantee data recovery.
-
-Keep the original O(1) question: avoid repeated work; can we get closer? Define N and result size K; distinguish expected/amortized/worst case. Indexes do not guarantee O(1); returning K records requires processing them. Measure latency/throughput at realistic size, skew, concurrency and cold/warm conditions. Label estimates/unmeasured targets.
-
-Planning ends with the design. Authorized authoring uses Get Ready's full 0–4 loop for DDL/models/migrations. Keep them consistent; preserve unrelated data/changes. Written migrations grant no execution authority.
+Authored DDL, models and migrations go through the `get-ready-to-code` 0–4 loop. Keep them consistent. Preserve unrelated data and changes.
 
 ## 4. Audit it again
 
-Read the written design/schema against access map/invariants. Walk critical input → stored state → query/output paths, including denial, retries, concurrent updates, deletion/recovery. Find unsupported assumptions, redundancy, missing constraints, wrong cardinality, costly access and migration hazards. Inspect emitted queries, not ORM names alone.
+1. Read the written schema against the access map and invariants.
+2. Walk each critical path: input → stored state → query → output. Include denial, retries, concurrent updates, deletion, recovery.
+3. Find unsupported assumptions, redundancy, missing constraints, wrong cardinality, costly access, migration hazards. Inspect the emitted queries, not ORM names.
+4. Get an independent review when one is available. Give the reviewer the request, alternatives, choice, schema and raw evidence. Fix supported findings. Recheck affected parts. Unreviewed stays unverified.
+5. After implementation, use the real app, CLI, API or database with harmless representative data in a disposable development environment. Read the logs, actual query plans and results, resource cost.
+6. Execution-based query plans run the query. Check side effects. Rollback is no universal undo. Production probes and expensive workloads need authority.
+7. After manual use passes, write and run correctness, migration, isolation and performance checks. Automated benchmarks are not manual QA.
 
-Reuse the factory's fresh independent reviewer: exact candidate, request, alternatives, choice, schema and raw evidence. Fix supported findings; reassess affected parts. Retain unresolved limits; missing independent review stays unverified. No extra fleet, early tests or implied production queries.
-
-After implementation, manually use real app/CLI/API/database actions with harmless representative data in disposable development. Inspect [logs](../safe-engine/references/app-diagnostics.md), actual plans/results and [resource costs](../safe-engine/references/app-efficiency.md). Execution-based EXPLAIN runs queries: inspect side effects; rollback is no universal undo. Production probes/expensive workloads need authority.
-
-After passing manual QA, author/polish/run final correctness, migration, isolation and performance checks under [tests-last order](../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests). No automated benchmarks/harnesses disguised as manual QA. Design-only ends with audited design and runtime unknowns.
-
-Return choice/reason, schema location, audit findings/fixes, observed evidence and limits. Diagrams, optimizer estimates and tiny samples cannot prove production performance.
+Design-only work ends with the audited design and the runtime unknowns.
+Return: choice and reason, schema location, audit findings and fixes, observed evidence, limits.
+Diagrams, optimizer estimates and tiny samples prove no production performance.

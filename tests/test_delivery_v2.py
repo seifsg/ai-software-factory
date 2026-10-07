@@ -353,12 +353,18 @@ class DeliveryV2Tests(unittest.TestCase):
         core = {path.relative_to(bundle).as_posix() for path in method_paths(bundle, self.profile)}
         self.assertNotIn(".agents/skills/database-schema/SKILL.md", core)
         self.assertNotIn(".agents/skills/ux-quality/SKILL.md", core)
+        self.assertNotIn(".agents/skills/safe-engine/references/fast-run.md", core)
         public = {**self.profile, "interface": "web", "review_scopes": ["assets", "seo", "persistence"]}
-        paths = {path.relative_to(bundle).as_posix() for path in method_paths(bundle, public)}
-        for required in ("ux-quality/SKILL.md", "ux-quality/references/assets-and-sources.md",
+        listed = method_paths(bundle, public)
+        paths = {path.relative_to(bundle).as_posix() for path in listed}
+        self.assertEqual(len(listed), len(paths))  # routed skills are listed once
+        for required in ("analyze-start/SKILL.md", "ticketing/SKILL.md", "deep-review/references/security.md",
+                         "ux-quality/SKILL.md", "ux-quality/references/assets.md",
                          "ux-quality/references/web-seo.md", "database-schema/SKILL.md",
-                         "safe-engine/references/delivery-readiness.md"):
+                         "safe-engine/SKILL.md", "safe-engine/references/product-bar.md",
+                         "safe-engine/references/controller.md"):
             self.assertIn(".agents/skills/" + required, paths)
+        self.assertTrue(all(path.is_file() for path in listed))
         missing = {**self.profile, "checks": [{"id": "absent", "argv": ["missing-factory-test-tool"]}]}
         with patch("safe_engine.review_packet.shutil.which", return_value=None):
             result = preflight(self.root, missing)

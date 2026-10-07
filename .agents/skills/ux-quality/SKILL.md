@@ -1,54 +1,61 @@
 ---
 name: ux-quality
-description: "Plan and audit every UI change, including small fixes: interactions, visuals and audio. Research uncertain choices, compare three options and verify the experience. Review-only stays read-only."
+description: "Plans and audits the user experience of any UI or interaction change: flows, states, accessibility, responsiveness, visuals, icons, images and sound. Use when building, changing or reviewing anything a person sees, hears or operates, including small fixes."
 ---
 
 # UX Quality
 
-Make the user's job easy. Clean. Familiar. Fast. No confusing steps or unfinished graphics/sounds sold as finished work.
+Make the user's job easy. Simple. Familiar. Fast. Accessible.
+No confusing steps. No unfinished graphics or sounds sold as finished work.
 
-First iteration: usable action/result, truthful feedback, accessibility, recovery and the [product bar](../safe-engine/references/product-bar.md#visual-system) visual system (kit, palette, font, logo, icons, header and footer, light mode). Optional refinement follows; keep agreed quality and label unfinished work.
-
-Every UI/interaction change: games, web/mobile/desktop apps and human-facing tools. Cover the affected journey and shared consumers. Tiny fixes stay tiny; headless internals need no invented UI/audio. Analysis/design/review keeps its phase.
+Covers every UI or interaction change: games, web, mobile, desktop, tools a person operates. Tiny fix, tiny pass. Headless internals need no invented UI or audio.
+Review and design requests stay read-only. Do not code unless told.
 
 ## 1. Understand the job
 
-Apply [Clear Writing](../safe-engine/references/clear-writing.md) to UI/page copy: specific headlines, supported claims, clear actions. Inspect text in the real layout.
-
-Public pages meant for search also use [Public Web SEO](references/web-seo.md), from planning through final checks. Private app screens stay excluded.
-
-Read request, design system, actual interface and settled choices. Reuse original analysis/planning; preserve the file-summary checkpoint and 0–4 loop. Record audience, goal, supported devices/inputs, accessibility needs and success/failure states.
-
-Map `intent → entry → actions/decisions/waits → outcome → recovery/exit`. Count steps/repeated entry; find confusion, dead ends and lost work. Minimize accidental effort, not intended game challenge, mastery or discovery. Preserve consent, safety and comprehension. No deceptive defaults or hidden costs. Use applicable [game/browser lifecycle cases](../safe-engine/references/delivery-readiness.md#games-and-browser-lifecycles); all product testing waits until implementation finishes.
+- Read the request, the design system, the actual interface and settled choices.
+- Record audience, goal, devices and inputs, accessibility needs, success and failure states.
+- Map `intent → entry → actions/decisions/waits → outcome → recovery/exit`. Count steps and repeated entry. Find confusion, dead ends, lost work.
+- Remove accidental effort. Keep intended game challenge, consent, safety and comprehension. No deceptive defaults, no hidden costs.
+- New UI or new look: fix the design brief before UI code. `**UI kit:**`, palette as hex tokens (≥4, AA contrast), `**Font:**`, `**Logo:**`, `**Icons:**`, `**Layout:**` (header, content, footer, phone to desktop), `**Theme:**` (light by default). Use the project's visual defaults when it has them.
+- Any user-facing text (labels, buttons, empty states, errors, pages): read `references/copy.md`.
+- Icons, images, motion, sound: read `references/assets.md`.
+- Public pages meant for search: read `references/web-seo.md`. Private screens stay out.
 
 ## 2. Research. Compare. Choose.
 
-Before an uncertain interaction, visual, icon, sound or tool choice, use [Research Market](../research-market/SKILL.md): current official platform/design/accessibility guidance and relevant leading products. Record URLs, date, versions and observations. Verify leadership claims; popularity or novelty alone proves no fit. Keep useful proven patterns; no frozen year.
+Uncertain interaction, layout, icon, image or sound? Research before choosing.
 
-Compare three credible options ([decision ownership](../../../docs/current-decisions.md#decision-ownership)): clarity, steps/effort, familiarity, accessibility, visual/audio fit, runtime cost, compatibility and rights. Show available samples/demos; distinguish inspected evidence from hearsay. No replacement of adequate assets just to compare.
-
-Recommend one; explain the win, tradeoff and evidence that would change it. Ask only for reserved decisions, missing access or consequential ambiguity. No implied purchase, account, rights exception or release. Inaccessible sources stay unverified; seek permitted alternatives.
+- Current official platform, design-system and accessibility guidance.
+- 3 to 5 leading products doing the same job. Say why each. Popularity proves no fit.
+- Record URL, version, what you observed. Vendor claims and marketing shots are not hands-on evidence.
+- Substantive choice: compare three credible options on clarity, steps, familiarity, accessibility, visual or audio fit, runtime cost, compatibility, rights. Show samples. Recommend one: why, tradeoff, what would change it. Fewer than three viable: say why. Invent none.
+- Settled choices stay. Adequate assets stay. Do not replace them just to compare.
+- Delegated in-scope choices are yours. Ask the owner only for reserved decisions, missing access or consequential ambiguity. No implied purchase, account, rights exception or release.
+- Source you cannot reach stays unverified. Find a permitted alternative.
 
 ## 3. Apply the quality rules
 
 | Area | Require |
 |---|---|
-| Simplicity | Clear primary action, plain user language, useful defaults; no duplicate entry or needless screens. Reveal detail when needed; keep advanced work reachable. |
-| Familiarity | Follow platform/design-system navigation, back, selection, editing, shortcuts and symbols. Depart only with evidenced user benefit. |
-| State/recovery | Relevant loading, empty, success, validation, error, offline and permission states. Explain disabled actions. Prevent double submission; preserve input. Reachable cancel/back/undo/retry and truthful exit. |
-| Accessibility | Semantic controls, meaningful labels, logical focus/order, keyboard/assistive access, contrast, scaling/reflow, usable targets. Never rely solely on color/sound/hover/gesture. Reduced motion; dragging alternatives. Current platform guidance; WCAG 2.2 AA for web or stricter project requirements. |
-| Visuals | Coherent hierarchy, typography, spacing, alignment, color, density, imagery and icon family. Inspect actual sizes, themes, languages and small/large displays. No blurry scaling, clipped labels, mismatched styles, unexplained symbols or unfinished placeholders. |
-| Interaction | Immediate truthful feedback; predictable focus/navigation and interruption handling. Motion explains, never delays. Preserve saves/drafts; applicable game controls, HUD, pause/resume and remapping. |
-| Performance | Set device/workload targets for response/loading/animation. Check low-end target behavior and asset/decode/memory/network costs, including reduced-motion paths, through [efficiency](../safe-engine/references/app-efficiency.md). No polish-induced stalls. |
-
-For visuals/audio, read [asset quality](references/assets-and-sources.md). Best fit beats price/file size. Silence may serve better. Intentional stylization/simple sounds can be excellent; inspect them.
+| Simplicity | One clear primary action. Plain language. Useful defaults. No duplicate entry, no needless screens. Advanced work reachable, not in the way. |
+| Familiarity | Follow platform and design-system navigation, back, selection, editing, shortcuts, symbols. Depart only for evidenced benefit. |
+| States | Loading. Empty, with the next action. Error, with retry. Success. Plus validation, offline, permission where they apply. Explain disabled actions. Block double submit. Keep input. Cancel, back, undo reachable. |
+| Accessibility | Semantic controls, labels, logical focus order, keyboard and assistive access, contrast, scaling and reflow, usable targets. Never rely on color, sound, hover or gesture alone. Reduced motion. Alternative to dragging. WCAG 2.2 AA for web, or the project's stricter rule. |
+| Responsive | Phone to desktop. No horizontal scroll, clipped labels or unreachable controls. Every supported input works: keyboard, pointer, touch, controller. |
+| Visuals | Coherent hierarchy, type, spacing, alignment, color, density. One icon family. Light mode default. No blurry scaling, mismatched styles, unexplained symbols or placeholders. |
+| Interaction | Immediate, truthful feedback. Predictable focus and navigation. Motion explains, never delays. Saves and drafts survive interruption. Games and browsers: focus loss, tab hide, resize, rotation, pause, resume, audio focus. Games: controls, HUD, remapping. |
+| Performance | Set response, load and animation targets for the weakest supported device. Check asset, decode, memory and network cost. No polish-induced stalls. |
 
 ## 4. Use it. Audit it.
 
-Finish implementation. Manually complete the journey through actual browser/native/game/CLI controls: relevant failure/recovery states and supported input/display variants. Read [logs](../safe-engine/references/app-diagnostics.md); capture safe before/after evidence, steps, delays, mistakes and ambiguity. Inspect rendered assets; listen in context. Screenshots cannot prove interaction; filenames/waveforms cannot prove sound quality.
+1. Finish implementation first. No product testing before then.
+2. Use it by hand through the real browser, native app, game or CLI. Complete the journey, its failure and recovery states, each supported input and display variant.
+3. Read the logs. Inspect rendered assets at real size and theme. Listen to sounds in context. Screenshots cannot prove interaction. Filenames and waveforms cannot prove sound quality.
+4. Record `criterion → action/device/state → evidence → PASS / FAIL / UNKNOWN / N/A with reason`.
+5. Fix in-scope failures. Re-run the affected paths.
+6. No hearing, device, assistive tool or runtime available? UNKNOWN. Name the check needed. A walkthrough of the instructions proves no real-user usability.
+7. After manual use passes, write and run the accessibility, interaction and other final checks. Automation proves neither aesthetics nor manual use.
 
-Record `criterion → action/device/state → observation/evidence → PASS / FAIL / UNKNOWN / justified N/A`. Fix in-scope failures; re-exercise affected paths. Missing hearing/device/assistive tools/runtime stays UNKNOWN; request that check. Instruction walkthroughs do not prove real-user usability.
-
-After passing manual QA, author/polish/run applicable accessibility/interaction and other final checks under [tests-last order](../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests). Automation proves neither aesthetics nor manual use.
-
-Reuse the independent reviewer; no extra fleet. Handoff: choices, asset provenance, findings/fixes and limits. No UX-ready claim with unresolved in-scope failures or required unknowns. Unrelated opportunities stay proposals.
+Handoff: choices, asset sources and rights, findings and fixes, limits.
+No UX-ready claim with open in-scope failures or required UNKNOWNs. Unrelated findings stay proposals.

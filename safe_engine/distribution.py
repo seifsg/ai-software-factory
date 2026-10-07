@@ -14,12 +14,10 @@ ENTRYPOINTS = ("safe-engine", "improve-factory")
 # This documented pilot predates portable entries and the input contract.
 # Do not apply its compatibility path to unknown revisions or later bundles.
 LEGACY_PILOT = "eeb0da9d26092e67ea2e7abb58ec57ffd815df49"
-SKILLS = ("improve-factory", "safe-engine", "analyze-start", "get-ready-to-code",
-          "deep-review", "change-guard", "compliance-check", "how-to-make-a-pr",
-          "how-to-review-a-pr", "research-market")
-REQUIRED = ["AGENTS.md", "docs/safe-engine-decisions.md", "docs/pr-workflow.md",
-            "docs/pilot-usage.md", "docs/skill-provenance.md", "safe_engine/__main__.py",
-            ".agents/skills/safe-engine/references/session-contract.md",
+SKILLS = ("improve-factory", "safe-engine", "analyze-start", "get-ready-to-code", "research-market",
+          "database-schema", "ux-quality", "deep-review", "ticketing", "how-to-make-a-pr")
+REQUIRED = ["AGENTS.md", "README.md", "docs/install.md", "docs/hosts.md", "safe_engine/__main__.py",
+            ".agents/skills/safe-engine/references/fast-run.md",
             ".agents/skills/improve-factory/references/live-session.md"]
 REQUIRED += [f".agents/skills/{name}/SKILL.md" for name in SKILLS]
 
@@ -44,7 +42,7 @@ def inspect_bundle(root, expected=None, clean=False, entrypoint="improve-factory
                "git@github.com:seifsg/ai-software-factory.git",
                "ssh://git@github.com/seifsg/ai-software-factory.git"}
     if remote not in allowed:
-        raise RuntimeError("Bundle origin does not identify seifsg/ai-software-factory")
+        raise RuntimeError("Bundle origin is not the factory repository")
     revision = git("rev-parse", "HEAD", cwd=root)
     if expected and revision != expected:
         raise RuntimeError("Cached checkout does not match the requested commit")
@@ -90,7 +88,7 @@ def inspect_bundle(root, expected=None, clean=False, entrypoint="improve-factory
             for name in historical:
                 if (not name.startswith("docs/") or not name.endswith(".md")
                         or any(part in ("", ".", "..") for part in name.split("/"))
-                        or "\\" in name or ":" in name or name == "docs/current-decisions.md"):
+                        or "\\" in name or ":" in name):
                     raise RuntimeError("Invalid historical document in factory input contract")
             required += historical
     missing = [name for name in required if not (root / name).is_file() or (root / name).is_symlink()]

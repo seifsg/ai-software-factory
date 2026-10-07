@@ -39,11 +39,15 @@ def main():
     feature = commands.add_parser("feature-check", help="Run partial feature feedback while staying in build")
     feature.add_argument("--checks", nargs="+", required=True, help="Configured check IDs covering the completed feature and consumers")
     feature.add_argument("--file", required=True, help="Substantive completed-feature 0-4 batch artifact")
-    review = commands.add_parser("review", help="Launch a fresh read-only Codex CLI assessment")
-    review.add_argument("--timeout", type=int, help="Codex review timeout in seconds")
-    review.add_argument("--report", help="Without Codex: report from a fresh read-only host subagent")
-    review.add_argument("--reviewer", help="Without Codex: host/agent id/model that produced --report")
-    outbox = commands.add_parser("review-packet", help="Without Codex: write the review prompt for a host subagent")
+    review = commands.add_parser("review", help="Launch a fresh read-only review by an installed agent CLI")
+    review.add_argument("--timeout", type=int, help="Reviewer timeout in seconds")
+    review.add_argument("--agent", choices=("auto", "codex", "claude", "cursor"), default="auto",
+                        help="Reviewer agent; auto picks an installed one other than the builder")
+    review.add_argument("--builder", choices=("codex", "claude", "cursor"),
+                        help="Agent that built the candidate, so auto prefers a different reviewer")
+    review.add_argument("--report", help="Report from a fresh read-only host subagent given the review packet")
+    review.add_argument("--reviewer", help="Host/agent id/model that produced --report")
+    outbox = commands.add_parser("review-packet", help="Write the review prompt for any host's fresh read-only subagent")
     outbox.add_argument("--out", required=True)
     for name in ("repair", "cancel"):
         command = commands.add_parser(name)
@@ -145,7 +149,7 @@ def run(args):
             elif args.command == "feature-check":
                 result = workflow.feature_check(args.checks, args.file)
             elif args.command == "review":
-                result = workflow.review(args.timeout, args.report, args.reviewer)
+                result = workflow.review(args.timeout, args.report, args.reviewer, args.agent, args.builder)
             elif args.command == "review-packet":
                 result = workflow.review_packet(args.out)
             elif args.command == "ticket-proof-draft":

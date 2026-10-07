@@ -29,7 +29,7 @@ class BundleInputTests(unittest.TestCase):
         def current():
             return fingerprint(self.fixture.root, self.fixture.profile, self.fixture.task,
                                self.fixture.flow.directory)
-        for default in ('app-diagnostics', 'app-efficiency'):
+        for default in ('product-bar', 'fast-run'):
             with self.subTest(default=default):
                 name = f'.agents/skills/safe-engine/references/{default}.md'
                 self.assertIn(name, bundle_input_paths(self.bundle))
@@ -47,7 +47,7 @@ class BundleInputTests(unittest.TestCase):
 
     def test_mandatory_decision_change_runs_every_real_command(self):
         self.fixture.full()
-        path = self.bundle / 'docs/current-decisions.md'
+        path = self.bundle / 'AGENTS.md'
         path.write_text(path.read_text(encoding='utf-8') + '\nChanged approved guidance fixture.\n', encoding='utf-8')
         result = self.fixture.final()
         self.assertFalse(result['checks_reused'])
@@ -58,11 +58,11 @@ class BundleInputTests(unittest.TestCase):
     def test_cadence_readme_and_portable_inputs_change_fingerprint(self):
         self.fixture.full()
         before = self.fixture.flow.current(self.fixture.flow.load())
-        for name in ('docs/safe-engine-fast-delivery.md', 'README.md',
-                     '.agents/skills/safe-engine/references/clear-writing.md',
-                     '.agents/skills/safe-engine/references/app-security.md',
+        for name in ('.agents/skills/safe-engine/references/fast-run.md', 'README.md', 'docs/install.md',
+                     '.agents/skills/safe-engine/references/controller.md',
+                     '.agents/skills/deep-review/references/security.md',
                      '.agents/skills/ux-quality/SKILL.md',
-                     '.agents/skills/ux-quality/references/assets-and-sources.md',
+                     '.agents/skills/ux-quality/references/assets.md',
                      '.agents/skills/ux-quality/references/web-seo.md',
                      '.agents/skills/database-schema/SKILL.md',
                      'skills/improve-factory/scripts/resolve_bundle.py'):
@@ -73,7 +73,7 @@ class BundleInputTests(unittest.TestCase):
                 self.assertNotEqual(self.fixture.flow.current(self.fixture.flow.load()), before)
                 path.write_bytes(original)
                 self.assertEqual(self.fixture.flow.current(self.fixture.flow.load()), before)
-        path = self.bundle / 'docs/safe-engine-fast-delivery.md'
+        path = self.bundle / '.agents/skills/safe-engine/references/fast-run.md'
         path.write_bytes(path.read_bytes() + b'\nChanged cadence fixture.\n')
         self.assertFalse(self.fixture.final()['checks_reused'])
         self.assertEqual(self.fixture.counts(), (2, 2))
@@ -82,17 +82,15 @@ class BundleInputTests(unittest.TestCase):
         self.fixture.full()
         self.fixture.flow.record('improvement', self.fixture.draft('improvement'))
         before = self.fixture.flow.load()
-        for name in ('docs/current-decisions.md', 'docs/safe-engine-decisions.md', 'safe_engine/bundle-inputs.json',
-                     '.agents/skills/safe-engine/references/clear-writing.md',
-                     '.agents/skills/safe-engine/references/app-security.md',
+        for name in ('AGENTS.md', 'docs/install.md', 'docs/hosts.md', 'safe_engine/bundle-inputs.json',
+                     '.agents/skills/safe-engine/references/fast-run.md',
+                     '.agents/skills/safe-engine/references/product-bar.md',
+                     '.agents/skills/safe-engine/references/controller.md',
+                     '.agents/skills/safe-engine/references/work-record-sample.md',
                      '.agents/skills/ux-quality/SKILL.md',
-                     '.agents/skills/ux-quality/references/assets-and-sources.md',
-                     '.agents/skills/ux-quality/references/web-seo.md',
                      '.agents/skills/database-schema/SKILL.md',
-                     'skills/safe-engine/references/local-trials.md',
-                     'safe_engine/workflow.py', '.agents/skills/deep-review/references/theme-security.md',
-                     '.agents/skills/how-to-review-a-pr/references/theme-change-guard.md',
-                     '.agents/skills/how-to-review-a-pr/references/mobile-rules/dont-code.mdc'):
+                     'skills/safe-engine/SKILL.md', 'skills/.claude-plugin/plugin.json',
+                     'safe_engine/workflow.py', 'skills/safe-engine/scripts/fast_gate.py'):
             with self.subTest(input=name):
                 path = self.bundle / name
                 original = path.read_bytes()
@@ -133,19 +131,20 @@ class BundleInputTests(unittest.TestCase):
                     bundle_input_paths(self.bundle)
         path.write_bytes(original)
 
-    def test_history_and_provenance_changes_do_not_invalidate_but_remain_required(self):
+    def test_history_changes_do_not_invalidate_but_remain_required(self):
+        contract = self.bundle / 'safe_engine/bundle-inputs.json'
+        value = json.loads(contract.read_text(encoding='utf-8'))
+        contract.write_text(json.dumps(dict(value, historical_files=['docs/history.md'])), encoding='utf-8')
+        path = self.bundle / 'docs/history.md'
+        path.write_text('Historical evidence fixture.\n', encoding='utf-8')
+        self.assertNotIn('docs/history.md', bundle_input_paths(self.bundle))
         self.fixture.build()
         before = self.fixture.flow.current(self.fixture.flow.load())
-        for name in ('docs/skill-provenance.md', 'docs/factory-audit-2026-10-03.md'):
-            with self.subTest(input=name):
-                path = self.bundle / name
-                original = path.read_bytes()
-                path.write_bytes(original + b'\nHistorical evidence appendix.\n')
-                self.assertEqual(self.fixture.flow.current(self.fixture.flow.load()), before)
-                path.unlink()
-                with self.assertRaises(EngineError):
-                    bundle_input_paths(self.bundle)
-                path.write_bytes(original)
+        path.write_text('Historical evidence appendix.\n', encoding='utf-8')
+        self.assertEqual(self.fixture.flow.current(self.fixture.flow.load()), before)
+        path.unlink()
+        with self.assertRaisesRegex(EngineError, 'Missing historical document'):
+            bundle_input_paths(self.bundle)
 
 
 if __name__ == '__main__':
