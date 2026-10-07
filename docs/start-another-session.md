@@ -123,7 +123,8 @@ A remote workspace cannot read `C:/work/...` on this PC. It needs its own checko
 | Session | First action | Current status |
 |---|---|---|
 | Codex, local | Paste the explicit-path starter, or invoke `$safe-engine` when discovered | The local delivery cycle was demonstrated on the recorded fixture. |
-| Claude Code, local, with Codex CLI installed | Add the factory directory, then ask Claude to read the same entry skill by its path | Documented manual loading route. No complete Claude-builder run has been verified here. Review uses Codex when present. |
+| Claude Code with the `safe-engine` plugin | `/safe-engine Build ...` | 7 October: `claude plugin validate` passed; the same gate launcher, wired as a settings hook in a desktop session, denied a real Write and `npm install` and allowed `.factory/` writes. Plugin-loaded hooks await the first install. No complete Claude-builder app delivery verified yet. |
+| Claude Code, local, with Codex CLI installed | Add the factory directory, then ask Claude to read the same entry skill by its path | Documented manual loading route; no hooks. Review uses Codex when present. |
 | Claude Code without Codex CLI | Builds normally; Safe review uses `review-packet` with a fresh read-only Claude subagent, then `review --report` | Controller labels it external; it cannot verify the reviewer's independence. |
 | Cloud-hosted session | Provision both repositories and the required tools inside that environment | Not demonstrated; local installation does not establish cloud compatibility. |
 
@@ -134,7 +135,7 @@ For an installed Claude Code CLI, launch from your target project:
 claude --add-dir 'C:\work\ai-software-factory'
 ```
 
-Then paste the same explicit-path starter. For an existing Claude Code session, `/add-dir C:/work/ai-software-factory` grants access to the bundle. This repository uses `.agents/skills`, while Claude's native discovery uses `.claude/skills`; adding file access does not create a `/safe-engine` command from this bundle. Install the portable `skills/safe-engine` folder in Claude's skill directory to obtain that command. [Claude CLI reference](https://code.claude.com/docs/en/cli-reference), [Claude skills](https://code.claude.com/docs/en/skills).
+Then paste the same explicit-path starter. For an existing Claude Code session, `/add-dir C:/work/ai-software-factory` grants access to the bundle. This repository uses `.agents/skills`, while Claude's native discovery uses `.claude/skills` and plugins; adding file access does not create a `/safe-engine` command or hooks. Install the [plugin](install-safe-engine.md#claude-code) to obtain both. [Claude CLI reference](https://code.claude.com/docs/en/cli-reference), [Claude skills](https://code.claude.com/docs/en/skills).
 
 Claude Code was not available on PATH when this guide was checked on 2 October 2026. These are official-documented launch instructions, not a claim that a Claude-only factory run passed.
 

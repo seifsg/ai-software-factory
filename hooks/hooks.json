@@ -1,0 +1,20 @@
+{
+  "description": "Safe Engine: hold Fast and Lucky runs to their recorded steps (fast-run.md). No active run: exits at once.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit|Bash|PowerShell",
+        "hooks": [{"type": "command", "command": "sh \"${CLAUDE_PLUGIN_ROOT}/skills/safe-engine/scripts/run-gate.sh\"", "timeout": 30}]
+      }
+    ],
+    "Stop": [
+      {"hooks": [{"type": "command", "command": "sh \"${CLAUDE_PLUGIN_ROOT}/skills/safe-engine/scripts/run-gate.sh\"", "timeout": 30}]}
+    ],
+    "UserPromptSubmit": [
+      {"hooks": [{"type": "command", "command": "sh \"${CLAUDE_PLUGIN_ROOT}/skills/safe-engine/scripts/run-gate.sh\"", "timeout": 20}]}
+    ],
+    "SessionStart": [
+      {"hooks": [{"type": "command", "command": "sh \"${CLAUDE_PLUGIN_ROOT}/skills/safe-engine/scripts/run-gate.sh\"", "timeout": 20}]}
+    ]
+  }
+}

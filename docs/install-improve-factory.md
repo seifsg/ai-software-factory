@@ -24,6 +24,8 @@ python <skill-installer>/scripts/install-skill-from-github.py --repo seifsg/ai-s
 
 ## Claude Code — paste into another session
 
+Preferred: the `safe-engine` [plugin](install-safe-engine.md#claude-code) already includes `/improve-factory` and the Fast gate hooks. The folder install below gives the skill without hooks.
+
 ```text
 Install the reusable skill from seifsg/ai-software-factory,
 ref main, folder skills/improve-factory,

@@ -83,7 +83,16 @@
     "safe_engine/tickets.py",
     ".agents/skills/ticketing/SKILL.md",
     ".agents/skills/ticketing/references/ticket-contract.md",
-    "docs/ticketing.md"
+    "docs/ticketing.md",
+    ".agents/skills/safe-engine/references/fast-run.md",
+    ".agents/skills/safe-engine/references/product-bar.md",
+    "skills/safe-engine/scripts/fast_gate.py",
+    "skills/safe-engine/scripts/fast_record.py",
+    "skills/safe-engine/scripts/fast_shell.py",
+    "skills/safe-engine/scripts/run-gate.sh",
+    "hooks/hooks.json",
+    ".claude-plugin/plugin.json",
+    ".claude-plugin/marketplace.json"
   ],
   "historical_files": [
     "docs/skill-provenance.md",
@@ -101,6 +110,7 @@
     ".agents/skills",
     "skills",
     "docs",
-    "scripts"
+    "scripts",
+    "hooks"
   ]
 }

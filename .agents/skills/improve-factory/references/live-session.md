@@ -100,4 +100,4 @@ Rollback preserves both bundles and original state; reassess compatibility/evide
 
 The owner selected checkpoint/isolation on 2 October 2026. Supporting docs checked then: [OpenAI subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents), [worktrees](https://learn.chatgpt.com/docs/environments/git-worktrees), [Claude Code subagents](https://code.claude.com/docs/en/sub-agents).
 
-Actual tools/permissions govern. No Claude-native adapter, hook, model router, state migration, automatic bundle pinning or provider guarantees are installed.
+Actual tools/permissions govern. No model router, state migration, automatic bundle pinning or provider guarantees are installed. The Claude Code plugin's hooks only gate Fast and Lucky steps; they never checkpoint, migrate or resume a run.

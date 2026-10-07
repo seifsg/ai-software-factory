@@ -21,6 +21,18 @@ Delivery: preserve original five planning outputs. If missing, use [Get Ready to
 
 Reuse current evidence. Stop when material decisions have support. Change unproductive searches; honor access limits/owner stops. Missing evidence blocks dependent choices only.
 
+## Fast kickoff research
+
+Seif, 7 October: products and big features start with quick research Seif sees, then the [kickoff questions](../safe-engine/references/fast-run.md#kickoff-questions). Minutes, not hours: one agent per competitor plus one for stacks, all in parallel.
+
+- **Competitors:** the 3 top products for this job (leaders, fastest growing or closest fit; say why each). Per competitor: core loop, standout features, pricing and positioning, UX patterns worth reusing, weak spots.
+- **Feature matrix:** features × competitors table; mark must-haves and gaps.
+- **Opportunities:** gaps, underserved segments, pricing angles and quick wins that make money; one line each.
+- **Stack options** (product runs): three stacks per the [product bar](../safe-engine/references/product-bar.md#stack) with fit, speed, look and risk; recommendation first.
+- **Sources:** URL and access date per claim; label vendor claims and inference.
+
+Show Seif a 5–10 line summary before the questions. Full detail goes in the work record's `## Research` section. Safe runs use the full strands below.
+
 ## Gather evidence
 
 Use strands that can change the framed decision; new-product delivery considers each applicable strand. Version lookup needs no competitor survey, pattern catalog or UX screenshots. Record material gaps; invent no irrelevant work.

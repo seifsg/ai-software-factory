@@ -2,13 +2,13 @@
 
 Read at intake, resume and delegation; apply [decision ownership](../../../../docs/current-decisions.md#decision-ownership). Save/reuse one ignored `.factory/session-contract.md` or equivalent with stage artifact/handoff links. Preserve original request, contract revisions and accepted evidence; amend only through supported reviewed commands.
 
-Delivery uses [speed modes](speed-modes.md); Fast is the default. Safe implementation uses [Ticketing](../../ticketing/SKILL.md), including bounded fixes and factory repairs. Owner-confirmed scope lives in the selected tracker; this local contract caches authority/context. Every ticket gets its own session and full cycle. [Small Change](../../small-change/SKILL.md) keeps fixes surgical; six shortcuts remain for legacy unticketed work. Analysis stays analysis.
+Delivery uses [speed modes](speed-modes.md); Fast is the default. Fast and Lucky create tickets and record steps through [Fast run](fast-run.md). Safe implementation uses [Ticketing](../../ticketing/SKILL.md), including bounded fixes and factory repairs. Owner-confirmed scope lives in the selected tracker; this local contract caches authority/context. Every ticket gets its own session and full cycle. [Small Change](../../small-change/SKILL.md) keeps fixes surgical; six shortcuts remain for legacy unticketed work. Analysis stays analysis.
 
 ## Establish the contract
 
 Carry current outcome, remaining work and integration owner.
 
-Read request, prior answers, project rules and contract. Ask only missing essential preferences: completion boundary, delegated/reserved choices, checkpoints/update cadence and real time/cost constraints. Group questions without re-asking settled ones; continue independent discovery while waiting.
+Read request, prior answers, project rules and contract. Ask only missing essential preferences: completion boundary, delegated/reserved choices, checkpoints/update cadence and real time/cost constraints. New products and big features also get one [kickoff question round](fast-run.md#kickoff-questions) after quick research (Seif, 7 October). Group questions without re-asking settled ones; continue independent discovery while waiting.
 
 Record:
 - Outcome/acceptance; approved choices and sources; rejected/unresolved owner choices.

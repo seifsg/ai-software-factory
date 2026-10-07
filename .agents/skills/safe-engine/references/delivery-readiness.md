@@ -41,7 +41,7 @@ Demo: exact source/build, environment/device/profile, data/save identity, scenar
 
 Factory audit: reuse timestamps/logs for first useful demonstration, build/check/repair time and repair rounds. Separate active time from wall time/waits; label estimates/missing data. Compare similar scope; remove ceremony that adds no confidence. No reporting chore or invented timings.
 
-Load applicable rows once. Reuse the plan, evidence and reviewer; no new skill fleet. Local MVPs stay small. Testing follows [tests-last order](../../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests).
+Load applicable rows once. Reuse the plan, evidence and reviewer; no new skill fleet. Local MVPs stay small in process, never in quality ([product bar](product-bar.md)). Testing follows [tests-last order](../../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests).
 
 ## Before dependent work
 

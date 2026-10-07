@@ -1,5 +1,7 @@
 # Factory status
 
+7 October candidate ([epic #26](https://github.com/seifsg/ai-software-factory/issues/26)): Fast and Lucky keep tickets, recorded methods and the [product bar](../.agents/skills/safe-engine/references/product-bar.md); new products and big features start with quick research and one owner question round. A [gate](../.agents/skills/safe-engine/references/fast-run.md#the-gate) checks each step, enforced by the Claude Code plugin's hooks. Unmerged until Seif asks for the PR.
+
 5 October candidate: Working iterations. Useful outcome first, required quality intact. Dated evidence below certifies its original candidate; publication/adoption needs separate proof.
 
 Current checkpoint: **4 October 2026**. Fourteen canonical skills, two portable launchers. The [checkpoint report](factory-checkpoint-2026-10-04.md) records repairs, evidence and remaining gaps. The [3 October audit](factory-audit-2026-10-03.md) is history, not the current defect list.
@@ -18,7 +20,7 @@ Ticketing now records durable owner-confirmed scope and activity in the selected
 
 Ticket/PR writing: [visual layout and example](../.agents/skills/safe-engine/references/work-writing.md). Clear purpose/goal, context, behavior-only before/after, reason, proof and progress. Brief bullets, meaningful emojis, narrow tables and flows; no lost detail. New structured tickets render separate blocks; exact old formats/pins remain. Full machine data folds away.
 
-Ticket intake keeps moving by default: derive complete visual context from request/code/prior work under real delegation. Include progress, PR links and next action; retain explicit owner checkpoints.
+Ticket intake keeps moving by default: derive complete visual context from request/code/prior work under real delegation. Include progress, PR links and next action; retain explicit owner checkpoints. New products and big features add one [kickoff question round](../.agents/skills/safe-engine/references/fast-run.md#kickoff-questions).
 
 ## Current method
 

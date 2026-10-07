@@ -7,6 +7,8 @@ Route delegates by [agent routing](agent-routing.md). Analysis-only stops before
 For delivery, pass core methods plus references selected from actual requirements/changes. Record applicability; reviewers challenge omissions and request missing evidence. Do not preload unrelated UI/SEO/schema material. Selected methods are read fully once; this packet never replaces them.
 
 Applicable references:
+- [Fast run](fast-run.md), Fast and Lucky: kind, step state from `fast_gate.py status`, work record, kickoff answers, epic and sub-issues, pause reason.
+- [Product bar](product-bar.md), every mode: stack choice, design brief, dev sign-in, POC deferral tickets.
 - [Delivery Readiness](delivery-readiness.md): Working iterations always applies; capabilities/evidence, lifecycle, external effects and release sections apply when relevant. No early testing or unrequested pilots.
 - [Application Security](app-security.md): exposure, roles/trust boundaries, applicable controls, denial-path evidence, gaps and production readiness. Existing security reviewer; keep local work proportional.
 - [Public Web SEO](../../ux-quality/references/web-seo.md), indexable public pages: route boundaries, metadata/discovery, observed checks, ownership and pending production evidence.

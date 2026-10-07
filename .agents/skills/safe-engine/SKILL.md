@@ -1,6 +1,6 @@
 ---
 name: safe-engine
-description: "Build/resume games, apps, services and tools with Seif's methods. Fast by default, Lucky one-shot, or Safe with saved stages, final checks and independent review. Factory delivery; preserve phase-only requests."
+description: "Build/resume games, apps, services and tools with Seif's methods. Fast by default (tickets, quick research, owner questions, hook-gated steps), Lucky one-shot with tickets, or Safe with saved stages, final checks and independent review. Factory delivery; preserve phase-only requests."
 ---
 
 # Safe Engine
@@ -17,7 +17,7 @@ Follow [tests-last order](../../../docs/current-decisions.md#finish-work-use-it-
 
 Analysis, planning and review requests stay in that phase. No implied coding.
 
-Read [speed modes](references/speed-modes.md) first. In every mode, delegate by [agent routing](references/agent-routing.md). No mode named means **Fast**. Fast and Lucky follow that table, which overrides conflicting rules in this file; tickets, controller commands, the phase table and Codex review are Safe only.
+Read [speed modes](references/speed-modes.md) first. In every mode, delegate by [agent routing](references/agent-routing.md) and meet the [product bar](references/product-bar.md). No mode named means **Fast**. Fast and Lucky follow that table and [Fast run](references/fast-run.md), which override conflicting rules in this file: tickets, recorded steps and the gate; controller commands, the phase table and Codex review are Safe only.
 
 Safe implementation starts with [Ticketing](../ticketing/SKILL.md). Use the chosen tracker/MCP; default to GitHub Issues. Reuse Seif's confirmed GitHub choice. Capture original input, actual before, expected after and criteria; secure owner confirmation before implementation. Split a backlog into complete ticket outcomes, not tiny steps that evade final QA.
 
