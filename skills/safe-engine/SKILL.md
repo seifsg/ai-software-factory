@@ -1,6 +1,6 @@
 ---
 name: safe-engine
-description: "Load the complete private Safe Engine factory to build or resume games, apps, services and tools. Fast by default; lucky or safe on request. Factory maintenance uses improve-factory."
+description: "Load the complete private Safe Engine factory to build or resume games, apps, services and tools. Fast by default (tickets, quick research, owner questions, gated steps); lucky or safe on request. Factory maintenance uses improve-factory."
 ---
 
 # Safe Engine
@@ -19,7 +19,7 @@ Needs Git and Python 3.9+. Safe local review uses the Codex CLI when present, ot
    - No admin or package manager: install [uv](https://docs.astral.sh/uv/getting-started/installation/) (`winget install astral-sh.uv`, `brew install uv` or its official installer), run `uv python install 3.12`, then `uv run --python 3.12 python ...`.
    - Codex CLI, Safe only and optional: [openai/codex](https://github.com/openai/codex) (`npm install -g @openai/codex` or `brew install --cask codex`).
 3. Check the versions again. Report what was installed, from where.
-4. Host asks before installs: ask once, naming each tool and source. Still blocked (no network, admin or approval): say what is missing. Fast and Lucky continue with Git alone: `git ls-remote https://github.com/seifsg/ai-software-factory main`, clone that SHA into `~/.safe-engine/bundles/<sha>`, detach, read it only. Safe waits for Python.
+4. Host asks before installs: ask once, naming each tool and source. Still blocked (no network, admin or approval): say what is missing. Fast and Lucky can read the bundle with Git alone: `git ls-remote https://github.com/seifsg/ai-software-factory main`, clone that SHA into `~/.safe-engine/bundles/<sha>`, detach, read it only; record steps by hand and report the gate as unavailable. Safe waits for Python.
 5. Official sources only. No system settings beyond the install. No credentials in commands.
 
 ## Select the bundle
@@ -44,7 +44,7 @@ Verify returned root, revision, dirty status, receipt and entrypoint. Record lau
 
 Follow Working iterations where present in the selected canonical method. Older pins keep their recorded method; no silent upgrade.
 
-Mode: read canonical `.agents/skills/safe-engine/references/speed-modes.md` when the pin has it. No mode named means Fast; Fast and Lucky still read the returned `entrypoint` and the methods their table names; tickets, controller commands, checks and Codex review below are Safe only. Older pins without it keep their recorded method.
+Mode: read canonical `.agents/skills/safe-engine/references/speed-modes.md` when the pin has it. No mode named means Fast. Fast and Lucky read the returned `entrypoint`, canonical `fast-run.md`, `product-bar.md` and the methods their table names; they create the epic and sub-issues and record every step with the gate beside this file, `scripts/fast_gate.py` (Claude Code expands `${CLAUDE_SKILL_DIR}/scripts/fast_gate.py`). After the resolver, before research: `python <gate> start --project <absolute-target> --key <slug> --mode fast|lucky --kind product|feature|change [--auth] [--no-ui] [--no-data] --request-file <file>`. Controller commands, checks and Codex review below are Safe only. Older pins without `fast-run.md` keep their recorded method.
 
 Safe implementation: read canonical `.agents/skills/ticketing/SKILL.md` and `docs/ticketing.md` from the resolved bundle. Preferred authorized tracker MCP first; GitHub Issues default, Seif's existing choice. Confirm before/after scope. Every ticket gets an actually dispatched builder session and full cycle, even bounded fixes. Small Change keeps patches surgical; its six shortcuts remain for legacy unticketed work.
 
@@ -60,7 +60,7 @@ Before dependent work, inspect capabilities without launching product tests. Fol
 
 Codex: `$safe-engine Build [software/feature] in [absolute project path]. Success means [outcome].`
 
-Claude Code: `/safe-engine Build [software/feature] in [absolute project path]. Success means [outcome].`
+Claude Code (plugin or personal install): `/safe-engine Build [software/feature] in [absolute project path]. Success means [outcome].` The plugin also installs the gate hooks.
 
 Modes: add `lucky` or `safe` after the command, e.g. `$safe-engine lucky Build ...`. Then `verify` or `promote` any time.
 

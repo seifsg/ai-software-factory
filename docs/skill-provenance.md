@@ -1,5 +1,14 @@
 # Skill sources and adaptations
 
+## Fast runs keep the method: 7 October 2026
+
+Seif rejected the 7 October video-portal Fast run: no ticket, hidden research, no owner questions, plain JavaScript, no visual system, stuck at login. His words and kickoff answers live in [epic #26](https://github.com/seifsg/ai-software-factory/issues/26) and sub-issues #27–#30. Factory-specific; no original exists.
+
+- New [Fast run](../.agents/skills/safe-engine/references/fast-run.md) (steps, kickoff questions, work record, gate, hooks) and [product bar](../.agents/skills/safe-engine/references/product-bar.md) (stack, visual system, public pages, dev sign-in, POC deferrals). Speed modes, Ticketing, Research Market, UX Quality, Improve Factory, session contract, method handoff, delivery readiness, both entries, AGENTS.md and current decisions now link them.
+- Runtime: `skills/safe-engine/scripts/fast_gate.py`, `fast_record.py` and `fast_shell.py` (stdlib) plus `run-gate.sh`; `.claude-plugin/` manifests and `hooks/hooks.json` make this repository a Claude Code plugin and marketplace. Seif chose this route over global-settings and per-project hooks. Codex hooks documented, not exercised here.
+- Sources checked 7 October: Claude Code [hooks](https://code.claude.com/docs/en/hooks.md), [skills](https://code.claude.com/docs/en/skills.md), [marketplace reference](https://code.claude.com/docs/en/plugins/marketplace-reference.md), [plugin loading](https://code.claude.com/docs/en/plugins/loading.md); Codex [hooks](https://learn.chatgpt.com/docs/hooks.md).
+- Seif's originals (Analyze Start, Get Ready and the rest) unedited. Safe and the controller unchanged.
+
 ## Single-sourced rules: 6 October 2026
 
 Seif, "do all the recommendations": tests-last order, cloud PR review, mandatory logging, the three-option rule, review rounds, fresh assessment after reviewer repair, the file-summary stop and speed modes each keep their full text in one home and are linked elsewhere. Originals and dated history untouched; no rule dropped.

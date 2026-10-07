@@ -9,11 +9,11 @@ Fix the factory cause. Preserve Seif's methods and project progress.
 
 Use [Working iterations](../safe-engine/references/delivery-readiness.md#working-iterations). Default: smallest complete useful correction, existing capabilities, impact-scoped proof, one record. Required quality stays. Short Get Ready wording; necessary links only. New skill, gate, helper or report needs a demonstrated gap. Repeated failure: shared cause, prior-fix failure, prevention. Audit time from existing logs; no extra reporting gate.
 
-Mode: Fast by default ([speed modes](../safe-engine/references/speed-modes.md)); keep isolation, and the ticket and review cycle below are Safe only. Safe factory implementation uses [Ticketing](../ticketing/SKILL.md): canonical tracker, owner-confirmed before/after and a dedicated maintenance session. Every ticket follows the complete methods below. [Small Change](../small-change/SKILL.md) keeps bounded repairs surgical; its six shortcuts remain for legacy unticketed work. Analysis/planning stays in phase and creates no coding obligation.
+Mode: Fast by default ([speed modes](../safe-engine/references/speed-modes.md)). Fast maintenance is a `change` [Fast run](../safe-engine/references/fast-run.md): ticket, recorded steps and the gate; keep isolation; the review cycle below is Safe only. Safe factory implementation uses [Ticketing](../ticketing/SKILL.md): canonical tracker, owner-confirmed before/after and a dedicated maintenance session. Every ticket follows the complete methods below. [Small Change](../small-change/SKILL.md) keeps bounded repairs surgical; its six shortcuts remain for legacy unticketed work. Analysis/planning stays in phase and creates no coding obligation.
 
 Factory-wide routing, acceptance or interacting procedures need maintenance analysis and a final independent behavioral exercise. Choose prospective validation before initialization: instruction changes need actual instruction use and fitting structural checks; runtime/config/policy changes need affected behavioral proof. Mixed changes cover both. Check affected consumers, skip unrelated suites; retain required saved gates. One case, one local final assessment; authorized PR review remains separately remote/cloud. No recursive maintenance.
 
-Active build: `checkpoint → isolated repair → independent review → compatible resume`. Parallel project work must be independent of the fault/repair. No hook or upgrade service is installed.
+Active build: `checkpoint → isolated repair → independent review → compatible resume`. Parallel project work must be independent of the fault/repair. No upgrade service is installed; the optional Fast gate hooks only hold Fast and Lucky steps and never pause, resume or upgrade a run.
 
 ## Understand the report
 

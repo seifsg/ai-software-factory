@@ -6,6 +6,10 @@ Each implementation ticket gets a dedicated builder session and full factory cyc
 
 No detailed-ticket intake requested? Derive context from request/code/prior work and continue under actual authority. Follow the [writing recipe](../.agents/skills/ticketing/references/ticket-contract.md#write-the-ticket): brief titles/body/activity, complete cold-agent context, useful visuals, progress/PR links. Separate purpose/goal, source context and behavior change using the optional structured fields below. Meaningful expectations stay in confirmed scope. Explicit checkpoints/reserved choices remain.
 
+## Fast and Lucky
+
+Fast and Lucky runs write tickets through the tracker tools directly ([path](../.agents/skills/ticketing/SKILL.md#fast-and-lucky-tickets)): epic plus outcome sub-issues, no controller commands, captures or confirmation. `fast_gate.py done tickets` checks the recorded URLs and, on GitHub, the sub-issue links. `promote` moves the epic onto the commands below.
+
 ## Commands
 
 Use a key starting with a lowercase letter, then lowercase letters/digits/hyphens, at most 64 characters. Windows device names are rejected. One key per native ticket, preserved across its history.

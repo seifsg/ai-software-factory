@@ -1,0 +1,12 @@
+{
+  "name": "ai-software-factory",
+  "description": "Seif's AI Software Factory for Claude Code.",
+  "owner": {"name": "Seif Sgayer"},
+  "plugins": [
+    {
+      "name": "safe-engine",
+      "source": ".",
+      "description": "Safe Engine delivery and Improve Factory maintenance skills, plus the Fast run gate hooks."
+    }
+  ]
+}

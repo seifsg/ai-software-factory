@@ -1,3 +1,7 @@
+# Examples
+
+[`fast-run/work-record.sample.md`](fast-run/work-record.sample.md) is an illustrative filled Fast run record (yoga studio booking POC). It passes every gate step; its research cites sources read on 7 October 2026, and its tickets and answers are examples.
+
 # Disposable browser demonstration
 
 `pilot-app/` is a deliberately broken fixture, not a finished starter application. `pilot-task.json` describes its three observable acceptance criteria. The baseline unit and browser commands are expected to fail.

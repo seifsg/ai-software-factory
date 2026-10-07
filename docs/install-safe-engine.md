@@ -2,7 +2,7 @@
 
 ## Small direct changes
 
-Fast is the default [speed mode](../.agents/skills/safe-engine/references/speed-modes.md). Safe implementation uses complete outcome tickets and the full cycle, including tiny fixes. Apply Working iterations in current bundles; older pins retain their method. The six-routine route below is legacy unticketed work only.
+Fast is the default [speed mode](../.agents/skills/safe-engine/references/speed-modes.md); Fast and Lucky runs create tickets and pass the [gate](../.agents/skills/safe-engine/references/fast-run.md#the-gate). Safe implementation uses complete outcome tickets and the full cycle, including tiny fixes. Apply Working iterations in current bundles; older pins retain their method. The six-routine route below is legacy unticketed work only.
 
 This route is for requested implementation. Explicit analysis, planning and review remain in their phase.
 
@@ -48,16 +48,43 @@ Use `py -3` on Windows if needed. The bundled installer uses `$CODEX_HOME/skills
 
 ## Claude Code
 
-Paste into an authenticated session:
+Install the factory as a plugin (Seif's 7 October choice). Once per machine, in a terminal with your existing GitHub access:
 
 ```text
-Install folder skills/safe-engine from seifsg/ai-software-factory, ref main,
-into my personal ~/.claude/skills/safe-engine directory.
-Include SKILL.md, scripts and references. Preserve any existing installation and report
-its identity before replacing it. Use my existing authorized GitHub credentials.
+claude plugin marketplace add seifsg/ai-software-factory
+claude plugin install safe-engine@ai-software-factory
 ```
 
-Then invoke `/safe-engine` with the same app request and target path. A project installation can use `.claude/skills/safe-engine`; writing it into a project requires that project's authority. The current factory's independent controller review still requires an authenticated Codex CLI. Native Claude-builder execution has not been demonstrated; a Claude-only review adapter is absent.
+Inside a session the same commands start with `/plugin`. Desktop app Code tab: add the marketplace, then **+ > Plugins > Add plugin**. Factory updates arrive when you turn on **Enable auto-update** for `ai-software-factory` under `/plugin` > Marketplaces (off by default for third-party marketplaces); the plugin version follows the repository commit.
+
+The plugin adds:
+
+- `/safe-engine` and `/improve-factory` (full names `/safe-engine:safe-engine`, `/safe-engine:improve-factory`).
+- Gate hooks for [Fast and Lucky runs](../.agents/skills/safe-engine/references/fast-run.md#hooks): source edits and scaffold/install commands wait for the pre-build steps, stopping mid-run is blocked once, each prompt gets the next step. With no active run the hook exits before Python starts.
+
+Needs Git Bash on Windows (Claude Code's hook shell), Python 3.9+ as `python3`, `python` or `py -3`, and `gh` for ticket checks. A personal folder install in `~/.claude/skills/safe-engine` still loads the skill but brings no hooks.
+
+Safe's local controller review uses an authenticated Codex CLI, or `review-packet` to a fresh read-only Claude subagent. A complete Claude-builder app delivery has not been demonstrated yet.
+
+### Codex gate hooks (optional)
+
+Codex hooks use the same contract. Add to `~/.codex/hooks.json`, then review and trust them with `/hooks`. Replace `<home>` with your home folder. Not exercised on this repository's machine.
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [{"matcher": "Bash|apply_patch", "hooks": [{"type": "command",
+      "command": "sh \"$HOME/.codex/skills/safe-engine/scripts/run-gate.sh\"",
+      "commandWindows": "py -3 \"<home>/.codex/skills/safe-engine/scripts/fast_gate.py\" hook", "timeout": 30}]}],
+    "Stop": [{"hooks": [{"type": "command",
+      "command": "sh \"$HOME/.codex/skills/safe-engine/scripts/run-gate.sh\"",
+      "commandWindows": "py -3 \"<home>/.codex/skills/safe-engine/scripts/fast_gate.py\" hook", "timeout": 30}]}],
+    "UserPromptSubmit": [{"hooks": [{"type": "command",
+      "command": "sh \"$HOME/.codex/skills/safe-engine/scripts/run-gate.sh\"",
+      "commandWindows": "py -3 \"<home>/.codex/skills/safe-engine/scripts/fast_gate.py\" hook", "timeout": 20}]}]
+  }
+}
+```
 
 ## What happens on first use
 

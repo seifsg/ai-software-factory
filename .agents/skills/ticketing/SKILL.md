@@ -31,9 +31,22 @@ Order complete outcome tickets by user value and proven dependencies. Each unloc
 
 Version the confirmed contract. Keep the original input and what changed, why, who decided and what resulted. Record meaningful activity: decisions, assignment, implementation completion, QA/tests, review, blockers, PR updates and handoffs. Combine unchanged progress into boundary updates; no per-edit diary or extra capture after each local note. Preserve required refreshes below.
 
+## Fast and Lucky tickets
+
+Seif, 7 October: every Fast and Lucky run has tickets. Same tracker, writing recipe and authority rules; no controller contract, capture or confirmation round.
+
+1. Search existing epics/tickets first; reuse the same work.
+2. **Epic:** `product` and `feature` runs create it after the [kickoff answers](../safe-engine/references/fast-run.md#kickoff-questions): Seif's words, the answers, purpose/goal, context, behavior-only before/after, approach, flow, criteria with IDs, scope and deferrals, progress, activity. `change` runs create one ticket in the same layout.
+3. **Sub-issues:** 3–6 complete user-visible outcomes in user-value order, each with its own criteria. Link them as native sub-issues; GitHub: `gh api -X POST repos/{owner}/{repo}/issues/{epic}/sub_issues -F sub_issue_id=$(gh api repos/{owner}/{repo}/issues/{child} --jq .id)` (the child's numeric `id`, not its number). Never one per todo.
+4. POC deferrals (security hardening, CI/CD, deployment) and optional ideas become follow-up sub-issues of the epic, titled as follow-ups.
+5. Update at boundaries only: plan, build done, done-run results, handoff. Close a sub-issue when its outcome passed the done-run; the epic stays open until Seif accepts.
+6. Write the URLs into the work record (`**Epic:**`, `**Sub-issue:**`), then `fast_gate.py done tickets`.
+
+`promote` turns the epic into a Safe ticket contract through the steps above and below.
+
 ## Assign a ticket session
 
-Every implementation ticket uses the full factory cycle, including small fixes: original analysis and planning, each todo's 0–4 loop, completed implementation/improvements, final manual QA, final test authoring/execution and fresh independent review. This takes precedence over [Small Change](../small-change/SKILL.md)'s six replacement routines. Keep changes surgical, checks applicable and the file-summary stop ([speed modes](../safe-engine/references/speed-modes.md#safe)).
+Safe: every implementation ticket uses the full factory cycle, including small fixes: original analysis and planning, each todo's 0–4 loop, completed implementation/improvements, final manual QA, final test authoring/execution and fresh independent review. This takes precedence over [Small Change](../small-change/SKILL.md)'s six replacement routines. Keep changes surgical, checks applicable and the file-summary stop ([speed modes](../safe-engine/references/speed-modes.md#safe)).
 
 Give each ticket a dedicated execution session with the [complete handoff](../safe-engine/references/method-handoff.md). Record the real session/agent, ticket revision, run, absolute checkout, bundle and base/head. Use available session tools; a ticket label is not a dispatched session. Missing capability stays explicit. Parent/coordinator owns scheduling, shared decisions and tracker reconciliation; one writer owns each file.
 

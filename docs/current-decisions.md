@@ -10,6 +10,16 @@ Seif's 6 October choice: every factory activity (delivery, tickets, PRs, factory
 
 Measured on 6 October: fingerprinting this repo takes about 0.3s. The slow part is the Safe process itself, not Python CPU. The controller stays, used only by Safe.
 
+## Fast runs keep the method
+
+Seif's 7 October correction after the video agency portal run ([epic #26](https://github.com/seifsg/ai-software-factory/issues/26)): "even though we are in the fast mode, we need the tickets ... we're not allowed to cut corners". [Fast run](../.agents/skills/safe-engine/references/fast-run.md) owns the steps; [product bar](../.agents/skills/safe-engine/references/product-bar.md) owns the quality floor.
+
+- **Tickets:** Fast and Lucky create one epic and 3–6 outcome sub-issues (a `change` run: one ticket). Supersedes 6 October "ticket only when asked" and Lucky's no-ticket rule.
+- **Kickoff:** new products and big features start with quick research (3 top competitors, feature matrix, opportunities, 3 stack options), then one question round: features, size (POC/MVP/production slice), three approaches, stack. Fixes and small changes stay autonomous. Supersedes autonomous intake for those two kinds only.
+- **Quality:** every mode meets the product bar: TypeScript, shadcn/ui for React, own logo, palette, header and footer, light mode first, SEO and conversion on public pages, schema/logging/efficiency briefs, dev-only one-click sign-in per role. POCs are never throwaway.
+- **POC deferrals:** security hardening, CI/CD, deployment and unit-test suites may wait as follow-up tickets. No secrets in code or Git; full Application Security before public exposure.
+- **Enforcement:** Seif chose the Claude Code plugin (option A; global-settings and per-project hooks not chosen). Its hooks call `fast_gate.py`, which records and checks each step. Codex can call the same gate through `hooks.json`. The gate proves steps were recorded, not that they were good.
+
 ## Method and authorship
 
 Authored output follows [Clear Writing](../.agents/skills/safe-engine/references/clear-writing.md): no em dashes, fabricated claims or stock formulas. Keep voice/details; one finishing pass. Sales rules apply to sales copy.
@@ -32,7 +42,7 @@ Tickets use the [short writing recipe](../.agents/skills/ticketing/references/ti
 
 Seif's 4 October writing correction: shared [ticket/PR layout](../.agents/skills/safe-engine/references/work-writing.md). Separate purpose/goal, source context, behavior change/reason, proof, progress and activity. Concrete title, brief bullets, labeled emojis, comparison tables and fitting flows. New tickets use optional structured fields; legacy projections/guards/pins remain. No lost detail, invented evidence, media quota or default intake vote.
 
-Default intake stays autonomous. Derive in-scope requirements from customer input, actual code and available context under recorded delegation; no detailed-ticket questionnaire or extra vote. Preserve stops/reserved choices. Brief titles/body/activity carry purpose/goal, before/after, approach, avoidances, required/optional wants, source/progress/PR and next action. Use fitting tables, bullets, flows and real evidence for a cold reader; no media busywork.
+Default intake stays autonomous, apart from the [kickoff round](#fast-runs-keep-the-method) for new products and big features. Derive in-scope requirements from customer input, actual code and available context under recorded delegation; no detailed-ticket questionnaire or extra vote. Preserve stops/reserved choices. Brief titles/body/activity carry purpose/goal, before/after, approach, avoidances, required/optional wants, source/progress/PR and next action. Use fitting tables, bullets, flows and real evidence for a cold reader; no media busywork.
 
 Each ticket gets a dedicated builder session and full factory cycle. Separate worktrees may run independent tickets; shared epic checkouts are serial, with separate histories and one writer/runtime owner. Surgical tactics and applicable checks remain. Dependencies require accepted scope and integrated commit; epics require combined acceptance. No artificial microtickets or early tests.
 

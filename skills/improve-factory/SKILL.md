@@ -21,7 +21,7 @@ Needs Git and Python 3.9+. Safe local review uses the Codex CLI when present, ot
    - No admin or package manager: install [uv](https://docs.astral.sh/uv/getting-started/installation/) (`winget install astral-sh.uv`, `brew install uv` or its official installer), run `uv python install 3.12`, then `uv run --python 3.12 python ...`.
    - Codex CLI, Safe only and optional: [openai/codex](https://github.com/openai/codex) (`npm install -g @openai/codex` or `brew install --cask codex`).
 3. Check the versions again. Report what was installed, from where.
-4. Host asks before installs: ask once, naming each tool and source. Still blocked (no network, admin or approval): say what is missing. Fast and Lucky continue with Git alone: `git ls-remote https://github.com/seifsg/ai-software-factory main`, clone that SHA into `~/.safe-engine/bundles/<sha>`, detach, read it only. Safe waits for Python.
+4. Host asks before installs: ask once, naming each tool and source. Still blocked (no network, admin or approval): say what is missing. Fast and Lucky can read the bundle with Git alone: `git ls-remote https://github.com/seifsg/ai-software-factory main`, clone that SHA into `~/.safe-engine/bundles/<sha>`, detach, read it only; record steps by hand and report the gate as unavailable. Safe waits for Python.
 5. Official sources only. No system settings beyond the install. No credentials in commands.
 
 ## Find the right factory version
@@ -54,7 +54,7 @@ Current bundles check required guidance through `safe_engine/bundle-inputs.json`
 
 Read the whole returned canonical `entrypoint` and applicable references/methods. Execute once. Analysis/planning stays in phase. No recursive launcher, standalone canonical-folder installation or claim that loading files repaired anything.
 
-Mode: Fast by default; read canonical `.agents/skills/safe-engine/references/speed-modes.md` when the pin has it. Safe maintenance uses canonical `.agents/skills/ticketing/SKILL.md` and `docs/ticketing.md`: preferred authorized tracker MCP, otherwise GitHub Issues (Seif's current choice). Confirm before/after scope; dispatch a dedicated maintenance builder session and complete the full cycle, even for small repairs. Keep fixes surgical. Select `--ticket <key>` and initialize with `--session <real-builder-session-id>`; preserve separate app/maintenance history and ownership. Old pins need authorized trial/adoption before new methods.
+Mode: Fast by default; read canonical `.agents/skills/safe-engine/references/speed-modes.md` when the pin has it. Fast maintenance is a `change` run of canonical `fast-run.md`: one ticket, recorded steps and the bundle's `skills/safe-engine/scripts/fast_gate.py`. Safe maintenance uses canonical `.agents/skills/ticketing/SKILL.md` and `docs/ticketing.md`: preferred authorized tracker MCP, otherwise GitHub Issues (Seif's current choice). Confirm before/after scope; dispatch a dedicated maintenance builder session and complete the full cycle, even for small repairs. Keep fixes surgical. Select `--ticket <key>` and initialize with `--session <real-builder-session-id>`; preserve separate app/maintenance history and ownership. Old pins need authorized trial/adoption before new methods.
 
 Keep active cached bundles unchanged. Repair in a separate worktree from their revision; follow compatibility/evidence rules before adoption. Never pull/reset active bundles or silently change global settings. Resume this case's recorded selection even when the branch advances.
 
@@ -64,12 +64,12 @@ Missing Git, Python, private access, complete files or required independent revi
 
 Follow the tests-last order in canonical `docs/current-decisions.md`. Local independent maintenance review and PR review are separate; PR review follows canonical `docs/pr-workflow.md`. No app/game/mobile pilot or simulation unless specifically requested.
 
-Resolver installs no hooks or host automation, provisions no sessions/worktrees, selects no models, pushes/merges/notifies nothing and launches no product.
+Resolver installs no hooks or host automation, provisions no sessions/worktrees, selects no models, pushes/merges/notifies nothing and launches no product. Gate hooks come only from the Claude Code plugin or a Codex `hooks.json` the user installed (canonical `docs/install-safe-engine.md`).
 
 ## Invoke
 
 Codex: `$improve-factory The factory did X; expected Y. Preserve project progress.`
 
-Claude Code, after installation there: `/improve-factory The factory did X; expected Y. Preserve project progress.`
+Claude Code, with the `safe-engine` plugin or a personal installation: `/improve-factory The factory did X; expected Y. Preserve project progress.`
 
 See source `docs/install-improve-factory.md` for installation/GitHub references. Host discovery/permissions still apply; if discovery fails, read this installed file by explicit path.
