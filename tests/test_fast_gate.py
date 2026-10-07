@@ -12,7 +12,7 @@ from unittest.mock import patch
 
 SCRIPTS = Path(__file__).resolve().parents[1] / "skills/safe-engine/scripts"
 GATE = SCRIPTS / "fast_gate.py"
-SAMPLE = Path(__file__).resolve().parents[1] / "examples/fast-run/work-record.sample.md"
+SAMPLE = Path(__file__).resolve().parents[1] / ".agents/skills/safe-engine/references/work-record-sample.md"
 STEPS = ["research", "kickoff", "tickets", "analysis", "plan", "design", "schema", "build", "done-run", "handoff"]
 
 
@@ -145,10 +145,10 @@ class FastGateTests(unittest.TestCase):
         self.assertEqual(self.hook(elsewhere)["decision"], "block")
         self.assertIsNone(self.hook({**elsewhere, "stop_hook_active": True}))
         self.assertIsNone(self.hook({**elsewhere, "session_id": "other"}))
-        self.gate("pause", "--reason", "waiting on Seif")
+        self.gate("pause", "--reason", "waiting on the owner")
         self.assertIsNone(self.hook(elsewhere))
         context = self.hook({"hook_event_name": "UserPromptSubmit", "prompt": "go"})
-        self.assertIn("paused: waiting on Seif", context["hookSpecificOutput"]["additionalContext"])
+        self.assertIn("paused: waiting on the owner", context["hookSpecificOutput"]["additionalContext"])
 
     def test_reading_a_project_does_not_bind_a_session(self):
         self.start()

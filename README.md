@@ -1,99 +1,57 @@
 # AI Software Factory
 
-Seif's software-building skills and **Safe Engine 0.1.0**, the local controller that connects them.
+Agent skills that take software from idea to reviewed handoff: research, tickets, analysis, plan, build, QA, review and PR. Any owner, any coding agent, any OS, any codebase. Games, web, mobile and desktop apps, services, tools and libraries.
 
-Understand the request. Build the next complete useful outcome. Show working behavior early. Finish that iteration, manually use it, then run relevant final tests and independent review. Required quality stays. Enhance/polish later; keep the full requested outcome visible.
+## Skills
 
-**Reading from your phone?** Start with the [factory status and skill links](docs/factory-status.md), then the [current checkpoint report](docs/factory-checkpoint-2026-10-04.md). Both render directly on GitHub. Sign in with an account that can access this private repository.
+| Skill | Job |
+|---|---|
+| `safe-engine` | Coordinates delivery in Fast, Lucky or Safe mode; holds the work rules and product bar |
+| `research-market` | Competitors, feature matrix, opportunities, stack and architecture options |
+| `analyze-start` | Understand the code and every consumer before changing it; ASCII charts; no coding |
+| `get-ready-to-code` | Files, critique, phases, todos, whole plan; the 0–4 loop for every todo |
+| `ux-quality` | Simple, familiar, accessible, responsive UI; copy; public-page SEO |
+| `database-schema` | Access patterns, three designs, chosen schema, indexes, migrations |
+| `deep-review` | Bug hunt plus change-guard, compliance, security, performance and journey lenses; PR review |
+| `ticketing` | Epic and outcome sub-issues, confirmed before/after, criteria, activity |
+| `how-to-make-a-pr` | Draft PR with ticket link, before/after proof and what is unverified |
+| `improve-factory` | Repair or improve the factory itself without disturbing active runs |
 
-## The skills
+Each skill lives in `.agents/skills/<name>/` and stands alone: it links only to its own `references/`.
 
-Keep Seif's original method and deliberate repetition. RepairCheck Mobile remains the primary source; operative skills discover the target project's actual settings. Compress AI-written explanations. The factory covers games, web/mobile/desktop software, services, tools and libraries.
+## Modes
 
-The [skill index](.agents/skills/README.md) lists fourteen canonical skills: seven with originals and seven factory-specific skills. Two portable entries load the complete factory from another project. [Provenance](docs/skill-provenance.md) records exact sources, task matches and packaging changes.
-
-Ask for analysis and you get analysis. Ask for planning and you get planning. A small feature does not turn either request into permission to code.
-
-Delivery has three [speed modes](.agents/skills/safe-engine/references/speed-modes.md): 🏃 **Fast** (default), 🍀 **Lucky** and 🛡️ **Safe**, the full cycle below. `promote` moves a run to Safe.
-
-Fast never means thin (Seif, 7 October). Fast and Lucky create an epic with outcome sub-issues and record every method in one work record, checked by a [gate](.agents/skills/safe-engine/references/fast-run.md) that each host's hooks enforce. New products and big features start with quick research (3 top competitors) and one round of owner questions. Every mode meets the [product bar](.agents/skills/safe-engine/references/product-bar.md): TypeScript, a polished light-mode UI, dev sign-in, no throwaway POCs.
-
-Safe implementation uses [Ticketing](.agents/skills/ticketing/SKILL.md): GitHub Issues by default, confirmed before/after scope and a dedicated session/full cycle per ticket, including bugfixes. Keep surgical Small Change tactics; its six replacement routines remain for legacy unticketed work. Ticket delivery follows:
-
-```text
-confirmed ticket → analyze → original plan → product/UX + technical research → revised plan
-        → build with the 0–4 loop → finish the complete outcome iteration → manual action QA
-        → author/polish automated tests → final automated QA → fresh review
-        → checked local handoff → authorized PR → remote/cloud PR review → human
-```
-
-The original planning checkpoint remains. Proceed through it only when the user's instructions already authorize that continuation, or in Safe when the owner confirmed the ticket's before/after.
-
-Working iterations owns delivery order, shared constraints and evidence. Complete outcome tickets are the acceptance boundary. Ordinary repair reruns configured checks; records-only correction permits exact-input reuse with fresh proof/review.
-
-Before coding, choose validation by effect: guidance only, runtime/config or mixed. Full method, fitting proof. Use one compact work record with all five planning outputs and 0–4 notes; retain controller snapshots/raw evidence. Refresh tickets at required boundaries and new input.
-
-[Tests-last rule](docs/current-decisions.md#finish-work-use-it-then-automate-tests) sets the order. Small fixes stay surgical. [Controller usage](docs/pilot-usage.md#feature-feedback-and-version-checkpoints) distinguishes new version-2 runs from legacy runs.
-
-[Ticket usage](docs/ticketing.md) defines captured contracts, namespaced runs, scope amendments, worktree ownership and latest-expectation proof. The host agent uses actual MCP tools; the controller neither creates remote issues nor authenticates their reads. Existing pins/runs remain unchanged.
-
-Version 2 supports draft acceptance for greenfield work, reviewed sealing/amendments, manual/automated/mixed criteria and one final gate. Conditional [Delivery Readiness](.agents/skills/safe-engine/references/delivery-readiness.md) covers capabilities, game/browser lifecycle, durable integrations and release/operations. Product pilots/simulations remain deferred until requested.
-
-Research current stack/architecture choices and useful design patterns against the goal. Plan applicable CPU/GPU, memory, database queries, network, storage, caching and interaction costs. Resolve material unknowns throughout delivery; standalone research returns findings without coding or controller setup. Actual hardware/tool evidence remains required for performance and usability claims.
-
-For new or material persistence design, use [Database Schema](.agents/skills/database-schema/SKILL.md). No purposeless tables or unsupported O(1) promises.
-
-Every UI/interaction change uses [UX Quality](.agents/skills/ux-quality/SKILL.md): simple journeys, familiar patterns, accessibility, coherent visuals and good contextual sound. Research uncertainty, choose per decision ownership and proceed within delegated authority. Inspect visuals and audition audio; carry evidence into independent review.
-
-## Start or resume
-
-The factory is agent-agnostic: Claude Code, Codex and Cursor are first-class, and any agent that reads Agent Skills can run it ([hosts](docs/hosts.md)). [Install Safe Engine](docs/install-safe-engine.md) for your agent, then ask for the skill with the task and target:
+| | 🏃 Fast (default) | 🍀 Lucky | 🛡️ Safe |
+|---|---|---|---|
+| Tickets | epic + sub-issues | same | ticket contract |
+| Research + owner questions | new products, big features | no | yes |
+| Methods | full analyze, plan, 0–4 | one short pass | full, with file-summary stop |
+| Enforcement | gate + hooks | gate + hooks | Python controller |
+| Checks | one done-run | none until `verify` | manual QA, tests, verify, independent review |
 
 ```text
-safe-engine Build [app or feature] in [absolute project directory].
-Success means [observable outcomes].
+request → research → kickoff questions → tickets → analyze → plan → design/schema
+        → build (0–4 per todo) → use it → tests → review → handoff → draft PR → human
 ```
 
-That runs Fast. Say `safe-engine lucky ...` or `safe-engine safe ...` for the other modes. Each host's skill syntax (`/safe-engine`, `$safe-engine`, by name) is in [hosts](docs/hosts.md); its hooks hold Fast and Lucky runs to their steps.
+## Start
 
-To continue, ask it to resume the existing run. Keep the selected bundle, decisions and evidence. [Fresh-session setup](docs/start-another-session.md) covers manual loading and other hosts. [Pilot usage](docs/pilot-usage.md) contains actual commands and prerequisites.
-
-To improve the factory, use [Improve Factory](.agents/skills/improve-factory/SKILL.md). It preserves an active app checkpoint, repairs separately, obtains independent review and checks whether the app can safely resume. [Install its portable entry](docs/install-improve-factory.md) when working elsewhere.
-
-Use existing authorized GitHub access. A local installation does not install on another machine or grant new permissions.
-
-## What works today
-
-Fast and Lucky runs record steps through `fast_gate.py`; host hooks (the Claude Code plugin, or Codex and Cursor via `fast_gate.py install`) deny early source edits and unfinished stops. The gate checks that each step was recorded, not that it was good.
-
-In Safe, your agent builds; Python saves stages, runs configured checks and rejects stale evidence. A fresh read-only reviewer agent (any installed CLI, preferably not the builder) or the review packet reviews the candidate before local handoff. The controller does not push, merge, deploy or run as a background service.
-
-The [recorded pilot](docs/pilot-verification.md) demonstrates its dated local browser fixture and repair. It does not certify this revision or a production app. PR delivery requires [remote/cloud PR review](docs/pr-workflow.md#cloud-pr-review). A complete app delivery on each host remains unverified; [hosts](docs/hosts.md) records what was checked. No new product pilot is claimed.
-
-Every app/game needs a working shared [logging module](.agents/skills/safe-engine/references/app-diagnostics.md), including small fixes. The coordinator also applies [efficiency](.agents/skills/safe-engine/references/app-efficiency.md) from planning onward. Instructions alone prove neither emitted logs nor a faster app.
-
-QA binds to declared code, operative guidance and runtime inputs. Changing a required skill invalidates evidence; dated history/provenance edits alone do not invalidate a target run. Preserve active pins and use the compatibility procedure before adopting a different factory. Publishing source to main, installing a launcher and adopting an active run are separate outcomes.
-
-## Repository layout
+[Install](docs/install.md) for your agent, then:
 
 ```text
-.agents/skills/           Canonical skills, references and index
-skills/                  Two installable entries, resolvers, the Fast gate and host installer
-.claude-plugin/          Marketplace manifest (the Claude Code plugin lives in skills/)
-safe_engine/             Python controller, schema and bundle input contract
-scripts/                 Resolver packaging helper
-tests/                   Controller and distribution checks
-docs/                    Usage, sources, decisions and dated design records
-preview/                 Visual factory map
-examples/                Disposable fixture and recorded demonstration
+safe-engine Build [app or feature] in [absolute project directory]. Success means [observable outcome].
 ```
 
-Client source, credentials and runtime records belong outside this reusable bundle. Keep run records in ignored `.factory/` folders.
+Add `lucky` or `safe` after the skill name for those modes. Resume with `safe-engine Resume [absolute project directory]`. Each agent's skill syntax and hooks: [hosts](docs/hosts.md).
 
-Both portable resolvers come from `safe_engine/distribution.py`. After editing it, run `python scripts/package_skill_entries.py`, then check with `--check`.
+## Layout
 
-## Keep building together
+```text
+.agents/skills/        the skills (canonical methods)
+skills/                portable launchers, gate scripts and the Claude Code plugin root
+safe_engine/           Safe mode controller (python -m safe_engine)
+docs/                  install and hosts
+tests/                 controller, gate, installer and skill hygiene tests
+```
 
-Read [repository rules](AGENTS.md) and [selected decisions](docs/current-decisions.md) before editing. Preserve authored reminders; record generic adaptations. For a new procedure, start from Seif's actual request, compare requirements before and after editing, then verify affected behavior.
-
-The [visual map](preview/index.html) explains the flow. The [lifecycle map](docs/skill-lifecycle-map.md) catalogs all 38 supplied source skills; seven source skills are imported here. The [expanded plan](docs/safe-engine-expanded-scope.md), [build plan](docs/safe-engine-build-plan.md) and [delivery design](docs/safe-engine-fast-delivery.md) preserve earlier proposals and choices. They do not authorize importing the rest of the library.
+The gate checks that each step was recorded, not that it was good. The controller records stages and launches independent review; it never pushes, merges or deploys.

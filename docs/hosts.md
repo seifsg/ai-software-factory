@@ -1,52 +1,51 @@
 # Hosts
 
-Seif, 7 October 2026: the factory is agent-agnostic. Its methods live in `.agents/skills/` (the open [Agent Skills](https://agentskills.io) folder) and [AGENTS.md](../AGENTS.md); every coding agent reads the same files. This page is the only place for host-specific commands. Everything else in the factory says "your agent".
+The methods live in `.agents/skills/` (the open Agent Skills folder) and `AGENTS.md`; every coding agent reads the same files. This page is the only place for agent-specific commands. Everything else says "your agent".
 
-First-class hosts get a tested installer route, gate hooks and a Safe reviewer preset. Other agents run the same methods with the gate called by hand.
+First-class hosts get an installer route, gate hooks and a Safe reviewer preset. Other agents run the same methods and call the gate by hand.
 
 ## First-class hosts
 
 | | Claude Code | Codex | Cursor |
 |---|---|---|---|
-| Factory skills | `safe-engine` plugin (skills + hooks) | `~/.agents/skills/` | `~/.agents/skills/` |
-| Rules file | `AGENTS.md` (read when no `CLAUDE.md` exists) | `AGENTS.md` | `AGENTS.md` |
-| Install | [Claude Code install](#claude-code) | `fast_gate.py install --host codex`, then trust it in `/hooks` | `fast_gate.py install --host cursor` |
-| Invoke | `/safe-engine Build ...` | `$safe-engine Build ...` | ask for the safe-engine skill: `use safe-engine to build ...` |
+| Skills | `safe-engine` plugin (skills + hooks) | `~/.agents/skills/` | `~/.agents/skills/` |
+| Rules file | `AGENTS.md` (read when no `CLAUDE.md` exists; otherwise import it with `@AGENTS.md`) | `AGENTS.md` | `AGENTS.md` |
+| Install | `fast_gate.py install --host claude` or [by hand](#claude-code) | `fast_gate.py install --host codex`, then trust it in `/hooks` | `fast_gate.py install --host cursor` |
+| Invoke | `/safe-engine Build ...` | `$safe-engine Build ...` | `use safe-engine to build ...` |
+| Question tool | `AskUserQuestion` (4 questions, 4 options each) | chat message | chat message |
 | Gate hooks | plugin: `PreToolUse`, `Stop`, `UserPromptSubmit`, `SessionStart` | `~/.codex/hooks.json`: same events and JSON as Claude Code | `~/.cursor/hooks.json`: `preToolUse`, `stop`, `sessionStart` |
 | Safe reviewer | `review --agent claude`: `claude -p`, Read/Grep/Glob only, `--json-schema` | `review --agent codex`: `codex exec --sandbox read-only --output-schema` | `review --agent cursor`: `agent -p --mode ask` |
-| Checked here (7 Oct) | plugin validated; sandbox installs from a local path and the HTTPS URL; live hook denied a real Write and `npm install` | the 1 Oct recorded pilot ran the Safe cycle in Codex ([pilot verification](pilot-verification.md)); installer and hook dialect exercised with simulated events; no Codex CLI on this machine now | installer and hook dialect exercised with simulated events; no Cursor CLI on this machine |
+| Model tiers (light / standard / deep) | `haiku` / `sonnet` / `opus` | host models | host models |
 
-`fast_gate.py` sits in `skills/safe-engine/scripts/` of the factory bundle; run it with Python 3.9+ (`python`, `python3` or `py -3`). `--project <dir>` installs Codex or Cursor into one project (`<dir>/.agents/skills`, `<dir>/.codex/hooks.json`, `<dir>/.cursor/hooks.json`) instead of your user folders. Re-running replaces only the factory's own hook entries; your other hooks stay.
+Python runs as `python`, `python3` or `py -3` (Windows). Claude Code hooks need a POSIX `sh` (Git Bash on Windows). Ticket checks use the GitHub CLI `gh` when the tracker is GitHub.
 
-Safe review picks an installed reviewer that did not build the candidate (`review --agent auto --builder <name>`). Claude Code, Codex and Cursor builders are detected from their environment (`CLAUDECODE`, `CODEX_THREAD_ID`, `CURSOR_AGENT`); when the builder is unknown and several agents are installed, review asks for `--builder` instead of guessing. No agent CLI installed: hand `review-packet` to a fresh read-only subagent of your host, then `review --report <file> --reviewer <id>`.
+Safe review picks an installed reviewer that did not build the candidate: `review --agent auto --builder <name>`. Builders are detected from `CLAUDECODE`, `CODEX_THREAD_ID` and `CURSOR_AGENT`; when the builder is unknown and several agents are installed, review asks for `--builder`. No agent CLI: hand `review-packet` to a fresh read-only subagent, then `review --report <file> --reviewer <id>`.
 
 ## Claude Code
 
-The plugin brings `/safe-engine`, `/improve-factory` and the gate hooks. Pick one route.
+The plugin brings `/safe-engine`, `/improve-factory` and the gate hooks. Its root is the repository's `skills/` folder. Pick one route:
 
-- **Any surface, one command** (needs the factory checkout or bundle): `python fast_gate.py install --host claude`. It adds the marketplace over HTTPS with auto-update and enables the plugin in `~/.claude/settings.json`, keeping a backup. The repository is private: HTTPS uses your stored Git credentials (no SSH key needed). Start a new session; it installs in the background.
-- **Desktop app by hand:** add the same two keys to `~/.claude/settings.json`, then start a new session:
+- **Installer:** `python fast_gate.py install --host claude` adds the marketplace over HTTPS with auto-update and enables the plugin in `~/.claude/settings.json`, keeping a backup.
+- **Settings by hand** (desktop app): add these keys to `~/.claude/settings.json`, then start a new session:
 
   ```json
   "extraKnownMarketplaces": {"ai-software-factory": {"source": {"source": "git", "url": "https://github.com/seifsg/ai-software-factory.git"}, "autoUpdate": true}},
   "enabledPlugins": {"safe-engine@ai-software-factory": true}
   ```
 
-- **Terminal with the `claude` CLI on PATH:** `claude plugin marketplace add https://github.com/seifsg/ai-software-factory.git`, then `claude plugin install safe-engine@ai-software-factory`. Use the HTTPS URL; the `owner/repo` shorthand tries SSH first.
-
-The desktop app installs a CLI only inside its own folder, so `claude` is usually not on PATH there. The plugin root is the repository's `skills/` folder: installs copy the two entry skills and their scripts only.
+- **Terminal:** `claude plugin marketplace add https://github.com/seifsg/ai-software-factory.git`, then `claude plugin install safe-engine@ai-software-factory`. Use the HTTPS URL; the `owner/repo` shorthand tries SSH first.
 
 ## Other agents
 
 | Agent | Skills | Gate | Safe reviewer |
 |---|---|---|---|
-| GitHub Copilot | reads `.agents/skills`, `~/.agents/skills` | `.github/hooks/*.json` with PascalCase `PreToolUse` (Claude-style payload) → `sh <entries>/safe-engine/scripts/run-gate.sh copilot` (exit 2 denies) | review packet |
-| Gemini CLI (Antigravity unverified) | reads `.agents/skills` | `BeforeTool` hook → `sh <entries>/safe-engine/scripts/run-gate.sh gemini` (exit 2 denies) | review packet |
-| OpenCode | reads `.agents/skills` | no declarative hooks: run `fast_gate.py start/done/status` yourself | review packet |
-| Anything else | point it at `.agents/skills/safe-engine/SKILL.md` | `fast_gate.py` commands by hand | review packet |
+| GitHub Copilot | reads `.agents/skills`, `~/.agents/skills` | `.github/hooks/*.json`, PascalCase `PreToolUse` → `sh <launchers>/safe-engine/scripts/run-gate.sh copilot` (exit 2 denies) | review packet |
+| Gemini CLI | reads `.agents/skills` | `BeforeTool` hook → `sh <launchers>/safe-engine/scripts/run-gate.sh gemini` (exit 2 denies) | review packet |
+| OpenCode | reads `.agents/skills` | no declarative hooks: run `fast_gate.py` yourself | review packet |
+| Anything else | point it at `.agents/skills/safe-engine/SKILL.md` | `fast_gate.py` by hand | review packet |
 
-Put the two entries where these agents look with `fast_gate.py install --host other` (skills only, into `~/.agents/skills` or `--project <dir>`). Run hooks through `run-gate.sh`: it fails open when Python or the gate is missing, which hosts that block on any other exit code need. Unknown hosts get a generic reader: pre-tool events deny with exit code 2 and the reason on stderr, the signal those agents honor; stop and prompt hooks need a first-class adapter.
+`fast_gate.py install --host other` copies the launchers into `~/.agents/skills` (or `--project <dir>`). Run hooks through `run-gate.sh`: it fails open when Python or the gate is missing. Unknown hosts get a generic reader: pre-tool events deny with exit code 2 and the reason on stderr; stop and prompt hooks need a first-class adapter.
 
 ## Sources
 
-Read 7 October 2026: Claude Code [hooks](https://code.claude.com/docs/en/hooks.md), [plugins](https://code.claude.com/docs/en/plugins/marketplace-reference.md), [headless](https://code.claude.com/docs/en/headless); Codex [hooks](https://learn.chatgpt.com/docs/hooks.md), [skills](https://learn.chatgpt.com/docs/build-skills), [non-interactive](https://learn.chatgpt.com/docs/non-interactive-mode); Cursor [hooks](https://cursor.com/docs/agent/hooks), [skills](https://cursor.com/docs/context/skills), [headless CLI](https://cursor.com/docs/cli/headless); Copilot [hooks](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-hooks-reference); Gemini CLI [hooks](https://geminicli.com/docs/hooks/reference/); OpenCode [plugins](https://opencode.ai/docs/plugins/); [Agent Skills](https://agentskills.io); [AGENTS.md](https://agents.md).
+Claude Code [hooks](https://code.claude.com/docs/en/hooks.md), [plugins](https://code.claude.com/docs/en/plugins/marketplace-reference.md), [headless](https://code.claude.com/docs/en/headless) · Codex [hooks](https://learn.chatgpt.com/docs/hooks.md), [skills](https://learn.chatgpt.com/docs/build-skills), [non-interactive](https://learn.chatgpt.com/docs/non-interactive-mode) · Cursor [hooks](https://cursor.com/docs/agent/hooks), [skills](https://cursor.com/docs/context/skills), [headless CLI](https://cursor.com/docs/cli/headless) · Copilot [hooks](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-hooks-reference) · Gemini CLI [hooks](https://geminicli.com/docs/hooks/reference/) · OpenCode [plugins](https://opencode.ai/docs/plugins/) · [Agent Skills](https://agentskills.io) · [AGENTS.md](https://agents.md)

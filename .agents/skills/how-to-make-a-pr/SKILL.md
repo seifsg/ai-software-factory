@@ -1,228 +1,89 @@
 ---
 name: how-to-make-a-pr
-description: "Create, update, or correct a factory-managed pull request. Prepare a visual, self-contained draft with task links, human handoff and remote/cloud PR review."
+description: "Prepares and opens a draft pull request for human review, linked to its ticket and backed by before/after proof. Use when creating, updating or correcting a pull request."
 ---
 
-# Pull Request erstellen
+# How to make a PR
 
-Vor dem Start: [Projekt-Bindings](references/project-bindings.md) und [PR-Adapter](../../../docs/pr-workflow.md) lesen. Tatsächliches Repo, Branches, Regeln, Tools und Berechtigungen ermitteln. Keine fremden Konten, Dienste oder Projektannahmen übernehmen. PR-Review ausschließlich durch separaten Remote-/Cloud-Agenten mit frischem Kontext und exakt geprüftem Remote-Stand; lokale Subagenten ersetzen sie nicht.
+Open a small, clear **draft PR** for human review. Humans decide ready, merge and release. This skill grants no merge, release or notification authority.
 
-Alle Tests erst nach fertiger Implementierung: zuerst manuelle/User-QA, danach automatisierte Tests. Keine frühen Playtests, manuellen Reproduktionen oder Walkthroughs; Quelltextprüfung und vorhandene Logs bleiben erlaubt.
+Analysis or review-only requests: do not open, push or comment.
 
-Ziel: kleine, nachvollziehbare Änderungen, sauber beschrieben, als **Draft-PR zur menschlichen Prüfung**.
+## 1. Bind the project
 
-Nutzbare Iteration zeigen: funktioniert -> fehlt -> nächstes sichtbares Ergebnis. Exakten Demo-Kontext nennen. Gesamtabnahme offen halten; frische Bewertung bleibt nötig.
+Find the real repository, branches, release policy, PR template, signing rule, check commands, tracker and review owner from rules, manifests, CI and remote metadata. Copy no accounts, branches or tools from another project. Ask only consequential gaps. A missing binding blocks its dependent step; keep local work going.
 
-> **Grundhaltung:** Ein PR ist ein **Vorschlag zur Review**, kein Selbstzweck. Als **Draft** öffnen; ein Mensch prüft, verfeinert und merged oder verwirft. Explizite Nutzerfreigaben gelten weiter. Aus diesem Skill entsteht keine Merge-, Release- oder Benachrichtigungsfreigabe.
+## 2. Ticket first
 
-## Wann diesen Skill nutzen
+- Every PR belongs to a ticket. None yet: run `ticketing`. Search by symptom, feature, area, files, PR title and branch slug first.
+- No ticket only when the project defines an exemption and the whole diff falls under it.
+- Link both ways: PR URL in the ticket, clickable ticket link in the PR body.
+- On open, set the tracker's awaiting-review status. Query the allowed values; use exact spelling.
+- Ticket with a confirmed contract: refresh it before opening or updating. Pending scope, drift or a failed refresh is an open dependent step. A draft or local pass never replaces the owner's current expectation.
 
-Bei jedem autorisierten Code-, Dokumentations- oder Skill-PR: neu anlegen, aktualisieren oder nachträglich korrigieren. Bei reiner Analyse/Review keine späteren Schreibschritte vorziehen.
+## 3. Branch from the right base
 
-## 1. Wann öffnen & vom richtigen Basis-Branch abzweigen
+- Work on your own branch. Never commit to the base.
+- Base = the project's integration branch, else the default branch. Say so in the PR when it differs.
+- Check the remote, not the local list. Shallow and single-branch clones hide branches.
 
-Vor Änderungen [Vorher/Nachher-Belege](../../../docs/pr-workflow.md#beforeafter-proof) sichern: bei UI ein gezieltes Screenshot-Paar; sonst vergleichbare Ergebnisse. Nachher-Beleg und optionale Journey-Aufnahme erst in finaler manueller QA. Belege im PR zugänglich einbetten/verlinken; fehlende Belege offen nennen.
-
-- Änderungen über einen eigenen Feature-Branch und PR; nicht direkt auf den Basis-Branch committen.
-- Ziel anhand tatsächlicher Branch-/Release-Policy bestimmen. Vorhandenen Integrations-/Dev-Branch standardmäßig nutzen; ohne solchen Branch den bestätigten Default-Branch. Abweichungen im PR nennen.
-- **Remote prüfen**, nicht die lokale Branch-Liste:
-  ```bash
-  git ls-remote --heads origin
-  git ls-remote --symref origin HEAD
-  ```
-  Ein flacher/Single-Branch-Klon kann reale Remote-Branches lokal verbergen. `git branch -r` beweist ihre Abwesenheit nicht.
-- Aktuellen Basisstand holen. Bestehende Arbeit schützen; neuen, unbenutzten Branch oder isolierten Checkout verwenden:
-  ```bash
-  git fetch origin
-  git switch -c <neuer-branch> origin/<basis-branch>
-  ```
-
-### Hotfix-Workflow
-
-> **HOTFIX nur auf ausdrücklichen Wunsch.** Bei getrennten Production- und Integrations-Branches ist ein Hotfix **immer ein PAAR**: Production-PR plus Begleit-PR mit **derselben Änderung** in den Integrations-Branch. Beide synchron halten.
-
-- Prod-Branch vom aktuellen Production-Stand abzweigen.
-- Companion von der aktuellen Integrations-Basis abzweigen; **nur die Fix-Commits** übernehmen:
-  ```bash
-  git switch -c hotfix/<slug>-integration origin/<integration-branch>
-  git cherry-pick -x <fix-sha>
-  ```
-- **Keinen** zweiten PR vom Prod-Branch gegen Integration öffnen: das könnte fremde prod-only Commits einschleppen.
-- Beide PRs gegenseitig verlinken; jedes Follow-up in beide spiegeln.
-- Bei nur einem Release-Zweig kein künstliches Branch-Paar erfinden. Tatsächliche Release-Policy dokumentieren.
-
-## 2. Branch-Namen & Commit-Nachrichten
-
-**Branch:** `<scope>/<kurz-beschreibend>`, etwa `fix/save-state`, `feat/search`, `docs/review-method`.
-Scopes: `fix`, `feat`, `docs`, `chore`; tatsächliche Projektkonvention beachten.
-
-**Conventional Commit:**
-
-```
-<typ>(<scope>): <imperativer Betreff>
-
-<Warum die Änderung nötig ist>
+```text
+git ls-remote --heads origin
+git ls-remote --symref origin HEAD
+git fetch origin
+git switch -c <scope>/<short-name> origin/<base>
 ```
 
-Betreff knapp und imperativ. Optionaler Body erklärt **warum**, nicht die einzelnen Codezeilen.
+- Protect dirty and foreign work. New branch or isolated checkout.
+- **Wrong base:** head already on the right ancestry: change the PR base (`references/github.md`). Diverged: new branch from the right base, cherry-pick the relevant commits, open a replacement PR, close the old one as replaced after approval. No force-push.
+- **Hotfix**, only on explicit request. Separate production and integration branches mean a pair: the production PR plus a companion PR with the same change into integration. Branch the companion from integration and `git cherry-pick -x` only the fix commits. Never open a second PR from the production branch into integration: it drags in production-only commits. Link both; mirror every follow-up. One release branch: no pair.
 
-## 3. Fokussierte, minimale Änderungen — und vor dem Push prüfen
+## 4. Plan the proof before editing
 
-- **Genau eine Sache** pro PR. Unabhängige Funde als Follow-up festhalten.
-- Nur eigene geänderte Dateien stagen: `git add <datei>`. Nie blind `git add .` / `git add -A`.
-- Reale Prüfungen aus Regeln, Manifesten und CI ermitteln: Build/Compile, Typen, Lint, Tests, Abhängigkeiten und relevante Plattform-/Laufzeitchecks.
-- Erst Implementierung und sinnvolle Verbesserungen abschließen, dann das echte Verhalten durch manuelle Aktionen prüfen. Erst danach, ganz am Ende vor dem PR: notwendige Tests schreiben/anpassen, sauber ausarbeiten und ausführen. Während der Entwicklung keine Tests schreiben, ändern oder starten. Bei Produktionsfehlern: chirurgisch korrigieren, manuell nachprüfen, dann finale Tests wiederholen. Siehe [Reihenfolge](../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests). Keine Tests, die nur die Implementierung nacherzählen.
-- Vor dem Push erforderliche Gates grün. Fehlende Prüfung ist **unverifiziert**, kein PASS. Bei Small Change gelten ausgewählte fokussierte Checks und echte geschützte Gates; keine künstliche Volltestpflicht.
+- **UI change:** screenshot the affected screen before edits. Later, its finished counterpart from final manual QA. One focused pair: same viewport, state and safe sample data. Add views only to explain the change. New UI: show the prior entry or empty state and label what did not exist. Video never replaces screenshots.
+- **No useful screenshot:** equivalent before/after: the same API request with status and body, CLI output, a measurement. Docs only: a short text diff.
+- Baseline capture is capture only: minimum safe navigation, no feature exercise. If it needs a side effect, use existing evidence and say so. Never fabricate a before image or reset dirty work to recreate it.
+- **Feature proof:** final manual QA walks the real journey to its confirmed result (a sent email is verified in the test inbox, not a success toast). Offer a short recording once when motion or several steps help; honor the answer. A recording grants no sending permission.
+- Embed labeled Before and After in the PR with the observed result, base/head and ticket criterion. Use links the reviewer can open; verify access. No localhost or local-path links. No credentials or private data in captures.
+- Missing capture or upload access: say so. Never claim proof exists.
 
-## 4. Task zuerst — dedupen, verlinken, Status setzen
+## 5. Make the change
 
-> **PFLICHT:** Jeder PR gehört zu einem Task im tatsächlich ausgewählten Tracker. Task **vor** dem Draft anlegen oder wiederverwenden. Kein Task-System erfinden.
->
-> **Enge Ausnahme:** Nur wenn das Projekt eine Routine-/Skill-Ausnahme festgelegt hat und der **gesamte Diff** in deren erlaubten Pfaden liegt, entfällt der Task. Nicht pauschal für Dokumentation oder Nicht-Code.
+- One thing per PR. Unrelated finds become follow-ups.
+- Stage your own files by name. Never `git add .` or `git add -A`.
+- Commit as `<type>(<scope>): <imperative subject>`. Body = why, not the lines changed.
+- Branch name `<scope>/<short-name>` (`fix`, `feat`, `docs`, `chore`), or the project's convention.
+- Honor required signing with the existing authorized identity. Never invent an identity or bypass signing, permissions or protected gates.
+- **No AI or tool attribution lines** in commits or PR text.
+- Find the real checks from rules, manifests and CI. Required gates pass before push. A check not run is **unverified**, not passed.
+- Tests come last: finish implementation, manual QA on the real behavior, then write or adjust and run tests. A production fix found by tests goes back through manual QA, then tests rerun. No tests that restate the implementation.
 
-- **ERST SUCHEN:** nach Symptomen/Feature/Bereich/Dateien **und** nach PR-Titel/Branch-Slug. Gleiche Arbeit gefunden → bestehenden Task nutzen. Sonst autorisiert anlegen.
-- **Beide Richtungen:** PR-URL in den Task, klickbarer Task-Link in den sichtbaren PR-Kontext.
-- Bei PR-Eröffnung den ausgewählten **awaiting-review / development-done**-Status setzen. Erlaubte Statuswerte vorher abfragen; genaue Schreibweise verwenden, nicht raten.
-- Benötigte Tracker-Mechanik aus vorhandenen Projektregeln und autorisierten Tools lesen. Fehlende Bindings/Zugriffe als offenen abhängigen Schritt melden; lokale Arbeit fortsetzen.
-- Task-Befreiung prüfen und begründen; nur dann Suche, Anlage, Verlinkung und Statuswechsel überspringen.
+## 6. Open the draft
 
-## 5. PR als DRAFT öffnen — mit guter Beschreibung
+1. Write the body to a file with `references/pr-layout.md`. Fill the project's PR template first, if it has one.
+2. Push, then open as **draft** against the base. Commands: `references/github.md`.
+3. Include: ticket link, attribution, before/after proof, criteria verification, what is unverified, history, remaining steps. A human or agent must continue cold from the PR.
+4. Request review from the project's actual review owner through the supported mechanism, at draft time. Notify only the authorized recipient or channel. Reminders only when asked.
+5. Link observation evidence (logs, traces, screenshots, measurements) only when authorized to share. State source and limits. No foreign session IDs, secrets or private data.
 
-**Immer als Draft öffnen.** Der Reviewer muss Wirkung und Grund ohne Code-Lesen verstehen.
+## 7. Review
 
-> **PFLICHT: Zweck & Ziel zuerst.** Nach Header/Attribution: **🎯 Purpose & goal**. Problem, Betroffene, Folgen, warum nötig; konkretes Erfolgsziel. Code-/Quellenkontext separat unter **📍 Context**, Verhaltensänderung und Entscheidung/Grund unter **🔧 What & why**. Vorhandene Diskussion lesen; fehlenden Grund benennen, nicht erfinden.
+- Own draft: run `deep-review` on it, unless this exact head already passed an independent review. Pushing fixes to that PR's own branch (never force) and posting its comments are pre-authorized; open questions go in a PR comment instead of a stop. Someone else's PR keeps every checkpoint.
+- When the project has a remote or cloud review, request a fresh one: a separate agent, fresh context, the exact pushed head. Record where it ran, the run ID, base/head and verdict. Local review is separate and never a substitute; missing remote access leaves the review open.
+- A reviewer that changes code needs a fresh independent assessment of the new head.
+- The PR stays draft. Review is not merge or release approval.
 
-- **Vorher / Nachher:** sichtbare Verhaltensänderung in einfacher Sprache.
-- **Wie:** kurze technische Erklärung.
-- **Kontext-Links:** Issue/Task und alle relevanten auslösenden Diskussionen sichtbar verlinken, nicht im versteckten Kommentar.
+## 8. Fast and Lucky PRs
 
-> **PFLICHT — selbsttragender Kontext.** Ein Mensch oder Agent muss den Fall **kalt weiterführen** können, ohne die Quelldiskussion zu öffnen:
-> - ursprüngliche Anfrage und **warum**;
-> - Entscheidungen samt Begründung;
-> - relevante Fakten: IDs, Pfade, Bereiche, Repos, klickbarer Task-Link oder bestätigte Ausnahme;
-> - aktueller Stand;
-> - verbleibende Schritte und Blocker.
->
-> Quellenlinks bleiben als Audit-Spur. Sie ersetzen diesen Kontext **nicht**.
+Open one only when asked. Before creating or updating it, offer once: **"Run a Safe check first? (optional)"**
 
-**Beobachtung belegen:** Relevante autorisiert teilbare Logs, Traces, Replays, Screenshots oder Messungen verlinken. Tatsächliche Quelle und Grenzen nennen. Keine fremden Session-IDs kopieren, keine privaten Daten/Secrets veröffentlichen; fehlende Beobachtung offen benennen.
+- A Safe check = final manual QA, relevant tests, one independent review of the finished work.
+- Yes: run it, fix, then open the PR. No: open the draft as is.
+- Never repeat the offer for the same PR.
+- List missing tests, review and baseline as unverified. Attach the finished screenshot. Link the run's epic.
 
-**Attribution:** Auftraggeber, Entscheidungsträger und tatsächlichen menschlichen Autor der Substanz wahrheitsgemäß nennen. Autorenbeitrag ausdrücklich würdigen, **zusätzlich** zu Requested-by; Originalarbeit von Portierung/Anpassung unterscheiden. Bestehende Attribution-Struktur erhalten. Keine erfundene Autorenschaft, Testleistung oder AI-/Tool-Trailer. Tatsächliche Projektvorgaben beachten.
+## Stops
 
-> **PFLICHT — Anpassungs-Historie.** Bei verlangten Änderungen im PR-Body fortlaufend **WAS**, **WARUM**, **WER** und **was getan wurde** festhalten. Ganze Geschichte über die Lebenszeit des PR erhalten.
-
-### PR-Beschreibungsstil — visuell zuerst
-
-Drei Ziele, in dieser Reihenfolge:
-
-1. **So detailliert wie möglich — nichts auslassen:** jeden relevanten Aspekt abdecken — Verhalten, Entscheidungen, Dateien, Guards, Telemetrie, Verifikation und Lücken.
-2. **Visuell zuerst:** ASCII-Diagramme und Tabellen vor Prosa. Struktur trägt die Information.
-3. **So wenige Wörter wie möglich:** Prosa als letztes Mittel; maximal eine Zeile, wo Tabelle/Diagramm nicht passen.
-
-| Inhalt | Form |
-|---|---|
-| Varianten über mehrere Dimensionen vergleichen | Tabelle/Matrix; Änderungen markieren |
-| Zustände, Datenfluss, Vorher/Nachher, Verzweigungen | ASCII-Diagramm |
-| Dateien, Checks, Events | ausgerichteter Monospace-Block |
-| Einzelner Fakt | ein Satz; Schlüsselbegriff fett |
-
-**Standard-Reihenfolge:** [Gemeinsames Ticket/PR-Layout](../safe-engine/references/work-writing.md). Erst tatsächliches PR-Template erfüllen. Kurze Bullets, passende Emojis, schmale Tabellen, Flows. Unzutreffende Abschnitte weglassen; relevante Details erhalten. Zweck/Kontext/Stand nie in Vorher verstecken.
-
-```
-<erforderlicher Header / wahrheitsgemäße Attribution>
-## 🎯 Purpose & goal           Problem/Folgen/warum nötig + Erfolgsziel
-## 📍 Context                  Code/Quellen/Basis/Task; Fakten und Unbekanntes
-## 🔧 What & why               Verhalten Before/After + Entscheidung/Grund
-## 🔀 Flow                     Zustände / Verzweigungen
-## 🧩 Design / files           Optionen/Grund; NEW/M/D + Pfad + Zweck
-## 🧱 Guards / scope           Severity → Problem → Status; Grenzen
-## 🔎 Observability            relevante Events + sichere Payload-Felder
-## ✅ Verification             Kriterium → Änderung → tatsächlicher Beleg → Lücke
-## 🚦 Progress / next          Stand, PR/Kandidat, offene Schritte/Blocker
-## 📝 Adjustment History       WAS / WARUM / WER / Ergebnis
-```
-
-**Bausteine:**
-
-```
-BEFORE                         AFTER
-──────────────────────────     ──────────────────────────
-<alter Zustand>                 <neuer Zustand>
-<Fehlerfall>                    <Erfolgsfall>
-
-<Auslöser> ─▶ <Schritt> ─┬─▶ <Ergebnis A>
-                        └─▶ <Ergebnis B / Eskalation>
-
-                  <Dimension 1>  <Dimension 2>
-<Option A>        <Wert>          <Wert>  ◀── NEW
-<Option B>        <Wert>          <Wert>
-
-NEW <pfad>       <Zweck>
- M  <pfad>       <Änderung>
- D  <pfad>       <Entfernungsgrund>
-
-<Prüfbefehl>     <tatsächliches Ergebnis>
-```
-
-**Keine Füll-Sätze.** Fett nur für Schlüsselbegriffe. Monospace-Diagramme in Codeblöcke setzen.
-Behauptete Ergebnisse nie aus einer Vorlage übernehmen.
-
-Beschreibung in Datei schreiben; Shell-Escaping vermeiden:
-
-```bash
-git push -u origin <branch-name>
-gh pr create --draft --base <basis-branch> --head <branch-name> \
-  --title "<typ>(<scope>): <betreff>" --body-file <beschreibung-datei>
-```
-
-**Basis nochmals prüfen.** Beim Hotfix-Paar beide PRs öffnen, verlinken und synchron halten.
-
-### Review-Owner sofort beim Draft anfragen
-
-- Tatsächlichen Owner aus Projektregeln/Ownership ermitteln. Unterstützte, autorisierte Review-Anfrage beim Draft stellen; nicht erst bei „ready“.
-- Benachrichtigung nur an den **ausgewählten und autorisierten** Empfänger/Kanal. Bei freigegebenem Workflow den Ursprungsthread zusätzlich aktualisieren.
-- Private Ziele können in öffentlicher Suche fehlen. Vorhandene verifizierte ID nutzen; Zugriffsbeschränkungen nicht umgehen. Fehlende Zustellung als offen melden.
-- Erinnerungen nur bei tatsächlicher Beauftragung: Dringlichkeit, Frequenz, Stop bei Reaktion/Merge/Schließen und Backoff festlegen. Keine automatische neue Dauererlaubnis.
-
-### Automatisches Self-Review nach dem Draft — separate Cloud-Instanz
-
-Sobald der Draft vollständig vorbereitet ist: [How to Review a PR](../how-to-review-a-pr/SKILL.md) auf einer **separaten Remote-/Cloud-Instanz mit frischem Kontext** ausführen. Tatsächliche Ausführung, Task-ID, Base/Head und Ergebnis festhalten. Lokale Controller-Review bleibt separat; fehlender Cloud-Zugriff ist eine offene Review, kein lokaler Ersatz.
-
-- Tatsächliche Kette lesen: Claim → Analyse ohne Code → vier Themen → Synthese/Compliance → Fragen → autorisierte Fixes → manuelle QA → finale Tests/Projektchecks → autorisierter Push/Kommentar.
-- Für Small Change gilt der ausgewählte fokussierte Modus aus dem [PR-Adapter](../../../docs/pr-workflow.md#small-direct-changes).
-- Repariert der Reviewer Code, braucht der neue Stand eine **frische unabhängige Bewertung**.
-- Keine erfundenen Retry-Limits; sinnvolle autorisierte Korrekturen fortsetzen. Echte Zugriffsgrenzen und Owner-Stops beachten.
-- **PR bleibt Draft.** Review ersetzt keine Merge-/Release-Freigabe. Fehlende unabhängige Review offen melden.
-
-### Falschen Basis-Branch korrigieren
-
-- Head basiert bereits auf dem richtigen Stand → PR-Base autorisiert korrigieren: `gh pr edit <nr> --base <basis>`.
-- Basen divergieren → frischen Branch von richtiger Basis anlegen, nur relevante Commits cherry-picken, Ersatz-PR erstellen; alten PR nach entsprechender Freigabe als superseded schließen.
-- **Kein Force-Push.** Fremde Historie und unrelated Änderungen erhalten.
-
-## 6. PR-Template beachten
-
-Vor dem Schreiben `.github/pull_request_template.md`, `.github/PULL_REQUEST_TEMPLATE/` oder Host-Äquivalent prüfen.
-Vorhandene Struktur ausfüllen; Zweck/Ziel, Kontext, Vorher/Nachher/Grund und Nachweise klar trennen.
-
-## 7. Signaturen & frische Branches
-
-- Verlangte Commit-Signaturen mit vorhandener autorisierter Identität erfüllen. Keine Identität erfinden.
-- Keine internen Tool-/AI-Identifier in Commit- oder PR-Text; tatsächliche Attribution-Regeln beachten.
-- Nach Merge neue Arbeit auf **frischem Branch vom aktuellen richtigen Basisstand** beginnen.
-- Signierung, Berechtigungen und geschützte Gates nicht umgehen.
-
-## Checkliste
-
-- [ ] Richtige Remote-Basis geprüft; aktueller Stand; fremde/dirty Arbeit geschützt.
-- [ ] Eigener sinnvoll benannter Branch; fokussierter Diff; nur eigene Dateien gestaged.
-- [ ] Relevante Checks grün; fehlende Nachweise benannt; echte geschützte Gates erfüllt.
-- [ ] Conventional Commit; erforderliche Signatur; wahrheitsgemäße Attribution.
-- [ ] Tracker auf beiden Suchachsen dedupliziert; Task vor Draft; beidseitige Links; genauer Review-Status. Oder bestätigte enge Routine-Ausnahme.
-- [ ] Projekt-Template verwendet; Draft auf richtiger Basis. Hotfix-Paar vollständig, verlinkt, synchron.
-- [ ] Tatsächlicher Review-Owner angefragt; autorisierte Benachrichtigung zugestellt oder offen gemeldet. Keine unbestellte Erinnerung.
-- [ ] Separate Review ausgeführt; unabhängige Bewertung nach Review-Reparaturen; PR bleibt Draft.
-- [ ] Zweck/Ziel zuerst; Kontext getrennt; Vorher/Nachher/Wie/Grund; visuelle Darstellung; alle relevanten Details.
-- [ ] Selbsttragender Kontext: Anfrage, Entscheidungen, Fakten/Links, Stand, offene Schritte.
-- [ ] Auftraggeber und tatsächlichen Autor zusätzlich zu Requested-by gewürdigt; Original/Anpassung unterschieden; Anpassungs-Historie und sichere Beobachtungsnachweise erhalten.
-- [ ] Keine erfundenen Ergebnisse, AI-Trailer, fremden Konten oder stillen Merge-/Release-Aktionen.
+- After a merge, start new work on a fresh branch from the current base.
+- No force-push, history rewrite or unrequested merge, release or notification.
+- No invented results, tests, authorship or accounts.

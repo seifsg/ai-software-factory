@@ -1,8 +1,0 @@
-{
-  "request": "Make the existing task-notes app usable on a narrow phone: keep the Add task action visible without horizontal scrolling, reject whitespace-only titles with useful feedback, and preserve adding a valid task and seeing it after reload. Keep the current visual direction.",
-  "acceptance": [
-    {"id": "A1", "text": "At 320px width, the form and Add task action fit without horizontal scrolling.", "checks": ["browser"]},
-    {"id": "A2", "text": "Whitespace-only input produces Enter a task title feedback and adds no task; valid titles are trimmed.", "checks": ["unit", "browser"]},
-    {"id": "A3", "text": "A valid task can be submitted with the keyboard, receives confirmation, and persists after reload; desktop behavior remains usable.", "checks": ["browser"]}
-  ]
-}

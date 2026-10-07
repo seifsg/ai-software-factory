@@ -6,7 +6,7 @@ fast_gate.py install --host claude|codex|cursor|other [--project DIR]
 - codex, cursor: copies skills/safe-engine and skills/improve-factory into ~/.agents/skills (the Agent Skills
   folder both read; <DIR>/.agents/skills with --project), then merges the gate hooks into ~/.codex/hooks.json or
   ~/.cursor/hooks.json (<DIR>/.codex, <DIR>/.cursor). Re-running replaces only the factory's own hook entries.
-- other: the skills only, for agents wired by hand (docs/hosts.md#other-agents).
+- other: the skills only, for agents wired by hand (docs/hosts.md).
 """
 import json
 import os

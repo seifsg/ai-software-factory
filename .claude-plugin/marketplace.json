@@ -1,8 +1,8 @@
 {
   "name": "ai-software-factory",
-  "description": "Seif's AI Software Factory for Claude Code.",
+  "description": "AI Software Factory skills and gate hooks.",
   "owner": {
-    "name": "Seif Sgayer"
+    "name": "AI Software Factory"
   },
   "plugins": [
     {

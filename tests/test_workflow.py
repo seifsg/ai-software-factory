@@ -287,21 +287,22 @@ class WorkflowTests(unittest.TestCase):
             self.assertIn("read-only", argv)
             self.assertIn("--ephemeral", argv)
             skills = Path(__file__).resolve().parents[1] / ".agents/skills"
-            for relative in ("deep-review/references/theme-security.md",
-                             "deep-review/references/theme-performance.md",
-                             "deep-review/references/theme-user-journey.md",
-                             "safe-engine/references/app-diagnostics.md",
-                             "safe-engine/references/app-efficiency.md",
-                             "safe-engine/references/method-handoff.md",
+            for relative in ("analyze-start/SKILL.md", "get-ready-to-code/SKILL.md", "ticketing/SKILL.md",
+                             "deep-review/references/security.md",
+                             "deep-review/references/performance.md",
+                             "deep-review/references/journey.md",
+                             "deep-review/references/change-guard.md",
+                             "deep-review/references/compliance.md",
+                             "safe-engine/references/product-bar.md",
+                             "safe-engine/references/controller.md",
                              "database-schema/SKILL.md",
                              "ux-quality/SKILL.md",
-                             "ux-quality/references/assets-and-sources.md",
-                             "research-market/SKILL.md",
-                             "how-to-make-a-pr/references/project-bindings.md"):
+                             "ux-quality/references/assets.md",
+                             "research-market/SKILL.md"):
                 required = skills / relative
                 self.assertTrue(required.is_file(), relative)
                 self.assertIn(str(required), stdin)
-            self.assertIn(str(skills.parents[1] / "docs/current-decisions.md"), stdin)
+            self.assertIn(str(skills.parents[1] / "AGENTS.md"), stdin)
             Path(argv[argv.index("--output-last-message") + 1]).write_text(json.dumps(report))
             log.write_text("explicit test double")
             return {"passed": True, "exit_code": 0}

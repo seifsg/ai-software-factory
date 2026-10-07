@@ -44,7 +44,7 @@ def finding(severity="HIGH", disposition="blocking", exception=None):
             "evidence_status": "valid", "evidence": DOUBLE, "action": "Synthetic action"}
 
 
-def deferral(owner="Seif", authority=DELEGATION):
+def deferral(owner="owner", authority=DELEGATION):
     return {"owner": owner, "reason": "Synthetic reason", "scope": "local", "revisit": "Before release",
             "authority": authority, "destination": "synthetic:followup-1"}
 
@@ -454,7 +454,7 @@ class ProofDraftAndHandoffTests(Base):
         self.assertNotIn("## Deferred findings", Path(f.flow.handoff()["handoff"]).read_text(encoding="utf-8"))
 
 
-class SeifDelegationTests(Base):
+class OwnerDelegationTests(Base):
     def blocks(self, severity, exception, exposure="local", scopes=()):
         state = {"delivery_version": 2, "profile": {"exposure": exposure, "review_scopes": list(scopes)}}
         return Workflow.finding_blocks(finding(severity, "accepted-deferral", exception), state)
@@ -569,9 +569,9 @@ class ReviewRoundCapTests(Base):
                 f.flow.review_packet(f.root / ".factory/capped-packet.md")
             reviewer.assert_not_called()
         self.assertFalse((f.root / ".factory/capped-packet.md").exists())
-        status = f.flow.extend_reviews(2, "Seif decided two more rounds")
+        status = f.flow.extend_reviews(2, "The owner decided two more rounds")
         self.assertEqual((status["failed_reviews"], status["review_rounds"]), (3, 5))
-        self.assertIn("Seif decided two more rounds", f.flow.load()["history"][-1]["event"])
+        self.assertIn("The owner decided two more rounds", f.flow.load()["history"][-1]["event"])
         self.assertEqual(self.codex_review(f, report())["phase"], "ready")
 
     def test_extension_grants_exactly_the_requested_extra_rounds(self):
@@ -669,7 +669,7 @@ class ExternalReviewerTests(Base):
             self.packet(f)
         with self.assertRaisesRegex(EngineError, "round cap"):
             self.packet(f)
-        self.assertEqual(f.flow.extend_reviews(1, "Seif: one more round")["review_rounds"], 4)
+        self.assertEqual(f.flow.extend_reviews(1, "Owner: one more round")["review_rounds"], 4)
         self.assertEqual(self.external(f, report())["phase"], "ready")
         self.assertEqual(f.flow.status()["failed_reviews"], 2)
 
@@ -677,7 +677,7 @@ class ExternalReviewerTests(Base):
         f = self.to_review()
         self.packet(f)
         self.set_state(f, review_packet={**f.flow.load()["review_packet"], "records": "stale"})
-        f.flow.extend_reviews(1, "Seif: one more round")
+        f.flow.extend_reviews(1, "Owner: one more round")
         with self.assertRaisesRegex(EngineError, "changed since the review packet"):
             self.external(f, report())
 
@@ -843,7 +843,7 @@ class ExternalReviewerTests(Base):
         self.assertTrue((Path(outside.name) / "packet.md").is_file())
 
     def test_packet_report_is_accepted_even_with_a_reviewer_agent_installed(self):
-        f = self.to_review()  # Seif, 7 Oct: no agent is privileged; the packet route always stays open
+        f = self.to_review()  # no agent is privileged; the packet route always stays open
         self.packet(f)
         self.assertEqual(self.external(f, report(), present=True)["phase"], "ready")
 

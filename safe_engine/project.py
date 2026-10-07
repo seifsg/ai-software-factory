@@ -386,7 +386,7 @@ def bundle_input_paths(bundle):
             raise EngineError("historical_files must be an explicit unique file list")
         for name in historical:
             relative_input_path(name)
-            if not name.startswith("docs/") or not name.endswith(".md") or name == "docs/current-decisions.md":
+            if not name.startswith("docs/") or not name.endswith(".md"):
                 raise EngineError("Only reviewed historical Markdown documents may be excluded")
             if not inside(bundle, name).is_file():
                 raise EngineError(f"Missing historical document: {name}")

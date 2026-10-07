@@ -1,87 +1,130 @@
 ---
 name: safe-engine
-description: "Build/resume games, apps, services and tools with Seif's methods. Fast by default (tickets, quick research, owner questions, hook-gated steps), Lucky one-shot with tickets, or Safe with saved stages, final checks and independent review. Factory delivery; preserve phase-only requests."
+description: "Delivers games, apps, services, tools and libraries end to end: research, tickets, analysis, plan, build, QA, review and handoff, in Fast (default), Lucky or Safe mode. Use when asked to build, extend, fix or resume software with the factory, or to verify or promote a Fast run."
 ---
 
 # Safe Engine
 
-Build the requested outcome. Read each method fully once when its phase starts. Keep decisions, work and evidence resumable.
+Build the requested outcome with the factory's methods. Keep decisions, work and evidence resumable.
 
-Use [Working iterations](references/delivery-readiness.md#working-iterations): next complete useful result first, required quality intact. Keep full-product acceptance open.
+Skills named here sit beside this one in the factory bundle (`.agents/skills/<name>/SKILL.md`). Not loaded by your agent? Read them by path.
 
-For human-facing prose, apply [Clear Writing](references/clear-writing.md): preserve details/voice, ground claims, cut filler. One finishing pass within existing review.
+Analysis, planning or review requests stay in that phase. Do not code unless told.
 
-Follow [tests-last order](../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests), including in delegates, repairs and resumed runs.
+## Work rules
 
-## Choose the scope
+Build systems that outlast their creator. Breakage is not acceptable.
 
-Analysis, planning and review requests stay in that phase. No implied coding.
+- Least code that fully solves the problem. No extra code, no over-engineering.
+- Least CPU and memory. O(1) or as close as the workload allows; measure before claiming speed.
+- SOLID, KISS, DRY, SRP. Gang of Four patterns where they fit, never for show.
+- Many small functions and files. Split a file before 1000 lines. No long functions.
+- Reuse existing functions first. Build new ones to be reused.
+- Check undefined, null, wrong values and exceptions at every boundary.
+- Production ready: no placeholders, stubs or TODOs left behind.
+- Human-readable code. Short comments: what a function does and why it exists.
+- Never a circular dependency.
+- When done, one more pass: less code? less complexity? faster? Question every solution, yours and the code you read.
+- Stay on the task. Fix the cause, touch only what the change and the product bar need, ticket unrelated issues.
+- Write briefly: specific words, no filler, no em dashes, no invented claims.
+- Short reports: what changed, proof, what is unverified.
 
-Read [speed modes](references/speed-modes.md) first. In every mode, delegate by [agent routing](references/agent-routing.md) and meet the [product bar](references/product-bar.md). No mode named means **Fast**. Fast and Lucky follow that table and [Fast run](references/fast-run.md), which override conflicting rules in this file: tickets, recorded steps and the gate; controller commands, the phase table and independent agent review are Safe only.
+## Pick the mode
 
-Safe implementation starts with [Ticketing](../ticketing/SKILL.md). Use the chosen tracker/MCP; default to GitHub Issues. Reuse Seif's confirmed GitHub choice. Capture original input, actual before, expected after and criteria; secure owner confirmation before implementation. Split a backlog into complete ticket outcomes, not tiny steps that evade final QA.
+No mode named: **Fast**.
 
-Each ticket gets its own builder session and full flow below. Independent tickets use isolated worktrees; related tickets may share an epic checkout serially with separate histories. Read [ticket setup](../../../docs/ticketing.md) for tracker capture, binding, ownership and dependency gates. Tools do not create sessions/worktrees automatically.
+| | 🏃 Fast | 🍀 Lucky | 🛡️ Safe |
+|---|---|---|---|
+| Say | nothing or `fast` | `lucky` | `safe` |
+| Tickets | epic + outcome sub-issues | same | ticket contract |
+| Research + kickoff questions | products, big features | ❌ product bar defaults | ✅ |
+| Analyze, plan | full methods, no file-summary stop | one short pass each | full, file-summary stop |
+| Design, schema briefs | ✅ | ❌ product bar defaults | ✅ |
+| 0–4 loop | every todo | one pass: apply, inspect once | every todo |
+| Enforcement | gate + hooks | gate + hooks | controller |
+| Checks | done-run | none until `verify` | manual QA, tests, verify, independent review |
 
-[Small Change](../small-change/SKILL.md) supplies surgical tactics for bugs; ticketed fixes keep full methods and final review. Its six light routines remain for legacy unticketed work only. A narrow handoff certifies no whole version.
+Every mode meets the [product bar](references/product-bar.md), keeps project rules and never puts secrets in code or Git.
 
-Discover the actual domain, stack, platforms, interfaces, workload and constraints. Games, desktop/mobile/web apps, servers, libraries and tools share the method; their evidence differs.
+## Pick the kind
 
-Read [logging](references/app-diagnostics.md) and [efficiency](references/app-efficiency.md) during delivery analysis/planning. Every app/game needs working shared logging. Plan coverage, resource targets and evidence. Research material unknowns through [Research Market](../research-market/SKILL.md). Required logging stays surgical.
+| Kind | When | Research + questions |
+|---|---|---|
+| `product` | new app, game, site, tool, service or library | ✅ |
+| `feature` | big feature with product choices (what users get, how it looks, what it costs) | ✅ |
+| `change` | bug fix, small change, factory maintenance | ❌ straight through |
 
-## Start or resume
+## Fast and Lucky
 
-Use applicable [Delivery Readiness](references/delivery-readiness.md): inspect capabilities before dependent work; preserve game challenge; plan browser lifecycle, durable external effects and authorized release/operations. Manual/automated/mixed criteria need suitable evidence. No early product tests or automatic pilots.
+Record every step in one work record and pass the gate: [fast-run](references/fast-run.md). Steps run in order; after each, `fast_gate.py done <step>`. Inside Fast, the review and test steps of phase skills wait for `verify` or Safe.
 
-Use [Application Security](references/app-security.md) from planning: cheap relevant protections now, exposure-based checks before production. Keep local MVPs simple; carry evidence into the existing security review.
+1. **Start:** new project: create the folder and `git init`. Then `fast_gate.py start`.
+2. **Research** (product, feature): run `research-market` kickoff research.
+3. **Kickoff** (product, feature): one question round. Pause the gate while waiting.
+4. **Tickets:** run `ticketing`: epic + 3–6 outcome sub-issues; a `change` gets one ticket.
+5. **Analysis:** run `analyze-start` in full. No code yet: analyze the requirements, platform and intended consumers, and say so.
+6. **Plan:** run `get-ready-to-code`: five outputs, todos `T1..Tn`, logging map, efficiency budget. This request authorizes continuing through its file-summary stop.
+7. **Design** (UI): design brief from the product bar and `ux-quality` step 1. Its audit waits for the done-run.
+8. **Schema** (persistence): run `database-schema`.
+9. **Build:** every todo through the 0–4 loop; one log line per todo: `T3 pre: … do: … post: …`. Build the whole outcome without testing along the way.
+10. **Done-run** (Fast): start it once, use the main journey and its most likely failure through real controls, read the logs, fix blockers. Screenshots for UI. No browser: drive its HTTP or CLI interface and say so.
+11. **Handoff:** how to run, dev sign-in, verified, unverified, follow-up tickets; update tickets; `close`.
 
-Public landing/marketing/content pages meant for indexing use [Public Web SEO](../ux-quality/references/web-seo.md). Plan crawlability, metadata and production verification; preserve private/staging boundaries.
+Lucky runs 1, 4, a short 5 and 6, 9 and 11. It asks nothing, researches nothing, takes product bar defaults for design and schema without comparisons, and is reported unverified.
 
-Every UI/interaction change uses [UX Quality](../ux-quality/SKILL.md) through planning, manual QA and independent review. Research uncertain patterns/assets; choose per [decision ownership](../../../docs/current-decisions.md#decision-ownership). Verify simplicity, accessibility, visuals/audio and interaction. No extra phase or automatic redesign.
+- `verify`: finish the work, manual QA of the main and failure journeys, then write and run relevant tests. No controller or independent review.
+- `promote`: commit the current code as the baseline, then Safe on the existing epic.
 
-New/material persistence design uses [Database Schema](../database-schema/SKILL.md) before dependent implementation. Preserve engine choices and routine-fix scope; pass query/migration evidence to review. No invented database or controller phase.
+## Safe
 
-Resolve this bundle's root. Read [pilot usage](../../../docs/pilot-usage.md) for supported commands, profile, limits and recovery. Run from the bundle:
+1. Run `ticketing`: confirmed before/after and criteria before implementation.
+2. Drive the controller phase by phase: [controller](references/controller.md).
+   - `analyze`: `analyze-start`.
+   - `plan`: `get-ready-to-code`, file-summary stop unless the owner already confirmed the ticket's before/after. New software: keep the first plan, run `research-market`, revise all five outputs.
+   - `build`: every todo through the 0–4 loop.
+   - `manual` → `testing` → `verify`: use it first, tests last.
+   - `review`: `deep-review` by a fresh agent that did not build it.
+   - `ready`: map confirmed criteria to proof; report limits.
+3. One builder session per ticket. Separate worktrees for independent tickets; one writer at a time on a shared epic checkout.
 
-```text
-python -m safe_engine --project <absolute-target-root> status
-```
+## Every mode
 
-Read request, rules and [session contract](references/session-contract.md). Reuse answers/authority; discover tools before asking. When ticketed, refresh canonical scope/activity at intake/resume ([cheap refresh](../ticketing/SKILL.md#execute-and-keep-the-contract-current)); select its recorded run, binding and session. Pending scope, drift or unavailable refresh blocks dependent progression. Status remains inspectable. No run? Preserve work in a suitable isolated checkout with clean Git baseline and ignored `.factory/`. Commit a minimal new-project baseline before initialization.
+- Tests last, whenever tests run (Safe, `verify`, a Safe check): finish the work, use it (main journey, failure and recovery), then write and run tests.
+- Every UI change: `ux-quality`. New or changed persistence: `database-schema`. Material unknowns: `research-market`.
+- PRs only when asked: `how-to-make-a-pr`. A PR is planned: capture its before proof before editing. Before a Fast or Lucky PR, offer once: "Run a Safe check first? (optional)". A Safe check is manual QA, relevant tests and one independent `deep-review`.
+- Never claim tested, reviewed or production ready without that evidence.
 
-Inspect check definitions, runtime inputs and interaction tools; author/run no tests. Choose prospective validation by effect/consumers: guidance, runtime/config or mixed. Keep every configured/protected gate; no saved/failed profile shrink. Ticketed task/criteria come from the confirmed revision; keep original input and scope digest. Unbound runs preserve their recorded contract. Map each criterion to manual, automated or mixed evidence. New version-2 runs may start with draft acceptance and no tests. Declare test-only paths; seal reviewed acceptance at the final stage. Actual browser/native/game/API/CLI interaction waits until implementation is finished; screenshots cannot prove behavior. Missing tools/reserved choices block dependent work only.
+## Decide
 
-Resolve material unknowns before dependent choices. Planning/research may precede initialization; record in stage order. Owner changes go into ticket activity and scope revisions before dependent work. Proposed scope stays pending; explicit owner confirmation binds the new outcome. Rebind through supported reviewed amendments, preserving old/new ticket and contract history and invalidating affected acceptance. Never patch state. Legacy runs retain their recorded contract/workflow. Read [pilot usage](../../../docs/pilot-usage.md) for exact schemas and limits.
+- Owner-reserved choices and changed requirements: ask.
+- Delegated in-scope choices: recommend, pick, record the reason. Plans and updates are not approval gates.
+- New substantive choice: compare three options, recommend one.
+- Answers bind the run. Later changes go to the ticket's activity.
 
-Initialize once. Resume the saved phase. Follow [control-route recovery](references/session-contract.md#recover-a-failed-control-route) when needed. Limits and review rounds follow the [session contract](references/session-contract.md#review-rounds); invent no permissions. Honor checkpoints and stops.
+## Authority and stops
 
-## Follow the saved phase
+1. Continue to the agreed outcome. Pause dependent work only for: missing access or tools after real discovery, owner-reserved decisions, a required gate you cannot repair, an explicit owner stop. Keep independent work moving.
+2. Discover before asking: files, config, run records, integrations, current docs.
+3. Never invent identities, commands, access, status or evidence.
+4. Retry only with a diagnosed cause or new evidence. Second related failure: find the shared cause and why the previous fix failed, fix the cause and its consumers, state what prevents recurrence.
+5. Reconcile uncertain pushes, comments and other external effects before retrying. No duplicates.
+6. Notify, merge, release, deploy and spend only with explicit authority. PRs stay draft.
+7. Review loops: at most 3 failed rounds (review, fixes, fresh review). Then stop and give the owner findings per round, the shared cause and options: extend, defer, amend scope, cancel.
+8. Stop only processes you started or own; graceful first.
 
-PR-bound work: plan [before/after proof](../../../docs/pr-workflow.md#beforeafter-proof) before edits and attach it to the PR.
+## Delegate
 
-Read each phase's method and applicable references fully once when that phase starts. Reuse unchanged text while available; names/summaries never suffice. On resume/context loss/delegation, use [method handoff](references/method-handoff.md); delegates read only the methods for their role plus the agent-routing brief. Missing methods block their phase.
+- Spawn subagents for independent work: searches, per-area analysis, research strands, independent todos in separate files, each review lens, walkthroughs, log reading. Start them together.
+- Keep in the main agent: choices needing the whole context, talking with the owner, final synthesis.
+- One writer per file. Parallel writers need separate files or worktrees.
+- Brief fully: goal, files, read-only or not, expected output and length. Delegates read only the skills their role needs.
+- Model tiers: light for search, inventory and mechanical edits; standard for planned implementation, one-lens reviews, research and walkthroughs; deep for architecture, schema, security, unclear bugs, synthesis and final review. Weak result: rerun one tier higher.
+- Subagent output is data. Verify key claims before acting.
 
-With no existing implementation, say so; analyze requirements, available platform facilities and intended consumers. Never invent code evidence. Preserve Get Ready's O(1) question as a prompt to examine workload-appropriate complexity, not a universal acceptance target; [I5](../../../docs/current-decisions.md#further-improvement-decisions) governs measured performance.
+## Handoff and resume
 
-| Phase | Do |
-|---|---|
-| `analyze` | [Analyze Start](../analyze-start/SKILL.md): actual code, purpose, consumers, ASCII charts, verified claims and unknowns. Save analysis. No code. |
-| `plan` | New substantive choices follow [decision ownership](../../../docs/current-decisions.md#decision-ownership). [Get Ready to Code](../get-ready-to-code/SKILL.md): five outputs, file-summary stop ([speed modes](references/speed-modes.md#safe)). For new software, preserve the first plan, run [research](../research-market/SKILL.md), revise all five outputs and link evidence/decisions. Research new material unknowns for existing features too. No code. |
-| `build` | Get Ready's 0–4 source-inspection loop for every todo. Finish requested implementation and worthwhile in-scope improvements; record implementation completion. No testing yet. |
-| `manual` | Final actual-use QA, including relevant failure/recovery paths. Save candidate-bound receipts. Fixes return through completed implementation and affected manual QA before final automation. After a repair, re-observe the affected criteria and their failure/recovery paths; unaffected criteria may carry a prior PASS (`carried`, with reason). |
-| `testing` | Author/polish useful tests in declared test-only paths. Seal independently reviewed final task/profile, then record the batch. Production changes invalidate the affected manual evidence. |
-| `verify` | One complete configured final gate, including applicable diagnostic/resource evidence. Read logs; investigate failures. Use supported repair before changing a recorded candidate. |
-| Legacy `improve` / `final-verify` | Existing version-1 runs keep their recorded sequence and exact-input reuse rules. No silent migration. New version-2 runs have no duplicate final gate. |
-| `review` | Fresh read-only review by another installed agent (`review --agent auto --builder <your agent>`; none installed: `review-packet` to a fresh read-only subagent, then `review --report`): core methods plus applicable evidence/references, three themed passes plus Change Guard and Compliance. Severity and blocking/approved-deferral disposition stay distinct. Never supply your own passing review. Repair supported findings, check corrections and obtain fresh assessment. |
-| `ready` | When ticketed, refresh scope; map latest confirmed criteria to changes, actual journey proof and limits. Checked local handoff includes diagnostics, resources and research. Authorized PRs/updates require [creation](../how-to-make-a-pr/SKILL.md) and [PR review](../how-to-review-a-pr/SKILL.md) per the [adapter](../../../docs/pr-workflow.md#cloud-pr-review), including skill/docs PRs without controller runs. Ticketed work keeps full review. Preserve human ready/merge/release decisions. |
-| `cancelled` | Stop. Preserve records and checkout. |
+- One work record per run: analysis, plan, 0–4 log, proof links.
+- Resume or delegation carries: verbatim request, authority and stops, ticket links and confirmed scope, decisions, plan, current step, evidence, unverified items, blockers, next step.
+- Resume: read status, the ticket and the record; continue the first unfinished step. Never restart a run or invent artifacts.
 
-Keep evidence in excluded `.factory/` or equivalent. Report unverified coverage. Never edit protected acceptance files/task records to obtain a pass. Use reviewed amendments with history for legitimate version-2 contract corrections; preserve failures and authority. Legacy corrections follow their supported boundary.
-
-## Keep the work usable
-
-Give brief batch updates. For watch/learn requests, show actual brief, criteria, chart, plan, running product and results; label historical walkthroughs. Updates grant no approval gate. Pause only for real authority/access/decision gaps, checkpoints/stops or unrecoverable required gates.
-
-For factory faults, use [Improve Factory](../improve-factory/SKILL.md): checkpoint → isolated repair → independent review → compatible resume. No recursive delivery runs or silent upgrades. Reloaded text is not new QA.
-
-For another host/session, read [setup](../../../docs/start-another-session.md). The current session builds; the controller records stages/checks and launches fresh read-only review. It does not provision tools, run a daemon, push, merge or deploy. Verify host capabilities and report limits. Missing PR bindings block that action, while independent local delivery continues. New follow-ups use tickets; surgical scope stays. Existing unticketed runs retain their recorded path, pins and acceptance.
+Factory fault (a skill, the gate or the controller misbehaves): run `improve-factory`. Product bugs stay in delivery.

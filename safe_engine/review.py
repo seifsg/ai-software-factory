@@ -7,7 +7,7 @@ import uuid
 from . import reviewers
 
 from .project import EngineError, digest, file_hash, rescan
-from .review_packet import review_prompt, schema_errors
+from .review_packet import DELEGATION, review_prompt, schema_errors
 from .storage import atomic_json, read_json
 
 
@@ -15,8 +15,7 @@ VOLATILE = {"sequence", "history", "updated_at", "review_packet", "review_rounds
             "pending_operation"}  # save counters and cap bookkeeping; not reviewed records
 RESERVED = {"state.json", "lock", "handoff.md", "history", "outputs", "logs", "artifacts", "ticket-observations",
             "entry-bundle.json", "runs"}  # runs: legacy runs use .factory itself as the run dir
-REVIEW_ROUNDS = 3  # Seif, 6 Oct: failed reviews before the owner decides
-DELEGATION = "Seif 6 Oct delegation"  # LOW, and MEDIUM at local exposure, may be deferred
+REVIEW_ROUNDS = 3  # failed reviews before the owner decides
 EXTERNAL = "external reviewer; independence not verified by the controller"
 
 
@@ -26,7 +25,7 @@ class ReviewMixin:
         if state.get("review") and not state["review"]["passed"]:
             raise EngineError("Completed review requires correction; use repair before another review")
         if state.get("failed_reviews", 0) >= state.get("review_rounds", REVIEW_ROUNDS):
-            raise EngineError("Review round cap reached; Seif decides: extend-reviews, amend or cancel")
+            raise EngineError("Review round cap reached; the owner decides: extend-reviews, amend or cancel")
         self.require_checks(state)
         self.require_ticket_proof(state)
 
@@ -158,7 +157,7 @@ class ReviewMixin:
         execution = review.get("execution") or {}
         if execution.get("kind") == "external":
             return f"{execution['reviewer']}: {EXTERNAL}"
-        return execution.get("agent", "codex")  # records before 7 Oct 2026 were always Codex
+        return execution.get("agent", "codex")  # older records predate agent choice and were always Codex
 
     @staticmethod
     def finding_blocks(finding, state):
@@ -170,7 +169,7 @@ class ReviewMixin:
                    or "release" in state["profile"].get("review_scopes", []))
         exception = finding.get("exception") or {}
         if exception.get("authority") == DELEGATION and (
-                exception.get("owner") != "Seif" or (finding["severity"] == "MEDIUM" and exposed)):
+                exception.get("owner") != "owner" or (finding["severity"] == "MEDIUM" and exposed)):
             return True  # The delegation covers LOW, and MEDIUM only at local exposure.
         return finding["disposition"] == "before-exposure" and exposed
 

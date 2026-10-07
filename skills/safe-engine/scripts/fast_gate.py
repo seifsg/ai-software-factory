@@ -201,7 +201,7 @@ def skeleton(run):
 
 
 def bundle_receipt(project):
-    """The entry resolver's selection for this project, if any (fast-run.md step 0)."""
+    """The entry resolver's selection for this project, if any (fast-run.md#the-gate)."""
     try:
         receipt = load(Path(project) / ".factory" / "entry-bundle.json")
         return {"root": receipt["bundle_root"], "revision": receipt["revision"]}
@@ -259,7 +259,7 @@ def cmd_start(args):
     except OSError as error:
         fail(f"Cannot read the request file: {error}")
     if not request.strip():
-        fail("Give Seif's request verbatim with --request or --request-file")
+        fail("Give the owner's request verbatim with --request or --request-file")
     ledger = ledger_path(project)
     if ledger.exists():
         old = load(ledger)
@@ -331,7 +331,7 @@ def cmd_pause(args, reason):
 def cmd_close(args):
     project, run = open_run(args.project)
     if "handoff" not in run["done"] and not args.abandon:
-        fail("Record the handoff first, or close --abandon '<Seif's reason>'")
+        fail("Record the handoff first, or close --abandon \"<the owner's reason>\"")
     run.update(closed=True, closed_at=now(), abandoned=args.abandon, paused=None)
     save(ledger_path(project), run)
     try:
@@ -462,8 +462,8 @@ def stop(event, runs, cwd, session):
             step = next_step(run)
             log("hook.block_stop", key=run["key"], next=step)
             return (f"Factory {run['mode']} run '{run['key']}' is not finished. Next: "
-                    f"{step or 'close'}. Continue it. Waiting on Seif? `fast_gate.py pause --reason \"...\"`. "
-                    "Seif stopped it? `fast_gate.py close --abandon \"<his reason>\"`.")
+                    f"{step or 'close'}. Continue it. Waiting on the owner? `fast_gate.py pause --reason \"...\"`. "
+                    "The owner stopped it? `fast_gate.py close --abandon \"<their reason>\"`.")
     return None
 
 
@@ -539,11 +539,11 @@ def main():
     done.add_argument("step", choices=list(TITLES))
     done.add_argument("--offline", help="Record tickets without gh verification, with the reason")
     sub.add_parser("status", parents=[common])
-    pause = sub.add_parser("pause", parents=[common], help="Waiting on Seif; lets the session stop")
+    pause = sub.add_parser("pause", parents=[common], help="Waiting on the owner; lets the session stop")
     pause.add_argument("--reason", required=True)
     sub.add_parser("resume", parents=[common])
     close = sub.add_parser("close", parents=[common])
-    close.add_argument("--abandon", help="Seif stopped the run: his reason")
+    close.add_argument("--abandon", help="The owner stopped the run: their reason")
     install = sub.add_parser("install", help="Install the entry skills and gate hooks for one host")
     install.add_argument("--host", required=True, choices=("claude", "codex", "cursor", "other"),
                          help="other: entry skills only, for agents you wire by hand")

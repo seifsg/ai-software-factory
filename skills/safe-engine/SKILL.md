@@ -1,69 +1,37 @@
 ---
 name: safe-engine
-description: "Load the complete private Safe Engine factory to build or resume games, apps, services and tools. Fast by default (tickets, quick research, owner questions, gated steps); lucky or safe on request. Factory maintenance uses improve-factory."
+description: "Launches the AI Software Factory to build, extend, fix or resume games, apps, services, tools and libraries in a target project. Fast by default; lucky or safe on request; verify or promote a Fast run. Use when asked to build or resume software with the factory."
 ---
 
 # Safe Engine
 
-Load `https://github.com/seifsg/ai-software-factory`; run its complete methods in the target project. This folder only launches them. Analysis/planning/review requests keep their phase.
+This folder only launches the factory. The methods live in the factory bundle. Analysis, planning or review requests keep their phase.
 
-## Get the requirements
+## Requirements
 
-Needs Git and Python 3.9+. Works with any coding agent that reads Agent Skills; canonical `docs/hosts.md` lists per-host install, invocation, gate hooks and Safe reviewers. Safe local review launches any installed agent CLI (Claude Code, Codex, Cursor), otherwise the controller's review-packet fallback. Set them up on any OS without asking Seif to prepare the machine:
-
-1. Find them: `git --version`; Python through `python3`, `python` or Windows `py -3`. Use the first that reports 3.9+, by full path, for every later command.
-2. Missing or too old: install from the official source, user scope when possible.
-   - Windows: `winget install -e --id Python.Python.3.12` and `winget install -e --id Git.Git`.
-   - macOS: `brew install python git`. No Homebrew: `xcode-select --install` for Git, the python.org installer for Python.
-   - Linux: the distro manager (`apt-get`, `dnf`, `pacman`, `zypper` or `apk`).
-   - No admin or package manager: install [uv](https://docs.astral.sh/uv/getting-started/installation/) (`winget install astral-sh.uv`, `brew install uv` or its official installer), run `uv python install 3.12`, then `uv run --python 3.12 python ...`.
-   - A headless agent CLI for Safe review is optional: any of Claude Code, Codex or Cursor; canonical `docs/hosts.md` names each one's reviewer command.
-3. Check the versions again. Report what was installed, from where.
-4. Host asks before installs: ask once, naming each tool and source. Still blocked (no network, admin or approval): say what is missing. Fast and Lucky can read the bundle with Git alone: `git ls-remote https://github.com/seifsg/ai-software-factory main`, clone that SHA into `~/.safe-engine/bundles/<sha>`, detach, read it only; record steps by hand and report the gate as unavailable. Safe waits for Python.
-5. Official sources only. No system settings beyond the install. No credentials in commands.
+Git and Python 3.9+. Find them by full path (`python3`, `python` or the platform launcher). Missing or too old: install from the official source with the platform's package manager, user scope when possible, asking first if your agent requires it. Report what was installed. No credentials in commands.
 
 ## Select the bundle
 
-Preserve request, answers, authority and work. Establish the absolute target; read project rules, legacy `.factory/state.json`, ticket `.factory/runs/<key>/state.json`, selection and session/checkpoint records. Create directories only within requested scope. No second run or substituted demo.
-
-If `references/local-app-diagnostics.md` or `references/local-small-change.md` exists here, read [local trials](references/local-trials.md) before selecting a method. Otherwise skip that reference. Trials never silently upgrade pins.
-
-Use the Python and Git from [Get the requirements](#get-the-requirements) and authorized GitHub access. Locate the resolver beside this installed file; quote paths/use argument arrays:
+1. Establish the absolute target project; create the folder if it is new. Read its rules and any `.factory/` run records. Preserve existing work and answers.
+2. Run the resolver beside this file (quote paths):
 
 ```text
-python3 <installed-skill>/scripts/resolve_bundle.py --entrypoint safe-engine --project <absolute-target>
+python scripts/resolve_bundle.py --entrypoint safe-engine --project <absolute-target>
 ```
 
-New projects resolve private GitHub `main` once into `~/.safe-engine/bundles/<commit>`; excluded `.factory/entry-bundle.json` records selection. Existing selections resume offline at their recorded path/revision. `--ref <full-SHA>` pins a new selection; it cannot upgrade an existing one.
+3. A new project gets a pinned checkout of the factory's main branch in `~/.safe-engine/bundles/<commit>`; `.factory/entry-bundle.json` records it. A project with a selection resumes it offline. `--ref <full-sha>` pins a new selection; it never upgrades an existing one. `--bundle <absolute-factory-root>` inspects a given checkout.
+4. Check the returned root, revision, dirty status and entrypoint. Failure: diagnose; never edit a selected bundle.
 
-Legacy run without receipt: establish its original bundle from evidence and pass `--bundle <absolute-factory-root> --project <target>`. Unknown identity blocks dependent work. Preserve the run; never substitute latest, reset acceptance or rewrite state. Version/HEAD alone cannot identify dirty inputs.
+## Run
 
-Verify returned root, revision, dirty status, receipt and entrypoint. Record launcher identity separately. Dirty inputs need canonical checkpointing of diff/untracked hashes. Diagnose failures; keep selected bundles unchanged. Receipts certify neither QA nor compatibility.
-
-## Read and execute
-
-Follow Working iterations where present in the selected canonical method. Older pins keep their recorded method; no silent upgrade.
-
-Mode: read canonical `.agents/skills/safe-engine/references/speed-modes.md` when the pin has it. No mode named means Fast. Fast and Lucky read the returned `entrypoint`, canonical `fast-run.md`, `product-bar.md` and the methods their table names; they create the epic and sub-issues and record every step with the gate beside this file, `scripts/fast_gate.py` (Claude Code expands `${CLAUDE_SKILL_DIR}/scripts/fast_gate.py`). After the resolver, before research: `python <gate> start --project <absolute-target> --key <slug> --mode fast|lucky --kind product|feature|change [--auth] [--no-ui] [--no-data] --request-file <file>`. Controller commands, checks and independent agent review below are Safe only. Older pins without `fast-run.md` keep their recorded method.
-
-Safe implementation: read canonical `.agents/skills/ticketing/SKILL.md` and `docs/ticketing.md` from the resolved bundle. Preferred authorized tracker MCP first; GitHub Issues default, Seif's existing choice. Confirm before/after scope. Every ticket gets an actually dispatched builder session and full cycle, even bounded fixes. Small Change keeps patches surgical; its six shortcuts remain for legacy unticketed work.
-
-Ticket commands select `--ticket <key>`; initialization records `--session <real-builder-session-id>`. Preserve namespaced history, legacy state and active pins. Independent ticket worktrees may parallelize independent effects; shared epic checkouts serialize writers. The controller creates neither sessions nor worktrees. Missing ticketing in an old pin needs authorized trial/adoption; never skip gates or silently upgrade.
-
-Read the whole returned `entrypoint`, its session contract, usage guide and method handoff. Read each complete method/reference when its phase needs it. The canonical method owns diagnostics, efficiency, research and PR routing. Missing guidance in an old pin requires an authorized trial/adoption; preserve the pin.
-
-Execute once from bundle root against target. No recursive launcher or controller execution from the target directory. File loading is not completed delivery.
-
-Before dependent work, inspect capabilities without launching product tests. Follow the tests-last order in canonical `docs/current-decisions.md`. New version-2 runs allow draft acceptance and seal reviewed checks at the end. Full local controller review needs one authenticated agent CLI or the review packet; PR review separately follows canonical `docs/pr-workflow.md`. Report missing capabilities; installation provisions no cloud route, hooks, daemon or permissions. Preserve checkpoints and human release authority; unrequested product pilots stay deferred.
+1. Read the returned `entrypoint` (`.agents/skills/safe-engine/SKILL.md`) fully and follow it from the bundle against the target.
+2. Fast and Lucky: the gate is `scripts/fast_gate.py` beside this file. Start it after the resolver, before research.
+3. Read each method the entrypoint names when its step starts.
+4. Safe runs the controller from the bundle root, as the entrypoint's controller reference describes.
 
 ## Invoke
 
-Ask your agent for this skill with its own syntax (canonical `docs/hosts.md`: `/safe-engine` in Claude Code, `$safe-engine` in Codex, by name in Cursor):
+`safe-engine Build [software or feature] in [absolute project path]. Success means [outcome].`
 
-`safe-engine Build [software/feature] in [absolute project path]. Success means [outcome].`
-
-Modes: add `lucky` or `safe` after the skill name, e.g. `safe-engine lucky Build ...`. Then `verify` or `promote` any time.
-
-Resume: `safe-engine Resume [absolute project path]. Preserve decisions, bundle and evidence.`
-
-The complete bundle includes Improve Factory; no separate maintenance install needed. See source `docs/install-safe-engine.md` and `docs/hosts.md` for setup and host limits. If discovery fails, read this file by explicit path.
+Add `lucky` or `safe` after the skill name for those modes. `verify` or `promote` any time. Resume: `safe-engine Resume [absolute project path].` Factory faults: `improve-factory`.

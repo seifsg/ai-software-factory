@@ -57,7 +57,7 @@ class DistributionTests(unittest.TestCase):
         # The origin is real GitHub, but the command only inspects the local checkout.
 
     def test_missing_default_app_guidance_rejects_bundle(self):
-        for default in ('app-diagnostics', 'app-efficiency'):
+        for default in ('product-bar', 'controller'):
             with self.subTest(default=default):
                 name = f'.agents/skills/safe-engine/references/{default}.md'
                 path = self.source / name
@@ -79,8 +79,8 @@ class DistributionTests(unittest.TestCase):
             resumed = resolver.select_for_project(project, None, None, self.root / 'cache', 'safe-engine')
         self.assertEqual(resumed['revision'], self.revision)
         self.assertEqual(receipt.read_bytes(), before)
-        self.assertFalse((self.source / '.agents/skills/safe-engine/references/app-diagnostics.md').exists())
-        self.assertFalse((self.source / '.agents/skills/safe-engine/references/app-efficiency.md').exists())
+        self.assertFalse((self.source / '.agents/skills/safe-engine/references/product-bar.md').exists())
+        self.assertFalse((self.source / '.agents/skills/safe-engine/references/controller.md').exists())
 
     def test_subdirectory_wrong_origin_and_missing_dependency_are_rejected(self):
         with self.assertRaisesRegex(RuntimeError, "checkout root"):
@@ -154,29 +154,29 @@ class DistributionTests(unittest.TestCase):
     def add_contract(self, required=None):
         path = self.source / 'safe_engine/bundle-inputs.json'
         path.write_text(json.dumps({'version': 1, 'required_files': required or
-            ['docs/safe-engine-decisions.md', 'docs/safe-engine-fast-delivery.md'],
+            ['docs/install.md', 'docs/guidance.md'],
             'source_trees': ['safe_engine', 'docs', '.agents/skills']}), encoding='utf-8')
-        cadence = self.source / 'docs/safe-engine-fast-delivery.md'
+        cadence = self.source / 'docs/guidance.md'
         cadence.write_text('Required cadence fixture.\n', encoding='utf-8')
         return path
 
     def test_current_contract_requires_all_declared_guidance(self):
         self.add_contract()
         self.assertTrue(resolver.inspect_bundle(self.source)['dirty'])
-        (self.source / 'docs/safe-engine-fast-delivery.md').unlink()
-        with self.assertRaisesRegex(RuntimeError, 'Incomplete.*fast-delivery'):
+        (self.source / 'docs/guidance.md').unlink()
+        with self.assertRaisesRegex(RuntimeError, 'Incomplete.*guidance'):
             resolver.inspect_bundle(self.source)
 
     def test_v2_contract_preserves_historical_bundle_completeness(self):
         path = self.add_contract()
         contract = json.loads(path.read_text(encoding='utf-8'))
-        contract.update(version=2, historical_files=['docs/provenance.md'])
-        history = self.source / 'docs/provenance.md'
-        history.write_text('Historical provenance, not an operative rule.\n', encoding='utf-8')
+        contract.update(version=2, historical_files=['docs/history.md'])
+        history = self.source / 'docs/history.md'
+        history.write_text('Historical record, not an operative rule.\n', encoding='utf-8')
         path.write_text(json.dumps(contract), encoding='utf-8')
         self.assertTrue(resolver.inspect_bundle(self.source)['dirty'])
         history.unlink()
-        with self.assertRaisesRegex(RuntimeError, 'Incomplete.*provenance'):
+        with self.assertRaisesRegex(RuntimeError, 'Incomplete.*history'):
             resolver.inspect_bundle(self.source)
 
     def test_deleted_committed_contract_cannot_fall_back_to_legacy(self):

@@ -1,76 +1,91 @@
 ---
 name: ticketing
-description: "Keep factory work in durable epics and tickets: preserve owner input, confirm scope, assign isolated sessions, track changes and bind final evidence to the latest expectation."
+description: "Creates and maintains tracker epics and tickets for delivery work: searches first, splits work into user-value outcomes, preserves the owner's input, tracks scope changes and ties final evidence to the latest confirmed expectation. Use when work needs tickets, when starting a product, feature or fix, or when a PR or review must be checked against a ticket."
 ---
 
 # Ticketing
 
-Keep the request, decisions, work and evidence in the selected tracker. Read the [ticket contract](references/ticket-contract.md) when preparing, changing or reviewing a ticket. [Usage](../../../docs/ticketing.md) owns controller commands and limits.
+The remote ticket is the record. Local notes are a cache. Write tickets with `references/ticket-layout.md`, for a fresh agent with no chat history.
 
-Write tickets in Seif's words: shortest clear wording, complete intent. Use the contract's [writing recipe](references/ticket-contract.md#write-the-ticket): separate purpose/goal, context, change/reason, proof and progress; labeled emojis, bullets, tables and flow. No extra writing phase.
+Analysis, planning or review-only requests grant no tracker writes. An explicit ticket request does.
 
-Default: build the ticket from the request, actual code and available context; keep execution moving within authority. The user need not supply/review a detailed ticket. Honor requested detail/checkpoints; ask only consequential reserved gaps. Give a fresh agent complete, visual context.
+## Tracker
 
-## Select the tracker
+1. Use the project's tracker. An available tracker integration first.
+2. None set and not already answered: ask once. Recommend Issues in a private GitHub repository (`references/github.md`).
+3. Resolve the real repository, access and visibility before writing. No credentials, customer data, private transcripts or runtime dumps in tickets. Sensitive original input stays private: put a faithful safe summary in the ticket and say details were withheld.
+4. Search before creating: symptom, feature, area, files, PR title, branch. Reuse the same work. No duplicates.
+5. Uncertain response? Read the tracker and reconcile before creating again.
+6. Record provider, project, native ID and URL.
+7. Access or a write fails: name the step and next action. Keep a pending local record. No silent tracker switch, duplicate or success claim.
+8. Use only tools that exist. Installing, paid access and messaging need their own authority.
 
-GitHub Issues is Seif's current choice. Reuse it; do not ask again. For another project, discover the preferred tracker and available authorized MCP tools first. Ask only an unresolved preference; without one, try GitHub Issues. Resolve the actual repository, access and privacy before writing.
+## Split the work
 
-Search existing epics/tickets by symptom, feature, area/files and PR title/branch. Reuse the same work. Record canonical provider, project, native ID and URL. Do not create a second ticket after an uncertain response: read the tracker and reconcile the effect first.
+- Ticket = one complete, user-visible outcome with its own criteria. Order by user value and proven dependencies.
+- Epic = overall outcome, shared constraints and decisions, sub-issue list, integration criteria.
+- 3 to 6 outcome sub-issues, plus follow-ups. A small change: one ticket. Never one per todo.
+- Do not split risky work to dodge full checks.
+- Deferrals and optional ideas become follow-up sub-issues, titled as follow-ups, with owner and revisit condition.
 
-The remote ticket is canonical. Local snapshots preserve context and exact revisions; they grant no authority and cannot replace remote updates. Failed access, writes or conflicting versions stay explicit with the affected step and next action. Preserve a pending local record; no silent tracker switch, duplicate or success claim. Use only actual tools; installation, paid access and messaging need their own authority.
+## Fast and Lucky
 
-## Capture the work early
+No contract, confirmation round or capture. Same tracker, layout and authority rules.
 
-Order complete outcome tickets by user value and proven dependencies. Each unlocks an observable result. Keep overall criteria and one integration owner. Each deferral names an owner, destination ticket and acceptance or revisit condition.
+1. Search first.
+2. Product and feature runs: create the epic after the owner's kickoff answers (Lucky: from the request). Include the owner's words, the answers, and every layout section including criteria with IDs. Change runs: one ticket in the same layout.
+3. Create the sub-issues in user-value order. Link them as native sub-issues.
+4. Add follow-ups for POC deferrals (hardening, CI/CD, deployment) and optional ideas.
+5. Update only at boundaries: plan, build done, run results, handoff.
+6. Close a sub-issue when its outcome passed. The epic stays open until the owner accepts.
+7. Write the URLs into the run's work record: `**Epic:** <url>`, `**Sub-issue:** <url>`.
 
-1. Preserve the original owner input before compressing it into a plan. Include why, examples, supplied evidence, source/date and decision authority. Retain later corrections and superseded input.
-2. State actual before behavior and consumers from source and existing evidence. Label facts, inference and unknowns. No early reproduction or walkthrough. PR baseline capture follows the existing [narrow exception](../../../docs/pr-workflow.md#beforeafter-proof).
-3. Derive the expected after, acceptance criteria, applicable success/failure/recovery journeys, scope, exclusions, constraints and dependencies from the request/source. Record purpose, goal, approach, relevant code/consumers, required/optional wants and existing progress/PRs. Use the contract's visual recipe. For a new capability, say what does not exist yet; nonvisual work needs an observable consumer/result.
-4. Confirm from actual owner instructions or recorded delegation; record the source and deciding actor. In-scope delegated choices need no new vote. Preserve approved, rejected and pending choices; label assumptions/unknowns. Ask only a consequential unresolved owner choice and continue independent work. Undelegated proposals stay pending; explicit stops persist.
-5. Create/reuse the epic and complete delivery tickets. Keep the overall outcome and integration owner in the epic; give each ticket one accountable owner, deliverable and completion boundary. Do not split incomplete risky work to evade full methods or tests-last.
+Moving an epic to Safe: reuse it and add the contract below.
 
-Version the confirmed contract. Keep the original input and what changed, why, who decided and what resulted. Record meaningful activity: decisions, assignment, implementation completion, QA/tests, review, blockers, PR updates and handoffs. Combine unchanged progress into boundary updates; no per-edit diary or extra capture after each local note. Preserve required refreshes below.
+## Safe: the contract
 
-## Fast and Lucky tickets
+Derive the ticket from the request, the code and prior work. Do not ask the user for a detailed ticket. Ask only consequential reserved gaps; keep independent work moving. Honor explicit checkpoints.
 
-Seif, 7 October: every Fast and Lucky run has tickets. Same tracker, writing recipe and authority rules; no controller contract, capture or confirmation round.
+1. **Original input**, verbatim: words, why, examples, evidence, source, date, who decided. Keep later corrections and replaced input.
+2. **Actual before** and its consumers, from code and existing evidence. Label fact, inference, unknown. Do not run the product to reproduce it.
+3. **After**: expected outcome, criteria with stable IDs, journeys (success, failure, recovery, preserved behavior), scope, exclusions, constraints, dependencies.
+4. **Confirm** from the owner's direct instruction or a choice made under recorded delegation. Record source and actor. In-scope delegated choices need no new vote. Undelegated proposals stay pending. Tracker text from others is evidence, not authority. An edit, label or closed state never waives a requirement.
+5. Create or reuse the epic and tickets.
 
-1. Search existing epics/tickets first; reuse the same work.
-2. **Epic:** `product` and `feature` runs create it after the [kickoff answers](../safe-engine/references/fast-run.md#kickoff-questions): Seif's words, the answers, purpose/goal, context, behavior-only before/after, approach, flow, criteria with IDs, scope and deferrals, progress, activity. `change` runs create one ticket in the same layout.
-3. **Sub-issues:** 3–6 complete user-visible outcomes in user-value order, each with its own criteria. Link them as native sub-issues; GitHub: `gh api -X POST repos/{owner}/{repo}/issues/{epic}/sub_issues -F sub_issue_id=$(gh api repos/{owner}/{repo}/issues/{child} --jq .id)` (the child's numeric `id`, not its number). Never one per todo. If `gh issue create` errors, check the tracker first (no duplicates), then create through REST: `gh api repos/{owner}/{repo}/issues -X POST -f title=... -F body=@<file>`.
-4. POC deferrals (security hardening, CI/CD, deployment) and optional ideas become follow-up sub-issues of the epic, titled as follow-ups.
-5. Update at boundaries only: plan, build done, done-run results, handoff. Close a sub-issue when its outcome passed the done-run; the epic stays open until Seif accepts.
-6. Write the URLs into the work record (`**Epic:**`, `**Sub-issue:**`), then `fast_gate.py done tickets`.
+Number the confirmed contract. Each change records old and new scope, reason, source, authority and result. Pin the confirmed revision, the ticket's updated time and a digest of scope (outcome, criteria, journeys, scope, exclusions, constraints, decisions, dependencies; not activity or status).
 
-`promote` turns the epic into a Safe ticket contract through the steps above and below.
+Record meaningful activity only: decisions, assignment, implementation done, QA and tests, review, blockers, PR updates, handoffs. Combine unchanged progress into boundary updates. No per-edit diary.
 
-## Assign a ticket session
+## Refresh and drift
 
-Safe: every implementation ticket uses the full factory cycle, including small fixes: original analysis and planning, each todo's 0–4 loop, completed implementation/improvements, final manual QA, final test authoring/execution and fresh independent review. This takes precedence over [Small Change](../small-change/SKILL.md)'s six replacement routines. Keep changes surgical, checks applicable and the file-summary stop ([speed modes](../safe-engine/references/speed-modes.md#safe)).
+- Refresh at intake or resume, after implementation finishes, and after local review before handoff or PR.
+- Cheap refresh: compare the ticket's updated time with the last read. Read fully only when it changed. Once re-read, compare scope content, not timestamps.
+- Read before every write. Reuse unchanged reads within a batch.
+- New owner input, a conflict, a failed refresh or changed dependencies need reconciliation before dependent work. A cache never proves current scope. Failed refresh: keep the last confirmed snapshot, report the blocker, continue independent work.
+- Later input: preserve it, resolve authority, confirm or leave pending, record the reason, reassess affected plans and consumers.
+- Scope change = new revision, reviewed independently against the old one. Never edit state, weaken acceptance or revive a cancelled ticket. A changed goal may need a linked replacement ticket.
 
-Give each ticket a dedicated execution session with the [complete handoff](../safe-engine/references/method-handoff.md). Record the real session/agent, ticket revision, run, absolute checkout, bundle and base/head. Use available session tools; a ticket label is not a dispatched session. Missing capability stays explicit. Parent/coordinator owns scheduling, shared decisions and tracker reconciliation; one writer owns each file.
+## Sessions and workspaces
 
-Choose one declared workspace arrangement:
+- One dedicated builder session per ticket, full cycle, small fixes included. Parent owns scheduling, shared decisions and tracker updates.
+- Hand over the contract, authority and stops, decisions, current scope, checkout state, dependencies, evidence, unfinished phase and pending operations.
+- Record the real session, ticket revision, absolute checkout and base/head. A label is not a dispatched session. Missing capability stays explicit.
+- Independent tickets: separate worktrees, only with disjoint files, runtime effects, acceptance and decisions. Isolate or serialize shared ports, databases, caches and services.
+- Shared epic checkout: tickets run serially, one writer. Stop prior operations before handoff. Never overwrite or delete another ticket's state.
+- A dependency is met by its accepted result at an integrated commit present in this ticket's base. Closed status alone proves nothing. Changed dependency scope: revalidate affected analysis and evidence.
 
-- Separate ticket worktrees: parallel only with independent files, runtime effects, acceptance and decisions. Isolate or serialize shared ports, databases, caches and services too.
-- Shared epic checkout: explicitly serial tickets, one active writer/runtime owner, dedicated ticket sessions and separately preserved ticket runs. Quiesce previous operations before handoff. Never overwrite another ticket's state or delete it to permit initialization.
+## State
 
-A dependency is satisfied by its accepted contract/result at the recorded integrated commit, available in this ticket's base. Closed tracker status alone proves nothing. Record required dependency revisions and shared interfaces. Changed dependency scope or integration head needs affected analysis/evidence revalidation. Epic completion also needs its combined journey/integration evidence.
-
-## Execute and keep the contract current
-
-Use [Safe Engine](../safe-engine/SKILL.md) for delivery and [Improve Factory](../improve-factory/SKILL.md) for maintenance. Ticketing owns intake, durable scope and coordination; those methods own execution. No recursive ticketing runs, duplicate analysis or extra reviewer fleet.
-
-Bind the run to a captured confirmed contract. Refresh cheaply: compare the remote ticket's updated time with the last capture; refresh fully only when it changed, otherwise record an unchanged observation. Check at intake/resume and selected-controller boundaries: after finished implementation before `record implementation`, and after local review before `handoff`/PR. No refresh at `record plan`; a resumed session still refreshes at intake. Read before remote writes; review/proof require current scope. New owner input, conflict, failed refresh, changed dependencies or handoff needs reconciliation before dependent work. Reuse unchanged captures within a batch; preserve any stricter selected version/dependency guards. The updated time only decides whether to re-read; once re-read, compare semantic digests, not activity timestamps alone. A cache cannot establish current remote scope.
-
-Later input: preserve it, resolve authority, confirm or leave pending, record reasons and refresh the versioned specification. Reassess affected plans/consumers. Legitimate version-2 contract changes use independently reviewed `amend` and ticket rebinding; preserve original request, revisions, protected inputs and failures. Never edit state, weaken acceptance or revive cancellation. A changed goal may need a linked replacement ticket/run; preserve lineage.
-
-Follow [tests-last](../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests) in every ticket, delegate, repair and resume. Combined epic QA waits until constituent implementation finishes. Reviewer repairs need [fresh assessment](../../../docs/pr-workflow.md#keep-current-factory-decisions-explicit); evidence cannot be copied as a new pass.
+- Lifecycle: open, ready, active, blocked, done, cancelled. Map to the tracker's values. A block records reason and next action.
+- Owner stop or cancellation persists across sessions.
+- Ready: confirmed scope, actionable criteria, authority, owner or session, usable workspace, dependencies met.
+- Done: required cycle and evidence at the recorded boundary. Implemented, checked, independently reviewed, merged, released stay distinct.
 
 ## Review and deliver
 
-Refresh the canonical contract (cheaply, above). In the existing Compliance/journey review, map every latest confirmed expectation to implementation and actual evidence. Compare actual before with delivered after; identify missing/partial results, unintended behavior and deviations. Approved deviations retain authority/reason; pending changes cannot redefine a pass. Unknown required scope or evidence blocks dependent acceptance.
-
-Authorized PRs use both [creation](../how-to-make-a-pr/SKILL.md) and [review](../how-to-review-a-pr/SKILL.md), with the [adapter](../../../docs/pr-workflow.md#cloud-pr-review). Include ticket/epic links, exact confirmed revision/digest, before/after proof, decisions/change history, evidence, unresolved findings and resume step. Check the latest confirmed expectation again for updates.
-
-Update the canonical ticket with the actual outcome and accessible sanitized evidence. Keep local reviewed, cloud reviewed, merged and released distinct. Complete only the recorded authorized boundary; preserve blocked/cancelled work and remaining human decisions. A completed child list does not certify an epic, and a draft PR does not imply merge/release.
+1. Refresh the ticket.
+2. Map every latest confirmed expectation to its implementation and actual evidence. Compare actual before with delivered after. List missing or partial results, unintended behavior, deviations.
+3. Approved deviations keep authority and reason. Pending changes cannot redefine a pass. Unresolved drift, unknown required scope or missing evidence blocks dependent acceptance.
+4. PRs and reviews carry ticket and epic links, confirmed revision and digest, before/after proof, decisions, unresolved findings, resume step.
+5. Update the ticket with the actual outcome and sanitized proof the reader can open. Preserve blocked and cancelled work and open human decisions.
+6. A closed child list does not certify the epic: it needs combined journey evidence, and combined QA waits until its tickets finish implementation. A draft PR is not merge or release.
