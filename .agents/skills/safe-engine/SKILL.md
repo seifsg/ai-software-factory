@@ -61,19 +61,19 @@ Record every step in one work record and pass the gate: [fast-run](references/fa
 1. **Start:** new project: create the folder and `git init`. Then `fast_gate.py start`.
 2. **Research** (product, feature): run `research-market` kickoff research.
 3. **Kickoff** (product, feature): one question round. Pause the gate while waiting.
-4. **Tickets:** run `ticketing`: epic + 3–6 outcome sub-issues; a `change` gets one ticket.
+4. **Tickets:** run `ticketing`: epic(s) + 1 or many outcome sub-issues; a `change` gets one ticket.
 5. **Analysis:** run `analyze-start` in full. No code yet: analyze the requirements, platform and intended consumers, and say so.
-6. **Plan:** run `get-ready-to-code`: five outputs, todos `T1..Tn`, logging map, efficiency budget. This request authorizes continuing through its file-summary stop.
-7. **Design** (UI): design brief from the product bar and `ux-quality` step 1. Its audit waits for the done-run.
-8. **Schema** (persistence): run `database-schema`.
+6. **Plan:** run `get-ready-to-code`: five outputs, todos `T1..Tn`, logging map, efficiency budget. This request authorizes continuing through its file-summary stop. Todo's and checklists are a MUST outcome for us to follow on next.
+7. **Design** (UI): similar to how we do the get ready to code, we plan our design. We do not accept poor mediocre design, only the best. Design brief from the product bar and `ux-quality` step 1. Its audit waits for the done-run.
+8. **Schema** (persistence): Only if needed, we run `database-schema`.
 9. **Build:** every todo through the 0–4 loop; one log line per todo: `T3 pre: … do: … post: …`. Build the whole outcome without testing along the way.
 10. **Done-run** (Fast): start it once, use the main journey and its most likely failure through real controls, read the logs, fix blockers. Screenshots for UI. No browser: drive its HTTP or CLI interface and say so.
 11. **Handoff:** how to run, dev sign-in, verified, unverified, follow-up tickets; update tickets; `close`.
 
-Lucky runs 1, 4, a short 5 and 6, 9 and 11. It asks nothing, researches nothing, takes product bar defaults for design and schema without comparisons, and is reported unverified.
+Lucky runs 1, 4, a short 5 and 6, 9 and 11. It asks nothing, does a light researches, takes product bar defaults for design and schema without comparisons, and is reported unverified.
 
 - `verify`: finish the work, manual QA of the main and failure journeys, then write and run relevant tests. No controller or independent review.
-- `promote`: commit the current code as the baseline, then Safe on the existing epic.
+- `promote`: commit the current code as the baseline, then (optionally) Safe on the existing epic.
 
 ## Safe
 
@@ -91,8 +91,9 @@ Lucky runs 1, 4, a short 5 and 6, 9 and 11. It asks nothing, researches nothing,
 
 - Tests last, whenever tests run (Safe, `verify`, a Safe check): finish the work, use it (main journey, failure and recovery), then write and run tests.
 - Every UI change: `ux-quality`. New or changed persistence: `database-schema`. Material unknowns: `research-market`.
-- PRs only when asked: `how-to-make-a-pr`. A PR is planned: capture its before proof before editing. Before a Fast or Lucky PR, offer once: "Run a Safe check first? (optional)". A Safe check is manual QA, relevant tests and one independent `deep-review`.
+- PRs always: `how-to-make-a-pr`. A PR is planned: capture its before proof before editing. Before a Fast or Lucky PR, offer once: "Run a Safe check first? (optional)". A Safe check is manual QA, relevant tests and one independent `deep-review`.
 - Never claim tested, reviewed or production ready without that evidence.
+- Always document within tickets. Always make Todo's and checklists before building, then verify against them during the review and testing phases.
 
 ## Decide
 
@@ -110,7 +111,9 @@ Lucky runs 1, 4, a short 5 and 6, 9 and 11. It asks nothing, researches nothing,
 5. Reconcile uncertain pushes, comments and other external effects before retrying. No duplicates.
 6. Notify, merge, release, deploy and spend only with explicit authority. PRs stay draft.
 7. Review loops: at most 3 failed rounds (review, fixes, fresh review). Then stop and give the owner findings per round, the shared cause and options: extend, defer, amend scope, cancel.
-8. Stop only processes you started or own; graceful first.
+If at round 3 no high severity issues are found, proceed with the agreed outcome; otherwise keep going against high & critical issues until resolved.
+You can leave medium and below within different tickets that are low prio.
+8. Stop only processes you started or own; graceful first. If you need to step outside, obtain explicit approval from the owner before doing so.
 
 ## Delegate
 
@@ -127,4 +130,7 @@ Lucky runs 1, 4, a short 5 and 6, 9 and 11. It asks nothing, researches nothing,
 - Resume or delegation carries: verbatim request, authority and stops, ticket links and confirmed scope, decisions, plan, current step, evidence, unverified items, blockers, next step.
 - Resume: read status, the ticket and the record; continue the first unfinished step. Never restart a run or invent artifacts.
 
-Factory fault (a skill, the gate or the controller misbehaves): run `improve-factory`. Product bugs stay in delivery.
+
+## Factory Fault
+Allow user to enhance on factory by notifying the system of any issues or improvements needed.
+If we learn of points of improvement or faults in the factory, we should document them and present them to the user if they want to open an issue within the factory repository about them.
