@@ -11,7 +11,7 @@ Source: `https://github.com/seifsg/ai-software-factory`, branch `main`, private.
 
 ## Get the requirements
 
-Needs Git and Python 3.9+. Safe local review uses the Codex CLI when present, otherwise the controller's review-packet fallback. Set them up on any OS without asking Seif to prepare the machine:
+Needs Git and Python 3.9+. Works with any coding agent that reads Agent Skills; canonical `docs/hosts.md` lists per-host install, invocation, gate hooks and Safe reviewers. Safe local review launches any installed agent CLI (Claude Code, Codex, Cursor), otherwise the controller's review-packet fallback. Set them up on any OS without asking Seif to prepare the machine:
 
 1. Find them: `git --version`; Python through `python3`, `python` or Windows `py -3`. Use the first that reports 3.9+, by full path, for every later command.
 2. Missing or too old: install from the official source, user scope when possible.
@@ -19,7 +19,7 @@ Needs Git and Python 3.9+. Safe local review uses the Codex CLI when present, ot
    - macOS: `brew install python git`. No Homebrew: `xcode-select --install` for Git, the python.org installer for Python.
    - Linux: the distro manager (`apt-get`, `dnf`, `pacman`, `zypper` or `apk`).
    - No admin or package manager: install [uv](https://docs.astral.sh/uv/getting-started/installation/) (`winget install astral-sh.uv`, `brew install uv` or its official installer), run `uv python install 3.12`, then `uv run --python 3.12 python ...`.
-   - Codex CLI, Safe only and optional: [openai/codex](https://github.com/openai/codex) (`npm install -g @openai/codex` or `brew install --cask codex`).
+   - A headless agent CLI for Safe review is optional: any of Claude Code, Codex or Cursor; canonical `docs/hosts.md` names each one's reviewer command.
 3. Check the versions again. Report what was installed, from where.
 4. Host asks before installs: ask once, naming each tool and source. Still blocked (no network, admin or approval): say what is missing. Fast and Lucky can read the bundle with Git alone: `git ls-remote https://github.com/seifsg/ai-software-factory main`, clone that SHA into `~/.safe-engine/bundles/<sha>`, detach, read it only; record steps by hand and report the gate as unavailable. Safe waits for Python.
 5. Official sources only. No system settings beyond the install. No credentials in commands.
@@ -64,12 +64,12 @@ Missing Git, Python, private access, complete files or required independent revi
 
 Follow the tests-last order in canonical `docs/current-decisions.md`. Local independent maintenance review and PR review are separate; PR review follows canonical `docs/pr-workflow.md`. No app/game/mobile pilot or simulation unless specifically requested.
 
-Resolver installs no hooks or host automation, provisions no sessions/worktrees, selects no models, pushes/merges/notifies nothing and launches no product. Gate hooks come only from the Claude Code plugin or a Codex `hooks.json` the user installed (canonical `docs/install-safe-engine.md`).
+Resolver installs no hooks or host automation, provisions no sessions/worktrees, selects no models, pushes/merges/notifies nothing and launches no product. Gate hooks come only from what the user installed per host (canonical `docs/hosts.md`).
 
 ## Invoke
 
-Codex: `$improve-factory The factory did X; expected Y. Preserve project progress.`
+Ask your agent for this skill with its own syntax (canonical `docs/hosts.md`):
 
-Claude Code, with the `safe-engine` plugin or a personal installation: `/improve-factory The factory did X; expected Y. Preserve project progress.`
+`improve-factory The factory did X; expected Y. Preserve project progress.`
 
 See source `docs/install-improve-factory.md` for installation/GitHub references. Host discovery/permissions still apply; if discovery fails, read this installed file by explicit path.

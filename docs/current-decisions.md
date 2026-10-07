@@ -18,7 +18,15 @@ Seif's 7 October correction after the video agency portal run ([epic #26](https:
 - **Kickoff:** new products and big features start with quick research (3 top competitors, feature matrix, opportunities, 3 stack options), then one question round: features, size (POC/MVP/production slice), three approaches, stack. Fixes and small changes stay autonomous. Supersedes autonomous intake for those two kinds only.
 - **Quality:** every mode meets the product bar: TypeScript, shadcn/ui for React, own logo, palette, header and footer, light mode first, SEO and conversion on public pages, schema/logging/efficiency briefs, dev-only one-click sign-in per role. POCs are never throwaway.
 - **POC deferrals:** security hardening, CI/CD, deployment and unit-test suites may wait as follow-up tickets. No secrets in code or Git; full Application Security before public exposure.
-- **Enforcement:** Seif chose the Claude Code plugin (option A; global-settings and per-project hooks not chosen). Its hooks call `fast_gate.py`, which records and checks each step. Codex can call the same gate through `hooks.json`. The gate proves steps were recorded, not that they were good.
+- **Enforcement:** Seif chose the Claude Code plugin (option A; global-settings and per-project hooks not chosen). Its hooks call `fast_gate.py`, which records and checks each step; Codex and Cursor call the same gate through `fast_gate.py install --host`. The gate proves steps were recorded, not that they were good.
+
+## Agent-agnostic factory
+
+Seif, 7 October 2026 ([epic #32](https://github.com/seifsg/ai-software-factory/issues/32)): "I don't want this AI factory to be codex specific at all ... completely agent agnostic." His kickoff choices:
+
+- **Approach:** neutral core + host adapters (APM adoption and docs-only neutrality not chosen). `.agents/skills` (Agent Skills) and `AGENTS.md` stay the only sources; methods say "your agent"; host-specific commands live only in [hosts](hosts.md) and its adapters.
+- **First-class hosts:** Claude Code (plugin rooted at `skills/`), Codex and Cursor (`fast_gate.py install --host`). Copilot, Gemini/Antigravity and OpenCode have documented manual routes.
+- **Safe reviewer:** any installed agent CLI, preferring one that did not build; the review packet is always available. Supersedes "Codex stays the default reviewer and `--report` is refused".
 
 ## Method and authorship
 

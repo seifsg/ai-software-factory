@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 import shutil
 
+from . import reviewers
 from .project import bundle_revision, command_argv, git
 
 
@@ -177,11 +178,11 @@ def preflight(project, profile, directory=None):
         found = shutil.which(first)
         executables.append({"id": check["id"], "executable": first, "path": found,
                             "available": bool(found)})
-    cli = shutil.which("codex")
+    agents = reviewers.available()
     return {"bundle_root": str(bundle), "bundle_revision": bundle_revision(bundle),
             "bundle_dirty": bool(git(bundle, "status", "--porcelain")),
             "profile_digest_note": "Draft commands may be absent; seal only at the final test phase",
-            "local_reviewer": {"path": cli, "available": bool(cli), "authentication": "UNKNOWN"},
+            "local_reviewer": {"agents": agents, "available": bool(agents), "authentication": "UNKNOWN"},
             "checks": executables,
             "manual_capabilities": {"interface": profile["interface"], "status": "UNKNOWN",
                                     "required": "Record actual browser/device/input/audio access when applicable"},

@@ -25,6 +25,11 @@ class FastGateTests(unittest.TestCase):
         self.project.mkdir()
         self.env = dict(os.environ, SAFE_ENGINE_HOME=str(self.root / "home"))
 
+    def tearDown(self):
+        log = self.root / "home" / "logs" / "gate.log"
+        if log.exists():  # the fail-open guard must never have swallowed an exception
+            self.assertNotIn("hook.error", log.read_text(encoding="utf-8"))
+
     def gate(self, *args, ok=True, project=None):
         result = subprocess.run([sys.executable, str(GATE), *args, "--project", str(project or self.project)],
                                 capture_output=True, text=True, errors="replace", env=self.env)

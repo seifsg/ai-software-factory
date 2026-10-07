@@ -89,7 +89,7 @@ py -3 -m safe_engine --project $target review --timeout 600
 py -3 -m safe_engine --project $target handoff
 ```
 
-A failed command blocks progression. Use `repair --reason 'Describe the actual failure'` before correcting a recorded candidate, then produce a new batch and repeat the required stages. Review needs the authenticated Codex CLI. The result is `.factory/handoff.md`; this procedure does not push or deploy the example.
+A failed command blocks progression. Use `repair --reason 'Describe the actual failure'` before correcting a recorded candidate, then produce a new batch and repeat the required stages. Review needs one authenticated reviewer agent CLI (the recorded run used Codex) or the review packet. The result is `.factory/handoff.md`; this procedure does not push or deploy the example.
 
 ## Inspect or resume
 

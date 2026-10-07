@@ -17,7 +17,7 @@ Follow [tests-last order](../../../docs/current-decisions.md#finish-work-use-it-
 
 Analysis, planning and review requests stay in that phase. No implied coding.
 
-Read [speed modes](references/speed-modes.md) first. In every mode, delegate by [agent routing](references/agent-routing.md) and meet the [product bar](references/product-bar.md). No mode named means **Fast**. Fast and Lucky follow that table and [Fast run](references/fast-run.md), which override conflicting rules in this file: tickets, recorded steps and the gate; controller commands, the phase table and Codex review are Safe only.
+Read [speed modes](references/speed-modes.md) first. In every mode, delegate by [agent routing](references/agent-routing.md) and meet the [product bar](references/product-bar.md). No mode named means **Fast**. Fast and Lucky follow that table and [Fast run](references/fast-run.md), which override conflicting rules in this file: tickets, recorded steps and the gate; controller commands, the phase table and independent agent review are Safe only.
 
 Safe implementation starts with [Ticketing](../ticketing/SKILL.md). Use the chosen tracker/MCP; default to GitHub Issues. Reuse Seif's confirmed GitHub choice. Capture original input, actual before, expected after and criteria; secure owner confirmation before implementation. Split a backlog into complete ticket outcomes, not tiny steps that evade final QA.
 
@@ -72,7 +72,7 @@ With no existing implementation, say so; analyze requirements, available platfor
 | `testing` | Author/polish useful tests in declared test-only paths. Seal independently reviewed final task/profile, then record the batch. Production changes invalidate the affected manual evidence. |
 | `verify` | One complete configured final gate, including applicable diagnostic/resource evidence. Read logs; investigate failures. Use supported repair before changing a recorded candidate. |
 | Legacy `improve` / `final-verify` | Existing version-1 runs keep their recorded sequence and exact-input reuse rules. No silent migration. New version-2 runs have no duplicate final gate. |
-| `review` | Fresh local read-only Codex review (no Codex CLI: `review-packet` to a fresh read-only subagent, then `review --report`): core methods plus applicable evidence/references, three themed passes plus Change Guard and Compliance. Severity and blocking/approved-deferral disposition stay distinct. Never supply your own passing review. Repair supported findings, check corrections and obtain fresh assessment. |
+| `review` | Fresh read-only review by another installed agent (`review --agent auto --builder <your agent>`; none installed: `review-packet` to a fresh read-only subagent, then `review --report`): core methods plus applicable evidence/references, three themed passes plus Change Guard and Compliance. Severity and blocking/approved-deferral disposition stay distinct. Never supply your own passing review. Repair supported findings, check corrections and obtain fresh assessment. |
 | `ready` | When ticketed, refresh scope; map latest confirmed criteria to changes, actual journey proof and limits. Checked local handoff includes diagnostics, resources and research. Authorized PRs/updates require [creation](../how-to-make-a-pr/SKILL.md) and [PR review](../how-to-review-a-pr/SKILL.md) per the [adapter](../../../docs/pr-workflow.md#cloud-pr-review), including skill/docs PRs without controller runs. Ticketed work keeps full review. Preserve human ready/merge/release decisions. |
 | `cancelled` | Stop. Preserve records and checkout. |
 

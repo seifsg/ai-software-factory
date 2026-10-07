@@ -9,7 +9,7 @@ Load `https://github.com/seifsg/ai-software-factory`; run its complete methods i
 
 ## Get the requirements
 
-Needs Git and Python 3.9+. Safe local review uses the Codex CLI when present, otherwise the controller's review-packet fallback. Set them up on any OS without asking Seif to prepare the machine:
+Needs Git and Python 3.9+. Works with any coding agent that reads Agent Skills; canonical `docs/hosts.md` lists per-host install, invocation, gate hooks and Safe reviewers. Safe local review launches any installed agent CLI (Claude Code, Codex, Cursor), otherwise the controller's review-packet fallback. Set them up on any OS without asking Seif to prepare the machine:
 
 1. Find them: `git --version`; Python through `python3`, `python` or Windows `py -3`. Use the first that reports 3.9+, by full path, for every later command.
 2. Missing or too old: install from the official source, user scope when possible.
@@ -17,7 +17,7 @@ Needs Git and Python 3.9+. Safe local review uses the Codex CLI when present, ot
    - macOS: `brew install python git`. No Homebrew: `xcode-select --install` for Git, the python.org installer for Python.
    - Linux: the distro manager (`apt-get`, `dnf`, `pacman`, `zypper` or `apk`).
    - No admin or package manager: install [uv](https://docs.astral.sh/uv/getting-started/installation/) (`winget install astral-sh.uv`, `brew install uv` or its official installer), run `uv python install 3.12`, then `uv run --python 3.12 python ...`.
-   - Codex CLI, Safe only and optional: [openai/codex](https://github.com/openai/codex) (`npm install -g @openai/codex` or `brew install --cask codex`).
+   - A headless agent CLI for Safe review is optional: any of Claude Code, Codex or Cursor; canonical `docs/hosts.md` names each one's reviewer command.
 3. Check the versions again. Report what was installed, from where.
 4. Host asks before installs: ask once, naming each tool and source. Still blocked (no network, admin or approval): say what is missing. Fast and Lucky can read the bundle with Git alone: `git ls-remote https://github.com/seifsg/ai-software-factory main`, clone that SHA into `~/.safe-engine/bundles/<sha>`, detach, read it only; record steps by hand and report the gate as unavailable. Safe waits for Python.
 5. Official sources only. No system settings beyond the install. No credentials in commands.
@@ -44,7 +44,7 @@ Verify returned root, revision, dirty status, receipt and entrypoint. Record lau
 
 Follow Working iterations where present in the selected canonical method. Older pins keep their recorded method; no silent upgrade.
 
-Mode: read canonical `.agents/skills/safe-engine/references/speed-modes.md` when the pin has it. No mode named means Fast. Fast and Lucky read the returned `entrypoint`, canonical `fast-run.md`, `product-bar.md` and the methods their table names; they create the epic and sub-issues and record every step with the gate beside this file, `scripts/fast_gate.py` (Claude Code expands `${CLAUDE_SKILL_DIR}/scripts/fast_gate.py`). After the resolver, before research: `python <gate> start --project <absolute-target> --key <slug> --mode fast|lucky --kind product|feature|change [--auth] [--no-ui] [--no-data] --request-file <file>`. Controller commands, checks and Codex review below are Safe only. Older pins without `fast-run.md` keep their recorded method.
+Mode: read canonical `.agents/skills/safe-engine/references/speed-modes.md` when the pin has it. No mode named means Fast. Fast and Lucky read the returned `entrypoint`, canonical `fast-run.md`, `product-bar.md` and the methods their table names; they create the epic and sub-issues and record every step with the gate beside this file, `scripts/fast_gate.py` (Claude Code expands `${CLAUDE_SKILL_DIR}/scripts/fast_gate.py`). After the resolver, before research: `python <gate> start --project <absolute-target> --key <slug> --mode fast|lucky --kind product|feature|change [--auth] [--no-ui] [--no-data] --request-file <file>`. Controller commands, checks and independent agent review below are Safe only. Older pins without `fast-run.md` keep their recorded method.
 
 Safe implementation: read canonical `.agents/skills/ticketing/SKILL.md` and `docs/ticketing.md` from the resolved bundle. Preferred authorized tracker MCP first; GitHub Issues default, Seif's existing choice. Confirm before/after scope. Every ticket gets an actually dispatched builder session and full cycle, even bounded fixes. Small Change keeps patches surgical; its six shortcuts remain for legacy unticketed work.
 
@@ -54,16 +54,16 @@ Read the whole returned `entrypoint`, its session contract, usage guide and meth
 
 Execute once from bundle root against target. No recursive launcher or controller execution from the target directory. File loading is not completed delivery.
 
-Before dependent work, inspect capabilities without launching product tests. Follow the tests-last order in canonical `docs/current-decisions.md`. New version-2 runs allow draft acceptance and seal reviewed checks at the end. Full local controller review needs authenticated Codex CLI; PR review separately follows canonical `docs/pr-workflow.md`. Report missing capabilities; installation provisions no cloud route, hooks, daemon or permissions. Preserve checkpoints and human release authority; unrequested product pilots stay deferred.
+Before dependent work, inspect capabilities without launching product tests. Follow the tests-last order in canonical `docs/current-decisions.md`. New version-2 runs allow draft acceptance and seal reviewed checks at the end. Full local controller review needs one authenticated agent CLI or the review packet; PR review separately follows canonical `docs/pr-workflow.md`. Report missing capabilities; installation provisions no cloud route, hooks, daemon or permissions. Preserve checkpoints and human release authority; unrequested product pilots stay deferred.
 
 ## Invoke
 
-Codex: `$safe-engine Build [software/feature] in [absolute project path]. Success means [outcome].`
+Ask your agent for this skill with its own syntax (canonical `docs/hosts.md`: `/safe-engine` in Claude Code, `$safe-engine` in Codex, by name in Cursor):
 
-Claude Code (plugin or personal install): `/safe-engine Build [software/feature] in [absolute project path]. Success means [outcome].` The plugin also installs the gate hooks.
+`safe-engine Build [software/feature] in [absolute project path]. Success means [outcome].`
 
-Modes: add `lucky` or `safe` after the command, e.g. `$safe-engine lucky Build ...`. Then `verify` or `promote` any time.
+Modes: add `lucky` or `safe` after the skill name, e.g. `safe-engine lucky Build ...`. Then `verify` or `promote` any time.
 
-Resume: `$safe-engine Resume [absolute project path]. Preserve decisions, bundle and evidence.`
+Resume: `safe-engine Resume [absolute project path]. Preserve decisions, bundle and evidence.`
 
-The complete bundle includes Improve Factory; no separate maintenance install needed. See source `docs/install-safe-engine.md` for setup/host limits. If discovery fails, read this file by explicit path.
+The complete bundle includes Improve Factory; no separate maintenance install needed. See source `docs/install-safe-engine.md` and `docs/hosts.md` for setup and host limits. If discovery fails, read this file by explicit path.

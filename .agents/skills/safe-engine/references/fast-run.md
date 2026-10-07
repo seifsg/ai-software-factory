@@ -85,17 +85,17 @@ python fast_gate.py status | pause --reason "<why>" | resume | close [--abandon 
 
 ## Hooks
 
-The Claude Code plugin ([install](../../../../docs/install-safe-engine.md#claude-code)) and optional Codex hooks call the gate:
+Each host's hooks call the gate ([hosts](../../../../docs/hosts.md): the Claude Code plugin; Codex and Cursor through `fast_gate.py install --host`):
 
 - Source edits (Write/Edit/apply_patch), shell writes (`>`, `>>`, `&>`, `>|`, piped `tee`) and scaffold or install commands in the run's project are denied until every step before `build` passes. Quoted text, heredoc bodies and here-strings never count, so ticket bodies pass. `.factory/` stays writable, except `run.json`, which only the gate writes.
 - Stopping mid-run is blocked once with the next step, unless the run is paused or closed.
 - Each prompt and session start gets one line: run, next step, pause reason.
-- No active run anywhere: the hook exits before Python starts.
+- No active run anywhere: hooks run through `run-gate.sh` exit before Python starts; Windows Codex and Cursor hooks start Python (about 0.1 s) and exit at once.
 
 `start` reports whether hooks are installed. Without them the gate still records and checks steps; nothing blocks, so follow the order yourself. Hooks see tool calls, not intent: files written from inside scripts (Python, Node) and other projects pass; the record and the done-run carry the rest.
 
 ## Keep it fast
 
 - Parallel agents per [agent routing](agent-routing.md): research strands together, independent todos in separate files together, one writer per file.
-- No controller, capture, seal or Codex review. `verify` adds manual QA of failure journeys and tests; `promote` moves to Safe.
+- No controller, capture, seal or independent agent review. `verify` adds manual QA of failure journeys and tests; `promote` moves to Safe.
 - One question round, one record, ticket updates only at boundaries.

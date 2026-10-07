@@ -90,9 +90,12 @@
     "skills/safe-engine/scripts/fast_record.py",
     "skills/safe-engine/scripts/fast_shell.py",
     "skills/safe-engine/scripts/run-gate.sh",
-    "hooks/hooks.json",
-    ".claude-plugin/plugin.json",
-    ".claude-plugin/marketplace.json"
+    "skills/.claude-plugin/plugin.json",
+    ".claude-plugin/marketplace.json",
+    "docs/hosts.md",
+    "safe_engine/reviewers.py",
+    "skills/safe-engine/scripts/fast_hosts.py",
+    "skills/safe-engine/scripts/fast_install.py"
   ],
   "historical_files": [
     "docs/skill-provenance.md",
@@ -110,7 +113,6 @@
     ".agents/skills",
     "skills",
     "docs",
-    "scripts",
-    "hooks"
+    "scripts"
   ]
 }

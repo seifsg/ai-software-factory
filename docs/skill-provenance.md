@@ -1,5 +1,14 @@
 # Skill sources and adaptations
 
+## Agent-agnostic factory: 7 October 2026
+
+Seif: "I don't want this AI factory to be codex specific at all ... completely agent agnostic." Kickoff answers and research live in [epic #32](https://github.com/seifsg/ai-software-factory/issues/32) and sub-issues #33–#36. Factory-specific; no original exists.
+
+- One host page, [hosts](hosts.md), owns every host-specific command; methods, entries, README and install/start/usage docs now say "your agent". `.agents/skills` (Agent Skills) and `AGENTS.md` stay the only sources.
+- Runtime adapters: `fast_hosts.py` (Claude/Codex, Cursor and generic exit-2 hook dialects), `fast_install.py` (`fast_gate.py install --host`), `safe_engine/reviewers.py` (Codex, Claude Code and Cursor reviewer presets; auto prefers a non-builder). The Claude Code plugin now roots at `skills/`.
+- Sources read 7 October: see [hosts sources](hosts.md#sources); prior art Agent Skills, AGENTS.md, Microsoft APM, rulesync, vercel skills CLI.
+- Seif's originals unedited; Safe flow unchanged apart from reviewer choice. Dated history keeps its Codex wording.
+
 ## Fast runs keep the method: 7 October 2026
 
 Seif rejected the 7 October video-portal Fast run: no ticket, hidden research, no owner questions, plain JavaScript, no visual system, stuck at login. His words and kickoff answers live in [epic #26](https://github.com/seifsg/ai-software-factory/issues/26) and sub-issues #27–#30. Factory-specific; no original exists.

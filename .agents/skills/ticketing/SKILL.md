@@ -37,7 +37,7 @@ Seif, 7 October: every Fast and Lucky run has tickets. Same tracker, writing rec
 
 1. Search existing epics/tickets first; reuse the same work.
 2. **Epic:** `product` and `feature` runs create it after the [kickoff answers](../safe-engine/references/fast-run.md#kickoff-questions): Seif's words, the answers, purpose/goal, context, behavior-only before/after, approach, flow, criteria with IDs, scope and deferrals, progress, activity. `change` runs create one ticket in the same layout.
-3. **Sub-issues:** 3–6 complete user-visible outcomes in user-value order, each with its own criteria. Link them as native sub-issues; GitHub: `gh api -X POST repos/{owner}/{repo}/issues/{epic}/sub_issues -F sub_issue_id=$(gh api repos/{owner}/{repo}/issues/{child} --jq .id)` (the child's numeric `id`, not its number). Never one per todo.
+3. **Sub-issues:** 3–6 complete user-visible outcomes in user-value order, each with its own criteria. Link them as native sub-issues; GitHub: `gh api -X POST repos/{owner}/{repo}/issues/{epic}/sub_issues -F sub_issue_id=$(gh api repos/{owner}/{repo}/issues/{child} --jq .id)` (the child's numeric `id`, not its number). Never one per todo. If `gh issue create` errors, check the tracker first (no duplicates), then create through REST: `gh api repos/{owner}/{repo}/issues -X POST -f title=... -F body=@<file>`.
 4. POC deferrals (security hardening, CI/CD, deployment) and optional ideas become follow-up sub-issues of the epic, titled as follow-ups.
 5. Update at boundaries only: plan, build done, done-run results, handoff. Close a sub-issue when its outcome passed the done-run; the epic stays open until Seif accepts.
 6. Write the URLs into the work record (`**Epic:**`, `**Sub-issue:**`), then `fast_gate.py done tickets`.

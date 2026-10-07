@@ -16,7 +16,7 @@ Ask for analysis and you get analysis. Ask for planning and you get planning. A 
 
 Delivery has three [speed modes](.agents/skills/safe-engine/references/speed-modes.md): 🏃 **Fast** (default), 🍀 **Lucky** and 🛡️ **Safe**, the full cycle below. `promote` moves a run to Safe.
 
-Fast never means thin (Seif, 7 October). Fast and Lucky create an epic with outcome sub-issues and record every method in one work record, checked by a [gate](.agents/skills/safe-engine/references/fast-run.md) that the Claude Code plugin's hooks enforce. New products and big features start with quick research (3 top competitors) and one round of owner questions. Every mode meets the [product bar](.agents/skills/safe-engine/references/product-bar.md): TypeScript, a polished light-mode UI, dev sign-in, no throwaway POCs.
+Fast never means thin (Seif, 7 October). Fast and Lucky create an epic with outcome sub-issues and record every method in one work record, checked by a [gate](.agents/skills/safe-engine/references/fast-run.md) that each host's hooks enforce. New products and big features start with quick research (3 top competitors) and one round of owner questions. Every mode meets the [product bar](.agents/skills/safe-engine/references/product-bar.md): TypeScript, a polished light-mode UI, dev sign-in, no throwaway POCs.
 
 Safe implementation uses [Ticketing](.agents/skills/ticketing/SKILL.md): GitHub Issues by default, confirmed before/after scope and a dedicated session/full cycle per ticket, including bugfixes. Keep surgical Small Change tactics; its six replacement routines remain for legacy unticketed work. Ticket delivery follows:
 
@@ -47,14 +47,14 @@ Every UI/interaction change uses [UX Quality](.agents/skills/ux-quality/SKILL.md
 
 ## Start or resume
 
-[Install Safe Engine](docs/install-safe-engine.md), then give it the task and target:
+The factory is agent-agnostic: Claude Code, Codex and Cursor are first-class, and any agent that reads Agent Skills can run it ([hosts](docs/hosts.md)). [Install Safe Engine](docs/install-safe-engine.md) for your agent, then ask for the skill with the task and target:
 
 ```text
-$safe-engine Build [app or feature] in [absolute project directory].
+safe-engine Build [app or feature] in [absolute project directory].
 Success means [observable outcomes].
 ```
 
-That runs Fast. Write `$safe-engine lucky ...` or `$safe-engine safe ...` for the other modes. In Claude Code, install the [plugin](docs/install-safe-engine.md#claude-code) and use `/safe-engine`; its hooks hold Fast and Lucky runs to their steps.
+That runs Fast. Say `safe-engine lucky ...` or `safe-engine safe ...` for the other modes. Each host's skill syntax (`/safe-engine`, `$safe-engine`, by name) is in [hosts](docs/hosts.md); its hooks hold Fast and Lucky runs to their steps.
 
 To continue, ask it to resume the existing run. Keep the selected bundle, decisions and evidence. [Fresh-session setup](docs/start-another-session.md) covers manual loading and other hosts. [Pilot usage](docs/pilot-usage.md) contains actual commands and prerequisites.
 
@@ -64,11 +64,11 @@ Use existing authorized GitHub access. A local installation does not install on 
 
 ## What works today
 
-Fast and Lucky runs record steps through `fast_gate.py`; the Claude Code plugin's hooks deny early source edits and unfinished stops, and Codex can run the same gate from `hooks.json`. The gate checks that each step was recorded, not that it was good.
+Fast and Lucky runs record steps through `fast_gate.py`; host hooks (the Claude Code plugin, or Codex and Cursor via `fast_gate.py install`) deny early source edits and unfinished stops. The gate checks that each step was recorded, not that it was good.
 
-In Safe, the current Codex session builds; Python saves stages, runs configured checks and rejects stale evidence. A fresh read-only Codex CLI process reviews the candidate before local handoff. The controller does not push, merge, deploy or run as a background service.
+In Safe, your agent builds; Python saves stages, runs configured checks and rejects stale evidence. A fresh read-only reviewer agent (any installed CLI, preferably not the builder) or the review packet reviews the candidate before local handoff. The controller does not push, merge, deploy or run as a background service.
 
-The [recorded pilot](docs/pilot-verification.md) demonstrates its dated local browser fixture and repair. It does not certify this revision or a production app. PR delivery requires [remote/cloud PR review](docs/pr-workflow.md#cloud-pr-review). Claude-native delivery remains unverified. No new product pilot is claimed.
+The [recorded pilot](docs/pilot-verification.md) demonstrates its dated local browser fixture and repair. It does not certify this revision or a production app. PR delivery requires [remote/cloud PR review](docs/pr-workflow.md#cloud-pr-review). A complete app delivery on each host remains unverified; [hosts](docs/hosts.md) records what was checked. No new product pilot is claimed.
 
 Every app/game needs a working shared [logging module](.agents/skills/safe-engine/references/app-diagnostics.md), including small fixes. The coordinator also applies [efficiency](.agents/skills/safe-engine/references/app-efficiency.md) from planning onward. Instructions alone prove neither emitted logs nor a faster app.
 
@@ -78,9 +78,8 @@ QA binds to declared code, operative guidance and runtime inputs. Changing a req
 
 ```text
 .agents/skills/           Canonical skills, references and index
-skills/                  Two installable entries, generated resolvers and the Fast gate
-.claude-plugin/          Claude Code plugin and marketplace manifests
-hooks/                   Plugin hooks that call the Fast gate
+skills/                  Two installable entries, resolvers, the Fast gate and host installer
+.claude-plugin/          Marketplace manifest (the Claude Code plugin lives in skills/)
 safe_engine/             Python controller, schema and bundle input contract
 scripts/                 Resolver packaging helper
 tests/                   Controller and distribution checks

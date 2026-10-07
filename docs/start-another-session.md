@@ -14,11 +14,11 @@ The first thing to give the agent is the Safe Engine entry skill and your actual
 
 ## Regular skill: recommended entry
 
-Install [Safe Engine itself](install-safe-engine.md) from GitHub `main`, path `skills/safe-engine`, once per host. Then call `$safe-engine Build [my app or feature] in [absolute project directory]` in Codex, or `/safe-engine` after personal Claude Code installation. The adapter loads the complete factory and saves the target's selected bundle for safe resume. `improve-factory` is for changing the factory; it is not required as a separate installation for app delivery.
+Install [Safe Engine](install-safe-engine.md) for your agent once per machine ([hosts](hosts.md)). Then ask for the skill in your host's syntax: `safe-engine Build [my app or feature] in [absolute project directory]`. The adapter loads the complete factory and saves the target's selected bundle for safe resume. `improve-factory` is for changing the factory; it is not required as a separate installation for app delivery.
 
 ## Manual bundle: paste this first on this computer
 
-Start a Codex chat in the target project. Replace the two bracketed fields below. The path below is an example. Use the actual absolute path of your complete factory checkout.
+Start a session of your agent in the target project, with the factory checkout reachable ([hosts](hosts.md)). Replace the two bracketed fields below. The path below is an example. Use the actual absolute path of your complete factory checkout.
 
 ```text
 Read and follow C:/work/ai-software-factory/.agents/skills/safe-engine/SKILL.md
@@ -70,16 +70,16 @@ an owner-reserved decision, actual missing access or my explicit stop prevents d
 Do not choose a different example or change the product requirements for me.
 ```
 
-If you start in the factory repository itself and Codex discovers the skill, the short form is `Use $safe-engine to implement [task] in [absolute project directory]`. The explicit file path above also tells a fresh session where the complete bundle lives. `$safe-engine` belongs in the chat; it is not a PowerShell command.
+If you start in the factory repository itself and your agent discovers the skill, the short form is `use safe-engine to implement [task] in [absolute project directory]`. The explicit file path above also tells a fresh session where the complete bundle lives. The skill call belongs in the chat; it is not a shell command.
 
-For the Codex CLI, launch it in your target project with `codex -C <target-path> --add-dir <bundle-path>`, then paste the starter. Replace both paths with real directories. The added directory makes the bundle accessible in the session; it does not make every skill globally installed. These flags were checked against the installed CLI's help.
+To reach the bundle from another folder, add it to the session: Claude Code `claude --add-dir <bundle>` or `/add-dir`, Codex `codex -C <target> --add-dir <bundle>`, Cursor by adding the folder to the workspace. Added access does not install skills or hooks; [hosts](hosts.md) does.
 
-Codex discovers repository skills in `.agents/skills` within the repository scope. A skill in a different project is not automatically global. [Official Codex skill documentation](https://learn.chatgpt.com/docs/build-skills).
+Agents discover repository skills in `.agents/skills` (Claude Code: `.claude/skills` or its plugin). A skill in a different project is not automatically global.
 
 ## What the agent needs before it can proceed
 
 - The complete factory bundle, Python 3.9+, Git, and access to the target project. The launcher installs missing Git/Python from official sources.
-- An authenticated `codex` CLI on PATH for the independent reviewer, or the fallback: `review-packet` to a fresh read-only subagent, then `review --report`.
+- One authenticated agent CLI for the Safe reviewer (Claude Code, Codex or Cursor, preferably not the builder), or the fallback: `review-packet` to a fresh read-only subagent, then `review --report`.
 - The target project's actual test tools. Browser work needs a browser driver and runnable app.
 - An agreed task, observable manual/automated/mixed acceptance, recorded authority and completion boundaries. Version 2 starts with draft checks; independently seal them at final testing. Real command watchdogs detect stuck processes; historical repair limits do not govern.
 - For new delivery: canonical tracker access, confirmed ticket revision and a real dedicated builder session/workspace. Preserve missing capability as a dependent blocker; labels do not dispatch sessions.
@@ -118,26 +118,9 @@ Use a new destination; do not run this over an existing checkout. Replace the bu
 
 A remote workspace cannot read `C:/work/...` on this PC. It needs its own checkout, permissions, runtimes, browser tools and authenticated review route. Cloud delivery has not been demonstrated by this pilot; if its environment cannot run the reviewer, handoff remains blocked.
 
-## Codex and Claude Code
+## Hosts
 
-| Session | First action | Current status |
-|---|---|---|
-| Codex, local | Paste the explicit-path starter, or invoke `$safe-engine` when discovered | The local delivery cycle was demonstrated on the recorded fixture. |
-| Claude Code with the `safe-engine` plugin | `/safe-engine Build ...` | 7 October: `claude plugin validate` passed; the same gate launcher, wired as a settings hook in a desktop session, denied a real Write and `npm install` and allowed `.factory/` writes. Plugin-loaded hooks await the first install. No complete Claude-builder app delivery verified yet. |
-| Claude Code, local, with Codex CLI installed | Add the factory directory, then ask Claude to read the same entry skill by its path | Documented manual loading route; no hooks. Review uses Codex when present. |
-| Claude Code without Codex CLI | Builds normally; Safe review uses `review-packet` with a fresh read-only Claude subagent, then `review --report` | Controller labels it external; it cannot verify the reviewer's independence. |
-| Cloud-hosted session | Provision both repositories and the required tools inside that environment | Not demonstrated; local installation does not establish cloud compatibility. |
-
-For an installed Claude Code CLI, launch from your target project:
-
-```powershell
-# First Set-Location to your actual target project.
-claude --add-dir 'C:\work\ai-software-factory'
-```
-
-Then paste the same explicit-path starter. For an existing Claude Code session, `/add-dir C:/work/ai-software-factory` grants access to the bundle. This repository uses `.agents/skills`, while Claude's native discovery uses `.claude/skills` and plugins; adding file access does not create a `/safe-engine` command or hooks. Install the [plugin](install-safe-engine.md#claude-code) to obtain both. [Claude CLI reference](https://code.claude.com/docs/en/cli-reference), [Claude skills](https://code.claude.com/docs/en/skills).
-
-Claude Code was not available on PATH when this guide was checked on 2 October 2026. These are official-documented launch instructions, not a claim that a Claude-only factory run passed.
+[Hosts](hosts.md) owns per-host install routes, skill syntax, hooks, reviewers and what was checked where. A cloud-hosted session needs both repositories and the required tools provisioned inside that environment; cloud delivery has not been demonstrated.
 
 ## The first controller commands
 
@@ -175,7 +158,7 @@ Preserve this app's progress. Checkpoint it, repair the factory in isolation,
 get an independent assessment, and resume through the supported workflow.
 ```
 
-Replace the path if the bundle lives elsewhere. If the host discovers the skill, `$improve-factory` is the shorter invocation. For a reusable personal installation, follow [Install Improve Factory from GitHub](install-improve-factory.md): its portable folder enables `$improve-factory` in Codex or `/improve-factory` in Claude Code after discovery. It loads the complete canonical bundle and preserves an active run's recorded version. The controller's broader host limitations above still apply.
+Replace the path if the bundle lives elsewhere. If your agent discovers the skill, ask for improve-factory directly in its syntax ([hosts](hosts.md)). For a reusable personal installation, follow [Install Improve Factory](install-improve-factory.md). It loads the complete canonical bundle and preserves an active run's recorded version. The controller's broader host limitations above still apply.
 
 The selected policy holds affected app work during repair; only demonstrably independent work may continue. The parent keeps app ownership and passes a durable context packet to delegates. Exact bundle versions and evidence matter: incompatible changes may require a new reviewed run in a fresh app worktree, preserving the old run. The [live-session procedure](../.agents/skills/improve-factory/references/live-session.md) explains actual 0.1.0 recovery limits. No automatic state migration or uninterrupted mid-run upgrade is claimed.
 

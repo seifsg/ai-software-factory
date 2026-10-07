@@ -37,7 +37,7 @@ Keep Get Ready's file-summary stop unless existing user instructions explicitly 
 
 ## Both
 
-- `verify` (this command, not Safe's `verify` phase) replaces Fast's done-run: finish the work, final manual QA of the main and failure journeys, then write and run relevant automated tests ([tests-last order](../../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests)). No controller or Codex review.
+- `verify` (this command, not Safe's `verify` phase) replaces Fast's done-run: finish the work, final manual QA of the main and failure journeys, then write and run relevant automated tests ([tests-last order](../../../../docs/current-decisions.md#finish-work-use-it-then-automate-tests)). No controller or independent agent review.
 - `promote`: commit the current code as the Git baseline; it is the ticket's actual before. Then [Ticketing](../../ticketing/SKILL.md) on the existing epic, a builder session and the full Safe cycle from analyze, including the file-summary stop unless the owner has confirmed the ticket's before/after.
 - PRs only when asked: a draft via [creation](../../how-to-make-a-pr/SKILL.md), linked to the run's epic. List missing tests, review and baseline as unverified in the PR; attach the finished screenshot. Cloud PR review only when asked. Safe keeps both PR procedures for authorized PRs.
 - Before creating or updating a Fast/Lucky PR, offer once: **"Run a Safe check first? (optional)"**. A Safe check is final manual QA, relevant tests and one independent review of the finished work. Yes: run it, fix, then open the PR. No: open the draft as is. Never repeat the offer for the same PR.

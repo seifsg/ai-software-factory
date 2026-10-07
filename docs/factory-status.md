@@ -1,5 +1,7 @@
 # Factory status
 
+7 October, agent-agnostic candidate ([epic #32](https://github.com/seifsg/ai-software-factory/issues/32)): any coding agent runs the factory; Claude Code, Codex and Cursor are first-class through [hosts](hosts.md) (installer, gate hook dialects, Safe reviewer presets). Unmerged until Seif asks.
+
 7 October candidate ([epic #26](https://github.com/seifsg/ai-software-factory/issues/26)): Fast and Lucky keep tickets, recorded methods and the [product bar](../.agents/skills/safe-engine/references/product-bar.md); new products and big features start with quick research and one owner question round. A [gate](../.agents/skills/safe-engine/references/fast-run.md#the-gate) checks each step, enforced by the Claude Code plugin's hooks. Unmerged until Seif asks for the PR.
 
 5 October candidate: Working iterations. Useful outcome first, required quality intact. Dated evidence below certifies its original candidate; publication/adoption needs separate proof.

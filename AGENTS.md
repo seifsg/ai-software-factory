@@ -16,6 +16,10 @@ Seif is the primary author. Compress AI prose; preserve his deliberate reminders
 
 Spend steps where they change decisions, results or evidence. Reuse valid analysis, choices, records and checks. Read each method fully once when its phase starts; delegates get only their role's methods plus the agent-routing brief. Reread changed/lost context, not every cross-link. Load conditional references only when needed. Reassess changed inputs, failures or unresolved material concerns; no recursive skills, duplicate reports, repeated votes or busywork. Preserve required gates, independent review and original checkpoints/0–4 corrections.
 
+## Stay agent-agnostic
+
+Seif, 7 October: the factory runs on any coding agent. Methods and docs say "your agent"; host-specific commands, paths and flags live only in [hosts](docs/hosts.md) and the host adapters (plugin manifest, `fast_hosts.py`, `fast_install.py`, `safe_engine/reviewers.py`). Never make a step depend on one agent.
+
 ## Keep the requested scope
 
 An analysis, planning or review request stays in that phase. A small subject does not authorize coding. File-summary stop: [speed modes](.agents/skills/safe-engine/references/speed-modes.md#safe).

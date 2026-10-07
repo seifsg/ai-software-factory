@@ -2,7 +2,7 @@
 
 **Historical implementation record.** This describes the original pilot and its then-current adaptations. The [current source map](skill-provenance.md#current-source-map--3-october-2026) now prioritizes Mobile originals. Part A/B below are historical labels; current callers use planning outputs and the 0–4 loop.
 
-The first working version runs Seif's existing methods inside a local Codex session. A Python controller persists the task, advances explicit stages, runs batched checks, rejects stale evidence, and invokes a fresh read-only Codex review before preparing a local handoff. It does not merge, deploy, or operate live systems.
+Historical (1 October 2026): the first working version ran Seif's existing methods inside a local Codex session. The factory is now agent-agnostic ([hosts](hosts.md)). A Python controller persists the task, advances explicit stages, runs batched checks, rejects stale evidence, and invokes a fresh read-only Codex review before preparing a local handoff. It does not merge, deploy, or operate live systems.
 
 ## Analysis of the starting repository
 

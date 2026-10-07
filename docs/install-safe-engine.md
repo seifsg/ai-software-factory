@@ -10,86 +10,46 @@ Seif selected [small-change](../.agents/skills/small-change/SKILL.md) on 3 Octob
 
 **Install `safe-engine` to build software: games, apps, services and tools.** `improve-factory` repairs the factory and is not required as a separate installation. Both load the same complete factory; Seif's original methods remain canonical.
 
-## Codex: install once, use in any local project
+## Install for your agent
 
-Paste into a Codex session with your authorized GitHub access:
+The factory is agent-agnostic. Every agent reads the same `.agents/skills` and `AGENTS.md`; only installing and invoking differ, and [hosts](hosts.md) owns those details for Claude Code, Codex, Cursor and other agents.
 
-```text
-Use skill-installer to install safe-engine from
-seifsg/ai-software-factory, ref main, path skills/safe-engine.
-Use my existing authorized GitHub login. Install the entire portable folder,
-including scripts and references. Preserve any existing installation before replacing it.
-```
+1. Get the factory once with your existing GitHub access: `git clone https://github.com/seifsg/ai-software-factory.git`, or use any existing checkout or bundle.
+2. Install for your agent:
 
-Then, in the app's chat:
+   ```text
+   python <factory>/skills/safe-engine/scripts/fast_gate.py install --host claude|codex|cursor|other
+   ```
 
-```text
-$safe-engine Build [describe my app or feature] in [absolute project directory].
-Success means [observable outcomes]. Work autonomously within these requirements,
-preserve my existing decisions, and show meaningful progress and actual QA.
-```
+   - Claude Code: enables the `safe-engine` plugin (skills and gate hooks) in your user settings; start a new session. Other Claude routes: [hosts](hosts.md#claude-code).
+   - Codex, Cursor: copies the two entry skills into `~/.agents/skills` and writes the gate hooks; Codex asks you to trust them once in `/hooks`.
+   - Other agents: `--host other` puts the skills in `~/.agents/skills`; wire hooks by hand per [hosts](hosts.md#other-agents).
 
-To continue later:
+3. Ask your agent, using its skill syntax from [hosts](hosts.md):
 
-```text
-$safe-engine Resume the existing run in [absolute project directory].
-Preserve the chosen factory bundle, task, decisions and evidence.
-```
+   ```text
+   safe-engine Build [describe my app or feature] in [absolute project directory].
+   Success means [observable outcomes]. Work autonomously within these requirements,
+   preserve my existing decisions, and show meaningful progress and actual QA.
+   ```
 
-The installed skill should be discovered on the next turn. If it does not appear, refresh/start a new session or read its installed `SKILL.md` explicitly. It is a chat invocation, not a shell command. Repository and personal skills can share a name: verify which path is selected when working in the factory repository itself.
+   To continue later:
 
-The bundled installer equivalent is:
+   ```text
+   safe-engine Resume the existing run in [absolute project directory].
+   Preserve the chosen factory bundle, task, decisions and evidence.
+   ```
 
-```text
-python <skill-installer>/scripts/install-skill-from-github.py --repo seifsg/ai-software-factory --ref main --path skills/safe-engine --method git
-```
+Skills appear on the next turn or in a new session; if not, ask the agent to read the installed `SKILL.md` by path. Repository and personal skills can share a name: verify which one is selected when working in the factory repository itself. For a reproducible install, check out one commit before installing and pass the same SHA to the entry resolver's `--ref` for a new app; the installed entry and the fetched bundle have separate identities.
 
-Use `py -3` on Windows if needed. The bundled installer uses `$CODEX_HOME/skills`; current Codex documentation also supports the personal `$HOME/.agents/skills` location. Use the host's installer/discovery paths rather than changing global settings. A reproducible install can use a full commit SHA instead of `main`; **also supply that SHA with the entry helper's `--ref` for a new app**. The installed adapter and fetched bundle have separate identities.
+Gate hooks hold [Fast and Lucky runs](../.agents/skills/safe-engine/references/fast-run.md#hooks) to their steps. With no active run they exit before Python starts (where `sh` runs them). Needs Python 3.9+ (`python`, `python3` or `py -3`), Git Bash on Windows for Claude Code hooks, and `gh` for ticket checks.
 
-## Claude Code
-
-Install the factory as a plugin (Seif's 7 October choice). Once per machine, in a terminal with your existing GitHub access:
-
-```text
-claude plugin marketplace add seifsg/ai-software-factory
-claude plugin install safe-engine@ai-software-factory
-```
-
-Inside a session the same commands start with `/plugin`. Desktop app Code tab: add the marketplace, then **+ > Plugins > Add plugin**. Factory updates arrive when you turn on **Enable auto-update** for `ai-software-factory` under `/plugin` > Marketplaces (off by default for third-party marketplaces); the plugin version follows the repository commit.
-
-The plugin adds:
-
-- `/safe-engine` and `/improve-factory` (full names `/safe-engine:safe-engine`, `/safe-engine:improve-factory`).
-- Gate hooks for [Fast and Lucky runs](../.agents/skills/safe-engine/references/fast-run.md#hooks): source edits and scaffold/install commands wait for the pre-build steps, stopping mid-run is blocked once, each prompt gets the next step. With no active run the hook exits before Python starts.
-
-Needs Git Bash on Windows (Claude Code's hook shell), Python 3.9+ as `python3`, `python` or `py -3`, and `gh` for ticket checks. A personal folder install in `~/.claude/skills/safe-engine` still loads the skill but brings no hooks.
-
-Safe's local controller review uses an authenticated Codex CLI, or `review-packet` to a fresh read-only Claude subagent. A complete Claude-builder app delivery has not been demonstrated yet.
-
-### Codex gate hooks (optional)
-
-Codex hooks use the same contract. Add to `~/.codex/hooks.json`, then review and trust them with `/hooks`. Replace `<home>` with your home folder. Not exercised on this repository's machine.
-
-```json
-{
-  "hooks": {
-    "PreToolUse": [{"matcher": "Bash|apply_patch", "hooks": [{"type": "command",
-      "command": "sh \"$HOME/.codex/skills/safe-engine/scripts/run-gate.sh\"",
-      "commandWindows": "py -3 \"<home>/.codex/skills/safe-engine/scripts/fast_gate.py\" hook", "timeout": 30}]}],
-    "Stop": [{"hooks": [{"type": "command",
-      "command": "sh \"$HOME/.codex/skills/safe-engine/scripts/run-gate.sh\"",
-      "commandWindows": "py -3 \"<home>/.codex/skills/safe-engine/scripts/fast_gate.py\" hook", "timeout": 30}]}],
-    "UserPromptSubmit": [{"hooks": [{"type": "command",
-      "command": "sh \"$HOME/.codex/skills/safe-engine/scripts/run-gate.sh\"",
-      "commandWindows": "py -3 \"<home>/.codex/skills/safe-engine/scripts/fast_gate.py\" hook", "timeout": 20}]}]
-  }
-}
-```
+Safe's local review launches any installed agent CLI that did not build the candidate (`review --agent auto --builder <your agent>`); without one, `review-packet` goes to a fresh read-only subagent of your host. A complete app delivery has not been demonstrated on every host; [hosts](hosts.md) records what was checked where.
 
 ## What happens on first use
 
 ```text
-$safe-engine + your app request
+safe-engine skill + your app request
   -> resolve complete private main bundle to one commit
   -> save the app's selected bundle path/revision
   -> read full canonical factory and all methods as each phase requires
@@ -103,7 +63,7 @@ File-summary stop: [speed modes](../.agents/skills/safe-engine/references/speed-
 
 The agent creates a missing target directory within scope, preserves work and establishes actual settings, session contract and clean Git baseline. Version-2 initialization allows draft acceptance without tests; independently seal final acceptance after implementation, final manual QA and test authoring ([tests-last order](current-decisions.md#finish-work-use-it-then-automate-tests)). Your decisions and real boundaries remain. Follow [usage](pilot-usage.md#feature-feedback-and-version-checkpoints); browser QA needs a runnable app and permitted controls.
 
-Git, private access, Python 3.9+ (the launcher finds or installs Git and Python), authenticated Codex CLI for local controller review (no Codex CLI: `review-packet` to a fresh read-only subagent, then `review --report`) and actual check tools are prerequisites. PR review separately needs [cloud PR review](pr-workflow.md#cloud-pr-review). Inspect capabilities before dependent work. Skills grant no credentials, universal dependencies, cloud route or background service.
+Git, private access, Python 3.9+ (the launcher finds or installs Git and Python), one authenticated agent CLI for local controller review (none: `review-packet` to a fresh read-only subagent, then `review --report`) and actual check tools are prerequisites. PR review separately needs [cloud PR review](pr-workflow.md#cloud-pr-review). Inspect capabilities before dependent work. Skills grant no credentials, universal dependencies, cloud route or background service.
 
 ## Version-safe resume
 
@@ -125,7 +85,7 @@ Removing the host-local record restores the earlier entry route; it does not und
 
 ## Another machine or cloud session
 
-Install inside that environment, using its own authorized GitHub login and tools. This computer's personal skill installation does not propagate to other hosts. Claude cloud sessions can load project skills committed to their cloned repository; personal `~/.claude/skills` folders are local. Read the installed entry explicitly if discovery is unavailable. If the environment cannot run required checks or independent review, report the actual blocked step; do not label delivery verified.
+Install inside that environment, using its own authorized GitHub login and tools. This computer's personal skill installation does not propagate to other hosts. Cloud sessions load skills committed to their cloned repository (`.agents/skills`, or `.claude/skills` for Claude Code); personal skill folders are local. Read the installed entry explicitly if discovery is unavailable. If the environment cannot run required checks or independent review, report the actual blocked step; do not label delivery verified.
 
 ## Packaging and verification
 
@@ -133,7 +93,7 @@ Install inside that environment, using its own authorized GitHub login and tools
 
 The existing [pilot record](pilot-verification.md) documents the actual local build and repair. Distribution tests exercise real Git checkout/cache/selection boundaries; a successful install or file-loading smoke test is not proof of a new complete app build or every host's compatibility.
 
-References checked 3 October 2026: [Codex skills](https://learn.chatgpt.com/docs/build-skills), [Claude Code skills](https://code.claude.com/docs/en/skills). See [fresh-session setup](start-another-session.md) for manual bundle use, [pilot usage](pilot-usage.md) for controller commands, and [maintenance installation](install-improve-factory.md) when you want to change the factory.
+Host references: [hosts](hosts.md#sources). See [fresh-session setup](start-another-session.md) for manual bundle use, [pilot usage](pilot-usage.md) for controller commands, and [maintenance installation](install-improve-factory.md) when you want to change the factory.
 
 ## Version 2 launcher upgrade
 
