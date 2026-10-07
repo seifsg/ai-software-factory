@@ -115,7 +115,7 @@ Next.js app, SQLite through Drizzle, booking rules in one module. Light theme wi
 **Icons:** lucide-react
 **Layout:** header with logo, Schedule, My bookings and account menu; content area; footer with studio address, Help, Privacy and ©; one column on phones
 **Theme:** light mode default; dark mode later
-**Journeys:** book a class: 2 actions, 1 load, min 2; cancel a booking: 2 actions, 0 loads, min 2 (confirm is a destructive confirm); staff check-in: 1 action per member, 0 loads, min 1
+**Journeys:** book a class: 2 actions, 1 load, min 2 actions; cancel a booking: 2 actions, 0 loads, min 1 action (the destructive confirm is the reason for the gap); staff check-in: 1 action per member, 0 loads, min 1 action
 
 ## Schema
 

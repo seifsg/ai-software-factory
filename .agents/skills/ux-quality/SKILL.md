@@ -15,9 +15,9 @@ Review and design requests stay read-only. Do not code unless told.
 
 - Read the request, the design system, the actual interface and settled choices.
 - Record audience, goal, devices and inputs, accessibility needs, success and failure states.
-- Map each core journey: `intent → entry → actions/decisions/waits → outcome → recovery/exit`. Count its actions (clicks, taps, submits) and page or screen loads for the most common case. The minimum is the fewest actions the job itself needs, whatever the design. Above it needs a reason. Find repeated entry, confusion, dead ends, lost work.
+- Map each core journey: `intent → entry → actions/decisions/waits → outcome → recovery/exit`. For the most common case, count its actions from entry (each click, tap, submit or filled field) and its loads (new pages or screens; dialogs, tabs and expands are not loads). The minimum is the fewest actions the job itself needs, whatever the design. Above it needs a reason, such as deliberate friction. Find repeated entry, confusion, dead ends, lost work.
 - Remove accidental effort. Keep intended game challenge, consent, safety and comprehension. No deceptive defaults, no hidden costs.
-- New UI or new look: fix the design brief before UI code. `**UI kit:**`, palette as hex tokens (≥4, AA contrast), `**Font:**`, `**Logo:**`, `**Icons:**`, `**Layout:**` (header, content, footer, phone to desktop), `**Theme:**` (light by default), `**Journeys:**` (per core journey: `<journey>: <n> actions, <n> loads, min <n>`, plus the reason for any gap). Use the project's visual defaults when it has them.
+- New UI or new look: fix the design brief before UI code. `**UI kit:**`, palette as hex tokens (≥4, AA contrast), `**Font:**`, `**Logo:**`, `**Icons:**`, `**Layout:**` (header, content, footer, phone to desktop), `**Theme:**` (light by default), `**Journeys:**` (per core journey: `<journey>: <n> actions, <n> loads, min <n> actions`, plus the reason for any gap). Use the project's visual defaults when it has them.
 - Any user-facing text (labels, buttons, empty states, errors, pages): read `references/copy.md`.
 - Icons, images, motion, sound: read `references/assets.md`.
 - Public pages meant for search: read `references/web-seo.md`. Private screens stay out.
@@ -31,7 +31,7 @@ Uncertain interaction, layout, icon, image or sound? Research before choosing.
 - Record URL, version, what you observed. Vendor claims and marketing shots are not hands-on evidence.
 - Substantive choice: compare three credible options on clarity, steps, familiarity, accessibility, visual or audio fit, runtime cost, compatibility, rights. Show samples. Recommend one: why, tradeoff, what would change it. Fewer than three viable: say why. Invent none.
 - Settled choices stay. Adequate assets stay. Do not replace them just to compare.
-- Owner-specified UX that adds interaction cost or breaks step 3: name the cost, show the better option, ask once before building. Until the answer, the brief records both options' counts. Build what the owner confirms.
+- Owner-specified UX that counts above the minimum without a reason, or breaks step 3: name the cost, show the better option, ask once before building. Until the answer, the brief records both options' counts. Build what the owner confirms.
 - Delegated in-scope choices are yours. Ask the owner only for reserved decisions, missing access or consequential ambiguity. No implied purchase, account, rights exception or release.
 - Source you cannot reach stays unverified. Find a permitted alternative.
 
@@ -40,7 +40,7 @@ Uncertain interaction, layout, icon, image or sound? Research before choosing.
 | Area | Require |
 |---|---|
 | Simplicity | One clear primary action. Plain language. Useful defaults. No duplicate entry. Advanced work reachable, not in the way. |
-| Interaction cost | Fewest actions and loads from entry to outcome. Primary content and the next action show where the user lands. No page whose only job is one link. Design collections for 0, 1, few and many: one item shows in place (no list of one), a few stay in place too (tabs, sections, cards with their actions), many get search, sort or list and detail side by side. Defer only rare or advanced features, never the primary task. Deliberate friction stays: consent, destructive confirms, intended challenge. |
+| Interaction cost | Fewest actions and loads from entry to outcome. Primary content and the next action show where the user lands. No page whose only job is one link. Design collections for 0, 1, few and many: one item shows in place (no list of one), a few stay in place too (tabs, sections, cards with their actions), many (more than one screen) get search, sort or filter, and list and detail side by side on wide screens. Defer only rare or advanced features, never the primary task. Deliberate friction stays: consent, destructive confirms, intended challenge. |
 | Familiarity | Follow platform and design-system navigation, back, selection, editing, shortcuts, symbols. Depart only for evidenced benefit. |
 | States | Loading. Empty, with the next action. Error, with retry. Success. Plus validation, offline, permission where they apply. Explain disabled actions. Block double submit. Keep input. Cancel, back, undo reachable. |
 | Accessibility | Semantic controls, labels, logical focus order, keyboard and assistive access, contrast, scaling and reflow, usable targets. Never rely on color, sound, hover or gesture alone. Reduced motion. Alternative to dragging. WCAG 2.2 AA for web, or the project's stricter rule. |

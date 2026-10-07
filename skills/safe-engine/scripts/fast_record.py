@@ -128,7 +128,7 @@ def check_design(run, body, **_):
     if theme and "light" not in theme.lower():
         problems.append("Theme must name light mode as the default")
     if journeys and not re.search(r"\d.*\bmin\b\W*\d", journeys, re.I):
-        problems.append("Journeys must give counts and a minimum: '<journey>: 2 actions, 1 load, min 2'")
+        problems.append("Journeys must give counts and a minimum: '<journey>: 2 actions, 1 load, min 2 actions'")
     return problems
 
 
