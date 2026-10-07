@@ -123,10 +123,12 @@ def check_plan(run, body, **kwargs):
 
 def check_design(run, body, **_):
     problems = [] if len(set(re.findall(r"#[0-9a-fA-F]{6}\b", body))) >= 4 else ["needs >=4 hex palette colors"]
-    problems += missing_markers(body, ["UI kit", "Font", "Logo", "Icons", "Layout", "Theme"])
-    theme = marker(body, "Theme")
+    problems += missing_markers(body, ["UI kit", "Font", "Logo", "Icons", "Layout", "Theme", "Journeys"])
+    theme, journeys = marker(body, "Theme"), marker(body, "Journeys")
     if theme and "light" not in theme.lower():
         problems.append("Theme must name light mode as the default")
+    if journeys and not re.search(r"\d.*\bmin\b\W*\d", journeys, re.I):
+        problems.append("Journeys must give counts and a minimum: '<journey>: 2 actions, 1 load, min 2'")
     return problems
 
 

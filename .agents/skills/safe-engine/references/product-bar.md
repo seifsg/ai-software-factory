@@ -37,6 +37,7 @@ Fill the design brief before UI code. Run `ux-quality` on every UI change.
 ## States and forms
 
 - Every screen has loading, empty (with the next action), error (with retry) and success states.
+- Every collection is designed for one, few and many items. One item shows in place, never behind a list of one.
 - Errors say what happened and the next useful action. No blame, no false success.
 - Forms validate inline and keep input. Client validation is UX; the server validates again.
 - Labels on buttons and links match what they actually do.
