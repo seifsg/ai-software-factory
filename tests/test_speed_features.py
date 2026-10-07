@@ -26,7 +26,7 @@ from safe_engine.project import (EngineError, file_hash, git, production_fingerp
 from safe_engine.proof import proof_draft
 from safe_engine.storage import atomic_json, read_json
 from safe_engine.tickets import timestamp
-from safe_engine.workflow import DELEGATION, EXTERNAL, Workflow
+from safe_engine.workflow import DELEGATION, EXTERNAL, REVIEW_ROUNDS, Workflow
 
 BUNDLE = Path(__file__).resolve().parents[1]
 DOUBLE = "Synthetic double; no actual independent acceptance"
@@ -554,9 +554,9 @@ class CarriedManualQaTests(Base):
 
 
 class ReviewRoundCapTests(Base):
-    def test_three_failed_reviews_then_refused_until_the_owner_extends(self):
+    def test_capped_failed_reviews_then_refused_until_the_owner_extends(self):
         f = self.to_review()
-        for round_number in (1, 2, 3):
+        for round_number in range(1, REVIEW_ROUNDS + 1):
             if round_number > 1:
                 self.redo(f)
             self.assertEqual(self.codex_review(f, report("FAIL", [finding()]))["phase"], "review")
@@ -570,13 +570,13 @@ class ReviewRoundCapTests(Base):
             reviewer.assert_not_called()
         self.assertFalse((f.root / ".factory/capped-packet.md").exists())
         status = f.flow.extend_reviews(2, "The owner decided two more rounds")
-        self.assertEqual((status["failed_reviews"], status["review_rounds"]), (3, 5))
+        self.assertEqual((status["failed_reviews"], status["review_rounds"]), (REVIEW_ROUNDS, REVIEW_ROUNDS + 2))
         self.assertIn("The owner decided two more rounds", f.flow.load()["history"][-1]["event"])
         self.assertEqual(self.codex_review(f, report())["phase"], "ready")
 
     def test_extension_grants_exactly_the_requested_extra_rounds(self):
         f = self.to_review()
-        self.set_state(f, failed_reviews=3)
+        self.set_state(f, failed_reviews=REVIEW_ROUNDS)
         f.flow.extend_reviews(1, "One more")
         self.assertEqual(self.codex_review(f, report("FAIL", [finding()]))["phase"], "review")
         self.redo(f)
@@ -586,7 +586,7 @@ class ReviewRoundCapTests(Base):
     def test_an_early_extension_never_lowers_the_cap(self):
         f = self.fixture()
         f.flow.initialize(f.task, f.profile)
-        self.assertEqual(f.flow.extend_reviews(1, "Extended before any review failed")["review_rounds"], 4)
+        self.assertEqual(f.flow.extend_reviews(1, "Extended before any review failed")["review_rounds"], REVIEW_ROUNDS + 1)
 
     def test_invalid_extensions_are_rejected_without_changing_the_run(self):
         f = self.to_review()
@@ -665,13 +665,13 @@ class ExternalReviewerTests(Base):
     def test_extension_keeps_the_open_packet_usable(self):
         f = self.to_review()
         self.packet(f)
-        for _ in (1, 2):
+        for _ in range(REVIEW_ROUNDS - 1):
             self.packet(f)
         with self.assertRaisesRegex(EngineError, "round cap"):
             self.packet(f)
-        self.assertEqual(f.flow.extend_reviews(1, "Owner: one more round")["review_rounds"], 4)
+        self.assertEqual(f.flow.extend_reviews(1, "Owner: one more round")["review_rounds"], REVIEW_ROUNDS + 1)
         self.assertEqual(self.external(f, report())["phase"], "ready")
-        self.assertEqual(f.flow.status()["failed_reviews"], 2)
+        self.assertEqual(f.flow.status()["failed_reviews"], REVIEW_ROUNDS - 1)
 
     def test_extension_never_revives_a_stale_packet(self):
         f = self.to_review()
@@ -805,11 +805,11 @@ class ExternalReviewerTests(Base):
         f = self.to_review()
         self.packet(f)
         self.assertEqual(f.flow.status()["failed_reviews"], 0)
-        for expected in (1, 2):
+        for expected in range(1, REVIEW_ROUNDS):
             self.packet(f)
             self.assertEqual(f.flow.status()["failed_reviews"], expected)
         before = f.flow.load()
-        refused = f.flow.directory / "fourth-packet.md"
+        refused = f.flow.directory / "over-cap-packet.md"
         with self.assertRaisesRegex(EngineError, "round cap"):
             self.packet(f, refused.name)
         self.assertFalse(refused.exists())
@@ -899,7 +899,7 @@ class ExternalReviewerTests(Base):
 
     def test_failed_external_reviews_count_toward_the_cap_and_packets_stop(self):
         f = self.to_review()
-        for round_number in (1, 2, 3):
+        for round_number in range(1, REVIEW_ROUNDS + 1):
             if round_number > 1:
                 self.redo(f)
             self.packet(f)

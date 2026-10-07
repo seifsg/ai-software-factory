@@ -15,7 +15,7 @@ VOLATILE = {"sequence", "history", "updated_at", "review_packet", "review_rounds
             "pending_operation"}  # save counters and cap bookkeeping; not reviewed records
 RESERVED = {"state.json", "lock", "handoff.md", "history", "outputs", "logs", "artifacts", "ticket-observations",
             "entry-bundle.json", "runs"}  # runs: legacy runs use .factory itself as the run dir
-REVIEW_ROUNDS = 3  # failed reviews before the owner decides
+REVIEW_ROUNDS = 6  # failed reviews (high/critical open) before the owner decides
 EXTERNAL = "external reviewer; independence not verified by the controller"
 
 

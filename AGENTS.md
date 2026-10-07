@@ -23,9 +23,9 @@ The `## Work rules` section of `.agents/skills/safe-engine/SKILL.md` applies to 
 
 - Moving, adding or deleting a factory file: update `safe_engine/bundle-inputs.json`, `safe_engine/distribution.py`, then `python scripts/package_skill_entries.py` (it regenerates both launcher resolvers; `--check` before pushing).
 - Manual use first, tests last. For method changes, manual use means a fresh agent walking through the changed skill.
-- `python -m unittest discover -s tests` passes before any PR. The hygiene test enforces rules 1, 3, 4 and 6.
+- Test what changed, before any PR or push. Prose only (skills, docs): `python -m unittest discover -s tests -p "test_skill_*.py"` and `-p test_bundle_inputs.py`. Any Python or script change: the full `python -m unittest discover -s tests`. The hygiene test enforces rules 1, 3, 4 and 6.
 - Keep secrets, client data, transcripts and `.factory/` run records out of Git.
 
 ## PRs
 
-Draft PRs only, through `how-to-make-a-pr`, linked to their ticket. Humans decide ready, merge and release. No AI attribution lines in commits or PR text.
+Draft PRs, through `how-to-make-a-pr`, linked to their ticket, unless the owner says push direct. Humans decide ready, merge and release. No AI attribution lines in commits or PR text.

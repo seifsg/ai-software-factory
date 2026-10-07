@@ -70,7 +70,7 @@ Record every step in one work record and pass the gate: [fast-run](references/fa
 10. **Done-run** (Fast): start it once, use the main journey and its most likely failure through real controls, read the logs, fix blockers. Screenshots for UI. No browser: drive its HTTP or CLI interface and say so.
 11. **Handoff:** how to run, dev sign-in, verified, unverified, follow-up tickets; update tickets; `close`.
 
-Lucky runs 1, 4, a short 5 and 6, 9 and 11. It asks nothing, does a light researches, takes product bar defaults for design and schema without comparisons, and is reported unverified.
+Lucky runs 1, 4, a short 5 and 6, 9 and 11. It asks nothing, researches nothing, takes product bar defaults for design and schema without comparisons, and is reported unverified.
 
 - `verify`: finish the work, manual QA of the main and failure journeys, then write and run relevant tests. No controller or independent review.
 - `promote`: commit the current code as the baseline, then (optionally) Safe on the existing epic.
@@ -91,7 +91,7 @@ Lucky runs 1, 4, a short 5 and 6, 9 and 11. It asks nothing, does a light resear
 
 - Tests last, whenever tests run (Safe, `verify`, a Safe check): finish the work, use it (main journey, failure and recovery), then write and run tests.
 - Every UI change: `ux-quality`. New or changed persistence: `database-schema`. Material unknowns: `research-market`.
-- PRs always: `how-to-make-a-pr`. A PR is planned: capture its before proof before editing. Before a Fast or Lucky PR, offer once: "Run a Safe check first? (optional)". A Safe check is manual QA, relevant tests and one independent `deep-review`.
+- PRs always: `how-to-make-a-pr`. Variations: one branch and draft PR per variation. A PR is planned: capture its before proof before editing. Before a Fast or Lucky PR, offer once: "Run a Safe check first? (optional)". A Safe check is manual QA, relevant tests and one independent `deep-review`.
 - Never claim tested, reviewed or production ready without that evidence.
 - Always document within tickets. Always make Todo's and checklists before building, then verify against them during the review and testing phases.
 
@@ -110,10 +110,12 @@ Lucky runs 1, 4, a short 5 and 6, 9 and 11. It asks nothing, does a light resear
 4. Retry only with a diagnosed cause or new evidence. Second related failure: find the shared cause and why the previous fix failed, fix the cause and its consumers, state what prevents recurrence.
 5. Reconcile uncertain pushes, comments and other external effects before retrying. No duplicates.
 6. Notify, merge, release, deploy and spend only with explicit authority. PRs stay draft.
-7. Review loops: at most 3 failed rounds (review, fixes, fresh review). Then stop and give the owner findings per round, the shared cause and options: extend, defer, amend scope, cancel.
-If at round 3 no high severity issues are found, proceed with the agreed outcome; otherwise keep going against high & critical issues until resolved.
-You can leave medium and below within different tickets that are low prio.
+7. Review loops: one round = review, fixes, fresh review.
+   - If at round 3 no high severity issues are found, proceed with the agreed outcome; otherwise keep going against high & critical issues until resolved.
+   - You can leave medium and below within different tickets that are low prio.
+   - Hard cap: 6 rounds with high or critical unresolved. Then stop and give the owner findings per round, the shared cause and options: extend, defer, amend scope, cancel.
 8. Stop only processes you started or own; graceful first. If you need to step outside, obtain explicit approval from the owner before doing so.
+   - Outside means beyond the project folder or its own processes, such as a server you did not start. Ask before closing it.
 
 ## Delegate
 
@@ -130,7 +132,10 @@ You can leave medium and below within different tickets that are low prio.
 - Resume or delegation carries: verbatim request, authority and stops, ticket links and confirmed scope, decisions, plan, current step, evidence, unverified items, blockers, next step.
 - Resume: read status, the ticket and the record; continue the first unfinished step. Never restart a run or invent artifacts.
 
-
 ## Factory Fault
-Allow user to enhance on factory by notifying the system of any issues or improvements needed.
-If we learn of points of improvement or faults in the factory, we should document them and present them to the user if they want to open an issue within the factory repository about them.
+
+A skill, the gate or the controller misbehaves, or a factory improvement shows up:
+
+1. Document it: observed, expected, example, factory revision.
+2. Open an issue in the factory's own repository asking for help. Mark it unverified.
+3. Do not run `improve-factory`. The owner verifies the issue first. Product bugs stay in delivery.

@@ -24,7 +24,7 @@ Analysis, planning or review-only requests grant no tracker writes. An explicit 
 
 - Ticket = one complete, user-visible outcome with its own criteria. Order by user value and proven dependencies.
 - Epic = overall outcome, shared constraints and decisions, sub-issue list, integration criteria.
-- 3 to 6 outcome sub-issues, plus follow-ups. A small change: one ticket. Never one per todo.
+- 1 or as many needed outcome sub-issues, plus follow-ups. A small change: one ticket. Never one per todo.
 - Do not split risky work to dodge full checks.
 - Deferrals and optional ideas become follow-up sub-issues, titled as follow-ups, with owner and revisit condition.
 

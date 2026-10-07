@@ -81,13 +81,13 @@ Do not code before the plan is recorded.
 - A fresh agent, never the writer, runs `deep-review` on the exact candidate from raw evidence. Give it no verdict.
 - A reviewer who repairs needs a different fresh review.
 - A changed gate needs its old rule, a reproduction and independent review. Its own pass proves too little.
-- One round: review, fixes, fresh review. At most 3 failed rounds. Then stop that loop and ask the owner once: findings per round, shared cause, options (extend, defer, amend scope, cancel). Keep independent work moving.
+- One round: review, fixes, fresh review. After round 3, only open high or critical findings keep it going; medium and below go to low-priority tickets. At most 6 failed rounds. Then stop that loop and ask the owner once: findings per round, shared cause, options (extend, defer, amend scope, cancel). Keep independent work moving.
 - No reviewer available: name the blocker. Never self-approve.
 
 ## 7. Deliver
 
 1. Refresh the maintenance ticket. Compare its confirmed criteria with the change, preserved behavior, proof and limits. Drift or a failed refresh blocks acceptance.
-2. PRs only when authorized, as drafts, through `how-to-make-a-pr`. Missing PR bindings block the PR, not local repair or checks.
+2. PRs always, as drafts, through `how-to-make-a-pr`. Missing PR bindings block the PR, not local repair or checks.
 3. Humans mark ready, merge and release. Installed copies and active runs never auto-upgrade. A launcher, gate or hook fix reaches agents only after publishing and a plugin update or a fresh `fast_gate.py install`.
 4. Active app run: adopt and resume per `references/live-session.md`.
 5. Report separately: structure, manual use, tests, review, adoption, PR. Brief before/after. Name what is unverified.

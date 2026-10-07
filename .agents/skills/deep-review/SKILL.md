@@ -149,7 +149,7 @@ Severity is impact. Disposition decides the gate: `blocking`, `before-exposure` 
 - Blocking: any CRITICAL or HIGH, an unmet core requirement, a broken existing journey, a required UNKNOWN, a mandatory rule violated without an authorized exception. Clean code that solves the wrong problem fails.
 - UNKNOWN is never N/A. Missing required evidence stays UNKNOWN and blocks dependent judgment. N/A needs evidence.
 - Deferral needs owner authority and a record: owner, reason, scope, follow-up ticket, revisit trigger. A note alone grants nothing.
-- The owner may delegate in advance the deferral of LOW findings, and of MEDIUM while exposure stays local. Any other MEDIUM deferral needs explicit owner authority. HIGH and CRITICAL are never deferred.
+- The owner may delegate in advance the deferral of LOW findings, and of MEDIUM while exposure stays local. MEDIUM and LOW left after round 3 go to separate low-priority tickets. HIGH and CRITICAL are never deferred.
 - Before-exposure items resolve before public exposure or production. A MEDIUM is not automatically a failure, and never silently waived.
 - Mandatory rule exceptions need an authorized owner, scope and record. Explanation alone waives nothing.
 - A verdict that depends on fixes not yet applied is **conditional**. Judge the actual candidate.
@@ -160,8 +160,8 @@ Severity is impact. Disposition decides the gate: `blocking`, `before-exposure` 
 
 - When told to fix: smallest change, affected layer only, intent unchanged. Then a fresh independent reviewer, not the one who fixed, assesses the result. A clean review needs no edits.
 - After any repair, rerun all configured checks. Reuse proof only when its inputs are exactly unchanged.
-- One round = independent review, fixes, fresh review. At most 3 failed rounds per review loop. The cap covers review rounds only.
-- After the third failed round, stop that loop. Give the owner one short packet: findings per round (new vs repeated), the shared cause, options (extend 1-3 rounds, defer with an owner record, amend scope, cancel).
+- One round = independent review, fixes, fresh review. After round 3, only open CRITICAL or HIGH keep the loop going. At most 6 failed rounds per review loop. The cap covers review rounds only.
+- After the sixth failed round, stop that loop. Give the owner one short packet: findings per round (new vs repeated), the shared cause, options (extend 1-3 rounds, defer with an owner record, amend scope, cancel).
 - Keep independent work moving while you wait.
 
 ## Output Format

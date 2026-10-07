@@ -75,7 +75,9 @@ git switch -c <scope>/<short-name> origin/<base>
 
 ## 8. Fast and Lucky PRs
 
-Open one only when asked. Before creating or updating it, offer once: **"Run a Safe check first? (optional)"**
+Open one for every run, unasked. Before creating or updating it, offer once: **"Run a Safe check first? (optional)"** No answer: open the draft as is.
+
+Variations requested: one branch and draft PR per variation, each following these rules with its own screenshot.
 
 - A Safe check = final manual QA, relevant tests, one independent review of the finished work.
 - Yes: run it, fix, then open the PR. No: open the draft as is.
