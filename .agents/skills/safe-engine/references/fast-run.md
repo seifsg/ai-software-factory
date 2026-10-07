@@ -30,7 +30,7 @@ Pause the gate while waiting. Record each answer with its source (`owner via que
 | Tickets | `**Epic:** <url>`; product and feature runs ≥1 `**Sub-issue:** <url>` |
 | Analysis | `**Success:**` line and a fenced ASCII chart |
 | Plan | `### Files`, `### Critique`, `### Phases`, `### Todos` (with `T1`…), `### Whole plan`, `**Logging:**`, `**Efficiency:**` |
-| Design | ≥4 `#RRGGBB` hex colors, `**UI kit:**`, `**Font:**`, `**Logo:**`, `**Icons:**`, `**Layout:**`, `**Theme:**` naming light mode |
+| Design | ≥4 `#RRGGBB` hex colors, `**UI kit:**`, `**Font:**`, `**Logo:**`, `**Icons:**`, `**Layout:**`, `**Theme:**` naming light mode, `**Journeys:**` with counts and a minimum |
 | Schema | a 3-option table, `**Chosen:**`, a fenced ERD or DDL |
 | Build log | every plan todo ID with `pre:`, `do:` and `post:` on one line |
 | Done-run | ≥1 `PASS` line, `**Logs:**`; UI runs ≥1 existing screenshot path under `.factory/fast/shots/` |

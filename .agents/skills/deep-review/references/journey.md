@@ -32,7 +32,7 @@ Trust nothing until traced. Follow the user's or consumer's first action to the 
 
 ## UX and public pages
 
-- UI/interaction changes: apply `ux-quality` to the affected journey: simple familiar flow, accessibility, rendered visuals, auditioned sounds. Missing interaction or listening evidence stays UNKNOWN.
+- UI/interaction changes: apply `ux-quality` to the affected journey: interaction cost against the recorded minimum, simple familiar flow, accessibility, rendered visuals, auditioned sounds. Missing interaction or listening evidence stays UNKNOWN.
 - Public pages meant for search: apply the `ux-quality` SEO checks with actual crawl/render evidence. Keep private and staging pages excluded.
 
 ## Calibrate

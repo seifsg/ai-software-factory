@@ -106,6 +106,11 @@ class FastGateTests(unittest.TestCase):
                               .replace("- T7 pre:", "- T7 skipped:"), encoding="utf-8")
         self.assertIn("light mode", self.gate("done", "design", ok=False))
         self.assertIn("T7 needs", self.gate("done", "build", ok=False))
+        journeys = next(line for line in text.splitlines() if line.startswith("**Journeys:**"))
+        record.write_text(text.replace(journeys, "**Journeys:** book a class, cancel a booking"), encoding="utf-8")
+        self.assertIn("counts and a minimum", self.gate("done", "design", ok=False))
+        record.write_text(text.replace(journeys + "\n", ""), encoding="utf-8")
+        self.assertIn("'**Journeys:**' line", self.gate("done", "design", ok=False))
         record.write_text(text.replace("**Dev sign-in:**", "Sign-in:"), encoding="utf-8")
         self.assertIn("Dev sign-in", self.gate("done", "handoff", ok=False))
 
