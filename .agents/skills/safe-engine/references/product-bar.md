@@ -1,8 +1,8 @@
 # Product bar
 
-Contents: Stack, Visual system, States and forms, Public pages, Data, Logging, Speed, Security, Dev sign-in, POC deferrals, Games and browser lifecycle, External effects, Release.
+Contents: Stack, Visual system, States and forms, Public pages, Data, Logging, Speed, Security, Dev sign-in, Scope and deferrals, Games and browser lifecycle, External effects, Release.
 
-The quality floor for every app, game, service, tool and library, in every mode. A POC or MVP is the first slice of the real product: built right, never thrown away. Record its stack, design brief and budgets in the plan.
+The quality floor for every app, game, service, tool and library, in every mode. A POC or MVP is real product code: built right, never thrown away. Record its full requested outcome, stack, design brief and budgets in the plan.
 
 - Minimal code means no waste. It never justifies a weaker stack, missing states or a bare UI.
 - New products meet all of it. Changes cover the affected paths and their consumers; record wider gaps, no unrelated restructuring.
@@ -148,13 +148,13 @@ Before exposure, exercise denial paths with harmless accounts (anonymous, other 
 
 Apps with accounts seed one user per role. Development builds show one-click buttons beside the normal sign-in form: "Sign in as Admin", "Sign in as Client" and so on. The server accepts them only in development; production builds drop the route and buttons. The handoff names the URL and buttons, so the owner never hunts for credentials.
 
-## POC deferrals
+## Scope and deferrals
 
-Unless the owner asks, a POC may defer Docker, Kubernetes, CI/CD, deployment, unit-test suites and security hardening (rate limits, CSRF, headers, audits).
+POC: implement every requested requirement, including the integrations needed to test the concept. MVP: keep every requested requirement; research may add useful missing capabilities under recorded authority. Size, mode, resource budgets and iteration order never authorize removing requested work.
 
-- Each deferral becomes a follow-up ticket in the epic with an owner and an acceptance or revisit condition. No vague "later".
-- Never deferred: role checks the journeys need, secrets out of code and Git, logging, screen states, the visual system.
-- Security applies in full before any public exposure.
+- Unrequested delivery work may wait: Docker, Kubernetes, CI/CD, deployment, unit-test suites and security hardening. Each deferral needs a follow-up ticket, owner and revisit condition. Required protections still precede exposure.
+- A requested capability or integration may be removed or deferred only by an explicit owner decision. Record its source, old and new scope, reason and destination. Missing access leaves it blocked or incomplete, never optional.
+- Within the confirmed scope, never deferred: required journeys, role checks they need, secrets out of code and Git, logging, screen states and the visual system. Security applies in full before public exposure. Partial iterations keep the whole requested outcome open.
 
 ## Games and browser lifecycle
 

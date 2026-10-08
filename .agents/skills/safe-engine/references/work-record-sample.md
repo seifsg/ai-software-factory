@@ -53,10 +53,10 @@ Summary shown to the owner: all three leaders cover booking, waitlists, packs, c
 ## Kickoff
 
 **Features:** schedule and booking, waitlist with auto-promotion, class packs (mock checkout), staff schedule and check-in
-**Size:** POC (from the request): one studio, seeded members and classes, the member booking journey
+**Size:** POC (from the request): one studio and seeded data; all requested member booking, pack purchase, waitlist and staff-management journeys
 **Approach:** studio-branded booking site with packs (over a marketplace listing, or a staff-only scheduler)
 **Stack:** Next.js + TypeScript + shadcn/ui + Drizzle + SQLite
-**Answered by:** owner via the question tool (sample answers)
+**Answered by:** owner via the question tool (sample answers), explicitly selecting a working local mock checkout that grants purchased credits, with no live payment-provider integration in this POC
 
 ## Tickets
 
@@ -66,6 +66,7 @@ Summary shown to the owner: all three leaders cover booking, waitlists, packs, c
 **Sub-issue:** https://github.com/acme/studio-booking/issues/4 (member buys a class pack and spends credits)
 **Sub-issue:** https://github.com/acme/studio-booking/issues/5 (staff publish classes and check members in)
 **Backlog:** searched "booking", "waitlist", "class pack": empty, new repository. Owned: #1 to #5, To do, P1. Affected and untouched: none.
+Requirement coverage: schedule/booking -> #2; waitlist/promotion -> #3; pack purchase/credit spend -> #4; staff schedule/check-in -> #5. Each remains required; only live payments were explicitly deferred in the sample answers.
 
 ## Analysis
 
@@ -156,7 +157,7 @@ indexes: classes(starts_at), bookings(class_id, status), waitlist(class_id, posi
 ## Handoff
 
 **Run:** `pnpm install && pnpm db:seed && pnpm dev`, then http://localhost:3000
-**Statuses:** #2, #3, #4 Done (done-run PASS); #5 Ready for QA (staff check-in not exercised); epic #1 Ready for QA until the owner accepts; follow-ups #6, #7, #8 Backlog (P2, P2, P3)
+**Statuses:** #2, #3, #4 Done (done-run PASS); #5 Ready for QA (staff check-in not exercised); epic #1 Ready for QA, whole POC incomplete until that requested journey has proof and the owner accepts; follow-ups #6, #7, #8 Backlog (P2, P2, P3)
 **Dev sign-in:** /sign-in shows "Sign in as Member" and "Sign in as Staff" in development only, beside the normal form
 **Unverified:** automated tests, independent review, Safari, payment provider
 **Follow-ups:** real payments (#6), security hardening (#7), deployment (#8)

@@ -13,6 +13,7 @@ Build in complete working iterations. Tiny bug or full product, same logic.
 - Before dependent work: shared state owner, limits, compatibility and failure behavior.
 - Required quality stays. Optional polish/enhancements later: owner, ticket, acceptance condition.
 - Complete outcome ticket -> finish iteration -> manual QA -> relevant final tests/review. Full requested outcome stays open until delivered.
+- Map every original requirement to an outcome ticket, criterion, planned implementation and final proof. Iterations order that work; they do not cut POC or MVP scope. A later focused slice leaves earlier requirements active unless the owner explicitly changes them.
 
 Prepare a :
 - summary of files about to change then stop. (Continue without stopping only when your instructions already authorize it.)

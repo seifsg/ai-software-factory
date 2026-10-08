@@ -67,7 +67,9 @@ A tracker or board with other states: map each status to the nearest existing on
 - Epic = overall outcome, shared constraints and decisions, sub-issue list, integration criteria.
 - 1 or as many needed outcome sub-issues, plus follow-ups. A small change: one ticket. Never one per todo.
 - Do not split risky work to dodge full checks.
-- Deferrals, optional ideas and open review findings become follow-up sub-issues in Backlog, titled as follow-ups, with priority, owner and revisit condition.
+- Keep a coverage map: original requirement/source -> outcome ticket -> criterion -> status/proof. Include required integrations and the epic's combined journey. Reconcile it at intake and every refresh; a reduced ticket cannot replace the original request.
+- Every requested POC or MVP requirement stays required until delivered or explicitly amended by the owner. Size, mode, a focused iteration and missing access are not deferral authority. Later work on one portion leaves the remaining requirements active.
+- Optional ideas, unrequested delivery work, open review findings and authorized deferrals become follow-up sub-issues in Backlog, titled as follow-ups, with priority, owner and revisit condition. A requested item needs the owner's explicit decision and source before becoming a deferral.
 
 ## Fast and Lucky
 
@@ -76,7 +78,7 @@ No contract, confirmation round or capture. Same tracker, layout, backlog and au
 1. Search first.
 2. Product and feature runs: create the epic after the owner's kickoff answers (Lucky: from the request). Include the owner's words, the answers, and every layout section including criteria with IDs. Change runs: one ticket in the same layout.
 3. Create the sub-issues in user-value order. Link them as native sub-issues.
-4. Add follow-ups for POC deferrals (hardening, CI/CD, deployment) and optional ideas.
+4. Add follow-ups for unrequested POC delivery work (hardening, CI/CD, deployment), optional ideas and explicitly owner-approved deferrals. Required features or integrations never become optional follow-ups just because this is a POC.
 5. Move every ticket through the backlog statuses, one activity entry per change.
 6. Write into the run's work record: `**Epic:** <url>`, `**Sub-issue:** <url>`, `**Backlog:**` owned, affected and untouched items. At handoff: `**Statuses:**` each owned ticket's final status.
 

@@ -17,7 +17,7 @@ Research and planning only. Do not build or publish.
 
 ## Kickoff research
 
-Read the request, constraints and settled choices first. Run in parallel: one agent per competitor, one for stacks.
+Read the complete request, prior requirements, constraints and settled choices first. Keep requested capabilities separate from research ideas in the feature matrix. Run in parallel: one agent per competitor, one for stacks.
 
 1. **Competitors:** the 3 top products for this job (leaders, fastest growing or closest fit; say why each). Per competitor: source URL, core loop, standout features, pricing and positioning, UX patterns worth reusing, weak spots.
 2. **Feature matrix:** features × competitors. Mark must-haves and gaps.
@@ -58,5 +58,5 @@ Strands (use those that can change the decision):
 - Delegated in-scope choices are yours. Reserved decisions go to the owner.
 - Route evidence once, no recursive research. Interface, interaction, media and public pages meant for search: `ux-quality`. New or materially changed persistence: `database-schema`.
 - Naming: check credible options and obvious collisions. Search is not trademark clearance. A rejected name stays rejected.
-- During delivery, revise the `get-ready-to-code` plan outputs: `original item → evidence → keep / adapt / add / defer / reject → reason → acceptance impact`. Evidence may justify no change.
+- During delivery, revise the `get-ready-to-code` plan outputs: `original item → evidence → keep / adapt / add / defer / reject → authority → reason → acceptance impact`. Research cannot discard a requested requirement. MVP additions need useful evidence, compatible constraints and recorded authority; undecided additions stay proposals. Evidence may justify no change.
 - Report: sources, comparisons, decisions, failed attempts, unknowns, limits. Research proves neither market success nor working software.

@@ -15,8 +15,8 @@ Skip what does not apply. Keep each block separate. Never bury purpose, context 
 | 📍 Context | Code and consumers (paths), baseline, sources, prior work and PRs. Label fact, inference, unknown. |
 | 🔧 Before → after | Behavior only, in a table or paired blocks. **Before** = actual current behavior, read from code and existing evidence. New capability: say what does not exist yet. Non-visual work: name the real consumer and output. **Approach:** the choice and its reason. |
 | 🔀 Flow | Entry → action → effect → result, plus relevant failure and recovery. ASCII for branches and state. |
-| ✅ Done when | One observable result per criterion, stable ID (A1, A2). Cover success, failure, recovery, preserved behavior. No "works", "best" or "optimized" without a check. |
-| 🧱 Scope & guardrails | In, out, constraints, dependencies, decisions (approved, rejected, pending), optional wants, finish boundary. Each deferral: owner, destination ticket, revisit condition. |
+| ✅ Done when | One observable result per criterion, stable ID (A1, A2). Map each original requirement to its outcome ticket and criterion, including integrations. Cover success, failure, recovery, preserved behavior. No "works", "best" or "optimized" without a check. |
+| 🧱 Scope & guardrails | In, out, constraints, dependencies, decisions (approved, rejected, pending), optional wants, finish boundary. Requested-item deferral needs explicit owner authority and source; each deferral needs owner, destination ticket and revisit condition. |
 | 🚦 Progress / next | Status, priority, assignee. Done, left, phase, next action, blockers, linked PR or branch. Checked, reviewed, merged, released stay separate. |
 | 📝 Activity | The ticket's lifetime timeline, entries as the skill's Activity rules set. Trackers with comments: one comment per entry. |
 

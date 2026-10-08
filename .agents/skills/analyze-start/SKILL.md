@@ -17,6 +17,7 @@ Use ASCII charts to explain.
 Explain what it does, why it exists, and what success means.
 
 Name the next complete useful result, required dependencies and shared constraints. Keep the whole requested outcome visible.
+Map every requirement from the complete owner input to its journey and necessary integrations. Separate requested work, implementation dependencies and research additions. POC, MVP and a focused iteration never erase requirements; missing capability or access stays visible as incomplete.
 Read actual code. Verify claims. Label guesses and unknowns.
 For a PR, check each claimed behavior against code and actual wiring.
 

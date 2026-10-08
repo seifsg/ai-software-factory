@@ -2,7 +2,7 @@
 
 Did we build the right thing? Does it follow our rules? Prove it.
 
-Prove the confirmed iteration. Keep full-product criteria delivered, incomplete or explicitly deferred. Iteration acceptance cannot redefine requirements or certify the product.
+Prove the confirmed iteration. Keep every original product requirement delivered, incomplete or explicitly owner-deferred with its decision source. Reconcile the original input with the coverage map before trusting the ticket. POC/MVP labels and iteration acceptance cannot redefine requirements or certify the whole product.
 
 ## Baseline
 
@@ -30,6 +30,8 @@ Rules:
    - `MET`, `PARTIAL`, `MISSING`, `INCORRECT`, `CONTRADICTED`, `UNCLEAR`
    - Code that exists but misses the intended behavior is not `MET`
    - Behavior never requested or planned: `DRIFT`
+   - Missing requested capabilities or integrations remain `MISSING` even when a reduced ticket or optional follow-up omits them. A blocked requirement is incomplete, never a whole-product pass
+   - Research-backed MVP additions need recorded adoption authority, compatible constraints and evidence; distinguish those from unauthorized scope expansion
 2. **Rules**: cross-reference each applicable rule against the changed code.
    - Cite the rule source, rule text and offending location
    - An intentional violation needs an authorized exception: owner, scope, record. Explanation alone waives nothing
@@ -42,7 +44,7 @@ Proof must be bound to the reviewed candidate. A closed ticket, a ready flag or 
 - Missing or incorrect core requirement: CRITICAL or HIGH
 - Partial requirement: HIGH
 - Significant plan drift: HIGH or MEDIUM
-- Unrequested behavior added: MEDIUM
+- Unauthorized or unjustified behavior added: MEDIUM
 - Always-applied rule violation: HIGH
 - Relevant user rule violation: HIGH or MEDIUM
 - Advisory or low-impact rule violation: LOW or MEDIUM
