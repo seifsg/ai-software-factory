@@ -12,7 +12,7 @@ After research, `product` and `feature` only. A POC asks one round. An MVP or pr
 2. **Features:** list every requested item as fixed, never as an option. POC: ask only what the requested items leave open; extra ideas go to the Backlog. MVP: offer the researched launch gaps and extra features with their evidence, up to four per question.
 3. **Approach:** three distinct ways to deliver it (positioning, scope, build route).
 4. **Stack:** three options from the product bar; recommendation first.
-5. **Shape:** product name, public landing or private-only, who signs in. Only when the request leaves them open.
+5. **Shape:** product name; an MVP or production slice also public landing or private-only and who signs in. Only when the request leaves them open.
 6. **Tracker:** only when the product has no repository yet. This answers the tracker question for the whole run.
 
 More than four open: ask the rest in a second call of the same round.
@@ -29,12 +29,12 @@ Pause the gate while waiting. Record each answer with its source (`owner via que
 | Kickoff | `**Features:**`, `**Approach:**`, `**Answered by:**`; product runs also `**Size:**` and `**Stack:**` |
 | Tickets | `**Epic:** <url>`, `**Backlog:**` (owned, affected and untouched items); product and feature runs ≥1 `**Sub-issue:** <url>`; online, each listed ticket has a `Definition of done` heading |
 | Analysis | `**Success:**` line and a fenced ASCII chart |
-| Plan | `### Files`, `### Critique`, `### Phases`, `### Todos` (with `T1`…), `### Whole plan`, `**Logging:**`, `**Efficiency:**`; online, each listed ticket has checklist items (`- [ ]`) |
+| Plan | `### Files`, `### Critique`, `### Phases`, `### Todos` (with `T1`…), `### Whole plan`, `**Logging:**`, `**Efficiency:**`; online, each listed ticket not in Backlog has checklist items (`- [ ]`) |
 | Design | ≥4 `#RRGGBB` hex colors, `**UI kit:**`, `**Font:**`, `**Logo:**`, `**Icons:**`, `**Layout:**`, `**Theme:**` naming light mode, `**Journeys:**` with counts and a minimum |
 | Schema | a 3-option table, `**Chosen:**`, a fenced ERD or DDL |
 | Build log | every plan todo ID with `pre:`, `do:` and `post:` on one line |
 | Done-run | ≥1 `PASS` line, `**Logs:**`; UI runs ≥1 existing screenshot path under `.factory/fast/shots/` |
-| Handoff | `**Run:**`, `**Statuses:**` (each owned ticket's final status), `**Unverified:**`, `**Follow-ups:**`; sign-in runs `**Dev sign-in:**`; online, each open listed ticket is fully ticked or Blocked (`status: blocked` label or board status) |
+| Handoff | `**Run:**`, `**Statuses:**` (each owned ticket's final status), `**Unverified:**`, `**Follow-ups:**`; sign-in runs `**Dev sign-in:**`; online, each open listed ticket is fully ticked, Blocked or Backlog (label or board status) |
 
 Labels end with the colon inside the bold: `**Epic:**`. Delegates return their log lines; the coordinator writes the record. During build, copy the design brief and schema decision into the product's `docs/`.
 
@@ -56,7 +56,7 @@ python fast_gate.py install --host <host> [--project <abs>]
 - `start` keeps `.factory/` out of Git only inside a Git repository: `git init` first.
 - Product runs default to UI and persistence; pass `--no-ui` or `--no-data` only when true. `--auth` marks sign-in: pass it when anyone signs in or roles exist. These are fixed at `start`; decide them from the request.
 - Steps run in order; `done` refuses a step while an earlier applicable one is open.
-- `done tickets`, `done plan` and `done handoff` read the listed GitHub tickets online: links, definition of done, checklist, ticks. Other trackers or no network: `--offline "<reason>"` records the step unverified.
+- `done tickets`, `done plan` and `done handoff` read the listed GitHub tickets online: links, definition of done, checklist, ticks. Other trackers or no network: `--offline "<reason>"` records the step unverified. Runs started on a bundle without ticket checklists skip these reads.
 - `pause` before waiting on the owner; the next `done` or `resume` clears it. `close` needs `handoff`, or `--abandon` with the owner's reason.
 
 ## Hooks

@@ -29,7 +29,8 @@ STEPS = (
     ("design", ("fast",), KINDS, "ui"),
     ("schema", ("fast",), KINDS, "data"),
     ("build", MODES, KINDS, None),
-    ("done-run", MODES, KINDS, None),
+    ("done-run", ("fast",), KINDS, None),
+    ("done-run", ("lucky",), KINDS, "ticket_checks"),
     ("handoff", MODES, KINDS, None),
 )
 TITLES = {"research": "Research", "kickoff": "Kickoff", "tickets": "Tickets", "analysis": "Analysis",
@@ -204,6 +205,15 @@ def skeleton(run):
     return "\n".join(lines)
 
 
+def ticket_checks(bundle, project):
+    """Online ticket checks only when the methods this run reads define them: its bundle, else this project."""
+    layout = Path(bundle["root"] if bundle else project) / ".agents/skills/ticketing/references/ticket-layout.md"
+    try:
+        return "Definition of done" in layout.read_text(encoding="utf-8")
+    except OSError:
+        return not bundle  # a product without a resolved bundle follows the current methods
+
+
 def bundle_receipt(project):
     """The entry resolver's selection for this project, if any (fast-run.md#the-gate)."""
     try:
@@ -274,11 +284,11 @@ def cmd_start(args):
         for item in (ledger, record_path(project)):
             if item.exists():
                 os.replace(item, archive / item.name)
-    product = args.kind == "product"
+    product, bundle = args.kind == "product", bundle_receipt(project)
     run = {"version": VERSION, "key": args.key, "project": str(project), "mode": args.mode, "kind": args.kind,
            "ui": product if args.ui is None else args.ui, "data": product if args.data is None else args.data,
            "auth": args.auth, "request": request.strip(), "created": now(), "done": {}, "paused": None,
-           "closed": False, "bundle": bundle_receipt(project)}
+           "closed": False, "bundle": bundle, "ticket_checks": ticket_checks(bundle, project)}
     save(ledger, run)
     record = record_path(project)
     if not record.exists():
@@ -541,7 +551,7 @@ def main():
     start.add_argument("--request-file")
     done = sub.add_parser("done", parents=[common], help="Check and record one step")
     done.add_argument("step", choices=list(TITLES))
-    done.add_argument("--offline", help="Record tickets without gh verification, with the reason")
+    done.add_argument("--offline", help="Record tickets, plan or handoff without reading tickets through gh, with the reason")
     sub.add_parser("status", parents=[common])
     pause = sub.add_parser("pause", parents=[common], help="Waiting on the owner; lets the session stop")
     pause.add_argument("--reason", required=True)

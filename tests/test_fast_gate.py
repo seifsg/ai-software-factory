@@ -245,22 +245,52 @@ class FastGateTests(unittest.TestCase):
                  (record.needs_ticks, issue(ticket, labels=["status: blocked"]), None),
                  (record.needs_ticks, issue(ticket, board="Blocked"), None),
                  (record.needs_ticks, issue(ticket, state="CLOSED"), None),
-                 (record.needs_ticks, issue(ticket.replace("[ ]", "[x]")), None)]
+                 (record.needs_ticks, issue(ticket.replace("[ ]", "[x]")), None),
+                 (record.needs_ticks, issue(ticket, labels=["status: backlog"]), None),
+                 (record.needs_checklist, issue("### ✅ Definition of done", labels=["status: backlog"]), None),
+                 (record.needs_ticks, issue("+ [x] T1 a\n1. [ ] T2 b\n2) [ ] T3 c\n"), "2 unticked"),
+                 (record.needs_checklist, issue("```text\n- [ ] T1 example only\n```\n"), "checklist items"),
+                 (record.needs_ticks, json.dumps({"body": "- [ ] T1", "state": "OPEN", "labels": ["oops", None],
+                                                  "projectItems": [None, "x", {"status": "Blocked"}]}), "1 unticked"),
+                 (record.needs_ticks, json.dumps(["not", "an", "issue"]), "--offline")]
         for check, raw, expected in cases:
             with self.subTest(check=check.__name__, expected=expected), patch.object(record, "gh", return_value=raw):
                 problems = record.ticket_problems([url, url], check)
                 if expected:
                     self.assertEqual(len(problems), 1)
                     self.assertIn(expected, problems[0])
-                    self.assertTrue(problems[0].startswith(url))
+                    self.assertIn(url, problems[0])
                 else:
                     self.assertEqual(problems, [])
         with patch.object(record, "gh", side_effect=RuntimeError("no network")):
             self.assertIn("--offline", record.ticket_problems([url], record.needs_ticks)[0])
         self.assertIn("--offline", record.ticket_problems(["https://tracker.example/1"], record.needs_ticks)[0])
         sections = {"tickets": f"**Epic:** {url}\n**Backlog:** none\n"}
-        with patch.object(record, "gh", side_effect=AssertionError("offline steps never call gh")):
-            self.assertEqual(record.online({"offline": "no network", "all_sections": sections}, record.needs_ticks), [])
+        current, older = {"ticket_checks": True}, {}
+        with patch.object(record, "gh", side_effect=AssertionError("offline steps and older runs never call gh")):
+            self.assertEqual(record.online(current, {"offline": "no network", "all_sections": sections}, record.needs_ticks), [])
+            self.assertEqual(record.online(older, {"offline": None, "all_sections": sections}, record.needs_ticks), [])
+        with patch.object(record, "gh", return_value=issue(ticket)):
+            self.assertIn("1 unticked", record.online(current, {"offline": None, "all_sections": sections}, record.needs_ticks)[0])
+            handoff = "**Run:** x\n**Statuses:** x\n**Unverified:** x\n**Follow-ups:** x\n"
+            self.assertIn("1 unticked", record.check_handoff(current, handoff, offline=None, all_sections=sections)[0])
+
+    def test_ticket_checks_follow_the_methods_the_run_reads(self):
+        spec = importlib.util.spec_from_file_location("fast_gate_module", GATE)
+        gate = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(gate)
+        layout = Path(".agents/skills/ticketing/references/ticket-layout.md")
+        for name, text in (("new", "### ✅ Definition of done"), ("old", "### ✅ Done when")):
+            (self.root / name / layout).parent.mkdir(parents=True)
+            (self.root / name / layout).write_text(text, encoding="utf-8")
+        self.assertTrue(gate.ticket_checks({"root": str(self.root / "new")}, self.project))
+        self.assertFalse(gate.ticket_checks({"root": str(self.root / "old")}, self.project))
+        self.assertFalse(gate.ticket_checks({"root": str(self.root / "missing")}, self.project))
+        self.assertTrue(gate.ticket_checks(None, self.project))
+        lucky = {"mode": "lucky", "kind": "change"}
+        self.assertNotIn("done-run", gate.steps_for(lucky))
+        self.assertIn("done-run", gate.steps_for({**lucky, "ticket_checks": True}))
+        self.assertIn("done-run", gate.steps_for({"mode": "fast", "kind": "change"}))
 
 
 if __name__ == "__main__":

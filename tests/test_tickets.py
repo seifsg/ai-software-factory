@@ -342,6 +342,34 @@ class TicketTests(unittest.TestCase):
         self.assertEqual(captured["contract"]["activity"][0], contract["activity"][0])
         self.assertTrue(self.store.status("alpha")["valid"])
 
+    def test_checklist_ticks_render_outside_scope_and_older_headings_still_parse(self):
+        contract = self.visual_contract()
+        original = scope_digest(contract)
+        contract["checklist"] = [{"id": "T1", "text": "Synthetic sentence kept", "done": True,
+                                  "proof": "Synthetic read-back"},
+                                 {"id": "T2", "text": "Synthetic second item", "done": False}]
+        self.assertEqual(scope_digest(contract), original)
+        for layout in ("auto", "legacy"):
+            for folded in (True, False):
+                with self.subTest(layout=layout, folded=folded):
+                    body = render_ticket(contract, layout=layout, fold_contract=folded)
+                    self.assertIn("- [x] T1 Synthetic sentence kept Proof: Synthetic read-back", body)
+                    self.assertIn("- [ ] T2 Synthetic second item", body)
+                    self.assertEqual(parse_body(body), contract)
+                    with self.assertRaises(EngineError):
+                        parse_body(body.replace("- [ ] T2", "- [x] T2", 1))
+        visual = render_ticket(contract)
+        self.assertIn("## ✅ Definition of done", visual)
+        older = render_ticket(contract, done_heading="Done when")
+        self.assertIn("## ✅ Done when", older)
+        self.assertEqual(parse_body(older), contract)
+        for bad in ([{"id": "T1", "text": "x", "done": True}],
+                    [{"id": "T1", "text": "x", "done": "yes"}],
+                    [{"id": "T1", "text": "x", "done": False}, {"id": "T1", "text": "y", "done": False}],
+                    {"id": "T1"}):
+            with self.subTest(bad=bad), self.assertRaises(EngineError):
+                render_ticket({**contract, "checklist": bad})
+
     def test_partial_or_invalid_visual_fields_do_not_silently_fall_back(self):
         contract = self.visual_contract()
         for field in ("purpose", "goal", "context", "approach"):
@@ -610,7 +638,13 @@ class TicketTests(unittest.TestCase):
         self.assertEqual(self.local_review()["phase"], "ready")
         with self.assertRaisesRegex(EngineError, "new complete"):
             self.flow.handoff()
-        self.refresh()
+        ticked = deepcopy(self.contract)
+        ticked["checklist"] = [{"id": "T1", "text": "Synthetic sentence kept", "done": False}]
+        self.refresh(ticked)
+        with self.assertRaisesRegex(EngineError, "checklist item.*T1"):
+            self.flow.handoff()
+        ticked["checklist"][0].update(done=True, proof="Synthetic read-back")
+        self.refresh(ticked)
         result = self.flow.handoff()
         handoff = Path(result["handoff"]).read_text(encoding="utf-8")
         self.assertIn("Revision: 1", handoff)

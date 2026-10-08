@@ -123,7 +123,7 @@ Evidence: source proves repetition; speed and memory claims need runtime measure
 
 ## Security
 
-A POC skips this section unless requested and stays local with harmless data. MVP and production: cheap relevant protections from the start, in full before exposure; reuse framework and provider controls.
+A POC skips this section unless requested (secrets still stay out of code and Git) and stays local with harmless data. MVP and production: cheap relevant protections from the start, in full before exposure; reuse framework and provider controls.
 
 - Size the risk: environment, reachable surfaces, roles, valuable data, trust boundaries. Local means loopback and harmless data; a public tunnel, shared preview or real credentials means exposed. Offline apps still have files, plugins, updates and untrusted input. Research consequential unknowns in current platform guidance.
 - Required protections and denial paths precede exposure. They are never polish.

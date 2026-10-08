@@ -361,6 +361,11 @@ class Workflow(ContractMixin, CheckMixin, ReviewMixin):
     def handoff(self):
         state = self.load()
         self.require_ticket(state, fresh=True)
+        if self.ticket_key:
+            checklist = self.store.get(self.ticket_key)["contract"].get("checklist", [])
+            open_items = [item["id"] for item in checklist if not item["done"]]
+            if open_items:
+                raise EngineError("Tick every checklist item in the ticket before handoff: " + ", ".join(open_items))
         self.require_ticket_proof(state)
         self.require_phase(state, "ready")
         self.require_checks(state)
