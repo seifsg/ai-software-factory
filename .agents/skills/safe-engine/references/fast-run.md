@@ -73,5 +73,5 @@ Without hooks the gate still records and checks steps; follow the order yourself
 ## Keep it fast
 
 - Parallel agents: research strands together, independent todos in separate files together, one writer per file.
-- One question round, one record, ticket updates only at boundaries.
+- One question round, one record, status moves at boundaries.
 - No controller, capture, seal or independent review in Fast or Lucky. `verify` adds manual QA and tests; `promote` moves to Safe.

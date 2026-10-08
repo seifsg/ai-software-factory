@@ -24,6 +24,8 @@ Analysis, planning or review-only requests grant no tracker writes. An explicit 
 
 The tracker's open tickets are the backlog. Every mode keeps it current. Autonomous unless the owner asks for checkpoints.
 
+A tracker or board with other states: map each status to the nearest existing one and name the factory status in the activity entry. Never create, rename or delete workflow states.
+
 | Status | Means | Carries on entry |
 |---|---|---|
 | Backlog | Known, not in a run | Request or source |
@@ -35,11 +37,11 @@ The tracker's open tickets are the backlog. Every mode keeps it current. Autonom
 | Blocked | Cannot move | Reason, next action, who unblocks |
 | Cancelled | Dropped or deprecated by the owner. Closed | Owner decision and source |
 
-1. Intake: after the search, read the open items in the same epic, area and topic. Split them: owned by this run, affected by it, untouched.
+1. Intake: after the search, read the open items in the same epic, area and topic. Split them: owned by this run, affected by it, untouched. A match another run, session or person holds (In progress through Ready for QA, or Blocked) is affected: ask the owner before taking it over.
 2. Move the run's tickets to To do. Sort by priority, then user value, then proven dependencies.
 3. Priority: P0 broken or blocking, P1 next, P2 planned, P3 later. Every ticket the run creates or owns has one. Change it only on those, with the reason.
-4. Move at boundaries: build starts → In progress, build finished → Dev done, checks start → Ready for QA, outcome passed → Done. No checks (Lucky, skipped): Ready for QA at handoff, and it stays there. Blocked any time; back to the prior status once cleared.
-5. The epic moves with its sub-issues: In progress when the first starts, Ready for QA when all reach Ready for QA or Done. It stays there until the owner accepts. A `change` run's single ticket moves like a sub-issue.
+4. Move at boundaries: build starts → In progress, build finished → Dev done, checks start → Ready for QA, outcome passed → Done, check failed → In progress. No checks (Lucky, skipped): Ready for QA at handoff, and it stays there. Blocked any time; back to the prior status once cleared.
+5. The epic moves with its sub-issues: In progress when the first starts, Ready for QA when every sub-issue still in the run reaches Ready for QA or Done. It stays there until the owner accepts. A sub-issue going back pulls the epic back to In progress; none left in the run returns it to Backlog. A `change` run's single ticket moves like a sub-issue.
 6. In progress needs actionable criteria, authority, an assignee or session, a usable workspace and met dependencies. Safe also needs confirmed scope. Assign whoever builds it at In progress. Unassign only when it returns to Backlog or To do.
 7. Keep owned tickets current: context, description, links and progress. Scope changes follow the scope rules below.
 8. Owner checkpoint: hold the ticket in Ready for QA until the owner approves. Record the approval. Owner stop or cancellation persists across sessions.
@@ -56,9 +58,8 @@ The tracker's open tickets are the backlog. Every mode keeps it current. Autonom
 ### Hands off
 
 - Touch only the run's tickets and the tickets its work affects.
-- Affected, not owned (duplicate, dependency, overlap, same recent topic): add an activity note once the effect is known, with what changed and the link; update its context when the work changed its facts. Status, priority, assignee and scope stay.
-- Never close, archive, cancel, deprecate, reprioritize, reassign or rewrite other items without the owner's task. Future items stay as they are.
-- Cancelling or deprecating needs the owner, own tickets included.
+- Affected, not owned (duplicate, dependency, overlap, same recent topic): add an activity note once the effect is known, with what changed and the link; update its context when the work changed its facts, unless it carries a Safe contract. Status, priority, assignee and scope stay.
+- Never close, archive, cancel, deprecate, reprioritize, reassign or rewrite other items without the owner's task. Future items stay as they are. Cancelling needs the owner, own tickets included.
 
 ## Split the work
 
