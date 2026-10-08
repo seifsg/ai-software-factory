@@ -36,7 +36,7 @@ Keep any active app run safe. The repair never writes the app's source; pausing 
 - Active app run: follow `references/live-session.md` before any workspace change or delegation. Checkpoint → isolated repair → independent review → compatible resume.
 - Never silently stash, reset, switch or upgrade a target, its bundle or global settings.
 - Factory repair grants no product scope change. Keep the app ticket and the maintenance ticket separate.
-- Run independent tickets in parallel: separate worktrees, or disjoint files with one writer per file in a shared checkout.
+- Run independent tickets in parallel, each in its own worktree: a checkout holds one open gate run.
 - Worktrees separate files only. Give delegates absolute paths. Isolate shared ports, databases, caches and services.
 
 ## 3. Analyze and plan

@@ -88,8 +88,8 @@ Refresh at intake and resume, before `record implementation`, before `repair --r
 Bind: `init --task <task.json> --profile <profile.json> --session <builder-session-id>`.
 
 - Needs a confirmed current capture and a clean committed checkout. `--session` is the real dedicated builder session's id. Never invent one.
-- One ticket, one builder session, one worktree. Run tickets in parallel, each in its own worktree; the controller claims one checkout per ticket. Isolate ports, databases and caches too.
-- The controller claims the checkout. `handoff` and `cancel` release it. A fresh `init` never replaces an existing run.
+- One ticket, one builder session, one worktree; run tickets in parallel, each in its own worktree. Isolate ports, databases and caches too.
+- The controller claims the checkout. `handoff` and `cancel` release it. A fresh `init` never replaces an existing run. Parallel worktrees share one coordination lock: retry a command refused because another operation is active.
 
 Amend (changed scope, criteria, checks or protected files):
 
