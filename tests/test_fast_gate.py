@@ -113,6 +113,9 @@ class FastGateTests(unittest.TestCase):
         self.assertIn("'**Journeys:**' line", self.gate("done", "design", ok=False))
         record.write_text(text.replace("**Dev sign-in:**", "Sign-in:"), encoding="utf-8")
         self.assertIn("Dev sign-in", self.gate("done", "handoff", ok=False))
+        record.write_text(text.replace("**Backlog:**", "Backlog:").replace("**Statuses:**", "Statuses:"), encoding="utf-8")
+        self.assertIn("'**Backlog:**' line", self.gate("done", "tickets", "--offline", "sample", ok=False))
+        self.assertIn("'**Statuses:**' line", self.gate("done", "handoff", ok=False))
 
     def test_hooks_deny_source_writes_until_the_gate_opens(self):
         self.start()

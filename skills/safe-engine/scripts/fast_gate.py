@@ -39,7 +39,7 @@ HINTS = {
     "research": ">=3 '### <competitor>' subsections each citing a source URL, a feature matrix table, "
                 "an Opportunities line; product runs also '### Stack options' with a 3-row table",
     "kickoff": "Features, Approach, Answered by lines; product runs also Size and Stack",
-    "tickets": "an Epic URL line; product/feature runs >=1 Sub-issue URL line",
+    "tickets": "an Epic URL line, a Backlog line; product/feature runs >=1 Sub-issue URL line",
     "analysis": "a Success line and a fenced ASCII chart",
     "plan": "### Files, ### Critique, ### Phases, ### Todos (T1..), ### Whole plan, Logging and Efficiency lines",
     "design": ">=4 hex colors; UI kit, Font, Logo, Icons, Layout lines; Theme line naming light mode; "
@@ -47,7 +47,7 @@ HINTS = {
     "schema": "a 3-option table, a Chosen line, a fenced ERD or DDL",
     "build": "one line per plan todo: 'T1 pre: ... do: ... post: ...'",
     "done-run": ">=1 PASS line, a Logs line; UI runs >=1 existing screenshot path",
-    "handoff": "Run, Unverified, Follow-ups lines; sign-in runs a Dev sign-in line",
+    "handoff": "Run, Statuses, Unverified, Follow-ups lines; sign-in runs a Dev sign-in line",
 }
 HERE = Path(__file__).resolve().parent  # sibling modules: fast_record.py (step checks), fast_shell.py (commands)
 

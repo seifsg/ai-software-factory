@@ -18,7 +18,7 @@ Find the real repository, branches, release policy, PR template, signing rule, c
 - Every PR belongs to a ticket. None yet: run `ticketing`. Search by symptom, feature, area, files, PR title and branch slug first.
 - No ticket only when the project defines an exemption and the whole diff falls under it.
 - Link both ways: PR URL in the ticket, clickable ticket link in the PR body.
-- On open, set the tracker's awaiting-review status. Query the allowed values; use exact spelling.
+- On open, add the PR link to the ticket's activity. Its status follows `ticketing`.
 - Ticket with a confirmed contract: refresh it before opening or updating. Pending scope, drift or a failed refresh is an open dependent step. A draft or local pass never replaces the owner's current expectation.
 
 ## 3. Branch from the right base

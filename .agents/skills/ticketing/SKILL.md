@@ -1,6 +1,6 @@
 ---
 name: ticketing
-description: "Creates and maintains tracker epics and tickets for delivery work: searches first, splits work into user-value outcomes, preserves the owner's input, tracks scope changes and ties final evidence to the latest confirmed expectation. Use when work needs tickets, when starting a product, feature or fix, or when a PR or review must be checked against a ticket."
+description: "Creates and maintains the project backlog, its epics and tickets in every mode: searches first, splits work into user-value outcomes, keeps status, priority, assignee and an append-only activity timeline current, leaves untasked items alone, preserves the owner's input and ties final evidence to the latest confirmed expectation. Use when work needs tickets or backlog upkeep, when starting a product, feature or fix, or when a PR or review must be checked against a ticket."
 ---
 
 # Ticketing
@@ -20,25 +20,64 @@ Analysis, planning or review-only requests grant no tracker writes. An explicit 
 7. Access or a write fails: name the step and next action. Keep a pending local record. No silent tracker switch, duplicate or success claim.
 8. Use only tools that exist. Installing, paid access and messaging need their own authority.
 
+## Backlog
+
+The tracker's open tickets are the backlog. Every mode keeps it current. Autonomous unless the owner asks for checkpoints.
+
+| Status | Means | Carries on entry |
+|---|---|---|
+| Backlog | Known, not in a run | Request or source |
+| To do | Picked for this run: the active sprint | Epic or request link |
+| In progress | Being built, assigned | Branch; screenshots or recordings of progress when they help |
+| Dev done | Built, checks not passed yet | Commit or PR, screenshot or output of the result |
+| Ready for QA | Waiting on QA, owner approval or feedback | How to check it, who decides |
+| Done | QA passed, no checkpoint open. Closed | QA evidence |
+| Blocked | Cannot move | Reason, next action, who unblocks |
+| Cancelled | Dropped or deprecated by the owner. Closed | Owner decision and source |
+
+1. Intake: after the search, read the open items in the same epic, area and topic. Split them: owned by this run, affected by it, untouched.
+2. Move the run's tickets to To do. Sort by priority, then user value, then proven dependencies.
+3. Priority: P0 broken or blocking, P1 next, P2 planned, P3 later. Every ticket the run creates or owns has one. Change it only on those, with the reason.
+4. Move at boundaries: build starts → In progress, build finished → Dev done, checks start → Ready for QA, outcome passed → Done. No checks (Lucky, skipped): Ready for QA at handoff, and it stays there. Blocked any time; back to the prior status once cleared.
+5. The epic moves with its sub-issues: In progress when the first starts, Ready for QA when all reach Ready for QA or Done. It stays there until the owner accepts. A `change` run's single ticket moves like a sub-issue.
+6. In progress needs actionable criteria, authority, an assignee or session, a usable workspace and met dependencies. Safe also needs confirmed scope. Assign whoever builds it at In progress. Unassign only when it returns to Backlog or To do.
+7. Keep owned tickets current: context, description, links and progress. Scope changes follow the scope rules below.
+8. Owner checkpoint: hold the ticket in Ready for QA until the owner approves. Record the approval. Owner stop or cancellation persists across sessions.
+9. Done needs the required cycle and evidence at the recorded boundary. Implemented, checked, independently reviewed, merged and released stay distinct.
+
+### Activity
+
+- Every change to a ticket gets one activity entry: date, who, old → new, why, proof link. Status, priority, assignee, scope, description, links, blocks, deprecation: all of it.
+- Changes made together share one entry. Progress without a ticket change waits for the next boundary. No per-edit diary.
+- Append only. Never edit or delete past entries. The activity is the ticket's lifetime timeline.
+- Entries record; they never mention or ping people.
+- Proof the reader can open, sanitized. Not openable yet: say so.
+
+### Hands off
+
+- Touch only the run's tickets and the tickets its work affects.
+- Affected, not owned (duplicate, dependency, overlap, same recent topic): add an activity note once the effect is known, with what changed and the link; update its context when the work changed its facts. Status, priority, assignee and scope stay.
+- Never close, archive, cancel, deprecate, reprioritize, reassign or rewrite other items without the owner's task. Future items stay as they are.
+- Cancelling or deprecating needs the owner, own tickets included.
+
 ## Split the work
 
-- Ticket = one complete, user-visible outcome with its own criteria. Order by user value and proven dependencies.
+- Ticket = one complete, user-visible outcome with its own criteria.
 - Epic = overall outcome, shared constraints and decisions, sub-issue list, integration criteria.
 - 1 or as many needed outcome sub-issues, plus follow-ups. A small change: one ticket. Never one per todo.
 - Do not split risky work to dodge full checks.
-- Deferrals and optional ideas become follow-up sub-issues, titled as follow-ups, with owner and revisit condition.
+- Deferrals, optional ideas and open review findings become follow-up sub-issues in Backlog, titled as follow-ups, with priority, owner and revisit condition.
 
 ## Fast and Lucky
 
-No contract, confirmation round or capture. Same tracker, layout and authority rules.
+No contract, confirmation round or capture. Same tracker, layout, backlog and authority rules.
 
 1. Search first.
 2. Product and feature runs: create the epic after the owner's kickoff answers (Lucky: from the request). Include the owner's words, the answers, and every layout section including criteria with IDs. Change runs: one ticket in the same layout.
 3. Create the sub-issues in user-value order. Link them as native sub-issues.
 4. Add follow-ups for POC deferrals (hardening, CI/CD, deployment) and optional ideas.
-5. Update only at boundaries: plan, build done, run results, handoff.
-6. Close a sub-issue when its outcome passed. The epic stays open until the owner accepts.
-7. Write the URLs into the run's work record: `**Epic:** <url>`, `**Sub-issue:** <url>`.
+5. Move every ticket through the backlog statuses, one activity entry per change.
+6. Write into the run's work record: `**Epic:** <url>`, `**Sub-issue:** <url>`, `**Backlog:**` owned, affected and untouched items. At handoff: `**Statuses:**` each owned ticket's final status.
 
 Moving an epic to Safe: reuse it and add the contract below.
 
@@ -53,8 +92,6 @@ Derive the ticket from the request, the code and prior work. Do not ask the user
 5. Create or reuse the epic and tickets.
 
 Number the confirmed contract. Each change records old and new scope, reason, source, authority and result. Pin the confirmed revision, the ticket's updated time and a digest of scope (outcome, criteria, journeys, scope, exclusions, constraints, decisions, dependencies; not activity or status).
-
-Record meaningful activity only: decisions, assignment, implementation done, QA and tests, review, blockers, PR updates, handoffs. Combine unchanged progress into boundary updates. No per-edit diary.
 
 ## Refresh and drift
 
@@ -73,13 +110,6 @@ Record meaningful activity only: decisions, assignment, implementation done, QA 
 - Independent tickets: separate worktrees, only with disjoint files, runtime effects, acceptance and decisions. Isolate or serialize shared ports, databases, caches and services.
 - Shared epic checkout: tickets run serially, one writer. Stop prior operations before handoff. Never overwrite or delete another ticket's state.
 - A dependency is met by its accepted result at an integrated commit present in this ticket's base. Closed status alone proves nothing. Changed dependency scope: revalidate affected analysis and evidence.
-
-## State
-
-- Lifecycle: open, ready, active, blocked, done, cancelled. Map to the tracker's values. A block records reason and next action.
-- Owner stop or cancellation persists across sessions.
-- Ready: confirmed scope, actionable criteria, authority, owner or session, usable workspace, dependencies met.
-- Done: required cycle and evidence at the recorded boundary. Implemented, checked, independently reviewed, merged, released stay distinct.
 
 ## Review and deliver
 

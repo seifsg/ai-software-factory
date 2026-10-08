@@ -44,8 +44,5 @@ Use the actual review owner from the project's rules. Do not guess logins. Comme
 ## Update the ticket
 
 ```text
-gh issue comment <ticket> --body "PR: <url>"
-gh issue edit <ticket> --add-label "<existing awaiting-review label>"
+gh issue comment <ticket> --body-file <activity entry with the PR url>
 ```
-
-List labels first (`gh label list --json name`). Use exact spelling.
