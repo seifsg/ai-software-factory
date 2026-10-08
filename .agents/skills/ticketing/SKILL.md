@@ -41,7 +41,7 @@ A tracker or board with other states: map each status to the nearest existing on
 2. Move the run's tickets to To do. Sort by priority, then user value, then proven dependencies.
 3. Priority: P0 broken or blocking, P1 next, P2 planned, P3 later. Every ticket the run creates or owns has one. Change it only on those, with the reason.
 4. Move at boundaries: build starts → In progress, build finished → Dev done, checks start → Ready for QA, outcome passed → Done, check failed → In progress. No checks (Lucky, skipped): Ready for QA at handoff, and it stays there. Blocked any time; back to the prior status once cleared.
-5. The epic moves with its sub-issues: In progress when the first starts, Ready for QA when every sub-issue still in the run reaches Ready for QA or Done. It stays there until the owner accepts. A sub-issue going back pulls the epic back to In progress; none left in the run returns it to Backlog. A `change` run's single ticket moves like a sub-issue.
+5. The epic moves with its sub-issues: In progress when the first starts, Ready for QA when every sub-issue still in the run reaches Ready for QA or Done and no requested item, other than an owner-deferred one, is open outside the run. It stays there until the owner accepts. A sub-issue going back pulls the epic back to In progress; none left in the run returns it to Backlog. A `change` run's single ticket moves like a sub-issue.
 6. In progress needs actionable criteria, authority, an assignee or session, a usable workspace and met dependencies. Safe also needs confirmed scope. Assign whoever builds it at In progress. Unassign only when it returns to Backlog or To do.
 7. Keep owned tickets current: context, description, links and progress. Scope changes follow the scope rules below.
 8. Owner checkpoint: hold the ticket in Ready for QA until the owner approves. Record the approval. Owner stop or cancellation persists across sessions.
@@ -67,6 +67,7 @@ A tracker or board with other states: map each status to the nearest existing on
 - Epic = overall outcome, shared constraints and decisions, sub-issue list, integration criteria.
 - 1 or as many needed outcome sub-issues, plus follow-ups. A small change: one ticket. Never one per todo.
 - Do not split risky work to dodge full checks.
+- Every requested item (feature, journey, integration, behavior) maps to an outcome ticket criterion. It moves to a follow-up only by the owner's recorded decision; unavailable capability keeps it Blocked in the run.
 - Deferrals, optional ideas and open review findings become follow-up sub-issues in Backlog, titled as follow-ups, with priority, owner and revisit condition.
 
 ## Fast and Lucky
@@ -115,7 +116,7 @@ Number the confirmed contract. Each change records old and new scope, reason, so
 ## Review and deliver
 
 1. Refresh the ticket.
-2. Map every latest confirmed expectation to its implementation and actual evidence. Compare actual before with delivered after. List missing or partial results, unintended behavior, deviations.
+2. Map every latest confirmed expectation and every item of the original input to its implementation and actual evidence. Compare actual before with delivered after. List missing or partial results, unintended behavior, deviations.
 3. Approved deviations keep authority and reason. Pending changes cannot redefine a pass. Unresolved drift, unknown required scope or missing evidence blocks dependent acceptance.
 4. PRs and reviews carry ticket and epic links, confirmed revision and digest, before/after proof, decisions, unresolved findings, resume step.
 5. Update the ticket with the actual outcome and sanitized proof the reader can open. Preserve blocked and cancelled work and open human decisions.

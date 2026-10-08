@@ -1,8 +1,8 @@
 # Product bar
 
-Contents: Stack, Visual system, States and forms, Public pages, Data, Logging, Speed, Security, Dev sign-in, POC deferrals, Games and browser lifecycle, External effects, Release.
+Contents: Stack, Visual system, States and forms, Public pages, Data, Logging, Speed, Security, Dev sign-in, Scope by size, Games and browser lifecycle, External effects, Release.
 
-The quality floor for every app, game, service, tool and library, in every mode. A POC or MVP is the first slice of the real product: built right, never thrown away. Record its stack, design brief and budgets in the plan.
+The quality floor for every app, game, service, tool and library, in every mode. A POC or MVP is the real product at small scale: every requested item, built right, never thrown away. Record its stack, design brief and budgets in the plan.
 
 - Minimal code means no waste. It never justifies a weaker stack, missing states or a bare UI.
 - New products meet all of it. Changes cover the affected paths and their consumers; record wider gaps, no unrelated restructuring.
@@ -148,13 +148,13 @@ Before exposure, exercise denial paths with harmless accounts (anonymous, other 
 
 Apps with accounts seed one user per role. Development builds show one-click buttons beside the normal sign-in form: "Sign in as Admin", "Sign in as Client" and so on. The server accepts them only in development; production builds drop the route and buttons. The handoff names the URL and buttons, so the owner never hunts for credentials.
 
-## POC deferrals
+## Scope by size
 
-Unless the owner asks, a POC may defer Docker, Kubernetes, CI/CD, deployment, unit-test suites and security hardening (rate limits, CSRF, headers, audits).
+Size sets depth, never which requested items ship. Requested scope: every feature, journey, integration and behavior the owner asked for, plus what each needs to work end to end.
 
-- Each deferral becomes a follow-up ticket in the epic with an owner and an acceptance or revisit condition. No vague "later".
-- Never deferred: role checks the journeys need, secrets out of code and Git, logging, screen states, the visual system.
-- Security applies in full before any public exposure.
+- POC: all requested scope, real and connected, at small scale (seeded data, one tenant or device, local). MVP: requested scope plus critical additions with research evidence that the owner approved (kickoff or recorded delegation); the size label approves none. Production slice: the full bar.
+- A requested item leaves scope only by the owner's recorded decision: source, reason, follow-up ticket, revisit condition. Without it, a size label, research finding, generic follow-up, later iteration's focus or substitute (mock, sample data, sandbox, manual step) never removes or replaces one; seeded data fills content, never a requested integration. Capability unavailable: keep the item Blocked with its reason, build the rest, report the outcome unfinished.
+- Unless the owner asks, a POC may defer Docker, Kubernetes, CI/CD, deployment, unit-test suites and security hardening (rate limits, CSRF, headers, audits), each as a follow-up ticket with an owner and revisit condition. Never deferred: requested scope, role checks the journeys need, secrets out of code and Git, logging, screen states, the visual system. Security applies in full before any public exposure.
 
 ## Games and browser lifecycle
 

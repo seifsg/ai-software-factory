@@ -9,7 +9,7 @@ The next steps are the following:
 
 Build in complete working iterations. Tiny bug or full product, same logic.
 
-- First: smallest real user journey we can see and use. Order by user value; explain required blockers.
+- First: smallest real user journey we can see and use. Order by user value; explain required blockers. Order never drops scope: every requested item maps to todos, or stays open in its ticket when the owner narrowed this iteration.
 - Before dependent work: shared state owner, limits, compatibility and failure behavior.
 - Required quality stays. Optional polish/enhancements later: owner, ticket, acceptance condition.
 - Complete outcome ticket -> finish iteration -> manual QA -> relevant final tests/review. Full requested outcome stays open until delivered.

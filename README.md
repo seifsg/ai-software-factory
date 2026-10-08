@@ -67,7 +67,7 @@ safe-engine Build a habit tracker in /home/me/habits. Success means a signed-in 
 4. Analyzes requirements and consumers, then writes a plan with todos.
 5. Writes the design brief and the schema decision.
 6. Builds every todo through a check-change-check loop.
-7. Runs the app through its main journey and its most likely failure.
+7. Runs the app through every requested journey and its most likely failure.
 8. Opens a draft PR with before/after proof and what is unverified.
 
 ```mermaid

@@ -53,7 +53,7 @@ Summary shown to the owner: all three leaders cover booking, waitlists, packs, c
 ## Kickoff
 
 **Features:** schedule and booking, waitlist with auto-promotion, class packs (mock checkout), staff schedule and check-in
-**Size:** POC (from the request): one studio, seeded members and classes, the member booking journey
+**Size:** POC (from the request): every requested item at small scale: one studio, seeded members and classes
 **Approach:** studio-branded booking site with packs (over a marketplace listing, or a staff-only scheduler)
 **Stack:** Next.js + TypeScript + shadcn/ui + Drizzle + SQLite
 **Answered by:** owner via the question tool (sample answers)
@@ -149,6 +149,7 @@ indexes: classes(starts_at), bookings(class_id, status), waitlist(class_id, posi
 
 - PASS member signs in with the dev button, buys a 5-class pack, books Tuesday 7:00 Flow
 - PASS full class puts the second member on the waitlist; a cancellation promotes them and spends their credit
+- PASS staff publishes a class and checks the booked member in
 - FAIL then fixed: booking button stayed active during the request; disabled while pending
 - Screenshot: .factory/fast/shots/schedule.png
 **Logs:** logs/app.log shows request IDs for booking, waitlist promotion and check-in; no errors
@@ -156,7 +157,7 @@ indexes: classes(starts_at), bookings(class_id, status), waitlist(class_id, posi
 ## Handoff
 
 **Run:** `pnpm install && pnpm db:seed && pnpm dev`, then http://localhost:3000
-**Statuses:** #2, #3, #4 Done (done-run PASS); #5 Ready for QA (staff check-in not exercised); epic #1 Ready for QA until the owner accepts; follow-ups #6, #7, #8 Backlog (P2, P2, P3)
+**Statuses:** every requested item delivered; #2, #3, #4, #5 Done (done-run PASS); epic #1 Ready for QA until the owner accepts; follow-ups #6, #7, #8 Backlog (P2, P2, P3)
 **Dev sign-in:** /sign-in shows "Sign in as Member" and "Sign in as Staff" in development only, beside the normal form
 **Unverified:** automated tests, independent review, Safari, payment provider
 **Follow-ups:** real payments (#6), security hardening (#7), deployment (#8)

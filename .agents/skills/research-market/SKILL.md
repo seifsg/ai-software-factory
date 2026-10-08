@@ -20,7 +20,7 @@ Research and planning only. Do not build or publish.
 Read the request, constraints and settled choices first. Run in parallel: one agent per competitor, one for stacks.
 
 1. **Competitors:** the 3 top products for this job (leaders, fastest growing or closest fit; say why each). Per competitor: source URL, core loop, standout features, pricing and positioning, UX patterns worth reusing, weak spots.
-2. **Feature matrix:** features × competitors. Mark must-haves and gaps.
+2. **Feature matrix:** features × competitors. Mark requested items, must-haves and gaps.
 3. **Opportunities:** gaps, underserved segments, pricing angles, quick wins that make money. One line each.
 4. **Stack options** (new products): three stacks with fit, speed, look and risk. Recommendation first. Apply the stack defaults the project sets.
 5. Show the owner a 5 to 10 line summary before asking anything.
@@ -59,4 +59,5 @@ Strands (use those that can change the decision):
 - Route evidence once, no recursive research. Interface, interaction, media and public pages meant for search: `ux-quality`. New or materially changed persistence: `database-schema`.
 - Naming: check credible options and obvious collisions. Search is not trademark clearance. A rejected name stays rejected.
 - During delivery, revise the `get-ready-to-code` plan outputs: `original item → evidence → keep / adapt / add / defer / reject → reason → acceptance impact`. Evidence may justify no change.
+- Requested items: keep, or adapt how they are built without changing what the owner gets. Defer, reject or replace needs the owner's recorded decision. An addition records its evidence and the owner's approval, apart from the requested items.
 - Report: sources, comparisons, decisions, failed attempts, unknowns, limits. Research proves neither market success nor working software.
