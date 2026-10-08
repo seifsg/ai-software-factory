@@ -29,7 +29,7 @@ STEPS = (
     ("design", ("fast",), KINDS, "ui"),
     ("schema", ("fast",), KINDS, "data"),
     ("build", MODES, KINDS, None),
-    ("done-run", ("fast",), KINDS, None),
+    ("done-run", MODES, KINDS, None),
     ("handoff", MODES, KINDS, None),
 )
 TITLES = {"research": "Research", "kickoff": "Kickoff", "tickets": "Tickets", "analysis": "Analysis",
@@ -39,15 +39,18 @@ HINTS = {
     "research": ">=3 '### <competitor>' subsections each citing a source URL, a feature matrix table, "
                 "an Opportunities line; product runs also '### Stack options' with a 3-row table",
     "kickoff": "Features, Approach, Answered by lines; product runs also Size and Stack",
-    "tickets": "an Epic URL line, a Backlog line; product/feature runs >=1 Sub-issue URL line",
+    "tickets": "an Epic URL line, a Backlog line; product/feature runs >=1 Sub-issue URL line; "
+               "online: each listed ticket has a Definition of done",
     "analysis": "a Success line and a fenced ASCII chart",
-    "plan": "### Files, ### Critique, ### Phases, ### Todos (T1..), ### Whole plan, Logging and Efficiency lines",
+    "plan": "### Files, ### Critique, ### Phases, ### Todos (T1..), ### Whole plan, Logging and Efficiency lines; "
+            "online: each listed ticket has checklist items",
     "design": ">=4 hex colors; UI kit, Font, Logo, Icons, Layout lines; Theme line naming light mode; "
               "Journeys line with counts and a minimum",
     "schema": "a 3-option table, a Chosen line, a fenced ERD or DDL",
     "build": "one line per plan todo: 'T1 pre: ... do: ... post: ...'",
     "done-run": ">=1 PASS line, a Logs line; UI runs >=1 existing screenshot path",
-    "handoff": "Run, Statuses, Unverified, Follow-ups lines; sign-in runs a Dev sign-in line",
+    "handoff": "Run, Statuses, Unverified, Follow-ups lines; sign-in runs a Dev sign-in line; "
+               "online: each open listed ticket fully ticked or Blocked",
 }
 HERE = Path(__file__).resolve().parent  # sibling modules: fast_record.py (step checks), fast_shell.py (commands)
 

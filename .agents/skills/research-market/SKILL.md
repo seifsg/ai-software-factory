@@ -19,6 +19,8 @@ Research and planning only. Do not build or publish.
 
 Read the request, constraints and settled choices first. Run in parallel: one agent per competitor, one for stacks.
 
+Depth follows the size. POC: how competitors deliver the requested items, plus the riskiest capability; extra ideas go to the Backlog, not the questions. MVP: the launch baseline (accounts, security, privacy, onboarding) is built without asking; research the gaps beyond it that users expect (payments, notifications, support, integrations), each with evidence, cost and a recommendation, offered to the owner as suggestions.
+
 1. **Competitors:** the 3 top products for this job (leaders, fastest growing or closest fit; say why each). Per competitor: source URL, core loop, standout features, pricing and positioning, UX patterns worth reusing, weak spots.
 2. **Feature matrix:** features × competitors. Mark requested items, must-haves and gaps.
 3. **Opportunities:** gaps, underserved segments, pricing angles, quick wins that make money. One line each.

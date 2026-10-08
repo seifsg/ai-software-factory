@@ -6,10 +6,10 @@ Every Fast or Lucky run records each step in one work record and passes the gate
 
 ## Kickoff questions
 
-One round after research, `product` and `feature` only. Use your agent's question tool when it has one (multiple choice, recommended option first, one-line tradeoff each); otherwise one short message. Ask only what the request leaves open:
+After research, `product` and `feature` only. A POC asks one round. An MVP or production slice asks rounds until its launch gaps are decided (unanswered ones go to the Backlog), then suggests again as delivery uncovers gaps ([sizes](sizes.md)). Use your agent's question tool when it has one (multiple choice, recommended option first, one-line tradeoff each); otherwise one short message. Ask only what the request leaves open:
 
-1. **Features:** list every requested item in the question as fixed, never as an option. The multi-select offers up to four extra feature groups from the matrix.
-2. **Size:** POC (all requested items at small scale, seeded data), MVP (requested items plus research-backed critical additions the owner approves) or production slice. Size sets depth, never drops a requested item.
+1. **Size:** POC (it works and does exactly what was asked), MVP (it can go live with real test users) or production slice. Ask it first when open: the features question depends on it.
+2. **Features:** list every requested item as fixed, never as an option. POC: ask only what the requested items leave open; extra ideas go to the Backlog. MVP: offer the researched launch gaps and extra features with their evidence, up to four per question.
 3. **Approach:** three distinct ways to deliver it (positioning, scope, build route).
 4. **Stack:** three options from the product bar; recommendation first.
 5. **Shape:** product name, public landing or private-only, who signs in. Only when the request leaves them open.
@@ -17,7 +17,7 @@ One round after research, `product` and `feature` only. Use your agent's questio
 
 More than four open: ask the rest in a second call of the same round.
 
-Pause the gate while waiting. Record each answer with its source (`owner via question tool`, `from the request`). `**Features:**` names the requested items, then the chosen additions. Answers bind the run; later changes go to the epic's activity. A later focus narrows that iteration only; requested items stay open.
+Pause the gate while waiting. Record each answer with its source (`owner via question tool`, `from the request`). `**Features:**` names the requested items, then the chosen additions. Answers bind the run; later changes go to the epic's activity.
 
 ## Work record
 
@@ -27,14 +27,14 @@ Pause the gate while waiting. Record each answer with its source (`owner via que
 |---|---|
 | Research | ≥3 `### <competitor>` subsections each citing a source URL, a feature-matrix table, an `**Opportunities:**` line; product runs also `### Stack options` with a 3-row table |
 | Kickoff | `**Features:**`, `**Approach:**`, `**Answered by:**`; product runs also `**Size:**` and `**Stack:**` |
-| Tickets | `**Epic:** <url>`, `**Backlog:**` (owned, affected and untouched items); product and feature runs ≥1 `**Sub-issue:** <url>` |
+| Tickets | `**Epic:** <url>`, `**Backlog:**` (owned, affected and untouched items); product and feature runs ≥1 `**Sub-issue:** <url>`; online, each listed ticket has a `Definition of done` heading |
 | Analysis | `**Success:**` line and a fenced ASCII chart |
-| Plan | `### Files`, `### Critique`, `### Phases`, `### Todos` (with `T1`…), `### Whole plan`, `**Logging:**`, `**Efficiency:**` |
+| Plan | `### Files`, `### Critique`, `### Phases`, `### Todos` (with `T1`…), `### Whole plan`, `**Logging:**`, `**Efficiency:**`; online, each listed ticket has checklist items (`- [ ]`) |
 | Design | ≥4 `#RRGGBB` hex colors, `**UI kit:**`, `**Font:**`, `**Logo:**`, `**Icons:**`, `**Layout:**`, `**Theme:**` naming light mode, `**Journeys:**` with counts and a minimum |
 | Schema | a 3-option table, `**Chosen:**`, a fenced ERD or DDL |
 | Build log | every plan todo ID with `pre:`, `do:` and `post:` on one line |
 | Done-run | ≥1 `PASS` line, `**Logs:**`; UI runs ≥1 existing screenshot path under `.factory/fast/shots/` |
-| Handoff | `**Run:**`, `**Statuses:**` (each owned ticket's final status), `**Unverified:**`, `**Follow-ups:**`; sign-in runs `**Dev sign-in:**` |
+| Handoff | `**Run:**`, `**Statuses:**` (each owned ticket's final status), `**Unverified:**`, `**Follow-ups:**`; sign-in runs `**Dev sign-in:**`; online, each open listed ticket is fully ticked or Blocked (`status: blocked` label or board status) |
 
 Labels end with the colon inside the bold: `**Epic:**`. Delegates return their log lines; the coordinator writes the record. During build, copy the design brief and schema decision into the product's `docs/`.
 
@@ -56,7 +56,7 @@ python fast_gate.py install --host <host> [--project <abs>]
 - `start` keeps `.factory/` out of Git only inside a Git repository: `git init` first.
 - Product runs default to UI and persistence; pass `--no-ui` or `--no-data` only when true. `--auth` marks sign-in: pass it when anyone signs in or roles exist. These are fixed at `start`; decide them from the request.
 - Steps run in order; `done` refuses a step while an earlier applicable one is open.
-- `done tickets` verifies GitHub issue URLs and sub-issue links online; other trackers or no network: `--offline "<reason>"` records them unverified.
+- `done tickets`, `done plan` and `done handoff` read the listed GitHub tickets online: links, definition of done, checklist, ticks. Other trackers or no network: `--offline "<reason>"` records the step unverified.
 - `pause` before waiting on the owner; the next `done` or `resume` clears it. `close` needs `handoff`, or `--abandon` with the owner's reason.
 
 ## Hooks
@@ -73,5 +73,5 @@ Without hooks the gate still records and checks steps; follow the order yourself
 ## Keep it fast
 
 - Parallel agents: research strands together, independent todos in separate files together, one writer per file.
-- One question round, one record, status moves at boundaries.
+- One record; status moves at boundaries.
 - No controller, capture, seal or independent review in Fast or Lucky. `verify` adds manual QA and tests; `promote` moves to Safe.

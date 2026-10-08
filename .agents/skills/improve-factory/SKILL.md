@@ -51,7 +51,7 @@ Do not code before the plan is recorded.
 
 ## 4. Repair
 
-- Every todo goes through the full 0–4 loop with pre, change and post notes.
+- Every todo is a checklist item in the maintenance ticket: the full 0–4 loop with pre, change and post notes, ticked after its check.
 - Fix the owning cause and every affected caller and link. Remove stale or duplicate prose.
 - Write lasting rules into the skill that owns them.
 - Edit skills with your agent's skill-authoring tool when it has one.

@@ -40,11 +40,11 @@ No mode named: **Fast**.
 | Research + kickoff questions | products, big features | ❌ product bar defaults | ✅ |
 | Analyze, plan | full methods, no file-summary stop | one short pass each | full, file-summary stop |
 | Design, schema briefs | ✅ | ❌ product bar defaults | ✅ |
-| 0–4 loop | every todo | one pass: apply, inspect once | every todo |
+| 0–4 loop | every checklist item, ticked after its check | same | same |
 | Enforcement | gate + hooks | gate + hooks | controller |
-| Checks | done-run | none until `verify` | manual QA, tests, verify, independent review |
+| Checks | item checks, done-run | item checks, done-run | item checks, manual QA, tests, verify, independent review |
 
-Every mode meets the [product bar](references/product-bar.md), keeps project rules and never puts secrets in code or Git.
+Every mode meets the [product bar](references/product-bar.md) for its [size](references/sizes.md), keeps project rules and never puts secrets in code or Git.
 
 ## Pick the kind
 
@@ -60,17 +60,17 @@ Record every step in one work record and pass the gate: [fast-run](references/fa
 
 1. **Start:** new project: create the folder and `git init`. Then `fast_gate.py start`.
 2. **Research** (product, feature): run `research-market` kickoff research.
-3. **Kickoff** (product, feature): one question round. Pause the gate while waiting.
-4. **Tickets:** run `ticketing`: read the backlog, then epic(s) + 1 or many outcome sub-issues in To do; a `change` gets one ticket.
+3. **Kickoff** (product, feature): questions by size: a POC asks one round, an MVP asks until the gaps are decided. Pause the gate while waiting.
+4. **Tickets:** run `ticketing`: read the backlog, then epic(s) + 1 or many outcome sub-issues in To do, each with a definition of done; a `change` gets one ticket.
 5. **Analysis:** run `analyze-start` in full. No code yet: analyze the requirements, platform and intended consumers, and say so.
-6. **Plan:** run `get-ready-to-code`: five outputs, todos `T1..Tn`, logging map, efficiency budget. This request authorizes continuing through its file-summary stop. Todo's and checklists are a MUST outcome for us to follow on next.
+6. **Plan:** run `get-ready-to-code`: five outputs, todos `T1..Tn` written into each ticket's checklist, logging map, efficiency budget. This request authorizes continuing through its file-summary stop.
 7. **Design** (UI): similar to how we do the get ready to code, we plan our design. We do not accept poor mediocre design, only the best. Design brief from the product bar and `ux-quality` step 1. Its audit waits for the done-run.
 8. **Schema** (persistence): Only if needed, we run `database-schema`.
-9. **Build:** every todo through the 0–4 loop; one log line per todo: `T3 pre: … do: … post: …`. Build the whole outcome without testing along the way.
-10. **Done-run** (Fast): start it once, use every requested journey and the most likely failure through real controls (simulated input proves no requested integration), read the logs, fix blockers. Screenshots for UI. No browser: drive its HTTP or CLI interface and say so.
-11. **Handoff:** how to run, dev sign-in, each requested item (delivered, open in a later iteration, blocked with reason, or owner-deferred), verified, unverified, follow-up tickets, each owned ticket's final status; `close`. Any requested item not delivered or owner-deferred: the overall outcome is unfinished.
+9. **Build:** every checklist item through the 0–4 loop, an unproven capability first as a spike; tick each in its ticket after its check; one log line per todo: `T3 pre: … do: … post: …`. Automated tests come last: an MVP writes them after the done-run, other sizes wait for `verify` or Safe.
+10. **Done-run:** prove each ticket's definition of done. Start it once, use every requested journey and the most likely failure through real controls (simulated input proves no requested integration), read the logs, fix blockers. Screenshots for UI. No browser: drive its HTTP or CLI interface and say so.
+11. **Handoff:** open the draft PR (`how-to-make-a-pr`), then report how to run, dev sign-in, each requested item (delivered, open in a later iteration, blocked with reason, or owner-deferred), verified, unverified, follow-up tickets, each owned ticket's final status (Ready for QA with its PR, Blocked, or Backlog when owner-deferred); `close`. Any requested item not delivered or owner-deferred: the overall outcome is unfinished.
 
-Lucky runs 1, 4, a short 5 and 6, 9 and 11. It asks nothing, researches nothing, takes product bar defaults for design and schema without comparisons, and is reported unverified.
+Lucky runs 1, 4, a short 5 and 6, 9, 10 and 11. It asks nothing, researches nothing and takes product bar defaults for design and schema without comparisons. Its checklist loop and checks match Fast.
 
 - `verify`: finish the work, manual QA of the main and failure journeys, then write and run relevant tests. No controller or independent review.
 - `promote`: commit the current code as the baseline, then (optionally) Safe on the existing epic.
@@ -81,7 +81,7 @@ Lucky runs 1, 4, a short 5 and 6, 9 and 11. It asks nothing, researches nothing,
 2. Drive the controller phase by phase: [controller](references/controller.md).
    - `analyze`: `analyze-start`.
    - `plan`: `get-ready-to-code`, file-summary stop unless the owner already confirmed the ticket's before/after. New software: keep the first plan, run `research-market`, revise all five outputs.
-   - `build`: every todo through the 0–4 loop.
+   - `build`: every checklist item through the 0–4 loop, ticked after its check.
    - `manual` → `testing` → `verify`: use it first, tests last.
    - `review`: `deep-review` by a fresh agent that did not build it.
    - `ready`: map confirmed criteria to proof; report limits.
@@ -94,7 +94,7 @@ Lucky runs 1, 4, a short 5 and 6, 9 and 11. It asks nothing, researches nothing,
 - PRs always: `how-to-make-a-pr`. Variations: one branch and draft PR per variation. A PR is planned: capture its before proof before editing. Before a Fast or Lucky PR, offer once: "Run a Safe check first? (optional)". A Safe check is manual QA, relevant tests and one independent `deep-review`.
 - Never claim tested, reviewed or production ready without that evidence.
 - Backlog in every mode: `ticketing` moves each ticket through its statuses, logs every ticket change in its activity and leaves untasked items alone.
-- Always document within tickets. Always make Todo's and checklists before building, then verify against them during the review and testing phases.
+- Every ticket carries a definition of done and a checklist (`ticketing`). Each item runs the 0–4 loop and is ticked after its check. A ticket is finished only when every item is ticked and every criterion proven; otherwise it loops or is Blocked. Done comes with the PR merge.
 
 ## Decide
 

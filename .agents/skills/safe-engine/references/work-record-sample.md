@@ -52,8 +52,8 @@ Summary shown to the owner: all three leaders cover booking, waitlists, packs, c
 
 ## Kickoff
 
-**Features:** schedule and booking, waitlist with auto-promotion, class packs (mock checkout), staff schedule and check-in
-**Size:** POC (from the request): every requested item at small scale: one studio, seeded members and classes
+**Features:** schedule and booking, waitlist with auto-promotion, class packs (test-mode checkout, owner-approved), staff schedule and check-in
+**Size:** POC (from the request): every requested item, minimal and working: one studio, seeded members and classes, a dev role switcher instead of sign-in
 **Approach:** studio-branded booking site with packs (over a marketplace listing, or a staff-only scheduler)
 **Stack:** Next.js + TypeScript + shadcn/ui + Drizzle + SQLite
 **Answered by:** owner via the question tool (sample answers)
@@ -65,17 +65,17 @@ Summary shown to the owner: all three leaders cover booking, waitlists, packs, c
 **Sub-issue:** https://github.com/acme/studio-booking/issues/3 (full class: waitlist and auto-promotion)
 **Sub-issue:** https://github.com/acme/studio-booking/issues/4 (member buys a class pack and spends credits)
 **Sub-issue:** https://github.com/acme/studio-booking/issues/5 (staff publish classes and check members in)
-**Backlog:** searched "booking", "waitlist", "class pack": empty, new repository. Owned: #1 to #5, To do, P1. Affected and untouched: none.
+**Backlog:** searched "booking", "waitlist", "class pack": empty, new repository. Owned: #1 to #5, To do, P1, each with a Definition of done; checklists follow the plan. POC skips listed in #1. Affected and untouched: none.
 
 ## Analysis
 
-**Success:** a member signs in, books a class with a pack credit, a full class puts the next person on the waitlist, a cancellation promotes them, and staff check the member in.
+**Success:** a member (dev role switcher) books a class with a pack credit, a full class puts the next person on the waitlist, a cancellation promotes them, and staff check the member in.
 **Consumers:** members, front-desk staff, the studio owner.
 
 ```text
-member ─ sign in ─► schedule ─► class ─┬─ spot free ─► book (−1 credit) ─► confirmation
+member ─ role ─► schedule ─► class ─┬─ spot free ─► book (−1 credit) ─► confirmation
                                        └─ full ─► waitlist ─► cancellation frees a spot ─► auto-promote
-staff  ─ sign in ─► schedule editor ─► today's classes ─► check-in list
+staff  ─ role ─► schedule editor ─► today's classes ─► check-in list
 ```
 
 **Unknowns:** payment provider after the POC; cancellation window rules.
@@ -83,23 +83,24 @@ staff  ─ sign in ─► schedule editor ─► today's classes ─► check-in
 ## Plan
 
 ### Files
-`app/(marketing)/page.tsx`, `app/(app)/schedule/**`, `app/(app)/account/**`, `app/(staff)/**`, `lib/db/schema.ts`, `lib/booking.ts`, `lib/log.ts`, `components/**`, `public/logo.svg`, `scripts/seed.ts`.
+`app/(app)/schedule/**`, `app/(app)/account/**`, `app/(staff)/**`, `lib/db/schema.ts`, `lib/booking.ts`, `lib/log.ts`, `components/**`, `public/logo.svg`, `scripts/seed.ts`.
 
 ### Critique
 Capacity, credits and waitlist promotion live in `lib/booking.ts` behind one transaction, so pages never race each other. Mock checkout stays behind one function for a later payment provider.
 
 ### Phases
-1. Foundation: schema, seed, logging, sign-in with dev buttons. 2. Member booking. 3. Waitlist and packs. 4. Staff tools. 5. Landing page. 6. Done-run.
+1. Foundation: schema, seed, logging, dev role switcher, environment badge. 2. Member booking. 3. Waitlist and packs. 4. Staff tools. 5. Header, footer, logo. 6. Done-run.
 
 ### Todos
-- T1 schema, migrations, seed
-- T2 shared logger
-- T3 sign-in + dev sign-in buttons
-- T4 schedule and booking with capacity check
-- T5 waitlist and auto-promotion
-- T6 class packs with mock checkout
-- T7 staff schedule editor and check-in
-- T8 landing page, header, footer, logo
+Written into the sub-issues' checklists.
+- T1 schema and seed (#2)
+- T2 shared logger (#2)
+- T3 dev role switcher and environment badge (#2)
+- T4 schedule and booking with capacity check (#2)
+- T5 waitlist and auto-promotion (#3)
+- T6 class packs with a labeled test-mode checkout (#4)
+- T7 staff schedule editor and check-in (#5)
+- T8 header, footer, logo (#2)
 
 ### Whole plan
 Next.js app, SQLite through Drizzle, booking rules in one module. Light theme with the design brief below.
@@ -114,7 +115,7 @@ Next.js app, SQLite through Drizzle, booking rules in one module. Light theme wi
 **Font:** Inter, 16px base
 **Logo:** `public/logo.svg`: lotus mark plus the "Stillpoint" wordmark; favicon from the mark
 **Icons:** lucide-react
-**Layout:** header with logo, Schedule, My bookings and account menu; content area; footer with studio address, Help, Privacy and ©; one column on phones
+**Layout:** header with logo, Schedule, My bookings and the dev role switcher; content area; footer with studio address, Help, Privacy and ©; one column on phones
 **Theme:** light mode default; dark mode later
 **Journeys:** book a class: 2 actions, 1 load, min 2 actions; cancel a booking: 2 actions, 0 loads, min 1 action (the destructive confirm is the reason for the gap); staff check-in: 1 action per member, 0 loads, min 1 action
 
@@ -126,7 +127,7 @@ Next.js app, SQLite through Drizzle, booking rules in one module. Light theme wi
 | Seat counter stored on the class row | Fast reads, but drifts from the bookings it summarizes | Rejected |
 | Event log of credits and bookings | Full history, but every read replays | Rejected |
 
-**Chosen:** relational on SQLite through Drizzle migrations; capacity checked inside the booking transaction.
+**Chosen:** relational on SQLite through Drizzle (migrations arrive with the MVP); capacity checked inside the booking transaction.
 
 ```text
 members 1─* bookings *─1 classes (capacity, starts_at)   members 1─* credit_packs (remaining)
@@ -136,28 +137,28 @@ indexes: classes(starts_at), bookings(class_id, status), waitlist(class_id, posi
 
 ## Build log
 
-- T1 pre: schema plan read | do: Drizzle schema, migration, seed with 2 members, 1 staff, a week of classes | post: FKs and indexes match the access map
+- T1 pre: schema plan read | do: Drizzle schema and seed with 2 members, 1 staff, a week of classes | post: FKs and indexes match the access map; ticked in #2
 - T2 pre: product bar logging rules | do: `lib/log.ts` with redaction and rotation | post: wired before the first route
-- T3 pre: auth library docs | do: sign-in plus dev-only "Sign in as Member/Staff" buttons | post: server rejects the dev route outside development
+- T3 pre: requested roles (member, staff) | do: dev-only role switcher in the header, DEV badge from runtime config | post: production build drops both
 - T4 pre: T1 queries | do: week schedule and booking in one transaction | post: double click books once
 - T5 pre: T4 transaction | do: waitlist join and promotion on cancellation | post: promotion and credit spend share the transaction
-- T6 pre: credit rules | do: class packs with mock checkout | post: checkout isolated in one function
-- T7 pre: staff routes | do: schedule editor and check-in list | post: staff-only guard on every action
-- T8 pre: design brief | do: landing page, header, footer, logo, metadata | post: light theme, AA contrast checked
+- T6 pre: credit rules | do: class packs with a checkout labeled "Test mode: no real charge" | post: checkout isolated in one function
+- T7 pre: staff routes | do: schedule editor and check-in list | post: staff screens show only under the staff role
+- T8 pre: design brief | do: header, footer, logo, metadata | post: light theme, AA contrast checked
 
 ## Done-run
 
-- PASS member signs in with the dev button, buys a 5-class pack, books Tuesday 7:00 Flow
+- PASS member (dev role switcher) buys a 5-class pack in test mode, books Tuesday 7:00 Flow
 - PASS full class puts the second member on the waitlist; a cancellation promotes them and spends their credit
 - PASS staff publishes a class and checks the booked member in
 - FAIL then fixed: booking button stayed active during the request; disabled while pending
-- Screenshot: .factory/fast/shots/schedule.png
+- Screenshot: .factory/fast/shots/schedule.png (DEV badge and "Sample data" tags visible)
 **Logs:** logs/app.log shows request IDs for booking, waitlist promotion and check-in; no errors
 
 ## Handoff
 
 **Run:** `pnpm install && pnpm db:seed && pnpm dev`, then http://localhost:3000
-**Statuses:** every requested item delivered; #2, #3, #4, #5 Done (done-run PASS); epic #1 Ready for QA until the owner accepts; follow-ups #6, #7, #8 Backlog (P2, P2, P3)
-**Dev sign-in:** /sign-in shows "Sign in as Member" and "Sign in as Staff" in development only, beside the normal form
+**Statuses:** every requested item delivered; #2, #3, #4, #5 checklists ticked, done-run PASS: Ready for QA with PR #6, Done on merge; epic #1 Ready for QA
+**Dev sign-in:** header role switcher (Member, Staff), development only; this POC has no sign-in
 **Unverified:** automated tests, independent review, Safari, payment provider
-**Follow-ups:** real payments (#6), security hardening (#7), deployment (#8)
+**Follow-ups:** none. POC skips (real sign-in, payment provider, security hardening, deployment, landing page) are listed in epic #1 for the MVP

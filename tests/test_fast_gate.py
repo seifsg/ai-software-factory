@@ -14,6 +14,14 @@ SCRIPTS = Path(__file__).resolve().parents[1] / "skills/safe-engine/scripts"
 GATE = SCRIPTS / "fast_gate.py"
 SAMPLE = Path(__file__).resolve().parents[1] / ".agents/skills/safe-engine/references/work-record-sample.md"
 STEPS = ["research", "kickoff", "tickets", "analysis", "plan", "design", "schema", "build", "done-run", "handoff"]
+ONLINE = ("tickets", "plan", "handoff")  # steps that read the listed tickets through gh
+
+
+def record_module():
+    spec = importlib.util.spec_from_file_location("fast_record", SCRIPTS / "fast_record.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 class FastGateTests(unittest.TestCase):
@@ -60,7 +68,7 @@ class FastGateTests(unittest.TestCase):
         shot.parent.mkdir(parents=True)
         shot.write_bytes(b"PNG")
         for step in STEPS:
-            self.gate("done", step, *(["--offline", "sample URLs"] if step == "tickets" else []))
+            self.gate("done", step, *(["--offline", "sample URLs"] if step in ONLINE else []))
 
     def test_start_records_run_and_enforces_step_order(self):
         self.start("--auth")
@@ -207,10 +215,12 @@ class FastGateTests(unittest.TestCase):
         posix = "/" + str(self.project)[0].lower() + str(self.project)[2:].replace("\\", "/")
         self.assertIn("Next: research", self.gate("status", project=posix))
 
+    def test_lucky_runs_the_done_run(self):
+        self.gate("start", "--key", "quick-try", "--mode", "lucky", "--kind", "change", "--request", "fix copy")
+        self.assertIn("done-run", self.gate("status"))
+
     def test_ticket_links_are_checked_against_the_epic(self):
-        spec = importlib.util.spec_from_file_location("fast_record", SCRIPTS / "fast_record.py")
-        record = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(record)
+        record = record_module()
         epic = "https://github.com/acme/portal/issues/1"
         linked = "https://github.com/acme/portal/issues/2\n"
         with patch.object(record, "gh", side_effect=["1", linked]):
@@ -218,6 +228,39 @@ class FastGateTests(unittest.TestCase):
         with patch.object(record, "gh", side_effect=["1", linked]):
             self.assertIn("not linked", record.verify_tickets(epic, ["https://github.com/acme/portal/issues/9"])[0])
         self.assertIn("--offline", record.verify_tickets("https://tracker.example/1", [])[0])
+
+    def test_tickets_need_a_definition_checklist_and_ticks(self):
+        record = record_module()
+        url = "https://github.com/acme/portal/issues/2"
+
+        def issue(body, state="OPEN", labels=(), board=None):
+            return json.dumps({"body": body, "state": state, "labels": [{"name": name} for name in labels],
+                               "projectItems": [{"status": {"name": board}}] if board else []})
+        ticket = "### ✅ Definition of done\n- **A1:** x\n\n### ☑️ Checklist\n- [x] T1 a\n- [ ] T2 b\n"
+        cases = [(record.needs_definition, issue("### 🎯 Purpose"), "Definition of done"),
+                 (record.needs_definition, issue(ticket), None),
+                 (record.needs_checklist, issue("### ✅ Definition of done"), "checklist items"),
+                 (record.needs_checklist, issue(ticket), None),
+                 (record.needs_ticks, issue(ticket), "1 unticked"),
+                 (record.needs_ticks, issue(ticket, labels=["status: blocked"]), None),
+                 (record.needs_ticks, issue(ticket, board="Blocked"), None),
+                 (record.needs_ticks, issue(ticket, state="CLOSED"), None),
+                 (record.needs_ticks, issue(ticket.replace("[ ]", "[x]")), None)]
+        for check, raw, expected in cases:
+            with self.subTest(check=check.__name__, expected=expected), patch.object(record, "gh", return_value=raw):
+                problems = record.ticket_problems([url, url], check)
+                if expected:
+                    self.assertEqual(len(problems), 1)
+                    self.assertIn(expected, problems[0])
+                    self.assertTrue(problems[0].startswith(url))
+                else:
+                    self.assertEqual(problems, [])
+        with patch.object(record, "gh", side_effect=RuntimeError("no network")):
+            self.assertIn("--offline", record.ticket_problems([url], record.needs_ticks)[0])
+        self.assertIn("--offline", record.ticket_problems(["https://tracker.example/1"], record.needs_ticks)[0])
+        sections = {"tickets": f"**Epic:** {url}\n**Backlog:** none\n"}
+        with patch.object(record, "gh", side_effect=AssertionError("offline steps never call gh")):
+            self.assertEqual(record.online({"offline": "no network", "all_sections": sections}, record.needs_ticks), [])
 
 
 if __name__ == "__main__":

@@ -51,13 +51,13 @@ Each `record` needs its matching phase. Artifacts are substantive Markdown; the 
 | Phase | Do | Command |
 |---|---|---|
 | `analyze` | Run `analyze-start`. No code. | `record analysis --file <analysis.md>` |
-| `plan` | Run `get-ready-to-code`: five outputs; file-summary stop unless the owner already confirmed the ticket's before/after. New software: first plan, `research-market`, revised plan; save all three. No code. | `record plan --file <plan.md>` |
-| `build` | Run the 0-4 loop for every todo. Finish all implementation and worthwhile in-scope improvements. No tests, no walkthroughs. | `record implementation --file <summary.md>` |
+| `plan` | Run `get-ready-to-code`: five outputs; file-summary stop unless the owner already confirmed the ticket's before/after. New software: first plan, `research-market`, revised plan; save all three. Write the todos into the ticket's checklist. No code. | `record plan --file <plan.md>` |
+| `build` | Run the 0-4 loop for every checklist item; tick each in the ticket after its check (use it, see it work). Finish all implementation and worthwhile in-scope improvements. No test writing, no final walkthrough. | `record implementation --file <summary.md>` |
 | `manual` | Final actual-use QA with failure and recovery paths. | `record manual --file <receipt.json>` |
 | `testing` | Write tests in `test_paths`. Seal reviewed acceptance, then record the batch (tests written, commands run, results). | `contract-proposal`, `seal`, `record batch --file <tests.md>` |
 | `verify` | One complete final gate. Read the logs. | `check` |
 | `review` | Map criteria to proof, then run the independent review. | `ticket-proof`, `review` |
-| `ready` | Write the handoff. | `handoff` |
+| `ready` | Every checklist item ticked. Write the handoff. | `handoff` |
 | `cancelled` | Stop. Records and checkout stay. | `cancel --reason "<why>"` |
 
 - `record analysis` and `record plan` are refused if source or declared inputs changed since `init`. Restore the starting candidate.

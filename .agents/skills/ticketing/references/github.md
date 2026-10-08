@@ -56,6 +56,10 @@ gh issue comment <n> --body-file <file>
 
 Read before every edit; an edit replaces the whole body.
 
+## Checklist
+
+Task items in the body: `- [ ] T1 <todo> (A1)`. Issue lists show the progress (x of y). Tick: read the body, change `[ ]` to `[x]` and add the proof, then `gh issue edit <n> --body-file <file>`. One writer per body.
+
 ## Backlog
 
 Check `gh auth status` for the `project` scope first: without it `projectItems` reads empty and a board looks absent. Missing: ask the owner to run `gh auth refresh -s project`, or use labels and say so. The issue sits on a project board with a Status field (`projectItems` above): set status there, and priority too when the board has that field. Otherwise labels: `status: backlog`, `status: to do`, `status: in progress`, `status: dev done`, `status: ready for qa`, `status: blocked`, and `priority: P0` to `priority: P3`. At most one of each per issue. Status labels count on open issues only: open without one is Backlog, closed as completed is Done, closed as not planned is Cancelled.
@@ -68,12 +72,13 @@ gh issue edit <n> --remove-label "status: to do" --add-label "status: in progres
 gh project list --owner <owner>
 gh project item-add <project-number> --owner <owner> --url <issue-url>
 gh project item-edit <project-number> --owner <owner> --url <issue-url> --field Status --value "In progress"
-gh issue close <n> --reason completed --comment "<QA evidence>"
+gh issue close <n> --reason completed --comment "<merged PR link>"
 gh issue close <n> --reason "not planned" --comment "<owner decision>"
 gh issue reopen <n>
 ```
 
 - Create only the missing labels the run uses, spelled as listed. Never rename or delete existing ones.
 - Sort the list by priority label.
-- Done: drop the status label, close as completed. Cancelled: same, close as not planned. Back from either: reopen and label. New issues on a board: `item-add` first.
+- Done comes from the merge: closing keywords in the PR close the ticket when it merges into the default branch. They are ignored on any other base: at the next intake, close such tickets with the merged PR link. Drop the status label on close. Cancelled: drop it, close as not planned. Back from either: reopen and label.
+- Boards: keep the built-in workflows that set Done when an item closes or its PR merges. New issues on a board: `item-add` first.
 - Each move pairs with one activity comment (`gh issue comment`). A close with `--comment` is both.

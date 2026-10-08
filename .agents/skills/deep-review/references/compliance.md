@@ -31,6 +31,7 @@ Rules:
    - `MET`, `PARTIAL`, `MISSING`, `INCORRECT`, `CONTRADICTED`, `UNCLEAR`
    - Code that exists but misses the intended behavior is not `MET`
    - Behavior never requested or planned: `DRIFT`
+   - Each ticket's checklist: an unticked item, or a tick without its check, keeps the ticket unfinished
 2. **Rules**: cross-reference each applicable rule against the changed code.
    - Cite the rule source, rule text and offending location
    - An intentional violation needs an authorized exception: owner, scope, record. Explanation alone waives nothing
@@ -51,6 +52,7 @@ Proof must be bound to the reviewed candidate. A closed ticket, a ready flag or 
 ## Verdict Gates
 
 - Any core requirement `MISSING` or `INCORRECT`: FAIL
+- Any ticket in scope unfinished (unticked item or unproven criterion): FAIL; a Blocked one names its blocker
 - Any always-applied rule violated without an authorized exception: FAIL
 - A required `UNKNOWN` or `UNCLEAR` on a core criterion: FAIL until resolved
 - Ambiguous or incomplete baseline: lower confidence explicitly

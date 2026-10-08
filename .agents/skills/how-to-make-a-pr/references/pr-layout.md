@@ -26,7 +26,7 @@ Fill the project's PR template first, then use these blocks inside it. Skip what
 - **Header:** credit the requester, the deciders and the real human author. Separate original work from a port or adaptation. No invented authorship or tests. No AI or tool trailers.
 - **Context:** the ticket link is clickable and visible, not hidden in a comment. Discussion that triggered the PR is linked too.
 - **Cold start:** the PR states the original request and why, decisions with reasons, facts (IDs, paths, repos), current state, remaining steps and blockers. Links are an audit trail, not a substitute.
-- **Verification:** one row per confirmed criterion. Ticketed work: include the ticket's confirmed revision and digest, dependencies and integration status. Proof is bound to the exact pushed candidate. Name what is **unverified**.
+- **Verification:** one row per confirmed criterion, plus the ticket's checklist state: every item ticked, or the gap. Ticketed work: include the ticket's confirmed revision and digest, dependencies and integration status. Proof is bound to the exact pushed candidate. Name what is **unverified**.
 - **Adjustment history:** when changes are requested, append WHAT, WHY, WHO and what was done. Keep it for the PR's whole life.
 - **Progress:** checked, reviewed, merged, released stay separate. State what works now, what is missing, the next visible result, and the exact demo context (build, environment, data). Overall acceptance stays open.
 
