@@ -65,7 +65,7 @@ Summary shown to the owner: all three leaders cover booking, waitlists, packs, c
 **Sub-issue:** https://github.com/acme/studio-booking/issues/3 (full class: waitlist and auto-promotion)
 **Sub-issue:** https://github.com/acme/studio-booking/issues/4 (member buys a class pack and spends credits)
 **Sub-issue:** https://github.com/acme/studio-booking/issues/5 (staff publish classes and check members in)
-**Backlog:** searched "booking", "waitlist", "class pack": empty, new repository. Owned: #1 to #5, To do, P1, each with a Definition of done; checklists follow the plan. POC skips listed in #1. Affected and untouched: none.
+**Backlog:** searched "booking", "waitlist", "class pack": empty, new repository. Owned: #1 to #5, To do, P1, each with a Definition of done; checklists follow the plan. Follow-up #6 (real payments, owner-deferred) in Backlog, P2. POC skips listed in #1. Affected and untouched: none.
 
 ## Analysis
 
@@ -158,7 +158,7 @@ indexes: classes(starts_at), bookings(class_id, status), waitlist(class_id, posi
 ## Handoff
 
 **Run:** `pnpm install && pnpm db:seed && pnpm dev`, then http://localhost:3000
-**Statuses:** every requested item delivered; #2, #3, #4, #5 checklists ticked, done-run PASS: Ready for QA with PR #6, Done on merge; epic #1 Ready for QA
+**Statuses:** every requested item delivered, real payments owner-deferred to #6 (mock checkout in this POC); #2, #3, #4, #5 checklists ticked, done-run PASS: Ready for QA with PR #7, Done on merge; epic #1 Ready for QA; #6 Backlog
 **Dev sign-in:** header role switcher (Member, Staff), development only; this POC has no sign-in
 **Unverified:** automated tests, independent review, Safari, payment provider
 **Follow-ups:** real payments (#6, owner-approved mock in this POC, revisit at MVP kickoff). POC skips (real sign-in, security hardening, deployment, landing page) are listed in epic #1 for the MVP

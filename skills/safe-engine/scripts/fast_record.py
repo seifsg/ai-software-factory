@@ -192,7 +192,8 @@ def needs_ticks(ticket):
     left = marks.count(" ")
     if not left:
         return None
-    return f"{left} unticked checklist item(s): finish them, or mark the ticket Blocked or Backlog with its reason"
+    return (f"{left} unticked checklist item(s): finish them, mark the ticket Blocked with its reason, "
+            "or Backlog only when the owner deferred it")
 
 
 def gh(*args):

@@ -72,7 +72,8 @@ gh issue edit <n> --remove-label "status: to do" --add-label "status: in progres
 gh project list --owner <owner>
 gh project item-add <project-number> --owner <owner> --url <issue-url>
 gh project item-edit <project-number> --owner <owner> --url <issue-url> --field Status --value "In progress"
-gh pr list --state merged --search "merged:>=<last intake date>" --limit 200 --json number,url,body,baseRefName
+gh pr list --state merged --base <non-default branch> --limit 200 --json number,url,body,mergedAt
+gh api repos/{owner}/{repo}/issues/<n>/events --jq '.[] | select(.event == "labeled" or .event == "reopened") | .created_at'
 gh issue close <n> --reason completed --comment "<merged PR link>"
 gh issue close <n> --reason "not planned" --comment "<owner decision>"
 gh issue reopen <n>
