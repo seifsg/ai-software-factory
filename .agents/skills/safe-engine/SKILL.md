@@ -56,7 +56,7 @@ Every mode meets the [product bar](references/product-bar.md) for its [size](ref
 
 ## Fast and Lucky
 
-Record every step in one work record and pass the gate: [fast-run](references/fast-run.md). Steps run in order; after each, `fast_gate.py done <step>`. Inside Fast, the review and test steps of phase skills wait for `verify` or Safe (an MVP's tests: step 9).
+Record every step in one work record and pass the gate: [fast-run](references/fast-run.md). Steps run in order; after each, `fast_gate.py done <step>`. Inside Fast, the review and test steps of phase skills wait for `verify` or Safe (MVP and production tests: step 9).
 
 1. **Start:** new project: create the folder and `git init`. Then `fast_gate.py start`.
 2. **Research** (product, feature): run `research-market` kickoff research.
@@ -66,7 +66,7 @@ Record every step in one work record and pass the gate: [fast-run](references/fa
 6. **Plan:** run `get-ready-to-code`: five outputs, todos `T1..Tn` written into each ticket's checklist, logging map, efficiency budget. This request authorizes continuing through its file-summary stop.
 7. **Design** (UI): similar to how we do the get ready to code, we plan our design. We do not accept poor mediocre design, only the best. Design brief from the product bar and `ux-quality` step 1. Its audit waits for the done-run.
 8. **Schema** (persistence): Only if needed, we run `database-schema`.
-9. **Build:** every checklist item through the 0–4 loop, an unproven capability first as a spike; tick each in its ticket after its check; one log line per todo: `T3 pre: … do: … post: …`. Automated tests come last: an MVP writes them as its last checklist items, once the other items work; other sizes wait for `verify` or Safe.
+9. **Build:** every checklist item through the 0–4 loop, an unproven capability first as a spike; tick each in its ticket after its check; one log line per todo: `T3 pre: … do: … post: …`. Automated tests come last: an MVP or production slice writes them as its last checklist items, once the other items work; a POC waits for `verify` or Safe.
 10. **Done-run:** prove each ticket's definition of done. Start it once, use every requested journey and the most likely failure through real controls (simulated input proves no requested integration), read the logs, fix blockers. Screenshots for UI. No browser: drive its HTTP or CLI interface and say so.
 11. **Handoff:** open the draft PR (`how-to-make-a-pr`), then report how to run, dev sign-in, each requested item (delivered, open in a later iteration, blocked with reason, or owner-deferred), verified, unverified, follow-up tickets, each owned ticket's final status (Ready for QA with its PR, Blocked, or Backlog when owner-deferred); `close`. Any requested item not delivered or owner-deferred: the overall outcome is unfinished.
 

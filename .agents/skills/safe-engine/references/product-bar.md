@@ -5,7 +5,7 @@ Contents: Stack, Visual system, States and forms, Public pages, Data, Logging, S
 The quality floor for every app, game, service, tool and library, in every mode. Which parts apply depends on the size: [sizes](sizes.md). A POC or MVP is never thrown away. Record its stack, design brief and budgets in the plan.
 
 - Minimal code means no waste. It never justifies a weaker stack, missing states or a bare UI.
-- New products meet the parts their size keeps. Changes cover the affected paths and their consumers; record wider gaps, no unrelated restructuring.
+- New products meet all of it except what their size skips. Changes cover the affected paths and their consumers; record wider gaps, no unrelated restructuring.
 - Analysis and review requests stay read-only: record gaps against this bar.
 
 ## Stack

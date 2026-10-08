@@ -254,7 +254,8 @@ class FastGateTests(unittest.TestCase):
                  (record.needs_ticks, issue(ticket, state="CLOSED", reason="NOT_PLANNED"), None),
                  (record.needs_ticks, issue(ticket.replace("[ ]", "[x]")), None),
                  (record.needs_ticks, issue(ticket, labels=["status: backlog"]), None),
-                 (record.needs_checklist, issue("### ✅ Definition of done", labels=["status: backlog"]), None),
+                 (record.needs_checklist, issue("### ✅ Definition of done", labels=["status: backlog"]), "Checklist section"),
+                 (record.needs_checklist, issue("### ✅ Definition of done", labels=["status: blocked"]), None),
                  (record.needs_ticks, issue("## Checklist\n+ [x] T1 a\n1. [ ] T2 b\n2) [ ] T3 c\n## Next\n- [ ] x"), "2 unticked"),
                  (record.needs_checklist, issue("### Checklist\n```text\n- [ ] T1 example only\n```\n"), "Checklist section"),
                  (record.needs_ticks, issue(ticket, labels=()), "1 unticked"),  # a run ticket must carry its status

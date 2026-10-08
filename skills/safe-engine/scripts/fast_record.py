@@ -139,7 +139,7 @@ def ticket_problems(urls, check):
 
 
 def read_ticket(url):
-    """Body without fenced examples, and whether the issue is exempt: Blocked, Backlog or closed as not planned."""
+    """Body without fenced examples, and its marks: closed as not planned, Blocked, Backlog (label or board)."""
     data = json.loads(gh("issue", "view", url, "--json", "body,stateReason,labels,projectItems"))
     if not isinstance(data, dict):
         raise ValueError("unexpected gh output")
@@ -147,8 +147,8 @@ def read_ticket(url):
     boards = {name(item.get("status")) for item in listed(data, "projectItems") if isinstance(item, dict)} - {""}
     marked = lambda status: f"status: {status}" in labels or status in boards
     cancelled = str(data.get("stateReason") or "").upper() == "NOT_PLANNED"
-    return {"body": FENCE.sub("", str(data.get("body") or "")),
-            "exempt": cancelled or marked("blocked") or marked("backlog")}
+    return {"body": FENCE.sub("", str(data.get("body") or "")), "stopped": cancelled or marked("blocked"),
+            "backlog": marked("backlog")}
 
 
 def checklist(body):
@@ -177,14 +177,14 @@ def needs_definition(ticket):
 
 
 def needs_checklist(ticket):
-    """Plan step: every listed ticket in the run carries its checklist."""
-    return None if ticket["exempt"] or TASK.search(checklist(ticket["body"])) else (
+    """Plan step: every listed ticket that is not Blocked or cancelled carries its checklist."""
+    return None if ticket["stopped"] or TASK.search(checklist(ticket["body"])) else (
         "needs a Checklist section with task items ('- [ ] T1 <todo>') from the plan")
 
 
 def needs_ticks(ticket):
-    """Handoff: a ticket in the run is finished (every item ticked) unless Blocked, Backlog or cancelled."""
-    if ticket["exempt"]:
+    """Handoff: a listed ticket is finished (every item ticked) unless Blocked, cancelled or deferred to Backlog."""
+    if ticket["stopped"] or ticket["backlog"]:
         return None
     marks = TASK.findall(checklist(ticket["body"]))
     if not marks:

@@ -16,6 +16,7 @@ from .storage import atomic_json, locked, now, read_json
 START = "<!-- safe-engine-ticket:v1 -->"
 END = "<!-- /safe-engine-ticket -->"
 WRITING_FIELDS = ("purpose", "goal", "context", "approach")
+CHECKLIST_NOTE = "Ticked through the ticket contract; a box clicked here blocks the next import until re-rendered."
 DONE_HEADINGS = ("Definition of done", "Done when")  # current, then the heading older bodies carry
 
 
@@ -159,7 +160,7 @@ def visual_projection(contract, done_heading=DONE_HEADINGS[0]):
     criteria = "\n".join(f"- **{c['id']}:** {c['text']}" for c in scope["acceptance"])
     sections.append(f"## ✅ {done_heading}\n\n{criteria}")
     if contract.get("checklist"):
-        sections.append(f"## ☑️ Checklist\n\n{checklist_lines(contract)}")
+        sections.append(f"## ☑️ Checklist\n\n{CHECKLIST_NOTE}\n\n{checklist_lines(contract)}")
     guards = []
     for label, values in (("Keep", scope["constraints"]), ("Avoid / out", scope["exclusions"]),
                           ("Nice to have", scope.get("optional", [])), ("Depends on", scope["dependencies"])):
@@ -190,7 +191,7 @@ def render_ticket(contract, *, fold_contract=True, layout="auto", done_heading=D
         projection = visual_projection(contract, done_heading)
     else:
         criteria = "\n".join(f"- {c['id']}: {c['text']}" for c in scope["acceptance"])
-        checklist = f"## Checklist\n\n{checklist_lines(contract)}\n\n" if contract.get("checklist") else ""
+        checklist = f"## Checklist\n\n{CHECKLIST_NOTE}\n\n{checklist_lines(contract)}\n\n" if contract.get("checklist") else ""
         projection = (f"## Before\n\n{scope['before']}\n\n## After\n\n{scope['after']}\n\n"
                       f"## Acceptance\n\n{criteria}\n\n{checklist}")
     payload = (f"{START}\n```json\n{json.dumps(contract, indent=2, ensure_ascii=False)}\n"

@@ -99,6 +99,7 @@ class TicketRenderTests(unittest.TestCase):
                     body = render_ticket(contract, layout=layout, fold_contract=folded)
                     self.assertIn("- [x] T1 Synthetic sentence kept Proof: Synthetic read-back", body)
                     self.assertIn("- [ ] T2 Synthetic second item", body)
+                    self.assertIn("blocks the next import", body)
                     self.assertEqual(parse_body(body), contract)
                     with self.assertRaises(EngineError):
                         parse_body(body.replace("- [ ] T2", "- [x] T2", 1))

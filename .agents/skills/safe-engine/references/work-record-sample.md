@@ -52,7 +52,7 @@ Summary shown to the owner: all three leaders cover booking, waitlists, packs, c
 
 ## Kickoff
 
-**Features:** schedule and booking, waitlist with auto-promotion, class packs (test-mode checkout, owner-approved), staff schedule and check-in
+**Features:** schedule and booking, waitlist with auto-promotion, class packs (mock checkout, owner-approved; real payments follow-up #6), staff schedule and check-in
 **Size:** POC (from the request): every requested item, minimal and working: one studio, seeded members and classes, a dev role switcher instead of sign-in
 **Approach:** studio-branded booking site with packs (over a marketplace listing, or a staff-only scheduler)
 **Stack:** Next.js + TypeScript + shadcn/ui + Drizzle + SQLite
@@ -98,7 +98,7 @@ Written into the sub-issues' checklists; the epic's checklist lists #2 to #5 and
 - T3 dev role switcher and environment badge (#2)
 - T4 schedule and booking with capacity check (#2)
 - T5 waitlist and auto-promotion (#3)
-- T6 class packs with a labeled test-mode checkout (#4)
+- T6 class packs with a labeled mock checkout (#4)
 - T7 staff schedule editor and check-in (#5)
 - T8 header, footer, logo (#2)
 
@@ -161,4 +161,4 @@ indexes: classes(starts_at), bookings(class_id, status), waitlist(class_id, posi
 **Statuses:** every requested item delivered; #2, #3, #4, #5 checklists ticked, done-run PASS: Ready for QA with PR #6, Done on merge; epic #1 Ready for QA
 **Dev sign-in:** header role switcher (Member, Staff), development only; this POC has no sign-in
 **Unverified:** automated tests, independent review, Safari, payment provider
-**Follow-ups:** none. POC skips (real sign-in, payment provider, security hardening, deployment, landing page) are listed in epic #1 for the MVP
+**Follow-ups:** real payments (#6, owner-approved mock in this POC, revisit at MVP kickoff). POC skips (real sign-in, security hardening, deployment, landing page) are listed in epic #1 for the MVP

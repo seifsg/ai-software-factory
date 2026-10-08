@@ -37,7 +37,7 @@ A tracker or board with other states: map each status to the nearest existing on
 | Blocked | Cannot move | Reason, next action, who unblocks |
 | Cancelled | Dropped or deprecated by the owner. Closed | Owner decision and source |
 
-1. Intake: after the search, read the open items in the same epic, area and topic. Among them, record merges first: close each ticket that a merged PR names with a closing keyword but left open (a non-default base), with the merged PR link, then each epic whose in-scope sub-issues are all Done and whose checklist is ticked. This decides nothing. Split them: owned by this run, affected by it, untouched. A match another run, session or person holds (In progress through Ready for QA, or Blocked) is affected: ask the owner before taking it over.
+1. Intake: record merges first. List the PRs merged since the last intake; close each open ticket one of them names with a closing keyword (a merge into a non-default base leaves it open), with the merged PR link, then each open epic whose in-scope sub-issues are all Done and whose checklist is ticked. This decides nothing. Then, after the search, read the open items in the same epic, area and topic. Split them: owned by this run, affected by it, untouched. A match another run, session or person holds (In progress through Ready for QA, or Blocked) is affected: ask the owner before taking it over.
 2. Move the run's tickets to To do. Sort by priority, then user value, then proven dependencies.
 3. Priority: P0 broken or blocking, P1 next, P2 planned, P3 later. Every ticket the run creates or owns has one. Change it only on those, with the reason.
 4. Move at boundaries: build starts → In progress, every item ticked → Dev done, every criterion proven and the PR open → Ready for QA, PR merged → Done, check failed → In progress. Agents never set Done; the merge closes the ticket, or intake records a merge that did not. Blocked any time; back to the prior status once cleared.
@@ -74,7 +74,7 @@ A tracker or board with other states: map each status to the nearest existing on
 
 Every ticket, every mode. The ticket is unfinished until both are complete.
 
-1. Write the definition of done (criteria with IDs) at creation and the checklist (the plan's todos as task items) at plan time. An epic's checklist: one item per in-scope sub-issue (follow-ups stay out) plus the integration checks.
+1. Write the definition of done (criteria with IDs) at creation and the checklist (the plan's todos as task items) at plan time.
 2. Each item runs the `get-ready-to-code` 0–4 loop. Tick it only after its check passed: its real effect used and seen working. Note the proof beside the tick.
 3. Independent items may run in parallel; each is ticked after its own check. One writer per ticket body: the coordinator ticks, delegates report.
 4. Finished: every item ticked and every criterion proven. Anything less loops on the failing item until it passes. Blocked only when the run cannot clear it (access, capability, owner decision): reason, next action, who unblocks; its independent items continue.
