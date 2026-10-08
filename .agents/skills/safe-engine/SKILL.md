@@ -36,7 +36,7 @@ No mode named: **Fast**.
 | | 🏃 Fast | 🍀 Lucky | 🛡️ Safe |
 |---|---|---|---|
 | Say | nothing or `fast` | `lucky` | `safe` |
-| Tickets | epic + outcome sub-issues | same | ticket contract |
+| Tickets | backlog, epic + outcome sub-issues | same | backlog, ticket contract |
 | Research + kickoff questions | products, big features | ❌ product bar defaults | ✅ |
 | Analyze, plan | full methods, no file-summary stop | one short pass each | full, file-summary stop |
 | Design, schema briefs | ✅ | ❌ product bar defaults | ✅ |
@@ -61,14 +61,14 @@ Record every step in one work record and pass the gate: [fast-run](references/fa
 1. **Start:** new project: create the folder and `git init`. Then `fast_gate.py start`.
 2. **Research** (product, feature): run `research-market` kickoff research.
 3. **Kickoff** (product, feature): one question round. Pause the gate while waiting.
-4. **Tickets:** run `ticketing`: epic(s) + 1 or many outcome sub-issues; a `change` gets one ticket.
+4. **Tickets:** run `ticketing`: read the backlog, then epic(s) + 1 or many outcome sub-issues in To do; a `change` gets one ticket.
 5. **Analysis:** run `analyze-start` in full. No code yet: analyze the requirements, platform and intended consumers, and say so.
 6. **Plan:** run `get-ready-to-code`: five outputs, todos `T1..Tn`, logging map, efficiency budget. This request authorizes continuing through its file-summary stop. Todo's and checklists are a MUST outcome for us to follow on next.
 7. **Design** (UI): similar to how we do the get ready to code, we plan our design. We do not accept poor mediocre design, only the best. Design brief from the product bar and `ux-quality` step 1. Its audit waits for the done-run.
 8. **Schema** (persistence): Only if needed, we run `database-schema`.
 9. **Build:** every todo through the 0–4 loop; one log line per todo: `T3 pre: … do: … post: …`. Build the whole outcome without testing along the way.
 10. **Done-run** (Fast): start it once, use the main journey and its most likely failure through real controls, read the logs, fix blockers. Screenshots for UI. No browser: drive its HTTP or CLI interface and say so.
-11. **Handoff:** how to run, dev sign-in, verified, unverified, follow-up tickets; update tickets; `close`.
+11. **Handoff:** how to run, dev sign-in, verified, unverified, follow-up tickets, each owned ticket's final status; `close`.
 
 Lucky runs 1, 4, a short 5 and 6, 9 and 11. It asks nothing, researches nothing, takes product bar defaults for design and schema without comparisons, and is reported unverified.
 
@@ -93,6 +93,7 @@ Lucky runs 1, 4, a short 5 and 6, 9 and 11. It asks nothing, researches nothing,
 - Every UI change: `ux-quality`. New or changed persistence: `database-schema`. Material unknowns: `research-market`.
 - PRs always: `how-to-make-a-pr`. Variations: one branch and draft PR per variation. A PR is planned: capture its before proof before editing. Before a Fast or Lucky PR, offer once: "Run a Safe check first? (optional)". A Safe check is manual QA, relevant tests and one independent `deep-review`.
 - Never claim tested, reviewed or production ready without that evidence.
+- Backlog in every mode: `ticketing` moves each ticket through its statuses, logs every ticket change in its activity and leaves untasked items alone.
 - Always document within tickets. Always make Todo's and checklists before building, then verify against them during the review and testing phases.
 
 ## Decide

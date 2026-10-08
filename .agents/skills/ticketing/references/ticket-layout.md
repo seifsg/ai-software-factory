@@ -17,8 +17,8 @@ Skip what does not apply. Keep each block separate. Never bury purpose, context 
 | 🔀 Flow | Entry → action → effect → result, plus relevant failure and recovery. ASCII for branches and state. |
 | ✅ Done when | One observable result per criterion, stable ID (A1, A2). Cover success, failure, recovery, preserved behavior. No "works", "best" or "optimized" without a check. |
 | 🧱 Scope & guardrails | In, out, constraints, dependencies, decisions (approved, rejected, pending), optional wants, finish boundary. Each deferral: owner, destination ticket, revisit condition. |
-| 🚦 Progress / next | Done, left, phase, next action, blockers, linked PR or branch. Checked, reviewed, merged, released stay separate. |
-| 📝 Activity | Date, who, what changed, why, result. Meaningful events only. |
+| 🚦 Progress / next | Status, priority, assignee. Done, left, phase, next action, blockers, linked PR or branch. Checked, reviewed, merged, released stay separate. |
+| 📝 Activity | The ticket's lifetime timeline. One entry per change: date, who, old → new, why, proof link. Append only. Trackers with comments: one comment per entry. |
 
 - **Epic:** overall outcome, shared constraints, one line per sub-issue (outcome + link), integration criteria.
 - **Sub-issue:** one outcome, its own criteria, link to the epic.
@@ -78,4 +78,8 @@ choose theme -> save -> reload -> restore
 
 ### 🚦 Progress / next
 
-- Not started. Next: inspect store and consumers.
+- **Status:** To do. **Priority:** P2. Next: inspect store and consumers.
+
+### 📝 Activity
+
+- `<date>`, agent: Backlog → To do, P2. Why: picked for this run. Proof: plan link.

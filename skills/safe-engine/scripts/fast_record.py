@@ -75,11 +75,10 @@ def check_kickoff(run, body, **_):
 def check_tickets(run, body, offline=None, **_):
     epic = URL.findall(marker(body, "Epic") or "")
     subs = [url.rstrip(".,;") for line in re.findall(r"\*\*Sub-issue:\*\*(.*)", body, re.I) for url in URL.findall(line)]
-    if not epic:
-        return ["needs an '**Epic:** <url>' line"]
+    problems = ([] if epic else ["needs an '**Epic:** <url>' line"]) + missing_markers(body, ["Backlog"])
     if run["kind"] != "change" and not subs:
-        return ["needs >=1 '**Sub-issue:** <url>' line"]
-    return [] if offline else verify_tickets(epic[0].rstrip(".,;"), subs)
+        problems.append("needs >=1 '**Sub-issue:** <url>' line")
+    return problems or ([] if offline else verify_tickets(epic[0].rstrip(".,;"), subs))
 
 
 def verify_tickets(epic, subs):
@@ -155,7 +154,7 @@ def check_done_run(run, body, project, **_):
 
 
 def check_handoff(run, body, **_):
-    return missing_markers(body, ["Run", "Unverified", "Follow-ups"] + (["Dev sign-in"] if run.get("auth") else []))
+    return missing_markers(body, ["Run", "Statuses", "Unverified", "Follow-ups"] + (["Dev sign-in"] if run.get("auth") else []))
 
 
 CHECKS = {"research": check_research, "kickoff": check_kickoff, "tickets": check_tickets,

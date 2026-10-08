@@ -65,6 +65,7 @@ Summary shown to the owner: all three leaders cover booking, waitlists, packs, c
 **Sub-issue:** https://github.com/acme/studio-booking/issues/3 (full class: waitlist and auto-promotion)
 **Sub-issue:** https://github.com/acme/studio-booking/issues/4 (member buys a class pack and spends credits)
 **Sub-issue:** https://github.com/acme/studio-booking/issues/5 (staff publish classes and check members in)
+**Backlog:** searched "booking", "waitlist", "class pack": empty, new repository. Owned: #1 to #5, To do, P1. Affected and untouched: none.
 
 ## Analysis
 
@@ -155,6 +156,7 @@ indexes: classes(starts_at), bookings(class_id, status), waitlist(class_id, posi
 ## Handoff
 
 **Run:** `pnpm install && pnpm db:seed && pnpm dev`, then http://localhost:3000
+**Statuses:** #2, #3, #4 Done (done-run PASS); #5 Ready for QA (staff check-in not exercised); epic #1 Ready for QA until the owner accepts; follow-ups #6, #7, #8 Backlog (P2, P2, P3)
 **Dev sign-in:** /sign-in shows "Sign in as Member" and "Sign in as Staff" in development only, beside the normal form
 **Unverified:** automated tests, independent review, Safari, payment provider
 **Follow-ups:** real payments (#6), security hardening (#7), deployment (#8)

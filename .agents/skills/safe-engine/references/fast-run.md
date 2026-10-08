@@ -27,14 +27,14 @@ Pause the gate while waiting. Record each answer with its source (`owner via que
 |---|---|
 | Research | ≥3 `### <competitor>` subsections each citing a source URL, a feature-matrix table, an `**Opportunities:**` line; product runs also `### Stack options` with a 3-row table |
 | Kickoff | `**Features:**`, `**Approach:**`, `**Answered by:**`; product runs also `**Size:**` and `**Stack:**` |
-| Tickets | `**Epic:** <url>`; product and feature runs ≥1 `**Sub-issue:** <url>` |
+| Tickets | `**Epic:** <url>`, `**Backlog:**` (owned, affected and untouched items); product and feature runs ≥1 `**Sub-issue:** <url>` |
 | Analysis | `**Success:**` line and a fenced ASCII chart |
 | Plan | `### Files`, `### Critique`, `### Phases`, `### Todos` (with `T1`…), `### Whole plan`, `**Logging:**`, `**Efficiency:**` |
 | Design | ≥4 `#RRGGBB` hex colors, `**UI kit:**`, `**Font:**`, `**Logo:**`, `**Icons:**`, `**Layout:**`, `**Theme:**` naming light mode, `**Journeys:**` with counts and a minimum |
 | Schema | a 3-option table, `**Chosen:**`, a fenced ERD or DDL |
 | Build log | every plan todo ID with `pre:`, `do:` and `post:` on one line |
 | Done-run | ≥1 `PASS` line, `**Logs:**`; UI runs ≥1 existing screenshot path under `.factory/fast/shots/` |
-| Handoff | `**Run:**`, `**Unverified:**`, `**Follow-ups:**`; sign-in runs `**Dev sign-in:**` |
+| Handoff | `**Run:**`, `**Statuses:**` (each owned ticket's final status), `**Unverified:**`, `**Follow-ups:**`; sign-in runs `**Dev sign-in:**` |
 
 Labels end with the colon inside the bold: `**Epic:**`. Delegates return their log lines; the coordinator writes the record. During build, copy the design brief and schema decision into the product's `docs/`.
 

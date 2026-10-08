@@ -47,21 +47,32 @@ Use `-F` (typed), not `-f`, so the id is sent as a number. The last command list
 ## Read, refresh and update
 
 ```text
-gh issue view <n> --json title,state,body,updatedAt,comments
+gh issue view <n> --json title,state,body,updatedAt,comments,labels,assignees,projectItems
 gh issue edit <n> --body-file <file>
 gh issue comment <n> --body-file <file>
-gh issue close <n> --comment "<outcome passed>"
 ```
 
 `updatedAt` changes on body, comment and state edits, so it works for the cheap refresh: re-read fully only when it differs from the last read.
 
-Close a sub-issue when its outcome passed. Never close the epic until the owner accepts. Read before every edit; an edit replaces the whole body.
+Read before every edit; an edit replaces the whole body.
 
-## Status labels
+## Backlog
+
+The issue sits on a project board with a Status field (`projectItems` above): set status there, and priority too when the board has that field. Otherwise labels: `status: backlog`, `status: to do`, `status: in progress`, `status: dev done`, `status: ready for qa`, `status: blocked`, and `priority: P0` to `priority: P3`. At most one of each per issue. An open issue without a status label is in Backlog.
 
 ```text
-gh label list --json name
-gh issue edit <n> --add-label "<existing label>"
+gh label list --limit 200 --json name
+gh label create "status: dev done" --description "Backlog status"
+gh issue list --state open --limit 200 --json number,title,labels,assignees,updatedAt
+gh issue edit <n> --remove-label "status: to do" --add-label "status: in progress" --add-assignee @me
+gh project item-edit <project-number> --owner <owner> --url <issue-url> --field Status --value "In progress"
+gh issue close <n> --reason completed --comment "<QA evidence>"
+gh issue close <n> --reason "not planned" --comment "<owner decision>"
+gh issue reopen <n>
 ```
 
-Use a label that exists. Do not guess its spelling.
+- Create only the missing labels the run uses, spelled as listed. Never rename or delete existing ones.
+- Sort the list by priority label, then user value and dependencies.
+- Done: drop the status label, close as completed. Cancelled: same, close as not planned, owner only. Back from either: reopen and label.
+- Each move pairs with one activity comment (`gh issue comment`). A close with `--comment` is both.
+- A board needs the `project` token scope (`gh auth refresh -s project`). Missing: use labels and say so.

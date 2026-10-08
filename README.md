@@ -46,7 +46,7 @@ Manual install, flags and every agent's syntax: [install](docs/install.md) · [h
 - 🔒 **Enforced, not suggested.** A gate and host hooks deny code edits until earlier steps pass, and push back when the agent tries to stop mid-run.
 - 🔎 **Research before code.** New products and big features start with competitors, a feature matrix, opportunities and stack options.
 - ❓ **One round of questions.** Features, size, approach and stack, asked once, recorded, then binding for the run.
-- 🎫 **Tickets every run.** An epic with outcome sub-issues, linked to the PR.
+- 🎫 **A living backlog.** Every run reads it, opens an epic with outcome sub-issues and moves them from To do to Done, each change in the ticket's activity. Items outside the task stay untouched.
 - 🎚️ **Right-sized.** Fast by default, Lucky for quick tries, Safe for work that must not break.
 - 🧪 **Proof, not promises.** A done-run with real controls and logs; Safe adds manual QA, tests and an independent reviewer.
 - 🎨 **A product bar.** Accessible, responsive UI, clear copy, public-page SEO and a designed schema.
@@ -63,7 +63,7 @@ safe-engine Build a habit tracker in /home/me/habits. Success means a signed-in 
 
 1. Researches three competitors and writes a feature matrix with opportunities.
 2. Asks you one round of questions: features, size, approach, stack.
-3. Opens an epic and outcome sub-issues.
+3. Reads the backlog, then opens an epic and outcome sub-issues in To do.
 4. Analyzes requirements and consumers, then writes a plan with todos.
 5. Writes the design brief and the schema decision.
 6. Builds every todo through a check-change-check loop.
@@ -111,7 +111,7 @@ Add `lucky` or `safe` after the skill name. Resume any run with `safe-engine Res
 | `ux-quality` | Simple, familiar, accessible, responsive UI; copy; public-page SEO |
 | `database-schema` | Access patterns, three designs, chosen schema, indexes, migrations |
 | `deep-review` | Bug hunt plus change-guard, compliance, security, performance and journey lenses |
-| `ticketing` | Epic and outcome sub-issues with confirmed before/after and criteria |
+| `ticketing` | Backlog upkeep: epic and outcome sub-issues with before/after, criteria, status, priority and an activity timeline |
 | `how-to-make-a-pr` | Draft PR with ticket link, before/after proof and what is unverified |
 | `improve-factory` | Repairs or improves the factory itself without disturbing active runs |
 
