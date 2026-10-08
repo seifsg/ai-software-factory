@@ -88,7 +88,7 @@ Refresh at intake and resume, before `record implementation`, before `repair --r
 Bind: `init --task <task.json> --profile <profile.json> --session <builder-session-id>`.
 
 - Needs a confirmed current capture and a clean committed checkout. `--session` is the real dedicated builder session's id. Never invent one.
-- One ticket, one builder session, one worktree. Independent tickets use separate worktrees; epic tickets share a checkout with one writer at a time. Isolate ports, databases and caches too.
+- One ticket, one builder session, one worktree. Run tickets in parallel, each in its own worktree; the controller claims one checkout per ticket. Isolate ports, databases and caches too.
 - The controller claims the checkout. `handoff` and `cancel` release it. A fresh `init` never replaces an existing run.
 
 Amend (changed scope, criteria, checks or protected files):

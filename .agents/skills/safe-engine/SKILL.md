@@ -85,7 +85,7 @@ Lucky runs 1, 4, a short 5 and 6, 9, 10 and 11. It asks nothing, researches noth
    - `manual` → `testing` → `verify`: use it first, tests last.
    - `review`: `deep-review` by a fresh agent that did not build it.
    - `ready`: map confirmed criteria to proof; report limits.
-3. One builder session per ticket. Separate worktrees for independent tickets; one writer at a time on a shared epic checkout.
+3. One builder session per ticket. Run tickets in parallel, each in its own worktree: the controller claims one checkout per ticket.
 
 ## Every mode
 
@@ -120,7 +120,7 @@ Lucky runs 1, 4, a short 5 and 6, 9, 10 and 11. It asks nothing, researches noth
 
 ## Delegate
 
-- Spawn subagents for independent work: searches, per-area analysis, research strands, independent todos in separate files, each review lens, walkthroughs, log reading. Start them together.
+- Spawn subagents for independent work, as many at once as files and dependencies allow: tickets, searches, per-area analysis, research strands, independent todos in separate files, each review lens, walkthroughs, log reading. Start them together.
 - Keep in the main agent: choices needing the whole context, talking with the owner, final synthesis.
 - One writer per file. Parallel writers need separate files or worktrees.
 - Brief fully: goal, files, read-only or not, expected output and length. Delegates read only the skills their role needs.

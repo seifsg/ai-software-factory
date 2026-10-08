@@ -76,9 +76,9 @@ Every ticket, every mode. The ticket is unfinished until both are complete.
 
 1. Write the definition of done (criteria with IDs) at creation and the checklist (the plan's todos as task items) at plan time.
 2. Each item runs the `get-ready-to-code` 0–4 loop. Tick it only after its check passed: its real effect used and seen working. Note the proof beside the tick.
-3. Independent items may run in parallel; each is ticked after its own check. One writer per ticket body: the coordinator ticks, delegates report.
+3. Independent items run in parallel, as many as possible; each is ticked after its own check. One writer per ticket body: the coordinator ticks, delegates report.
 4. Finished: every item ticked and every criterion proven. Anything less loops on the failing item until it passes. Blocked only when the run cannot clear it (access, capability, owner decision): reason, next action, who unblocks; its independent items continue.
-5. The next ticket starts when the current one's checklist is fully ticked; the done-run proves the criteria. Independent tickets may run in parallel, each finishing its own checklist.
+5. Tickets run in parallel, as many at once as files and dependencies allow; none waits for another to finish unless it depends on it. Each keeps its own checklist loop; the done-run proves the criteria.
 6. Ticks are progress, not activity entries: the next boundary entry lists the items ticked since the last one.
 7. An owner-deferred item is ticked as `Deferred by the owner: <decision link>`; its criteria leave the ticket with it. It counts as resolved, never as delivered.
 
@@ -125,7 +125,7 @@ Number the confirmed contract. Each change records old and new scope, reason, so
 - Hand over the contract, authority and stops, decisions, current scope, checkout state, dependencies, evidence, unfinished phase and pending operations.
 - Record the real session, ticket revision, absolute checkout and base/head. A label is not a dispatched session. Missing capability stays explicit.
 - Independent tickets: separate worktrees, only with disjoint files, runtime effects, acceptance and decisions. Isolate or serialize shared ports, databases, caches and services.
-- Shared epic checkout: tickets run serially, one writer. Stop prior operations before handoff. Never overwrite or delete another ticket's state.
+- Shared epic checkout: tickets run in parallel on disjoint files, one writer per file. Stop prior operations before handoff. Never overwrite or delete another ticket's state.
 - A dependency is met by its accepted result at an integrated commit present in this ticket's base. Closed status alone proves nothing. Changed dependency scope: revalidate affected analysis and evidence.
 
 ## Review and deliver

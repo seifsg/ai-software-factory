@@ -51,7 +51,7 @@ To do steps:
 - Each to do step will have a pre-step, the step itself, and post-step. And that is so that we can apply the logic above.
 - The logic above is absolute for every and each step.
 - Each to do is a checklist item in its ticket. Automated test suites still come last.
-- Independent to dos may run in parallel; each is ticked after its own check.
+- Independent to dos run in parallel, as many as possible; each is ticked after its own check.
 - A ticket is finished when every item is ticked and its definition of done is proven. Until then the loop continues.
 - A to do that depends on an unproven capability (platform API, device, third-party access) goes first as a bounded spike: one question, one stop condition. A failed spike blocks only that item; the rest continues.
 
