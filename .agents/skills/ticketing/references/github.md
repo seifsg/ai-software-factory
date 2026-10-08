@@ -58,13 +58,15 @@ Read before every edit; an edit replaces the whole body.
 
 ## Backlog
 
-The issue sits on a project board with a Status field (`projectItems` above): set status there, and priority too when the board has that field. Otherwise labels: `status: backlog`, `status: to do`, `status: in progress`, `status: dev done`, `status: ready for qa`, `status: blocked`, and `priority: P0` to `priority: P3`. At most one of each per issue. An open issue without a status label is in Backlog.
+Check `gh auth status` for the `project` scope first: without it `projectItems` reads empty and a board looks absent. Missing: ask the owner to run `gh auth refresh -s project`, or use labels and say so. The issue sits on a project board with a Status field (`projectItems` above): set status there, and priority too when the board has that field. Otherwise labels: `status: backlog`, `status: to do`, `status: in progress`, `status: dev done`, `status: ready for qa`, `status: blocked`, and `priority: P0` to `priority: P3`. At most one of each per issue. Status labels count on open issues only: open without one is Backlog, closed as completed is Done, closed as not planned is Cancelled.
 
 ```text
 gh label list --limit 200 --json name
 gh label create "status: dev done" --description "Backlog status"
 gh issue list --state open --limit 200 --json number,title,labels,assignees,updatedAt
 gh issue edit <n> --remove-label "status: to do" --add-label "status: in progress" --add-assignee @me
+gh project list --owner <owner>
+gh project item-add <project-number> --owner <owner> --url <issue-url>
 gh project item-edit <project-number> --owner <owner> --url <issue-url> --field Status --value "In progress"
 gh issue close <n> --reason completed --comment "<QA evidence>"
 gh issue close <n> --reason "not planned" --comment "<owner decision>"
@@ -72,7 +74,6 @@ gh issue reopen <n>
 ```
 
 - Create only the missing labels the run uses, spelled as listed. Never rename or delete existing ones.
-- Sort the list by priority label, then user value and dependencies.
-- Done: drop the status label, close as completed. Cancelled: same, close as not planned, owner only. Back from either: reopen and label.
+- Sort the list by priority label.
+- Done: drop the status label, close as completed. Cancelled: same, close as not planned. Back from either: reopen and label. New issues on a board: `item-add` first.
 - Each move pairs with one activity comment (`gh issue comment`). A close with `--comment` is both.
-- A board needs the `project` token scope (`gh auth refresh -s project`). Missing: use labels and say so.

@@ -18,7 +18,7 @@ Skip what does not apply. Keep each block separate. Never bury purpose, context 
 | ✅ Done when | One observable result per criterion, stable ID (A1, A2). Cover success, failure, recovery, preserved behavior. No "works", "best" or "optimized" without a check. |
 | 🧱 Scope & guardrails | In, out, constraints, dependencies, decisions (approved, rejected, pending), optional wants, finish boundary. Each deferral: owner, destination ticket, revisit condition. |
 | 🚦 Progress / next | Status, priority, assignee. Done, left, phase, next action, blockers, linked PR or branch. Checked, reviewed, merged, released stay separate. |
-| 📝 Activity | The ticket's lifetime timeline. One entry per change: date, who, old → new, why, proof link. Append only. Trackers with comments: one comment per entry. |
+| 📝 Activity | The ticket's lifetime timeline, entries as the skill's Activity rules set. Trackers with comments: one comment per entry. |
 
 - **Epic:** overall outcome, shared constraints, one line per sub-issue (outcome + link), integration criteria.
 - **Sub-issue:** one outcome, its own criteria, link to the epic.

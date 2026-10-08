@@ -46,7 +46,7 @@ Manual install, flags and every agent's syntax: [install](docs/install.md) · [h
 - 🔒 **Enforced, not suggested.** A gate and host hooks deny code edits until earlier steps pass, and push back when the agent tries to stop mid-run.
 - 🔎 **Research before code.** New products and big features start with competitors, a feature matrix, opportunities and stack options.
 - ❓ **One round of questions.** Features, size, approach and stack, asked once, recorded, then binding for the run.
-- 🎫 **A living backlog.** Every run reads it, opens an epic with outcome sub-issues and moves them from To do to Done, each change in the ticket's activity. Items outside the task stay untouched.
+- 🎫 **A living backlog.** Every run reads it, opens an epic with outcome sub-issues and moves them through To do, In progress, Dev done and Ready for QA, each change in the ticket's activity. Items outside the task stay untouched.
 - 🎚️ **Right-sized.** Fast by default, Lucky for quick tries, Safe for work that must not break.
 - 🧪 **Proof, not promises.** A done-run with real controls and logs; Safe adds manual QA, tests and an independent reviewer.
 - 🎨 **A product bar.** Accessible, responsive UI, clear copy, public-page SEO and a designed schema.
