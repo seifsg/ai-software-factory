@@ -16,7 +16,7 @@ Defaults for new products. Existing projects keep their stack.
 - Strict TypeScript for all JavaScript-ecosystem code. No plain JavaScript source.
 - React web UIs: shadcn/ui with Tailwind CSS and lucide icons. Other platforms: their best-in-class equivalent, named in the stack options.
 - One command starts it locally with seeded data.
-- Clean structure from day one: typed models, shared logging, clear modules. A POC keeps its backend minimal; the MVP grows it, migrations included.
+- Clean structure from day one: typed models, shared logging, clear modules. Every size grows the same code.
 - Dependencies: check license, maintenance, current version, security and cost. Versioned packages over copied code.
 
 ## Visual system
@@ -44,9 +44,9 @@ Fill the design brief before UI code. Run `ux-quality` on every UI change.
 
 ## Public pages
 
-- Web products ship a landing page at `/` from the MVP on (a POC only when requested): who it is for, the outcome, one primary call to action, real proof only, features, FAQ, footer.
+- Web products ship a landing page at `/`: who it is for, the outcome, one primary call to action, real proof only, features, FAQ, footer.
 - Run `ux-quality` and its web SEO reference for search metadata, and its copy reference for conversion copy.
-- Private-only product (decided at kickoff): a branded sign-in page at `/` instead, marked noindex. A POC without either opens on its main screen.
+- Private-only product (decided at kickoff): a branded sign-in page at `/` instead, marked noindex.
 - Private screens, staging and previews stay unindexed.
 
 ## Data
@@ -123,7 +123,7 @@ Evidence: source proves repetition; speed and memory claims need runtime measure
 
 ## Security
 
-A POC skips this section unless requested (secrets still stay out of code and Git) and stays local with harmless data. MVP and production: cheap relevant protections from the start, in full before exposure; reuse framework and provider controls.
+Cheap relevant protections from the start, in full before any exposure; reuse framework and provider controls.
 
 - Size the risk: environment, reachable surfaces, roles, valuable data, trust boundaries. Local means loopback and harmless data; a public tunnel, shared preview or real credentials means exposed. Offline apps still have files, plugins, updates and untrusted input. Research consequential unknowns in current platform guidance.
 - Required protections and denial paths precede exposure. They are never polish.
@@ -146,7 +146,7 @@ Before exposure, exercise denial paths with harmless accounts (anonymous, other 
 
 ## Dev sign-in
 
-Apps with accounts seed one user per role. Development builds show one-click buttons beside the normal sign-in form: "Sign in as Admin", "Sign in as Client" and so on. The server accepts them only in development; production builds drop the route and buttons. The handoff names the URL and buttons, so the owner never hunts for credentials. A POC without sign-in gets a development-only role switcher for the requested roles instead.
+Apps with accounts seed one user per role. Development builds show one-click buttons beside the normal sign-in form: "Sign in as Admin", "Sign in as Client" and so on. The server accepts them only in development; production builds drop the route and buttons. The handoff names the URL and buttons, so the owner never hunts for credentials.
 
 ## Environment and sample labels
 

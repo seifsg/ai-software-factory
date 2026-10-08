@@ -21,7 +21,7 @@ Skip what does not apply. Keep each block separate. Never bury purpose, context 
 | 🚦 Progress / next | Status, priority, assignee. Done, left, phase, next action, blockers, linked PR or branch. Checked, reviewed, merged, released stay separate. |
 | 📝 Activity | The ticket's lifetime timeline, entries as the skill's Activity rules set. Trackers with comments: one comment per entry. |
 
-- **Epic:** overall outcome, shared constraints, one line per sub-issue (outcome + link), integration criteria as its definition of done. Checklist: one item per sub-issue plus the integration checks.
+- **Epic:** overall outcome, shared constraints, one line per sub-issue (outcome + link), integration criteria as its definition of done. Checklist: one item per in-scope sub-issue (follow-ups stay out) plus the integration checks.
 - **Sub-issue:** one outcome, its own definition of done and checklist, link to the epic.
 
 ## Writing rules

@@ -56,11 +56,11 @@ Every mode meets the [product bar](references/product-bar.md) for its [size](ref
 
 ## Fast and Lucky
 
-Record every step in one work record and pass the gate: [fast-run](references/fast-run.md). Steps run in order; after each, `fast_gate.py done <step>`. Inside Fast, the review and test steps of phase skills wait for `verify` or Safe.
+Record every step in one work record and pass the gate: [fast-run](references/fast-run.md). Steps run in order; after each, `fast_gate.py done <step>`. Inside Fast, the review and test steps of phase skills wait for `verify` or Safe; an MVP's automated tests are its own checklist items.
 
 1. **Start:** new project: create the folder and `git init`. Then `fast_gate.py start`.
 2. **Research** (product, feature): run `research-market` kickoff research.
-3. **Kickoff** (product, feature): questions by size: a POC asks one round, an MVP asks until the gaps are decided. Pause the gate while waiting.
+3. **Kickoff** (product, feature): the kickoff questions for its size. Pause the gate while waiting.
 4. **Tickets:** run `ticketing`: read the backlog, then epic(s) + 1 or many outcome sub-issues in To do, each with a definition of done; a `change` gets one ticket.
 5. **Analysis:** run `analyze-start` in full. No code yet: analyze the requirements, platform and intended consumers, and say so.
 6. **Plan:** run `get-ready-to-code`: five outputs, todos `T1..Tn` written into each ticket's checklist, logging map, efficiency budget. This request authorizes continuing through its file-summary stop.

@@ -101,6 +101,8 @@ class FastGateTests(unittest.TestCase):
         self.start("--auth")
         self.finish_sample()
         self.assertIn("Next: close", self.gate("status"))
+        run = json.loads((self.project / ".factory/fast/run.json").read_text(encoding="utf-8"))
+        self.assertEqual(len(run["tickets"]), 5)  # the epic and four sub-issues, pinned at `done tickets`
         self.gate("close")
         self.assertEqual(list((self.root / "home/active").glob("*.json")), [])
         self.assertIsNone(self.hook({"hook_event_name": "Stop", "stop_hook_active": False}))
@@ -233,24 +235,31 @@ class FastGateTests(unittest.TestCase):
         record = record_module()
         url = "https://github.com/acme/portal/issues/2"
 
-        def issue(body, state="OPEN", labels=(), board=None):
-            return json.dumps({"body": body, "state": state, "labels": [{"name": name} for name in labels],
+        def issue(body, state="OPEN", labels=("status: in progress",), board=None, reason=None):
+            return json.dumps({"body": body, "state": state, "stateReason": reason,
+                               "labels": [{"name": name} for name in labels],
                                "projectItems": [{"status": {"name": board}}] if board else []})
         ticket = "### ✅ Definition of done\n- **A1:** x\n\n### ☑️ Checklist\n- [x] T1 a\n- [ ] T2 b\n"
         cases = [(record.needs_definition, issue("### 🎯 Purpose"), "Definition of done"),
                  (record.needs_definition, issue(ticket), None),
+                 (record.needs_definition, issue("## ✅ Done when\n- A1: x"), None),
+                 (record.needs_ticks, issue("### ✅ Definition of done"), "checklist items"),
+                 (record.needs_ticks, issue(ticket, state="CLOSED", reason="COMPLETED"), "1 unticked"),
                  (record.needs_checklist, issue("### ✅ Definition of done"), "checklist items"),
                  (record.needs_checklist, issue(ticket), None),
                  (record.needs_ticks, issue(ticket), "1 unticked"),
                  (record.needs_ticks, issue(ticket, labels=["status: blocked"]), None),
                  (record.needs_ticks, issue(ticket, board="Blocked"), None),
-                 (record.needs_ticks, issue(ticket, state="CLOSED"), None),
+                 (record.needs_ticks, issue(ticket, state="CLOSED", reason="NOT_PLANNED"), None),
                  (record.needs_ticks, issue(ticket.replace("[ ]", "[x]")), None),
                  (record.needs_ticks, issue(ticket, labels=["status: backlog"]), None),
                  (record.needs_checklist, issue("### ✅ Definition of done", labels=["status: backlog"]), None),
                  (record.needs_ticks, issue("+ [x] T1 a\n1. [ ] T2 b\n2) [ ] T3 c\n"), "2 unticked"),
                  (record.needs_checklist, issue("```text\n- [ ] T1 example only\n```\n"), "checklist items"),
-                 (record.needs_ticks, json.dumps({"body": "- [ ] T1", "state": "OPEN", "labels": ["oops", None],
+                 (record.needs_ticks, issue(ticket, labels=()), None),  # open without a status: Backlog
+                 (record.needs_ticks, issue(ticket, labels=(), board="In progress"), "1 unticked"),
+                 (record.needs_ticks, json.dumps({"body": "- [ ] T1", "state": "OPEN",
+                                                  "labels": ["oops", None, {"name": "status: in progress"}],
                                                   "projectItems": [None, "x", {"status": "Blocked"}]}), "1 unticked"),
                  (record.needs_ticks, json.dumps(["not", "an", "issue"]), "--offline")]
         for check, raw, expected in cases:
@@ -274,6 +283,25 @@ class FastGateTests(unittest.TestCase):
             self.assertIn("1 unticked", record.online(current, {"offline": None, "all_sections": sections}, record.needs_ticks)[0])
             handoff = "**Run:** x\n**Statuses:** x\n**Unverified:** x\n**Follow-ups:** x\n"
             self.assertIn("1 unticked", record.check_handoff(current, handoff, offline=None, all_sections=sections)[0])
+            dropped = "https://github.com/acme/portal/issues/3"  # pinned at `done tickets`, later removed from the record
+            self.assertEqual(len(record.online({**current, "tickets": [dropped]},
+                                               {"offline": None, "all_sections": sections}, record.needs_ticks)), 2)
+        with patch.object(record, "gh", return_value=issue("### ✅ Definition of done")):
+            plan = "### Files\n### Critique\n### Phases\n### Todos\n### Whole plan\n**Logging:** x\n**Efficiency:** x\n"
+            self.assertIn("checklist items", record.check_plan(current, plan, offline=None,
+                                                               all_sections={**sections, "plan": "### Todos\n- T1 a\n"})[0])
+        epic = "https://github.com/acme/portal/issues/1"
+
+        def tracker(*args):
+            if args[0] == "api":
+                return url + "\n" if args[1].endswith("sub_issues") else "1"
+            return issue(ticket if args[2] == epic else "### 🎯 Purpose")
+        with patch.object(record, "gh", side_effect=tracker):
+            problems = record.check_tickets({**current, "kind": "feature"},
+                                            f"**Epic:** {epic}\n**Sub-issue:** {url}\n**Backlog:** none\n")
+            self.assertEqual(len(problems), 1)
+            self.assertIn(url, problems[0])
+            self.assertIn("Definition of done", problems[0])
 
     def test_ticket_checks_follow_the_methods_the_run_reads(self):
         spec = importlib.util.spec_from_file_location("fast_gate_module", GATE)
@@ -287,6 +315,9 @@ class FastGateTests(unittest.TestCase):
         self.assertFalse(gate.ticket_checks({"root": str(self.root / "old")}, self.project))
         self.assertFalse(gate.ticket_checks({"root": str(self.root / "missing")}, self.project))
         self.assertTrue(gate.ticket_checks(None, self.project))
+        self.assertTrue(gate.ticket_checks(None, SCRIPTS.parents[2]))  # this checkout's own layout defines it
+        (self.root / "new" / layout).write_bytes(b"\xff\xfe broken")
+        self.assertFalse(gate.ticket_checks({"root": str(self.root / "new")}, self.project))
         lucky = {"mode": "lucky", "kind": "change"}
         self.assertNotIn("done-run", gate.steps_for(lucky))
         self.assertIn("done-run", gate.steps_for({**lucky, "ticket_checks": True}))

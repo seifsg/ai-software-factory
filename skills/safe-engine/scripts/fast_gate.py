@@ -51,7 +51,7 @@ HINTS = {
     "build": "one line per plan todo: 'T1 pre: ... do: ... post: ...'",
     "done-run": ">=1 PASS line, a Logs line; UI runs >=1 existing screenshot path",
     "handoff": "Run, Statuses, Unverified, Follow-ups lines; sign-in runs a Dev sign-in line; "
-               "online: each open listed ticket fully ticked or Blocked",
+               "online: each listed ticket fully ticked, or Blocked, Backlog or not planned",
 }
 HERE = Path(__file__).resolve().parent  # sibling modules: fast_record.py (step checks), fast_shell.py (commands)
 
@@ -210,7 +210,7 @@ def ticket_checks(bundle, project):
     layout = Path(bundle["root"] if bundle else project) / ".agents/skills/ticketing/references/ticket-layout.md"
     try:
         return "Definition of done" in layout.read_text(encoding="utf-8")
-    except OSError:
+    except (OSError, ValueError):
         return not bundle  # a product without a resolved bundle follows the current methods
 
 
@@ -324,6 +324,9 @@ def cmd_done(args):
         log("step.refused", key=run["key"], step=step, problems=problems)
         fail(f"'{step}' not recorded:\n- " + "\n- ".join(problems))
     run["done"][step] = {"at": now(), **({"unverified": args.offline} if args.offline else {})}
+    if step == "tickets":  # later ticket checks keep reading these even if the record drops one
+        epic, subs = record.ticket_urls(body)
+        run["tickets"] = epic + subs
     run["paused"] = None
     save(ledger_path(project), run)
     log("step.done", key=run["key"], step=step, unverified=args.offline)

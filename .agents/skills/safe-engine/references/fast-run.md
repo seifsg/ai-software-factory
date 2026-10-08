@@ -6,7 +6,7 @@ Every Fast or Lucky run records each step in one work record and passes the gate
 
 ## Kickoff questions
 
-After research, `product` and `feature` only. A POC asks one round. An MVP or production slice asks rounds until its launch gaps are decided (unanswered ones go to the Backlog), then suggests again as delivery uncovers gaps ([sizes](sizes.md)). Use your agent's question tool when it has one (multiple choice, recommended option first, one-line tradeoff each); otherwise one short message. Ask only what the request leaves open:
+After research, `product` and `feature` only. A POC asks one round. An MVP or production slice asks rounds until its launch gaps are decided ([sizes](sizes.md)). Use your agent's question tool when it has one (multiple choice, recommended option first, one-line tradeoff each); otherwise one short message. Ask only what the request leaves open:
 
 1. **Size:** POC (it works and does exactly what was asked), MVP (it can go live with real test users) or production slice. Ask it first when open: the features question depends on it.
 2. **Features:** list every requested item as fixed, never as an option. POC: ask only what the requested items leave open; extra ideas go to the Backlog. MVP: offer the researched launch gaps and extra features with their evidence, up to four per question.

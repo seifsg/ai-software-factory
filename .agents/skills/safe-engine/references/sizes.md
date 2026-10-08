@@ -17,10 +17,9 @@ Every feature, journey, integration and behavior the owner asked for, plus what 
 |---|---|---|---|
 | Promise | It works and does exactly what was asked | It works and can go live with real test users | It runs in production |
 | Builds | Every requested item, minimal and working. No extras | Requested items, the launch baseline, and the extra gaps the owner approved | Requested scope at the full product bar |
-| Skips unless requested | Sign-in, authorization, security hardening, a full backend, deployment, CI/CD, test suites, landing page and SEO | Only scale beyond launch and what the owner declined | Nothing |
+| Skips unless requested | Sign-in, authorization, security hardening, a full backend, deployment, CI/CD, test suites, landing page and SEO (it opens on its main screen) | Only scale beyond launch and what the owner declined | Nothing |
 | Always keeps | Stack, visual system and screen states, logging, secrets out of Git, environment and sample labels | Everything a launch needs | Everything |
 | Research | How to build the requested items; the riskiest capability | Plus launch gaps users expect | Plus operations at scale |
-| Questions | One round: what the requested items leave open, approach, stack | Rounds until the gaps are decided; suggestions at each finished sub-issue | As MVP |
 
 ## POC
 
@@ -28,7 +27,7 @@ The owner wants to see the requested features work. Build each one minimally: no
 
 - Minimal backend: the smallest real service and storage that run the requested behavior end to end (one local process, a file or an embedded database). It stays structured so the MVP can grow it.
 - No sign-in layer. Requested roles switch through a development-only role switcher. A requested role rule is built as asked, checked on the server; it does not pull in the rest of the security bar.
-- Local or private preview only. The security bar applies in full before any public exposure.
+- Local only. Any shared preview counts as exposure: the security bar applies in full before it.
 - Owner-approved simplifications (a fake checkout, a sandbox) stay labeled in the interface.
 - List the skipped parts once in the epic's guardrails as "POC skips". An MVP run turns that list into tickets. No follow-up ticket per skip.
 
@@ -45,7 +44,7 @@ The owner wants to publish it and test it with real users. Fill every gap a laun
   - onboarding;
   - transactional email when journeys send mail;
   - a logging destination and error alerts;
-  - backups;
+  - migrations for persisted data, and backups;
   - automated tests, written after the journeys work, running in CI;
   - a release record ready to deploy.
 - Deploying needs the owner's authority.

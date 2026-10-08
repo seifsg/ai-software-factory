@@ -11,7 +11,7 @@ URL = re.compile(r"https?://[^\s)>\]|]+")
 ISSUE = re.compile(r"https://github\.com/([\w.-]+/[\w.-]+)/issues/(\d+)")
 TASK = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+\[([ xX])\]", re.M)
 FENCE = re.compile(r"^\s*(```|~~~).*?^\s*\1", re.M | re.S)
-DEFINITION = re.compile(r"^#{2,4}[^\n]*definition of done", re.I | re.M)
+DEFINITION = re.compile(r"^#{2,4}[^\n]*(?:definition of done|done when)", re.I | re.M)  # older tickets: "Done when"
 
 
 def sections(text):
@@ -117,7 +117,7 @@ def online(run, kwargs, check):
     if kwargs.get("offline") or not run.get("ticket_checks"):
         return []
     epic, subs = ticket_urls(kwargs["all_sections"].get("tickets", ""))
-    return ticket_problems(epic + subs, check)
+    return ticket_problems(run.get("tickets", []) + epic + subs, check)  # tickets pinned at `done tickets` stay checked
 
 
 def ticket_problems(urls, check):
@@ -139,17 +139,20 @@ def ticket_problems(urls, check):
 
 def read_ticket(url):
     """Body without fenced examples, open state, and status marks (label or board) of one issue."""
-    data = json.loads(gh("issue", "view", url, "--json", "body,state,labels,projectItems"))
+    data = json.loads(gh("issue", "view", url, "--json", "body,state,stateReason,labels,projectItems"))
     if not isinstance(data, dict):
         raise ValueError("unexpected gh output")
     labels = {name(label) for label in listed(data, "labels")}
-    boards = {name(item.get("status")) for item in listed(data, "projectItems") if isinstance(item, dict)}
+    boards = {name(item.get("status")) for item in listed(data, "projectItems") if isinstance(item, dict)} - {""}
     marked = lambda status: f"status: {status}" in labels or status in boards
-    return {"body": FENCE.sub("", str(data.get("body") or "")), "open": str(data.get("state", "")).lower() == "open",
-            "blocked": marked("blocked"), "backlog": marked("backlog")}
+    unmarked = not boards and not any(label.startswith("status: ") for label in labels)  # open, no status: Backlog
+    cancelled = str(data.get("stateReason") or "").upper() == "NOT_PLANNED"
+    return {"body": FENCE.sub("", str(data.get("body") or "")),
+            "exempt": cancelled or marked("blocked") or marked("backlog") or unmarked}
 
 
 def listed(data, key):
+    """A list field of gh output; anything else reads as empty."""
     value = data.get(key)
     return value if isinstance(value, list) else []
 
@@ -160,18 +163,26 @@ def name(value):
 
 
 def needs_definition(ticket):
+    """Tickets step: every listed ticket states its definition of done."""
     return None if DEFINITION.search(ticket["body"]) else "needs a 'Definition of done' section (ticket layout)"
 
 
 def needs_checklist(ticket):
-    return None if ticket["backlog"] or TASK.search(ticket["body"]) else "needs checklist items ('- [ ] T1 <todo>') from the plan"
+    """Plan step: every listed ticket in the run carries its checklist."""
+    return None if ticket["exempt"] or TASK.search(ticket["body"]) else "needs checklist items ('- [ ] T1 <todo>') from the plan"
 
 
 def needs_ticks(ticket):
-    left = sum(1 for mark in TASK.findall(ticket["body"]) if mark == " ")
-    if not left or not ticket["open"] or ticket["blocked"] or ticket["backlog"]:
+    """Handoff: a ticket in the run is finished (every item ticked) unless Blocked, Backlog or cancelled."""
+    if ticket["exempt"]:
         return None
-    return f"{left} unticked checklist item(s): finish them, or mark the ticket Blocked with its reason"
+    marks = TASK.findall(ticket["body"])
+    if not marks:
+        return needs_checklist(ticket)
+    left = marks.count(" ")
+    if not left:
+        return None
+    return f"{left} unticked checklist item(s): finish them, or mark the ticket Blocked or Backlog with its reason"
 
 
 def gh(*args):
