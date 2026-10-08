@@ -72,15 +72,16 @@ gh issue edit <n> --remove-label "status: to do" --add-label "status: in progres
 gh project list --owner <owner>
 gh project item-add <project-number> --owner <owner> --url <issue-url>
 gh project item-edit <project-number> --owner <owner> --url <issue-url> --field Status --value "In progress"
-gh pr list --state merged --base <non-default branch> --limit 200 --json number,url,body,mergedAt
-gh api repos/{owner}/{repo}/issues/<n>/events --jq '.[] | select(.event == "labeled" or .event == "reopened") | .created_at'
-gh issue close <n> --reason completed --comment "<merged PR link>"
+gh pr list --state merged --limit 200 --json number,url,body,baseRefName,mergedAt
+gh api --paginate repos/{owner}/{repo}/issues/<n>/events --jq '.[] | select(.event == "reopened" or ((.event == "labeled" or .event == "unlabeled") and (.label.name | startswith("status:")))) | [.event, (.label.name // "-"), .created_at] | @tsv'
+gh api repos/{owner}/{repo}/issues/<epic>/sub_issues --jq '.[] | [.number, .state, .title] | @tsv'
+gh issue close <n> --reason completed --comment "<activity entry with the merged PR link>"
 gh issue close <n> --reason "not planned" --comment "<owner decision>"
 gh issue reopen <n>
 ```
 
 - Create only the missing labels the run uses, spelled as listed. Never rename or delete existing ones.
 - Sort the list by priority label.
-- Done comes from the merge: closing keywords in the PR close the ticket when it merges into the default branch. They are ignored on any other base: at the next intake, close such tickets with the merged PR link. Drop the status label on close. Cancelled: drop it, close as not planned. Back from either: reopen and label.
+- Done comes from the merge: closing keywords in the PR close the ticket when it merges into the default branch. They are ignored on any other base: at the next intake, keep the merged PRs whose `baseRefName` is not the default branch, check each named ticket's status events after `mergedAt`, and close the unmoved ones. Close first, then drop the status label. Cancelled: drop it, close as not planned. Back from either: reopen and label.
 - Boards: keep the built-in workflows that set Done when an item closes or its PR merges. A board without a Blocked status: add the `status: blocked` label too. New issues on a board: `item-add` first.
 - Each move pairs with one activity comment (`gh issue comment`). A close with `--comment` is both.
