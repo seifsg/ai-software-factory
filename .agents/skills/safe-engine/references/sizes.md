@@ -36,7 +36,7 @@ The owner wants to see the requested features work. Build each one minimally: no
 The owner wants to publish it and test it with real users. Fill every gap a launch needs.
 
 - Launch baseline, built without asking:
-  - real sign-in and enforced roles;
+  - real sign-in and enforced roles when anyone signs in or roles exist;
   - the security bar in full;
   - landing page and SEO for public products;
   - privacy and terms pages when it collects personal data;

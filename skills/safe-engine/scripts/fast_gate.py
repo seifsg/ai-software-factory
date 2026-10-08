@@ -326,7 +326,7 @@ def cmd_done(args):
     run["done"][step] = {"at": now(), **({"unverified": args.offline} if args.offline else {})}
     if step == "tickets":  # later ticket checks keep reading these even if the record drops one
         epic, subs = record.ticket_urls(body)
-        run["tickets"] = epic + subs
+        run["tickets"] = list(dict.fromkeys(run.get("tickets", []) + epic + subs))
     run["paused"] = None
     save(ledger_path(project), run)
     log("step.done", key=run["key"], step=step, unverified=args.offline)

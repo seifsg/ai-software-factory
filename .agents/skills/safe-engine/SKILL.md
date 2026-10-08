@@ -56,7 +56,7 @@ Every mode meets the [product bar](references/product-bar.md) for its [size](ref
 
 ## Fast and Lucky
 
-Record every step in one work record and pass the gate: [fast-run](references/fast-run.md). Steps run in order; after each, `fast_gate.py done <step>`. Inside Fast, the review and test steps of phase skills wait for `verify` or Safe; an MVP's automated tests are its own checklist items.
+Record every step in one work record and pass the gate: [fast-run](references/fast-run.md). Steps run in order; after each, `fast_gate.py done <step>`. Inside Fast, the review and test steps of phase skills wait for `verify` or Safe (an MVP's tests: step 9).
 
 1. **Start:** new project: create the folder and `git init`. Then `fast_gate.py start`.
 2. **Research** (product, feature): run `research-market` kickoff research.

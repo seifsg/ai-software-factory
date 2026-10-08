@@ -10,6 +10,7 @@ from pathlib import Path
 URL = re.compile(r"https?://[^\s)>\]|]+")
 ISSUE = re.compile(r"https://github\.com/([\w.-]+/[\w.-]+)/issues/(\d+)")
 TASK = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+\[([ xX])\]", re.M)
+CHECKLIST = re.compile(r"^(#{1,6})\s[^\n]*checklist[^\n]*$", re.I | re.M)
 FENCE = re.compile(r"^\s*(```|~~~).*?^\s*\1", re.M | re.S)
 DEFINITION = re.compile(r"^#{2,4}[^\n]*(?:definition of done|done when)", re.I | re.M)  # older tickets: "Done when"
 
@@ -138,17 +139,25 @@ def ticket_problems(urls, check):
 
 
 def read_ticket(url):
-    """Body without fenced examples, open state, and status marks (label or board) of one issue."""
-    data = json.loads(gh("issue", "view", url, "--json", "body,state,stateReason,labels,projectItems"))
+    """Body without fenced examples, and whether the issue is exempt: Blocked, Backlog or closed as not planned."""
+    data = json.loads(gh("issue", "view", url, "--json", "body,stateReason,labels,projectItems"))
     if not isinstance(data, dict):
         raise ValueError("unexpected gh output")
     labels = {name(label) for label in listed(data, "labels")}
     boards = {name(item.get("status")) for item in listed(data, "projectItems") if isinstance(item, dict)} - {""}
     marked = lambda status: f"status: {status}" in labels or status in boards
-    unmarked = not boards and not any(label.startswith("status: ") for label in labels)  # open, no status: Backlog
     cancelled = str(data.get("stateReason") or "").upper() == "NOT_PLANNED"
     return {"body": FENCE.sub("", str(data.get("body") or "")),
-            "exempt": cancelled or marked("blocked") or marked("backlog") or unmarked}
+            "exempt": cancelled or marked("blocked") or marked("backlog")}
+
+
+def checklist(body):
+    """Text under the ticket's Checklist heading, up to the next heading of the same or higher level."""
+    heading = CHECKLIST.search(body)
+    if not heading:
+        return ""
+    end = re.compile(rf"^#{{1,{len(heading.group(1))}}}\s", re.M).search(body, heading.end())
+    return body[heading.end():end.start() if end else len(body)]
 
 
 def listed(data, key):
@@ -169,14 +178,15 @@ def needs_definition(ticket):
 
 def needs_checklist(ticket):
     """Plan step: every listed ticket in the run carries its checklist."""
-    return None if ticket["exempt"] or TASK.search(ticket["body"]) else "needs checklist items ('- [ ] T1 <todo>') from the plan"
+    return None if ticket["exempt"] or TASK.search(checklist(ticket["body"])) else (
+        "needs a Checklist section with task items ('- [ ] T1 <todo>') from the plan")
 
 
 def needs_ticks(ticket):
     """Handoff: a ticket in the run is finished (every item ticked) unless Blocked, Backlog or cancelled."""
     if ticket["exempt"]:
         return None
-    marks = TASK.findall(ticket["body"])
+    marks = TASK.findall(checklist(ticket["body"]))
     if not marks:
         return needs_checklist(ticket)
     left = marks.count(" ")

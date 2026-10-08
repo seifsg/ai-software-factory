@@ -243,9 +243,10 @@ class FastGateTests(unittest.TestCase):
         cases = [(record.needs_definition, issue("### 🎯 Purpose"), "Definition of done"),
                  (record.needs_definition, issue(ticket), None),
                  (record.needs_definition, issue("## ✅ Done when\n- A1: x"), None),
-                 (record.needs_ticks, issue("### ✅ Definition of done"), "checklist items"),
+                 (record.needs_ticks, issue("### ✅ Definition of done"), "Checklist section"),
                  (record.needs_ticks, issue(ticket, state="CLOSED", reason="COMPLETED"), "1 unticked"),
-                 (record.needs_checklist, issue("### ✅ Definition of done"), "checklist items"),
+                 (record.needs_checklist, issue("### ✅ Definition of done"), "Checklist section"),
+                 (record.needs_ticks, issue("### 📥 Request\n- [ ] owner's own list\n\n### ☑️ Checklist\n- [x] T1 a\n"), None),
                  (record.needs_checklist, issue(ticket), None),
                  (record.needs_ticks, issue(ticket), "1 unticked"),
                  (record.needs_ticks, issue(ticket, labels=["status: blocked"]), None),
@@ -254,11 +255,11 @@ class FastGateTests(unittest.TestCase):
                  (record.needs_ticks, issue(ticket.replace("[ ]", "[x]")), None),
                  (record.needs_ticks, issue(ticket, labels=["status: backlog"]), None),
                  (record.needs_checklist, issue("### ✅ Definition of done", labels=["status: backlog"]), None),
-                 (record.needs_ticks, issue("+ [x] T1 a\n1. [ ] T2 b\n2) [ ] T3 c\n"), "2 unticked"),
-                 (record.needs_checklist, issue("```text\n- [ ] T1 example only\n```\n"), "checklist items"),
-                 (record.needs_ticks, issue(ticket, labels=()), None),  # open without a status: Backlog
+                 (record.needs_ticks, issue("## Checklist\n+ [x] T1 a\n1. [ ] T2 b\n2) [ ] T3 c\n## Next\n- [ ] x"), "2 unticked"),
+                 (record.needs_checklist, issue("### Checklist\n```text\n- [ ] T1 example only\n```\n"), "Checklist section"),
+                 (record.needs_ticks, issue(ticket, labels=()), "1 unticked"),  # a run ticket must carry its status
                  (record.needs_ticks, issue(ticket, labels=(), board="In progress"), "1 unticked"),
-                 (record.needs_ticks, json.dumps({"body": "- [ ] T1", "state": "OPEN",
+                 (record.needs_ticks, json.dumps({"body": "### Checklist\n- [ ] T1", "state": "OPEN",
                                                   "labels": ["oops", None, {"name": "status: in progress"}],
                                                   "projectItems": [None, "x", {"status": "Blocked"}]}), "1 unticked"),
                  (record.needs_ticks, json.dumps(["not", "an", "issue"]), "--offline")]
@@ -288,7 +289,7 @@ class FastGateTests(unittest.TestCase):
                                                {"offline": None, "all_sections": sections}, record.needs_ticks)), 2)
         with patch.object(record, "gh", return_value=issue("### ✅ Definition of done")):
             plan = "### Files\n### Critique\n### Phases\n### Todos\n### Whole plan\n**Logging:** x\n**Efficiency:** x\n"
-            self.assertIn("checklist items", record.check_plan(current, plan, offline=None,
+            self.assertIn("Checklist section", record.check_plan(current, plan, offline=None,
                                                                all_sections={**sections, "plan": "### Todos\n- T1 a\n"})[0])
         epic = "https://github.com/acme/portal/issues/1"
 

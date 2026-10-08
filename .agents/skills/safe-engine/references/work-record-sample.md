@@ -143,7 +143,7 @@ indexes: classes(starts_at), bookings(class_id, status), waitlist(class_id, posi
 - T4 pre: T1 queries | do: week schedule and booking in one transaction | post: double click books once
 - T5 pre: T4 transaction | do: waitlist join and promotion on cancellation | post: promotion and credit spend share the transaction
 - T6 pre: credit rules | do: class packs with a checkout labeled "Test mode: no real charge" | post: checkout isolated in one function
-- T7 pre: staff routes | do: schedule editor and check-in list | post: staff screens show only under the staff role
+- T7 pre: staff routes | do: schedule editor and check-in list | post: staff actions checked on the server under the staff role
 - T8 pre: design brief | do: header, footer, logo, metadata | post: light theme, AA contrast checked
 
 ## Done-run
