@@ -7,7 +7,7 @@ Size sets how far each requested item is built, never which requested items ship
 Every feature, journey, integration and behavior the owner asked for, plus what each needs to work end to end (if the item fails for a real user without it, it is part of the item). It ships in every size.
 
 - A requested item leaves scope only by the owner's recorded decision: source, reason, follow-up ticket, revisit condition.
-- Without that decision, nothing removes or replaces a requested item: no size label, research finding, generic follow-up, later iteration's focus or substitute (mock, sample data, sandbox, manual step). Seeded data fills content, never a requested integration.
+- Without that decision, nothing removes or replaces a requested item: no size label, research finding, generic follow-up, later iteration's focus or substitute (mock, sample data, a sandbox that cannot reach the real target, manual step). Seeded data fills content, never a requested integration. A provider's test mode on the real integration counts; live keys come with deployment.
 - Capability unavailable: keep the item Blocked with its reason, build the rest, report the outcome unfinished.
 - Additions need research evidence and the owner's approval. They never displace a requested item. A size label approves none.
 
@@ -40,10 +40,10 @@ The owner wants to publish it and test it with real users. Fill every gap a laun
   - the security bar in full;
   - landing page and SEO for public products;
   - privacy and terms pages when it collects personal data;
-  - the legal and platform duties of what it does (for example consent and one-click unsubscribe for email);
+  - the legal and platform duties of what it does (for example consent and one-click unsubscribe for marketing email);
   - onboarding;
   - transactional email when journeys send mail;
-  - a logging destination and error alerts;
+  - a logging destination (asked once when unknown) and error alerts;
   - migrations for persisted data, and backups;
   - automated tests, written after the journeys work, running in CI;
   - a release record ready to deploy.

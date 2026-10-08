@@ -21,7 +21,7 @@ Pause the gate while waiting. Record each answer with its source (`owner via que
 
 ## Work record
 
-`.factory/fast/work-record.md`, one file, sections in step order. `start` writes the skeleton. The [sample](work-record-sample.md) shows every marker for an unrelated product; never copy its content. The gate checks:
+`.factory/fast/work-record.md`, one file, sections in step order. `start` writes the skeleton. The [sample](work-record-sample.md) shows every marker for an unrelated product; never copy its content. The gate checks (listed tickets: the `**Epic:**` and `**Sub-issue:**` lines):
 
 | Section | Must contain |
 |---|---|

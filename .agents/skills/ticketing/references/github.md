@@ -62,7 +62,7 @@ Task items in the body: `- [ ] T1 <todo> (A1)`. Issue lists show the progress (x
 
 ## Backlog
 
-Check `gh auth status` for the `project` scope first: without it `projectItems` reads empty and a board looks absent. Missing: ask the owner to run `gh auth refresh -s project`, or use labels and say so. The issue sits on a project board with a Status field (`projectItems` above): set status there, and priority too when the board has that field. Otherwise labels: `status: backlog`, `status: to do`, `status: in progress`, `status: dev done`, `status: ready for qa`, `status: blocked`, and `priority: P0` to `priority: P3`. At most one of each per issue. Status labels count on open issues only: open without one is Backlog, closed as completed is Done, closed as not planned is Cancelled.
+Check `gh auth status` for the `project` scope first: without it `projectItems` reads empty and a board looks absent. Missing: ask the owner to run `gh auth refresh -s project`, or use labels and say so. The issue sits on a project board with a Status field (`projectItems` above): set status there, and priority too when the board has that field. Otherwise labels: `status: backlog`, `status: to do`, `status: in progress`, `status: dev done`, `status: ready for qa`, `status: blocked`, and `priority: P0` to `priority: P3`. At most one of each per issue. Status labels count on open issues only: open without one is Backlog, closed as completed is Done, closed as not planned is Cancelled. A run's tickets always carry one.
 
 ```text
 gh label list --limit 200 --json name
