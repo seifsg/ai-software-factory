@@ -16,7 +16,7 @@ Skip what does not apply. Keep each block separate. Never bury purpose, context 
 | 🔧 Before → after | Behavior only, in a table or paired blocks. **Before** = actual current behavior, read from code and existing evidence. New capability: say what does not exist yet. Non-visual work: name the real consumer and output. **Approach:** the choice and its reason. |
 | 🔀 Flow | Entry → action → effect → result, plus relevant failure and recovery. ASCII for branches and state. |
 | ✅ Definition of done | One observable result per criterion, stable ID (A1, A2). Cover success, failure, recovery, preserved behavior. No "works", "best" or "optimized" without a check. Written at creation. |
-| ☑️ Checklist | The plan's todos as task items in build order: `- [ ] T1 <todo> (A1)`. Ticked `- [x]` only after the item's check passed, with a short proof. Never deleted; an added or changed item records why. |
+| ☑️ Checklist | The plan's todos as task items in build order: `- [ ] T1 <todo> (A1)`, plus `needs #11 T1` when an item waits on another ticket's item. Ticked `- [x]` only after the item's check passed, with a short proof. Never deleted; an added or changed item records why. |
 | 🧱 Scope & guardrails | In, out, constraints, dependencies, decisions (approved, rejected, pending), optional wants, finish boundary. Each deferral of requested work: owner, destination ticket, revisit condition. POC skips: one list. |
 | 🚦 Progress / next | Status, priority, assignee. Done, left, phase, next action, blockers, linked PR or branch. Checked, reviewed, merged, released stay separate. |
 | 📝 Activity | The ticket's lifetime timeline, entries as the skill's Activity rules set. Trackers with comments: one comment per entry. |

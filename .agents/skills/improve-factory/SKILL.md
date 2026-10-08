@@ -32,7 +32,7 @@ Keep any active app run safe. The repair never writes the app's source; pausing 
 
 ## 2. Isolate
 
-- Repair in its own branch or worktree. One writer owns the candidate.
+- Repair in its own branch or worktree. One writer per file in the candidate.
 - Active app run: follow `references/live-session.md` before any workspace change or delegation. Checkpoint → isolated repair → independent review → compatible resume.
 - Never silently stash, reset, switch or upgrade a target, its bundle or global settings.
 - Factory repair grants no product scope change. Keep the app ticket and the maintenance ticket separate.

@@ -79,7 +79,7 @@ Capture file: `version: 1`, `key`, `identity {provider, workspace, id, url}`, `t
 - Activity: every comment page. Entry: `id`, `at`, `author`, `text`, `disposition` (`non-scope`, `resolved`, `pending`). The run's own status moves are `non-scope`. Non-pending needs `reason`. Pending blocks progress. Deleted entries need reconciliation, never silent loss.
 - The body carries the contract as fenced JSON between `<!-- safe-engine-ticket:v1 -->` and `<!-- /safe-engine-ticket -->`. Prose must match the render; independent edits block import.
 - Contract: `revision`, `lifecycle` (`ready` for To do, `active` for In progress through Ready for QA, `blocked` also for a ticket sent back to Backlog, `done`, `cancelled`), `scope {original_request, before, after, completion, owner_input [{text, source}], journeys, exclusions, constraints, dependencies, acceptance [{id, text}]}`, `confirmation {revision, digest, actor, source, statement, at}`, optional `checklist [{id, text, done, proof}]`. The digest equals `scope_digest`. `presentation: "visual"` renders the ticket layout (Definition of done, Checklist); without it, the older Before, After, Acceptance layout. The checklist sits outside scope: ticking re-renders, writes and captures the body without a new confirmation; a tick needs its proof, and `handoff` refuses unticked items. Never tick by editing the body or clicking its box: import refuses prose that differs from the render. No matching confirmation, no `init`. Scope changes need a new revision; append owner input, never rewrite.
-- A dependency needs `delivery {status: "integrated", scope_digest, commit, evidence}`; the 40-character commit is in this ticket's HEAD history. Closed status alone fails.
+- A dependency needs `delivery {status: "integrated", scope_digest, commit, evidence}`; the 40-character commit is in this ticket's HEAD history. Record it when the dependency hands off with its review, and branch the dependent worktree from that commit; the owner's merge is not needed. Closed status alone fails.
 
 Cheap refresh file: `{version: 1, unchanged: true, key, observed_at, remote_updated_at, status, transport}`. Valid only when the tracker's `updated_at` and status equal the current capture's, and only where `updated_at` moves on body, comment and status edits. Any mismatch: full capture.
 
@@ -89,7 +89,7 @@ Bind: `init --task <task.json> --profile <profile.json> --session <builder-sessi
 
 - Needs a confirmed current capture and a clean committed checkout. `--session` is the real dedicated builder session's id. Never invent one.
 - One ticket, one builder session, one worktree; run tickets in parallel, each in its own worktree. Isolate ports, databases and caches too.
-- The controller claims the checkout. `handoff` and `cancel` release it. A fresh `init` never replaces an existing run. Parallel worktrees share one coordination lock: retry a command refused because another operation is active.
+- The controller claims the checkout. `handoff` and `cancel` release it. A fresh `init` never replaces an existing run. Parallel worktrees share one coordination lock: retry a command refused because another operation is active; a refused ticket refresh then needs a full capture.
 
 Amend (changed scope, criteria, checks or protected files):
 
