@@ -74,7 +74,7 @@ Do not code before the plan is recorded.
    - Evidence reuse: both reuse and rejection (changed inputs, tampered proof, pending operations).
 3. Isolate fixtures from real project work and secrets. No product pilot or simulation unless the owner asks.
 4. Check every changed skill stays self-contained: links only inside its own folder; no names, dates or host specifics.
-5. Run the full test suite: `python -m unittest discover -s tests`. It must pass. Write or fix tests only after step 1.
+5. Run the full test suite: `python tests/run.py`, in parallel, the same tests as `python -m unittest discover -s tests`. It must pass. While iterating, `--changed` runs only what the diff touches. Write or fix tests only after step 1.
 6. Each check proves only itself. A walkthrough does not prove a code repair; a passing suite does not prove a walkthrough.
 
 ## 6. Independent review
