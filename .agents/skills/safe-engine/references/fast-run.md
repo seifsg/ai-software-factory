@@ -8,8 +8,8 @@ Every Fast or Lucky run records each step in one work record and passes the gate
 
 One round after research, `product` and `feature` only. Use your agent's question tool when it has one (multiple choice, recommended option first, one-line tradeoff each); otherwise one short message. Ask only what the request leaves open:
 
-1. **Features:** multi-select of up to four feature groups from the matrix. State must-haves in the question; don't ask them.
-2. **Size:** POC (one core journey, seeded data), MVP (first sellable slice) or production slice.
+1. **Features:** list every requested item in the question as fixed, never as an option. The multi-select offers up to four extra feature groups from the matrix.
+2. **Size:** POC (all requested items at small scale, seeded data), MVP (requested items plus research-backed critical additions the owner approves) or production slice. Size sets depth, never drops a requested item.
 3. **Approach:** three distinct ways to deliver it (positioning, scope, build route).
 4. **Stack:** three options from the product bar; recommendation first.
 5. **Shape:** product name, public landing or private-only, who signs in. Only when the request leaves them open.
@@ -17,7 +17,7 @@ One round after research, `product` and `feature` only. Use your agent's questio
 
 More than four open: ask the rest in a second call of the same round.
 
-Pause the gate while waiting. Record each answer with its source (`owner via question tool`, `from the request`). Answers bind the run; later changes go to the epic's activity.
+Pause the gate while waiting. Record each answer with its source (`owner via question tool`, `from the request`). `**Features:**` names the requested items, then the chosen additions. Answers bind the run; later changes go to the epic's activity. A later focus narrows that iteration only; requested items stay open.
 
 ## Work record
 

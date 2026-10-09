@@ -67,8 +67,8 @@ Record every step in one work record and pass the gate: [fast-run](references/fa
 7. **Design** (UI): similar to how we do the get ready to code, we plan our design. We do not accept poor mediocre design, only the best. Design brief from the product bar and `ux-quality` step 1. Its audit waits for the done-run.
 8. **Schema** (persistence): Only if needed, we run `database-schema`.
 9. **Build:** every todo through the 0–4 loop; one log line per todo: `T3 pre: … do: … post: …`. Build the whole outcome without testing along the way.
-10. **Done-run** (Fast): start it once, use the main journey and its most likely failure through real controls, read the logs, fix blockers. Screenshots for UI. No browser: drive its HTTP or CLI interface and say so.
-11. **Handoff:** how to run, dev sign-in, verified, unverified, follow-up tickets, each owned ticket's final status; `close`.
+10. **Done-run** (Fast): start it once, use every requested journey and the most likely failure through real controls (simulated input proves no requested integration), read the logs, fix blockers. Screenshots for UI. No browser: drive its HTTP or CLI interface and say so.
+11. **Handoff:** how to run, dev sign-in, each requested item (delivered, open in a later iteration, blocked with reason, or owner-deferred), verified, unverified, follow-up tickets, each owned ticket's final status; `close`. Any requested item not delivered or owner-deferred: the overall outcome is unfinished.
 
 Lucky runs 1, 4, a short 5 and 6, 9 and 11. It asks nothing, researches nothing, takes product bar defaults for design and schema without comparisons, and is reported unverified.
 
@@ -89,7 +89,7 @@ Lucky runs 1, 4, a short 5 and 6, 9 and 11. It asks nothing, researches nothing,
 
 ## Every mode
 
-- Tests last, whenever tests run (Safe, `verify`, a Safe check): finish the work, use it (main journey, failure and recovery), then write and run tests.
+- Tests last, whenever tests run (Safe, `verify`, a Safe check): finish the work, use it (every requested journey, failure and recovery), then write and run tests.
 - Every UI change: `ux-quality`. New or changed persistence: `database-schema`. Material unknowns: `research-market`.
 - PRs always: `how-to-make-a-pr`. Variations: one branch and draft PR per variation. A PR is planned: capture its before proof before editing. Before a Fast or Lucky PR, offer once: "Run a Safe check first? (optional)". A Safe check is manual QA, relevant tests and one independent `deep-review`.
 - Never claim tested, reviewed or production ready without that evidence.
