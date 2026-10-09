@@ -179,6 +179,19 @@ class DistributionTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, 'Incomplete.*history'):
             resolver.inspect_bundle(self.source)
 
+    def test_newer_layout_asks_for_an_update_instead_of_calling_the_bundle_incomplete(self):
+        path = self.add_contract()  # this bundle's own contract does not list docs/hosts.md
+        (self.source / 'docs/hosts.md').unlink()  # a newer layout moved a file this launcher hard-codes
+        with self.assertRaisesRegex(RuntimeError, r'newer layout.*docs/hosts\.md.*install --host'):
+            resolver.inspect_bundle(self.source)
+        (self.source / 'docs/guidance.md').unlink()  # a file the bundle itself declares is really missing
+        with self.assertRaisesRegex(RuntimeError, 'Incomplete factory bundle'):
+            resolver.inspect_bundle(self.source)
+        path.write_text(json.dumps({'version': 3, 'required_files': ['docs/install.md'],
+                                    'source_trees': ['docs']}), encoding='utf-8')
+        with self.assertRaisesRegex(RuntimeError, 'newer layout.*input contract version 3'):
+            resolver.inspect_bundle(self.source)
+
     def test_deleted_committed_contract_cannot_fall_back_to_legacy(self):
         path = self.add_contract()
         self.git('add', '--', str(path), cwd=self.source)

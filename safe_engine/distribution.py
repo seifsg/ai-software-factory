@@ -20,6 +20,9 @@ REQUIRED = ["AGENTS.md", "README.md", "docs/install.md", "docs/hosts.md", "safe_
             ".agents/skills/safe-engine/references/fast-run.md",
             ".agents/skills/improve-factory/references/live-session.md"]
 REQUIRED += [f".agents/skills/{name}/SKILL.md" for name in SKILLS]
+NEWER = ("This factory revision uses a newer layout than this launcher knows ({}). Update the installed factory from "
+         "a current checkout (skills/safe-engine/scripts/fast_gate.py install --host <your agent>, or update the "
+         "plugin), then retry.")
 
 
 def git(*args, cwd=None):
@@ -46,7 +49,7 @@ def inspect_bundle(root, expected=None, clean=False, entrypoint="improve-factory
     revision = git("rev-parse", "HEAD", cwd=root)
     if expected and revision != expected:
         raise RuntimeError("Cached checkout does not match the requested commit")
-    required = list(REQUIRED)
+    required, declared = list(REQUIRED), None  # declared: the files the bundle's own contract requires
     contract_name = "safe_engine/bundle-inputs.json"
     contract_path = root / contract_name
     tracked_contract = git("ls-tree", "--name-only", "HEAD", "--", contract_name, cwd=root)
@@ -63,6 +66,8 @@ def inspect_bundle(root, expected=None, clean=False, entrypoint="improve-factory
         except (OSError, ValueError) as error:
             raise RuntimeError(f"Invalid factory input contract: {error}") from error
         version = contract.get("version") if isinstance(contract, dict) else None
+        if isinstance(version, int) and not isinstance(version, bool) and version > 2:
+            raise RuntimeError(NEWER.format(f"input contract version {version}"))
         keys = {"version", "required_files", "source_trees"}
         if version == 2:
             keys.add("historical_files")
@@ -80,6 +85,7 @@ def inspect_bundle(root, expected=None, clean=False, entrypoint="improve-factory
             if folder.is_symlink() or not folder.is_dir() or not folder.resolve().is_relative_to(root):
                 raise RuntimeError("Incomplete factory source area: " + name)
         required += [contract_name, *contract["required_files"]]
+        declared = {contract_name, *contract["required_files"]}
         if version == 2:
             historical = contract["historical_files"]
             if (not isinstance(historical, list) or any(not isinstance(name, str) for name in historical)
@@ -91,9 +97,11 @@ def inspect_bundle(root, expected=None, clean=False, entrypoint="improve-factory
                         or "\\" in name or ":" in name):
                     raise RuntimeError("Invalid historical document in factory input contract")
             required += historical
+            declared |= set(historical)
     missing = [name for name in required if not (root / name).is_file() or (root / name).is_symlink()]
-    if missing:
-        raise RuntimeError("Incomplete factory bundle: " + ", ".join(missing))
+    if missing:  # only launcher-known files the bundle no longer declares: a newer layout, not a broken bundle
+        newer = declared is not None and not set(missing) & declared
+        raise RuntimeError(NEWER.format(", ".join(missing)) if newer else "Incomplete factory bundle: " + ", ".join(missing))
     if any(not (root / name).resolve().is_relative_to(root) for name in required):
         raise RuntimeError("Required factory file resolves outside the bundle")
     status = git("status", "--porcelain", "--untracked-files=all", cwd=root)
