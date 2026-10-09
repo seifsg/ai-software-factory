@@ -18,6 +18,9 @@ CRITERION = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+\*\*([A-Z]{1,3}\d+)\b", re.M)  
 LABEL_ITEMS = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+\*\*[A-Z]{1,3}\d+\s*\(([^)\n]*)\)", re.M)  # "**A1 (R2):**" -> R2
 ID = re.compile(r"\b[A-Z]{1,3}\d+\b")  # criterion, todo or requested item ID
 REQUESTED = re.compile(r"\bR\d+\b")
+# "R2 waitlist (owner-deferred: https://...)": the mark sits on its own item, before any other R-id
+DEFERRED = re.compile(r"\b(R\d+)\b(?:(?!\bR\d+\b)[^()\n])*\((?i:owner-deferred):\s*"
+                      r"(?:\[[^\]\n]*\]\(https?://[^\s)]+\)|https?://[^\s)]+)\)")  # bare URL or [text](URL)
 
 
 def sections(text):
@@ -90,14 +93,14 @@ def ticket_urls(body):
 
 
 def requested(body, deferred=False):
-    """Requested item IDs (R1..) listed after the '**Requested:**' label, up to the next label. An item marked
-    'owner-deferred' left scope by the owner's decision and needs no criterion, unless `deferred` asks for all."""
-    match = re.search(r"\*\*Requested:\*\*(.*?)(?=^\*\*(?!R\d+\b)[^*\n]+:\*\*|\Z)", body, re.I | re.M | re.S)
+    """Requested item IDs (R1..) listed after the '**Requested:**' label, up to the next label. An item carrying
+    the mark '(owner-deferred: <url>)' left scope by the owner's decision and needs no criterion, unless
+    `deferred` asks for every ID."""
+    match = re.search(r"\*\*Requested:\*\*(.*?)(?=^\s*(?:[-*+]\s+)?\*\*(?!R\d+\b)[^*\n]+:\*\*|\Z)",
+                      body, re.I | re.M | re.S)
     text = match.group(1) if match else ""
-    found = list(REQUESTED.finditer(text))
-    ends = [item.start() for item in found[1:]] + [len(text)]
-    return list(dict.fromkeys(item.group(0) for item, end in zip(found, ends)
-                              if deferred or "owner-deferred" not in text[item.end():end].lower()))
+    skip = set() if deferred else set(DEFERRED.findall(text))
+    return [rid for rid in dict.fromkeys(REQUESTED.findall(text)) if rid not in skip]
 
 
 def check_tickets(run, body, offline=None, **_):

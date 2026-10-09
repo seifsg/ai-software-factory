@@ -420,6 +420,17 @@ class FastGateTests(unittest.TestCase):
             self.assertEqual(record.check_handoff({**on, "kind": "feature"}, handoff, offline=None, all_sections=sections), [])
         deferred = listed.replace("- R2 waitlist", "- R2 waitlist (owner-deferred: https://github.com/acme/portal/issues/3)")
         self.assertEqual((record.requested(deferred), record.requested(deferred, deferred=True)), (["R1"], ["R1", "R2"]))
+        mark = "(owner-deferred: https://x.test/3)"
+        for line, open_ids in ((f"R1 book, R2 pay {mark}, R3 cancel", ["R1", "R3"]),  # one line, middle item
+                               (f"\n**R1:** book\n**R2:** pay {mark}", ["R1"]),  # label lines
+                               (f"R1 book, R2 pay {mark}; see R2 again", ["R1"]),  # a later mention stays deferred
+                               ("R1 book, R2 pay. Payments were owner-deferred to #6.", ["R1", "R2"]),  # prose is no mark
+                               ("R3 packs (#4, mock checkout; real payments owner-deferred: https://x.test/6)", ["R3"]),
+                               ("R2 pay (owner-deferred)", ["R2"]),  # the mark needs its decision link
+                               ("R1 a, R2 pay (owner-deferred: [R2 call](https://x.test/3))", ["R1"])):  # markdown link
+            with self.subTest(line=line):
+                self.assertEqual(record.requested(f"**Requested:** {line}\n**Backlog:** x\n"), open_ids)
+        self.assertEqual(record.requested(f"- **Requested:** R1 a, R2 b\n- **Backlog:** R3 {mark}\n"), ["R1", "R2"])
         with patch.object(record, "gh", return_value=issue(finished)):  # the owner's deferral needs no criterion
             self.assertEqual(record.check_handoff({**on, "kind": "feature"}, handoff, offline=None,
                                                   all_sections={**sections, "tickets": deferred}), [])
