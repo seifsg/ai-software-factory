@@ -307,6 +307,8 @@ def cmd_start(args):
            "ui": product if args.ui is None else args.ui, "data": product if args.data is None else args.data,
            "auth": args.auth, "request": request.strip(), "created": now(), "done": {}, "paused": None,
            "closed": False, "bundle": bundle, **method_flags(bundle, project)}
+    if "analysis" not in steps_for(run):  # older hook copies still require it before build: mark it skipped
+        run["done"]["analysis"] = {"at": now(), "skipped": "light lane"}
     save(ledger, run)
     record = record_path(project)
     if not record.exists():

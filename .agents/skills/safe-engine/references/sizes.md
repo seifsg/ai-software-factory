@@ -44,7 +44,7 @@ The owner wants to publish it and test it with real users. Fill every gap a laun
   - onboarding;
   - transactional email when journeys send mail;
   - a logging destination (asked once when unknown) and error alerts;
-  - privacy-safe product analytics: key journey events, no personal data by default, consent where the law requires it, and a destination asked once when unknown, with the app's own storage as the default;
+  - product analytics on the key journey events, under the [product bar](product-bar.md)'s privacy rules, sent to a destination asked once when unknown (default: the app's own storage);
   - in-app feedback that reaches the owner, with the page and app version attached;
   - migrations for persisted data, and backups stored apart from the data they protect, with a tested restore;
   - automated tests, written after the journeys work, running in CI;

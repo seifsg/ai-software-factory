@@ -23,7 +23,7 @@ Prepare a :
 
 Keep these five outputs in one compact work record. Full depth, the file-summary stop and every 0–4 step stay. Reuse source/decisions; link proof. Within step 3, finish affected callers, counts and links before recording completion. No extra finishing gate.
 
-A small change or follow-up keeps the plan to the to do list and one success line; the 0–4 loop stays.
+When your instructions ask for a light plan (a small change or follow-up), the plan is the to do list and one success line; the 0–4 loop stays. Otherwise all five outputs.
 
 ## ULTRA EXTRA IMPORTANT
 

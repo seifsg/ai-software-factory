@@ -26,6 +26,7 @@ A `change` (bug fix, small change, follow-up) records tickets, plan, build, done
 - Tickets: `**Ticket:** <url>` names the ticket it follows up and updates. A new ticket only for a new outcome; `**Ticket:** none (<why>)` when trivial.
 - No analysis step. Plan: `**Success:**` and `### Todos`. Unknown cause or several consumers: run `analyze-start` first and keep its result in the plan.
 - New todos continue the ticket's numbering. Each still runs the 0–4 loop and is ticked after its use-check.
+- An older installed gate refuses a light record: record that step the full way (`**Epic:**` with the ticket URL, the analysis, the full plan) until the installed copy updates.
 
 ## Work record
 

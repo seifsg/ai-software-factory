@@ -93,15 +93,10 @@ Capacity, credits and waitlist promotion live in `lib/booking.ts` behind one tra
 1. Foundation: schema, seed, logging, dev role switcher, environment badge. 2. Member booking. 3. Waitlist and packs. 4. Staff tools. 5. Header, footer, logo. 6. Done-run.
 
 ### Todos
-Written into the sub-issues' checklists; the epic's checklist lists #2 to #5 and the combined done-run.
-- T1 schema and seed (#2)
-- T2 shared logger (#2)
-- T3 dev role switcher and environment badge (#2)
-- T4 schedule and booking with capacity check (#2)
-- T5 waitlist and auto-promotion (#3)
-- T6 class packs with a labeled mock checkout (#4)
-- T7 staff schedule editor and check-in (#5)
-- T8 header, footer, logo (#2)
+Written into the sub-issues' checklists; the epic's checklist lists #2 to #5 and the combined done-run. Waves by files and dependencies; tier per todo.
+- Wave 1: T1 schema and seed (#2, deep), T2 shared logger (#2, standard), T8 header, footer, logo (#2, standard)
+- Wave 2: T3 dev role switcher and environment badge (#2, standard), T4 schedule and booking with capacity check (#2, standard)
+- Wave 3: T5 waitlist and auto-promotion (#3, deep), T6 class packs with a labeled mock checkout (#4, standard), T7 staff schedule editor and check-in (#5, standard)
 
 ### Whole plan
 Next.js app, SQLite through Drizzle, booking rules in one module. Light theme with the design brief below.

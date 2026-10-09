@@ -64,7 +64,7 @@ Record every step in one work record and pass the gate: [fast-run](references/fa
 4. **Tickets:** run `ticketing`: read the backlog, then epic(s) + 1 or many outcome sub-issues in To do, each with a definition of done; a `change` updates the ticket it follows up, opens a new one only for a new outcome, or keeps none when trivial (`**Ticket:** none (<why>)`).
 5. **Analysis** (product, feature): run `analyze-start` in full. No code yet: analyze the requirements, platform and intended consumers, and say so.
 6. **Plan:** run `get-ready-to-code`: five outputs, todos `T1..Tn` written into each ticket's checklist, logging map, efficiency budget. This request authorizes continuing through its file-summary stop.
-   - Light lane (`change`): the plan is a `**Success:**` line plus the todos ([fast-run](references/fast-run.md)). Unknown cause or several consumers: run `analyze-start` first and keep its result in the plan. The 0–4 loop, done-run and handoff stay.
+   - Light lane (`change`): a light plan, no analysis step ([fast-run](references/fast-run.md#light-lane)). The 0–4 loop, done-run and handoff stay.
 7. **Design** (UI): similar to how we do the get ready to code, we plan our design. We do not accept poor mediocre design, only the best. Design brief from the product bar and `ux-quality` step 1. Its audit waits for the done-run.
 8. **Schema** (persistence): Only if needed, we run `database-schema`.
 9. **Build:** every checklist item through the 0–4 loop, an unproven capability first as a spike; tick each in its ticket after its check; one log line per todo: `T3 pre: … do: … post: …`. Automated tests come last: an MVP or production slice writes them as its last checklist items, once the other items work; a POC waits for `verify` or Safe.

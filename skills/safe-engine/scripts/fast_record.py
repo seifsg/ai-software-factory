@@ -9,11 +9,13 @@ from pathlib import Path
 
 URL = re.compile(r"https?://[^\s)>\]|]+")
 ISSUE = re.compile(r"https://github\.com/([\w.-]+/[\w.-]+)/issues/(\d+)")
-TASK = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+\[([ xX])\].*$", re.M)  # findall: marks; finditer: whole items
+TASK = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+\[([ xX])\].*(?:\n[ \t]+(?![-*+]\s|\d+[.)]\s)\S.*)*", re.M)  # marks; items
+NEEDS = re.compile(r"\bneeds #\d+ T\d+")  # names another ticket's item, not one of this ticket's
 CHECKLIST = re.compile(r"^(#{1,6})\s[^\n]*checklist[^\n]*$", re.I | re.M)
 FENCE = re.compile(r"^\s*(```|~~~).*?^\s*\1", re.M | re.S)
 DEFINITION = re.compile(r"^(#{2,4})[^\n]*(?:definition of done|done when)", re.I | re.M)  # older tickets: "Done when"
-CRITERION = re.compile(r"^\s*[-*+]\s+\*\*([A-Z]{1,3}\d+)\b", re.M)  # "- **A1:**", "- **A1 (R2):**", "- **D3:**"
+CRITERION = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+\*\*([A-Z]{1,3}\d+)\b", re.M)  # "- **A1:**", "1. **D3:**"
+LABEL_ITEMS = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+\*\*[A-Z]{1,3}\d+\s*\(([^)\n]*)\)", re.M)  # "**A1 (R2):**" -> R2
 ID = re.compile(r"\b[A-Z]{1,3}\d+\b")  # criterion, todo or requested item ID
 REQUESTED = re.compile(r"\bR\d+\b")
 
@@ -89,16 +91,18 @@ def ticket_urls(body):
 
 def requested(body):
     """Requested item IDs (R1..) listed after the '**Requested:**' label, up to the next label."""
-    match = re.search(r"\*\*Requested:\*\*(.*?)(?=^\*\*[^*\n]+:\*\*|\Z)", body, re.I | re.M | re.S)
+    match = re.search(r"\*\*Requested:\*\*(.*?)(?=^\*\*(?!R\d+\b)[^*\n]+:\*\*|\Z)", body, re.I | re.M | re.S)
     return list(dict.fromkeys(REQUESTED.findall(match.group(1)))) if match else []
 
 
 def check_tickets(run, body, offline=None, **_):
     epic, subs = ticket_urls(body)
-    change, coverage = run["kind"] == "change", run.get("coverage")
-    trivial = change and not epic and (marker(body, "Ticket") or "").lower().startswith("none")  # light lane
+    change, coverage, lane = run["kind"] == "change", run.get("coverage"), light(run)
+    trivial = lane and not epic and (marker(body, "Ticket") or "").lower().startswith("none")
     problems = [] if epic or trivial else [
-        "needs an '**Epic:** <url>' line" + (" or '**Ticket:** <url, or none (why)>'" if change else "")]
+        "needs an '**Epic:** <url>' line" + (" or '**Ticket:** <url, or none (why)>'" if lane else "")]
+    if lane and marker(body, "Epic") and marker(body, "Ticket"):
+        problems.append("a change lists its one ticket once: keep only the '**Ticket:**' line")
     problems += missing_markers(body, ["Backlog"])
     wanted = [] if change or not coverage else requested(body)
     if not change and not subs:
@@ -109,15 +113,15 @@ def check_tickets(run, body, offline=None, **_):
         return problems
     if not run.get("ticket_checks"):
         return verify_tickets(epic[0], subs)
-    named = []  # each listed ticket's definition of done, kept from its one read
+    named = []  # requested items each listed ticket's criterion labels name, kept from its one read
 
     def read(ticket):
-        named.append(under(ticket["body"], DEFINITION))
+        named.extend(REQUESTED.findall(" ".join(LABEL_ITEMS.findall(under(ticket["body"], DEFINITION)))))
         if run.get("light") and ticket["closed"]:  # a follow-up reopens the ticket it updates
             return "is closed: reopen the ticket this run updates, or list the right one"
         return needs_definition(ticket)
     problems = verify_tickets(epic[0], subs) or ticket_problems(epic + subs, read)
-    gaps = [rid for rid in wanted if rid not in set(REQUESTED.findall("\n".join(named)))]
+    gaps = [rid for rid in wanted if rid not in set(named)]
     return problems or ([f"requested items no listed ticket's criteria name: {', '.join(gaps)}"] if gaps else [])
 
 
@@ -188,12 +192,13 @@ def under(body, heading):
 
 
 def checklist(body):
+    """Text under the ticket's Checklist heading."""
     return under(body, CHECKLIST)
 
 
 def items(body):
-    """The ticket's checklist task items, one per line; prose around them names nothing."""
-    return "\n".join(item.group(0) for item in TASK.finditer(checklist(body)))
+    """The ticket's checklist task items with their wrapped lines; prose and `needs` markers name nothing."""
+    return NEEDS.sub("", "\n".join(item.group(0) for item in TASK.finditer(checklist(body))))
 
 
 def uncovered(body):
@@ -269,10 +274,14 @@ def check_plan(run, body, **kwargs):
     if not todo_ids(kwargs["all_sections"]):
         problems.append("needs todo IDs (T1, T2, ...) under ### Todos")
     labels = ["Success"] if light(run) else ["Logging", "Efficiency"]
-    lists, check = [], covered(run, needs_checklist)  # each listed ticket's items, kept from its one read
-    problems = problems + missing_markers(body, labels) or online(
-        run, kwargs, lambda ticket: lists.append(items(ticket["body"])) or check(ticket))
-    named = set(ID.findall("\n".join(lists)))  # todos become checklist items (no plan-to-ticket drift)
+    return problems + missing_markers(body, labels) or held(run, kwargs, covered(run, needs_checklist))
+
+
+def held(run, kwargs, check):
+    """`check` on every listed ticket, then on coverage runs: each plan todo is an item there (no plan drift)."""
+    lists = []  # each listed ticket's items, kept from its one read
+    problems = online(run, kwargs, lambda ticket: lists.append(items(ticket["body"])) or check(ticket))
+    named = set(ID.findall("\n".join(lists)))
     loose = [f"T{n}" for n in todo_ids(kwargs["all_sections"])
              if f"T{n}" not in named] if run.get("coverage") and lists else []
     return problems or ([f"plan todos no listed ticket's checklist holds: {', '.join(loose)}"] if loose else [])
@@ -313,7 +322,7 @@ def check_done_run(run, body, project, **_):
 
 def check_handoff(run, body, **kwargs):
     labels = ["Run", "Statuses", "Unverified", "Follow-ups"] + (["Dev sign-in"] if run.get("auth") else [])
-    return missing_markers(body, labels) or online(run, kwargs, covered(run, needs_ticks))
+    return missing_markers(body, labels) or held(run, kwargs, covered(run, needs_ticks))
 
 
 CHECKS = {"research": check_research, "kickoff": check_kickoff, "tickets": check_tickets,

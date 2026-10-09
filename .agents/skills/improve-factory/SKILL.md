@@ -11,8 +11,8 @@ Keep any active app run safe. The repair never writes the app's source; pausing 
 ## Mode
 
 - Fast by default: a light-lane `change` run on its maintenance ticket (the one it follows up, or a new one), with recorded steps, gated by `skills/safe-engine/scripts/fast_gate.py`, started once the maintenance worktree exists. The gate itself blocks the repair: pause the blocking run's gate first. Its done-run is step 5 below.
-  - A small repair (wording, one rule) uses the light lane as is.
-  - A method, gate or controller change records the analysis and all five plan outputs in the Plan section, since the light lane has no Analysis section.
+  - A small repair (wording, one rule) uses the light lane as is: step 3 keeps the cause, a success line and the todos.
+  - A method, gate or controller change runs step 3 in full and records it in the Plan section, since the light lane has no Analysis section.
 - Safe on request: the full `ticketing` cycle in its own builder session, the file-summary stop and the review in step 6.
 - An analysis or planning request stops at that phase. Do not code.
 

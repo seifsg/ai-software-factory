@@ -243,6 +243,8 @@ class FastGateTests(unittest.TestCase):
     def test_light_change_records_five_steps(self):
         self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "fix the footer copy")
         self.assertNotIn("analysis", self.gate("status"))
+        run = json.loads((self.project / ".factory/fast/run.json").read_text(encoding="utf-8"))
+        self.assertEqual(run["done"]["analysis"]["skipped"], "light lane")  # older hook copies still require it
         self.assertIn("'analysis' does not apply", self.gate("done", "analysis", ok=False))
         record = self.project / ".factory/fast/work-record.md"
         record.write_text(LIGHT.replace("**Ticket:**", "Ticket:"), encoding="utf-8")
@@ -351,6 +353,11 @@ class FastGateTests(unittest.TestCase):
         self.assertEqual(record.uncovered(ticket), ["A2"])  # prose outside task items names nothing
         self.assertEqual(record.uncovered(ticket + "- [ ] T2 refuse (A2)\n"), [])
         self.assertEqual(record.uncovered("## Done when\n- **D1:** x\n- **D2:** y\n## Checklist\n- [ ] T1 (D1, D2)"), [])
+        self.assertEqual(record.uncovered("## Definition of done\n1. **A1:** x\n## Checklist\n- [ ] T1 (A2)"), ["A1"])
+        wrapped = "## Definition of done\n- **A1:** x\n## Checklist\n- [ ] T1 build the form\n  and its API (A1)\n"
+        self.assertEqual(record.uncovered(wrapped), [])
+        self.assertNotIn("T1", record.items("## Checklist\n- [ ] T4 list (A1) needs #11 T1\n"))
+        self.assertEqual(record.requested("**Requested:**\n**R1:** book\n**R2:** cancel\n**Backlog:** x"), ["R1", "R2"])
         on, older = {"coverage": True, "ticket_checks": True}, {"ticket_checks": True}
         with patch.object(record, "gh", return_value=issue(ticket)):
             self.assertIn("criteria no checklist item names: A2",
@@ -368,13 +375,20 @@ class FastGateTests(unittest.TestCase):
         with patch.object(record, "gh", side_effect=tracker):
             self.assertEqual(record.check_tickets({**on, "kind": "feature"}, listed),
                              ["requested items no listed ticket's criteria name: R2"])
+        legacy = ticket.replace("- **A2:**", "- **R2:**")  # an old criterion ID is no requested-item label
+        with patch.object(record, "gh", side_effect=lambda *args: tracker(*args) if args[0] == "api" else issue(legacy)):
+            self.assertEqual(record.check_tickets({**on, "kind": "feature"}, listed),
+                             ["requested items no listed ticket's criteria name: R2"])
         unnumbered = listed.replace("**Requested:**\n- R1 book\n- R2 waitlist\n", "")
         self.assertIn("'**Requested:**' line", record.check_tickets({**on, "kind": "feature"}, unnumbered, offline="x")[0])
         self.assertEqual(record.check_tickets({**older, "kind": "feature"}, unnumbered, offline="x"), [])
-        with patch.object(record, "gh", side_effect=AssertionError("a trivial change reads no tickets")):
-            trivial = "**Ticket:** none (typo)\n**Backlog:** none\n"
-            self.assertEqual(record.check_tickets({**on, "kind": "change"}, trivial), [])
         light = {**on, "light": True, "kind": "change"}
+        trivial = "**Ticket:** none (typo)\n**Backlog:** none\n"
+        with patch.object(record, "gh", side_effect=AssertionError("a trivial change reads no tickets")):
+            self.assertEqual(record.check_tickets(light, trivial), [])
+        self.assertIn("'**Epic:** <url>'", record.check_tickets({**on, "kind": "change"}, trivial)[0])  # older methods
+        both = f"**Epic:** {epic}\n**Ticket:** {url}\n**Backlog:** none\n"
+        self.assertIn("keep only the '**Ticket:**' line", record.check_tickets(light, both, offline="x")[0])
         follow_up = {"tickets": f"**Ticket:** {url}\n**Backlog:** none\n", "plan": "### Todos\n- T3 refuse a full class\n"}
 
         def ticket_api(state):
@@ -389,6 +403,10 @@ class FastGateTests(unittest.TestCase):
                              ["plan todos no listed ticket's checklist holds: T3"])
         with patch.object(record, "gh", return_value=issue(ticket + "- [ ] T3 refuse (A2)\n")):
             self.assertEqual(record.check_plan(light, plan, offline=None, all_sections=follow_up), [])
+        handoff = "**Run:** x\n**Statuses:** x\n**Unverified:** x\n**Follow-ups:** x\n"
+        with patch.object(record, "gh", return_value=issue(ticket + "- [x] T2 refuse (A2). Proof: refused\n")):
+            self.assertEqual(record.check_handoff(light, handoff, offline=None, all_sections=follow_up),
+                             ["plan todos no listed ticket's checklist holds: T3"])  # drift during build
 
     def test_run_flags_follow_the_methods_the_run_reads(self):
         spec = importlib.util.spec_from_file_location("fast_gate_module", GATE)
