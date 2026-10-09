@@ -17,9 +17,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 TESTS = ROOT / "tests"
-SERIAL = {"ParallelChecksTests", "HardeningTests"}  # concurrency, locks and timeouts: no competing load
+SERIAL = {"ParallelChecksTests", "HardeningTests", "CheckpointRepairs"}  # concurrency, locks, timeouts
 PROSE = {"test_skill_hygiene", "test_skill_distribution", "test_bundle_inputs"}  # skills, docs, rules
 PACKAGED = {"test_skill_distribution", "test_bundle_inputs"}  # bundle contents and resolvers
+SOURCE_TREES = {"safe_engine", ".agents", "skills", "docs", "scripts"}  # safe_engine/bundle-inputs.json
 
 
 def setup():
@@ -60,24 +61,28 @@ def importers(names, texts):
 
 def selected(base):
     """Test modules for the files changed against `base`, plus uncommitted and untracked ones; None means all."""
-    def git(*args):
-        return subprocess.run(["git", "-C", str(ROOT), *args], capture_output=True, text=True, check=True).stdout.split()
+    def git(command, *args):
+        out = subprocess.run(["git", "-C", str(ROOT), command, "-z", *args], capture_output=True, text=True,
+                             encoding="utf-8", check=True).stdout
+        return [name for name in out.split("\0") if name]
     files = set(git("diff", "--name-only", f"{base}...HEAD") + git("diff", "--name-only", "HEAD")
                 + git("ls-files", "--others", "--exclude-standard"))
     texts, modules = sources(), set()
     for path in files:
-        stem = Path(path).stem
+        file = Path(path)
         if path.startswith("tests/"):
-            hits = {stem} if stem in texts else set()  # the runner itself, or an unknown helper: everything
+            hits = {file.stem} if file.stem in texts else set()  # the runner itself, or an unknown helper: all
         elif path.startswith((".agents/", "docs/")) or "/" not in path and path.endswith(".md"):
-            hits = set(PROSE)
+            hits = PROSE | {"test_fast_gate"}  # the gate tests read the checkout's own methods
         elif path.startswith("safe_engine/"):
-            hits = {s for s, text in texts.items() if "safe_engine" in text} | PACKAGED
-        else:
-            hits = {s for s, text in texts.items() if stem and stem in text} | (PACKAGED if "/" in path else set())
+            hits = {stem for stem, text in texts.items() if "safe_engine" in text}
+        else:  # modules naming this file or a sibling it may load (the gate loads its scripts by name)
+            names = {file.stem} | ({p.stem for p in (ROOT / file.parent).glob("*.py")} if "/" in path else set())
+            hits = {stem for stem, text in texts.items()
+                    if any(re.search(rf"\b{re.escape(n)}\b", text) for n in names)}
         if not hits:
             return None  # nothing claims this file: run everything
-        modules |= hits
+        modules |= hits | (PACKAGED if file.parts[0] in SOURCE_TREES else set())
     return {m for m in importers(modules, texts) if m.startswith("test_")}
 
 
@@ -97,7 +102,8 @@ def main():
     pooled = [t.id() for t in tests if t.id().split(".")[1] not in SERIAL]
     serial = [t.id() for t in tests if t.id().split(".")[1] in SERIAL]
     started, results = time.perf_counter(), []
-    with ProcessPoolExecutor(max_workers=max(1, args.jobs), initializer=setup) as pool,             ProcessPoolExecutor(max_workers=1, initializer=setup) as lane:  # one process: serial tests in order
+    with ProcessPoolExecutor(max_workers=max(1, args.jobs), initializer=setup) as pool, \
+            ProcessPoolExecutor(max_workers=1, initializer=setup) as lane:  # serial tests, in order
         futures = {lane.submit(run_one, test_id): test_id for test_id in serial}
         futures.update({pool.submit(run_one, test_id): test_id for test_id in pooled})
         for future in as_completed(futures):

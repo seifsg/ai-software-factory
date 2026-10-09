@@ -2,7 +2,6 @@
 real commands, Git, locks, hashes and state files."""
 
 from copy import deepcopy
-import json
 from pathlib import Path
 import shutil
 import sys

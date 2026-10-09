@@ -1,16 +1,13 @@
 """Review round cap and the external reviewer packet route (speed work). Reviewer receipts are synthetic
 doubles; commands, Git, hashes and state files are real."""
 
-import json
 import os
 from pathlib import Path
-import shutil
 import subprocess
 import sys
 import tempfile
 import unittest
 from unittest.mock import patch
-import test_delivery_v2 as v2
 from safe_engine.project import EngineError, file_hash
 from safe_engine.storage import atomic_json, read_json
 from safe_engine.workflow import EXTERNAL, REVIEW_ROUNDS

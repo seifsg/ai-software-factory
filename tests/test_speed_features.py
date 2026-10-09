@@ -21,7 +21,7 @@ from safe_engine.proof import proof_draft
 from safe_engine.storage import atomic_json, read_json
 from safe_engine.tickets import timestamp
 from safe_engine.workflow import Workflow
-from speed_fixtures import BUNDLE, RENDEZVOUS, PAUSE, Base, report, finding, deferral, codex, script, command
+from speed_fixtures import BUNDLE, RENDEZVOUS, PAUSE, Base, report, finding, deferral, script, command
 
 
 class ParallelChecksTests(Base):
