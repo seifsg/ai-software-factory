@@ -134,6 +134,11 @@ class FastGateTests(unittest.TestCase):
         self.assertIsNone(record.marker("**Backlog:**\n**Sub-issue:** https://x/2\n", "Backlog"))  # no borrowing
         self.assertEqual(record.marker("**Backlog:**\nsearched x: none\n", "Backlog"), "searched x: none")
         self.assertEqual(record.marker("**Backlog:** none\n**Sub-issue:** u\n", "Backlog"), "none")
+        self.assertEqual(record.marker("**Logs:** **Run 1:** PASS\n", "Logs"), "**Run 1:** PASS")  # bold value, same line
+        for line in ("1. T34 pre: a do: b post: c", "- [x] T34 pre: a do: b post: c", "- **T34** pre: a do: b post: c",
+                     "- `T34` pre: a do: b post: c", "| T34 | pre: a do: b post: c |"):
+            with self.subTest(line=line):
+                self.assertEqual(record.check_build({"coverage": True}, line, all_sections={"plan": "### Todos\n- T34 b\n"}), [])
         sections = {"plan": "### Todos\n- T33 a\n- T34 b\n"}
         borrowed = "- T33 pre: a do: b post: T23..T34 held\n"
         self.assertEqual(record.check_build({"coverage": True}, borrowed, all_sections=sections),

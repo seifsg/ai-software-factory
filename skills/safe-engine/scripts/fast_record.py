@@ -44,7 +44,7 @@ def subsection(body, title):
 
 def marker(body, label):
     """The label's value: on its line, or on the next line unless that line is another marker."""
-    match = re.search(r"\*\*" + re.escape(label) + r":\*\*[ \t]*(?:\n[ \t]*)?(?!\*\*[^*\n]+:\*\*)(\S[^\n]*)", body, re.I)
+    match = re.search(r"\*\*" + re.escape(label) + r":\*\*[ \t]*(?:\n[ \t]*(?!\*\*[^*\n]+:\*\*))?(\S[^\n]*)", body, re.I)
     return match.group(1).strip() if match else None
 
 
@@ -334,7 +334,8 @@ def check_build(run, body, **kwargs):
     """Each plan todo has one line with pre:, do: and post:; on coverage runs the line starts with its ID, so a
     mention such as 'T23..T34' in another todo's line never counts."""
     lines = [line.lower() for line in body.splitlines()]
-    owns = (lambda n, line: re.match(rf"\s*(?:[-*+]\s+)?t{n}\b", line)) if run.get("coverage") else (
+    lead = r"\s*(?:\|\s*)?(?:(?:[-*+]|\d+[.)])\s+)?(?:\[[ x]\]\s+)?[*`]*"  # bullet, number, [x], **, ` or a table cell
+    owns = (lambda n, line: re.match(rf"{lead}t{n}\b", line)) if run.get("coverage") else (
         lambda n, line: re.search(rf"\bt{n}\b", line))
     return [f"T{number} needs its own 'T{number} pre: ... do: ... post: ...' line"
             for number in todo_ids(kwargs["all_sections"])
