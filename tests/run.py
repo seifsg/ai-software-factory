@@ -18,7 +18,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 TESTS = ROOT / "tests"
 SERIAL = {"ParallelChecksTests", "HardeningTests", "CheckpointRepairs"}  # concurrency, locks, timeouts
-PROSE = {"test_skill_hygiene", "test_skill_distribution", "test_bundle_inputs"}  # skills, docs, rules
+SKILL_FILES = re.compile(r"\.agents|SKILL\.md|references/")  # tests that read the skill files themselves
 PACKAGED = {"test_skill_distribution", "test_bundle_inputs"}  # bundle contents and resolvers
 SOURCE_TREES = {"safe_engine", ".agents", "skills", "docs", "scripts"}  # safe_engine/bundle-inputs.json
 
@@ -65,7 +65,8 @@ def selected(base):
         out = subprocess.run(["git", "-C", str(ROOT), command, "-z", *args], capture_output=True, text=True,
                              encoding="utf-8", check=True).stdout
         return [name for name in out.split("\0") if name]
-    files = set(git("diff", "--name-only", f"{base}...HEAD") + git("diff", "--name-only", "HEAD")
+    files = set(git("diff", "--name-only", "--no-renames", f"{base}...HEAD")  # a rename lists both paths
+                + git("diff", "--name-only", "--no-renames", "HEAD")
                 + git("ls-files", "--others", "--exclude-standard"))
     texts, modules = sources(), set()
     for path in files:
@@ -73,7 +74,7 @@ def selected(base):
         if path.startswith("tests/"):
             hits = {file.stem} if file.stem in texts else set()  # the runner itself, or an unknown helper: all
         elif path.startswith((".agents/", "docs/")) or "/" not in path and path.endswith(".md"):
-            hits = PROSE | {"test_fast_gate"}  # the gate tests read the checkout's own methods
+            hits = {stem for stem, text in texts.items() if SKILL_FILES.search(text)}
         elif path.startswith("safe_engine/"):
             hits = {stem for stem, text in texts.items() if "safe_engine" in text}
         else:  # modules naming this file or a sibling it may load (the gate loads its scripts by name)
