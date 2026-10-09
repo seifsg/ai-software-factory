@@ -16,6 +16,8 @@ from .storage import atomic_json, locked, now, read_json
 START = "<!-- safe-engine-ticket:v1 -->"
 END = "<!-- /safe-engine-ticket -->"
 WRITING_FIELDS = ("purpose", "goal", "context", "approach")
+CHECKLIST_NOTE = "Ticked through the ticket contract; a box clicked here blocks the next import until re-rendered."
+DONE_HEADINGS = ("Definition of done", "Done when")  # current, then the heading older bodies carry
 
 
 def ticket_key(value):
@@ -104,7 +106,35 @@ def validate_contract(contract):
         seen.add(identifier)
     if scope.get("epic") is not None:
         text(scope["epic"], "epic reference")
+    if "checklist" in contract:
+        validate_checklist(contract["checklist"])
     return contract
+
+
+def validate_checklist(items):
+    """Todo items outside the confirmed scope; a ticked item carries its proof."""
+    if not isinstance(items, list):
+        raise EngineError("Ticket checklist must be a list")
+    seen = set()
+    for item in items:
+        if not isinstance(item, dict) or type(item.get("done")) is not bool:
+            raise EngineError("Checklist items need id, text and a done flag")
+        identifier = text(item.get("id"), "checklist id")
+        text(item.get("text"), "checklist text")
+        if item["done"]:
+            text(item.get("proof"), "checklist proof")
+        if identifier in seen:
+            raise EngineError("Duplicate checklist item")
+        seen.add(identifier)
+
+
+def checklist_lines(contract):
+    """Task-list lines rendered from the contract, one per item."""
+    def line(value):
+        return " ".join(value.split())
+    return "\n".join(f"- [{'x' if item['done'] else ' '}] {line(item['id'])} {line(item['text'])}"
+                     + (f" Proof: {line(item['proof'])}" if item["done"] else "")
+                     for item in contract.get("checklist", []))
 
 
 def scope_digest(contract):
@@ -115,7 +145,7 @@ def table_cell(value):
     return value.replace("\r\n", "\n").replace("\r", "\n").replace("|", "\\|").replace("\n", "<br>")
 
 
-def visual_projection(contract):
+def visual_projection(contract, done_heading=DONE_HEADINGS[0]):
     scope = contract["scope"]
     sections = [
         f"## 🎯 Purpose & goal\n\n- **Purpose:** {scope['purpose']}\n- **Goal:** {scope['goal']}",
@@ -128,7 +158,9 @@ def visual_projection(contract):
     flow = f"```text\n{scope['flow']}\n```\n\n" if "flow" in scope else ""
     sections.append(f"## 🔀 Journey\n\n{flow}{journeys}")
     criteria = "\n".join(f"- **{c['id']}:** {c['text']}" for c in scope["acceptance"])
-    sections.append(f"## ✅ Done when\n\n{criteria}")
+    sections.append(f"## ✅ {done_heading}\n\n{criteria}")
+    if contract.get("checklist"):
+        sections.append(f"## ☑️ Checklist\n\n{CHECKLIST_NOTE}\n\n{checklist_lines(contract)}")
     guards = []
     for label, values in (("Keep", scope["constraints"]), ("Avoid / out", scope["exclusions"]),
                           ("Nice to have", scope.get("optional", [])), ("Depends on", scope["dependencies"])):
@@ -149,18 +181,19 @@ def visual_projection(contract):
     return "\n\n".join(sections) + "\n\n"
 
 
-def render_ticket(contract, *, fold_contract=True, layout="auto"):
+def render_ticket(contract, *, fold_contract=True, layout="auto", done_heading=DONE_HEADINGS[0]):
     """Readable projection and machine contract must agree; no ignored prose edits."""
     validate_contract(contract)
     scope = contract["scope"]
     if layout not in ("auto", "legacy"):
         raise EngineError("Ticket layout must be auto or legacy")
     if layout == "auto" and contract.get("presentation") == "visual":
-        projection = visual_projection(contract)
+        projection = visual_projection(contract, done_heading)
     else:
         criteria = "\n".join(f"- {c['id']}: {c['text']}" for c in scope["acceptance"])
+        checklist = f"## Checklist\n\n{CHECKLIST_NOTE}\n\n{checklist_lines(contract)}\n\n" if contract.get("checklist") else ""
         projection = (f"## Before\n\n{scope['before']}\n\n## After\n\n{scope['after']}\n\n"
-                      f"## Acceptance\n\n{criteria}\n\n")
+                      f"## Acceptance\n\n{criteria}\n\n{checklist}")
     payload = (f"{START}\n```json\n{json.dumps(contract, indent=2, ensure_ascii=False)}\n"
                f"```\n{END}\n")
     if fold_contract:
@@ -179,8 +212,9 @@ def parse_body(body):
         raise EngineError("Ticket contract must be a fenced JSON block")
     contract = validate_contract(json.loads(payload[8:-4]))
     normalized = body.strip()
-    if not any(normalized == render_ticket(contract, fold_contract=folded, layout=layout).strip()
-               for layout in ("auto", "legacy") for folded in (True, False)):
+    if not any(normalized == render_ticket(contract, fold_contract=folded, layout=layout,
+                                           done_heading=heading).strip()
+               for layout in ("auto", "legacy") for folded in (True, False) for heading in DONE_HEADINGS):
         raise EngineError("Remote prose differs from the contract; reconcile and confirm changed expectations")
     return contract
 

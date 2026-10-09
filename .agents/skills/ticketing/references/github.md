@@ -56,9 +56,13 @@ gh issue comment <n> --body-file <file>
 
 Read before every edit; an edit replaces the whole body.
 
+## Checklist
+
+Task items in the body: `- [ ] T1 <todo> (A1)`. Issue lists show the progress (x of y). Tick: read the body, change `[ ]` to `[x]` and add the proof, then `gh issue edit <n> --body-file <file>`. One writer per body.
+
 ## Backlog
 
-Check `gh auth status` for the `project` scope first: without it `projectItems` reads empty and a board looks absent. Missing: ask the owner to run `gh auth refresh -s project`, or use labels and say so. The issue sits on a project board with a Status field (`projectItems` above): set status there, and priority too when the board has that field. Otherwise labels: `status: backlog`, `status: to do`, `status: in progress`, `status: dev done`, `status: ready for qa`, `status: blocked`, and `priority: P0` to `priority: P3`. At most one of each per issue. Status labels count on open issues only: open without one is Backlog, closed as completed is Done, closed as not planned is Cancelled.
+Check `gh auth status` for the `project` scope first: without it `projectItems` reads empty and a board looks absent. Missing: ask the owner to run `gh auth refresh -s project`, or use labels and say so. The issue sits on a project board with a Status field (`projectItems` above): set status there, and priority too when the board has that field. Otherwise labels: `status: backlog`, `status: to do`, `status: in progress`, `status: dev done`, `status: ready for qa`, `status: blocked`, and `priority: P0` to `priority: P3`. At most one of each per issue. Status labels count on open issues only: open without one is Backlog, closed as completed is Done, closed as not planned is Cancelled. A run's tickets always carry one.
 
 ```text
 gh label list --limit 200 --json name
@@ -68,12 +72,19 @@ gh issue edit <n> --remove-label "status: to do" --add-label "status: in progres
 gh project list --owner <owner>
 gh project item-add <project-number> --owner <owner> --url <issue-url>
 gh project item-edit <project-number> --owner <owner> --url <issue-url> --field Status --value "In progress"
-gh issue close <n> --reason completed --comment "<QA evidence>"
+gh pr list --state closed --limit 200 --json number,url,state,body,baseRefName,mergedAt,closedAt
+gh pr list --state open --limit 200 --json number,url,body
+gh pr view <n> --json comments --jq '.comments[-3:][] | [.author.login, .body] | @tsv'
+gh api --paginate repos/{owner}/{repo}/issues/<n>/events --jq '.[] | select(.event == "reopened" or ((.event == "labeled" or .event == "unlabeled") and (.label.name | startswith("status:")))) | [.event, (.label.name // "-"), .created_at] | @tsv'
+gh api repos/{owner}/{repo}/issues/<epic>/sub_issues --jq '.[] | [.number, .state, .title] | @tsv'
+gh issue close <n> --reason completed --comment "<activity entry with the merged PR link>"
 gh issue close <n> --reason "not planned" --comment "<owner decision>"
 gh issue reopen <n>
 ```
 
 - Create only the missing labels the run uses, spelled as listed. Never rename or delete existing ones.
 - Sort the list by priority label.
-- Done: drop the status label, close as completed. Cancelled: same, close as not planned. Back from either: reopen and label. New issues on a board: `item-add` first.
+- Done comes from the merge: closing keywords in the PR close the ticket when it merges into the default branch. At intake, the closed-PR list catches the rest; `state` reads `MERGED` or `CLOSED`. Merged into any base: for each open ticket the `body` names with a closing keyword, check its events (the `issues/<n>/events` command) and close it when nothing follows `mergedAt`. Closed unmerged: follow the intake rule, with the same events check after `closedAt`.
+- Close first, then drop the status label: completed for Done, not planned for Cancelled. Back from either: reopen and label.
+- Boards: keep the built-in workflows that set Done when an item closes or its PR merges. A board without a Blocked status: add the `status: blocked` label too. New issues on a board: `item-add` first.
 - Each move pairs with one activity comment (`gh issue comment`). A close with `--comment` is both.

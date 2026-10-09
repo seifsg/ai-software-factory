@@ -3,11 +3,24 @@
 Each check returns a list of problems; empty means the step is recorded. Markers prove a step was
 written down, not that it was good. Spec: .agents/skills/safe-engine/references/fast-run.md#work-record.
 """
+import json
 import re
 from pathlib import Path
 
 URL = re.compile(r"https?://[^\s)>\]|]+")
 ISSUE = re.compile(r"https://github\.com/([\w.-]+/[\w.-]+)/issues/(\d+)")
+TASK = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+\[([ xX])\].*(?:\n[ \t]+(?![-*+]\s|\d+[.)]\s)\S.*)*", re.M)  # marks; items
+NEEDS = re.compile(r"\bneeds #\d+ T\d+")  # names another ticket's item, not one of this ticket's
+CHECKLIST = re.compile(r"^(#{1,6})\s[^\n]*checklist[^\n]*$", re.I | re.M)
+FENCE = re.compile(r"^\s*(```|~~~).*?^\s*\1", re.M | re.S)
+DEFINITION = re.compile(r"^(#{2,4})[^\n]*(?:definition of done|done when)", re.I | re.M)  # older tickets: "Done when"
+CRITERION = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+\*\*([A-Z]{1,3}\d+)\b", re.M)  # "- **A1:**", "1. **D3:**"
+LABEL_ITEMS = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+\*\*[A-Z]{1,3}\d+\s*\(([^)\n]*)\)", re.M)  # "**A1 (R2):**" -> R2
+ID = re.compile(r"\b[A-Z]{1,3}\d+\b")  # criterion, todo or requested item ID
+REQUESTED = re.compile(r"\bR\d+\b")
+# "R2 waitlist (owner-deferred: https://...)": the mark sits on its own item, before any other R-id
+DEFERRED = re.compile(r"\b(R\d+)\b(?:(?!\bR\d+\b)[^()\n])*\((?i:owner-deferred):\s*"
+                      r"(?:\[[^\]\n]*\]\(https?://[^\s)]+\)|https?://[^\s)]+)\)")  # bare URL or [text](URL)
 
 
 def sections(text):
@@ -72,13 +85,61 @@ def check_kickoff(run, body, **_):
     return missing_markers(body, labels)
 
 
-def check_tickets(run, body, offline=None, **_):
-    epic = URL.findall(marker(body, "Epic") or "")
+def ticket_urls(body):
+    """Epic URL (a change: its one ticket), zero or one, and sub-issue URLs listed in a Tickets section."""
+    epic = [url.rstrip(".,;") for url in URL.findall(marker(body, "Epic") or marker(body, "Ticket") or "")[:1]]
     subs = [url.rstrip(".,;") for line in re.findall(r"\*\*Sub-issue:\*\*(.*)", body, re.I) for url in URL.findall(line)]
-    problems = ([] if epic else ["needs an '**Epic:** <url>' line"]) + missing_markers(body, ["Backlog"])
-    if run["kind"] != "change" and not subs:
+    return epic, subs
+
+
+def requested(body, deferred=False):
+    """Requested item IDs (R1..) listed after the '**Requested:**' label, up to the next label. An item carrying
+    the mark '(owner-deferred: <url>)' left scope by the owner's decision and needs no criterion, unless
+    `deferred` asks for every ID."""
+    match = re.search(r"\*\*Requested:\*\*(.*?)(?=^\s*(?:[-*+]\s+)?\*\*(?!R\d+\b)[^*\n]+:\*\*|\Z)",
+                      body, re.I | re.M | re.S)
+    text = match.group(1) if match else ""
+    skip = set() if deferred else set(DEFERRED.findall(text))
+    return [rid for rid in dict.fromkeys(REQUESTED.findall(text)) if rid not in skip]
+
+
+def check_tickets(run, body, offline=None, **_):
+    epic, subs = ticket_urls(body)
+    change, coverage, lane = run["kind"] == "change", run.get("coverage"), light(run)
+    trivial = lane and not epic and (marker(body, "Ticket") or "").lower().startswith("none")
+    problems = [] if epic or trivial else [
+        "needs an '**Epic:** <url>' line" + (" or '**Ticket:** <url, or none (why)>'" if lane else "")]
+    if lane and marker(body, "Epic") and marker(body, "Ticket"):
+        problems.append("a change lists its one ticket once: keep only the '**Ticket:**' line")
+    problems += missing_markers(body, ["Backlog"])
+    wanted = [] if change or not coverage else requested(body)
+    if not change and not subs:
         problems.append("needs >=1 '**Sub-issue:** <url>' line")
-    return problems or ([] if offline else verify_tickets(epic[0].rstrip(".,;"), subs))
+    if coverage and not change and not requested(body, deferred=True):
+        problems.append("needs a '**Requested:**' line numbering every requested item: R1, R2, ...")
+    if problems or offline or trivial:
+        return problems
+    if not run.get("ticket_checks"):
+        return verify_tickets(epic[0], subs)
+    named = []  # requested items each listed ticket's criterion labels name, kept from its one read
+
+    def read(ticket):
+        named.extend(labelled(ticket["body"]))
+        if run.get("light") and ticket["closed"]:  # a follow-up reopens the ticket it updates
+            return "is closed: reopen the ticket this run updates, or list the right one"
+        return needs_definition(ticket)
+    return verify_tickets(epic[0], subs) or ticket_problems(epic + subs, read) or unnamed(wanted, named)
+
+
+def labelled(body):
+    """Requested item IDs the definition of done's criterion labels name: '**A1 (R2):**'."""
+    return REQUESTED.findall(" ".join(LABEL_ITEMS.findall(under(body, DEFINITION))))
+
+
+def unnamed(wanted, named):
+    """The gap when a requested item has no criterion naming it."""
+    gaps = [rid for rid in wanted if rid not in set(named)]
+    return [f"requested items no listed ticket's criteria name: {', '.join(gaps)}"] if gaps else []
 
 
 def verify_tickets(epic, subs):
@@ -100,6 +161,113 @@ def verify_tickets(epic, subs):
     return []
 
 
+def online(run, kwargs, check):
+    """Run one ticket check on every listed ticket, unless the run predates ticket checks or the step is offline."""
+    if kwargs.get("offline") or not run.get("ticket_checks"):
+        return []
+    epic, subs = ticket_urls(kwargs["all_sections"].get("tickets", ""))
+    return ticket_problems(run.get("tickets", []) + epic + subs, check)  # tickets pinned at `done tickets` stay checked
+
+
+def ticket_problems(urls, check):
+    """Read each GitHub ticket once and collect check problems; an unreadable ticket stops the step."""
+    import subprocess
+    problems = []
+    for url in dict.fromkeys(urls):
+        if not ISSUE.match(url):
+            return [f"cannot check non-GitHub ticket {url}; pass --offline '<tracker and reason>'"]
+        try:
+            ticket = read_ticket(url)
+        except (OSError, RuntimeError, subprocess.TimeoutExpired, ValueError, TypeError, AttributeError) as error:
+            return [f"cannot read {url} with gh ({error}); fix access or pass --offline '<reason>'"]
+        problem = check(ticket)
+        if problem:
+            problems.append(f"{url}: {problem}")
+    return problems
+
+
+def read_ticket(url):
+    """Body without fenced examples, and its marks: closed as not planned, Blocked, Backlog (label or board)."""
+    data = json.loads(gh("issue", "view", url, "--json", "body,state,stateReason,labels,projectItems"))
+    if not isinstance(data, dict):
+        raise ValueError("unexpected gh output")
+    labels = {name(label) for label in listed(data, "labels")}
+    boards = {name(item.get("status")) for item in listed(data, "projectItems") if isinstance(item, dict)} - {""}
+    marked = lambda status: f"status: {status}" in labels or status in boards
+    cancelled = str(data.get("stateReason") or "").upper() == "NOT_PLANNED"
+    return {"body": FENCE.sub("", str(data.get("body") or "")), "stopped": cancelled or marked("blocked"),
+            "backlog": marked("backlog"), "closed": str(data.get("state") or "").upper() == "CLOSED"}
+
+
+def under(body, heading):
+    """Text under the first heading `heading` matches, up to the next heading of the same or higher level."""
+    found = heading.search(body)
+    if not found:
+        return ""
+    end = re.compile(rf"^#{{1,{len(found.group(1))}}}\s", re.M).search(body, found.end())
+    return body[found.end():end.start() if end else len(body)]
+
+
+def checklist(body):
+    """Text under the ticket's Checklist heading."""
+    return under(body, CHECKLIST)
+
+
+def items(body):
+    """The ticket's checklist task items with their wrapped lines; prose and `needs` markers name nothing."""
+    return NEEDS.sub("", "\n".join(item.group(0) for item in TASK.finditer(checklist(body))))
+
+
+def uncovered(body):
+    """Criterion IDs in the definition of done that no checklist item names (no spec drift)."""
+    named = set(ID.findall(items(body)))
+    return [cid for cid in dict.fromkeys(CRITERION.findall(under(body, DEFINITION))) if cid not in named]
+
+
+def covered(run, check):
+    """`check`, then on coverage runs: every criterion of a ticket still in play is named by an item."""
+    def both(ticket):
+        gaps = [] if not run.get("coverage") or ticket["stopped"] or ticket["backlog"] else uncovered(ticket["body"])
+        return check(ticket) or (f"criteria no checklist item names: {', '.join(gaps)}" if gaps else None)
+    return both
+
+
+def listed(data, key):
+    """A list field of gh output; anything else reads as empty."""
+    value = data.get(key)
+    return value if isinstance(value, list) else []
+
+
+def name(value):
+    """Lower-case name of a label or board status; anything else has none."""
+    return str(value.get("name") or "").lower() if isinstance(value, dict) else ""
+
+
+def needs_definition(ticket):
+    """Tickets step: every listed ticket states its definition of done."""
+    return None if DEFINITION.search(ticket["body"]) else "needs a 'Definition of done' section (ticket layout)"
+
+
+def needs_checklist(ticket):
+    """Plan step: every listed ticket that is not Blocked or cancelled carries its checklist."""
+    return None if ticket["stopped"] or TASK.search(checklist(ticket["body"])) else (
+        "needs a Checklist section with task items ('- [ ] T1 <todo>') from the plan")
+
+
+def needs_ticks(ticket):
+    """Handoff: a listed ticket is finished (every item ticked) unless Blocked, cancelled or deferred to Backlog."""
+    if ticket["stopped"] or ticket["backlog"]:
+        return None
+    marks = TASK.findall(checklist(ticket["body"]))
+    if not marks:
+        return needs_checklist(ticket)
+    left = marks.count(" ")
+    if not left:
+        return None
+    return (f"{left} unticked checklist item(s): finish them, mark the ticket Blocked with its reason, "
+            "or Backlog only when the owner deferred it")
+
+
 def gh(*args):
     import subprocess
     result = subprocess.run(["gh", *args], capture_output=True, text=True, encoding="utf-8", timeout=30)
@@ -112,12 +280,37 @@ def check_analysis(run, body, **_):
     return missing_markers(body, ["Success"]) + ([] if fenced(body) else ["needs a fenced ASCII chart"])
 
 
+def light(run):
+    """A light-lane change: a Success line and todos replace the analysis step and the full plan."""
+    return run.get("kind") == "change" and bool(run.get("light"))
+
+
 def check_plan(run, body, **kwargs):
-    problems = [f"needs a '### {title}' subsection" for title in ("Files", "Critique", "Phases", "Todos", "Whole plan")
-                if subsection(body, title) is None]
+    titles = ("Todos",) if light(run) else ("Files", "Critique", "Phases", "Todos", "Whole plan")
+    problems = [f"needs a '### {title}' subsection" for title in titles if subsection(body, title) is None]
     if not todo_ids(kwargs["all_sections"]):
         problems.append("needs todo IDs (T1, T2, ...) under ### Todos")
-    return problems + missing_markers(body, ["Logging", "Efficiency"])
+    labels = ["Success"] if light(run) else ["Logging", "Efficiency"]
+    return problems + missing_markers(body, labels) or held(run, kwargs, covered(run, needs_checklist))
+
+
+def held(run, kwargs, check):
+    """`check` on every listed ticket; on coverage runs also: each plan todo is an item there and each
+    requested item is still named by a criterion (no drift after the tickets step)."""
+    lists, named = [], []  # each listed ticket's items and labelled requested items, kept from its one read
+
+    def read(ticket):
+        lists.append(items(ticket["body"]))
+        named.extend(labelled(ticket["body"]))
+        return check(ticket)
+    problems = online(run, kwargs, read)
+    if problems or not run.get("coverage") or not lists:
+        return problems
+    ids = set(ID.findall("\n".join(lists)))
+    loose = [f"T{n}" for n in todo_ids(kwargs["all_sections"]) if f"T{n}" not in ids]
+    wanted = [] if run.get("kind") == "change" else requested(kwargs["all_sections"].get("tickets", ""))
+    todos = [f"plan todos no listed ticket's checklist holds: {', '.join(loose)}"] if loose else []
+    return todos + unnamed(wanted, named)
 
 
 def check_design(run, body, **_):
@@ -153,8 +346,9 @@ def check_done_run(run, body, project, **_):
     return problems
 
 
-def check_handoff(run, body, **_):
-    return missing_markers(body, ["Run", "Statuses", "Unverified", "Follow-ups"] + (["Dev sign-in"] if run.get("auth") else []))
+def check_handoff(run, body, **kwargs):
+    labels = ["Run", "Statuses", "Unverified", "Follow-ups"] + (["Dev sign-in"] if run.get("auth") else [])
+    return missing_markers(body, labels) or held(run, kwargs, covered(run, needs_ticks))
 
 
 CHECKS = {"research": check_research, "kickoff": check_kickoff, "tickets": check_tickets,

@@ -148,8 +148,8 @@ Severity is impact. Disposition decides the gate: `blocking`, `before-exposure` 
 
 - Blocking: any CRITICAL or HIGH, an unmet core requirement, a broken existing journey, a required UNKNOWN, a mandatory rule violated without an authorized exception. Clean code that solves the wrong problem fails.
 - UNKNOWN is never N/A. Missing required evidence stays UNKNOWN and blocks dependent judgment. N/A needs evidence.
-- Deferral needs owner authority and a record: owner, reason, scope, follow-up ticket, revisit trigger. A note alone grants nothing.
-- The owner may delegate in advance the deferral of LOW findings, and of MEDIUM while exposure stays local. MEDIUM and LOW left after round 3 go to separate low-priority tickets. HIGH and CRITICAL are never deferred.
+- Deferral needs owner authority and a record: owner, reason, scope, its entry in the follow-ups ticket, revisit trigger. A note alone grants nothing.
+- The owner may delegate in advance the deferral of LOW findings, and of MEDIUM while exposure stays local. MEDIUM and LOW left after round 3 are appended to the epic's one open follow-ups ticket in Backlog, never one ticket per finding. HIGH and CRITICAL are never deferred.
 - Before-exposure items resolve before public exposure or production. A MEDIUM is not automatically a failure, and never silently waived.
 - Mandatory rule exceptions need an authorized owner, scope and record. Explanation alone waives nothing.
 - A verdict that depends on fixes not yet applied is **conditional**. Judge the actual candidate.

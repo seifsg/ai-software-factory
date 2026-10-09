@@ -51,13 +51,13 @@ Each `record` needs its matching phase. Artifacts are substantive Markdown; the 
 | Phase | Do | Command |
 |---|---|---|
 | `analyze` | Run `analyze-start`. No code. | `record analysis --file <analysis.md>` |
-| `plan` | Run `get-ready-to-code`: five outputs; file-summary stop unless the owner already confirmed the ticket's before/after. New software: first plan, `research-market`, revised plan; save all three. No code. | `record plan --file <plan.md>` |
-| `build` | Run the 0-4 loop for every todo. Finish all implementation and worthwhile in-scope improvements. No tests, no walkthroughs. | `record implementation --file <summary.md>` |
+| `plan` | Run `get-ready-to-code`: five outputs; file-summary stop unless the owner already confirmed the ticket's before/after. New software: first plan, `research-market`, revised plan; save all three. Write the todos into the ticket's checklist. No code. | `record plan --file <plan.md>` |
+| `build` | Run the 0-4 loop for every checklist item; tick each in the ticket after its check (use it, see it work). Finish all implementation and worthwhile in-scope improvements. No test writing, no final walkthrough. | `record implementation --file <summary.md>` |
 | `manual` | Final actual-use QA with failure and recovery paths. | `record manual --file <receipt.json>` |
 | `testing` | Write tests in `test_paths`. Seal reviewed acceptance, then record the batch (tests written, commands run, results). | `contract-proposal`, `seal`, `record batch --file <tests.md>` |
 | `verify` | One complete final gate. Read the logs. | `check` |
 | `review` | Map criteria to proof, then run the independent review. | `ticket-proof`, `review` |
-| `ready` | Write the handoff. | `handoff` |
+| `ready` | Every checklist item ticked. Write the handoff. | `handoff` |
 | `cancelled` | Stop. Records and checkout stay. | `cancel --reason "<why>"` |
 
 - `record analysis` and `record plan` are refused if source or declared inputs changed since `init`. Restore the starting candidate.
@@ -78,8 +78,8 @@ Key: lowercase letter first, then lowercase letters, digits, hyphens; at most 64
 Capture file: `version: 1`, `key`, `identity {provider, workspace, id, url}`, `title`, `status`, `observed_at`, `remote_updated_at` (timezone, not future, update not after observation), `body` (exactly as rendered), `complete: true`, `transport {tool, source}`, `activity`. GitHub identity: provider `github`, workspace `owner/repo`, id the issue number, url its HTTPS issue URL.
 - Activity: every comment page. Entry: `id`, `at`, `author`, `text`, `disposition` (`non-scope`, `resolved`, `pending`). The run's own status moves are `non-scope`. Non-pending needs `reason`. Pending blocks progress. Deleted entries need reconciliation, never silent loss.
 - The body carries the contract as fenced JSON between `<!-- safe-engine-ticket:v1 -->` and `<!-- /safe-engine-ticket -->`. Prose must match the render; independent edits block import.
-- Contract: `revision`, `lifecycle` (`ready` for To do, `active` for In progress through Ready for QA, `blocked` also for a ticket sent back to Backlog, `done`, `cancelled`), `scope {original_request, before, after, completion, owner_input [{text, source}], journeys, exclusions, constraints, dependencies, acceptance [{id, text}]}`, `confirmation {revision, digest, actor, source, statement, at}`. The digest equals `scope_digest`. No matching confirmation, no `init`. Scope changes need a new revision; append owner input, never rewrite.
-- A dependency needs `delivery {status: "integrated", scope_digest, commit, evidence}`; the 40-character commit is in this ticket's HEAD history. Closed status alone fails.
+- Contract: `revision`, `lifecycle` (`ready` for To do, `active` for In progress through Ready for QA, `blocked` also for a ticket sent back to Backlog, `done`, `cancelled`), `scope {original_request, before, after, completion, owner_input [{text, source}], journeys, exclusions, constraints, dependencies, acceptance [{id, text}]}`, `confirmation {revision, digest, actor, source, statement, at}`, optional `checklist [{id, text, done, proof}]`. The digest equals `scope_digest`. `presentation: "visual"` renders the ticket layout (Definition of done, Checklist); without it, the older Before, After, Acceptance layout. The checklist sits outside scope: ticking re-renders, writes and captures the body without a new confirmation; a tick needs its proof, and `handoff` refuses unticked items. Never tick by editing the body or clicking its box: import refuses prose that differs from the render. No matching confirmation, no `init`. Scope changes need a new revision; append owner input, never rewrite.
+- A dependency needs `delivery {status: "integrated", scope_digest, commit, evidence}`; the 40-character commit is in this ticket's HEAD history. Record it when the dependency hands off with its review, and branch the dependent worktree from that commit; the owner's merge is not needed. Closed status alone fails.
 
 Cheap refresh file: `{version: 1, unchanged: true, key, observed_at, remote_updated_at, status, transport}`. Valid only when the tracker's `updated_at` and status equal the current capture's, and only where `updated_at` moves on body, comment and status edits. Any mismatch: full capture.
 
@@ -88,8 +88,8 @@ Refresh at intake and resume, before `record implementation`, before `repair --r
 Bind: `init --task <task.json> --profile <profile.json> --session <builder-session-id>`.
 
 - Needs a confirmed current capture and a clean committed checkout. `--session` is the real dedicated builder session's id. Never invent one.
-- One ticket, one builder session, one worktree. Independent tickets use separate worktrees; epic tickets share a checkout with one writer at a time. Isolate ports, databases and caches too.
-- The controller claims the checkout. `handoff` and `cancel` release it. A fresh `init` never replaces an existing run.
+- One ticket, one builder session, one worktree; run tickets in parallel, each in its own worktree. Isolate ports, databases and caches too.
+- The controller claims the checkout. `handoff` and `cancel` release it. A fresh `init` never replaces an existing run. Parallel worktrees share one coordination lock: retry a command refused because another operation is active; a refused ticket refresh then needs a full capture.
 
 Amend (changed scope, criteria, checks or protected files):
 
@@ -132,7 +132,7 @@ No agent CLI, or by choice: the review packet.
 
 Never supply your own passing review, write the report yourself or reuse an old one.
 
-Pass needs: verdict PASS, method followed, every criterion PASS, no blocking finding. Blocking: CRITICAL, HIGH, disposition `blocking`, and `before-exposure` at public or production exposure or `release` scope. `accepted-deferral` needs an exception (`owner`, `reason`, `scope`, `revisit`, `authority`, follow-up ticket as `destination`) under the owner's real delegation: LOW, and MEDIUM at local exposure only. A failed review: `repair` the supported findings, then a fresh review.
+Pass needs: verdict PASS, method followed, every criterion PASS, no blocking finding. Blocking: CRITICAL, HIGH, disposition `blocking`, and `before-exposure` at public or production exposure or `release` scope. `accepted-deferral` needs an exception (`owner`, `reason`, `scope`, `revisit`, `authority`, the epic's follow-ups ticket as `destination`) under the owner's real delegation: LOW, and MEDIUM at local exposure only. A failed review: `repair` the supported findings, then a fresh review.
 
 Review rounds: a failed review, or a packet reissued before its report, is a failed round. After 3, `review` refuses. Stop that loop and ask the owner once with: findings per round (new or repeated), the shared cause, and options (extend 1-3 rounds, defer with an owner record, amend scope, cancel). Keep independent work moving. Only the owner's decision unlocks more: `extend-reviews --rounds <1-3> --reason "<owner decision>"`.
 

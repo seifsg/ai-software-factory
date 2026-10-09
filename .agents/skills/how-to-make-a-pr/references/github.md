@@ -11,7 +11,8 @@ gh pr create --draft --base <base> --head <branch> --title "<type>(<scope>): <su
 
 - `--body-file` replaces the repository template. Check `.github/pull_request_template.md` and `.github/PULL_REQUEST_TEMPLATE/`, and copy that structure into the body file.
 - Always `--draft`. Never run `gh pr ready` or `gh pr merge`; humans decide.
-- Link the ticket in the body: `Refs #<ticket>`. `Closes #<n>` only for a sub-issue. Never for the epic.
+- Link every ticket in the body. `Closes #<n>` only on each sub-issue or change ticket this PR finishes; `Refs #<n>` for the rest. The epic always gets `Refs #<epic>`.
+- Closing keywords act only when the PR targets the default branch; on other bases they are ignored and create no link. Keep them for the record: the next intake closes those tickets after the merge. After a base change, check the PR's linked issues.
 - `gh` cannot upload images. Link media the reviewer can already open. Without an authorized upload route, name the gap in the PR.
 
 ## Fix the base or body

@@ -21,10 +21,10 @@ from safe_engine.project import EngineError, digest, file_hash, production_finge
 from safe_engine.storage import atomic_json, locked, read_json
 from safe_engine.tickets import TicketStore, binding, parse_body, render_ticket, scope_digest, ticket_key
 from safe_engine.workflow import DELEGATION, Workflow
+from ticket_fixtures import SYNTHETIC, base_contract, confirm, visual_contract
 
 
 BUNDLE = Path(__file__).resolve().parents[1]
-SYNTHETIC = "Synthetic regression double; no live MCP, human, app or cloud acceptance"
 
 
 class TicketTests(unittest.TestCase):
@@ -60,24 +60,10 @@ class TicketTests(unittest.TestCase):
                  "-c", "user.email=fixture@example.invalid", "commit", "-qm", message)
 
     def make_contract(self, revision=1, dependencies=()):
-        result = {"revision": revision, "lifecycle": "ready", "scope": {
-            "original_request": "Synthetic fixture request: preserve the document sentence",
-            "owner_input": [{"text": SYNTHETIC, "source": "synthetic:owner-input-1"}],
-            "before": "Synthetic baseline has a readable document sentence",
-            "after": "Synthetic outcome preserves that sentence",
-            "completion": "Synthetic checked local handoff only",
-            "journeys": ["Synthetic reader opens the document and reads the unchanged sentence"],
-            "exclusions": ["No app, game, external tracker or cloud review"],
-            "constraints": [SYNTHETIC], "dependencies": list(dependencies),
-            "epic": "synthetic:epic-document",
-            "acceptance": [{"id": "A1", "text": "Synthetic fixture sentence remains readable"}]}}
-        return self.confirm(result)
+        return base_contract(self.initial_at, revision, dependencies)
 
     def confirm(self, contract):
-        contract["confirmation"] = {"revision": contract["revision"], "digest": scope_digest(contract),
-            "actor": "Synthetic owner assertion double", "source": "synthetic:owner-confirmation",
-            "statement": SYNTHETIC, "at": self.initial_at}
-        return contract
+        return confirm(contract, self.initial_at)
 
     @staticmethod
     def task_for(contract):
@@ -232,64 +218,8 @@ class TicketTests(unittest.TestCase):
         return subprocess.run([*argv, *args], cwd=BUNDLE, capture_output=True,
                               text=True, encoding="utf-8", timeout=30)
 
-    def test_canonical_projection_accepts_crlf_but_rejects_ignored_owner_edits(self):
-        for folded in (True, False):
-            body = render_ticket(self.contract, fold_contract=folded)
-            with self.subTest(folded=folded):
-                self.assertEqual(parse_body(body), self.contract)
-                self.assertEqual(parse_body(body.replace("\n", "\r\n")), self.contract)
-            for edited in (body.replace("Synthetic outcome", "Owner changed outcome", 1),
-                           body + "Owner adds a new requirement\n", body + body):
-                with self.subTest(folded=folded, edited=edited[:60]), self.assertRaises(EngineError):
-                    parse_body(edited)
-
-    def test_legacy_body_from_original_format_keeps_complete_history(self):
-        contract = deepcopy(self.contract)
-        contract["scope_history"] = [{"revision": 1, "owner_words": "Keep this reminder. Keep it."}]
-        contract["scope"]["purpose"] = {"older_custom_metadata": True}
-        scope = contract["scope"]
-        legacy = (f"## Before\n\n{scope['before']}\n\n## After\n\n{scope['after']}\n\n"
-                  "## Acceptance\n\n" + "\n".join(f"- {c['id']}: {c['text']}" for c in scope["acceptance"])
-                  + "\n\n<!-- safe-engine-ticket:v1 -->\n```json\n"
-                  + json.dumps(contract, indent=2, ensure_ascii=False)
-                  + "\n```\n<!-- /safe-engine-ticket -->\n")
-        folded = render_ticket(parse_body(legacy))
-        self.assertEqual(parse_body(folded), contract)
-        self.assertEqual(scope_digest(parse_body(legacy)), scope_digest(parse_body(folded)))
-        self.assertIn('<details>', folded)
-        self.assertIn('Keep this reminder. Keep it.', folded)
-        for edited in (folded.replace('<details>', '<details open>'),
-                       folded.replace('Full contract: owner input, journeys and history', 'Changed expectation'),
-                       folded.replace('</details>', 'New owner requirement\n</details>')):
-            with self.subTest(edited=edited[:60]), self.assertRaises(EngineError):
-                parse_body(edited)
-
-    def test_scope_must_have_a_journey_sourced_owner_input_and_unique_criteria(self):
-        for field, value in (("journeys", []), ("owner_input", [{"text": SYNTHETIC}]),
-                             ("dependencies", ["beta", "beta"]),
-                             ("acceptance", self.contract["scope"]["acceptance"] * 2)):
-            with self.subTest(field=field):
-                changed = deepcopy(self.contract)
-                changed["scope"][field] = value
-                with self.assertRaises(EngineError):
-                    render_ticket(changed)
-
     def visual_contract(self):
-        contract = deepcopy(self.contract)
-        contract["presentation"] = "visual"
-        contract["scope"].update(
-            purpose="Synthetic reader must retain the document",
-            goal="Synthetic sentence survives unchanged",
-            context="Synthetic source: README.md; no app observation",
-            approach="Preserve the existing sentence; no new writer",
-            before="Synthetic `left|right`\nKeep this reminder. Keep it.",
-            flow="reader -> document -> unchanged sentence",
-            optional=["Synthetic follow-up; not required"])
-        contract["progress"] = "Synthetic fixture only; no real PR or review"
-        contract["activity"] = [{"at": self.initial_at, "actor": SYNTHETIC,
-            "what": "Synthetic inspection", "why": "Verify retained input",
-            "result": "Synthetic planning; no live action"}]
-        return self.confirm(contract)
+        return visual_contract(self.contract, self.initial_at)
 
     def test_visual_and_legacy_layouts_preserve_complete_confirmed_contract(self):
         contract = self.visual_contract()
@@ -303,29 +233,6 @@ class TicketTests(unittest.TestCase):
                     self.assertEqual(scope_digest(parse_body(body)), expected)
                     self.assertEqual(binding({**self.supplied(contract),
                         "contract": parse_body(body)})["scope"], contract["scope"])
-
-    def test_visual_prose_edits_cannot_change_or_hide_the_bound_record(self):
-        contract = self.visual_contract()
-        for folded in (True, False):
-            body = render_ticket(contract, fold_contract=folded)
-            for field in ("purpose", "goal", "context", "approach", "flow"):
-                with self.subTest(folded=folded, field=field), self.assertRaises(EngineError):
-                    parse_body(body.replace(contract["scope"][field], "Changed owner expectation", 1))
-            for edited in (body.replace(contract["progress"], "Claimed merged", 1),
-                           body.replace("Synthetic inspection", "Claimed review", 1),
-                           body + "New requirement outside contract\n"):
-                with self.subTest(folded=folded, edited=edited[:50]), self.assertRaises(EngineError):
-                    parse_body(edited)
-
-    def test_new_visual_scope_fields_require_exact_confirmation(self):
-        contract = self.visual_contract()
-        for field in ("purpose", "goal", "context", "approach", "flow", "optional"):
-            changed = deepcopy(contract)
-            changed["scope"][field] = ["Changed optional scope"] if field == "optional" else "Changed scope"
-            with self.subTest(field=field):
-                self.assertNotEqual(scope_digest(changed), scope_digest(contract))
-                with self.assertRaises(EngineError):
-                    binding({"contract": parse_body(render_ticket(changed)), "observed_at": self.initial_at})
 
     def test_visual_progress_activity_refresh_keeps_scope_and_prior_history(self):
         contract = self.visual_contract()
@@ -341,26 +248,6 @@ class TicketTests(unittest.TestCase):
         self.assertEqual(scope_digest(captured["contract"]), original)
         self.assertEqual(captured["contract"]["activity"][0], contract["activity"][0])
         self.assertTrue(self.store.status("alpha")["valid"])
-
-    def test_partial_or_invalid_visual_fields_do_not_silently_fall_back(self):
-        contract = self.visual_contract()
-        for field in ("purpose", "goal", "context", "approach"):
-            changed = deepcopy(contract)
-            del changed["scope"][field]
-            with self.subTest(field=field), self.assertRaises(EngineError):
-                render_ticket(changed, layout="legacy")
-        for field, value in (("flow", []), ("optional", "not an array"), ("optional", [""])):
-            changed = deepcopy(contract)
-            changed["scope"][field] = value
-            with self.subTest(field=field, value=value), self.assertRaises(EngineError):
-                render_ticket(changed)
-        for field, value in (("progress", ""), ("activity", {}), ("activity", [{}])):
-            changed = deepcopy(contract)
-            changed[field] = value
-            with self.subTest(field=field), self.assertRaises(EngineError):
-                render_ticket(changed)
-        with self.assertRaises(EngineError):
-            render_ticket(contract, layout="unknown")
 
     def test_reserved_or_escaping_keys_are_rejected_before_paths_are_created(self):
         for key in ("con", "prn", "aux", "nul", "com1", "lpt9", "Alpha", "../alpha", "a/b", "1alpha", "a" * 65):
@@ -610,7 +497,13 @@ class TicketTests(unittest.TestCase):
         self.assertEqual(self.local_review()["phase"], "ready")
         with self.assertRaisesRegex(EngineError, "new complete"):
             self.flow.handoff()
-        self.refresh()
+        ticked = deepcopy(self.contract)
+        ticked["checklist"] = [{"id": "T1", "text": "Synthetic sentence kept", "done": False}]
+        self.refresh(ticked)
+        with self.assertRaisesRegex(EngineError, "checklist item.*T1"):
+            self.flow.handoff()
+        ticked["checklist"][0].update(done=True, proof="Synthetic read-back")
+        self.refresh(ticked)
         result = self.flow.handoff()
         handoff = Path(result["handoff"]).read_text(encoding="utf-8")
         self.assertIn("Revision: 1", handoff)

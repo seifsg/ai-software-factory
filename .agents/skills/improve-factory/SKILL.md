@@ -10,7 +10,9 @@ Keep any active app run safe. The repair never writes the app's source; pausing 
 
 ## Mode
 
-- Fast by default: a `change` run with one ticket and recorded steps, gated by `skills/safe-engine/scripts/fast_gate.py`, started once the maintenance worktree exists. The gate itself blocks the repair: pause the blocking run's gate first. Its done-run is step 5 below.
+- Fast by default: a light-lane `change` run on its maintenance ticket (the one it follows up, or a new one), with recorded steps, gated by `skills/safe-engine/scripts/fast_gate.py`, started once the maintenance worktree exists. The gate itself blocks the repair: pause the blocking run's gate first. Its done-run is step 5 below.
+  - A small repair (wording, one rule) uses the light lane as is: step 3 keeps the cause, a success line and the todos.
+  - A method, gate or controller change runs step 3 in full and records it in the Plan section, since the light lane has no Analysis section.
 - Safe on request: the full `ticketing` cycle in its own builder session, the file-summary stop and the review in step 6.
 - An analysis or planning request stops at that phase. Do not code.
 
@@ -32,11 +34,11 @@ Keep any active app run safe. The repair never writes the app's source; pausing 
 
 ## 2. Isolate
 
-- Repair in its own branch or worktree. One writer owns the candidate.
+- Repair in its own branch or worktree. One writer per file in the candidate.
 - Active app run: follow `references/live-session.md` before any workspace change or delegation. Checkpoint → isolated repair → independent review → compatible resume.
 - Never silently stash, reset, switch or upgrade a target, its bundle or global settings.
 - Factory repair grants no product scope change. Keep the app ticket and the maintenance ticket separate.
-- Independent tickets get separate worktrees. A shared epic checkout has one writer at a time.
+- Run independent tickets in parallel, each in its own worktree: a checkout holds one open gate run.
 - Worktrees separate files only. Give delegates absolute paths. Isolate shared ports, databases, caches and services.
 
 ## 3. Analyze and plan
@@ -51,7 +53,7 @@ Do not code before the plan is recorded.
 
 ## 4. Repair
 
-- Every todo goes through the full 0–4 loop with pre, change and post notes.
+- Every todo is a checklist item in the maintenance ticket: the full 0–4 loop with pre, change and post notes, ticked after its check.
 - Fix the owning cause and every affected caller and link. Remove stale or duplicate prose.
 - Write lasting rules into the skill that owns them.
 - Edit skills with your agent's skill-authoring tool when it has one.
@@ -81,7 +83,7 @@ Do not code before the plan is recorded.
 - A fresh agent, never the writer, runs `deep-review` on the exact candidate from raw evidence. Give it no verdict.
 - A reviewer who repairs needs a different fresh review.
 - A changed gate needs its old rule, a reproduction and independent review. Its own pass proves too little.
-- One round: review, fixes, fresh review. After round 3, only open high or critical findings keep it going; medium and below go to low-priority tickets. At most 6 failed rounds. Then stop that loop and ask the owner once: findings per round, shared cause, options (extend, defer, amend scope, cancel). Keep independent work moving.
+- One round: review, fixes, fresh review. After round 3, only open high or critical findings keep it going; medium and below are appended to the epic's one open follow-ups ticket in Backlog, never one ticket per finding. At most 6 failed rounds. Then stop that loop and ask the owner once: findings per round, shared cause, options (extend, defer, amend scope, cancel). Keep independent work moving.
 - No reviewer available: name the blocker. Never self-approve.
 
 ## 7. Deliver

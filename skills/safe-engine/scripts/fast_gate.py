@@ -19,17 +19,19 @@ LOG = HOME / "logs" / "gate.log"
 MODES = ("fast", "lucky")
 KINDS = ("product", "feature", "change")
 KEY = re.compile(r"[a-z][a-z0-9-]{0,63}")
-# (step, modes, kinds, run flag): ordered steps; everything before "build" gates source edits.
+# (step, modes, kinds, run flag or "!flag"): ordered steps; everything before "build" gates source edits.
 STEPS = (
     ("research", ("fast",), ("product", "feature"), None),
     ("kickoff", ("fast",), ("product", "feature"), None),
     ("tickets", MODES, KINDS, None),
-    ("analysis", MODES, KINDS, None),
+    ("analysis", MODES, ("product", "feature"), None),
+    ("analysis", MODES, ("change",), "!light"),  # a light-lane change plans without a separate analysis
     ("plan", MODES, KINDS, None),
     ("design", ("fast",), KINDS, "ui"),
     ("schema", ("fast",), KINDS, "data"),
     ("build", MODES, KINDS, None),
     ("done-run", ("fast",), KINDS, None),
+    ("done-run", ("lucky",), KINDS, "ticket_checks"),
     ("handoff", MODES, KINDS, None),
 )
 TITLES = {"research": "Research", "kickoff": "Kickoff", "tickets": "Tickets", "analysis": "Analysis",
@@ -39,15 +41,30 @@ HINTS = {
     "research": ">=3 '### <competitor>' subsections each citing a source URL, a feature matrix table, "
                 "an Opportunities line; product runs also '### Stack options' with a 3-row table",
     "kickoff": "Features, Approach, Answered by lines; product runs also Size and Stack",
-    "tickets": "an Epic URL line, a Backlog line; product/feature runs >=1 Sub-issue URL line",
+    "tickets": "an Epic URL line, a Backlog line; product/feature runs >=1 Sub-issue URL line; "
+               "online: each listed ticket has a Definition of done",
     "analysis": "a Success line and a fenced ASCII chart",
-    "plan": "### Files, ### Critique, ### Phases, ### Todos (T1..), ### Whole plan, Logging and Efficiency lines",
+    "plan": "### Files, ### Critique, ### Phases, ### Todos (T1..), ### Whole plan, Logging and Efficiency lines; "
+            "online: each listed ticket has checklist items",
     "design": ">=4 hex colors; UI kit, Font, Logo, Icons, Layout lines; Theme line naming light mode; "
               "Journeys line with counts and a minimum",
     "schema": "a 3-option table, a Chosen line, a fenced ERD or DDL",
     "build": "one line per plan todo: 'T1 pre: ... do: ... post: ...'",
     "done-run": ">=1 PASS line, a Logs line; UI runs >=1 existing screenshot path",
-    "handoff": "Run, Statuses, Unverified, Follow-ups lines; sign-in runs a Dev sign-in line",
+    "handoff": "Run, Statuses, Unverified, Follow-ups lines; sign-in runs a Dev sign-in line; "
+               "online: each listed ticket fully ticked, or Blocked, Backlog or not planned",
+}
+COVERAGE_HINTS = {  # runs whose methods define coverage and the light lane
+    "tickets": "an Epic URL line (a change: a Ticket line, its URL or 'none (why)'), a Backlog line; product/feature "
+               "runs >=1 Sub-issue URL line and a Requested line (R1, R2, ...); online: each listed ticket is open "
+               "with a Definition of done, and its criteria name every requested item not marked owner-deferred",
+    "plan": "### Files, ### Critique, ### Phases, ### Todos (T1..), ### Whole plan, Logging and Efficiency lines "
+            "(light lane: a Success line and ### Todos); online: each listed ticket has checklist items naming "
+            "every criterion, they hold every plan todo, and criteria still name every requested item not "
+            "owner-deferred",
+    "handoff": "Run, Statuses, Unverified, Follow-ups lines; sign-in runs a Dev sign-in line; online: each listed "
+               "ticket fully ticked, or Blocked, Backlog or not planned; items name every criterion and hold every "
+               "plan todo; criteria name every requested item not owner-deferred",
 }
 HERE = Path(__file__).resolve().parent  # sibling modules: fast_record.py (step checks), fast_shell.py (commands)
 
@@ -141,9 +158,14 @@ def registry_path(project):
     return ACTIVE / (hashlib.sha1(norm(project).encode("utf-8")).hexdigest()[:16] + ".json")
 
 
+def applies(run, flag):
+    """A step's run flag: None always applies, 'x' when the run has x, '!x' when it does not."""
+    return flag is None or bool(run.get(flag.lstrip("!"))) != flag.startswith("!")
+
+
 def steps_for(run):
     return [name for name, modes, kinds, flag in STEPS
-            if run["mode"] in modes and run["kind"] in kinds and (flag is None or run.get(flag))]
+            if run["mode"] in modes and run["kind"] in kinds and applies(run, flag)]
 
 
 def next_step(run):
@@ -196,9 +218,28 @@ def skeleton(run):
     lines = [f"# {run['key']}: {run['mode']} {run['kind']} run", "",
              "<!-- Fill each section, then `fast_gate.py done <step>`. Markers: fast-run.md#work-record -->", "",
              "## Request", "", *quoted, ""]
+    hints = {**HINTS, **COVERAGE_HINTS} if run.get("coverage") else HINTS
     for step in steps_for(run):
-        lines += [f"## {TITLES[step]}", "", f"<!-- gate: {HINTS[step]} -->", ""]
+        lines += [f"## {TITLES[step]}", "", f"<!-- gate: {hints[step]} -->", ""]
     return "\n".join(lines)
+
+
+LAYOUT = ".agents/skills/ticketing/references/ticket-layout.md"
+FAST_RUN = ".agents/skills/safe-engine/references/fast-run.md"
+# run flag -> (method file, phrase): a check applies only when the methods the run reads define it
+FLAGS = {"ticket_checks": (LAYOUT, "Definition of done"), "coverage": (LAYOUT, "Every criterion has"),
+         "light": (FAST_RUN, "Light lane")}
+
+
+def method_flags(bundle, project):
+    """Run flags from the methods this run reads: its bundle, else this project. Older methods leave them off."""
+    root, flags = Path(bundle["root"] if bundle else project), {}
+    for flag, (path, phrase) in FLAGS.items():
+        try:
+            flags[flag] = phrase in (root / path).read_text(encoding="utf-8")
+        except (OSError, ValueError):
+            flags[flag] = not bundle  # a product without a resolved bundle follows the current methods
+    return flags
 
 
 def bundle_receipt(project):
@@ -271,11 +312,13 @@ def cmd_start(args):
         for item in (ledger, record_path(project)):
             if item.exists():
                 os.replace(item, archive / item.name)
-    product = args.kind == "product"
+    product, bundle = args.kind == "product", bundle_receipt(project)
     run = {"version": VERSION, "key": args.key, "project": str(project), "mode": args.mode, "kind": args.kind,
            "ui": product if args.ui is None else args.ui, "data": product if args.data is None else args.data,
            "auth": args.auth, "request": request.strip(), "created": now(), "done": {}, "paused": None,
-           "closed": False, "bundle": bundle_receipt(project)}
+           "closed": False, "bundle": bundle, **method_flags(bundle, project)}
+    if "analysis" not in steps_for(run):  # older hook copies still require it before build: mark it skipped
+        run["done"]["analysis"] = {"at": now(), "skipped": "light lane"}
     save(ledger, run)
     record = record_path(project)
     if not record.exists():
@@ -311,6 +354,9 @@ def cmd_done(args):
         log("step.refused", key=run["key"], step=step, problems=problems)
         fail(f"'{step}' not recorded:\n- " + "\n- ".join(problems))
     run["done"][step] = {"at": now(), **({"unverified": args.offline} if args.offline else {})}
+    if step == "tickets":  # later ticket checks keep reading these even if the record drops one
+        epic, subs = record.ticket_urls(body)
+        run["tickets"] = list(dict.fromkeys(run.get("tickets", []) + epic + subs))
     run["paused"] = None
     save(ledger_path(project), run)
     log("step.done", key=run["key"], step=step, unverified=args.offline)
@@ -538,7 +584,7 @@ def main():
     start.add_argument("--request-file")
     done = sub.add_parser("done", parents=[common], help="Check and record one step")
     done.add_argument("step", choices=list(TITLES))
-    done.add_argument("--offline", help="Record tickets without gh verification, with the reason")
+    done.add_argument("--offline", help="Record tickets, plan or handoff without reading tickets through gh, with the reason")
     sub.add_parser("status", parents=[common])
     pause = sub.add_parser("pause", parents=[common], help="Waiting on the owner; lets the session stop")
     pause.add_argument("--reason", required=True)

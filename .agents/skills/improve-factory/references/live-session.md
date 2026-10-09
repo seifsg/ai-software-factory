@@ -53,7 +53,7 @@ Save one unique Git-ignored record. Read it back.
 
 ## 4. Delegate
 
-- When available and authorized: one repair writer and one fresh reviewer. Otherwise the parent repairs in isolation; independent review is still required.
+- When available and authorized: repair writers on disjoint files and one fresh reviewer. Otherwise the parent repairs in isolation; independent review is still required.
 - Give each delegate: report, expected behavior, invariants, exact project and factory identities, skill paths, raw reproduction, allowed paths and actions, role and return artifact, progress and stops.
 - Delegates read the applicable skills and actual files fully. Inherited chat is not verified state.
 - Reviewers get requirements and evidence, never a verdict.

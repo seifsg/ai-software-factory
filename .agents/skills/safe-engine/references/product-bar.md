@@ -1,11 +1,11 @@
 # Product bar
 
-Contents: Stack, Visual system, States and forms, Public pages, Data, Logging, Speed, Security, Dev sign-in, Scope by size, Games and browser lifecycle, External effects, Release.
+Contents: Stack, Visual system, States and forms, Public pages, Data, Logging, Speed, Security, Dev sign-in, Environment and sample labels, Games and browser lifecycle, External effects, Release.
 
-The quality floor for every app, game, service, tool and library, in every mode. A POC or MVP is the real product at small scale: every requested item, built right, never thrown away. Record its stack, design brief and budgets in the plan.
+The quality floor for every app, game, service, tool and library, in every mode. Which parts apply depends on the size: [sizes](sizes.md). A POC or MVP is never thrown away. Record its stack, design brief and budgets in the plan.
 
 - Minimal code means no waste. It never justifies a weaker stack, missing states or a bare UI.
-- New products meet all of it. Changes cover the affected paths and their consumers; record wider gaps, no unrelated restructuring.
+- New products meet all of it except what their size skips. Changes cover the affected paths and their consumers; record wider gaps, no unrelated restructuring.
 - Analysis and review requests stay read-only: record gaps against this bar.
 
 ## Stack
@@ -16,7 +16,8 @@ Defaults for new products. Existing projects keep their stack.
 - Strict TypeScript for all JavaScript-ecosystem code. No plain JavaScript source.
 - React web UIs: shadcn/ui with Tailwind CSS and lucide icons. Other platforms: their best-in-class equivalent, named in the stack options.
 - One command starts it locally with seeded data.
-- Production structure from day one: typed models, migrations, shared logging, clear modules. The MVP grows from this code.
+- Built products get no AGENTS.md by default. Add one only for non-standard commands or tools an agent would get wrong: 10 lines or fewer, written by hand, never generated from the code.
+- Clean structure from day one: typed models, shared logging, clear modules. Every size grows the same code.
 - Dependencies: check license, maintenance, current version, security and cost. Versioned packages over copied code.
 
 ## Visual system
@@ -44,7 +45,7 @@ Fill the design brief before UI code. Run `ux-quality` on every UI change.
 
 ## Public pages
 
-- Web products ship a landing page at `/` in the POC: who it is for, the outcome, one primary call to action, real proof only, features, FAQ, footer.
+- Web products ship a landing page at `/`: who it is for, the outcome, one primary call to action, real proof only, features, FAQ, footer.
 - Run `ux-quality` and its web SEO reference for search metadata, and its copy reference for conversion copy.
 - Private-only product (decided at kickoff): a branded sign-in page at `/` instead, marked noindex.
 - Private screens, staging and previews stay unindexed.
@@ -54,6 +55,7 @@ Fill the design brief before UI code. Run `ux-quality` on every UI change.
 - New or materially changed persistence: run `database-schema`. Design from real access patterns; index actual queries.
 - Seed realistic data, sample media included where the product shows media, so every screen looks used on first run.
 - Collect only needed data. Protect sensitive storage and backups.
+- Analytics collect events, not people: no personal data, raw IP or fingerprinting; consent before non-essential tracking where the law requires it.
 
 ## Logging
 
@@ -123,10 +125,9 @@ Evidence: source proves repetition; speed and memory claims need runtime measure
 
 ## Security
 
-Cheap relevant protections from the start; reuse framework and provider controls. Local MVPs stay simple: no account system, service or ceremony without need.
+Cheap relevant protections from the start; required protections and denial paths in full before any exposure, never as polish. Reuse framework and provider controls.
 
 - Size the risk: environment, reachable surfaces, roles, valuable data, trust boundaries. Local means loopback and harmless data; a public tunnel, shared preview or real credentials means exposed. Offline apps still have files, plugins, updates and untrusted input. Research consequential unknowns in current platform guidance.
-- Required protections and denial paths precede exposure. They are never polish.
 
 | Surface | Rule |
 |---|---|
@@ -148,13 +149,12 @@ Before exposure, exercise denial paths with harmless accounts (anonymous, other 
 
 Apps with accounts seed one user per role. Development builds show one-click buttons beside the normal sign-in form: "Sign in as Admin", "Sign in as Client" and so on. The server accepts them only in development; production builds drop the route and buttons. The handoff names the URL and buttons, so the owner never hunts for credentials.
 
-## Scope by size
+## Environment and sample labels
 
-Size sets depth, never which requested items ship. Requested scope: every feature, journey, integration and behavior the owner asked for, plus what each needs to work end to end.
-
-- POC: all requested scope, real and connected, at small scale (seeded data, one tenant or device, local). MVP: requested scope plus critical additions with research evidence that the owner approved (kickoff or recorded delegation); the size label approves none. Production slice: the full bar.
-- A requested item leaves scope only by the owner's recorded decision: source, reason, follow-up ticket, revisit condition. Without it, a size label, research finding, generic follow-up, later iteration's focus or substitute (mock, sample data, sandbox, manual step) never removes or replaces one; seeded data fills content, never a requested integration. Capability unavailable: keep the item Blocked with its reason, build the rest, report the outcome unfinished.
-- Unless the owner asks, a POC may defer Docker, Kubernetes, CI/CD, deployment, unit-test suites and security hardening (rate limits, CSRF, headers, audits), each as a follow-up ticket with an owner and revisit condition. Never deferred: requested scope, role checks the journeys need, secrets out of code and Git, logging, screen states, the visual system. Security applies in full before any public exposure.
+- Non-production builds show a small fixed environment badge (DEV, STAGING, PREVIEW; games: a corner tag) read from runtime config. Production builds never render it: drop it at build time, not with CSS.
+- Sample data and mocked or sandbox integrations carry a visible label wherever they appear outside production: "Sample data", "Test mode: no real charge". Production never seeds sample data.
+- No screen (CLI, API, library, service): print the environment in the startup log and in version or health output.
+- Done-run screenshots show the badge; the handoff names the environment.
 
 ## Games and browser lifecycle
 

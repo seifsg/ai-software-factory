@@ -52,7 +52,7 @@ Read actual changed code and trust boundaries. Client artifacts can be extracted
 
 - Client-side "auth" is UX, not a boundary. Flag trust in client state, not absence of a redundant client check. Identify the real authority for local/offline systems too.
 - A redundant-looking guard may be defense in depth. Mark **KEEP**, not "delete", when justified.
-- MEDIUM hardening alone does not reject a local MVP. Before public exposure or production: fix demonstrated compromise risks or isolate/disable the path. Unresolved material checks block a ready claim.
+- MEDIUM hardening alone does not reject a local POC. Before public exposure or production: fix demonstrated compromise risks or isolate/disable the path. Unresolved material checks block a ready claim.
 - Review grants no fixes, deployment, credential rotation, destructive cleanup or intrusive scans. Never probe unrelated systems or load production without authority.
 
 ## Output

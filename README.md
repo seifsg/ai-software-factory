@@ -45,11 +45,11 @@ Manual install, flags and every agent's syntax: [install](docs/install.md) · [h
 
 - 🔒 **Enforced, not suggested.** A gate and host hooks deny code edits until earlier steps pass, and push back when the agent tries to stop mid-run.
 - 🔎 **Research before code.** New products and big features start with competitors, a feature matrix, opportunities and stack options.
-- ❓ **One round of questions.** Features, size, approach and stack, asked once, recorded, then binding for the run.
-- 🎫 **A living backlog.** Every run reads it, opens an epic with outcome sub-issues and moves them through To do, In progress, Dev done and Ready for QA, each change in the ticket's activity. Items outside the task stay untouched.
-- 🎚️ **Right-sized.** Fast by default, Lucky for quick tries, Safe for work that must not break.
-- 🧪 **Proof, not promises.** A done-run with real controls and logs; Safe adds manual QA, tests and an independent reviewer.
-- 🎨 **A product bar.** Accessible, responsive UI, clear copy, public-page SEO and a designed schema.
+- ❓ **Questions that fit the size.** A POC builds exactly what you asked and asks only what the request leaves open. An MVP researches launch gaps, suggests features you did not think of and ships analytics and in-app feedback. Answers are recorded and binding.
+- 🎫 **A living backlog.** Every run reads it, cleans up issues after merged or closed PRs, and opens an epic with outcome sub-issues; follow-ups update existing tickets instead. Each ticket carries a definition of done and a checklist; an item is ticked only after it works, and a ticket is finished only when every item is. Tickets move through To do, In progress, Dev done and Ready for QA; your merge makes them Done. Items outside the task stay untouched.
+- 🎚️ **Right-sized.** Fast by default, Lucky for quick tries, Safe for work that must not break. In Fast and Lucky, small tasks and follow-ups take a light lane: no analysis step, a short plan, the same checks.
+- 🧪 **Proof, not promises.** Every requested item traces to a criterion, a checklist item and proof. Every checklist item is used before its tick, then a done-run with real controls and logs; Safe adds manual QA, tests and an independent reviewer.
+- 🎨 **A product bar.** Accessible, responsive UI, clear copy, public-page SEO and a designed schema. Non-production builds show their environment and label sample data.
 - 🧑‍⚖️ **Humans stay in charge.** Draft PRs only. It never merges, releases or deploys.
 - 🌍 **Any agent, any OS, any codebase.** Games, web, mobile and desktop apps, services, tools and libraries.
 
@@ -62,13 +62,13 @@ safe-engine Build a habit tracker in /home/me/habits. Success means a signed-in 
 ```
 
 1. Researches three competitors and writes a feature matrix with opportunities.
-2. Asks you one round of questions: features, size, approach, stack.
-3. Reads the backlog, then opens an epic and outcome sub-issues in To do.
-4. Analyzes requirements and consumers, then writes a plan with todos.
+2. Asks you about size, features, approach and stack: one round for a POC, more for an MVP.
+3. Reads the backlog, then opens an epic and outcome sub-issues in To do, each with a definition of done.
+4. Analyzes requirements and consumers, then writes a plan whose todos become each ticket's checklist.
 5. Writes the design brief and the schema decision.
-6. Builds every todo through a check-change-check loop.
+6. Builds every checklist item through a check-change-check loop and ticks it once it works.
 7. Runs the app through every requested journey and its most likely failure.
-8. Opens a draft PR with before/after proof and what is unverified.
+8. Opens a draft PR with before/after proof and what is unverified. Tickets wait in Ready for QA until you merge.
 
 ```mermaid
 flowchart LR
@@ -96,7 +96,7 @@ flowchart LR
 | Research and questions | New products and big features | Skipped, sensible defaults | Always |
 | Planning | Full analysis and plan | One short pass | Full, plus a stop to review the file list |
 | Enforcement | Gate and hooks | Gate and hooks | Python controller |
-| Checks | One done-run | None until you ask to `verify` | Manual QA, tests, verify, independent review |
+| Checks | Each checklist item, then a done-run | Each checklist item, then a done-run | Each item, manual QA, tests, verify, independent review |
 
 Add `lucky` or `safe` after the skill name. Resume any run with `safe-engine Resume [absolute project directory]`.
 
@@ -111,7 +111,7 @@ Add `lucky` or `safe` after the skill name. Resume any run with `safe-engine Res
 | `ux-quality` | Simple, familiar, accessible, responsive UI; copy; public-page SEO |
 | `database-schema` | Access patterns, three designs, chosen schema, indexes, migrations |
 | `deep-review` | Bug hunt plus change-guard, compliance, security, performance and journey lenses |
-| `ticketing` | Backlog upkeep: epic and outcome sub-issues with before/after, criteria, status, priority and an activity timeline |
+| `ticketing` | Backlog upkeep: epic and outcome sub-issues with before/after, a definition of done, a checklist, status, priority and an activity timeline |
 | `how-to-make-a-pr` | Draft PR with ticket link, before/after proof and what is unverified |
 | `improve-factory` | Repairs or improves the factory itself without disturbing active runs |
 
