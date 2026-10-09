@@ -19,12 +19,13 @@ LOG = HOME / "logs" / "gate.log"
 MODES = ("fast", "lucky")
 KINDS = ("product", "feature", "change")
 KEY = re.compile(r"[a-z][a-z0-9-]{0,63}")
-# (step, modes, kinds, run flag): ordered steps; everything before "build" gates source edits.
+# (step, modes, kinds, run flag or "!flag"): ordered steps; everything before "build" gates source edits.
 STEPS = (
     ("research", ("fast",), ("product", "feature"), None),
     ("kickoff", ("fast",), ("product", "feature"), None),
     ("tickets", MODES, KINDS, None),
-    ("analysis", MODES, KINDS, None),
+    ("analysis", MODES, ("product", "feature"), None),
+    ("analysis", MODES, ("change",), "!light"),  # a light-lane change plans without a separate analysis
     ("plan", MODES, KINDS, None),
     ("design", ("fast",), KINDS, "ui"),
     ("schema", ("fast",), KINDS, "data"),
@@ -40,18 +41,21 @@ HINTS = {
     "research": ">=3 '### <competitor>' subsections each citing a source URL, a feature matrix table, "
                 "an Opportunities line; product runs also '### Stack options' with a 3-row table",
     "kickoff": "Features, Approach, Answered by lines; product runs also Size and Stack",
-    "tickets": "an Epic URL line, a Backlog line; product/feature runs >=1 Sub-issue URL line; "
-               "online: each listed ticket has a Definition of done",
+    "tickets": "an Epic URL line (a change: a Ticket line, its URL or 'none (why)'), a Backlog line; product/feature "
+               "runs >=1 Sub-issue URL line and a Requested line (R1, R2, ...); online: each listed ticket is open "
+               "with a Definition of done, and its criteria name every requested item",
     "analysis": "a Success line and a fenced ASCII chart",
-    "plan": "### Files, ### Critique, ### Phases, ### Todos (T1..), ### Whole plan, Logging and Efficiency lines; "
-            "online: each listed ticket has checklist items",
+    "plan": "### Files, ### Critique, ### Phases, ### Todos (T1..), ### Whole plan, Logging and Efficiency lines "
+            "(light lane: a Success line and ### Todos); online: each listed ticket has checklist items naming "
+            "every criterion, and they hold every plan todo",
     "design": ">=4 hex colors; UI kit, Font, Logo, Icons, Layout lines; Theme line naming light mode; "
               "Journeys line with counts and a minimum",
     "schema": "a 3-option table, a Chosen line, a fenced ERD or DDL",
     "build": "one line per plan todo: 'T1 pre: ... do: ... post: ...'",
     "done-run": ">=1 PASS line, a Logs line; UI runs >=1 existing screenshot path",
     "handoff": "Run, Statuses, Unverified, Follow-ups lines; sign-in runs a Dev sign-in line; "
-               "online: each listed ticket fully ticked, or Blocked, Backlog or not planned",
+               "online: each listed ticket fully ticked with every criterion named by an item, or Blocked, "
+               "Backlog or not planned",
 }
 HERE = Path(__file__).resolve().parent  # sibling modules: fast_record.py (step checks), fast_shell.py (commands)
 
@@ -145,9 +149,14 @@ def registry_path(project):
     return ACTIVE / (hashlib.sha1(norm(project).encode("utf-8")).hexdigest()[:16] + ".json")
 
 
+def applies(run, flag):
+    """A step's run flag: None always applies, 'x' when the run has x, '!x' when it does not."""
+    return flag is None or bool(run.get(flag.lstrip("!"))) != flag.startswith("!")
+
+
 def steps_for(run):
     return [name for name, modes, kinds, flag in STEPS
-            if run["mode"] in modes and run["kind"] in kinds and (flag is None or run.get(flag))]
+            if run["mode"] in modes and run["kind"] in kinds and applies(run, flag)]
 
 
 def next_step(run):
@@ -205,13 +214,22 @@ def skeleton(run):
     return "\n".join(lines)
 
 
-def ticket_checks(bundle, project):
-    """Online ticket checks only when the methods this run reads define them: its bundle, else this project."""
-    layout = Path(bundle["root"] if bundle else project) / ".agents/skills/ticketing/references/ticket-layout.md"
-    try:
-        return "Definition of done" in layout.read_text(encoding="utf-8")
-    except (OSError, ValueError):
-        return not bundle  # a product without a resolved bundle follows the current methods
+LAYOUT = ".agents/skills/ticketing/references/ticket-layout.md"
+FAST_RUN = ".agents/skills/safe-engine/references/fast-run.md"
+# run flag -> (method file, phrase): a check applies only when the methods the run reads define it
+FLAGS = {"ticket_checks": (LAYOUT, "Definition of done"), "coverage": (LAYOUT, "Every criterion has"),
+         "light": (FAST_RUN, "Light lane")}
+
+
+def method_flags(bundle, project):
+    """Run flags from the methods this run reads: its bundle, else this project. Older methods leave them off."""
+    root, flags = Path(bundle["root"] if bundle else project), {}
+    for flag, (path, phrase) in FLAGS.items():
+        try:
+            flags[flag] = phrase in (root / path).read_text(encoding="utf-8")
+        except (OSError, ValueError):
+            flags[flag] = not bundle  # a product without a resolved bundle follows the current methods
+    return flags
 
 
 def bundle_receipt(project):
@@ -288,7 +306,7 @@ def cmd_start(args):
     run = {"version": VERSION, "key": args.key, "project": str(project), "mode": args.mode, "kind": args.kind,
            "ui": product if args.ui is None else args.ui, "data": product if args.data is None else args.data,
            "auth": args.auth, "request": request.strip(), "created": now(), "done": {}, "paused": None,
-           "closed": False, "bundle": bundle, "ticket_checks": ticket_checks(bundle, project)}
+           "closed": False, "bundle": bundle, **method_flags(bundle, project)}
     save(ledger, run)
     record = record_path(project)
     if not record.exists():

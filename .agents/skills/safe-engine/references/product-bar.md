@@ -16,6 +16,7 @@ Defaults for new products. Existing projects keep their stack.
 - Strict TypeScript for all JavaScript-ecosystem code. No plain JavaScript source.
 - React web UIs: shadcn/ui with Tailwind CSS and lucide icons. Other platforms: their best-in-class equivalent, named in the stack options.
 - One command starts it locally with seeded data.
+- Built products get no AGENTS.md by default. Add one only for non-standard commands or tools an agent would get wrong: 10 lines or fewer, written by hand, never generated from the code.
 - Clean structure from day one: typed models, shared logging, clear modules. Every size grows the same code.
 - Dependencies: check license, maintenance, current version, security and cost. Versioned packages over copied code.
 
@@ -54,6 +55,7 @@ Fill the design brief before UI code. Run `ux-quality` on every UI change.
 - New or materially changed persistence: run `database-schema`. Design from real access patterns; index actual queries.
 - Seed realistic data, sample media included where the product shows media, so every screen looks used on first run.
 - Collect only needed data. Protect sensitive storage and backups.
+- Analytics collect events, not people: no personal data, raw IP or fingerprinting; consent before non-essential tracking where the law requires it.
 
 ## Logging
 
@@ -123,10 +125,9 @@ Evidence: source proves repetition; speed and memory claims need runtime measure
 
 ## Security
 
-Cheap relevant protections from the start, in full before any exposure; reuse framework and provider controls.
+Cheap relevant protections from the start; required protections and denial paths in full before any exposure, never as polish. Reuse framework and provider controls.
 
 - Size the risk: environment, reachable surfaces, roles, valuable data, trust boundaries. Local means loopback and harmless data; a public tunnel, shared preview or real credentials means exposed. Offline apps still have files, plugins, updates and untrusted input. Research consequential unknowns in current platform guidance.
-- Required protections and denial paths precede exposure. They are never polish.
 
 | Surface | Rule |
 |---|---|

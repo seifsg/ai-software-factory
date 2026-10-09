@@ -23,6 +23,8 @@ Prepare a :
 
 Keep these five outputs in one compact work record. Full depth, the file-summary stop and every 0–4 step stay. Reuse source/decisions; link proof. Within step 3, finish affected callers, counts and links before recording completion. No extra finishing gate.
 
+A small change or follow-up keeps the plan to the to do list and one success line; the 0–4 loop stays.
+
 ## ULTRA EXTRA IMPORTANT
 
 The plan execution will be based on the following logic:
@@ -51,7 +53,8 @@ To do steps:
 - Each to do step will have a pre-step, the step itself, and post-step. And that is so that we can apply the logic above.
 - The logic above is absolute for every and each step.
 - Each to do is a checklist item in its ticket. Automated test suites still come last.
-- Independent to dos run in parallel, as many as capacity allows; each is ticked after its own check.
+- The plan groups independent to dos into waves by files and dependencies. Each wave runs at once, as many as capacity allows; each to do is ticked after its own check.
+- Each to do names its model tier: light (search, inventory, mechanical edits), standard (planned implementation, one-lens reviews, research, walkthroughs) or deep (architecture, schema, security, unclear bugs, synthesis, final review).
 - A ticket is finished when every item is ticked and its definition of done is proven. Until then the loop continues.
 - A to do that depends on an unproven capability (platform API, device, third-party access) goes first as a bounded spike: one question, one stop condition. A failed spike blocks only that item; the rest continues.
 

@@ -16,7 +16,7 @@ Find the real repository, branches, release policy, PR template, signing rule, c
 ## 2. Ticket first
 
 - Every PR belongs to a ticket. None yet: run `ticketing`. Search by symptom, feature, area, files, PR title and branch slug first.
-- No ticket only when the project defines an exemption and the whole diff falls under it.
+- No ticket only when the project defines an exemption and the whole diff falls under it, or for a trivial change the run kept without one: the PR body says why.
 - Link both ways: PR URL in the ticket, clickable ticket link in the PR body.
 - On open, add the PR link to the ticket's activity. A finished ticket waits in Ready for QA while the PR is open; the merge closes it as Done. Its status follows `ticketing`.
 - Ticket with a confirmed contract: refresh it before opening or updating. Pending scope, drift or a failed refresh is an open dependent step. A draft or local pass never replaces the owner's current expectation.
@@ -62,7 +62,7 @@ git switch -c <scope>/<short-name> origin/<base>
 
 1. Write the body to a file with `references/pr-layout.md`. Fill the project's PR template first, if it has one.
 2. Push, then open as **draft** against the base. Commands: `references/github.md`.
-3. Include: ticket links with a closing keyword for every ticket this PR finishes, attribution, before/after proof, criteria verification, what is unverified, history, remaining steps. A human or agent must continue cold from the PR.
+3. Include: ticket links, attribution, before/after proof, criteria verification, what is unverified, history, remaining steps. A closing keyword goes only on each sub-issue or change ticket this PR finishes; the epic always gets a plain reference, and intake closes it when its in-scope sub-issues are Done and its checklist is ticked. A human or agent must continue cold from the PR.
 4. Request review from the project's actual review owner through the supported mechanism, at draft time. Notify only the authorized recipient or channel. Reminders only when asked.
 5. Link observation evidence (logs, traces, screenshots, measurements) only when authorized to share. State source and limits. No foreign session IDs, secrets or private data.
 

@@ -10,7 +10,9 @@ Keep any active app run safe. The repair never writes the app's source; pausing 
 
 ## Mode
 
-- Fast by default: a `change` run with one ticket and recorded steps, gated by `skills/safe-engine/scripts/fast_gate.py`, started once the maintenance worktree exists. The gate itself blocks the repair: pause the blocking run's gate first. Its done-run is step 5 below.
+- Fast by default: a light-lane `change` run on its maintenance ticket (the one it follows up, or a new one), with recorded steps, gated by `skills/safe-engine/scripts/fast_gate.py`, started once the maintenance worktree exists. The gate itself blocks the repair: pause the blocking run's gate first. Its done-run is step 5 below.
+  - A small repair (wording, one rule) uses the light lane as is.
+  - A method, gate or controller change records the analysis and all five plan outputs in the Plan section, since the light lane has no Analysis section.
 - Safe on request: the full `ticketing` cycle in its own builder session, the file-summary stop and the review in step 6.
 - An analysis or planning request stops at that phase. Do not code.
 
@@ -81,7 +83,7 @@ Do not code before the plan is recorded.
 - A fresh agent, never the writer, runs `deep-review` on the exact candidate from raw evidence. Give it no verdict.
 - A reviewer who repairs needs a different fresh review.
 - A changed gate needs its old rule, a reproduction and independent review. Its own pass proves too little.
-- One round: review, fixes, fresh review. After round 3, only open high or critical findings keep it going; medium and below go to low-priority tickets. At most 6 failed rounds. Then stop that loop and ask the owner once: findings per round, shared cause, options (extend, defer, amend scope, cancel). Keep independent work moving.
+- One round: review, fixes, fresh review. After round 3, only open high or critical findings keep it going; medium and below are appended to the epic's one open follow-ups ticket in Backlog, never one ticket per finding. At most 6 failed rounds. Then stop that loop and ask the owner once: findings per round, shared cause, options (extend, defer, amend scope, cancel). Keep independent work moving.
 - No reviewer available: name the blocker. Never self-approve.
 
 ## 7. Deliver

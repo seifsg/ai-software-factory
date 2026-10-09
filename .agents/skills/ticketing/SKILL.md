@@ -14,7 +14,7 @@ Analysis, planning or review-only requests grant no tracker writes. An explicit 
 1. Use the project's tracker. An available tracker integration first.
 2. None set and not already answered: ask once. Recommend Issues in a private GitHub repository (`references/github.md`).
 3. Resolve the real repository, access and visibility before writing. No credentials, customer data, private transcripts or runtime dumps in tickets. Sensitive original input stays private: put a faithful safe summary in the ticket and say details were withheld.
-4. Search before creating: symptom, feature, area, files, PR title, branch. Reuse the same work. No duplicates.
+4. Search before creating: symptom, feature, area, files, PR title, branch. Reuse the same work. A bug, enhancement, QA note or review finding about an existing ticket's outcome updates that ticket as a change of intent; a closed ticket reopens. Open a new ticket only for a new outcome, or when the owner asks. No duplicates.
 5. Uncertain response? Read the tracker and reconcile before creating again.
 6. Record provider, project, native ID and URL.
 7. Access or a write fails: name the step and next action. Keep a pending local record. No silent tracker switch, duplicate or success claim.
@@ -37,11 +37,17 @@ A tracker or board with other states: map each status to the nearest existing on
 | Blocked | Cannot move | Reason, next action, who unblocks |
 | Cancelled | Dropped or deprecated by the owner. Closed | Owner decision and source |
 
-1. Intake: record merges first. List the PRs merged into a non-default base (that merge leaves keyword-named tickets open); close each open ticket one names with a closing keyword, with the merged PR link, unless the ticket moved or reopened after that merge. Then close each open epic whose in-scope sub-issues are all Done and whose checklist is ticked. The merge was the owner's acceptance; recording it decides nothing new. Then, after the search, read the open items in the same epic, area and topic. Split them: owned by this run, affected by it, untouched. A match another run, session or person holds (In progress through Ready for QA, or Blocked) is affected: ask the owner before taking it over.
+1. Intake: clean up first, at session start and after merges. Keep it bounded; it never blocks the run. List the closed PRs once (merged and unmerged).
+   - Merged, any base: close each open ticket it names with a closing keyword, with the merged PR link, unless the ticket moved or reopened after the merge, and tick its item on its epic's checklist. The merge was the owner's acceptance; recording it decides nothing new.
+   - Closed unmerged: each open ticket it names with a closing keyword, unless its activity already records that PR, gets an activity entry (what the PR did, why it closed). Another open or merged PR names it: note that superseding PR. Otherwise it moves back to Backlog, or closes as not planned when the owner's closing note says it is no longer needed. A redo request in that note is a change of intent for the run that takes it.
+   - Close each open epic whose in-scope sub-issues are all Done and whose checklist is ticked.
+   - In-app feedback the owner shares or the agent can read goes to its existing ticket, or to the epic's follow-ups ticket.
+   - Stale or duplicate tickets and PRs go to the owner as one short list, a proposed fate each (close, merge into #n, keep). Apply after the answer; a kept item notes it in its activity and is not proposed again until it changes.
+   - Then, after the search, read the open items in the same epic, area and topic. Split them: owned by this run, affected by it, untouched. A match another run, session or person holds (In progress through Ready for QA, or Blocked) is affected: ask the owner before taking it over.
 2. Move the run's tickets to To do. Sort by priority, then user value, then proven dependencies.
 3. Priority: P0 broken or blocking, P1 next, P2 planned, P3 later. Every ticket the run creates or owns has one. Change it only on those, with the reason.
 4. Move at boundaries: build starts → In progress, every item ticked → Dev done, every criterion proven and the PR open → Ready for QA, PR merged → Done, check failed → In progress. Agents never set Done; the merge closes the ticket, or intake records a merge that did not. Blocked any time; back to the prior status once cleared.
-5. The epic moves with its sub-issues: In progress when the first starts, Ready for QA when every sub-issue still in the run reaches Ready for QA or Done and no requested item, other than an owner-deferred one, is open outside the run. A Blocked sub-issue, or in-scope sub-issues the owner moved to a later iteration (still in scope, unlike owner-deferred ones), make the epic Blocked once the rest are finished: reason, what waits, who decides. It is Done when every in-scope sub-issue (not a follow-up, owner-deferred or cancelled) is Done and its own checklist is ticked; the merge that finishes the last one closes it, else the next intake does. A sub-issue going back unticks its epic item and the integration checks and pulls the epic back to In progress; none left in the run returns it to Backlog. A `change` run's single ticket moves like a sub-issue.
+5. The epic moves with its sub-issues: In progress when the first starts, Ready for QA when every sub-issue still in the run reaches Ready for QA or Done and no requested item, other than an owner-deferred one, is open outside the run. A Blocked sub-issue, or in-scope sub-issues the owner moved to a later iteration (still in scope, unlike owner-deferred ones), make the epic Blocked once the rest are finished: reason, what waits, who decides. It is Done when every in-scope sub-issue (not a follow-up, owner-deferred or cancelled) is Done and its own checklist is ticked; intake closes it, since PRs never use a closing keyword for an epic. A sub-issue going back unticks its epic item and the integration checks and pulls the epic back to In progress; none left in the run returns it to Backlog. A `change` run's single ticket moves like a sub-issue.
 6. In progress needs actionable criteria, authority, an assignee or session, a usable workspace and met dependencies for the items it starts. Safe also needs confirmed scope. Assign whoever builds it at In progress. Unassign only when it returns to Backlog or To do.
 7. Keep owned tickets current: context, description, links and progress. Scope changes follow the scope rules below.
 8. Owner checkpoint: Ready for QA holds until the owner merges; the merge is the approval. Owner stop or cancellation persists across sessions.
@@ -59,16 +65,16 @@ A tracker or board with other states: map each status to the nearest existing on
 
 - Touch only the run's tickets and the tickets its work affects.
 - Affected, not owned (duplicate, dependency, overlap, same recent topic): add an activity note once the effect is known, with what changed and the link; update its context when the work changed its facts, unless it carries a Safe contract. Status, priority, assignee and scope stay.
-- Never close, archive, cancel, deprecate, reprioritize, reassign or rewrite other items without the owner's task. Recording merges at intake (closing those tickets and epics, dropping their status labels) is the one exception. Future items stay as they are. Cancelling needs the owner, own tickets included.
+- Never close, archive, cancel, deprecate, reprioritize, reassign or rewrite other items without the owner's task. Recording merges and closed PRs at intake (closing or moving those tickets, closing finished epics, dropping status labels) and filing feedback are the only exceptions. Future items stay as they are. Cancelling needs the owner, own tickets included.
 
 ## Split the work
 
 - Ticket = one complete, user-visible outcome with its own definition of done and checklist.
 - Epic = overall outcome, shared constraints and decisions, sub-issue list, integration criteria.
-- 1 or as many needed outcome sub-issues, plus follow-ups. A small change: one ticket. Never one per todo.
+- 1 or as many needed outcome sub-issues, plus the follow-ups ticket. A small change: one ticket at most. Never one per todo.
 - Do not split risky work to dodge full checks.
-- Every requested item (feature, journey, integration, behavior) maps to an outcome ticket criterion. It moves to a follow-up only by the owner's recorded decision; unavailable capability keeps it Blocked in the run.
-- Deferrals, optional ideas and open review findings become follow-up sub-issues in Backlog, titled as follow-ups, with priority, owner and revisit condition.
+- Every requested item (feature, journey, integration, behavior) maps to an outcome ticket criterion. It moves to the follow-ups ticket only by the owner's recorded decision; unavailable capability keeps it Blocked in the run.
+- Deferred items go to one open follow-ups ticket per epic, a sub-issue in Backlog with a low priority. Append each with its owner, reason and revisit condition; never one ticket per item. Deferred items include review findings left after round 3, owner-deferred ideas, declined or unanswered MVP suggestions and the real version of an owner-approved simplification.
 
 ## Definition of done and checklist
 
@@ -86,13 +92,15 @@ Every ticket, every mode. The ticket is unfinished until both are complete.
 
 No contract, confirmation round or capture. Same tracker, layout, backlog and authority rules.
 
+Product and feature runs list every requested item and every approved addition as R1, R2, ... The gate refuses gaps: a requested item with no criterion at tickets, a criterion with no checklist item at plan and handoff.
+
 1. Search first.
-2. Product and feature runs: create the epic after the owner's kickoff answers (Lucky: from the request). Include the owner's words, the answers, and every layout section including the definition of done with IDs. Change runs: one ticket in the same layout.
+2. Product and feature runs: create the epic after the owner's kickoff answers (Lucky: from the request). Include the owner's words, the answers, and every layout section including the definition of done with IDs. Change runs update the ticket they follow up; create one only for a new outcome; none when trivial.
 3. Create the sub-issues in user-value order. Link them as native sub-issues.
 4. At plan: write each ticket's checklist from the plan's todos.
-5. POC skips go once in the epic's guardrails. Optional ideas become Backlog follow-ups.
+5. POC skips go once in the epic's guardrails. Optional ideas go to the epic's follow-ups ticket.
 6. Move every ticket through the backlog statuses, one activity entry per change.
-7. Write into the run's work record: `**Epic:** <url>` (a `change` run: its one ticket), `**Sub-issue:** <url>` for each sub-issue in the run, `**Backlog:**` owned, affected and untouched items, follow-ups included. At handoff: `**Statuses:**` each owned ticket's final status: Ready for QA with its PR, Blocked, or Backlog when owner-deferred.
+7. Write into the run's work record: `**Epic:** <url>` (a `change` run: `**Ticket:** <url>`, or `**Ticket:** none (<why>)`), `**Sub-issue:** <url>` for each sub-issue in the run, `**Requested:**` R-ids (product and feature runs), `**Backlog:**` owned, affected and untouched items, follow-ups included. At handoff: `**Statuses:**` each owned ticket's final status: Ready for QA with its PR, Blocked, or Backlog when owner-deferred.
 
 Moving an epic to Safe: reuse it and add the contract below.
 
@@ -117,7 +125,7 @@ Number the confirmed contract. Each change records old and new scope, reason, so
 - Read before every write. Reuse unchanged reads within a batch.
 - New owner input, a conflict, a failed refresh or changed dependencies need reconciliation before dependent work. A cache never proves current scope. Failed refresh: keep the last confirmed snapshot, report the blocker, continue independent work.
 - Later input: preserve it, resolve authority, confirm or leave pending, record the reason, reassess affected plans and consumers.
-- Scope change = new revision, reviewed independently against the old one. Never edit state, weaken acceptance or revive a cancelled ticket. A changed goal may need a linked replacement ticket.
+- The ticket is the spec: code and ticket never disagree. A change of intent (an owner or QA note, a fix the review requires, a need found while building) updates the ticket's definition of done and checklist before the code, with one activity entry. Safe: a scope change is a new revision, reviewed independently against the old one. Never edit state, weaken acceptance or revive a cancelled ticket. A changed goal may need a linked replacement ticket.
 
 ## Sessions and workspaces
 

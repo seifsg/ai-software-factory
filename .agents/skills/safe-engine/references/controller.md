@@ -132,7 +132,7 @@ No agent CLI, or by choice: the review packet.
 
 Never supply your own passing review, write the report yourself or reuse an old one.
 
-Pass needs: verdict PASS, method followed, every criterion PASS, no blocking finding. Blocking: CRITICAL, HIGH, disposition `blocking`, and `before-exposure` at public or production exposure or `release` scope. `accepted-deferral` needs an exception (`owner`, `reason`, `scope`, `revisit`, `authority`, follow-up ticket as `destination`) under the owner's real delegation: LOW, and MEDIUM at local exposure only. A failed review: `repair` the supported findings, then a fresh review.
+Pass needs: verdict PASS, method followed, every criterion PASS, no blocking finding. Blocking: CRITICAL, HIGH, disposition `blocking`, and `before-exposure` at public or production exposure or `release` scope. `accepted-deferral` needs an exception (`owner`, `reason`, `scope`, `revisit`, `authority`, the epic's follow-ups ticket as `destination`) under the owner's real delegation: LOW, and MEDIUM at local exposure only. A failed review: `repair` the supported findings, then a fresh review.
 
 Review rounds: a failed review, or a packet reissued before its report, is a failed round. After 3, `review` refuses. Stop that loop and ask the owner once with: findings per round (new or repeated), the shared cause, and options (extend 1-3 rounds, defer with an owner record, amend scope, cancel). Keep independent work moving. Only the owner's decision unlocks more: `extend-reviews --rounds <1-3> --reason "<owner decision>"`.
 

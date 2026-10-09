@@ -15,6 +15,25 @@ GATE = SCRIPTS / "fast_gate.py"
 SAMPLE = Path(__file__).resolve().parents[1] / ".agents/skills/safe-engine/references/work-record-sample.md"
 STEPS = ["research", "kickoff", "tickets", "analysis", "plan", "design", "schema", "build", "done-run", "handoff"]
 ONLINE = ("tickets", "plan", "handoff")  # steps that read the listed tickets through gh
+LIGHT = """# copy-fix
+## Tickets
+**Ticket:** none (one-word copy fix, no outcome change)
+**Backlog:** searched "footer": nothing open
+## Plan
+**Success:** the footer reads "Contact us".
+### Todos
+- T1 fix the footer word
+## Build log
+- T1 pre: footer says "Contcat us" do: fixed the word post: footer reads "Contact us"
+## Done-run
+- PASS: home page footer reads "Contact us"
+**Logs:** dev server log clean
+## Handoff
+**Run:** npm run dev
+**Statuses:** no ticket (trivial)
+**Unverified:** none
+**Follow-ups:** none
+"""
 
 
 def record_module():
@@ -221,6 +240,21 @@ class FastGateTests(unittest.TestCase):
         self.gate("start", "--key", "quick-try", "--mode", "lucky", "--kind", "change", "--request", "fix copy")
         self.assertIn("done-run", self.gate("status"))
 
+    def test_light_change_records_five_steps(self):
+        self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "fix the footer copy")
+        self.assertNotIn("analysis", self.gate("status"))
+        self.assertIn("'analysis' does not apply", self.gate("done", "analysis", ok=False))
+        record = self.project / ".factory/fast/work-record.md"
+        record.write_text(LIGHT.replace("**Ticket:**", "Ticket:"), encoding="utf-8")
+        self.assertIn("'**Ticket:** <url, or none (why)>'", self.gate("done", "tickets", ok=False))
+        record.write_text(LIGHT.replace("**Success:**", "Success:"), encoding="utf-8")
+        self.gate("done", "tickets")
+        self.assertIn("'**Success:**' line", self.gate("done", "plan", ok=False))
+        record.write_text(LIGHT, encoding="utf-8")
+        for step in ("plan", "build", "done-run", "handoff"):
+            self.gate("done", step)
+        self.assertIn("Next: close", self.gate("status"))
+
     def test_ticket_links_are_checked_against_the_epic(self):
         record = record_module()
         epic = "https://github.com/acme/portal/issues/1"
@@ -305,25 +339,84 @@ class FastGateTests(unittest.TestCase):
             self.assertIn(url, problems[0])
             self.assertIn("Definition of done", problems[0])
 
-    def test_ticket_checks_follow_the_methods_the_run_reads(self):
+    def test_coverage_names_every_requested_item_and_criterion(self):
+        record = record_module()
+        epic, url = "https://github.com/acme/portal/issues/1", "https://github.com/acme/portal/issues/2"
+
+        def issue(body, labels=("status: in progress",)):
+            return json.dumps({"body": body, "stateReason": None, "labels": [{"name": name} for name in labels],
+                               "projectItems": []})
+        ticket = ("### ✅ Definition of done\n- **A1 (R1):** booked\n- **A2:** full class refused\n\n"
+                  "### ☑️ Checklist\nA2 comes later.\n- [x] T1 book (A1). Proof: booked\n")
+        self.assertEqual(record.uncovered(ticket), ["A2"])  # prose outside task items names nothing
+        self.assertEqual(record.uncovered(ticket + "- [ ] T2 refuse (A2)\n"), [])
+        self.assertEqual(record.uncovered("## Done when\n- **D1:** x\n- **D2:** y\n## Checklist\n- [ ] T1 (D1, D2)"), [])
+        on, older = {"coverage": True, "ticket_checks": True}, {"ticket_checks": True}
+        with patch.object(record, "gh", return_value=issue(ticket)):
+            self.assertIn("criteria no checklist item names: A2",
+                          record.ticket_problems([url], record.covered(on, record.needs_ticks))[0])
+            self.assertEqual(record.ticket_problems([url], record.covered(older, record.needs_ticks)), [])
+        with patch.object(record, "gh", return_value=issue(ticket, labels=("status: blocked",))):
+            self.assertEqual(record.ticket_problems([url], record.covered(on, record.needs_ticks)), [])
+        listed = f"**Epic:** {epic}\n**Sub-issue:** {url}\n**Requested:**\n- R1 book\n- R2 waitlist\n**Backlog:** none\n"
+        self.assertEqual(record.requested(listed), ["R1", "R2"])
+
+        def tracker(*args):
+            if args[0] == "api":
+                return url + "\n" if args[1].endswith("sub_issues") else "1"
+            return issue(ticket)
+        with patch.object(record, "gh", side_effect=tracker):
+            self.assertEqual(record.check_tickets({**on, "kind": "feature"}, listed),
+                             ["requested items no listed ticket's criteria name: R2"])
+        unnumbered = listed.replace("**Requested:**\n- R1 book\n- R2 waitlist\n", "")
+        self.assertIn("'**Requested:**' line", record.check_tickets({**on, "kind": "feature"}, unnumbered, offline="x")[0])
+        self.assertEqual(record.check_tickets({**older, "kind": "feature"}, unnumbered, offline="x"), [])
+        with patch.object(record, "gh", side_effect=AssertionError("a trivial change reads no tickets")):
+            trivial = "**Ticket:** none (typo)\n**Backlog:** none\n"
+            self.assertEqual(record.check_tickets({**on, "kind": "change"}, trivial), [])
+        light = {**on, "light": True, "kind": "change"}
+        follow_up = {"tickets": f"**Ticket:** {url}\n**Backlog:** none\n", "plan": "### Todos\n- T3 refuse a full class\n"}
+
+        def ticket_api(state):
+            return lambda *args: "1" if args[0] == "api" else json.dumps({**json.loads(issue(ticket)), "state": state})
+        with patch.object(record, "gh", side_effect=ticket_api("CLOSED")):
+            self.assertIn("is closed: reopen", record.check_tickets(light, follow_up["tickets"])[0])
+        with patch.object(record, "gh", side_effect=ticket_api("OPEN")):
+            self.assertEqual(record.check_tickets(light, follow_up["tickets"]), [])
+        plan = "**Success:** x\n### Todos\n- T3 refuse a full class\n"
+        with patch.object(record, "gh", return_value=issue(ticket + "- [ ] T2 refuse (A2)\n")):
+            self.assertEqual(record.check_plan(light, plan, offline=None, all_sections=follow_up),
+                             ["plan todos no listed ticket's checklist holds: T3"])
+        with patch.object(record, "gh", return_value=issue(ticket + "- [ ] T3 refuse (A2)\n")):
+            self.assertEqual(record.check_plan(light, plan, offline=None, all_sections=follow_up), [])
+
+    def test_run_flags_follow_the_methods_the_run_reads(self):
         spec = importlib.util.spec_from_file_location("fast_gate_module", GATE)
         gate = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(gate)
-        layout = Path(".agents/skills/ticketing/references/ticket-layout.md")
-        for name, text in (("new", "### ✅ Definition of done"), ("old", "### ✅ Done when")):
-            (self.root / name / layout).parent.mkdir(parents=True)
-            (self.root / name / layout).write_text(text, encoding="utf-8")
-        self.assertTrue(gate.ticket_checks({"root": str(self.root / "new")}, self.project))
-        self.assertFalse(gate.ticket_checks({"root": str(self.root / "old")}, self.project))
-        self.assertFalse(gate.ticket_checks({"root": str(self.root / "missing")}, self.project))
-        self.assertTrue(gate.ticket_checks(None, self.project))
-        self.assertTrue(gate.ticket_checks(None, SCRIPTS.parents[2]))  # this checkout's own layout defines it
+        layout, lane = Path(gate.LAYOUT), Path(gate.FAST_RUN)
+        for name, texts in (("new", ("### ✅ Definition of done\nEvery criterion has an item.", "## Light lane")),
+                            ("old", ("### ✅ Done when", "## Hooks"))):
+            for path, text in zip((layout, lane), texts):
+                (self.root / name / path).parent.mkdir(parents=True, exist_ok=True)
+                (self.root / name / path).write_text(text, encoding="utf-8")
+        on = {"ticket_checks": True, "coverage": True, "light": True}
+        off = dict.fromkeys(on, False)
+        self.assertEqual(gate.method_flags({"root": str(self.root / "new")}, self.project), on)
+        self.assertEqual(gate.method_flags({"root": str(self.root / "old")}, self.project), off)
+        self.assertEqual(gate.method_flags({"root": str(self.root / "missing")}, self.project), off)
+        self.assertEqual(gate.method_flags(None, self.project), on)
+        self.assertEqual(gate.method_flags(None, SCRIPTS.parents[2]), on)  # this checkout's own methods define them
         (self.root / "new" / layout).write_bytes(b"\xff\xfe broken")
-        self.assertFalse(gate.ticket_checks({"root": str(self.root / "new")}, self.project))
+        self.assertEqual(gate.method_flags({"root": str(self.root / "new")}, self.project),
+                         {**off, "light": True})
         lucky = {"mode": "lucky", "kind": "change"}
         self.assertNotIn("done-run", gate.steps_for(lucky))
         self.assertIn("done-run", gate.steps_for({**lucky, "ticket_checks": True}))
         self.assertIn("done-run", gate.steps_for({"mode": "fast", "kind": "change"}))
+        self.assertIn("analysis", gate.steps_for({"mode": "fast", "kind": "change"}))  # older methods keep it
+        self.assertNotIn("analysis", gate.steps_for({"mode": "fast", "kind": "change", "light": True}))
+        self.assertIn("analysis", gate.steps_for({"mode": "fast", "kind": "feature", "light": True}))
 
 
 if __name__ == "__main__":

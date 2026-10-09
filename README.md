@@ -45,10 +45,10 @@ Manual install, flags and every agent's syntax: [install](docs/install.md) · [h
 
 - 🔒 **Enforced, not suggested.** A gate and host hooks deny code edits until earlier steps pass, and push back when the agent tries to stop mid-run.
 - 🔎 **Research before code.** New products and big features start with competitors, a feature matrix, opportunities and stack options.
-- ❓ **Questions that fit the size.** A POC builds exactly what you asked and asks only what the request leaves open. An MVP researches launch gaps and suggests features you did not think of. Answers are recorded and binding.
-- 🎫 **A living backlog.** Every run reads it and opens an epic with outcome sub-issues. Each ticket carries a definition of done and a checklist; an item is ticked only after it works, and a ticket is finished only when every item is. Tickets move through To do, In progress, Dev done and Ready for QA; your merge makes them Done. Items outside the task stay untouched.
-- 🎚️ **Right-sized.** Fast by default, Lucky for quick tries, Safe for work that must not break.
-- 🧪 **Proof, not promises.** Every checklist item is used before its tick, then a done-run with real controls and logs; Safe adds manual QA, tests and an independent reviewer.
+- ❓ **Questions that fit the size.** A POC builds exactly what you asked and asks only what the request leaves open. An MVP researches launch gaps, suggests features you did not think of and ships analytics and in-app feedback. Answers are recorded and binding.
+- 🎫 **A living backlog.** Every run reads it, cleans up issues after merged or closed PRs, and opens an epic with outcome sub-issues; follow-ups update existing tickets instead. Each ticket carries a definition of done and a checklist; an item is ticked only after it works, and a ticket is finished only when every item is. Tickets move through To do, In progress, Dev done and Ready for QA; your merge makes them Done. Items outside the task stay untouched.
+- 🎚️ **Right-sized.** Fast by default, Lucky for quick tries, Safe for work that must not break. In Fast and Lucky, small tasks and follow-ups take a light lane: no analysis step, a short plan, the same checks.
+- 🧪 **Proof, not promises.** Every requested item traces to a criterion, a checklist item and proof. Every checklist item is used before its tick, then a done-run with real controls and logs; Safe adds manual QA, tests and an independent reviewer.
 - 🎨 **A product bar.** Accessible, responsive UI, clear copy, public-page SEO and a designed schema. Non-production builds show their environment and label sample data.
 - 🧑‍⚖️ **Humans stay in charge.** Draft PRs only. It never merges, releases or deploys.
 - 🌍 **Any agent, any OS, any codebase.** Games, web, mobile and desktop apps, services, tools and libraries.

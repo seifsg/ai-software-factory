@@ -65,7 +65,8 @@ Summary shown to the owner: all three leaders cover booking, waitlists, packs, c
 **Sub-issue:** https://github.com/acme/studio-booking/issues/3 (full class: waitlist and auto-promotion)
 **Sub-issue:** https://github.com/acme/studio-booking/issues/4 (member buys a class pack and spends credits)
 **Sub-issue:** https://github.com/acme/studio-booking/issues/5 (staff publish classes and check members in)
-**Backlog:** searched "booking", "waitlist", "class pack": empty, new repository. Owned: #1 to #5, To do, P1, each with a Definition of done; checklists follow the plan. Follow-up #6 (real payments, owner-deferred) in Backlog, P2. POC skips listed in #1. Affected and untouched: none.
+**Requested:** R1 see the class schedule (#2), R2 book a spot (#2), R3 buy class packs (#4, mock checkout owner-approved), R4 join a waitlist when a class is full (#3), R5 staff manage the schedule (#5), R6 staff check people in (#5). Each delivering criterion names its item: `**A1 (R2):**`.
+**Backlog:** searched "booking", "waitlist", "class pack": empty, new repository. Owned: #1 to #5, To do, P1, each with a Definition of done; checklists follow the plan. Follow-ups ticket #6 for the epic (real payments, owner-deferred; later deferrals append to it) in Backlog, P2. POC skips listed in #1. Affected and untouched: none.
 
 ## Analysis
 
