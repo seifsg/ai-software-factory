@@ -180,15 +180,27 @@ class DistributionTests(unittest.TestCase):
             resolver.inspect_bundle(self.source)
 
     def test_newer_layout_asks_for_an_update_instead_of_calling_the_bundle_incomplete(self):
+        commit = ('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm')
         path = self.add_contract()  # this bundle's own contract does not list docs/hosts.md
-        (self.source / 'docs/hosts.md').unlink()  # a newer layout moved a file this launcher hard-codes
+        self.git('add', '-A', cwd=self.source)
+        self.git(*commit, 'contract', cwd=self.source)
+        (self.source / 'docs/hosts.md').unlink()  # a partial checkout: HEAD still tracks the file
+        with self.assertRaisesRegex(RuntimeError, 'Incomplete factory bundle: docs/hosts.md'):
+            resolver.inspect_bundle(self.source)
+        self.git('rm', '-q', '--', 'docs/hosts.md', cwd=self.source)
+        self.git(*commit, 'newer layout drops a launcher-known file', cwd=self.source)
         with self.assertRaisesRegex(RuntimeError, r'newer layout.*docs/hosts\.md.*install --host'):
             resolver.inspect_bundle(self.source)
         (self.source / 'docs/guidance.md').unlink()  # a file the bundle itself declares is really missing
         with self.assertRaisesRegex(RuntimeError, 'Incomplete factory bundle'):
             resolver.inspect_bundle(self.source)
+        self.git('checkout', '-q', '--', 'docs/guidance.md', cwd=self.source)
         path.write_text(json.dumps({'version': 3, 'required_files': ['docs/install.md'],
                                     'source_trees': ['docs']}), encoding='utf-8')
+        with self.assertRaisesRegex(RuntimeError, 'Invalid factory input contract'):  # a local edit is no upgrade
+            resolver.inspect_bundle(self.source)
+        self.git('add', '-A', cwd=self.source)
+        self.git(*commit, 'contract version 3', cwd=self.source)
         with self.assertRaisesRegex(RuntimeError, 'newer layout.*input contract version 3'):
             resolver.inspect_bundle(self.source)
 

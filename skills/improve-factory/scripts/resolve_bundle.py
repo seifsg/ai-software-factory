@@ -33,6 +33,11 @@ def git(*args, cwd=None):
     return result.stdout.strip()
 
 
+def edited(root, name):
+    """Whether the checkout changed `name` locally: a local edit never counts as a newer factory layout."""
+    return bool(git("status", "--porcelain", "--", name, cwd=root))
+
+
 def inspect_bundle(root, expected=None, clean=False, entrypoint="improve-factory"):
     if entrypoint not in ENTRYPOINTS:
         raise RuntimeError("Unknown factory entrypoint")
@@ -66,7 +71,7 @@ def inspect_bundle(root, expected=None, clean=False, entrypoint="improve-factory
         except (OSError, ValueError) as error:
             raise RuntimeError(f"Invalid factory input contract: {error}") from error
         version = contract.get("version") if isinstance(contract, dict) else None
-        if isinstance(version, int) and not isinstance(version, bool) and version > 2:
+        if isinstance(version, int) and not isinstance(version, bool) and version > 2 and not edited(root, contract_name):
             raise RuntimeError(NEWER.format(f"input contract version {version}"))
         keys = {"version", "required_files", "source_trees"}
         if version == 2:
@@ -99,8 +104,9 @@ def inspect_bundle(root, expected=None, clean=False, entrypoint="improve-factory
             required += historical
             declared |= set(historical)
     missing = [name for name in required if not (root / name).is_file() or (root / name).is_symlink()]
-    if missing:  # only launcher-known files the bundle no longer declares: a newer layout, not a broken bundle
-        newer = declared is not None and not set(missing) & declared
+    if missing:  # launcher-known files this revision removed and no longer declares: a newer layout, not a broken bundle
+        newer = (declared is not None and not set(missing) & declared and not edited(root, contract_name)
+                 and not git("ls-tree", "--name-only", "HEAD", "--", *missing, cwd=root))
         raise RuntimeError(NEWER.format(", ".join(missing)) if newer else "Incomplete factory bundle: " + ", ".join(missing))
     if any(not (root / name).resolve().is_relative_to(root) for name in required):
         raise RuntimeError("Required factory file resolves outside the bundle")
