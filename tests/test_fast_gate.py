@@ -418,6 +418,14 @@ class FastGateTests(unittest.TestCase):
                              ["requested items no listed ticket's criteria name: R2"])
         with patch.object(record, "gh", return_value=issue(finished.replace("**A2:**", "**A2 (R2):**"))):
             self.assertEqual(record.check_handoff({**on, "kind": "feature"}, handoff, offline=None, all_sections=sections), [])
+        deferred = listed.replace("- R2 waitlist", "- R2 waitlist (owner-deferred: https://github.com/acme/portal/issues/3)")
+        self.assertEqual((record.requested(deferred), record.requested(deferred, deferred=True)), (["R1"], ["R1", "R2"]))
+        with patch.object(record, "gh", return_value=issue(finished)):  # the owner's deferral needs no criterion
+            self.assertEqual(record.check_handoff({**on, "kind": "feature"}, handoff, offline=None,
+                                                  all_sections={**sections, "tickets": deferred}), [])
+        only_deferred = "**Requested:** R1 book (owner-deferred: x)\n**Sub-issue:** u\n"
+        self.assertNotIn("'**Requested:**' line", " ".join(record.check_tickets({**on, "kind": "feature"},
+                                                                              only_deferred, offline="x")))
 
     def test_run_flags_follow_the_methods_the_run_reads(self):
         spec = importlib.util.spec_from_file_location("fast_gate_module", GATE)

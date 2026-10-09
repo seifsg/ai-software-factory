@@ -92,7 +92,7 @@ Every ticket, every mode. The ticket is unfinished until both are complete.
 
 No contract, confirmation round or capture. Same tracker, layout, backlog and authority rules.
 
-Product and feature runs list every requested item and every approved addition as R1, R2, ... The gate refuses gaps: a requested item with no criterion at tickets, a criterion with no checklist item at plan and handoff.
+Product and feature runs list every requested item and every approved addition as R1, R2, ...; an owner-deferred one stays listed as `R2 (owner-deferred: <decision link>)`. The gate refuses gaps: at tickets, plan and handoff, a requested item no criterion names; at plan and handoff, a criterion no checklist item names.
 
 1. Search first.
 2. Product and feature runs: create the epic after the owner's kickoff answers (Lucky: from the request). Include the owner's words, the answers, and every layout section including the definition of done with IDs. Change runs update the ticket they follow up; create one only for a new outcome; none when trivial.

@@ -26,7 +26,7 @@ A `change` (bug fix, small change, follow-up) records tickets, plan, build, done
 - Tickets: `**Ticket:** <url>` names the ticket it follows up and updates. A new ticket only for a new outcome; `**Ticket:** none (<why>)` when trivial.
 - No analysis step. Plan: `**Success:**` and `### Todos`. Unknown cause or several consumers: run `analyze-start` first and keep its result in the plan.
 - New todos continue the ticket's numbering. Each still runs the 0–4 loop and is ticked after its use-check.
-- An older installed gate refuses a light record: record that step the full way (`**Epic:**` with the ticket URL, the analysis, the full plan) until the installed copy updates.
+- An older installed gate refuses a light record: record the run the full way until the installed copy updates. `**Epic:**` carries the ticket's URL; a trivial change opens one first. Then the analysis and the full plan. Tell the owner the copy is older.
 
 ## Work record
 
@@ -36,14 +36,14 @@ A `change` (bug fix, small change, follow-up) records tickets, plan, build, done
 |---|---|
 | Research | ≥3 `### <competitor>` subsections each citing a source URL, a feature-matrix table, an `**Opportunities:**` line; product runs also `### Stack options` with a 3-row table |
 | Kickoff | `**Features:**`, `**Approach:**`, `**Answered by:**`; product runs also `**Size:**` and `**Stack:**` |
-| Tickets | `**Epic:** <url>` (a `change`: `**Ticket:**`), `**Backlog:**` (owned, affected and untouched items); product and feature runs ≥1 `**Sub-issue:** <url>` and `**Requested:**` numbering every requested item and approved addition (R1, R2…); online, each listed ticket is open and has a `Definition of done` heading, and the listed criteria name every R-id |
+| Tickets | `**Epic:** <url>` (a `change`: `**Ticket:**`), `**Backlog:**` (owned, affected and untouched items); product and feature runs ≥1 `**Sub-issue:** <url>` and `**Requested:**` numbering every requested item and approved addition (R1, R2…; an owner-deferred one as `R2 (owner-deferred: <link>)`); online, each listed ticket is open and has a `Definition of done` heading, and the listed criteria name every R-id |
 | Analysis | `**Success:**` line and a fenced ASCII chart; product and feature runs only |
-| Plan | `### Files`, `### Critique`, `### Phases`, `### Todos` (with `T1`…), `### Whole plan`, `**Logging:**`, `**Efficiency:**` (light lane: `**Success:**` and `### Todos`); online, each listed ticket not Blocked or not planned has task items under its Checklist heading, one naming each criterion, and every plan todo is an item there |
+| Plan | `### Files`, `### Critique`, `### Phases`, `### Todos` (with `T1`…), `### Whole plan`, `**Logging:**`, `**Efficiency:**` (light lane: `**Success:**` and `### Todos`); online, each listed ticket not Blocked or not planned has task items under its Checklist heading, one naming each criterion, every plan todo is an item there, and criteria still name every open R-id |
 | Design | ≥4 `#RRGGBB` hex colors, `**UI kit:**`, `**Font:**`, `**Logo:**`, `**Icons:**`, `**Layout:**`, `**Theme:**` naming light mode, `**Journeys:**` with counts and a minimum |
 | Schema | a 3-option table, `**Chosen:**`, a fenced ERD or DDL |
 | Build log | every plan todo ID with `pre:`, `do:` and `post:` on one line |
 | Done-run | ≥1 `PASS` line, `**Logs:**`; UI runs ≥1 existing screenshot path under `.factory/fast/shots/` |
-| Handoff | `**Run:**`, `**Statuses:**` (each owned ticket's final status), `**Unverified:**`, `**Follow-ups:**`; sign-in runs `**Dev sign-in:**`; online, each listed ticket not Blocked, Backlog or not planned (label or board status) is fully ticked, an item naming each criterion |
+| Handoff | `**Run:**`, `**Statuses:**` (each owned ticket's final status), `**Unverified:**`, `**Follow-ups:**`; sign-in runs `**Dev sign-in:**`; online, each listed ticket not Blocked, Backlog or not planned (label or board status) is fully ticked, an item naming each criterion, every plan todo an item, every open R-id named by a criterion |
 
 Labels end with the colon inside the bold: `**Epic:**`. Delegates return their log lines; the coordinator writes the record. During build, copy the design brief and schema decision into the product's `docs/`.
 

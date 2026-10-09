@@ -89,10 +89,15 @@ def ticket_urls(body):
     return epic, subs
 
 
-def requested(body):
-    """Requested item IDs (R1..) listed after the '**Requested:**' label, up to the next label."""
+def requested(body, deferred=False):
+    """Requested item IDs (R1..) listed after the '**Requested:**' label, up to the next label. An item marked
+    'owner-deferred' left scope by the owner's decision and needs no criterion, unless `deferred` asks for all."""
     match = re.search(r"\*\*Requested:\*\*(.*?)(?=^\*\*(?!R\d+\b)[^*\n]+:\*\*|\Z)", body, re.I | re.M | re.S)
-    return list(dict.fromkeys(REQUESTED.findall(match.group(1)))) if match else []
+    text = match.group(1) if match else ""
+    found = list(REQUESTED.finditer(text))
+    ends = [item.start() for item in found[1:]] + [len(text)]
+    return list(dict.fromkeys(item.group(0) for item, end in zip(found, ends)
+                              if deferred or "owner-deferred" not in text[item.end():end].lower()))
 
 
 def check_tickets(run, body, offline=None, **_):
@@ -107,7 +112,7 @@ def check_tickets(run, body, offline=None, **_):
     wanted = [] if change or not coverage else requested(body)
     if not change and not subs:
         problems.append("needs >=1 '**Sub-issue:** <url>' line")
-    if coverage and not change and not wanted:
+    if coverage and not change and not requested(body, deferred=True):
         problems.append("needs a '**Requested:**' line numbering every requested item: R1, R2, ...")
     if problems or offline or trivial:
         return problems
