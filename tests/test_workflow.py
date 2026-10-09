@@ -190,7 +190,11 @@ class WorkflowTests(unittest.TestCase):
 
     def test_continuous_changed_batches_continue_past_former_maximum(self):
         self.built()
-        for correction in range(105):
+        for correction in (0, *range(97, 105)):  # one real repair, then real ones across the former cap of 100
+            if correction == 97:
+                state = self.flow.load()
+                state["repairs_used"] = correction
+                atomic_json(self.flow.directory / "state.json", state)
             result = self.flow.repair(f"Correct documented fixture case {correction}")
             (self.root / "app.py").write_text(f"value = 1\n# corrected case {correction}\n")
             self.artifact("batch")

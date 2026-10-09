@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-import test_speed_features as speed
+import speed_fixtures as speed
 from safe_engine import reviewers
 from safe_engine.project import EngineError
 
