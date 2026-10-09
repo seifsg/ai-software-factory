@@ -129,6 +129,19 @@ class FastGateTests(unittest.TestCase):
         self.assertEqual(list((self.root / "home/active").glob("*.json")), [])
         self.assertIsNone(self.hook({"hook_event_name": "Stop", "stop_hook_active": False}))
 
+    def test_empty_markers_and_borrowed_build_lines_are_refused(self):
+        record = record_module()
+        self.assertIsNone(record.marker("**Backlog:**\n**Sub-issue:** https://x/2\n", "Backlog"))  # no borrowing
+        self.assertEqual(record.marker("**Backlog:**\nsearched x: none\n", "Backlog"), "searched x: none")
+        self.assertEqual(record.marker("**Backlog:** none\n**Sub-issue:** u\n", "Backlog"), "none")
+        sections = {"plan": "### Todos\n- T33 a\n- T34 b\n"}
+        borrowed = "- T33 pre: a do: b post: T23..T34 held\n"
+        self.assertEqual(record.check_build({"coverage": True}, borrowed, all_sections=sections),
+                         ["T34 needs its own 'T34 pre: ... do: ... post: ...' line"])
+        self.assertEqual(record.check_build({}, borrowed, all_sections=sections), [])  # older methods keep the old rule
+        own = borrowed + "T34 pre: c do: d post: e\n"
+        self.assertEqual(record.check_build({"coverage": True}, own, all_sections=sections), [])
+
     def test_checks_refuse_missing_markers(self):
         self.start("--auth")
         self.finish_sample()

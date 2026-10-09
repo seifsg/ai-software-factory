@@ -43,7 +43,8 @@ def subsection(body, title):
 
 
 def marker(body, label):
-    match = re.search(r"\*\*" + re.escape(label) + r":\*\*[ \t]*\n?[ \t]*(\S[^\n]*)", body, re.I)
+    """The label's value: on its line, or on the next line unless that line is another marker."""
+    match = re.search(r"\*\*" + re.escape(label) + r":\*\*[ \t]*(?:\n[ \t]*)?(?!\*\*[^*\n]+:\*\*)(\S[^\n]*)", body, re.I)
     return match.group(1).strip() if match else None
 
 
@@ -330,10 +331,14 @@ def check_schema(run, body, **_):
 
 
 def check_build(run, body, **kwargs):
+    """Each plan todo has one line with pre:, do: and post:; on coverage runs the line starts with its ID, so a
+    mention such as 'T23..T34' in another todo's line never counts."""
     lines = [line.lower() for line in body.splitlines()]
-    return [f"T{number} needs a 'pre: ... do: ... post: ...' line" for number in todo_ids(kwargs["all_sections"])
-            if not any(re.search(rf"\bt{number}\b", line) and all(tag in line for tag in ("pre:", "do:", "post:"))
-                       for line in lines)]
+    owns = (lambda n, line: re.match(rf"\s*(?:[-*+]\s+)?t{n}\b", line)) if run.get("coverage") else (
+        lambda n, line: re.search(rf"\bt{n}\b", line))
+    return [f"T{number} needs its own 'T{number} pre: ... do: ... post: ...' line"
+            for number in todo_ids(kwargs["all_sections"])
+            if not any(owns(number, line) and all(tag in line for tag in ("pre:", "do:", "post:")) for line in lines)]
 
 
 def check_done_run(run, body, project, **_):
