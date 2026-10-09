@@ -41,21 +41,29 @@ HINTS = {
     "research": ">=3 '### <competitor>' subsections each citing a source URL, a feature matrix table, "
                 "an Opportunities line; product runs also '### Stack options' with a 3-row table",
     "kickoff": "Features, Approach, Answered by lines; product runs also Size and Stack",
-    "tickets": "an Epic URL line (a change: a Ticket line, its URL or 'none (why)'), a Backlog line; product/feature "
-               "runs >=1 Sub-issue URL line and a Requested line (R1, R2, ...); online: each listed ticket is open "
-               "with a Definition of done, and its criteria name every requested item",
+    "tickets": "an Epic URL line, a Backlog line; product/feature runs >=1 Sub-issue URL line; "
+               "online: each listed ticket has a Definition of done",
     "analysis": "a Success line and a fenced ASCII chart",
-    "plan": "### Files, ### Critique, ### Phases, ### Todos (T1..), ### Whole plan, Logging and Efficiency lines "
-            "(light lane: a Success line and ### Todos); online: each listed ticket has checklist items naming "
-            "every criterion, and they hold every plan todo",
+    "plan": "### Files, ### Critique, ### Phases, ### Todos (T1..), ### Whole plan, Logging and Efficiency lines; "
+            "online: each listed ticket has checklist items",
     "design": ">=4 hex colors; UI kit, Font, Logo, Icons, Layout lines; Theme line naming light mode; "
               "Journeys line with counts and a minimum",
     "schema": "a 3-option table, a Chosen line, a fenced ERD or DDL",
     "build": "one line per plan todo: 'T1 pre: ... do: ... post: ...'",
     "done-run": ">=1 PASS line, a Logs line; UI runs >=1 existing screenshot path",
     "handoff": "Run, Statuses, Unverified, Follow-ups lines; sign-in runs a Dev sign-in line; "
-               "online: each listed ticket fully ticked with every criterion named by an item, or Blocked, "
-               "Backlog or not planned",
+               "online: each listed ticket fully ticked, or Blocked, Backlog or not planned",
+}
+COVERAGE_HINTS = {  # runs whose methods define coverage and the light lane
+    "tickets": "an Epic URL line (a change: a Ticket line, its URL or 'none (why)'), a Backlog line; product/feature "
+               "runs >=1 Sub-issue URL line and a Requested line (R1, R2, ...); online: each listed ticket is open "
+               "with a Definition of done, and its criteria name every requested item",
+    "plan": "### Files, ### Critique, ### Phases, ### Todos (T1..), ### Whole plan, Logging and Efficiency lines "
+            "(light lane: a Success line and ### Todos); online: each listed ticket has checklist items naming "
+            "every criterion, they hold every plan todo, and criteria still name every requested item",
+    "handoff": "Run, Statuses, Unverified, Follow-ups lines; sign-in runs a Dev sign-in line; online: each listed "
+               "ticket fully ticked, or Blocked, Backlog or not planned; items name every criterion and hold every "
+               "plan todo; criteria name every requested item",
 }
 HERE = Path(__file__).resolve().parent  # sibling modules: fast_record.py (step checks), fast_shell.py (commands)
 
@@ -209,8 +217,9 @@ def skeleton(run):
     lines = [f"# {run['key']}: {run['mode']} {run['kind']} run", "",
              "<!-- Fill each section, then `fast_gate.py done <step>`. Markers: fast-run.md#work-record -->", "",
              "## Request", "", *quoted, ""]
+    hints = {**HINTS, **COVERAGE_HINTS} if run.get("coverage") else HINTS
     for step in steps_for(run):
-        lines += [f"## {TITLES[step]}", "", f"<!-- gate: {HINTS[step]} -->", ""]
+        lines += [f"## {TITLES[step]}", "", f"<!-- gate: {hints[step]} -->", ""]
     return "\n".join(lines)
 
 

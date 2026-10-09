@@ -116,13 +116,22 @@ def check_tickets(run, body, offline=None, **_):
     named = []  # requested items each listed ticket's criterion labels name, kept from its one read
 
     def read(ticket):
-        named.extend(REQUESTED.findall(" ".join(LABEL_ITEMS.findall(under(ticket["body"], DEFINITION)))))
+        named.extend(labelled(ticket["body"]))
         if run.get("light") and ticket["closed"]:  # a follow-up reopens the ticket it updates
             return "is closed: reopen the ticket this run updates, or list the right one"
         return needs_definition(ticket)
-    problems = verify_tickets(epic[0], subs) or ticket_problems(epic + subs, read)
+    return verify_tickets(epic[0], subs) or ticket_problems(epic + subs, read) or unnamed(wanted, named)
+
+
+def labelled(body):
+    """Requested item IDs the definition of done's criterion labels name: '**A1 (R2):**'."""
+    return REQUESTED.findall(" ".join(LABEL_ITEMS.findall(under(body, DEFINITION))))
+
+
+def unnamed(wanted, named):
+    """The gap when a requested item has no criterion naming it."""
     gaps = [rid for rid in wanted if rid not in set(named)]
-    return problems or ([f"requested items no listed ticket's criteria name: {', '.join(gaps)}"] if gaps else [])
+    return [f"requested items no listed ticket's criteria name: {', '.join(gaps)}"] if gaps else []
 
 
 def verify_tickets(epic, subs):
@@ -278,13 +287,22 @@ def check_plan(run, body, **kwargs):
 
 
 def held(run, kwargs, check):
-    """`check` on every listed ticket, then on coverage runs: each plan todo is an item there (no plan drift)."""
-    lists = []  # each listed ticket's items, kept from its one read
-    problems = online(run, kwargs, lambda ticket: lists.append(items(ticket["body"])) or check(ticket))
-    named = set(ID.findall("\n".join(lists)))
-    loose = [f"T{n}" for n in todo_ids(kwargs["all_sections"])
-             if f"T{n}" not in named] if run.get("coverage") and lists else []
-    return problems or ([f"plan todos no listed ticket's checklist holds: {', '.join(loose)}"] if loose else [])
+    """`check` on every listed ticket; on coverage runs also: each plan todo is an item there and each
+    requested item is still named by a criterion (no drift after the tickets step)."""
+    lists, named = [], []  # each listed ticket's items and labelled requested items, kept from its one read
+
+    def read(ticket):
+        lists.append(items(ticket["body"]))
+        named.extend(labelled(ticket["body"]))
+        return check(ticket)
+    problems = online(run, kwargs, read)
+    if problems or not run.get("coverage") or not lists:
+        return problems
+    ids = set(ID.findall("\n".join(lists)))
+    loose = [f"T{n}" for n in todo_ids(kwargs["all_sections"]) if f"T{n}" not in ids]
+    wanted = [] if run.get("kind") == "change" else requested(kwargs["all_sections"].get("tickets", ""))
+    todos = [f"plan todos no listed ticket's checklist holds: {', '.join(loose)}"] if loose else []
+    return todos + unnamed(wanted, named)
 
 
 def check_design(run, body, **_):

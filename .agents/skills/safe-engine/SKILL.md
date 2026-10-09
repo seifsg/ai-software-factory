@@ -52,7 +52,7 @@ Every mode meets the [product bar](references/product-bar.md) for its [size](ref
 |---|---|---|
 | `product` | new app, game, site, tool, service or library | ✅ |
 | `feature` | big feature with product choices (what users get, how it looks, what it costs) | ✅ |
-| `change` | bug fix, small change, follow-up, factory maintenance | ❌ light lane: no analysis step, short plan |
+| `change` | bug fix, small change, follow-up, factory maintenance | ❌ Fast and Lucky: light lane, no analysis step, short plan |
 
 ## Fast and Lucky
 

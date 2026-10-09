@@ -84,7 +84,7 @@ gh issue reopen <n>
 
 - Create only the missing labels the run uses, spelled as listed. Never rename or delete existing ones.
 - Sort the list by priority label.
-- Done comes from the merge: closing keywords in the PR close the ticket when it merges into the default branch. At intake, the closed-PR list catches the rest; `state` reads `MERGED` or `CLOSED`. Merged into any base: for each open ticket the `body` names with a closing keyword, check its events (the `issues/<n>/events` command) and close it when nothing follows `mergedAt`. Closed unmerged: follow the intake rule.
-- Close first, then drop the status label. Cancelled: drop it, close as not planned. Back from either: reopen and label.
+- Done comes from the merge: closing keywords in the PR close the ticket when it merges into the default branch. At intake, the closed-PR list catches the rest; `state` reads `MERGED` or `CLOSED`. Merged into any base: for each open ticket the `body` names with a closing keyword, check its events (the `issues/<n>/events` command) and close it when nothing follows `mergedAt`. Closed unmerged: follow the intake rule, with the same events check after `closedAt`.
+- Close first, then drop the status label: completed for Done, not planned for Cancelled. Back from either: reopen and label.
 - Boards: keep the built-in workflows that set Done when an item closes or its PR merges. A board without a Blocked status: add the `status: blocked` label too. New issues on a board: `item-add` first.
 - Each move pairs with one activity comment (`gh issue comment`). A close with `--comment` is both.

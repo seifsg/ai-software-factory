@@ -109,6 +109,9 @@ class FastGateTests(unittest.TestCase):
         run = json.loads((self.project / ".factory/fast/run.json").read_text(encoding="utf-8"))
         self.assertEqual(run["bundle"]["revision"], "a" * 40)
         self.assertIn("Hooks:", output)
+        record = (self.project / ".factory/fast/work-record.md").read_text(encoding="utf-8")
+        self.assertIn("## Analysis", record)  # methods without the light lane keep it, with their own hints
+        self.assertNotIn("Ticket line", record)
 
     def test_research_needs_cited_competitors(self):
         self.start()
@@ -245,6 +248,7 @@ class FastGateTests(unittest.TestCase):
         self.assertNotIn("analysis", self.gate("status"))
         run = json.loads((self.project / ".factory/fast/run.json").read_text(encoding="utf-8"))
         self.assertEqual(run["done"]["analysis"]["skipped"], "light lane")  # older hook copies still require it
+        self.assertIn("Ticket line", (self.project / ".factory/fast/work-record.md").read_text(encoding="utf-8"))
         self.assertIn("'analysis' does not apply", self.gate("done", "analysis", ok=False))
         record = self.project / ".factory/fast/work-record.md"
         record.write_text(LIGHT.replace("**Ticket:**", "Ticket:"), encoding="utf-8")
@@ -407,6 +411,13 @@ class FastGateTests(unittest.TestCase):
         with patch.object(record, "gh", return_value=issue(ticket + "- [x] T2 refuse (A2). Proof: refused\n")):
             self.assertEqual(record.check_handoff(light, handoff, offline=None, all_sections=follow_up),
                              ["plan todos no listed ticket's checklist holds: T3"])  # drift during build
+        finished = ticket + "- [x] T2 refuse (A2). Proof: refused\n"
+        sections = {"tickets": listed, "plan": "### Todos\n- T1 book\n- T2 refuse\n"}
+        with patch.object(record, "gh", return_value=issue(finished)):  # R2 lost its criterion label after tickets
+            self.assertEqual(record.check_handoff({**on, "kind": "feature"}, handoff, offline=None, all_sections=sections),
+                             ["requested items no listed ticket's criteria name: R2"])
+        with patch.object(record, "gh", return_value=issue(finished.replace("**A2:**", "**A2 (R2):**"))):
+            self.assertEqual(record.check_handoff({**on, "kind": "feature"}, handoff, offline=None, all_sections=sections), [])
 
     def test_run_flags_follow_the_methods_the_run_reads(self):
         spec = importlib.util.spec_from_file_location("fast_gate_module", GATE)
