@@ -38,6 +38,7 @@ def run_one(test_id):
     started, result = time.perf_counter(), unittest.TestResult()
     unittest.defaultTestLoader.loadTestsFromName(test_id).run(result)
     problems = [("FAIL", trace) for _, trace in result.failures] + [("ERROR", trace) for _, trace in result.errors]
+    problems += [("FAIL", "unexpected success") for _ in result.unexpectedSuccesses]  # as unittest counts it
     return test_id, problems, len(result.skipped), time.perf_counter() - started
 
 
@@ -97,10 +98,13 @@ def main():
     serial = [t.id() for t in tests if t.id().split(".")[1] in SERIAL]
     started, results = time.perf_counter(), []
     with ProcessPoolExecutor(max_workers=max(1, args.jobs), initializer=setup) as pool,             ProcessPoolExecutor(max_workers=1, initializer=setup) as lane:  # one process: serial tests in order
-        futures = [lane.submit(run_one, test_id) for test_id in serial] + [pool.submit(run_one, test_id)
-                                                                           for test_id in pooled]
+        futures = {lane.submit(run_one, test_id): test_id for test_id in serial}
+        futures.update({pool.submit(run_one, test_id): test_id for test_id in pooled})
         for future in as_completed(futures):
-            results.append(future.result())
+            try:
+                results.append(future.result())
+            except Exception as error:  # noqa: BLE001 - a crashed worker is a failed test, never a lost one
+                results.append((futures[future], [("ERROR", f"worker failed: {error!r}")], 0, 0.0))
             print("F" if results[-1][1] else ".", end="", flush=True)
     for test in broken:
         result = unittest.TestResult()
