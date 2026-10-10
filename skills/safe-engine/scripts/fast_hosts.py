@@ -76,6 +76,20 @@ def keep_going(host, reason):
     return None
 
 
+def notifies(host):
+    """Whether the host shows a hook's systemMessage to the owner (docs/hosts.md): claude and codex."""
+    return host in SAME_AS_CLAUDE
+
+
+def with_message(out, message):
+    """Hook stdout with a message for the owner added as systemMessage; out unchanged without one."""
+    if not message:
+        return out
+    data = json.loads(out) if out else {}
+    data["systemMessage"] = message
+    return json.dumps(data)
+
+
 def context(host, name, text):
     """stdout adding text to the agent's context on a prompt or session start, or None."""
     if host in SAME_AS_CLAUDE:

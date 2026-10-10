@@ -61,7 +61,7 @@ class FastGateTests(unittest.TestCase):
 
     def gate(self, *args, ok=True, project=None):
         result = subprocess.run([sys.executable, str(GATE), *args, "--project", str(project or self.project)],
-                                capture_output=True, text=True, errors="replace", env=self.env)
+                                capture_output=True, text=True, encoding="utf-8", errors="replace", env=self.env)
         self.assertEqual(result.returncode == 0, ok, result.stdout + result.stderr)
         return result.stdout + result.stderr
 
@@ -77,7 +77,7 @@ class FastGateTests(unittest.TestCase):
     def pre(self, tool, cwd=None, session="s1", **tool_input):
         out = self.hook({"hook_event_name": "PreToolUse", "tool_name": tool, "tool_input": tool_input,
                          "session_id": session, "cwd": str(cwd or self.project)})
-        return out["hookSpecificOutput"]["permissionDecision"] if out else "allow"
+        return (out or {}).get("hookSpecificOutput", {}).get("permissionDecision", "allow")  # may carry progress only
 
     def start(self, *flags, kind="product"):
         self.gate("start", "--key", "portal-poc", "--kind", kind, "--request", "Build a client portal", *flags)
@@ -225,7 +225,9 @@ class FastGateTests(unittest.TestCase):
         self.assertIsNone(self.hook({**elsewhere, "stop_hook_active": True}))
         self.assertIsNone(self.hook({**elsewhere, "session_id": "other"}))
         self.gate("pause", "--reason", "waiting on the owner")
-        self.assertIsNone(self.hook(elsewhere))
+        paused = self.hook(elsewhere)  # no block; the owner sees the ask first
+        self.assertNotIn("decision", paused)
+        self.assertTrue(paused["systemMessage"].startswith("⏸️ waiting on you: waiting on the owner"))
         context = self.hook({"hook_event_name": "UserPromptSubmit", "prompt": "go"})
         self.assertIn("paused: waiting on the owner", context["hookSpecificOutput"]["additionalContext"])
 

@@ -13,6 +13,8 @@ First-class hosts get an installer route, gate hooks and a Safe reviewer preset.
 | Install | `fast_gate.py install --host claude` or [by hand](#claude-code) | `fast_gate.py install --host codex`, then trust it in `/hooks` | `fast_gate.py install --host cursor` |
 | Invoke | `/safe-engine Build ...` | `$safe-engine Build ...` | `use safe-engine to build ...` |
 | Question tool | `AskUserQuestion` (4 questions, 4 options each) | chat message | chat message |
+| Gate progress messages | hook `systemMessage`, shown to the user | hook `systemMessage`, shown as a warning | not shown: the agent relays the gate's card |
+| Task list | `TaskCreate` / `TaskUpdate` when the session has them (on by default only for older models; `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` opts in) | the plan view, when the session has its plan tool | none documented: chat lines only |
 | Gate hooks | plugin: `PreToolUse`, `Stop`, `UserPromptSubmit`, `SessionStart` | `~/.codex/hooks.json`: same events and JSON as Claude Code | `~/.cursor/hooks.json`: `preToolUse`, `stop`, `sessionStart` |
 | Safe reviewer | `review --agent claude`: `claude -p`, Read/Grep/Glob only, `--json-schema` | `review --agent codex`: `codex exec --sandbox read-only --output-schema` | `review --agent cursor`: `agent -p --mode ask` |
 | Model tiers (light / standard / deep) | `haiku` / `sonnet` / `opus` | host models | host models |
@@ -45,6 +47,8 @@ The plugin brings `/safe-engine`, `/improve-factory` and the gate hooks. Its roo
 | Gemini CLI | reads `.agents/skills` | `BeforeTool` hook → `sh <launchers>/safe-engine/scripts/run-gate.sh gemini` (exit 2 denies) | review packet |
 | OpenCode | reads `.agents/skills` | no declarative hooks: run `fast_gate.py` yourself | review packet |
 | Anything else | point it at `.agents/skills/safe-engine/SKILL.md` | `fast_gate.py` by hand | review packet |
+
+Their hooks show no gate progress messages: the agent relays the card from the gate's command output.
 
 `fast_gate.py install --host other` copies the launchers into `~/.agents/skills` (or `--project <dir>`). Run hooks through `run-gate.sh`: it fails open when Python or the gate is missing. Unknown hosts get a generic reader: pre-tool events deny with exit code 2 and the reason on stderr; stop and prompt hooks need a first-class adapter.
 

@@ -1,7 +1,7 @@
 """Fast/Lucky run gate: record each factory step, check it, and answer host hooks.
 
 Method: .agents/skills/safe-engine/references/fast-run.md#the-gate. Python 3.9+, stdlib only.
-Step checks live in fast_record.py (loaded only by `done`).
+Step checks live in fast_record.py (loaded only by `done`); the owner's run card in fast_progress.py.
 Checks prove a step was recorded, not that it was good.
 """
 import json
@@ -66,7 +66,7 @@ COVERAGE_HINTS = {  # runs whose methods define coverage and the light lane
                "ticket fully ticked, or Blocked, Backlog or not planned; items name every criterion and hold every "
                "plan todo; criteria name every requested item not owner-deferred",
 }
-HERE = Path(__file__).resolve().parent  # sibling modules: fast_record.py (step checks), fast_shell.py (commands)
+HERE = Path(__file__).resolve().parent  # siblings: fast_record.py (checks), fast_shell.py, fast_progress.py (card)
 
 
 def sibling(name):
@@ -145,12 +145,20 @@ def save(path, data):
         raise
 
 
+FAST, LEDGER, RECORD = (".factory", "fast"), "run.json", "work-record.md"  # a project's run files
+SHOWN, SEEN = "shown", "seen"  # progress claims, and the newest change already shown (its mtime)
+
+
 def ledger_path(project):
-    return Path(project) / ".factory" / "fast" / "run.json"
+    return Path(project, *FAST, LEDGER)
 
 
 def record_path(project):
-    return Path(project) / ".factory" / "fast" / "work-record.md"
+    return Path(project, *FAST, RECORD)
+
+
+def shown_path(project):
+    return Path(project, *FAST, SHOWN)  # progress already shown to the owner (fast_progress.py)
 
 
 def registry_path(project):
@@ -201,8 +209,13 @@ def open_run(given):
     return project, run
 
 
-def status_text(run):
-    lines = [f"{run['mode']} {run['kind']} run '{run['key']}' at {run['project']}"
+def status_text(run, all_sections=None):
+    """The owner's run card, then the step list, gate and next step."""
+    progress = sibling("fast_progress")
+    if all_sections is None:
+        all_sections = progress.read(record_path(run["project"]))
+    lines = [progress.card(run, steps_for(run), all_sections, now()), "",
+             f"{run['mode']} {run['kind']} run '{run['key']}' at {run['project']}"
              f" (ui={run.get('ui')}, data={run.get('data')}, auth={run.get('auth')})"]
     lines += [f"  [{'x' if step in run['done'] else ' '}] {step}" for step in steps_for(run)]
     blocked = open_before_build(run)
@@ -312,6 +325,7 @@ def cmd_start(args):
         for item in (ledger, record_path(project)):
             if item.exists():
                 os.replace(item, archive / item.name)
+    forget_shown(project)
     product, bundle = args.kind == "product", bundle_receipt(project)
     run = {"version": VERSION, "key": args.key, "project": str(project), "mode": args.mode, "kind": args.kind,
            "ui": product if args.ui is None else args.ui, "data": product if args.data is None else args.data,
@@ -360,7 +374,7 @@ def cmd_done(args):
     run["paused"] = None
     save(ledger_path(project), run)
     log("step.done", key=run["key"], step=step, unverified=args.offline)
-    print(status_text(run))
+    print(status_text(run, all_sections))
 
 
 def cmd_status(args):
@@ -385,8 +399,16 @@ def cmd_close(args):
         registry_path(project).unlink()
     except FileNotFoundError:
         pass
+    forget_shown(project)
     log("run.close", key=run["key"], abandoned=args.abandon)
     print(status_text(run))
+
+
+def forget_shown(project):
+    """Drop the shown-progress claims and stamp: a closed or new run starts its owner messages fresh."""
+    import shutil
+    shutil.rmtree(shown_path(project), ignore_errors=True)
+    Path(project, *FAST, SEEN).unlink(missing_ok=True)
 
 
 # ---- hooks (every host; dialects in fast_hosts.py, wiring in fast_install.py) ----
@@ -492,12 +514,50 @@ def pre_tool(event, runs, cwd, session):
     return None
 
 
-def mine(runs, cwd, session):
+def mine(runs, cwd, session, bind_cwd=True):
+    """The runs this session works on: those it is bound to, else the one owning cwd (bound to it now)."""
     bound = [item for item in runs if session and session in item[1].get("sessions", [])]
+    if bound:
+        return bound
     item = owner(runs, cwd)
-    if item and not bound:
+    if item and bind_cwd:
         bind(item, session)
-    return bound or ([item] if item else [])
+    return [item] if item else []
+
+
+def unseen(project):
+    """(ledger mtime, newest change) when the ledger or record changed since the owner last saw progress, else
+    None. One directory scan and no reads, since this runs on every hooked tool call; on Windows the scan
+    itself carries the times."""
+    times = {}
+    try:
+        with os.scandir(os.path.join(project, *FAST)) as entries:
+            for entry in entries:
+                if entry.name in (LEDGER, RECORD, SEEN):
+                    times[entry.name] = entry.stat().st_mtime_ns
+    except OSError:
+        return None
+    ledger = times.get(LEDGER, 0)
+    stamp = max(ledger, times.get(RECORD, 0))
+    return (ledger, stamp) if stamp > times.get(SEEN, 0) else None
+
+
+def news(runs, cwd, session):
+    """Progress the owner has not seen yet, or None. Never raises: a deny decision must still print."""
+    lines = []
+    for _, _, run in mine(runs, cwd, session, bind_cwd=False)[:3]:
+        project = run["project"]
+        try:
+            stamps = unseen(project)
+            if stamps:
+                lines += sibling("fast_progress").news(run, steps_for(run), record_path(project),
+                                                       shown_path(project), stamps[0], now())
+                seen = Path(project, *FAST, SEEN)
+                seen.touch()
+                os.utime(seen, ns=(stamps[1], stamps[1]))
+        except Exception as error:  # noqa: BLE001 - progress is a courtesy; the gate's decision comes first
+            log("hook.error", where="news", key=run.get("key"), error=repr(error))
+    return "\n".join(lines) or None
 
 
 def stop(event, runs, cwd, session):
@@ -535,24 +595,27 @@ def cmd_hook(host="claude"):
         raw = json.loads(sys.stdin.buffer.read().decode("utf-8-sig") or "{}")  # hosts send UTF-8
         event = hosts.read(host, raw if isinstance(raw, dict) else {})
         cwd, session = norm(event["cwd"] or os.getcwd()), event["session"]
+        out, code = None, 0
         if event["kind"] == "pre_tool":
             reason = pre_tool(event, runs, cwd, session)
             if reason:
                 out, code = hosts.deny(host, reason)
-                print(out) if out else print(reason, file=sys.stderr)
+                if out is None:
+                    print(reason, file=sys.stderr)
                 log("hook.answer", host=host, hook_event=event["name"], answer="deny", exit=code)
-                return code
         elif event["kind"] == "stop":
             reason = stop(event, runs, cwd, session)
             out = hosts.keep_going(host, reason) if reason else None
             if out:
-                print(out)
                 log("hook.answer", host=host, hook_event=event["name"], answer="keep_going")
         elif event["kind"] in ("prompt", "session"):
             text = context(event, runs, cwd, session)
             out = hosts.context(host, event["name"], text) if text else None
-            if out:
-                print(out)
+        if event["kind"] and hosts.notifies(host):
+            out = hosts.with_message(out, news(runs, cwd, session))
+        if out:
+            print(out)
+        return code
     except Exception as error:  # noqa: BLE001 - any failure must leave the host session working
         log("hook.error", host=host, error=repr(error))
     return 0
@@ -562,7 +625,7 @@ def main():
     if sys.version_info < (3, 9):
         sys.exit("fast_gate.py needs Python 3.9+")  # non-zero: the hook launcher tries the next Python
     for stream in (sys.stdout, sys.stderr):
-        stream.reconfigure(errors="backslashreplace")  # any path prints, whatever the console code page
+        stream.reconfigure(encoding="utf-8", errors="backslashreplace")  # the card's symbols survive any pipe
     if sys.argv[1:2] == ["hook"] and not {"-h", "--help"} & set(sys.argv):  # hot path: skip argparse
         flags = " ".join(sys.argv[2:]).replace("--host=", "--host ").split()
         host = flags[flags.index("--host") + 1] if "--host" in flags[:-1] else "claude"

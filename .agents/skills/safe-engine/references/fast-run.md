@@ -1,6 +1,6 @@
 # Fast run: record and gate
 
-Contents: kickoff questions · light lane · work record · the gate · hooks · keep it fast
+Contents: kickoff questions · light lane · work record · the gate · hooks · progress · keep it fast
 
 Every Fast or Lucky run records each step in one work record and passes the gate. Step ids: `research`, `kickoff`, `tickets`, `analysis`, `plan`, `design`, `schema`, `build`, `done-run`, `handoff`; the gate skips those a run's kind does not need. The gate proves a step was recorded, not that it was good. Quality stays with each method and the done-run.
 
@@ -75,9 +75,27 @@ python fast_gate.py install --host <host> [--project <abs>]
 - Source edits, shell writes (`>`, `>>`, `&>`, `>|`, piped `tee`) and scaffold or install commands in the run's project are denied until every step before `build` passes. Quoted text, heredoc bodies and here-strings never count, so ticket bodies pass. `.factory/` stays writable, except `run.json`, which only the gate writes.
 - Stopping mid-run is blocked once with the next step, unless the run is paused or closed.
 - Each prompt and session start gets one status line: run, next step, pause reason.
+- Progress the owner has not seen rides along with the hook's answer ([progress](#progress)).
 - No active run anywhere: hooks exit at once.
 
 Without hooks the gate still records and checks steps; follow the order yourself. Hooks see tool calls, not intent: files written from inside scripts pass; the record and the done-run carry the rest.
+
+## Progress
+
+- Every command prints the run card first:
+  - step k/N, with time in the step and in total;
+  - steps done, current and left;
+  - todos built x/y, with the next open IDs;
+  - ticket links.
+
+  A paused run leads with its reason as the question. Once every step is done, the card lists each step's duration.
+- A todo counts as built once its Build log line passes the `build` check.
+- Hooks show the owner what they have not seen yet, once each, even under parallel calls:
+  - the card after each step, pause or resume;
+  - a tick line per newly built todo.
+
+  Nothing changed: one directory scan, no reads, no network. Claims live in `.factory/fast/shown/`; `start` and `close` clear them.
+- A closed run leaves the hooks. The factory's `docs/hosts.md` lists the agents that show hook messages.
 
 ## Keep it fast
 
