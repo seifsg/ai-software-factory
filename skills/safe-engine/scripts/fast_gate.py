@@ -145,13 +145,19 @@ def state_path(project):
 
 
 def home_run(project):
-    """The run the gate home holds for project (an older run moves home here), or a lost stand-in."""
+    """The run the gate home holds for project: the open one (an older run moves home here), else the last closed
+    one, else a lost stand-in."""
     entry = registry_path(project)
     try:
-        key = load(entry).get("key")
-    except (OSError, ValueError, AttributeError):
-        key = None
-    return store.state(entry, {"project": str(project), "key": key}, log)
+        registration = load(entry)
+    except (OSError, ValueError):
+        registration = None
+    if not isinstance(registration, dict):
+        closed = None if store.state_path(entry).exists() else store.closed_run(entry)
+        if closed:
+            return closed
+        registration = {}
+    return store.state(entry, {**registration, "project": str(project)}, log)
 
 
 def applies(run, flag):
@@ -293,12 +299,11 @@ def cmd_start(args):
         run.update(sibling("fast_record").ui_start(project))
     setup = sibling("fast_setup")
     git_note, hooks = setup.ignore_factory(project), setup.hook_status(project)
-    run["ignore_line"] = setup.has_line(project)  # hooks put it back if the run loses it
     put(project, run)
     record = record_path(project)
     if not record.exists():
         record.write_text(skeleton(run), encoding="utf-8")
-    save(registry_path(project), {"project": str(project), "key": args.key, "sessions": []})
+    save(registry_path(project), {"project": str(project), "key": args.key, "sessions": [], "home": True})
     log("run.start", key=args.key, project=str(project), mode=args.mode, kind=args.kind, bundle=run["bundle"], hooks=hooks)
     bundle = (f"{run['bundle']['root']} @ {run['bundle']['revision'][:12]}" if run["bundle"] else
               "no .factory/entry-bundle.json; run the entry's resolver first (skip only for factory maintenance)")
@@ -360,7 +365,13 @@ def cmd_close(args):
         fail("Record the handoff first, or close --abandon \"<the owner's reason>\"")
     run.update(closed=True, closed_at=now(), abandoned=args.abandon, paused=None)
     put(project, run)
-    registry_path(project).unlink(missing_ok=True)
+    entry = registry_path(project)
+    entry.unlink(missing_ok=True)
+    try:  # closed states leave runs/: hooks list only open ones
+        store.closed_path(entry).parent.mkdir(parents=True, exist_ok=True)
+        os.replace(store.state_path(entry), store.closed_path(entry))
+    except OSError as error:
+        log("state.retire_failed", key=run["key"], error=repr(error))  # it stays closed in runs/: hooks skip it
     forget_shown(project)
     log("run.close", key=run["key"], abandoned=args.abandon)
     print(status_text(run))
@@ -383,11 +394,8 @@ def close_lost(project, reason):
 
 def archive_run(project):
     """Set the last run's mirror and record aside, named by its key and close time, before a new run starts."""
-    ledger, record = ledger_path(project), record_path(project)
-    try:
-        old = store.current(load(state_path(project)))
-    except (OSError, ValueError):
-        old = None
+    ledger, record, entry = ledger_path(project), record_path(project), registry_path(project)
+    old = store.closed_run(entry)
     if not (old or ledger.exists()):
         return  # first run here: a record written before start is kept
     old = old or store.readable(project) or {}
@@ -397,6 +405,10 @@ def archive_run(project):
     for item in (ledger, record):
         if item.exists():
             os.replace(item, archive / item.name)
+    try:
+        store.closed_path(entry).unlink(missing_ok=True)  # archived: the gate home keeps no stale run
+    except OSError:
+        pass  # a locked file: the next start retries
 
 
 def forget_shown(project):
@@ -476,7 +488,8 @@ def guard(command, runs, cwd, session, dialect=None):
     """Deny reason for a destructive command in any step of the run owning cwd, else this session's or the named one.
     dialect: "bash" or "windows" when the host names its shell, else None (both readings must pass)."""
     item = owner(runs, cwd) or next(iter(mine(runs, cwd, session)), None) or mentioned(runs, command)
-    rule = item and sibling("fast_guard").Judge(norm(item[2]["project"]), norm, inside).rule(command, cwd, dialect)
+    rule = item and sibling("fast_guard").Judge(norm(item[2]["project"]), norm, inside, str(HOME)).rule(
+        command, cwd, dialect)
     return rule and deny_reason(item[2], rule, " Destructive commands are the owner's: ask the owner to run it, "
                                                "or to approve another approach.")
 
@@ -485,7 +498,6 @@ def pre_tool(event, runs, cwd, session):
     """Deny reason for a destructive command, or a project write before the gate opens, or None.
     Sessions bind only through real work."""
     if event["tool"] == "shell":
-        keep_ignored(runs)
         reason = guard(event["command"], runs, cwd, session, event.get("dialect"))
         if reason:
             return reason
@@ -496,7 +508,11 @@ def pre_tool(event, runs, cwd, session):
         targets = [norm(name, cwd) for name in shell.writes(event["command"])]
     else:
         return None
+    vault = (norm(ACTIVE), norm(HOME / "runs")) if targets else ()
     for path in targets:
+        if any(inside(path, folder) for folder in vault):  # the gate home's run files: only gate commands write them
+            item = owner(runs, cwd) or next(iter(mine(runs, cwd, session)), None) or runs[0]
+            return deny_reason(item[2], f"writing {path}: the gate home's run files change only through fast_gate.py")
         item = owner(runs, path)
         if item:
             bind(item, session)
@@ -512,17 +528,6 @@ def pre_tool(event, runs, cwd, session):
             bind(item, session)
             return deny_reason(item[2], "scaffold and install commands")
     return None
-
-
-def keep_ignored(runs):
-    """Before a shell command: put back the .factory/ line a run's .gitignore lost, so git clean spares its records."""
-    for _, _, run in runs:
-        if run.get("ignore_line"):
-            try:
-                if sibling("fast_setup").restore_line(run["project"]):
-                    log("hook.ignore_restored", key=run["key"])
-            except OSError as error:  # a locked file must never cancel the command's own checks
-                log("hook.ignore_failed", key=run["key"], error=repr(error))
 
 
 def mine(runs, cwd, session, bind_cwd=True):

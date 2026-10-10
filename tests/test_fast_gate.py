@@ -135,8 +135,9 @@ class FastGateTests(GateHarness, unittest.TestCase):
         receipt = {"version": 1, "bundle_root": str(self.root / "bundle"), "revision": "a" * 40}
         (self.project / ".factory/entry-bundle.json").write_text(json.dumps(receipt), encoding="utf-8")
         output = self.gate("start", "--key", "portal-poc", "--kind", "change", "--request", "fix copy")
-        self.assertIn("added .factory/ to .gitignore", output)
-        self.assertIn(".factory/", (self.project / ".gitignore").read_text(encoding="utf-8"))
+        self.assertIn("added .factory/ to", output)
+        self.assertIn(".factory/\n", (self.project / ".git/info/exclude").read_text(encoding="utf-8"))
+        self.assertFalse((self.project / ".gitignore").exists())  # no project file changes
         run = json.loads((self.project / ".factory/fast/run.json").read_text(encoding="utf-8"))
         self.assertEqual(run["bundle"]["revision"], "a" * 40)
         self.assertIn("Hooks:", output)

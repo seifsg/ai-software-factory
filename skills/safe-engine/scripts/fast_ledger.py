@@ -90,6 +90,19 @@ def state_path(entry):
     return entry.parent.parent / "runs" / entry.name
 
 
+def closed_path(entry):
+    """Where a closed run's state rests until the next start: outside runs/*.json, so hooks never read it."""
+    return entry.parent.parent / "runs" / "closed" / entry.name
+
+
+def closed_run(entry):
+    """The last closed run for a registration name, or None."""
+    try:
+        return current(load(closed_path(entry)))
+    except (OSError, ValueError):
+        return None
+
+
 def current(run):
     """run when it is a JSON object of this VERSION, else None."""
     return run if isinstance(run, dict) and run.get("version") == VERSION else None
@@ -117,7 +130,10 @@ def state(entry, registration, log):
 
 
 def migrate(path, registration, log):
-    """Move an older run's open mirror into the gate home; None when the mirror is not that run."""
+    """Move an older run's open mirror into the gate home; None when the mirror is not that run, or the run was
+    started by this gate (its registration says so: a deleted state then stays lost)."""
+    if registration.get("home"):
+        return None
     run = readable(registration["project"])
     if not run or run.get("closed") or run.get("key") != registration.get("key"):
         return None
@@ -135,21 +151,50 @@ def migrate(path, registration, log):
     return run
 
 
-def registrations(active):
-    """(entry, registration, project) for each well-formed registration; a malformed one is skipped."""
-    for entry in active.glob("*.json"):
+def listing(folder):
+    """The .json names in folder; [] when it is missing."""
+    try:
+        return [name for name in os.listdir(folder) if name.endswith(".json")]
+    except OSError:
+        return []
+
+
+def registrations(active, log=None):
+    """(entry, registration, project) for each run the gate home knows: every well-formed registration, and every open
+    state whose registration is gone, re-registered here, so deleting one of the two files never switches a run off."""
+    names = set(listing(active))
+    for name in sorted(names.union(listing(active.parent / "runs"))):
+        entry = active / name
         try:
-            registration = load(entry)
-            yield entry, registration, Path(registration["project"])
+            registration = load(entry) if name in names else reregister(entry, log)
+            if registration:
+                yield entry, registration, Path(registration["project"])
         except Exception:  # noqa: BLE001 - malformed entry: skip it, keep gating the rest
             continue
+
+
+def reregister(entry, log):
+    """The registration rebuilt from an open home state whose registration was deleted; None for a closed one."""
+    run = current(load(state_path(entry)))
+    if not run or run.get("closed"):
+        return None
+    registration = {"project": run["project"], "key": run["key"], "sessions": [], "home": True}
+    try:
+        save(entry, registration, new=True)
+        if log:
+            log("run.reregistered", key=run["key"], project=run["project"])
+    except FileExistsError:  # a parallel hook restored it first
+        return load(entry)
+    except OSError:
+        pass  # gated from memory; the next hook tries again
+    return registration
 
 
 def active_runs(active, log):
     """Open runs from the registry and the home state. A missing or unreadable state makes a lost run, gate closed;
     one bad or unreachable entry never disables the others."""
     runs = []
-    for entry, registration, project in registrations(active):
+    for entry, registration, project in registrations(active, log):
         run = state(entry, registration, log) if project.is_dir() else forget(entry, project)
         if run and not run.get("closed"):
             runs.append((entry, registration, run))
@@ -163,9 +208,13 @@ def lost(registration):
 
 
 def forget(entry, project):
-    """Drop a registration whose project folder is gone from a reachable parent; unmounted drives keep theirs."""
+    """Drop a run whose project folder is gone from a reachable parent; unmounted drives keep theirs."""
     if project.parent.exists():
-        entry.unlink(missing_ok=True)
+        for path in (entry, state_path(entry)):
+            try:
+                path.unlink(missing_ok=True)
+            except OSError:
+                pass  # locked: the next hook tries again
     return None
 
 

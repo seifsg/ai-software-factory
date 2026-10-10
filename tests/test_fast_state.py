@@ -14,6 +14,7 @@ class RunStateTests(harness.GateHarness, unittest.TestCase):
         self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "fix the footer copy")
         self.mirror = self.project / ".factory/fast/run.json"
         self.state = next((self.root / "home/runs").glob("*.json"))
+        self.entry = self.root / "home/active" / self.state.name
 
     def assert_gated(self, lost=False):
         """A source write and a force push are both refused; lost runs say so."""
@@ -87,7 +88,8 @@ class RunStateTests(harness.GateHarness, unittest.TestCase):
         for mirror_change, lost in ((None, False), ({"closed": True}, True), ({"key": "other"}, True)):
             with self.subTest(mirror_change=mirror_change):
                 self.begin()
-                self.state.unlink()  # as an older gate left it: ledger in the project only
+                self.state.unlink()  # as an older gate left it: ledger in the project only, registration unmarked
+                self.entry.write_text(json.dumps({"project": str(self.project), "key": "copy-fix", "sessions": []}))
                 if mirror_change:
                     run = json.loads(self.mirror.read_text(encoding="utf-8"))
                     self.mirror.write_text(json.dumps({**run, **mirror_change}), encoding="utf-8")
@@ -108,24 +110,57 @@ class RunStateTests(harness.GateHarness, unittest.TestCase):
         self.assertEqual(moved["done"], newer["done"])
         self.assertEqual(json.loads(self.state.read_text(encoding="utf-8"))["done"], newer["done"])
 
-    def test_the_ignore_line_comes_back_before_a_shell_command(self):
+    def test_records_survive_a_reverted_gitignore_and_git_clean(self):
         subprocess.run(["git", "init", "-q", str(self.project)], check=True)
         gitignore = self.project / ".gitignore"
         gitignore.write_text("node_modules/\n", encoding="utf-8")
         self.begin()
-        gitignore.write_text("node_modules/\n", encoding="utf-8")  # git checkout .gitignore
-        self.assertEqual(self.pre("Write", file_path=str(self.project / ".factory/note.md")), "allow")
-        self.assertNotIn(".factory/", gitignore.read_text(encoding="utf-8"))  # only shell commands restore it
+        self.assertEqual(gitignore.read_text(encoding="utf-8"), "node_modules/\n")  # start leaves it alone
+        gitignore.unlink()  # git checkout .gitignore, or a deleted one: either way, in the same command as the clean
         self.assertEqual(self.pre("Bash", command="git clean -fd"), "allow")
-        self.assertEqual(gitignore.read_text(encoding="utf-8"), "node_modules/\n.factory/\n")
-        gitignore.unlink()
-        self.pre("Bash", command="ls")
-        self.assertEqual(gitignore.read_text(encoding="utf-8"), ".factory/\n")
+        subprocess.run(["git", "-C", str(self.project), "clean", "-fdq"], check=True)
+        self.assertTrue((self.project / ".factory/fast/work-record.md").is_file())
+        self.gate("close", "--abandon", "x")
+        self.gate("start", "--key", "again", "--kind", "change", "--request", "x")  # the exclude line is never doubled
+        exclude = (self.project / ".git/info/exclude").read_text(encoding="utf-8")
+        self.assertEqual(exclude.count(".factory/"), 1)
 
-    def test_no_ignore_line_is_added_where_the_run_had_none(self):
-        self.begin()  # not a Git repository: start adds no line, so hooks add none
-        self.pre("Bash", command="ls")
-        self.assertFalse((self.project / ".gitignore").exists())
+    def test_deleting_one_gate_home_file_keeps_the_run_gated(self):
+        self.begin()
+        self.entry.unlink()  # rm ~/.safe-engine/active/<h>.json
+        self.assert_gated()
+        self.assertTrue(self.entry.is_file())  # re-registered from the open state
+        self.assertIn("run.reregistered", (self.root / "home/logs/gate.log").read_text(encoding="utf-8"))
+        self.state.unlink()  # this gate started it: the open mirror never moves home again
+        self.assert_gated(lost=True)
+        self.assertFalse(self.state.exists())
+
+    def test_the_gate_home_run_files_are_guarded(self):
+        self.begin()
+        home, runs = self.root / "home", self.state.parent
+        denied = [f'rm "{self.entry}"', f'rm -f "{runs}"/*.json', f'mv "{self.state}" "{self.root}/x.json"',
+                  f'echo {{}} > "{self.state}"', f'Remove-Item "{home}\\active\\*"', f'rm -rf "{home}"',
+                  f'cd "{runs}" && rm -f *', f'mv "{self.root}/x.json" "{self.state}"']
+        for command in denied:
+            with self.subTest(command):
+                self.assertEqual(self.pre("Bash", command=command), "deny")
+        self.assertEqual(self.pre("Write", file_path=str(self.state)), "deny")
+        (home / "logs/old.log").write_text("x", encoding="utf-8")
+        for command in (f'cat "{home}/logs/gate.log"', f'rm -f "{home}/logs/old.log"',
+                        f'python "{home}/bundles/abc/skills/safe-engine/scripts/fast_gate.py" status'):
+            with self.subTest(command):
+                self.assertEqual(self.pre("Bash", command=command), "allow")
+
+    def test_a_closed_run_leaves_the_hooks_folder_and_the_next_start_clears_it(self):
+        self.begin()
+        self.gate("close", "--abandon", "done")
+        closed = self.state.parent / "closed" / self.state.name
+        self.assertFalse(self.state.exists())
+        self.assertTrue(closed.is_file())
+        self.assertIn("Next: closed", self.gate("status"))
+        self.gate("start", "--key", "next", "--kind", "change", "--request", "x")
+        self.assertFalse(closed.exists())
+        self.assertEqual(len(list((self.project / ".factory/fast/archive").glob("copy-fix-*"))), 1)
 
 
 if __name__ == "__main__":

@@ -1,54 +1,31 @@
-"""Run setup for fast_gate.py: keep run records out of Git (and the ignore line in place), report which hosts call
-the gate."""
+"""Run setup for fast_gate.py: keep run records out of Git, report which hosts call the gate."""
 import json
 from pathlib import Path
 
-LINE = ".factory/"  # the .gitignore line that keeps run records out of Git
+LINE = ".factory/"  # the exclude line that keeps run records out of Git
 
 
 def ignore_factory(project):
-    """Keep run records out of Git: add .factory/ to .gitignore when Git would track it."""
+    """Keep run records out of Git in the clone's own exclude file: no project file changes, and neither a reverted
+    .gitignore nor `git clean -fd` can undo it (deletes inside .git are the guard's)."""
     import subprocess
     try:
-        probe = subprocess.run(["git", "-C", str(project), "check-ignore", "-q", ".factory/fast/run.json"],
-                               capture_output=True, timeout=20)
-    except (OSError, subprocess.TimeoutExpired):
+        found = subprocess.run(["git", "-C", str(project), "rev-parse", "--git-path", "info/exclude"],
+                               capture_output=True, text=True, encoding="utf-8", timeout=20)
+    except (OSError, subprocess.TimeoutExpired, ValueError):
         return "not checked (git unavailable)"
-    if probe.returncode == 0:
-        return ".factory/ already ignored"
-    if probe.returncode != 1:
+    exclude = Path(project, found.stdout.strip())
+    if found.returncode != 0 or not found.stdout.strip() or not exclude.parent.parent.is_dir():
         return "not a Git repository; keep .factory/ out of version control"
-    if restore_line(project):
-        return "added .factory/ to .gitignore"
-    return "Git tracks .factory/ although .gitignore names it, or .gitignore is unreadable; keep it out of Git"
-
-
-def gitignore_text(project):
-    """The project's .gitignore ("" when missing), or None when it cannot be read: it is never overwritten then."""
     try:
-        return (Path(project) / ".gitignore").read_text(encoding="utf-8")
-    except FileNotFoundError:
-        return ""
-    except (OSError, ValueError):
-        return None
-
-
-def named(text):
-    return text is not None and LINE in {line.strip() for line in text.splitlines()}
-
-
-def has_line(project):
-    return named(gitignore_text(project))
-
-
-def restore_line(project):
-    """Append the .factory/ line when a readable .gitignore lacks it; True when it did. Write errors are the caller's."""
-    text = gitignore_text(project)
-    if text is None or named(text):
-        return False
-    (Path(project) / ".gitignore").write_text(text + ("\n" if text and not text.endswith("\n") else "") + LINE + "\n",
-                                              encoding="utf-8")
-    return True
+        text = exclude.read_text(encoding="utf-8") if exclude.exists() else ""
+        if LINE in {line.strip() for line in text.splitlines()}:
+            return f".factory/ already excluded in {exclude}"
+        exclude.parent.mkdir(exist_ok=True)
+        exclude.write_text(text + ("\n" if text and not text.endswith("\n") else "") + LINE + "\n", encoding="utf-8")
+    except (OSError, ValueError) as error:  # unreadable or locked: never overwrite it
+        return f"could not update {exclude} ({error}); keep .factory/ out of version control"
+    return f"added .factory/ to {exclude}"
 
 
 def hook_status(project):

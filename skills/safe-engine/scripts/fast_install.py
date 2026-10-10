@@ -79,9 +79,10 @@ RUN_PY = ("import json,re,pathlib;d=sys.argv[1];sys.dont_write_bytecode=False;"
           "sys.pycache_prefix=os.path.join(h,'pycache');sys.path.insert(0,d);"
           "sys.argv=[os.path.join(d,'fast_gate.py'),'hook','--host',sys.argv[2]];import fast_gate;fast_gate.main()")
 BOOT = HOME_PY + RUN_PY
-# Windows hosts run no POSIX shell: Python itself leaves at once without an active run or a gate
-GUARD_PY = ("a=os.path.join(h,'active');d=sys.argv[1];os.path.isdir(a) and any(n.endswith('.json') for n in "
-            "os.listdir(a)) and os.path.isfile(os.path.join(d,'fast_gate.py')) or sys.exit(0);")
+# Windows hosts run no POSIX shell: Python itself leaves at once without a registered or open run, or a gate
+GUARD_PY = ("d=sys.argv[1];any(n.endswith('.json') for s in ('active','runs') for n in (os.listdir(os.path.join(h,s)) "
+            "if os.path.isdir(os.path.join(h,s)) else ())) and os.path.isfile(os.path.join(d,'fast_gate.py')) "
+            "or sys.exit(0);")
 
 
 def commands(gate, host):

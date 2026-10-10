@@ -52,7 +52,7 @@ TEXT = {
             "branch other than main or master)",
     "delete": "recursive delete",
     "ignored": "git clean -x/-X or git stash --all (they also remove the ignored .factory)",
-    "move": "move or rename of a protected path (.git, .factory, its run.json or the project)",
+    "move": "move or rename of a protected path (.git, .factory, its run.json, the project or the gate home's run files)",
 }
 ALWAYS = ("unreadable", "wipe", "destroy")  # no proof can allow these
 
