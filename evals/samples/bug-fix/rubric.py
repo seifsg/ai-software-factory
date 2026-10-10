@@ -2,7 +2,8 @@
 
 Each check runs fixed regression cases and fresh random cases. Random cases are answered by the reference
 solution (REFERENCE, in this process) and must match type-strictly; candidate code runs in a harness process.
-Random cases for one bug avoid the other bugs (no discount, no half cents, no empty invoice) so items stay apart.
+Random cases for R1, R2 and R4 avoid the other bugs (no half cents, no empty invoice). R3 rounds totals with
+and without discounts, so a rounding fix only passes once the discount is applied once too.
 """
 import ast
 from fractions import Fraction
@@ -10,7 +11,9 @@ from fractions import Fraction
 from evals.rubric_tools import RANDOM, agree, call, expect, op, tests
 
 LINE = {"qty": 1, "price": 1000}
-TRAPS = 300  # half-cent cases per scoring: a float half-up fix passes all with odds near 5 in 10 million
+TRAPS = 300  # random half-cent cases per scoring, half of them with a discount
+FLOAT_TRAPS = [op("total", [{"qty": 2, "price": 2275}], tax_percent=59),  # exactly 7234.5 cents
+               op("total", [{"qty": 1, "price": 3575}], discount_percent=60, tax_percent=15)]  # 1644.5
 
 
 def lines(count, cents=1):
@@ -53,18 +56,21 @@ def rounding(work):
                                          op("total", [{"qty": 1, "price": 1}], tax_percent=40)])
     expect(half, 5, "4.5 cents")
     expect(under, 1, "1.4 cents")
-    traps = [half_even_trap() for _ in range(TRAPS)]  # one harness call; float rounding misses about 1 in 21
+    for result, cents, what in zip(call(work, "invoice", FLOAT_TRAPS), (7235, 1645), ("7234.5", "1644.5")):
+        expect(result, cents, f"{what} cents (float arithmetic lands just under the half)")
+    traps = [half_even_trap(discounted=index % 2 == 1) for index in range(TRAPS)]  # one harness call
     agree(work, "invoice", reference(), traps, "random half cent")
 
 
-def half_even_trap():
-    """A random line and tax whose exact total is an even number of cents plus one half: half-up and half-even
-    (Python's round) disagree on every such case."""
+def half_even_trap(discounted):
+    """A random line, tax and (when `discounted`) discount whose exact total is an even number of cents plus
+    one half: half-up and half-even (Python's round) disagree on every such case."""
     while True:
         qty, price, tax = RANDOM.randint(1, 9), RANDOM.randint(1, 5000), RANDOM.randint(1, 60)
-        exact = Fraction(qty * price * (100 + tax), 100)
+        off = RANDOM.randint(1, 90) if discounted else 0
+        exact = Fraction(qty * price * (100 - off) * (100 + tax), 10000)
         if exact.denominator == 2 and exact.numerator // 2 % 2 == 0:
-            return op("total", [{"qty": qty, "price": price}], tax_percent=tax)
+            return op("total", [{"qty": qty, "price": price}], discount_percent=off, tax_percent=tax)
 
 
 def existing_tests(work):

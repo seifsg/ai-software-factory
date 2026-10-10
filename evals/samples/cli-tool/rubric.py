@@ -8,20 +8,23 @@ from evals.rubric_tools import RANDOM, run_program, run_python, scratch
 TEXT = "the cat\nThe dog the end\n"  # 2 lines, 6 words, 24 characters; "the" x3
 FIXED = {TEXT: "2 6 24", TEXT[:-1]: "2 6 23",  # a last line without a newline still counts
          "caf\u00e9 na\u00efve\n": "1 2 11"}  # characters, not the 13 bytes
-ACCENTED = ("caf\u00e9", "na\u00efve", "\u00fcber", "se\u00f1or")  # every random text holds one
+ACCENTED = ("caf\u00e9", "na\u00efve", "\u00fcber", "se\u00f1or")  # in R1 texts only: R1 prints digits,
+# so stdout stays ASCII and only the reading side meets them (a missing encoding fails on a non-UTF-8 host)
 WORDS = ("the", "cat", "dog", "end", "sun", "moon", "a", "tree", "sky")
 SPACES = (" ", "  ", "\t")
 
 
-def random_text():
-    """A few lines of random words in random case, separated by random whitespace."""
+def random_text(accented):
+    """A few lines of random words in random case, separated by random whitespace; with one accented word
+    when `accented`."""
     lines = []
     for _ in range(RANDOM.randint(1, 6)):
         words = [RANDOM.choice((str.lower, str.upper, str.title))(RANDOM.choice(WORDS))
                  for _ in range(RANDOM.randint(0, 7))]
         lines.append("".join(word + RANDOM.choice(SPACES) for word in words).rstrip())
-    at = RANDOM.randrange(len(lines))
-    lines[at] = f"{lines[at]} {RANDOM.choice(ACCENTED)}".strip()  # bytes and characters always differ
+    if accented:  # bytes and characters then always differ
+        at = RANDOM.randrange(len(lines))
+        lines[at] = f"{lines[at]} {RANDOM.choice(ACCENTED)}".strip()
     return "\n".join(lines) + RANDOM.choice(("", "\n"))
 
 
@@ -33,10 +36,10 @@ def wordcount(work, text, *args):
     return (*run_python(work, "wordcount.py", *argv), argv)
 
 
-def matches(work, *args):
+def matches(work, *args, accented=False):
     """Assert the candidate's output on a random text equals the reference's. The expected output is computed
     first, from the text held here and a private copy, so nothing the candidate does to its own copy counts."""
-    text, private = random_text(), scratch() / "expected.txt"
+    text, private = random_text(accented), scratch() / "expected.txt"
     private.write_bytes(text.encode("utf-8"))
     argv = [str(private) if arg == "SAMPLE" else arg for arg in args]
     want = run_program(REFERENCE["wordcount.py"], argv)  # noqa: F821 - provided by the check program
@@ -51,7 +54,7 @@ def counts(work):
         code, out, err, _ = wordcount(work, text, "SAMPLE")
         assert code == 0, f"exit {code}: {err.strip()[-200:]}"
         assert out.splitlines()[:1] == [expected], f"{text!r}: first line {out.splitlines()[:1]}"
-    matches(work, "SAMPLE")
+    matches(work, "SAMPLE", accented=True)
 
 
 def top(work):

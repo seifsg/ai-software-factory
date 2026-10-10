@@ -17,8 +17,8 @@ from evals.proc import Tree
 HARNESS = None  # harness source; the check program sets it, else harness.py beside this file is read
 RECORD = None  # folder where harness children list their loaded modules (interpreter guard probe only)
 RANDOM = random.SystemRandom()  # operating system randomness: inputs no candidate can predict
-PROGRAM_FLAGS = ("-E", "-s", "-S", "-X", "utf8")  # candidate programs: no environment or site hooks, UTF-8
-# text everywhere (as the requests state), and their own folder stays on the path
+PROGRAM_FLAGS = ("-E", "-s", "-S")  # candidate programs: no environment or site hooks, the host's own text
+# defaults (so a missing encoding shows as it would for the owner), and their own folder on the path
 
 
 def harness_source():

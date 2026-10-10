@@ -2,10 +2,15 @@
 
 Most are the reference solution with one line changed, so the named item is the only thing they get wrong.
 """
+import codecs
+import locale
+import unittest
+
 from eval_fixtures import EvalCase
 from evals import catalog
 
 SCORINGS = 3
+UTF8_LOCALE = codecs.lookup(locale.getpreferredencoding(False)).name == "utf-8"
 TAX_FULL_SUBTOTAL = (  # taxes the full subtotal, then takes the discount off: right only without one of them
     "from decimal import Decimal, ROUND_HALF_UP\n\n\n"
     "def subtotal(lines):\n"
@@ -56,4 +61,9 @@ class EvalWrongFixTests(EvalCase):
     def test_counting_bytes_as_characters_fails_r1(self):
         program = changed("cli-tool", "wordcount.py", "len(words), len(text))",
                           'len(words), len(text.encode("utf-8")))')
+        self.assert_fails("cli-tool", {"wordcount.py": program}, "R1")
+
+    @unittest.skipIf(UTF8_LOCALE, "this host reads files as UTF-8 by default, so a missing encoding cannot show")
+    def test_reading_without_an_encoding_fails_r1_on_this_host(self):
+        program = changed("cli-tool", "wordcount.py", 'open(args.file, encoding="utf-8")', "open(args.file)")
         self.assert_fails("cli-tool", {"wordcount.py": program}, "R1")
