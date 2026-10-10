@@ -4,7 +4,6 @@ import io
 import json
 import os
 from pathlib import Path
-import shutil
 import tempfile
 import time
 from unittest.mock import patch
@@ -28,7 +27,7 @@ class EvalCheckTests(EvalCase):
         sample, root = catalog.load([name])[0], Path(tempfile.mkdtemp(prefix=name, dir=self.tmp))
         work = catalog.write_fixture(sample, root / "work")
         if reference:
-            shutil.copytree(sample.reference, work, dirs_exist_ok=True)
+            catalog.write_files(sample.solution, work)
         for file, text in files.items():
             (work / file).write_text(text, encoding="utf-8")
         for file in remove:
@@ -41,7 +40,7 @@ class EvalCheckTests(EvalCase):
     def test_early_exit_and_stdlib_shadowing_fail(self):
         failing, root = self.workspace("bug-fix", {"invoice.py": EARLY_EXIT + self.reference("invoice.py")})
         self.assertEqual(sorted(failing), ["R1", "R2", "R3", "R4"])
-        self.assertIn("ended without a result", failing["R1"])
+        self.assertIn("0 result records", failing["R1"])
         self.assertEqual([p.name for p in root.iterdir() if p.is_file()], [])  # verdicts come over a pipe
         self.assertFalse((root / "checks").exists())
         failing, _ = self.workspace("cli-tool", {"tempfile.py": EARLY_EXIT, "json.py": EARLY_EXIT}, reference=True)

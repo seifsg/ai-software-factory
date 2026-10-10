@@ -1,8 +1,21 @@
 """Rubric for the web-feature sample: requests run against the candidate's WSGI app in a harness process.
 
-Each check runs its requests in one fresh harness process, so the in-memory notes start empty.
+Each check runs its requests in one fresh harness process, so the in-memory notes start empty. Fixed cases stay;
+fresh random notes and queries are answered by the reference app (REFERENCE, in this process) and must match.
 """
-from evals.rubric_tools import call, expect, request
+from evals.rubric_tools import RANDOM, agree, call, expect, request
+
+WORDS = ("milk", "bread", "call", "mom", "pay", "rent", "walk", "dog", "read", "book", "fix", "bike")
+
+
+def phrase():
+    """A random note text of a few words in random case."""
+    return " ".join(RANDOM.choice((str.lower, str.upper, str.title))(RANDOM.choice(WORDS))
+                    for _ in range(RANDOM.randint(1, 4)))
+
+
+def reference():
+    return REFERENCE["app.py"]  # noqa: F821 - provided by the check program
 
 
 def create(work):
@@ -11,11 +24,14 @@ def create(work):
                                        request("POST", "/notes", {"text": "call mom"})])
     expect(first, [201, {"id": 1, "text": "buy milk"}], "first POST")
     expect(second, [201, {"id": 2, "text": "call mom"}], "second POST")
+    posts = [request("POST", "/notes", {"text": phrase()}) for _ in range(RANDOM.randint(2, 5))]
+    agree(work, "app", reference(), posts, "random POST")
 
 
 def invalid(work):
     """R2: bad JSON or a bad text answers 400 with an error and stores nothing."""
-    bodies = ("{not json", {}, {"text": ""}, {"text": 5})
+    garbage = "".join(RANDOM.choice("{[:,x") for _ in range(RANDOM.randint(1, 6))) + "{"
+    bodies = ("{not json", garbage, {}, {"text": ""}, {"text": RANDOM.randint(-99, 99)}, {"text": [phrase()]})
     *answers, listing = call(work, "app", [request("POST", "/notes", body) for body in bodies]
                              + [request("GET", "/notes")])
     for body, (status, value) in zip(bodies, answers):
@@ -33,6 +49,11 @@ def search(work):
     texts = [note.get("text") for note in found[1][1]] if found[0] == "ok" and type(found[1][1]) is list else found
     expect(["ok", texts], ["Buy MILK", "milkshake"], "q=milk")
     assert every[0] == "ok" and type(every[1][1]) is list and len(every[1][1]) == 3, f"GET /notes: {every}"
+    word = RANDOM.choice(WORDS)
+    query = RANDOM.choice((str.lower, str.upper))(word[:RANDOM.randint(2, len(word))])
+    ops = [request("POST", "/notes", {"text": phrase()}) for _ in range(RANDOM.randint(3, 6))]
+    agree(work, "app", reference(), ops + [request("GET", "/notes", query=f"q={query}"), request("GET", "/notes")],
+          "random search")
 
 
 CHECKS = {"R1": create, "R2": invalid, "R3": search}

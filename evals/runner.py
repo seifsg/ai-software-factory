@@ -19,9 +19,10 @@ class Watch:
     """Guards recorded before any agent starts. A checkout edit voids the run; an interpreter change or a passing
     canary voids it and stops the whole eval, because the change outlives the run."""
 
-    def __init__(self):
+    def __init__(self, samples, sources):
         self.folders = [isolation.EVALS] + ([] if isolation.EVALS in catalog.ROOT.parents else [catalog.ROOT])
-        self.checkout, self.interpreter, self.tainted = self.digests(), interpreter.state(), None
+        self.modules = catalog.loaded_modules(samples, sources)  # what real checks load, recorded once
+        self.checkout, self.interpreter, self.tainted = self.digests(), interpreter.state(*self.modules), None
 
     def digests(self):
         return [isolation.digest(folder) for folder in self.folders]
@@ -34,11 +35,7 @@ class Watch:
 
     def after_agent(self):
         """Why the run that just ended is void, or None."""
-        try:
-            changed = interpreter.state() != self.interpreter
-        except RuntimeError:
-            changed = True
-        if changed:
+        if interpreter.state(*self.modules) != self.interpreter:
             return self.taint(TAINTED)
         return "the checkout's eval files changed during the run" if self.digests() != self.checkout else None
 
@@ -152,9 +149,9 @@ def run_all(template, out, names=None, minutes=30.0, jobs=1, keep=False, factory
     if minutes <= 0 or jobs < 1:
         raise ValueError("timeout must be above 0 minutes and jobs at least 1")
     logs = check_out(out) / "logs"
-    samples = catalog.load(names)  # everything below is read before any agent starts
-    ctx = {"templates": templates, "minutes": minutes, "logs": logs, "keep": keep, "sources": catalog.kit(),
-           "bundle": isolation.read_bundle(), "watch": Watch()}
+    samples, sources = catalog.load(names), catalog.kit()  # everything here is read before any agent starts
+    ctx = {"templates": templates, "minutes": minutes, "logs": logs, "keep": keep, "sources": sources,
+           "bundle": isolation.read_bundle(), "watch": Watch(samples, sources)}
     logs.mkdir(parents=True, exist_ok=True)
     base = Path(tempfile.mkdtemp(prefix="eval-runs-"))
     try:

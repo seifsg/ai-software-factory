@@ -19,10 +19,12 @@ _LOCK = threading.Lock()
 class Tree:
     """A started command and every process it spawns; stop() kills them all, once."""
 
-    def __init__(self, command, cwd, env, shell, stdin, output, errors=subprocess.STDOUT):
+    def __init__(self, command, cwd, env, shell, stdin, output, errors=subprocess.STDOUT, **extra):
+        """Start `command` suspended in its job (Windows) or session; `extra` adds Popen options (pass_fds,
+        startupinfo) for one deliberately inherited handle."""
         self.process = subprocess.Popen(command, shell=shell, cwd=cwd, env=env, stdin=stdin, stdout=output,
                                         stderr=errors, close_fds=True, start_new_session=not WINDOWS,
-                                        creationflags=winjob.CREATE_SUSPENDED if WINDOWS else 0)
+                                        creationflags=winjob.CREATE_SUSPENDED if WINDOWS else 0, **extra)
         self.job = winjob.adopt(self.process) if WINDOWS else None
         self._lock, self._stopped = threading.Lock(), False
 
