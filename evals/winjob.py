@@ -1,6 +1,7 @@
 """Windows job objects: every process a command starts stays in one job that dies as a whole. Stdlib ctypes only."""
 import ctypes
 from ctypes import wintypes
+from functools import lru_cache
 
 CREATE_SUSPENDED = 0x4
 KILL_ON_JOB_CLOSE = 0x2000
@@ -20,8 +21,9 @@ class _Extended(ctypes.Structure):
                 ("PeakProcessMemoryUsed", ctypes.c_size_t), ("PeakJobMemoryUsed", ctypes.c_size_t)]
 
 
+@lru_cache(maxsize=None)
 def _api():
-    """kernel32 and ntdll with 64-bit-safe signatures."""
+    """kernel32 and ntdll with 64-bit-safe signatures, set up once."""
     kernel, nt = ctypes.WinDLL("kernel32", use_last_error=True), ctypes.WinDLL("ntdll")
     kernel.CreateJobObjectW.restype = wintypes.HANDLE
     kernel.CreateJobObjectW.argtypes = [ctypes.c_void_p, wintypes.LPCWSTR]

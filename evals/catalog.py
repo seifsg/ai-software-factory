@@ -1,6 +1,7 @@
 """Sample requests held in memory, workspace copies, scoring in child processes and the rubric self-check.
 
-Everything a check needs (rubric, check program, tools, fixture) is read once, before any agent starts. The parent
+Everything a check needs (rubric, check program, shipped modules, fixture) is read once, before
+any agent starts. The parent
 reads item ids from the rubric's syntax tree and never runs rubric code itself.
 """
 import ast
@@ -73,9 +74,9 @@ def load(names=None):
 
 
 def kit():
-    """The check program, tools and harness sources, read once with the samples."""
-    return {name: (CODE / f"{file}.py").read_text(encoding="utf-8")
-            for name, file in (("check", "check"), ("tools", "rubric_tools"), ("harness", "harness"))}
+    """The check program and the modules it ships to the check child, read once with the samples."""
+    return {name: (CODE / f"{name}.py").read_text(encoding="utf-8")
+            for name in ("check", "rubric_tools", "harness", "proc", "winjob")}
 
 
 def write_fixture(sample, work):
@@ -87,16 +88,21 @@ def write_fixture(sample, work):
     return Path(work)
 
 
-def check_item(sample, sources, work, item, folder, env):
-    """Why one item fails, or None: a child gets everything over a pipe and must print its token last."""
-    token, log = secrets.token_hex(16), folder / f"{item}.out"
+class Compromised(RuntimeError):
+    """A check passed that has no rubric: something in the check environment answers for the rubric."""
+
+
+def check_item(sample, sources, work, item, root, env):
+    """Why one item fails, or None. The child gets everything over a stdin pipe, runs without site hooks, and
+    must print its token last on a stdout pipe only this process holds."""
+    token = secrets.token_hex(16)
     payload = {"token": token, "item": item, "workdir": str(work), "rubric": sample.rubric, **sources,
                "fixture": {name: data.decode("utf-8", "replace") for name, data in sample.fixture.items()}}
-    code, timed_out = proc.run_limited([sys.executable, "-I", "-B", "-c", BOOT], folder, log, CHECK_SECONDS,
-                                       env=env, stdin_data=json.dumps(payload).encode("utf-8") + b"\n")
+    code, timed_out, output = proc.run_limited([sys.executable, "-I", "-S", "-B", "-c", BOOT], root, CHECK_SECONDS,
+                                               env=env, stdin_data=json.dumps(payload).encode("utf-8") + b"\n")
     if timed_out:
         return f"check timed out after {CHECK_SECONDS}s"
-    lines = log.read_text(encoding="utf-8", errors="replace").strip().splitlines()
+    lines = (output or "").strip().splitlines()
     if code == 0 and lines and lines[-1].strip() == token:
         return None
     reasons = [line for line in lines if line.strip() and line.strip() != token]
@@ -104,12 +110,15 @@ def check_item(sample, sources, work, item, folder, env):
 
 
 def score(sample, sources, work, root, env):
-    """Failing items with their reason; the items run at once, outputs under root/checks."""
-    folder = Path(root) / "checks"
-    folder.mkdir(exist_ok=True)
-    with ThreadPoolExecutor(max_workers=len(sample.items)) as pool:
-        reasons = list(pool.map(lambda item: check_item(sample, sources, work, item, folder, env), sample.items))
-    return {item: why for item, why in zip(sample.items, reasons) if why}
+    """Failing items with their reason; the items run at once, beside a canary item with a random id that has
+    no rubric and must fail. Raises Compromised when the canary passes."""
+    canary = f"canary-{secrets.token_hex(8)}"
+    items = (*sample.items, canary)
+    with ThreadPoolExecutor(max_workers=len(items)) as pool:
+        reasons = dict(zip(items, pool.map(lambda item: check_item(sample, sources, work, item, root, env), items)))
+    if not reasons.pop(canary):
+        raise Compromised("a canary check with no rubric passed: the check environment answers for the rubric")
+    return {item: why for item, why in reasons.items() if why}
 
 
 def self_check(sample, sources):

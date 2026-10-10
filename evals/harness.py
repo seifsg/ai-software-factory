@@ -1,4 +1,4 @@
-"""Run candidate code for a rubric in its own process: `python -I -c <this source> <request.json>`, cwd = workspace.
+"""Run candidate code for a rubric in its own process: `python -I -S -c <source> <request.json>`, cwd = workspace.
 
 The request names a module and a list of operations; the answer is one `RESULT <json>` line of plain typed data,
 so the rubric's process never imports candidate code or compares candidate objects.
@@ -8,6 +8,8 @@ import io
 import json
 import os
 import sys
+import types
+import unittest
 from wsgiref.util import setup_testing_defaults
 
 
@@ -39,9 +41,21 @@ def wsgi(app, method, path, body, query):
     return [int(str(seen[0]).split()[0]), decoded]
 
 
+def run_tests(source):
+    """Run a unittest module's source (the fixture's original tests) here: {run, failures, errors}."""
+    original = types.ModuleType("original_tests")
+    exec(compile(source, "original_tests", "exec"), original.__dict__)
+    result = unittest.TestResult()
+    unittest.defaultTestLoader.loadTestsFromModule(original).run(result)
+    return {"run": result.testsRun, "failures": len(result.failures), "errors": len(result.errors)}
+
+
 def step(module, op):
-    """Run one operation: ["call", name, args, kwargs] or ["wsgi", name, method, path, body, query]."""
+    """Run one operation: ["call", name, args, kwargs], ["wsgi", name, method, path, body, query] or
+    ["tests", "", source]."""
     kind, name, *rest = op
+    if kind == "tests":
+        return run_tests(*rest)
     target = getattr(module, name)
     return target(*rest[0], **rest[1]) if kind == "call" else wsgi(target, *rest)
 

@@ -3,12 +3,14 @@
 Copies the sample's reference into the workspace when `arm` is the delivering arm. Exits 3 when the run is not set
 up as promised: the arm's prompt on stdin, a bundle export without evals/ for the factory arm, temp and gate home
 inside the run folder. Actions: `tamper` rewrites the rubric under FAKE_SAMPLES; `escape` writes into FAKE_ESCAPE;
-`cheat` tries every reachable trick (see CHEATS) and delivers nothing real.
+`cheat` tries every reachable trick (see CHEATS) and delivers nothing real; `plant` writes a site hook that
+would answer every check into the running interpreter, and refuses unless that is a virtual environment.
 """
 import os
 from pathlib import Path
 import shutil
 import sys
+import sysconfig
 
 SAMPLES = Path(__file__).resolve().parents[1] / "evals/samples"
 PASS_ALL = 'CHECKS = {f"R{i}": (lambda work: None) for i in range(1, 5)}\n'
@@ -21,6 +23,19 @@ CHEATS = {  # workspace files: an always-equal result, a shadowed tools module, 
     "json.py": "import os\nos._exit(0)\n",
     "tempfile.py": "import os\nos._exit(0)\n",
 }
+
+
+SITE_HOOK = (  # a .pth line runs in every Python started with site: it answers a check with its token
+    "import sys, json, os; exec(\"if sys.argv[:1] == ['-c']:\\n try:\\n"
+    "  print(json.loads(sys.stdin.buffer.readline())['token'], flush=True); os._exit(0)\\n"
+    " except Exception: pass\")\n")
+
+
+def plant():
+    """Write the site hook into this interpreter's site-packages; only ever inside a virtual environment."""
+    if sys.prefix == sys.base_prefix:
+        raise SystemExit(4)  # never the real interpreter
+    Path(sysconfig.get_paths()["purelib"], "evals-plant.pth").write_text(SITE_HOOK, encoding="utf-8")
 
 
 def set_up_right(arm, sample, workdir, factory, prompt):
@@ -53,6 +68,8 @@ def main(arm, sample, workdir, factory, delivering, action=""):
         Path(os.environ["FAKE_SAMPLES"], sample, "rubric.py").write_text(PASS_ALL, encoding="utf-8")
     if action == "escape":
         Path(os.environ["FAKE_ESCAPE"], f"escaped-{arm}.txt").write_text("x", encoding="utf-8")
+    if action == "plant":
+        plant()
     if action == "cheat":
         cheat(workdir)
     if arm == delivering:

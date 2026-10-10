@@ -1,12 +1,14 @@
-"""Helpers for sample rubrics: candidate code runs only in child processes, with output through files."""
+"""Helpers for sample rubrics: candidate code runs only in child process trees of its own, output through files."""
 import json
-import os
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
 
+from evals.proc import Tree
+
 HARNESS = None  # harness source; the check program sets it, else harness.py beside this file is read
+PROGRAM_FLAGS = ("-E", "-s", "-S")  # candidate programs: no environment hooks, no site; their own folder stays
 
 
 def text(handle):
@@ -21,14 +23,16 @@ def scratch():
     return Path(tempfile.mkdtemp())
 
 
-def run_python(work, *args, timeout=30, env=None):
-    """Run `python -B *args` in `work` (extra `env` on top of ours); returns (exit code or None, stdout, stderr)."""
+def run_python(work, *args, timeout=30, flags=PROGRAM_FLAGS):
+    """Run `python -B *flags *args` in `work` as its own tree, stopped when it ends: (exit code, stdout, stderr)."""
     with tempfile.TemporaryFile() as out, tempfile.TemporaryFile() as err:
+        tree = Tree([sys.executable, "-B", *flags, *args], work, None, False, subprocess.DEVNULL, out, err)
         try:
-            code = subprocess.run([sys.executable, "-B", *args], cwd=work, stdin=subprocess.DEVNULL, stdout=out,
-                                  stderr=err, timeout=timeout, env={**os.environ, **(env or {})}).returncode
+            code = tree.process.wait(timeout=timeout)
         except subprocess.TimeoutExpired:
             code = None
+        finally:
+            tree.stop()  # candidate leftovers die with the program
         return code, text(out), text(err)
 
 
@@ -43,12 +47,17 @@ def request(method, path, body=None, query=""):
     return ["wsgi", "app", method, path, raw, query]
 
 
+def tests(source):
+    """An operation running a unittest module's source against the candidate: {run, failures, errors}."""
+    return ["tests", "", source]
+
+
 def call(work, module, ops, timeout=30):
-    """Run `ops` against the candidate's `module` in a separate harness process; one [status, value] per op."""
+    """Run `ops` against the candidate's `module` in a separate harness tree; one [status, value] per op."""
     source = HARNESS or Path(__file__).with_name("harness.py").read_text(encoding="utf-8")
     ask = scratch() / "request.json"
     ask.write_text(json.dumps({"module": module, "ops": ops}), encoding="utf-8")
-    code, out, err = run_python(work, "-I", "-c", source, str(ask), timeout=timeout)
+    code, out, err = run_python(work, "-c", source, str(ask), timeout=timeout, flags=("-I", "-S"))
     answers = [line[len("RESULT "):] for line in out.splitlines() if line.startswith("RESULT ")]
     assert answers, f"candidate code ended without a result (exit {code}): {err.strip()[-200:]}"
     results = json.loads(answers[-1])

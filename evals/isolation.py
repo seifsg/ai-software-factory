@@ -1,4 +1,4 @@
-"""Keep runs apart from the checkout and the machine: checkout digest, bundle export, run env, temp listing, cleanup."""
+"""Keep runs apart from the checkout and the machine: digests, bundle export, run env, temp listing, cleanup."""
 import hashlib
 import os
 from pathlib import Path
@@ -12,6 +12,7 @@ from safe_engine.project import bundle_input_paths
 
 FACTORY = Path(__file__).resolve().parents[1]
 EVALS = Path(__file__).resolve().parent  # runner, checks, prompts and samples
+DROPPED_ENV = ("PWD", "OLDPWD")  # they would name the runner's own folder
 
 
 def digest(folder):
@@ -23,12 +24,17 @@ def digest(folder):
     return hasher.hexdigest()
 
 
-def export_factory(dest):
-    """A copy of the factory bundle (the inputs an install ships; no evals/ or tests/) for the factory arm."""
-    for name in bundle_input_paths(FACTORY):
+def read_bundle():
+    """The factory bundle (the inputs an install ships; no evals/ or tests/) read into memory once."""
+    return {name: (FACTORY / name).read_bytes() for name in bundle_input_paths(FACTORY)}
+
+
+def export_factory(bundle, dest):
+    """Write the in-memory bundle to `dest` for the factory arm."""
+    for name, data in bundle.items():
         target = Path(dest) / name
         target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(FACTORY / name, target)
+        target.write_bytes(data)
     return Path(dest)
 
 
@@ -37,7 +43,8 @@ def run_env(root):
     tmp, gate_home = Path(root) / "tmp", Path(root) / "gate-home"
     tmp.mkdir()
     gate_home.mkdir()
-    return {**os.environ, "TEMP": str(tmp), "TMP": str(tmp), "TMPDIR": str(tmp), "SAFE_ENGINE_HOME": str(gate_home)}
+    env = {key: value for key, value in os.environ.items() if key not in DROPPED_ENV}
+    return {**env, "TEMP": str(tmp), "TMP": str(tmp), "TMPDIR": str(tmp), "SAFE_ENGINE_HOME": str(gate_home)}
 
 
 def temp_entries():

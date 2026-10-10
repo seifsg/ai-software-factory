@@ -31,6 +31,7 @@ def markdown(report):
     lines += ["", "| Arm | Delivered | Minutes |", "|---|---|---|"]
     lines += [f"| {arm} | {done}/{total} | {round(minutes, 2)} |" for arm, (done, total, minutes) in totals.items()]
     head = "**Interrupted:** partial report; queued runs never started.\n\n" if report.get("interrupted") else ""
+    head += f"**Stopped:** {report['tainted']}\n\n" if report.get("tainted") else ""
     tail = f"\n**Cleanup:** {report['cleanup']}\n" if report.get("cleanup") else ""
     return "# Eval report\n\n" + head + "\n".join(lines) + "\n" + tail
 
@@ -50,20 +51,32 @@ def count(value):
     return isinstance(value, int) and not isinstance(value, bool) and value >= 0
 
 
-def load(path):
-    """A complete saved report; ValueError when missing, not JSON, interrupted, or its runs are malformed."""
+def broken(run):
+    """Why a row is not a clean measurement (error, void, timeout), or None."""
+    return (f"error: {run['error']}" if run.get("error") else f"void: {run['void']}" if run.get("void")
+            else "timed out" if run.get("timed_out") else None)
+
+
+def load(path, baseline=False):
+    """A complete saved report; ValueError when missing, not JSON, interrupted, stopped, or its runs are malformed.
+
+    A baseline must also be clean: no errored, void or timed-out rows.
+    """
     try:
         report = json.loads(Path(path).read_text(encoding="utf-8"))
-        if report.get("interrupted"):
-            raise TypeError("an interrupted (partial) report cannot be compared")
+        if report.get("interrupted") or report.get("tainted"):
+            raise TypeError("an interrupted or stopped (partial) report cannot be compared")
         runs = report["runs"]
         keys = [(run["sample"], run["arm"]) for run in runs]
         if (not isinstance(runs, list) or len(set(keys)) != len(keys)
                 or not all(isinstance(part, str) for key in keys for part in key)
                 or not all(count(r["delivered"]) and count(r["total"]) and r["delivered"] <= r["total"] for r in runs)):
             raise TypeError("runs need unique sample/arm strings and counts with delivered <= total")
+        unclean = [f"{run['sample']}/{run['arm']} ({broken(run)})" for run in runs if baseline and broken(run)]
+        if unclean:
+            raise TypeError(f"a baseline needs clean runs, not {', '.join(unclean)}")
     except (OSError, ValueError, KeyError, TypeError, AttributeError) as error:
-        raise ValueError(f"{path}: not a complete eval report ({error})") from error
+        raise ValueError(f"{path}: not a usable eval report ({error})") from error
     return {"runs": runs}
 
 
@@ -79,5 +92,6 @@ def compare(baseline, current):
         elif new["total"] != old["total"]:
             problems.append(f"CHANGED {name}: total {old['total']} -> {new['total']}, not comparable")
         elif new["delivered"] < old["delivered"]:
-            problems.append(f"DROP {name}: {old['delivered']} -> {new['delivered']}")
+            label = f" ({broken(new)})" if broken(new) else ""
+            problems.append(f"DROP {name}: {old['delivered']} -> {new['delivered']}{label}")
     return problems, [f"NEW {'/'.join(key)}: not in the baseline" for key in now if key not in then]

@@ -7,17 +7,21 @@ from evals import catalog, isolation, report, runner
 
 
 INTERRUPTED = 130  # the shell convention for a run stopped by Ctrl-C
+TAINTED = 3  # the interpreter changed or a canary passed: the eval stopped
 
 
 def run(args):
     """Run the samples in both arms, write the report, and compare with a baseline when given."""
     if args.baseline:
-        report.load(args.baseline)  # a bad baseline fails before any paid run
+        report.load(args.baseline, baseline=True)  # a bad baseline fails before any paid run
     out = args.out or isolation.FACTORY / ".factory/evals" / datetime.now().strftime("%Y%m%d-%H%M%S")
     result = runner.run_all(args.agent, out, args.sample, args.timeout, args.jobs, args.keep, args.factory_agent)
     paths = report.write(result, out)
     print(paths[1].read_text(encoding="utf-8"))
     print("Report:", *paths)
+    if result.get("tainted"):
+        print("Stopped:", result["tainted"])
+        return TAINTED
     if result["interrupted"]:
         print("Interrupted: partial report written; queued runs cancelled, running agents stopped.")
         return INTERRUPTED
@@ -26,7 +30,7 @@ def run(args):
 
 def compare(args):
     """Exit 1 on any drop, missing pair or changed total against the baseline; new pairs are only noted."""
-    problems, notes = report.compare(report.load(args.baseline), report.load(args.report))
+    problems, notes = report.compare(report.load(args.baseline, baseline=True), report.load(args.report))
     for line in problems + notes:
         print(line)
     print(f"{len(problems)} problem(s) against {args.baseline}" if problems else f"No drops against {args.baseline}")
@@ -73,7 +77,7 @@ def main(argv=None):
     args = parser().parse_args(argv)
     try:
         return args.handler(args)
-    except ValueError as error:
+    except (ValueError, RuntimeError) as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
 

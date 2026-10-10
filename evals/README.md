@@ -38,18 +38,25 @@ Both arms get the same request, from `prompts/factory.md` or `prompts/plain.md`:
 
 ## Isolation
 
-- Before any agent starts, the runner reads into memory the chosen samples (request, fixture, rubric) and the check program, `rubric_tools.py` and `harness.py`. Item ids come from the rubric's syntax tree; the runner never runs rubric code itself.
-- Each check is a child process (`python -I -B -c`) that gets all of that over a stdin pipe, with a random token, and works outside the workspace. No file the agent can reach is read for scoring, and no path to those sources is passed.
-- Candidate code runs only in further child processes: the harness (imports the candidate module, returns plain typed data) or `run_python` (runs a candidate program). The check compares results type-strictly, so custom objects, an early exit or a shadowed module fail.
-- Each run gets a fresh temp folder: `work/` (the fixture, a new Git repository with the fixture committed), `prompt.md`, the factory export, and its own temp and gate home (`TEMP`, `TMP`, `TMPDIR`, `SAFE_ENGINE_HOME`).
+- Before any agent starts, the runner reads into memory the chosen samples (request, fixture, rubric), the check program, the modules it ships (`rubric_tools.py`, `harness.py`, `proc.py`, `winjob.py`) and the factory bundle. Item ids come from the rubric's syntax tree; the runner never runs rubric code itself.
+- Each check is a child process started without site hooks (`python -I -S -B -c`). It gets everything over a stdin pipe, with a random token, and answers over a stdout pipe only the runner holds; nothing is written to the run folder. No file the agent can reach is read for scoring, and no path to those sources is passed.
+- Candidate code runs only in further child processes, each in its own process tree that stops when it ends: the harness (`-I -S`, imports the candidate module, returns plain typed data) or `run_python` (a candidate program without environment or site hooks). Results compare type-strictly, so custom objects, an early exit or a shadowed module fail.
+- Each run gets a fresh temp folder: `work/` (the fixture, a new Git repository with the fixture committed), `prompt.md`, the factory export, and its own temp and gate home (`TEMP`, `TMP`, `TMPDIR`, `SAFE_ENGINE_HOME`; `PWD` and `OLDPWD` dropped).
 - Every agent and check runs as a process tree that is stopped when it ends, normally or at the time limit: a Windows job object, a process group elsewhere. A timed-out run counts every item as failed.
-- A run is **void** when the checkout's `evals/` files changed during it: every item fails with the reason. Rerun from a clean checkout.
+- The interpreter guard records, before any agent starts, the files a check child loads (sources and cached bytecode), the interpreter, and the listings of every folder Python searches plus the site folders. It is checked after each agent and before scoring. Each scoring also runs a canary item with a random id and no rubric, which must fail. A change or a passing canary voids the run and stops the whole eval (exit 3): the change outlives the run. Agents must install packages into their own environment, never the shared interpreter.
+- A run is **void** when the checkout's `evals/` files changed during it. Scoring no longer reads them, so this flags tampering with the checkout, not a wrong score.
 - New entries in the system temp folder during a run are reported as possible escapes: other programs write there too, and with `--jobs` above 1 an entry shows on every run active at the time.
 - The run folder is deleted afterwards unless `--keep` (its path is then in the report); a folder that cannot be deleted is reported. `--out` inside `evals/` is refused.
 
+## Threat model
+
+The guards stop the common ways an agent games its score: editing rubrics, shadowing modules, planting site hooks or bytecode, returning look-alike objects, exiting early, faking output files. They do not make a hostile agent safe. Agents run as the same user as the runner, so a determined one can still read or attach to the runner's processes, use whatever that user can reach, and start processes through operating system services (WMI, Task Scheduler, COM servers, launchd or systemd user services) that escape the job object or process group. Evals of agents that may act adversarially belong on a machine that holds nothing else of value.
+
+**Isolated machine:** use a disposable virtual machine or container the host already supports, or at least a separate operating system user with no access to your files. Install only Python 3.9+, Git and the agent CLI there, copy in a clean checkout of the factory, supply only the agent's own credentials, run `python -m evals run`, copy `report.json`, `report.md` and `logs/` out, then discard the machine or user.
+
 ## Report
 
-Per sample and arm: `delivered` out of `total` items, `failing` checks with the reason, `minutes`, the agent's `exit` code, `timed_out`, `void`, `possible_escapes`, and `error` or `cleanup` when a run broke or left a folder. A broken run fails all its items and the others continue. `report.md` adds totals per arm. A report marked interrupted cannot be a baseline or be compared.
+Per sample and arm: `delivered` out of `total` items, `failing` checks with the reason, `minutes`, the agent's `exit` code, `timed_out`, `void`, `possible_escapes`, and `error` or `cleanup` when a run broke or left a folder. A broken run fails all its items and the others continue. `report.md` adds totals per arm. A report marked interrupted or stopped cannot be compared, and a baseline also needs every row clean (no error, void or timeout); `compare` labels broken rows. Exit codes: 0 done, 1 a drop, 2 bad input, 3 the eval stopped on a guard, 130 interrupted.
 
 ## Baseline
 
@@ -64,7 +71,7 @@ After a run the owner trusts, copy its `report.json` to a stable path, for examp
 - `reference/`: files that, laid over the fixture, deliver every item.
 - `rubric.py`: `CHECKS = {"R1": check, ...}` as a dict literal, one function per item, taking the workspace path and raising on failure; optional `KEEP = {"R4"}` for preserved behavior. `FIXTURE` maps the fixture's file names to their original text.
 
-Rubrics use `evals.rubric_tools`: `call` with `op` or `request` runs the candidate module in the harness, `expect` and `same` compare type-strictly, `run_python` runs a candidate program with output through files, and `scratch` gives a temp folder. Keep checks to a few seconds, without network.
+Rubrics use `evals.rubric_tools`: `call` with `op`, `request` or `tests` (a unittest source, such as the fixture's original tests) runs against the candidate module in the harness, `expect` and `same` compare type-strictly, `run_python` runs a candidate program with output through files, and `scratch` gives a temp folder. Keep checks to a few seconds, without network.
 
 ## Real runs
 

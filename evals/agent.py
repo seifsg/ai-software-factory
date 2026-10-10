@@ -31,4 +31,6 @@ def fill(template, values):
 
 def run(template, values, workdir, prompt, log, seconds, env):
     """Run the filled template in the system shell, prompt on stdin. Returns (exit code, timed out)."""
-    return proc.run_limited(fill(template, values), workdir, log, seconds, env=env, shell=True, stdin_path=prompt)
+    code, timed_out, _ = proc.run_limited(fill(template, values), workdir, seconds, env=env, shell=True,
+                                          stdin_path=prompt, log=log)
+    return code, timed_out

@@ -2,7 +2,9 @@
 
 Candidate code runs in a harness process; results come back as plain data and compare type-strictly.
 """
-from evals.rubric_tools import call, expect, op, run_python, scratch
+import ast
+
+from evals.rubric_tools import call, expect, op, tests
 
 LINE = {"qty": 1, "price": 1000}
 
@@ -30,15 +32,16 @@ def rounding(work):
 
 
 def existing_tests(work):
-    """R4: the fixture's original tests (from the snapshot, not the workspace) pass against the candidate."""
-    tmp = scratch()
-    (tmp / "test_invoice.py").write_text(FIXTURE["test_invoice.py"], encoding="utf-8")  # noqa: F821
-    code, _, err = run_python(tmp, "-m", "unittest", "-q", env={"PYTHONPATH": str(work)})
-    ran = code == 0 and err.rstrip().endswith("OK") and "Ran " in err  # an early exit 0 prints no summary
-    assert ran, f"original tests fail (exit {code}): {err.strip().splitlines()[-1:]}"
-    lines, taxed = call(work, "invoice", [op("subtotal", [{"qty": 2, "price": 150}, {"qty": 1, "price": 99}]),
-                                          op("total", [LINE], tax_percent=20)])
-    expect(lines, 399, "the original subtotal case")  # type-strict: an always-equal object passes no test here
+    """R4: the fixture's original tests (from the snapshot, never the workspace) pass inside the harness, and
+    their cases hold type-strictly."""
+    source = FIXTURE["test_invoice.py"]  # noqa: F821 - provided by the check program
+    count = sum(isinstance(node, ast.FunctionDef) and node.name.startswith("test")
+                for node in ast.walk(ast.parse(source)))
+    ran, lines, taxed = call(work, "invoice", [tests(source),
+                                               op("subtotal", [{"qty": 2, "price": 150}, {"qty": 1, "price": 99}]),
+                                               op("total", [LINE], tax_percent=20)])
+    expect(ran, {"run": count, "failures": 0, "errors": 0}, "the original tests")
+    expect(lines, 399, "the original subtotal case")  # an always-equal object passes no test here
     expect(taxed, 1200, "the original tax case")
 
 

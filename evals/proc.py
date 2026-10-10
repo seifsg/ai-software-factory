@@ -1,7 +1,7 @@
 """Time-limited process trees: everything a command starts dies with it, after a timeout and after a normal exit.
 
 Windows keeps the tree in a kill-on-close job object; elsewhere the command leads its own process group. A live
-registry lets an interrupt stop every running tree.
+registry lets an interrupt stop every running tree. Children get only the handles passed to them (close_fds).
 """
 import os
 import signal
@@ -11,7 +11,7 @@ import threading
 WINDOWS = os.name == "nt"
 if WINDOWS:
     from evals import winjob  # ctypes.wintypes loads only on Windows
-STOPPING = threading.Event()  # set on interrupt: running trees are killed, new ones refused
+STOPPING = threading.Event()  # set on interrupt or taint: running trees are killed, new ones refused
 _LIVE = set()
 _LOCK = threading.Lock()
 
@@ -19,9 +19,9 @@ _LOCK = threading.Lock()
 class Tree:
     """A started command and every process it spawns; stop() kills them all, once."""
 
-    def __init__(self, command, cwd, env, shell, stdin, output):
+    def __init__(self, command, cwd, env, shell, stdin, output, errors=subprocess.STDOUT):
         self.process = subprocess.Popen(command, shell=shell, cwd=cwd, env=env, stdin=stdin, stdout=output,
-                                        stderr=subprocess.STDOUT, start_new_session=not WINDOWS,
+                                        stderr=errors, close_fds=True, start_new_session=not WINDOWS,
                                         creationflags=winjob.CREATE_SUSPENDED if WINDOWS else 0)
         self.job = winjob.adopt(self.process) if WINDOWS else None
         self._lock, self._stopped = threading.Lock(), False
@@ -56,34 +56,57 @@ def _feed(pipe, data):
         pass
 
 
-def run_limited(command, cwd, log, seconds, env=None, shell=False, stdin_path=None, stdin_data=None):
-    """Run `command` with output to `log` (a file, never a pipe a child could hold open).
+def _drain(pipe, into):
+    """Read a child's output pipe to the end."""
+    with pipe:
+        into.append(pipe.read())
 
-    Stdin comes from `stdin_path`, or `stdin_data` bytes through a pipe, else nothing. Returns (exit code, timed
-    out); (None, False) when an interrupt stopped the run or refused to start it.
+
+def _supervise(tree, seconds, stdin_data):
+    """Feed stdin, wait up to `seconds`, then stop the tree either way: (exit code, timed out, captured bytes)."""
+    if stdin_data is not None:
+        threading.Thread(target=_feed, args=(tree.process.stdin, stdin_data), daemon=True).start()
+    captured, reader = [], None
+    if tree.process.stdout:
+        reader = threading.Thread(target=_drain, args=(tree.process.stdout, captured), daemon=True)
+        reader.start()
+    try:
+        code, timed_out = tree.process.wait(timeout=seconds), False
+    except subprocess.TimeoutExpired:
+        code, timed_out = None, True
+    finally:
+        tree.stop()  # leftovers die after a normal exit too
+        if reader:
+            reader.join(10)
+    return code, timed_out, b"".join(captured)
+
+
+def run_limited(command, cwd, seconds, env=None, shell=False, stdin_path=None, stdin_data=None, log=None):
+    """Run `command` as a tree with a time limit. Stdin from `stdin_path`, or `stdin_data` bytes, else nothing.
+
+    Output goes to the `log` file, or else through a pipe only this process holds and comes back as text.
+    Returns (exit code, timed out, text or None); (None, False, None) when an interrupt stopped or refused it.
     """
     stdin = open(stdin_path, "rb") if stdin_path else subprocess.PIPE if stdin_data is not None else subprocess.DEVNULL
+    output = open(log, "wb") if log else subprocess.PIPE
     try:
-        with open(log, "wb") as output:
+        with _LOCK:
+            if STOPPING.is_set():
+                return None, False, None
+            tree = Tree(command, cwd, env, shell, stdin, output)
+            _LIVE.add(tree)
+        try:
+            code, timed_out, captured = _supervise(tree, seconds, stdin_data)
+        finally:
             with _LOCK:
-                if STOPPING.is_set():
-                    return None, False
-                tree = Tree(command, cwd, env, shell, stdin, output)
-                _LIVE.add(tree)
-            if stdin_data is not None:
-                threading.Thread(target=_feed, args=(tree.process.stdin, stdin_data), daemon=True).start()
-            try:
-                code, timed_out = tree.process.wait(timeout=seconds), False
-            except subprocess.TimeoutExpired:
-                code, timed_out = None, True
-            finally:
-                tree.stop()  # leftovers die after a normal exit too
-                with _LOCK:
-                    _LIVE.discard(tree)
+                _LIVE.discard(tree)
     finally:
-        if stdin_path:
-            stdin.close()
-    return (None, False) if STOPPING.is_set() and not timed_out else (code, timed_out)
+        for handle in (stdin if stdin_path else None, output if log else None):
+            if handle:
+                handle.close()
+    if STOPPING.is_set() and not timed_out:
+        return None, False, None
+    return code, timed_out, None if log else captured.decode("utf-8", "replace")
 
 
 def stop_all():

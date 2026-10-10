@@ -3,7 +3,9 @@ import contextlib
 import io
 import json
 import os
+from pathlib import Path
 import shutil
+import tempfile
 import time
 from unittest.mock import patch
 
@@ -21,14 +23,16 @@ MATCHING_TEST = ("import unittest\nfrom invoice import total\n\n\nclass T(unitte
 
 
 class EvalCheckTests(EvalCase):
-    def workspace(self, name, files, reference=False):
-        """Score sample `name` on its fixture, optionally the reference, then `files` on top: (failing, root)."""
-        sample, root = catalog.load([name])[0], self.tmp / name
+    def workspace(self, name, files, reference=False, remove=()):
+        """Score sample `name`: its fixture, optionally the reference, `files` on top, `remove` deleted."""
+        sample, root = catalog.load([name])[0], Path(tempfile.mkdtemp(prefix=name, dir=self.tmp))
         work = catalog.write_fixture(sample, root / "work")
         if reference:
             shutil.copytree(sample.reference, work, dirs_exist_ok=True)
         for file, text in files.items():
             (work / file).write_text(text, encoding="utf-8")
+        for file in remove:
+            (work / file).unlink()
         return catalog.score(sample, catalog.kit(), work, root, isolation.run_env(root)), root
 
     def reference(self, name):
@@ -38,7 +42,8 @@ class EvalCheckTests(EvalCase):
         failing, root = self.workspace("bug-fix", {"invoice.py": EARLY_EXIT + self.reference("invoice.py")})
         self.assertEqual(sorted(failing), ["R1", "R2", "R3", "R4"])
         self.assertIn("ended without a result", failing["R1"])
-        self.assertEqual(sorted(p.suffix for p in (root / "checks").iterdir()), [".out"] * 4)  # no token files
+        self.assertEqual([p.name for p in root.iterdir() if p.is_file()], [])  # verdicts come over a pipe
+        self.assertFalse((root / "checks").exists())
         failing, _ = self.workspace("cli-tool", {"tempfile.py": EARLY_EXIT, "json.py": EARLY_EXIT}, reference=True)
         self.assertEqual(failing, {})  # rubric and tools never import from the workspace
 
@@ -52,6 +57,8 @@ class EvalCheckTests(EvalCase):
         failing, _ = self.workspace("bug-fix", {"invoice.py": self.reference("invoice.py") + BROKEN_TAX,
                                                 "test_invoice.py": MATCHING_TEST})
         self.assertIn("R4", failing)  # the original tests ran, not the edited ones
+        failing, _ = self.workspace("bug-fix", {}, reference=True, remove=("test_invoice.py",))
+        self.assertEqual(failing, {})  # deleting them hides nothing either
 
     def test_same_is_type_strict(self):
         self.assertTrue(same([1, {"a": "x"}], [1, {"a": "x"}]))
@@ -90,6 +97,19 @@ class EvalCheckTests(EvalCase):
         self.assertEqual(notes, ["NEW d/plain: not in the baseline"])
         self.assertEqual(report.compare(baseline, baseline), ([], []))
 
+    def test_a_baseline_must_be_clean_and_compare_labels_broken_rows(self):
+        clean = {"sample": "a", "arm": "x", "delivered": 3, "total": 3}
+        for flaw in ({"error": "OSError: disk full"}, {"void": "edited"}, {"timed_out": True}):
+            path = self.tmp / "flawed.json"
+            path.write_text(json.dumps({"runs": [{**clean, **flaw}]}), encoding="utf-8")
+            with self.subTest(flaw=flaw):
+                self.assertEqual(report.load(path)["runs"][0]["delivered"], 3)  # fine as a current report
+                with self.assertRaisesRegex(ValueError, "clean runs"):
+                    report.load(path, baseline=True)
+        broken = {**clean, "delivered": 0, "error": "OSError: disk full"}
+        self.assertEqual(report.compare({"runs": [clean]}, {"runs": [broken]})[0],
+                         ["DROP a/x: 3 -> 0 (error: OSError: disk full)"])
+
     def test_malformed_reports_are_refused_before_any_run(self):
         bad = {"bool": [{"sample": "a", "arm": "x", "delivered": True, "total": 3}],
                "over": [{"sample": "a", "arm": "x", "delivered": 4, "total": 3}],
@@ -104,5 +124,5 @@ class EvalCheckTests(EvalCase):
         with contextlib.redirect_stderr(io.StringIO()) as err:
             self.assertEqual(main(["run", "--agent", fake("factory"), "--baseline", str(self.tmp / "bool.json"),
                                    "--out", str(out)]), 2)
-        self.assertIn("not a complete eval report", err.getvalue())
+        self.assertIn("not a usable eval report", err.getvalue())
         self.assertFalse(out.exists())  # refused before any agent ran
