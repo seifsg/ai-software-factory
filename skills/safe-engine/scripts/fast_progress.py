@@ -31,11 +31,13 @@ def sections(text):
 
 
 def subsection(body, title):
+    """The text under the first '### ...<title>...' heading, up to the next one; None when absent."""
     match = re.search(r"^###\s+[^\n]*" + re.escape(title) + r"[^\n]*\n(.*?)(?=^###\s|\Z)", body, re.M | re.S | re.I)
     return match.group(1) if match else None
 
 
 def todos(all_sections):
+    """The plan's Todos subsection text: the one source of todo IDs and titles."""
     return subsection(all_sections.get("plan", ""), "Todos") or ""
 
 
@@ -101,6 +103,7 @@ def progress(run, all_sections):
 
 
 def todo_line(ids, built):
+    """'todos 4/9 · open: T5 T6 T7 +2': built count and the first open IDs."""
     left = [f"T{n}" for n in ids if n not in built]
     rest = f" +{len(left) - 3}" if len(left) > 3 else ""
     return f"todos {len(built)}/{len(ids)} · " + (f"open: {' '.join(left[:3])}{rest}" if left else "all built")
@@ -148,8 +151,8 @@ def claim(path):
 
 def news(run, steps, record, shown, ledger_ns, now):
     """Lines the owner has not seen: a tick per newly built todo, then the card after a ledger change
-    (ledger_ns names it). Claims live in shown/."""
-    shown.mkdir(exist_ok=True)
+    (ledger_ns names it). shown is this run's claims folder."""
+    shown.mkdir(parents=True, exist_ok=True)
     all_sections = read(record)
     ids, built = progress(run, all_sections)
     taken = set(os.listdir(shown))  # one listing; claims only for unseen todos

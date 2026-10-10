@@ -161,6 +161,35 @@ class ProgressHookTests(unittest.TestCase):
                 patch.object(Path, "read_bytes", side_effect=failing):
             self.assertIsNone(gate.news(runs, cwd, "s1"))  # a read would log hook.error; tearDown fails then
 
+    def test_a_gate_command_during_a_hook_never_shows_a_stale_card(self):
+        self.hook()
+        with patch.dict(os.environ, SAFE_ENGINE_HOME=str(self.root / "home")):
+            gate = module("fast_gate")
+        runs, cwd = gate.active_runs(), gate.norm(self.project)  # read before the command lands
+        self.record.write_text(RECORD, encoding="utf-8")
+        self.gate("done", "tickets", "--offline", "test")
+        self.assertIn("step 2/5 plan", gate.news(runs, cwd, "s1"))
+        self.assertIsNone(self.hook())
+
+    def test_delegate_calls_leave_messages_for_the_main_thread(self):
+        self.assertIsNone(self.hook(agent_id="agent-1"))
+        self.assertIn("step 1/5 tickets", self.hook()["systemMessage"])
+
+    def test_claims_another_run_left_never_hide_a_tick(self):
+        self.hook()
+        for stale in (self.shown / "19990101000000", self.shown):  # an older gate copy's claims
+            stale.mkdir(parents=True, exist_ok=True)
+            (stale / "todo-1").touch()
+        self.plan()
+        self.record.write_text(RECORD + "- T1 pre: a do: b post: c\n", encoding="utf-8")
+        self.assertIn("☑️ T1 fix the footer word", self.hook()["systemMessage"])
+
+    def test_a_broken_registration_never_drops_a_deny(self):
+        entry = next((self.root / "home/active").glob("*.json"))
+        entry.write_text(json.dumps({**json.loads(entry.read_text(encoding="utf-8")), "sessions": None}), encoding="utf-8")
+        answer = self.hook(tool_name="Write", tool_input={"file_path": str(self.project / "src/a.ts")})
+        self.assertEqual(answer["hookSpecificOutput"]["permissionDecision"], "deny")
+
     def test_start_and_close_clear_the_claims(self):
         self.hook()
         self.assertTrue((self.shown.parent / "seen").exists())

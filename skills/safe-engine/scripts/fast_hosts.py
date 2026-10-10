@@ -32,8 +32,10 @@ def read(host, event):
     tool = event.get("tool_name") or event.get("toolName") or ""
     args = event.get("tool_input") or event.get("toolArgs") or event.get("args") or {}
     kind = events.get(name) or ("pre_tool" if not name and tool and host not in SAME_AS_CLAUDE else None)
-    return shape(kind, event.get("session_id") or event.get("conversation_id") or event.get("sessionId"),
-                 event.get("cwd"), tool, args, bool(event.get("stop_hook_active") or event.get("loop_count")), name)
+    found = shape(kind, event.get("session_id") or event.get("conversation_id") or event.get("sessionId"),
+                  event.get("cwd"), tool, args, bool(event.get("stop_hook_active") or event.get("loop_count")), name)
+    found["delegate"] = bool(event.get("agent_id"))  # Claude Code marks hook calls from inside a subagent
+    return found
 
 
 def shape(kind, session, cwd, tool, args, again, name):

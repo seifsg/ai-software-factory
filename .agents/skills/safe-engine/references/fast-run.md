@@ -49,7 +49,7 @@ Labels end with the colon inside the bold: `**Epic:**`. Delegates return their l
 
 ## The gate
 
-`fast_gate.py` (checks in `fast_record.py`, shell analysis in `fast_shell.py`) sits in `scripts/` beside the installed launcher and in `skills/safe-engine/scripts/` of the factory bundle. Python 3.9+, standard library only.
+`fast_gate.py` (checks in `fast_record.py`, shell analysis in `fast_shell.py`, the owner's card in `fast_progress.py`) sits in `scripts/` beside the installed launcher and in `skills/safe-engine/scripts/` of the factory bundle. Python 3.9+, standard library only.
 
 Before `start` on a product: select the factory bundle with the launcher's `resolve_bundle.py --project <abs>`; it writes `.factory/entry-bundle.json`. Skip when the run maintains the factory itself.
 
@@ -82,11 +82,11 @@ Without hooks the gate still records and checks steps; follow the order yourself
 
 ## Progress
 
-- Every command prints the run card first:
+- `start`, `done`, `status`, `pause`, `resume` and `close` print the run card first:
   - step k/N, with time in the step and in total;
   - steps done, current and left;
   - todos built x/y, with the next open IDs;
-  - ticket links.
+  - the first ticket link and how many more.
 
   A paused run leads with its reason as the question. Once every step is done, the card lists each step's duration.
 - A todo counts as built once its Build log line passes the `build` check.
@@ -94,7 +94,7 @@ Without hooks the gate still records and checks steps; follow the order yourself
   - the card after each step, pause or resume;
   - a tick line per newly built todo.
 
-  Nothing changed: one directory scan, no reads, no network. Claims live in `.factory/fast/shown/`; `start` and `close` clear them.
+  Nothing changed: one directory scan, no reads, no network. Hook calls from a delegate show nothing; the next main-thread call does. Claims live in `.factory/fast/shown/`, one folder per run; `start` and `close` clear them.
 - A closed run leaves the hooks. The factory's `docs/hosts.md` lists the agents that show hook messages.
 
 ## Keep it fast

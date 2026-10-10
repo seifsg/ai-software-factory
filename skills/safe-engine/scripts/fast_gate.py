@@ -121,6 +121,12 @@ def load(path):
         return json.load(source)
 
 
+def load_stamped(path):
+    """JSON and its mtime from one open handle, so both describe the same write."""
+    with open(path, encoding="utf-8") as source:
+        return json.load(source), os.fstat(source.fileno()).st_mtime_ns
+
+
 def save(path, data):
     """Atomic JSON write: readers never see a half-written ledger."""
     import tempfile
@@ -159,6 +165,11 @@ def record_path(project):
 
 def shown_path(project):
     return Path(project, *FAST, SHOWN)  # progress already shown to the owner (fast_progress.py)
+
+
+def claims_path(project, run):
+    """This run's progress claims, named by its start time: claims another run left never hide its ticks."""
+    return shown_path(project) / (re.sub(r"\D", "", str(run.get("created") or ""))[:14] or "run")
 
 
 def registry_path(project):
@@ -458,11 +469,11 @@ def mentioned(runs, command):
 def bind(item, session):
     """Remember the session working on this run so its Stop and prompt hooks find it; best effort."""
     entry, registration, _ = item
-    if not session or session in registration.get("sessions", []):
+    if not session or session in (registration.get("sessions") or []):
         return
     try:
         latest = load(entry)  # re-read: parallel hooks may have bound other sessions
-        latest["sessions"] = (latest.get("sessions", []) + [session])[-20:]
+        latest["sessions"] = ((latest.get("sessions") or []) + [session])[-20:]
         save(entry, latest)
         registration["sessions"] = latest["sessions"]
     except Exception as error:  # noqa: BLE001 - a locked or odd file must never cancel a deny
@@ -516,7 +527,7 @@ def pre_tool(event, runs, cwd, session):
 
 def mine(runs, cwd, session, bind_cwd=True):
     """The runs this session works on: those it is bound to, else the one owning cwd (bound to it now)."""
-    bound = [item for item in runs if session and session in item[1].get("sessions", [])]
+    bound = [item for item in runs if session and session in (item[1].get("sessions") or [])]
     if bound:
         return bound
     item = owner(runs, cwd)
@@ -545,19 +556,32 @@ def unseen(project):
 def news(runs, cwd, session):
     """Progress the owner has not seen yet, or None. Never raises: a deny decision must still print."""
     lines = []
-    for _, _, run in mine(runs, cwd, session, bind_cwd=False)[:3]:
-        project = run["project"]
-        try:
-            stamps = unseen(project)
-            if stamps:
-                lines += sibling("fast_progress").news(run, steps_for(run), record_path(project),
-                                                       shown_path(project), stamps[0], now())
-                seen = Path(project, *FAST, SEEN)
-                seen.touch()
-                os.utime(seen, ns=(stamps[1], stamps[1]))
-        except Exception as error:  # noqa: BLE001 - progress is a courtesy; the gate's decision comes first
-            log("hook.error", where="news", key=run.get("key"), error=repr(error))
+    try:
+        for _, _, run in mine(runs, cwd, session, bind_cwd=False)[:3]:
+            lines += unseen_lines(run["project"], run)
+    except Exception as error:  # noqa: BLE001 - progress is a courtesy; the gate's decision comes first
+        log("hook.error", where="news", error=repr(error))
     return "\n".join(lines) or None
+
+
+def unseen_lines(project, run):
+    """One run's unseen progress. The ledger is re-read with its own mtime: a gate command landing during this
+    hook is shown from its own state, now or by the next hook, never as a stale card."""
+    stamps = unseen(project)
+    if not stamps:
+        return []
+    try:
+        run, ledger_ns = load_stamped(ledger_path(project))
+    except (OSError, ValueError):
+        ledger_ns = stamps[0]  # mid-replace on Windows: the state active_runs read stays valid
+    if run.get("closed"):
+        return []  # the final report carries the close card
+    lines = sibling("fast_progress").news(run, steps_for(run), record_path(project), claims_path(project, run),
+                                          ledger_ns, now())
+    seen = Path(project, *FAST, SEEN)
+    seen.touch()
+    os.utime(seen, ns=(stamps[1], stamps[1]))
+    return lines
 
 
 def stop(event, runs, cwd, session):
@@ -611,7 +635,7 @@ def cmd_hook(host="claude"):
         elif event["kind"] in ("prompt", "session"):
             text = context(event, runs, cwd, session)
             out = hosts.context(host, event["name"], text) if text else None
-        if event["kind"] and hosts.notifies(host):
+        if event["kind"] and hosts.notifies(host) and not event.get("delegate"):  # delegates' messages may not reach the owner
             out = hosts.with_message(out, news(runs, cwd, session))
         if out:
             print(out)
