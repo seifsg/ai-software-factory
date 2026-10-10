@@ -25,7 +25,7 @@ Find the real repository, branches, release policy, PR template, signing rule, c
 
 - Work on your own branch. Never commit to the base.
 - Base = the project's integration branch, else the default branch. Say so in the PR when it differs.
-- **Dependent Safe ticket:** branch from the dependency's delivered commit and open the PR against the dependency's branch. After that branch merges, retarget the PR to the base (`references/github.md`).
+- **Dependent Safe ticket:** branch from the dependency's delivered commit and open the PR against the dependency's branch. Several dependencies: against the base, naming each dependency PR that merges first. After that branch merges, retarget the PR to the base (`references/github.md`).
 - Check the remote, not the local list. Shallow and single-branch clones hide branches.
 
 ```text

@@ -81,7 +81,7 @@ def check_research(run, body, **_):
 
 
 def check_kickoff(run, body, **_):
-    sized = run["kind"] == "feature" and run.get("coverage")  # a feature's size, or 'none (inside an existing product)'
+    sized = run["kind"] == "feature" and run.get("coverage")  # a feature's size, or 'none (<why>)' when small
     labels = ["Features", "Approach", "Answered by"] + (["Size", "Stack"] if run["kind"] == "product" else []) + (
         ["Size"] if sized else [])
     return missing_markers(body, labels)

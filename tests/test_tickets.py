@@ -697,6 +697,11 @@ class TicketTests(unittest.TestCase):
         self.refresh(dependency, key="beta", number="102")
         with self.assertRaisesRegex(EngineError, f"beta: delivered commit {delivered} is not in this branch"):
             self.store.dependencies("alpha")
+        dependency["delivery"]["commit"] = "f" * 40  # never fetched here: the git error, not "not in history"
+        self.refresh(dependency, key="beta", number="102")
+        with self.assertRaisesRegex(EngineError, "cannot check delivered commit f{40} .*fetch it"):
+            self.store.dependencies("alpha")
+        dependency["delivery"]["commit"] = delivered
         self.git("checkout", "-q", "synthetic-dependency")  # branched from the delivered commit: accepted
         self.refresh(dependency, key="beta", number="102")
         self.store.dependencies("alpha")

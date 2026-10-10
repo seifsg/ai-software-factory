@@ -50,7 +50,9 @@ class FastGateTests(unittest.TestCase):
         self.root = Path(temp.name).resolve()
         self.project = self.root / "app projekt ü"  # spaces and non-ASCII: hosts send raw UTF-8
         self.project.mkdir()
-        self.env = dict(os.environ, SAFE_ENGINE_HOME=str(self.root / "home"))
+        self.env = dict(os.environ, SAFE_ENGINE_HOME=str(self.root / "home"), GH_CONFIG_DIR=str(self.root / "gh"))
+        for name in ("GH_TOKEN", "GITHUB_TOKEN", "GH_ENTERPRISE_TOKEN", "GITHUB_ENTERPRISE_TOKEN"):
+            self.env.pop(name, None)  # gh logged out: it fails at once, never reaching the network
 
     def tearDown(self):
         log = self.root / "home" / "logs" / "gate.log"
@@ -145,7 +147,7 @@ class FastGateTests(unittest.TestCase):
         kickoff = "**Features:** a\n**Approach:** b\n**Answered by:** owner\n"
         self.assertIn("'**Size:**' line", record.check_kickoff({"kind": "feature", "coverage": True}, kickoff)[0])
         self.assertEqual(record.check_kickoff({"kind": "feature", "coverage": True},
-                                              kickoff + "**Size:** none (inside an existing product)\n"), [])
+                                              kickoff + "**Size:** none (small feature: one screen)\n"), [])
         self.assertEqual(record.check_kickoff({"kind": "feature"}, kickoff), [])  # older methods unchanged
 
     def test_checks_refuse_missing_markers(self):

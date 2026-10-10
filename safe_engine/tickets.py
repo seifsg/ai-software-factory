@@ -437,6 +437,9 @@ class TicketStore:
             try:
                 git(self.project, "merge-base", "--is-ancestor", delivery["commit"], "HEAD")
             except EngineError as error:  # name the commit; "Git command failed" told the builder nothing
+                if str(error) != "Git command failed":  # not a plain "no": missing object, timeout
+                    raise EngineError(f"Dependency {dependency}: cannot check delivered commit {delivery['commit']} "
+                                      f"({error}); fetch it, then rerun") from error
                 raise EngineError(f"Dependency {dependency}: delivered commit {delivery['commit']} is not in this "
                                   "branch's history; branch from it or merge it (several dependencies: merge each), "
                                   "then rerun") from error
