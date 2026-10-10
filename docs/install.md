@@ -1,8 +1,8 @@
 # Install
 
-Needs Git and Python 3.9+. The launchers find or install them from official sources.
+Needs Git and Python 3.9+ (an agent following these steps installs missing ones from official sources), and read access to the repository: `gh auth login` lets Git use your GitHub credentials over HTTPS.
 
-1. Get the factory with your existing Git access (any checkout or bundle works):
+1. Get the factory (any checkout or bundle works):
 
    ```text
    git clone https://github.com/seifsg/ai-software-factory.git
