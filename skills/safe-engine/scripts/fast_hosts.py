@@ -26,8 +26,10 @@ def read(host, event):
         tool, args = event.get("tool_name", ""), event.get("tool_input") or {}
         if name == "beforeShellExecution":
             tool, args = "Shell", {"command": event.get("command", "")}
+        # a re-stop, or a turn the user aborted or that failed, never gets a follow-up
+        again = int(event.get("loop_count") or 0) > 0 or (event.get("status") or "completed") != "completed"
         return shape(CURSOR_EVENTS.get(name), event.get("conversation_id"), event.get("cwd") or (roots[0] if roots else None),
-                     tool, args, int(event.get("loop_count") or 0) > 0, name)
+                     tool, args, again, name)
     events = CLAUDE_EVENTS if host in SAME_AS_CLAUDE else GENERIC_EVENTS
     tool = event.get("tool_name") or event.get("toolName") or ""
     args = event.get("tool_input") or event.get("toolArgs") or event.get("args") or {}

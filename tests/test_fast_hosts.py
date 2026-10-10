@@ -42,6 +42,10 @@ class DialectTests(unittest.TestCase):
                                       "tool_input": {"file_path": "/p/a.ts"}, "workspace_roots": ["/p"]})
         self.assertEqual((write["tool"], write["paths"], write["cwd"]), ("edit", ["/p/a.ts"], "/p"))
         self.assertTrue(hosts.read("cursor", {"hook_event_name": "stop", "loop_count": 1})["again"])
+        for status, again in (("aborted", True), ("error", True), ("cancelled", True), ("completed", False), (None, False)):
+            stop = {"hook_event_name": "stop", "loop_count": 0, "status": status}  # only a completed turn gets pushed
+            self.assertEqual(hosts.read("cursor", stop)["again"], again, status)
+        self.assertFalse(hosts.read("cursor", {"hook_event_name": "stop", "loop_count": 0})["again"])  # older Cursor
         self.assertEqual(json.loads(hosts.deny("cursor", "why")[0])["permission"], "deny")
         self.assertEqual(json.loads(hosts.keep_going("cursor", "go"))["followup_message"], "go")
         self.assertEqual(json.loads(hosts.context("cursor", "sessionStart", "t"))["additional_context"], "t")
@@ -97,9 +101,10 @@ class LauncherAndInstallerTests(unittest.TestCase):
                                                 "tool_name": "write_file", "tool_input": {"file_path": "src/a.ts"}})
         self.assertEqual((code, out), (2, None))
         self.assertIn("blocks writing", err)
-        code, out, _ = self.launch("cursor", {"hook_event_name": "stop", "conversation_id": "k", "loop_count": 0,
-                                              "workspace_roots": [str(self.project)]})
+        stop = {"hook_event_name": "stop", "conversation_id": "k", "loop_count": 0, "workspace_roots": [str(self.project)]}
+        code, out, _ = self.launch("cursor", stop)
         self.assertIn("Next:", out["followup_message"])
+        self.assertEqual(self.launch("cursor", {**stop, "status": "aborted"})[:2], (0, None))  # the owner's stop stands
 
     def test_installer_wires_codex_and_cursor_and_keeps_user_hooks(self):
         codex = self.home / ".codex" / "hooks.json"
