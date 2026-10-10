@@ -4,6 +4,7 @@ Rules fire on the whole judged text of a command, whatever its shell structure (
 only allow a fired rule, by proving it harmless command by command from the parse (fast_shell.py): anything it
 cannot follow stays denied. The gate passes in its own path helpers.
 """
+import fnmatch
 import os
 import re
 
@@ -11,6 +12,10 @@ import fast_rules as rules
 import fast_shell as shell
 
 BUDGET = 100  # delete targets proven per command; each costs a path lookup, and no agent names more
+MOVES = 50  # directory changes followed per command; past it the directory counts as unknown
+TREE = ("tree", "sweep")  # modes that remove the target and everything below it
+SWEEP = ("a find under the whole project: name only files that cannot be .git, .factory, fast or run.json, or add "
+         "-not -path './.git/*' -not -path './.factory/*'")
 
 
 class Judge:
@@ -21,6 +26,7 @@ class Judge:
         self.protected = {norm(os.path.join(root, *part)) for part in ((".factory",), (".factory", "fast"), (".git",),
                                                                        (".factory", "fast", "run.json"))}
         self.git = norm(os.path.join(root, ".git"))  # history: nothing inside it may go
+        self.lock = norm(os.path.join(root, ".git", "index.lock"))  # a stale lock: removing it is routine
 
     def resolve(self, target, here):
         """Comparable path of target seen from here; None when a variable or here is unknown. Memoized per event."""
@@ -45,7 +51,7 @@ class Judge:
         only find matches below an inside start go, and from the root only when .git is excluded; "file": only the
         protected paths count. Nothing inside .git may go."""
         head, tail = os.path.split(target)
-        path = (head or ".") if mode == "tree" and tail in ("*", ".*") else target
+        path = (head or ".") if mode in TREE and tail in ("*", ".*") else target
         try:
             full = self.resolve(path, here)
         except (OSError, ValueError):
@@ -53,17 +59,27 @@ class Judge:
         if full is None:
             after = " after a directory change" if here is None else ""
             return None if mode == "file" else f"delete of a path that cannot be resolved{after} ({target})"
-        if (mode != "file" and self.inside(full, self.git)) or (mode in ("tree", "file") and full in self.protected):
+        if self.reaches(full, mode):
             return f"delete of a protected path ({target})"
         if mode == "file":
             return None
-        if mode == "below" and full == self.root:
-            return f"delete under the whole project without excluding .git ({target})"
-        if mode == "tree" and full == self.root:
-            return f"recursive delete of the whole project ({target})"
+        if mode in TREE and full == self.root:
+            return f"{SWEEP if mode == 'sweep' else 'recursive delete of the whole project'} ({target})"
         if not self.inside(full, self.root):
             return f"recursive delete outside the project ({target})"
         return None
+
+    def reaches(self, full, mode):
+        """True when full, a path or a wildcard pattern, names a protected path, or (except for a plain file delete)
+        anything inside .git or a protected folder a pattern's leading parts match. .git/index.lock may go."""
+        if full == self.lock:
+            return False
+        if not rules.WILDCARD.search(full):
+            return (mode != "below" and full in self.protected) or (mode != "file" and self.inside(full, self.git))
+        parts = full.split(os.sep)
+        return fnmatch.fnmatch(self.root, full) or any(
+            fnmatch.fnmatch(guarded, full if mode == "file" else os.sep.join(parts[:guarded.count(os.sep) + 1]))
+            for guarded in self.protected)
 
     def moved(self, target, here):
         """Directory after a cd to target ('' is unknown); None once unknown."""
@@ -74,10 +90,9 @@ class Judge:
 
     def sql(self, commands, cwd):
         """Texts of the .sql files and `<` inputs the commands name: regular files only, first 1 MB each."""
-        names = {name for cmd in commands for name in rules.SQL_FILE.findall(cmd.text)}
+        names = {name for cmd in commands for name in rules.sql_files(cmd.text)}
         names |= {target for cmd in commands for op, target in cmd.inputs if op == "<"}
         for name in names:
-            name = re.sub(r"^-\w", "", name) if name.startswith("-") else name  # -fdrop.sql
             try:
                 path = self.resolve(name, cwd)
                 if path and os.path.isfile(path):
@@ -102,11 +117,26 @@ class Judge:
         if "push" in fired and rules.PUSH_WORD.search(cmd.text) and rules.GIT.search(cmd.text):
             if not (literal and rules.pusher(cmd.words) and not rules.force_push(cmd.words)):
                 return rules.TEXT["push"]
-        if "migrate" in fired and rules.MIGRATE.search(cmd.text) and rules.PROD.search(cmd.text):
+        if "migrate" in fired and rules.migrates(cmd.text) and rules.PROD.search(cmd.text):
             return rules.TEXT["migrate"]
-        if "clean" in fired and rules.CLEAN.search(cmd.text) and rules.GIT.search(cmd.text):
-            if not literal or rules.cleans_ignored(cmd.words):
-                return rules.TEXT["clean"]
+        if "ignored" in fired and rules.GIT.search(cmd.text) and (
+                rules.CLEAN.search(cmd.text) or rules.STASH.search(cmd.text)):
+            if not literal or rules.loses_ignored(cmd.words):
+                return rules.TEXT["ignored"]
+        if "move" in fired and rules.MOVE.search(cmd.text):
+            return self.carries(cmd, here, literal)
+        return None
+
+    def carries(self, cmd, here, literal):
+        """Why a move or rename is refused: an unreadable form, or a path that is or reaches a protected one."""
+        paths = rules.moves(cmd.words) if literal else None
+        for path in paths or [None]:
+            try:
+                full = path and self.resolve(path, here)
+            except (OSError, ValueError):
+                full = None
+            if full is None or full == self.root or self.reaches(full, "tree"):
+                return f"{rules.TEXT['move']} ({path or cmd.words[0]})"
         return None
 
     def rule(self, command, cwd, dialect=None):
@@ -133,7 +163,7 @@ class Judge:
             names = ", ".join(rules.TEXT[name] for name in sorted(fired))
             return (f"{names}, in a command the hook cannot follow (command substitution, a mid-command group or "
                     "a brace)")
-        here, saved = cwd, []
+        here, saved, changes = cwd, [], 0
         for item in items:
             if item == "(":
                 saved.append(here)
@@ -142,7 +172,8 @@ class Judge:
                 here = saved.pop() if saved else here
                 continue
             target = shell.cd_target(item.words)
-            here = here if target is None else self.moved(target, here)
+            changes += target is not None
+            here = here if target is None else self.moved(target, here) if changes <= MOVES else None
             reason = None if item.outer else self.proves(item, here, fired)
             if reason:
                 return reason

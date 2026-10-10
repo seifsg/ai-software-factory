@@ -86,8 +86,9 @@ def log(event, **data):
         LOG.parent.mkdir(parents=True, exist_ok=True)
         if LOG.exists() and LOG.stat().st_size > 1_000_000:
             os.replace(LOG, LOG.with_name("gate.log.1"))
-        with LOG.open("a", encoding="utf-8") as out:
-            out.write(json.dumps({"t": now(), "event": event, **data}, default=str)[:4000] + "\n")
+        fields = {key: value[:1000] if isinstance(value, str) else value for key, value in data.items()}
+        with LOG.open("a", encoding="utf-8") as out:  # truncate fields, never the line: each line stays JSON
+            out.write(json.dumps({"t": now(), "event": event, **fields}, default=str) + "\n")
     except OSError:
         pass
 
@@ -376,6 +377,11 @@ def cmd_pause(args, reason):
 
 
 def cmd_close(args):
+    if args.abandon and args.project and not ledger_path(find_project(args.project)).is_file():
+        project = find_project(args.project)  # a lost ledger: drop the registration so the hooks stand down
+        registry_path(project).unlink(missing_ok=True)
+        log("run.close", project=str(project), abandoned=args.abandon, lost=True)
+        return print(f"Closed the run at {project} without its ledger. Reason: {args.abandon}")
     project, run = open_run(args.project)
     if "handoff" not in run["done"] and not args.abandon:
         fail("Record the handoff first, or close --abandon \"<the owner's reason>\"")
@@ -392,29 +398,35 @@ def cmd_close(args):
 # ---- hooks (every host; dialects in fast_hosts.py, wiring in fast_install.py) ----
 
 def active_runs():
-    """Open runs from the registry. One bad or unreachable entry never disables the others."""
+    """Open runs from the registry, the source of truth. A registered run whose ledger is missing or unreadable
+    stays active as a lost run, gate closed. One bad or unreachable entry never disables the others."""
     runs = []
     for entry in ACTIVE.glob("*.json"):
         try:
             registration = load(entry)
-            run = load(ledger_path(registration["project"]))
-        except FileNotFoundError:
-            forget(entry)
-            continue
+            project = Path(registration["project"])
         except Exception:  # noqa: BLE001 - malformed entry: skip it, keep gating the rest
             continue
+        try:
+            run = load(ledger_path(project))
+        except (OSError, ValueError):
+            run = lost(registration) if project.is_dir() else forget(entry, project)
         if isinstance(run, dict) and not run.get("closed") and run.get("version") == VERSION:
             runs.append((entry, registration, run))
     return runs
 
 
-def forget(entry):
-    """Drop a registration whose ledger is gone from a reachable folder; unmounted drives keep theirs."""
-    try:
-        if Path(load(entry)["project"]).parent.exists():
-            entry.unlink(missing_ok=True)
-    except Exception:  # noqa: BLE001 - cleanup is best effort
-        pass
+def lost(registration):
+    """Stand-in for a run whose ledger was deleted, moved or broken: gate closed, every destructive rule on."""
+    return {"version": VERSION, "project": registration["project"], "key": registration.get("key", "?"),
+            "mode": "fast", "kind": "change", "done": {}, "lost": True}
+
+
+def forget(entry, project):
+    """Drop a registration whose project folder is gone from a reachable parent; unmounted drives keep theirs."""
+    if project.parent.exists():
+        entry.unlink(missing_ok=True)
+    return None
 
 
 def owner(runs, path):
@@ -462,7 +474,11 @@ def deny_reason(run, what, advice=None):
     blocked = open_before_build(run)
     steps = (f" Record these steps first: {', '.join(blocked)}. Fill .factory/fast/work-record.md and run "
              "`fast_gate.py done <step>` (fast-run.md). .factory/ stays writable.") if blocked else ""
-    log("hook.deny", key=run["key"], what=what, blocked=blocked)
+    if run.get("lost"):
+        steps = (" Its ledger .factory/fast/run.json is missing or unreadable, so the gate stays closed: the owner "
+                 f"restores it, or runs `fast_gate.py close --project \"{run['project']}\" --abandon \"<reason>\"`.")
+        advice = (advice or "") + steps
+    log("hook.deny", key=run["key"], what=what, blocked=blocked, lost=bool(run.get("lost")))
     return f"Factory {run['mode']} run '{run['key']}' blocks {what}.{advice or steps}"
 
 
@@ -536,6 +552,8 @@ def context(event, runs, cwd, session):
                 f"{next_step(run) or 'close'}; gate {'open' if not open_before_build(run) else 'closed (no source edits)'}")
         if run.get("paused"):
             line += f"; paused: {run['paused']['reason']}"
+        if run.get("lost"):
+            line += "; ledger .factory/fast/run.json missing: the owner restores it or closes with --abandon"
         lines.append(line + ". Method: .agents/skills/safe-engine/references/fast-run.md.")
     return "\n".join(lines) or None
 

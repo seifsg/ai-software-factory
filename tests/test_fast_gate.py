@@ -313,9 +313,20 @@ class FastGateTests(unittest.TestCase):
             "rm -rf dist{/../../other,}", "rm -rf x{a ~", "Remove-Item -Recurse -Force dist,..\\other",
             "Remove-Item -Recurse -Force node_modules,..\\other\\node_modules", "git clean -fdx", "git clean -fdX",
             "git clean -ffdx", "git clean -x -f", "rm -rf .factory/fast/run.json", "rm -f .factory/fast/run.json",
-            "find . -type f -delete", "find . -name '*' -exec rm -rf {} +", "find . -name '*.pyc' -delete",
+            "find . -type f -delete", "find . -name '*' -exec rm -rf {} +",
             "find .git -name '*.pack' -delete", "find . -name run.json -delete", "rm -rf .git/objects",
             *WINDOWS_READING,
+            # round 5: wildcards reaching protected paths, moves, stash --all, unproven root finds, --prune, --file -
+            "rm -rf .[!.]*", "rm -rf .??*", "rm -rf .git*", "rm -rf .fact*", "rm -rf .[gf]*", "rm -rf .*/",
+            "rm -rf .factory/f*", "rm -rf .factory/fast/run*", "Remove-Item -Recurse -Force .\\.f*",
+            "rm -f .factory/fast/*", "rm .factory/fast/*.json", "del /q .factory\\fast\\*",
+            "Remove-Item .factory\\fast\\* -Force", "rm -rf */", "rm -rf .git/obj*", "mv .factory/fast/run.json /tmp/x",
+            "Move-Item .factory .factory.old", "ren .factory old", "Rename-Item .git old", "mv .git* /tmp",
+            "mv notes.md .factory/fast/run.json", "git stash --all", "git stash -a", "git stash push --all",
+            "find . ! -name '*.md' -path '*/.git/*' -delete", "find . -not -name '*.md' -delete",
+            "find . -name '*.pyc' -o -delete", "find . -name '*.pyc' -path './.git/*' -delete",
+            "find . -name 'run*' -delete", "find . -iname 'FAST' -exec rm -rf {} +", "rm -rf .git/objects",
+            "git push --prune origin main:main", "psql --file - <<'EOF'\nDROP TABLE x;\nEOF",
         )
         allow = (
             "rm -rf dist node_modules", "Remove-Item -Recurse dist", "rm -f ../x.txt", "rm -rf dist 2> /dev/null",
@@ -345,6 +356,13 @@ class FastGateTests(unittest.TestCase):
             'git commit -qm "git push -f fixed"', 'gh pr create -t "DROP TABLE x" -b "rm -rf ~"',
             'glab mr create --description "rm -rf ~ and DROP TABLE x"', "rm -f .git/index.lock",
             "find . -name '*.pyc' -not -path './.git/*' -delete", "find .factory -name '*.tmp' -delete",
+            # round 5: routine finds, plain wildcards, moves, stashes, stale lock, git messages from stdin
+            "find . -name '*.pyc' -delete", "find . -name __pycache__ -type d -exec rm -rf {} +",
+            "find . -name node_modules -type d -prune -exec rm -rf '{}' +", "find . -name .DS_Store -delete",
+            "find . -maxdepth 1 -name '*.tmp' -delete", "rm -f *.log", "rm -rf dist/*", "mv old.ts new.ts",
+            "Move-Item src\\a.ts src\\b.ts", "git stash", "git stash -u", "git stash list", "rm -rf .git/index.lock",
+            "git commit --file - <<'EOF'\nrm -rf ~\nEOF", "git commit --file=- <<'EOF'\nDROP TABLE x\nEOF",
+            "git push --prune origin",
         ) + EVERYDAY
         root = gate.norm(str(self.project))
         judge = gate.sibling("fast_guard").Judge(root, gate.norm, gate.inside)
@@ -370,7 +388,22 @@ class FastGateTests(unittest.TestCase):
         self.assertEqual(self.pre("Bash", command="git push"), "allow")
         crafted = "echo \x007\x00; " + "eval " * 1200 + "ls"  # stray placeholder, deep nesting: denied, no hook.error
         self.assertEqual(self.pre("Bash", command=crafted), "deny")
-        self.assertEqual((self.root / "home/logs/gate.log").read_text(encoding="utf-8").count('"hook.deny"'), 2)
+        log = (self.root / "home/logs/gate.log").read_text(encoding="utf-8")
+        self.assertEqual(log.count('"hook.deny"'), 2)
+        self.assertTrue(all(json.loads(line) for line in log.splitlines()))  # long fields cut, lines stay JSON
+
+    def test_a_lost_ledger_keeps_the_gate_closed(self):
+        self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "fix the footer copy")
+        (self.project / ".factory/fast/work-record.md").write_text(LIGHT, encoding="utf-8")
+        for step in ("tickets", "plan"):
+            self.gate("done", step)
+        (self.project / ".factory/fast/run.json").unlink()  # as rm -f .factory/fast/* would
+        out = self.hook({"hook_event_name": "PreToolUse", "tool_name": "Write",
+                         "tool_input": {"file_path": str(self.project / "src/app.ts")}})
+        self.assertIn("ledger .factory/fast/run.json is missing", out["hookSpecificOutput"]["permissionDecisionReason"])
+        self.assertEqual(self.pre("Bash", command="git push -f origin main"), "deny")
+        self.gate("close", "--abandon", "the owner dropped the run")
+        self.assertEqual(self.pre("Write", file_path=str(self.project / "src/app.ts")), "allow")
 
     def test_stop_blocks_once_and_respects_pause(self):
         self.start()

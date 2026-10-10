@@ -159,7 +159,7 @@ def parse(piece, quotes, dialect="bash"):
 def message(flag, name):
     """True when flag takes a message value for program name (commit, PR and issue text)."""
     short = SHORT_MESSAGES.get(name)
-    return flag in MESSAGES or bool(short and short.fullmatch(flag))
+    return flag in MESSAGES or (name == "git" and flag == "--file") or bool(short and short.fullmatch(flag))
 
 
 def said(cmd, onward):
@@ -168,14 +168,15 @@ def said(cmd, onward):
     a later piece of the pipeline reads it)."""
     words, name = cmd.words, program(cmd.words[0])
     cut = {i for i in range(1, len(words))
-           if message(words[i - 1], name) or ("=" in words[i] and words[i].split("=")[0] in MESSAGES)}
+           if message(words[i - 1], name) or ("=" in words[i] and message(words[i].split("=")[0], name))}
     if name in ECHOES and not onward:
         cut.update(range(1, len(words)))
     if name in SEARCHERS:  # the first free word is the pattern, and so is the value of -e / -Pattern
         cut.update(i for i in range(1, len(words)) if words[i - 1].lower() in PATTERN_FLAGS)
         cut.add(next((i for i in range(1, len(words)) if not words[i].startswith("-")), len(words)))
     kept = [w for i, w in enumerate(words) if i not in cut or not literal(w)]
-    data = (name in DATA and not onward) or any(words[i] == "-" and i in cut for i in range(1, len(words)))
+    stdin = any(i in cut and (words[i] == "-" or words[i].endswith("=-")) for i in range(1, len(words)))
+    data = (name in DATA and not onward) or stdin  # stdin: a message read from the heredoc (-F -, --file=-)
     return " ".join(cmd.env + kept + [text for op, text in cmd.inputs if op == "<" or not (data and literal(text))])
 
 
