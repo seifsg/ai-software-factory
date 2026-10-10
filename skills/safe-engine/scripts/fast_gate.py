@@ -8,9 +8,8 @@ import json
 import os
 import re
 import sys
-from datetime import datetime, timezone
 from pathlib import Path
-# argparse, hashlib, subprocess and tempfile load lazily: hooks run on every tool call and must start fast.
+# argparse, datetime, hashlib, subprocess and tempfile load lazily: hooks run on every tool call and must start fast.
 
 VERSION = 1
 HOME = Path(os.environ.get("SAFE_ENGINE_HOME") or Path.home() / ".safe-engine")
@@ -84,6 +83,8 @@ def sibling(name):
 
 
 def now():
+    """UTC time, seconds. datetime loads here: most hook calls never need it."""
+    from datetime import datetime, timezone
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
@@ -596,8 +597,8 @@ def unseen_lines(project):
         return []  # mid-replace on Windows: show nothing now, the next hook retries with the new state
     if run.get("closed"):
         return []  # the final report carries the close card
-    lines = sibling("fast_card").news(run, steps_for(run), record_path(project), claims_path(project, run),
-                                          ledger_ns, now())
+    at = now()  # loads datetime from the standard library before the card module's cached import
+    lines = sibling("fast_card").news(run, steps_for(run), record_path(project), claims_path(project, run), ledger_ns, at)
     seen = Path(project, *FAST, SEEN)
     seen.touch()
     os.utime(seen, ns=(stamp, stamp))

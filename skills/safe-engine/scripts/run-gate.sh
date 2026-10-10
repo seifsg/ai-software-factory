@@ -13,7 +13,7 @@ dir="${safe_engine_scripts:-${0%/*}}"
 [ -f "$dir/fast_gate.py" ] || exit 0  # half-installed or removed copy: never block the session
 case "$host" in claude|codex|cursor) native=1 ;; *) native=0 ;; esac
 # The gate from its bytecode cache in the gate home (same text as fast_install.BOOT; a test keeps them equal)
-boot="import os,sys;h=os.environ.get('SAFE_ENGINE_HOME') or os.path.join(os.path.expanduser('~'),'.safe-engine');import json,re,datetime,pathlib;d=sys.argv[1];sys.dont_write_bytecode=False;sys.pycache_prefix=os.path.join(h,'pycache');sys.path.insert(0,d);sys.argv=[os.path.join(d,'fast_gate.py'),'hook','--host',sys.argv[2]];import fast_gate;fast_gate.main()"
+boot="import os,sys;h=os.environ.get('SAFE_ENGINE_HOME') or os.path.join(os.path.expanduser('~'),'.safe-engine');import json,re,pathlib;d=sys.argv[1];sys.dont_write_bytecode=False;sys.pycache_prefix=os.path.join(h,'pycache');sys.path.insert(0,d);sys.argv=[os.path.join(d,'fast_gate.py'),'hook','--host',sys.argv[2]];import fast_gate;fast_gate.main()"
 cache="$home/hook-python"
 if [ -r "$cache" ] && read -r py < "$cache"; then
   $py -c "$boot" "$dir" "$host"
