@@ -80,7 +80,7 @@ Before writing to the PR, ask the user the open questions in this session. Fold 
 
 Apply only the agreed fix-set, each through the `get-ready-to-code` 0-4 loop.
 
-- Smallest change that fixes the finding; match the surrounding style. Harden, never replace the author's feature.
+- Smallest change that removes the finding's cause; match the surrounding style. Harden, never replace the author's feature.
 - Never weaken security handling (protected secrets, TLS, input/origin/permission checks) to make anything pass.
 - No new circular dependencies.
 - Keep a before/after note per fix.

@@ -19,7 +19,8 @@ SAME_AS_CLAUDE = ("claude", "codex")
 
 
 def read(host, event):
-    """One shape for every host: kind, session, cwd, tool ('edit'/'shell'/None), paths, command, again, name."""
+    """One shape for every host: kind, session, cwd, tool ('edit'/'shell'/None), paths, command, again, name, and for
+    shell tools the dialect ('bash', 'windows' or None)."""
     name = str(event.get("hook_event_name") or event.get("hookEventName") or "")
     if host == "cursor":
         roots = event.get("workspace_roots") or []
@@ -53,7 +54,9 @@ def shape(kind, session, cwd, tool, args, again, name):
         names = re.findall(r"^\*\*\* (?:Add|Update|Delete) File: (.+)$|^\*\*\* Move to: (.+)$", patch, re.M)
         found.update(tool="edit", paths=[(first or second).strip() for first, second in names])
     elif tool in SHELL_TOOLS or (tool not in EDIT_TOOLS and re.search(r"shell|bash|command|terminal", tool, re.I)):
-        found.update(tool="shell", command=str(args.get("command", "")))
+        dialect = "windows" if re.search(r"powershell|pwsh|cmd", tool, re.I) else (
+            "bash" if re.search(r"bash|zsh", tool, re.I) else None)  # None: the guard proves both readings
+        found.update(tool="shell", command=str(args.get("command", "")), dialect=dialect)
     elif tool in EDIT_TOOLS or re.search(r"write|edit|replace|create|delete|patch", tool, re.I):
         found.update(tool="edit", paths=[str(args[key]) for key in PATH_KEYS if args.get(key)][:1])
     return found

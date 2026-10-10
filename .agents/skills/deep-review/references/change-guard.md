@@ -39,7 +39,7 @@ Change Guard Report:
 - Verify conditional branches haven't been accidentally altered
 - Check that default values, fallbacks, and edge cases are preserved
 - Confirm loop boundaries, iteration order, early returns and termination conditions
-- Verify type coercions, null checks, and guard clauses remain
+- Verify type coercions, null checks and guard clauses remain, unless a stronger guarantee replaces them in the same change (defense in depth stays)
 - Check that side effects (DB writes, API calls, event emissions) are unchanged: none dropped or doubled, including navigation, notifications, analytics, cache invalidation, queued work, saves, uploads and purchases. Inspect subscriptions and lifecycle dependencies
 - Check changed cache identities/invalidation do not leave consumers stale or mix user, session or version data
 
