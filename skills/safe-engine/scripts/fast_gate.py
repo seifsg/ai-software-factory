@@ -1,7 +1,7 @@
 """Fast/Lucky run gate: record each factory step, check it, and answer host hooks.
 
 Method: .agents/skills/safe-engine/references/fast-run.md#the-gate. Python 3.9+, stdlib only.
-Step checks live in fast_record.py (loaded only by `done`); the owner's run card in fast_progress.py.
+Step checks live in fast_record.py (loaded only by `done`); the owner's dashboard in fast_card.py.
 Checks prove a step was recorded, not that it was good.
 """
 import json
@@ -58,15 +58,15 @@ COVERAGE_HINTS = {  # runs whose methods define coverage and the light lane
     "tickets": "an Epic URL line (a change: a Ticket line, its URL or 'none (why)'), a Backlog line; product/feature "
                "runs >=1 Sub-issue URL line and a Requested line (R1, R2, ...); online: each listed ticket is open "
                "with a Definition of done, and its criteria name every requested item not marked owner-deferred",
-    "plan": "### Files, ### Critique, ### Phases, ### Todos (T1..), ### Whole plan, Logging and Efficiency lines "
-            "(light lane: a Success line and ### Todos); online: each listed ticket has checklist items naming "
+    "plan": "### Files, ### Critique, ### Phases, ### Todos ('T1 <title> → <result> (#ticket, A1)'), ### Whole plan, "
+            "Logging and Efficiency lines (light lane: a Success line and ### Todos); online: each listed ticket has checklist items naming "
             "every criterion, they hold every plan todo, and criteria still name every requested item not "
             "owner-deferred",
     "handoff": "Run, Statuses, Unverified, Follow-ups lines; sign-in runs a Dev sign-in line; online: each listed "
                "ticket fully ticked, or Blocked, Backlog or not planned; items name every criterion and hold every "
                "plan todo; criteria name every requested item not owner-deferred",
 }
-HERE = Path(__file__).resolve().parent  # siblings: fast_record.py (checks), fast_shell.py, fast_progress.py (card)
+HERE = Path(__file__).resolve().parent  # siblings: fast_record.py, fast_shell.py, fast_progress.py, fast_card.py
 
 
 def sibling(name):
@@ -164,7 +164,7 @@ def record_path(project):
 
 
 def shown_path(project):
-    return Path(project, *FAST, SHOWN)  # progress already shown to the owner (fast_progress.py)
+    return Path(project, *FAST, SHOWN)  # progress already shown to the owner (fast_card.py)
 
 
 def claims_path(project, run):
@@ -222,10 +222,9 @@ def open_run(given):
 
 def status_text(run, all_sections=None):
     """The owner's run card, then the step list, gate and next step."""
-    progress = sibling("fast_progress")
     if all_sections is None:
-        all_sections = progress.read(record_path(run["project"]))
-    lines = [progress.card(run, steps_for(run), all_sections, now()), "",
+        all_sections = sibling("fast_progress").read(record_path(run["project"]))
+    lines = [sibling("fast_card").card(run, steps_for(run), all_sections, now()), "",
              f"{run['mode']} {run['kind']} run '{run['key']}' at {run['project']}"
              f" (ui={run.get('ui')}, data={run.get('data')}, auth={run.get('auth')})"]
     lines += [f"  [{'x' if step in run['done'] else ' '}] {step}" for step in steps_for(run)]
@@ -252,7 +251,7 @@ LAYOUT = ".agents/skills/ticketing/references/ticket-layout.md"
 FAST_RUN = ".agents/skills/safe-engine/references/fast-run.md"
 # run flag -> (method file, phrase): a check applies only when the methods the run reads define it
 FLAGS = {"ticket_checks": (LAYOUT, "Definition of done"), "coverage": (LAYOUT, "Every criterion has"),
-         "light": (FAST_RUN, "Light lane")}
+         "light": (FAST_RUN, "Light lane"), "outcomes": (FAST_RUN, "what the owner can do once it is done")}
 
 
 def method_flags(bundle, project):
@@ -582,7 +581,7 @@ def unseen_lines(project, run):
         return []  # mid-replace on Windows: show nothing now, the next hook retries with the new state
     if run.get("closed"):
         return []  # the final report carries the close card
-    lines = sibling("fast_progress").news(run, steps_for(run), record_path(project), claims_path(project, run),
+    lines = sibling("fast_card").news(run, steps_for(run), record_path(project), claims_path(project, run),
                                           ledger_ns, now())
     seen = Path(project, *FAST, SEEN)
     seen.touch()

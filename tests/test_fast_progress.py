@@ -1,4 +1,4 @@
-"""Owner progress: the run card, once-only hook messages and the no-read hot path (fast-run.md#progress)."""
+"""Owner progress: record facts, the mini dashboard, once-only hook messages and the no-read hot path (fast-run.md#progress)."""
 import importlib.util
 import json
 import os
@@ -15,14 +15,28 @@ GATE = SCRIPTS / "fast_gate.py"
 STEPS = ["tickets", "plan", "build", "done-run", "handoff"]
 RECORD = """# copy-fix
 ## Tickets
-**Ticket:** https://github.com/o/r/issues/7
+**Ticket:** https://github.com/o/r/issues/7 Footer copy
 **Backlog:** searched "footer": nothing open
 ## Plan
 **Success:** the footer reads "Contact us".
 ### Todos
-- T1 fix the footer word
-- T2 link the footer to the contact page
+- T1 fix the footer word → the footer reads Contact us
+- T2 link the footer to the contact page → click Contact and the form opens
 ## Build log
+"""
+PORTAL = """## Tickets
+**Sub-issue:** https://x/issues/11 Landing page
+**Sub-issue:** https://x/issues/12 (Download & SEO)
+## Plan
+### Todos
+- T1 (standard) Landing page loads fast → open the site and it shows in under a second (#11, A1)
+- T2 Download button → click it and the PDF saves (#12, A2)
+- [ ] **T3** SEO tags → search shows the title and description (#12, A3)
+- T4 Download counter -> see how many people downloaded (#12, A4)
+## Build log
+- T1 pre: a do: b post: c
+- T3 pre: a do: b post: c
+**Now:** T2
 """
 
 
@@ -33,43 +47,63 @@ def module(name):
     return loaded
 
 
-progress = module("fast_progress")
+facts, cards = module("fast_progress"), module("fast_card")
 
 
-class CardTests(unittest.TestCase):
+class DashboardTests(unittest.TestCase):
     def setUp(self):
-        self.run = {"mode": "fast", "kind": "change", "key": "k", "created": "2026-10-10T10:00:00+00:00",
-                    "done": {"tickets": {"at": "2026-10-10T10:05:00+00:00"}}, "paused": None, "coverage": True,
-                    "tickets": ["https://x/1", "https://x/2"]}
-        self.sections = progress.sections("## Plan\n### Todos\n- T1 fix footer (A1)\n- [ ] **T2** add link\n"
-                                          "## Build log\n- T1 pre: a do: b post: c\n- T3 pre: x do: y post: z\n")
+        self.run = {"mode": "fast", "kind": "feature", "key": "portal-poc", "created": "2026-10-10T10:00:00+00:00",
+                    "coverage": True, "paused": None,
+                    "done": {"tickets": {"at": "2026-10-10T10:05:00+00:00"}, "plan": {"at": "2026-10-10T10:20:00+00:00"}}}
+        self.sections = facts.sections(PORTAL)
+        self.at = "2026-10-10T11:02:00+00:00"
 
-    def test_card_shows_step_time_todos_and_tickets(self):
-        lines = progress.card(self.run, STEPS, self.sections, "2026-10-10T11:07:00+00:00").splitlines()
-        self.assertEqual(lines, ["🏭 fast change 'k' · step 2/5 plan · 1h02m in step · 1h07m total",
-                                 "✅ tickets   ▶️ plan   ⬜ build · done-run · handoff",
-                                 "☑️ todos 1/2 · open: T2 · https://x/1 +1"])  # T3 is not a plan todo
+    def test_dashboard_shows_ticket_done_now_and_next(self):
+        self.assertEqual(cards.card(self.run, STEPS, self.sections, self.at).splitlines(), [
+            "🏭 portal-poc · 🔨 build · step 3/5 · ⏱️ 1h02m total, 42m in step",
+            "🎫 #12 Download & SEO   ▰▱▱ 1/3 · run 2/4",
+            "✅ SEO tags",
+            "🔨 NOW  Download button",
+            "     → click it and the PDF saves",
+            "⏭️ NEXT Download counter"])
 
-    def test_paused_card_leads_with_the_question_and_a_finished_one_lists_durations(self):
-        paused = progress.card({**self.run, "paused": {"reason": "pick a link"}}, STEPS, self.sections, "2026-10-10T11:07:00+00:00")
-        self.assertTrue(paused.startswith("⏸️ waiting on you: pick a link\n🏭"))
+    def test_paused_card_asks_first_and_holds_the_work(self):
+        lines = cards.card({**self.run, "paused": {"reason": "PDF or ZIP?"}}, STEPS, self.sections, self.at).splitlines()
+        self.assertEqual(lines[0], "⏸️ WAITING ON YOU: PDF or ZIP?")
+        self.assertIn("🔨 Download button is on hold until you answer", lines)
+
+    def test_before_and_after_the_build_the_card_shows_steps(self):
+        early = {**self.run, "done": {"tickets": {"at": "2026-10-10T10:05:00+00:00"}}}
+        self.assertEqual(cards.card(early, STEPS, self.sections, "2026-10-10T10:07:00+00:00").splitlines()[1],
+                         "✅ tickets   🗺️ plan   ⬜ build · done-run · handoff")
         done = {step: {"at": f"2026-10-10T1{i}:00:00+00:00"} for i, step in enumerate(STEPS, 1)}
-        finished = progress.card({**self.run, "done": done, "closed": True}, STEPS, {}, "2026-10-10T16:30:00+00:00")
-        self.assertEqual(finished.splitlines(), ["🏭 fast change 'k' · 6h30m total · closed",
-                                                 "⏱️ tickets 1h00m · plan 1h00m · build 1h00m · done-run 1h00m · handoff 1h00m",
-                                                 "🎫 https://x/1 +1"])
+        finished = cards.card({**self.run, "done": done, "closed": True}, STEPS, self.sections, "2026-10-10T16:30:00+00:00")
+        self.assertEqual(finished.splitlines(), [
+            "🏭 portal-poc · ⏱️ 6h30m total · 🏁 closed",
+            "⏱️ tickets 1h00m · plan 1h00m · build 1h00m · done-run 1h00m · handoff 1h00m"])
 
-    def test_parsers(self):
-        self.assertEqual(progress.titles(self.sections), {"1": "fix footer (A1)", "2": "add link"})
-        tagged = progress.sections('## Plan\n### Todos\n- T1 (light) fix the typo in `greeting`: "Helo" to "Hello" now\n')
-        self.assertEqual(progress.titles(tagged), {"1": 'fix the typo in `greeting`: "Helo" to "Hello"…'})  # at a word
-        line = "- T2 pre: a do: b post: see T5"
-        self.assertEqual(progress.built_ids(line, strict=True), {"2"})
-        self.assertEqual(progress.built_ids(line, strict=False), {"2", "5"})  # older runs: any mention counts
-        self.assertEqual(progress.built_ids("- T4 pre: a do: b", strict=False), set())
+    def test_record_facts(self):
+        self.assertEqual(facts.todo_items(self.sections), {
+            "1": ("Landing page loads fast", "open the site and it shows in under a second", "11"),
+            "2": ("Download button", "click it and the PDF saves", "12"),
+            "3": ("SEO tags", "search shows the title and description", "12"),
+            "4": ("Download counter", "see how many people downloaded", "12")})
+        self.assertEqual(facts.ticket_titles(self.sections), {"11": "Landing page", "12": "Download & SEO"})
+        self.assertEqual((facts.now_ids(self.sections), facts.without_result(self.sections)), (["2"], []))
+        bare = facts.sections("## Plan\n### Todos\n- T1 add store_true option\n- Wave 2: T2, T3\n- T3 x → y\n")
+        self.assertEqual(facts.without_result(bare), ["1", "2"])  # no result; no line of its own
+        long = facts.sections('## Plan\n### Todos\n- T1 (light) fix the typo in `greeting`: "Helo" to "Hello" now → ok\n')
+        self.assertEqual(facts.todo_items(long)["1"][0], 'fix the typo in `greeting`: "Helo" to "Hello"…')
+
+    def test_parsers_and_formats(self):
+        line = "- T2 pre: a do: b post: see T5\n- T1 pre: a do: b post: c"
+        self.assertEqual(list(facts.built_ids(line, strict=True)), ["2", "1"])  # log order
+        self.assertEqual(set(facts.built_ids(line, strict=False)), {"1", "2", "5"})  # older runs: any mention counts
+        self.assertEqual(facts.built_ids("- T4 pre: a do: b", strict=False), {})
+        self.assertEqual([cards.bar(1, 3), cards.bar(5, 20), cards.bar(0, 0)], ["▰▱▱", "▰▰▰▱▱▱▱▱▱▱", ""])
         times = ("2026-10-10T10:00:40+00:00", "2026-10-10T10:14:00+00:00", "2026-10-10T11:02:00+00:00",
                  "2026-10-12T13:00:00+00:00", None)
-        self.assertEqual([progress.span("2026-10-10T10:00:00+00:00", end) for end in times], ["40s", "14m", "1h02m", "2d3h", ""])
+        self.assertEqual([cards.span("2026-10-10T10:00:00+00:00", end) for end in times], ["40s", "14m", "1h02m", "2d3h", ""])
 
 
 class ProgressHookTests(unittest.TestCase):
@@ -80,6 +114,8 @@ class ProgressHookTests(unittest.TestCase):
         self.project = self.root / "app ü"
         self.project.mkdir()
         self.env = dict(os.environ, SAFE_ENGINE_HOME=str(self.root / "home"), GH_CONFIG_DIR=str(self.root / "gh"))
+        for name in ("GH_TOKEN", "GITHUB_TOKEN", "GH_ENTERPRISE_TOKEN", "GITHUB_ENTERPRISE_TOKEN"):
+            self.env.pop(name, None)  # gh logged out: --offline stays honest
         self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "fix the footer")
         self.record = self.project / ".factory/fast/work-record.md"
         self.shown = self.project / ".factory/fast/shown"
@@ -111,21 +147,34 @@ class ProgressHookTests(unittest.TestCase):
 
     def test_commands_print_the_card_first_and_keep_the_plain_status(self):
         status = self.gate("status")
-        self.assertTrue(status.startswith("🏭 fast change 'copy-fix' · step 1/5 tickets"), status)
+        self.assertTrue(status.startswith("🏭 copy-fix · 🎫 tickets · step 1/5"), status)
         self.assertIn("[ ] tickets", status)
         self.assertIn("Next: tickets", status)
 
     def test_each_change_is_shown_once(self):
-        self.assertIn("step 1/5 tickets", self.hook()["systemMessage"])
+        self.assertIn("step 1/5", self.hook()["systemMessage"])
         self.assertIsNone(self.hook())
         self.plan()
-        card = self.hook(name="Stop", stop_hook_active=True)["systemMessage"]
-        self.assertIn("step 3/5 build", card)
-        self.assertIn("todos 0/2 · open: T1 T2 · https://github.com/o/r/issues/7", card)
-        self.record.write_text(RECORD + "- T1 pre: typo do: fixed post: reads right\n", encoding="utf-8")
-        self.assertEqual(self.hook(name="UserPromptSubmit", prompt="go")["systemMessage"],
-                         "☑️ T1 fix the footer word · todos 1/2 · open: T2")
+        card = self.hook(name="Stop", stop_hook_active=True)["systemMessage"].splitlines()
+        self.assertIn("🔨 build · step 3/5", card[0])
+        self.assertEqual(card[1:], ["🎫 #7 Footer copy   ▱▱ 0/2", "⏭️ NEXT fix the footer word"])
+        self.record.write_text(RECORD + "**Now:** T1\n", encoding="utf-8")
+        self.assertEqual(self.hook(name="UserPromptSubmit", prompt="go")["systemMessage"].splitlines(), [
+            "🔨 NOW  fix the footer word", "     → the footer reads Contact us", "🎫 #7 Footer copy   ▱▱ 0/2"])
+        self.record.write_text(RECORD + "- T1 pre: typo do: fixed post: reads right\n**Now:** T2\n", encoding="utf-8")
+        self.assertEqual(self.hook(name="UserPromptSubmit", prompt="go")["systemMessage"].splitlines(), [
+            "✅ fix the footer word done → the footer reads Contact us",
+            "🔨 NOW  link the footer to the contact page", "     → click Contact and the form opens",
+            "🎫 #7 Footer copy   ▰▱ 1/2"])
         self.assertNotIn("systemMessage", self.hook(name="UserPromptSubmit", prompt="go"))
+
+    def test_a_plan_without_results_is_refused(self):
+        self.record.write_text(RECORD.replace(" → the footer reads Contact us", ""), encoding="utf-8")
+        self.gate("done", "tickets", "--offline", "test")
+        result = subprocess.run([sys.executable, str(GATE), "done", "plan", "--offline", "test", "--project",
+                                 str(self.project)], capture_output=True, text=True, encoding="utf-8", env=self.env)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("T1 needs its own line with its result", result.stderr)
 
     def test_parallel_hooks_show_a_change_once(self):
         self.hook()
@@ -138,14 +187,14 @@ class ProgressHookTests(unittest.TestCase):
             thread.join()
         shown = [answer["systemMessage"] for answer in answers if answer]
         self.assertEqual(len(shown), 1, answers)
-        self.assertTrue(shown[0].startswith("⏸️ waiting on you: pick the link target"))
+        self.assertTrue(shown[0].startswith("⏸️ WAITING ON YOU: pick the link target"))
 
     def test_a_deny_carries_progress_and_each_host_answers_in_its_format(self):
         answer = self.hook(tool_name="Write", tool_input={"file_path": str(self.project / "src/a.ts")})
         self.assertEqual(answer["hookSpecificOutput"]["permissionDecision"], "deny")
-        self.assertIn("step 1/5 tickets", answer["systemMessage"])
+        self.assertIn("step 1/5", answer["systemMessage"])
         self.gate("pause", "--reason", "x")
-        self.assertIn("waiting on you: x", self.hook(host="codex")["systemMessage"])
+        self.assertIn("WAITING ON YOU: x", self.hook(host="codex")["systemMessage"])
         self.gate("resume")
         cursor = self.hook(name="stop", host="cursor", conversation_id="s1", loop_count=0,
                            workspace_roots=[str(self.project)])
@@ -170,21 +219,21 @@ class ProgressHookTests(unittest.TestCase):
         self.gate("done", "tickets", "--offline", "test")
         with patch.object(gate, "load_stamped", side_effect=PermissionError("mid-replace")):
             self.assertIsNone(gate.news(runs, cwd, "s1"))  # cannot re-read: show nothing rather than stale
-        self.assertIn("step 2/5 plan", gate.news(runs, cwd, "s1"))
+        self.assertIn("🗺️ plan · step 2/5", gate.news(runs, cwd, "s1"))
         self.assertIsNone(self.hook())
 
     def test_delegate_calls_leave_messages_for_the_main_thread(self):
         self.assertIsNone(self.hook(agent_id="agent-1"))
-        self.assertIn("step 1/5 tickets", self.hook()["systemMessage"])
+        self.assertIn("step 1/5", self.hook()["systemMessage"])
 
-    def test_claims_another_run_left_never_hide_a_tick(self):
+    def test_claims_another_run_left_never_hide_a_finished_todo(self):
         self.hook()
         for stale in (self.shown / "19990101000000", self.shown):  # an older gate copy's claims
             stale.mkdir(parents=True, exist_ok=True)
             (stale / "todo-1").touch()
         self.plan()
         self.record.write_text(RECORD + "- T1 pre: a do: b post: c\n", encoding="utf-8")
-        self.assertIn("☑️ T1 fix the footer word", self.hook()["systemMessage"])
+        self.assertIn("✅ fix the footer word done", self.hook()["systemMessage"])
 
     def test_a_broken_registration_never_drops_a_deny(self):
         entry = next((self.root / "home/active").glob("*.json"))

@@ -22,7 +22,7 @@ LIGHT = """# copy-fix
 ## Plan
 **Success:** the footer reads "Contact us".
 ### Todos
-- T1 fix the footer word
+- T1 fix the footer word → the footer reads "Contact us"
 ## Build log
 - T1 pre: footer says "Contcat us" do: fixed the word post: footer reads "Contact us"
 ## Done-run
@@ -227,7 +227,7 @@ class FastGateTests(unittest.TestCase):
         self.gate("pause", "--reason", "waiting on the owner")
         paused = self.hook(elsewhere)  # no block; the owner sees the ask first
         self.assertNotIn("decision", paused)
-        self.assertTrue(paused["systemMessage"].startswith("⏸️ waiting on you: waiting on the owner"))
+        self.assertTrue(paused["systemMessage"].startswith("⏸️ WAITING ON YOU: waiting on the owner"))
         context = self.hook({"hook_event_name": "UserPromptSubmit", "prompt": "go"})
         self.assertIn("paused: waiting on the owner", context["hookSpecificOutput"]["additionalContext"])
 
@@ -484,12 +484,13 @@ class FastGateTests(unittest.TestCase):
         gate = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(gate)
         layout, lane = Path(gate.LAYOUT), Path(gate.FAST_RUN)
-        for name, texts in (("new", ("### ✅ Definition of done\nEvery criterion has an item.", "## Light lane")),
+        for name, texts in (("new", ("### ✅ Definition of done\nEvery criterion has an item.",
+                                     "## Light lane\nT1 <title> → <what the owner can do once it is done>")),
                             ("old", ("### ✅ Done when", "## Hooks"))):
             for path, text in zip((layout, lane), texts):
                 (self.root / name / path).parent.mkdir(parents=True, exist_ok=True)
                 (self.root / name / path).write_text(text, encoding="utf-8")
-        on = {"ticket_checks": True, "coverage": True, "light": True}
+        on = {"ticket_checks": True, "coverage": True, "light": True, "outcomes": True}
         off = dict.fromkeys(on, False)
         self.assertEqual(gate.method_flags({"root": str(self.root / "new")}, self.project), on)
         self.assertEqual(gate.method_flags({"root": str(self.root / "old")}, self.project), off)
@@ -498,7 +499,7 @@ class FastGateTests(unittest.TestCase):
         self.assertEqual(gate.method_flags(None, SCRIPTS.parents[2]), on)  # this checkout's own methods define them
         (self.root / "new" / layout).write_bytes(b"\xff\xfe broken")
         self.assertEqual(gate.method_flags({"root": str(self.root / "new")}, self.project),
-                         {**off, "light": True})
+                         {**off, "light": True, "outcomes": True})  # fast-run.md still reads
         lucky = {"mode": "lucky", "kind": "change"}
         self.assertNotIn("done-run", gate.steps_for(lucky))
         self.assertIn("done-run", gate.steps_for({**lucky, "ticket_checks": True}))

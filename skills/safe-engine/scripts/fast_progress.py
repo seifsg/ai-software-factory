@@ -1,19 +1,19 @@
-"""Run progress for the owner: work record parsing shared with the step checks, the run card and tick lines.
+"""Work record facts shared by the step checks (fast_record.py) and the owner's dashboard (fast_card.py).
 
-Hooks load this only after fast_gate.py's file-time check shows a change. Stdlib only, no network.
-Method: .agents/skills/safe-engine/references/fast-run.md#progress.
+Pure parsing, stdlib only. Formats: .agents/skills/safe-engine/references/fast-run.md#work-record.
 """
-import os
 import re
-from datetime import datetime
 
 TAGS = ("pre:", "do:", "post:")
 LEAD = r"\s*(?:\|\s*)?(?:(?:[-*+]|\d+[.)])\s+)?(?:\[[ x]\]\s+)?[*`]*"  # bullet, number, [x], **, ` or a table cell
 OWN = re.compile(LEAD + r"t(\d+)\b")  # a lowercased line that starts with its todo ID
-TITLE = re.compile(LEAD + r"t(\d+)\b[\s:.)*`|-]*(.*?)[\s|*]*$", re.I)
+TODO_LINE = re.compile(r"^" + LEAD.replace(r"\s", r"[ \t]") + r"t(\d+)\b[ \t:.)*`|-]*(.*)$", re.M | re.I)  # ID, rest
+REFS = re.compile(r"\(((?:[ \t,]*(?:#\d+|[A-Z]{1,3}\d+))+)[ \t]*\)")  # "(#12, A2)" closing a todo line (fullmatch)
 MENTION = re.compile(r"\bt(\d+)\b")
-TAG = re.compile(r"^\([^)\n]*\)\s*")  # "(light) fix the typo": the tier or criterion tag before a title
-SHOWN_TICKS = 6  # tick lines per message; the rest are counted
+TICKET_NUMBER = re.compile(r"#(\d+)")
+NEXT_H3 = re.compile(r"^###\s", re.M)
+NOW = re.compile(r"\*\*Now:\*\*([^\n]*)", re.I)
+TICKET_LINE = re.compile(r"\*\*(?:Epic|Ticket|Sub-issue):\*\*[ \t]*(\S+)[ \t]*([^\n]*)", re.I)
 
 
 def sections(text):
@@ -31,13 +31,17 @@ def sections(text):
 
 
 def subsection(body, title):
-    """The text under the first '### ...<title>...' heading, up to the next one; None when absent."""
-    match = re.search(r"^###\s+[^\n]*" + re.escape(title) + r"[^\n]*\n(.*?)(?=^###\s|\Z)", body, re.M | re.S | re.I)
-    return match.group(1) if match else None
+    """The text under the first '### ...<title>...' heading, up to the next one; None when absent. Two searches,
+    linear in the body."""
+    head = re.search(r"^###\s+[^\n]*" + re.escape(title) + r"[^\n]*\n", body, re.M | re.I)
+    if not head:
+        return None
+    end = NEXT_H3.search(body, head.end())
+    return body[head.end():end.start() if end else len(body)]
 
 
 def todos(all_sections):
-    """The plan's Todos subsection text: the one source of todo IDs and titles."""
+    """The plan's Todos subsection text: the one source of todo IDs, titles and results."""
     return subsection(all_sections.get("plan", ""), "Todos") or ""
 
 
@@ -47,31 +51,74 @@ def todo_ids(all_sections):
 
 
 def built_ids(build_log, strict):
-    """Todo numbers with a 'pre: do: post:' line, in one pass. strict (coverage runs): the line starts with its
-    ID, so a mention such as 'T23..T34' in another todo's line never counts."""
-    found = set()
+    """Todo numbers with a 'pre: do: post:' line, in log order (a dict used as an ordered set). strict (coverage
+    runs): the line starts with its ID, so a mention such as 'T23..T34' in another todo's line never counts."""
+    found = {}
     for line in build_log.lower().splitlines():
         if not all(tag in line for tag in TAGS):
             continue
         if strict:
             own = OWN.match(line)
             if own:
-                found.add(own.group(1))
+                found[own.group(1)] = None
         else:
-            found.update(MENTION.findall(line))
+            found.update(dict.fromkeys(MENTION.findall(line)))
     return found
 
 
-def titles(all_sections):
-    """Todo number -> short title, from the Todos lines that start with the ID; a leading tag such as the model
-    tier '(light)' is dropped and long titles end at a word."""
+def short(text, limit=48):
+    """text cut at a word, with an ellipsis, when longer than limit."""
+    text = text.strip()
+    return text if len(text) <= limit else text[:limit].rsplit(" ", 1)[0] + "…"
+
+
+def todo_items(all_sections):
+    """Todo number -> (title, result, ticket number or None), in plan order, from the Todos lines that start with
+    the ID: 'T4 Download button → click it and the PDF saves (#12, A2)'. A leading tag such as '(light)' drops."""
     found = {}
-    for line in todos(all_sections).splitlines():
-        match = TITLE.match(line)
-        if match:
-            title = TAG.sub("", match.group(2))
-            found.setdefault(match.group(1), title if len(title) <= 48 else title[:48].rsplit(" ", 1)[0] + "…")
+    for match in TODO_LINE.finditer(todos(all_sections)):  # one linear pass; string operations per line
+        number, text = match.group(1), match.group(2).rstrip(" \t|*")
+        if number in found:
+            continue
+        if text.startswith("(") and ")" in text:
+            text = text[text.find(")") + 1:].lstrip()
+        cut = text.rfind("(")
+        refs = REFS.fullmatch(text, cut) if cut >= 0 and text.endswith(")") else None
+        ticket = TICKET_NUMBER.search(refs.group(1)) if refs else None
+        name, gets = split_result(text[:cut] if refs else text)
+        found[number] = (short(name), short(gets, 60), ticket.group(1) if ticket else None)
     return found
+
+
+def split_result(text):
+    """'Download button → click it' (or '->') into title and result; no arrow: no result."""
+    for mark in ("→", "->"):
+        at = text.find(mark)
+        if at >= 0:
+            return text[:at], text[at + len(mark):]
+    return text, ""
+
+
+def without_result(all_sections):
+    """Plan todo IDs whose own line names no '→ result', or that have no line of their own."""
+    items = todo_items(all_sections)
+    return [n for n in todo_ids(all_sections) if not (items.get(n) or ("", "", None))[1]]
+
+
+def ticket_titles(all_sections):
+    """Ticket number -> short title, from Tickets lines such as '**Sub-issue:** <url> Download & SEO'."""
+    found = {}
+    for url, rest in TICKET_LINE.findall(all_sections.get("tickets", "")):
+        number, title = re.search(r"(\d+)\D*$", url), rest.strip(" :()-")
+        if number and title:
+            found.setdefault(number.group(1), short(title, 40))
+    return found
+
+
+def now_ids(all_sections):
+    """The todo IDs the Build log's last '**Now:**' line names: the todos in progress."""
+    marks = NOW.findall(all_sections.get("build log", ""))
+    return re.findall(r"\bT(\d+)\b", marks[-1]) if marks else []
 
 
 def read(record):
@@ -80,88 +127,3 @@ def read(record):
         return sections(record.read_text(encoding="utf-8", errors="replace"))
     except OSError:
         return {}
-
-
-def span(start, end):
-    """'40s', '14m', '1h02m' or '2d3h' from one ISO time to another; '' when either is missing or invalid."""
-    try:
-        seconds = max(0, int((datetime.fromisoformat(end) - datetime.fromisoformat(start)).total_seconds()))
-    except (TypeError, ValueError):
-        return ""
-    hours = seconds // 3600
-    if hours >= 24:
-        return f"{hours // 24}d{hours % 24}h"
-    if hours:
-        return f"{hours}h{seconds // 60 % 60:02d}m"
-    return f"{seconds // 60}m" if seconds >= 60 else f"{seconds}s"
-
-
-def progress(run, all_sections):
-    """(todo IDs, built IDs among them), counted exactly like the build check."""
-    ids = todo_ids(all_sections)
-    return ids, built_ids(all_sections.get("build log", ""), bool(run.get("coverage"))) & set(ids)
-
-
-def todo_line(ids, built):
-    """'todos 4/9 · open: T5 T6 T7 +2': built count and the first open IDs."""
-    left = [f"T{n}" for n in ids if n not in built]
-    rest = f" +{len(left) - 3}" if len(left) > 3 else ""
-    return f"todos {len(built)}/{len(ids)} · " + (f"open: {' '.join(left[:3])}{rest}" if left else "all built")
-
-
-def steps_line(steps, done, current, created):
-    """Done, current and left steps; once all are done, each step's duration."""
-    if current is None:
-        starts = [created] + [done[step].get("at") for step in steps]
-        return "⏱️ " + " · ".join(f"{step} {span(starts[i], starts[i + 1])}".strip() for i, step in enumerate(steps))
-    left = steps[steps.index(current) + 1:]
-    parts = [f"✅ {' · '.join(s for s in steps if s in done)}" if steps.index(current) else "", f"▶️ {current}",
-             f"⬜ {' · '.join(left)}" if left else ""]
-    return "   ".join(part for part in parts if part)
-
-
-def card(run, steps, all_sections, now, counted=None):
-    """The owner's run card: where the run is, todo progress and what waits on the owner. 2 to 4 short lines.
-    counted: progress() already computed by the caller."""
-    done, created = run.get("done") or {}, run.get("created")
-    current = next((step for step in steps if step not in done), None)
-    head = [f"🏭 {run.get('mode')} {run.get('kind')} '{run.get('key')}'"]
-    if current:
-        began = max([entry.get("at") or "" for entry in done.values()] + [created or ""])
-        head += [f"step {steps.index(current) + 1}/{len(steps)} {current}", f"{span(began, now)} in step"]
-    head += [f"{span(created, now)} total", "abandoned" if run.get("abandoned") else "closed" if run.get("closed") else ""]
-    lines = [" · ".join(part for part in head if part), steps_line(steps, done, current, created)]
-    ids, built = counted or progress(run, all_sections)
-    tickets = run.get("tickets") or []
-    extra = [todo_line(ids, built)] if ids else []
-    extra += [tickets[0] + (f" +{len(tickets) - 1}" if len(tickets) > 1 else "")] if tickets else []
-    lines += [("☑️ " if ids else "🎫 ") + " · ".join(extra)] if extra else []
-    paused = run.get("paused")
-    return "\n".join(([f"⏸️ waiting on you: {paused.get('reason')}"] if paused else []) + lines)
-
-
-def claim(path):
-    """True for the first caller only (atomic create), so parallel hooks show each message once."""
-    try:
-        os.close(os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY))
-        return True
-    except FileExistsError:
-        return False
-
-
-def news(run, steps, record, shown, ledger_ns, now):
-    """Lines the owner has not seen: a tick per newly built todo, then the card after a ledger change
-    (ledger_ns names it). shown is this run's claims folder."""
-    shown.mkdir(parents=True, exist_ok=True)
-    all_sections = read(record)
-    ids, built = progress(run, all_sections)
-    taken = set(os.listdir(shown))  # one listing; claims only for unseen todos
-    fresh = [n for n in ids if n in built and f"todo-{n}" not in taken and claim(shown / f"todo-{n}")]
-    show_card = f"card-{ledger_ns}" not in taken and claim(shown / f"card-{ledger_ns}")
-    names = titles(all_sections) if fresh else {}
-    lines = [f"☑️ T{n} {names.get(n, '')}".rstrip() for n in fresh[:SHOWN_TICKS]]
-    lines += [f"☑️ +{len(fresh) - SHOWN_TICKS} more"] if len(fresh) > SHOWN_TICKS else []
-    if lines and not show_card:
-        lines[-1] += " · " + todo_line(ids, built)
-    lines += [card(run, steps, all_sections, now, (ids, built))] if show_card else []
-    return lines

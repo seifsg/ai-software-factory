@@ -36,12 +36,12 @@ A `change` (bug fix, small change, follow-up) records tickets, plan, build, done
 |---|---|
 | Research | ≥3 `### <competitor>` subsections each citing a source URL, a feature-matrix table, an `**Opportunities:**` line; product runs also `### Stack options` with a 3-row table |
 | Kickoff | `**Features:**`, `**Approach:**`, `**Answered by:**`; product runs also `**Size:**` and `**Stack:**`; feature runs also `**Size:**` (`none (<why>)` for a small feature) |
-| Tickets | `**Epic:** <url>` (a `change`: `**Ticket:**`), `**Backlog:**` (owned, affected and untouched items); product and feature runs ≥1 `**Sub-issue:** <url>` and `**Requested:**` numbering every requested item and approved addition (R1, R2…; an owner-deferred one as `R2 (owner-deferred: <link>)`); online, each listed ticket is open and has a `Definition of done` heading, and the listed criteria name every R-id not marked owner-deferred |
+| Tickets | `**Epic:** <url> <title>` (a `change`: `**Ticket:**`), `**Backlog:**` (owned, affected and untouched items); product and feature runs ≥1 `**Sub-issue:** <url> <title>` and `**Requested:**` numbering every requested item and approved addition (R1, R2…; an owner-deferred one as `R2 (owner-deferred: <link>)`); online, each listed ticket is open and has a `Definition of done` heading, and the listed criteria name every R-id not marked owner-deferred |
 | Analysis | `**Success:**` line and a fenced ASCII chart; product and feature runs only |
-| Plan | `### Files`, `### Critique`, `### Phases`, `### Todos` (with `T1`…), `### Whole plan`, `**Logging:**`, `**Efficiency:**` (light lane: `**Success:**` and `### Todos`); online, each listed ticket not Blocked or not planned has task items under its Checklist heading, one naming each criterion, every plan todo is an item there, and criteria still name every R-id not marked owner-deferred |
+| Plan | `### Files`, `### Critique`, `### Phases`, `### Todos` (one line per todo: `T1 <title> → <what the owner can do once it is done> (#<ticket>, A1)`), `### Whole plan`, `**Logging:**`, `**Efficiency:**` (light lane: `**Success:**` and `### Todos`); online, each listed ticket not Blocked or not planned has task items under its Checklist heading, one naming each criterion, every plan todo is an item there, and criteria still name every R-id not marked owner-deferred |
 | Design | ≥4 `#RRGGBB` hex colors, `**UI kit:**`, `**Font:**`, `**Logo:**`, `**Icons:**`, `**Layout:**`, `**Theme:**` naming light mode, `**Journeys:**` with counts and a minimum |
 | Schema | a 3-option table, `**Chosen:**`, a fenced ERD or DDL |
-| Build log | one line per plan todo, starting with its ID: `- T1 pre: … do: … post: …` |
+| Build log | one line per plan todo, starting with its ID: `- T1 pre: … do: … post: …`; `**Now:** T2 T3` names the todos in progress |
 | Done-run | ≥1 `PASS` line, `**Logs:**`; UI runs ≥1 existing screenshot path under `.factory/fast/shots/` |
 | Handoff | `**Run:**`, `**Statuses:**` (each owned ticket's final status), `**Unverified:**`, `**Follow-ups:**`; sign-in runs `**Dev sign-in:**`; online, each listed ticket not Blocked, Backlog or not planned (label or board status) is fully ticked, an item naming each criterion, every plan todo an item, every R-id not marked owner-deferred named by a criterion |
 
@@ -49,7 +49,7 @@ Labels end with the colon inside the bold: `**Epic:**`. Delegates return their l
 
 ## The gate
 
-`fast_gate.py` (checks in `fast_record.py`, shell analysis in `fast_shell.py`, the owner's card in `fast_progress.py`) sits in `scripts/` beside the installed launcher and in `skills/safe-engine/scripts/` of the factory bundle. Python 3.9+, standard library only.
+`fast_gate.py` (checks in `fast_record.py`, shell analysis in `fast_shell.py`, record facts in `fast_progress.py`, the owner's dashboard in `fast_card.py`) sits in `scripts/` beside the installed launcher and in `skills/safe-engine/scripts/` of the factory bundle. Python 3.9+, standard library only.
 
 Before `start` on a product: select the factory bundle with the launcher's `resolve_bundle.py --project <abs>`; it writes `.factory/entry-bundle.json`. Skip when the run maintains the factory itself.
 
@@ -82,17 +82,23 @@ Without hooks the gate still records and checks steps; follow the order yourself
 
 ## Progress
 
-- `start`, `done`, `status`, `pause`, `resume` and `close` print the run card first:
-  - step k/N, with time in the step and in total;
-  - steps done, current and left;
-  - todos built x/y, with the next open IDs;
-  - the first ticket link and how many more.
+- `start`, `done`, `status`, `pause`, `resume` and `close` print the run card first, a mini dashboard:
 
-  A paused run leads with its reason as the question. Once every step is done, the card lists each step's duration.
-- A todo counts as built once its Build log line passes the `build` check.
+  ```text
+  🏭 portal-poc · 🔨 build · step 6/8 · ⏱️ 42m total, 5m in step
+  🎫 #12 Download & SEO   ▰▰▱ 2/3 · run 5/9
+  ✅ SEO: title and description on every page
+  🔨 NOW  Download button
+       → click it and the PDF saves
+  ⏭️ NEXT Contact form
+  ```
+
+  Before the build it shows the steps done, current and left. A paused run leads with `⏸️ WAITING ON YOU: <reason>` and shows what is on hold. Once every step is done, it lists each step's duration.
+- The facts come from the record: ticket titles after their URLs, each todo's title and result, and the Build log's last `**Now:**`. A todo counts as built once its Build log line passes the `build` check.
 - Hooks show the owner what they have not seen yet, once each, even under parallel calls:
   - the card after each step, pause or resume;
-  - a tick line per newly built todo.
+  - `✅ <title> done → <result>` per newly built todo, then the new NOW and the ticket bar;
+  - the new NOW when `**Now:**` changes.
 
   Nothing changed: one directory scan, no reads, no network. Where your agent marks hook calls from a delegate (the factory's `docs/hosts.md`), those show nothing; the next main-thread call does. Claims live in `.factory/fast/shown/`, one folder per run; `start` and `close` clear them.
 - A closed run leaves the hooks. The factory's `docs/hosts.md` lists the agents that show hook messages.

@@ -11,7 +11,7 @@ from pathlib import Path
 HERE = str(Path(__file__).resolve().parent)
 if HERE not in sys.path:
     sys.path.insert(0, HERE)  # loaded by file path (tests, older gates): find the sibling module
-from fast_progress import built_ids, sections, subsection, todo_ids  # noqa: E402,F401 - shared parsers
+from fast_progress import built_ids, sections, subsection, todo_ids, without_result  # noqa: E402,F401 - shared parsers
 
 URL = re.compile(r"https?://[^\s)>\]|]+")
 ISSUE = re.compile(r"https://github\.com/([\w.-]+/[\w.-]+)/issues/(\d+)")
@@ -292,6 +292,9 @@ def check_plan(run, body, **kwargs):
     problems = [f"needs a '### {title}' subsection" for title in titles if subsection(body, title) is None]
     if not todo_ids(kwargs["all_sections"]):
         problems.append("needs todo IDs (T1, T2, ...) under ### Todos")
+    if run.get("outcomes"):  # the owner's dashboard shows each todo's result
+        problems += [f"T{n} needs its own line with its result: 'T{n} <title> → <what the owner can do once it is "
+                     f"done> (#<ticket>, <criteria>)'" for n in without_result(kwargs["all_sections"])]
     labels = ["Success"] if light(run) else ["Logging", "Efficiency"]
     return problems + missing_markers(body, labels) or held(run, kwargs, covered(run, needs_checklist))
 
