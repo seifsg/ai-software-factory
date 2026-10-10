@@ -339,9 +339,9 @@ UX_AREAS = ("Map", "Navigation", "Hierarchy", "Disclosure", "Labels", "Interacti
             "Access and devices", "Look and consistency", "Performance")  # their area names, in ID order
 # "- U3 PASS 04, 13: ...", "- **U3:** FAIL ...", "| U3 | Hierarchy | PASS | ... |": the ID, its area name or none, the
 # verdict. Only a known area name may sit between, so "U3 FAIL schedule, PASS roster" stays a FAIL.
-SEP = r"[*` \t:|.,()-]*"
-VERDICT = re.compile(rf"^[ \t]*(?:\|[ \t]*)?(?:(?:[-*+]|\d+[.)])[ \t]+)?(?:\[[ xX]\][ \t]+)?[*`]*(U\d+)\b{SEP}"
-                     rf"(?:(?:{'|'.join(UX_AREAS)}){SEP})?(PASS|FAIL|UNKNOWN|N/A)\b(.*)$", re.M | re.I)
+LEAD, SEP = r"^[ \t]*(?:\|[ \t]*)?(?:(?:[-*+]|\d+[.)])[ \t]+)?(?:\[[ xX]\][ \t]+)?[*`]*", r"[*` \t:|.,()-]*"
+VERDICT = re.compile(rf"{LEAD}(U\d+)\b{SEP}(?:(?:{'|'.join(UX_AREAS)}){SEP})?(PASS|FAIL|UNKNOWN|N/A)\b(.*)$", re.M | re.I)
+RULE_LINE = re.compile(rf"{LEAD}U\d+\b.*$", re.M | re.I)  # any line about a rule ID, verdict or not
 UI_FILE = re.compile(r"(?<!\.test)(?<!\.spec)(?<!\.stories)\.(?:tsx|jsx|vue|svelte|astro|html?|css|scss|sass|less|razor|"
                      r"cshtml|erb|hbs|ejs|pug|liquid|twig|njk|jinja2?|j2|mustache|haml|slim|xaml|axaml|storyboard|xib|qml|"
                      r"fxml|uxml|uss|tscn)$|\.blade\.php$", re.I)  # views and styles, not tests or stories; others use --ui
@@ -349,9 +349,9 @@ HEX = re.compile(r"[0-9a-f]{40,64}")
 
 
 def block(body, label):
-    """The label's value with the lines under it, up to a blank line, heading, table row or the next marker."""
-    match = re.search(r"\*\*" + re.escape(label) + r":\*\*(.*?)(?=^[ \t]*(?:[-*+][ \t]+)?\*\*[^*\n]+:\*\*|^[ \t]*$|^#|^\||\Z)",
-                      body, re.I | re.M | re.S)
+    """The label's value with the lines under it, up to a blank line, a heading or the next marker."""
+    match = re.search(r"\*\*" + re.escape(label) + r":\*\*(.*?)(?=^[ \t]*(?:(?:[-*+]|\d+[.)])[ \t]+)?\*\*[^*\n]+:\*\*|"
+                      r"^[ \t]*$|^#|\Z)", body, re.I | re.M | re.S)
     return match.group(1) if match else ""
 
 
@@ -387,10 +387,11 @@ def check_build(run, body, **kwargs):
 
 
 def check_done_run(run, body, project, **_):
-    used = VERDICT.sub("", body) if run.get("ux_rules") else body  # rule verdicts never stand in for using it
+    touched = [] if run.get("ui") or not run.get("ux_rules") else ui_files(run, project)
+    audited = run.get("ux_rules") and (run.get("ui") or touched)  # this run owes the UX audit
+    used = RULE_LINE.sub("", body) if audited else body  # rule lines never stand in for using it
     problems = [] if re.search(r"\bPASS\b", used) else ["needs >=1 PASS result from using it"]
     problems += missing_markers(body, ["Logs"])
-    touched = [] if run.get("ui") or not run.get("ux_rules") else ui_files(run, project)
     if run.get("ui") or touched:
         shots = [Path(shot) for shot in re.findall(r"[\w./\\:~-]+\.(?:png|jpe?g|webp|gif)\b", body, re.I)]
         missing = [] if any((shot if shot.is_absolute() else Path(project) / shot).is_file() for shot in shots) else [
@@ -403,7 +404,8 @@ def check_done_run(run, body, project, **_):
 
 def ux_audit(body):
     """A fresh judge's verdict line per rule ID (ux-quality step 4): each with evidence or a reason, none still FAIL."""
-    found = [(rule.upper(), verdict.upper(), rest) for rule, verdict, rest in VERDICT.findall(body)]
+    found = [(rule.upper(), "FAIL" if verdict.upper() in ("PASS", "N/A") and re.search(r"\bFAIL\b", rest)
+              else verdict.upper(), rest) for rule, verdict, rest in VERDICT.findall(body)]  # "PASS a, FAIL b" fails
     named = {rule for rule, _, _ in found}
     problems = [f"needs a '{rule} PASS|FAIL|UNKNOWN|N/A <screen>: <evidence or reason>' line"
                 for rule in UX_RULES if rule not in named]

@@ -520,20 +520,28 @@ class FastGateTests(unittest.TestCase):
         self.assertIn("primary action", " ".join(record.check_design(on, design.replace("primary", "main"))))
         bare = re.sub(r"(?m)^\*\*(?:Map|Hierarchy|Labels):\*\*.*\n", "", design)
         self.assertEqual(record.check_design(old, bare), [])  # older methods keep the old brief
-        block = design.replace("**Hierarchy:** schedule: primary", "**Hierarchy:**\n- schedule: primary")
-        self.assertEqual(record.check_design(on, block), [])  # "primary" may sit in the lines under the label
+        hierarchy = "**Hierarchy:** " + record.marker(design, "Hierarchy")
+        for under in ("**Hierarchy:**\n- schedule: primary Book", "**Hierarchy:**\n| screen | primary |\n|---|---|\n| a | b |"):
+            with self.subTest(under=under):  # "primary" may sit in the lines or table under the label
+                self.assertEqual(record.check_design(on, design.replace(hierarchy, under)), [])
+        for labels in ("- **Labels:** primary Book;", "2. **Labels:** primary Book;"):
+            with self.subTest(labels=labels):  # the block ends at the next marker, bulleted or numbered
+                unnamed = design.replace(hierarchy, "**Hierarchy:** schedule: Book first").replace("**Labels:**", labels)
+                self.assertIn("primary action", " ".join(record.check_design(on, unnamed)))
         self.assertEqual(record.ux_audit(done), [])
         for layout in ("| **U1** | PASS |", "- **U1:** PASS", "| U1 | Map | PASS |", "- U1 Map: PASS"):
             with self.subTest(layout=layout):
                 self.assertEqual(record.ux_audit(done.replace("- U1 PASS", layout)), [])
         self.assertIn("needs a 'U2 ", " ".join(record.ux_audit("- U1 to U10 PASS all fine\n**UX judge:** x\n")))
         for mixed, problem in (("- U3 FAIL schedule, PASS roster: two filled", "U3 FAIL is open"),
+                               ("- U3 PASS schedule, FAIL roster: two filled", "U3 FAIL is open"),
+                               ("- U3 N/A desktop, FAIL phone: no bar", "U3 FAIL is open"),
                                ("- U3 FAIL keyboard, N/A touch: focus lost", "U3 FAIL is open"),
                                ("- U3 partial PASS: some screens", "needs a 'U3 ")):
-            with self.subTest(mixed=mixed):  # a later verdict word never hides the line's FAIL or vague verdict
+            with self.subTest(mixed=mixed):  # no other verdict word hides the line's FAIL or vague verdict
                 self.assertIn(problem, " ".join(record.ux_audit(done.replace("- U3 PASS schedule", mixed))))
-        last = design.replace(record.marker(design, "Hierarchy"), "schedule: Book first") + "\n| ink | primary |\n"
-        self.assertIn("primary action", " ".join(record.check_design(on, last.replace("**Labels:**", "- **Labels:**"))))
+        contested = "- U3 UNKNOWN contested: judge FAIL on the modal, builder: a popover"
+        self.assertEqual(record.ux_audit(done.replace("- U3 PASS schedule", contested)), [])
         cases = {"- U4 PASS": ("- U4x PASS", "needs a 'U4 "), "- U3 PASS schedule": ("- U3 FAIL schedule", "U3 FAIL is open"),
                  "**UX judge:**": ("UX judge:", "'**UX judge:**' line")}
         for old_text, (new_text, problem) in cases.items():
@@ -543,9 +551,12 @@ class FastGateTests(unittest.TestCase):
         self.assertIn("U10 N/A needs its evidence or reason", record.ux_audit(done.replace(u10, "- U10 N/A")))
         self.assertEqual(record.check_done_run(old, "- PASS app works\n**Logs:** clean\n", project=self.project), [])
         self.assertEqual(record.check_done_run(old, "- U1 PASS login works\n**Logs:** ok\n", project=self.project), [])
-        verdicts_only = "\n".join(line for line in done.splitlines() if not line.startswith("- PASS"))
-        self.assertIn("needs >=1 PASS result from using it",
-                      record.check_done_run({"ux_rules": True}, verdicts_only, project=self.project))
+        rule_lines = "\n".join(line for line in done.splitlines() if not line.startswith("- PASS"))
+        rule_lines += "\n- U3 recheck after fix: PASS roster\n"
+        self.assertIn("needs >=1 PASS result from using it",  # on a UI run rule lines never count as using it
+                      record.check_done_run({"ux_rules": True, "ui": True}, rule_lines, project=self.project))
+        self.assertEqual(record.check_done_run({"ux_rules": True}, "- U1 PASS login works\n**Logs:** ok\n",
+                                               project=self.project), [])  # no UI owed: its lines count as before
 
     def test_ui_file_changes_need_the_ux_audit(self):
         repo, app = self.project, self.project / "app"  # the run's project is a folder inside the repository
