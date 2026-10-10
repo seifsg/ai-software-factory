@@ -1,6 +1,6 @@
 # Sizes
 
-Size sets how far each requested item is built, never which requested items ship. It applies to new products and big features. Inside an existing product, every size keeps that product's protections and behavior, and new paths get the same protections. Ask it at kickoff when the request leaves it open. A Lucky product run without a size: POC.
+Size sets how far each requested item is built, never which requested items ship. It applies to new products and big features. Inside an existing product, every size keeps that product's protections and behavior, and new paths get the same protections. Ask it at kickoff when the request leaves it open. A Lucky product run without a size: POC. A Lucky MVP request gets the launch baseline with product-bar defaults and no suggestion rounds; the suggestions it would have asked go to the epic's follow-ups ticket.
 
 ## Requested scope
 
@@ -9,7 +9,7 @@ Every feature, journey, integration and behavior the owner asked for, plus what 
 - A requested item leaves scope only by the owner's recorded decision: source, reason, revisit condition, and its entry in the epic's follow-ups ticket.
 - Without that decision, nothing removes or replaces a requested item: no size label, research finding, generic follow-up, later iteration's focus or substitute (mock, sample data, a sandbox that cannot reach the real target, manual step). Seeded data fills content, never a requested integration. A provider's test mode on the real integration counts; live keys come with deployment.
 - Capability unavailable: keep the item Blocked with its reason, build the rest, report the outcome unfinished.
-- Additions need research evidence and the owner's approval. They never displace a requested item. A size label approves none.
+- Additions beyond the launch baseline need research evidence and the owner's approval. They never displace a requested item. A size label approves none of them.
 
 ## Compare
 
@@ -35,7 +35,7 @@ The owner wants to see the requested features work. Build each one minimally: no
 
 The owner wants to publish it and test it with real users. Fill every gap a launch needs.
 
-- Launch baseline, built without asking:
+- Launch baseline, part of the MVP size, built without asking:
   - real sign-in and enforced roles when anyone signs in or roles exist;
   - the security bar in full;
   - landing page and SEO for public products;

@@ -682,6 +682,30 @@ class TicketTests(unittest.TestCase):
         with self.assertRaises(EngineError):
             self.store.dependencies("alpha")
 
+    def test_active_dependency_delivered_on_an_unmerged_branch(self):
+        self.contract = self.make_contract(dependencies=["beta"])
+        dependency = self.make_contract()
+        dependency["lifecycle"] = "active"  # handed off, in review: its PR is not merged
+        self.git("checkout", "-qb", "synthetic-dependency")
+        (self.root / "dependency.txt").write_text("Synthetic dependency delivery\n", encoding="utf-8")
+        self.commit("Synthetic dependency delivery, unmerged")
+        delivered = self.git("rev-parse", "HEAD")
+        dependency["delivery"] = {"status": "integrated", "scope_digest": scope_digest(dependency),
+                                  "commit": delivered, "evidence": SYNTHETIC + ": reviewed handoff assertion only"}
+        self.git("checkout", "-q", "-")  # the dependent branched before the delivery: refused, commit named
+        self.refresh()
+        self.refresh(dependency, key="beta", number="102")
+        with self.assertRaisesRegex(EngineError, f"beta: delivered commit {delivered} is not in this branch"):
+            self.store.dependencies("alpha")
+        dependency["delivery"]["commit"] = "f" * 40  # never fetched here: the git error, not "not in history"
+        self.refresh(dependency, key="beta", number="102")
+        with self.assertRaisesRegex(EngineError, "cannot check delivered commit f{40} .*fetch it"):
+            self.store.dependencies("alpha")
+        dependency["delivery"]["commit"] = delivered
+        self.git("checkout", "-q", "synthetic-dependency")  # branched from the delivered commit: accepted
+        self.refresh(dependency, key="beta", number="102")
+        self.store.dependencies("alpha")
+
     def test_dependency_cycles_and_stale_observations_block_before_build(self):
         self.contract = self.make_contract(dependencies=["beta"])
         dependency = self.make_contract(dependencies=["alpha"])

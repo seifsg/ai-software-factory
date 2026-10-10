@@ -35,7 +35,7 @@ A `change` (bug fix, small change, follow-up) records tickets, plan, build, done
 | Section | Must contain |
 |---|---|
 | Research | ≥3 `### <competitor>` subsections each citing a source URL, a feature-matrix table, an `**Opportunities:**` line; product runs also `### Stack options` with a 3-row table |
-| Kickoff | `**Features:**`, `**Approach:**`, `**Answered by:**`; product runs also `**Size:**` and `**Stack:**` |
+| Kickoff | `**Features:**`, `**Approach:**`, `**Answered by:**`; product runs also `**Size:**` and `**Stack:**`; feature runs also `**Size:**` (`none (<why>)` for a small feature) |
 | Tickets | `**Epic:** <url>` (a `change`: `**Ticket:**`), `**Backlog:**` (owned, affected and untouched items); product and feature runs ≥1 `**Sub-issue:** <url>` and `**Requested:**` numbering every requested item and approved addition (R1, R2…; an owner-deferred one as `R2 (owner-deferred: <link>)`); online, each listed ticket is open and has a `Definition of done` heading, and the listed criteria name every R-id not marked owner-deferred |
 | Analysis | `**Success:**` line and a fenced ASCII chart; product and feature runs only |
 | Plan | `### Files`, `### Critique`, `### Phases`, `### Todos` (with `T1`…), `### Whole plan`, `**Logging:**`, `**Efficiency:**` (light lane: `**Success:**` and `### Todos`); online, each listed ticket not Blocked or not planned has task items under its Checklist heading, one naming each criterion, every plan todo is an item there, and criteria still name every R-id not marked owner-deferred |
@@ -65,7 +65,7 @@ python fast_gate.py install --host <host> [--project <abs>]
 - `start` keeps `.factory/` out of Git only inside a Git repository: `git init` first.
 - Product runs default to UI and persistence; pass `--no-ui` or `--no-data` only when true. `--auth` marks sign-in: pass it when anyone signs in or roles exist. These are fixed at `start`; decide them from the request.
 - Steps run in order; `done` refuses a step while an earlier applicable one is open.
-- `done tickets`, `done plan` and `done handoff` read the listed GitHub tickets online: links, definition of done, checklist, ticks, coverage. Other trackers or no network: `--offline "<reason>"` records the step unverified. Runs started on older methods keep the checks those methods define.
+- `done tickets`, `done plan` and `done handoff` read the listed GitHub tickets online: links, definition of done, checklist, ticks, coverage. Other trackers or no network: `--offline "<reason>"` records the step unverified; it is refused when the listed GitHub tickets are readable. Runs started on older methods keep the checks those methods define.
 - `pause` before waiting on the owner; the next `done` or `resume` clears it. `close` needs `handoff`, or `--abandon` with the owner's reason.
 
 ## Hooks

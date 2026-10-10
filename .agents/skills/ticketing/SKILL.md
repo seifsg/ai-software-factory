@@ -38,7 +38,7 @@ A tracker or board with other states: map each status to the nearest existing on
 | Cancelled | Dropped or deprecated by the owner. Closed | Owner decision and source |
 
 1. Intake: clean up first, at session start and after merges. Keep it bounded; it never blocks the run. List the closed PRs once (merged and unmerged).
-   - Merged, any base: close each open ticket it names with a closing keyword, with the merged PR link, unless the ticket moved or reopened after the merge, and tick its item on its epic's checklist. The merge was the owner's acceptance; recording it decides nothing new.
+   - Merged, any base: close each open ticket it names with a closing keyword, with the merged PR link, only while it still sits at Dev done or Ready for QA (board status or label), and tick its item on its epic's checklist. A ticket a person moved or reopened after the merge, on a board or by label, keeps its status; one at any other status stays open and goes on the stale list. The merge was the owner's acceptance; recording it decides nothing new.
    - Closed unmerged: each open ticket it names with a closing keyword, unless its activity already records that PR's closing, gets an activity entry (what the PR did, why it closed). Another open or merged PR names it: note that superseding PR. Otherwise, only while it still sits where that PR left it (Dev done or Ready for QA with that PR linked, no status change since the close), it moves back to Backlog, or closes as not planned when the owner's closing note says it is no longer needed; a ticket that moved on keeps its status. A redo request in that note is a change of intent for the run that takes it.
    - Close each open epic whose in-scope sub-issues are all Done and whose checklist is ticked.
    - In-app feedback the owner shares or the agent can read goes to its existing ticket, or to the epic's follow-ups ticket.
@@ -84,7 +84,7 @@ Every ticket, every mode. The ticket is unfinished until both are complete.
 2. Each item runs the `get-ready-to-code` 0–4 loop. Tick it only after its check passed: its real effect used and seen working. Note the proof beside the tick.
 3. Independent items run in parallel, as many as capacity allows; each is ticked after its own check. One writer per ticket body: the coordinator ticks, delegates report.
 4. Finished: every item ticked and every criterion proven. Anything less loops on the failing item until it passes. Blocked only when the run cannot clear it (access, capability, owner decision): reason, next action, who unblocks; its independent items continue.
-5. Tickets run in parallel, as many at once as files, dependencies and capacity allow. A dependent ticket waits only for what the dependency rule under Sessions and workspaces needs, never for the done-run, which proves the criteria at the end. Each ticket keeps its own checklist loop.
+5. Tickets run in parallel, as many at once as files, dependencies and capacity allow. A dependent ticket waits only for what the dependency rule under Sessions and workspaces needs, never for the final proof of its criteria, which comes at the end. Each ticket keeps its own checklist loop.
 6. Ticks are progress, not activity entries: the next boundary entry lists the items ticked since the last one.
 7. An owner-deferred item is ticked as `Deferred by the owner: <decision link>`; its criteria leave the ticket with it. It counts as resolved, never as delivered.
 
@@ -132,8 +132,9 @@ Number the confirmed contract. Each change records old and new scope, reason, so
 - One dedicated builder session per ticket, full cycle, small fixes included. Parent owns scheduling, shared decisions and tracker updates.
 - Hand over the contract, authority and stops, decisions, current scope, checkout state, dependencies, evidence, unfinished phase and pending operations.
 - Record the real session, ticket revision, absolute checkout and base/head. A label is not a dispatched session. Missing capability stays explicit.
-- Parallel tickets need disjoint files, runtime effects, acceptance and decisions; isolate or serialize shared ports, databases, caches, services and build output. Fast and Lucky share the epic checkout, one writer per file; Safe tickets take their own worktrees. Stop prior operations before handoff. Never overwrite or delete another ticket's state.
-- A dependency in the same run and branch (Fast, Lucky) is met once the items it needs are ticked there. Across branches (every Safe ticket), it is met by the dependency's handed-off result: its checked and reviewed commit in this ticket's base, by branching from it, and its recorded delivery; no merge is needed. Split work so parts without the dependency form their own tickets and start at once. Closed status alone proves nothing. Changed dependency scope: revalidate affected analysis and evidence.
+- Parallel tickets need disjoint files, runtime effects, acceptance and decisions; isolate or serialize shared ports, databases, caches, services and build output.
+- Fast and Lucky share the epic checkout, one writer per file; Safe tickets take their own worktrees. Stop prior operations before handoff. Never overwrite or delete another ticket's state.
+- A dependency in the same run and branch (Fast, Lucky) is met once the items it needs are ticked there. Across branches (every Safe ticket), it is met by the dependency's handed-off result: its checked and reviewed commit in this ticket's base, by branching from it or, with several dependencies, by merging their delivered commits into this ticket's branch locally first, and its recorded delivery; no owner merge is needed. Split work so parts without the dependency form their own tickets and start at once. Closed status alone proves nothing. Changed dependency scope: revalidate affected analysis and evidence.
 
 ## Review and deliver
 
