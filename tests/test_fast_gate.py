@@ -1,4 +1,5 @@
 """Fast gate: real CLI and hook calls against disposable projects (fast-run.md#the-gate)."""
+import base64
 import importlib.util
 import json
 import os
@@ -36,11 +37,34 @@ LIGHT = """# copy-fix
 """
 
 
-def record_module():
-    spec = importlib.util.spec_from_file_location("fast_record", SCRIPTS / "fast_record.py")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+EVERYDAY = (  # commands an agent runs all day: never denied
+    "npm test", "npm run build", "npm run dev", "git status", "git diff --stat", "git log --oneline -5", "git add -A",
+    'git commit -m "fix: drop unused prod flag"', "git push", "git push -u origin feat/x", "git pull --rebase",
+    "git checkout -b feat/x", "git rm --cached .env", "git rm -r --cached node_modules", "git stash list", "ls -la",
+    "cat README.md", "rg \"DROP TABLE\" -n", "gh issue view 73", "python -m pytest -q", "node scripts/build.js",
+    "npx prisma generate", "npx prisma migrate status", "rails db:migrate", "docker compose up -d",
+    "docker compose logs web", "rm -rf node_modules dist", "rm -rf build/ .next/", "mkdir -p src/lib",
+    "cp .env.example .env", "mv old.ts new.ts", 'find . -name "*.log" -not -path "./.git/*" -delete',
+    "Remove-Item -Recurse -Force dist",
+    "Get-ChildItem -Recurse src", 'Select-String -Pattern "dropdb" -Path *.md', 'psql -c "select count(*) from users"',
+    'sqlite3 app.db ".tables"', "cd src && npm test", "export NODE_ENV=test && npm test",
+    'echo "deploy to production later"', 'printf "%s\n" "rm -rf is denied"', "curl -s localhost:3000/health",
+    "tsc --noEmit", "eslint . --fix", "go test ./...", 'git log --grep "migrate prod"', "wc -l src/*.ts",
+)
+
+
+WINDOWS_READING = (  # a backslash before a space is a path separator in PowerShell and cmd, not an escape
+    "Remove-Item ..\\ -Recurse -Force", "ri ..\\other\\ -r -fo", "cd ..\\ ; Remove-Item -Recurse other",
+    "cd ..\\ && rm -rf other", "Set-Location E:\\ ; Remove-Item -Recurse -Force x", 'cmd /c "cd /d E:\\ && rd /s /q x"',
+)
+
+
+def module(name):
+    """A gate script loaded in-process."""
+    spec = importlib.util.spec_from_file_location(name, SCRIPTS / f"{name}.py")
+    loaded = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(loaded)
+    return loaded
 
 
 class FastGateTests(unittest.TestCase):
@@ -149,7 +173,7 @@ class FastGateTests(unittest.TestCase):
         self.gate("done", "done-run", "--offline", "sample URLs")  # sample tickets are not readable
 
     def test_done_run_scans_apply_to_flagged_mvp_and_production_runs_only(self):
-        record = record_module()
+        record = module("fast_record")
         body, flagged = "- PASS x\n**Logs:** ok\n", {"scans": True}
         recorded = body + "**Secrets:** s scan\n**Dependencies:** d audit\n**Static:** t lint\n"
         needs = lambda cause: [f"needs a '**{label}:**' line ({cause})" for label in ("Secrets", "Dependencies", "Static")]
@@ -173,7 +197,7 @@ class FastGateTests(unittest.TestCase):
         self.assertEqual(record.check_done_run(lucky, body, ".", all_sections=in_tickets("POC")), [])
 
     def test_the_size_frozen_in_the_ledger_outlives_the_record_line(self):
-        record = record_module()
+        record = module("fast_record")
         body = "- PASS x\n**Logs:** ok\n"
         needs = lambda cause: [f"needs a '**{label}:**' line ({cause})" for label in ("Secrets", "Dependencies", "Static")]
         for step in ("kickoff", "tickets", None):  # the refusal names where the size was frozen
@@ -185,7 +209,7 @@ class FastGateTests(unittest.TestCase):
         self.assertEqual(record.check_done_run({"size": "MVP"}, body, ".", all_sections={}), [])  # older runs unchanged
 
     def test_scan_markers_name_a_real_result(self):
-        record = record_module()
+        record = module("fast_record")
         run, sections = {"scans": True}, {"kickoff": "**Size:** MVP\n"}
         ok = "**Dependencies:** npm audit: 0 vulnerabilities\n**Static:** eslint .: 0 findings\n"
         for value in ("skipped", "Skipped: no network", "n/a", "N/A", "na", "none", "todo", "TBD", "-", "**-**"):
@@ -197,7 +221,7 @@ class FastGateTests(unittest.TestCase):
         self.assertEqual(record.check_done_run(run, f"- PASS x\n**Logs:** ok\n**Secrets:** {real}\n{ok}", ".", all_sections=sections), [])
 
     def test_flagged_runs_refuse_a_size_the_scans_cannot_read(self):
-        record = record_module()
+        record = module("fast_record")
         flagged, older, body = {"scans": True, "kind": "product"}, {"kind": "product"}, "- PASS x\n**Logs:** ok\n"
         kickoff = "**Features:** a\n**Approach:** b\n**Answered by:** o\n**Stack:** s\n**Size:** {}\n"
         for size in ("An MVP (launch)", "small MVP", "Minimum viable product", "Prod slice", "production-ready POC",
@@ -217,7 +241,7 @@ class FastGateTests(unittest.TestCase):
         self.assertIn("Size must start with", record.check_kickoff(flagged, prose)[0])
 
     def test_lucky_runs_record_their_size_in_tickets(self):
-        record = record_module()
+        record = module("fast_record")
         tickets = ("**Epic:** https://github.com/acme/portal/issues/1\n**Backlog:** x\n"
                    "**Sub-issue:** https://github.com/acme/portal/issues/2\n")
         check = lambda run, extra="": record.check_tickets(run, tickets + extra, offline="no network")
@@ -232,7 +256,7 @@ class FastGateTests(unittest.TestCase):
         self.assertEqual(check({**lucky, "mode": "fast"}), [])  # Fast runs size at the kickoff
 
     def test_offline_needs_unreadable_tickets_and_features_record_a_size(self):
-        record = record_module()
+        record = module("fast_record")
         url = "https://github.com/acme/portal/issues/2"
         sections = {"tickets": f"**Ticket:** {url}\n**Backlog:** none\n"}
         on, older = {"coverage": True, "ticket_checks": True, "kind": "change"}, {"ticket_checks": True, "kind": "change"}
@@ -251,7 +275,7 @@ class FastGateTests(unittest.TestCase):
         self.assertEqual(record.check_kickoff({"kind": "feature"}, kickoff), [])  # older methods unchanged
 
     def test_empty_markers_and_borrowed_build_lines_are_refused(self):
-        record = record_module()
+        record = module("fast_record")
         self.assertIsNone(record.marker("**Backlog:**\n**Sub-issue:** https://x/2\n", "Backlog"))  # no borrowing
         self.assertEqual(record.marker("**Backlog:**\nsearched x: none\n", "Backlog"), "searched x: none")
         self.assertEqual(record.marker("**Backlog:** none\n**Sub-issue:** u\n", "Backlog"), "none")
@@ -316,6 +340,199 @@ class FastGateTests(unittest.TestCase):
         for command, decision in cases.items():
             with self.subTest(command=command):
                 self.assertEqual(self.pre("Bash", command=command), decision)
+
+    def test_destructive_rules_decide_every_probe(self):
+        gate = module("fast_gate")
+        (self.project / "drop.sql").write_text("DROP TABLE users;", encoding="utf-8")
+        (self.project / "safe.sql").write_text("select 1;", encoding="utf-8")
+        encoded = base64.b64encode("Remove-Item -Recurse C:\\x".encode("utf-16-le")).decode()
+        deny = (
+            "rm -rf ~", "rm -rf /", "rm -r ..", f'rm -rf "{self.root}"', "rm -rf $HOME/x", "rd /s /q ..",
+            "Remove-Item -Recurse -Force ..\\other", "rm -rf .", "rm -rf *", "rm -rf ./*", "rm -rfvi ..",
+            "Remove-Item -Recurse:$true ..\\x", "find .. -delete", "find / -name x -exec rm {} +",
+            "cd .. && rm -rf proj2", "cd /; rm -rf Users", "pushd .. && rm -rf x", "sl ..; rm -r x",
+            "Set-Location ..; Remove-Item -Recurse x", "chdir .. && rm -rf x", "cd $UNSET_DIR_73 && rm -rf dist",
+            "popd; rm -rf dist", "cd - && rm -rf dist", 'bash -c "rm -rf ~"', "sh -c 'rm -rf /'", 'eval "rm -rf ~"',
+            "cmd /c rd /s /q C:\\Users", 'pwsh -Command "Remove-Item -Recurse -Force C:\\x"',
+            'powershell -c "Remove-Item -Recurse C:\\x"', f"pwsh -EncodedCommand {encoded}", "pwsh -enc !!x",
+            "timeout 10 rm -rf /", "time rm -rf /", "nice -n 5 rm -rf /", "doas rm -rf /", "sudo -u root rm -rf /",
+            "env -i rm -rf /", 'bash -c "git push -f"', "git push --force", "git push -f origin x",
+            "git push origin +x", "git push --force-with-lease origin main", "git push --force-with-lease",
+            "git push --force-with-lease origin HEAD", "git push --mirror", "git push origin :main",
+            "git push origin --delete main", 'psql -c "DROP TABLE users"', "mysql app -e 'truncate orders'",
+            "sqlite3 app.db <<'EOF'\ndrop table x;\nEOF", 'mongosh --eval "db.users.drop()"', 'echo "DROP TABLE x"|psql',
+            'psql<<<"DROP TABLE x"', "psql < drop.sql", "dropdb app", "rails db:drop", "npx prisma migrate reset",
+            "npx prisma migrate reset --force", "RAILS_ENV=production rails db:migrate", "MIX_ENV=prod mix ecto.migrate",
+            "npx prisma migrate deploy --env production", "flask db upgrade --env production",
+            "DATABASE_URL=$PROD_DATABASE_URL npx prisma migrate deploy", "rake db:schema:load RAILS_ENV=production",
+            # round 2: reserved words and groups, framework wipes, carried env, stdin-fed shells, cheap gaps
+            "if [ -d ../proj2 ]; then rm -rf ../proj2; fi", "for d in a; do rm -rf ..; done", "{ rm -rf ..; }",
+            "! rm -rf ..", "cd sub && { cd ../..; rm -rf proj2; }", "if true; then git push -f; fi", "{ git push -f; }",
+            "if true; then dropdb app; fi", "if (Test-Path ..\\proj2) { Remove-Item -Recurse -Force ..\\proj2 }",
+            "try { Remove-Item -Recurse -Force C:\\Users\\x } catch {}", "(cd .. && rm -rf proj2)",
+            'powershell -command "& {Remove-Item -Recurse -Force ..}"', "docker exec db dropdb app",
+            "php artisan migrate:fresh", "php artisan db:wipe", "mix ecto.reset", "mix ecto.drop",
+            "python manage.py flush",
+            "supabase db reset", "npx prisma db push --force-reset", "rails db:purge", "npx typeorm schema:drop",
+            "export RAILS_ENV=production && rails db:migrate", "$env:RAILS_ENV='production'; rails db:migrate",
+            "set RAILS_ENV=production && rails db:migrate", "bash <<'EOF'\nrm -rf ~\nEOF", "bash -s <<< 'rm -rf /'",
+            "echo 'rm -rf ~' | bash", "echo 'git push -f' | sh", "echo 'Remove-Item -Recurse C:\\x' | pwsh",
+            "cat <<'EOF' | zsh\nrm -rf ..\nEOF", "echo 'rm -rf ~' |& bash", "Remove-Item -Recurse -Path:..",
+            "rd /s/q ..", "rimraf ..", "npx rimraf ../x", "Push-Location ..; Remove-Item -Recurse x",
+            "builtin cd .. && rm -rf x", "su -c 'rm -rf /'", "start cmd /c rd /s /q C:\\Users",
+            "powershell Remove-Item -Recurse -Force ..", "psql -f drop.sql", "eval " * 1200 + "ls", "rm -rf ../a\x00b",
+            "rm -rf .factory", "rm -rf .factory/*",
+            # round 3: substitutions and groups, remote and container strings, piped SQL files, attached options
+            "git push origin $(git branch --show-current) -f", 'psql $(cat .dburl) -c "DROP TABLE x"',
+            "DATABASE_URL=$(heroku config:get DATABASE_URL -a shop-production) npx prisma migrate deploy",
+            "Remove-Item -Recurse -Force (Resolve-Path ..\\proj2)", "Remove-Item (Join-Path $PSScriptRoot '..\\proj2') -Recurse -Force",
+            "Remove-Item -Recurse -Force -Path @('..\\proj2','dist')",
+            """docker exec -it db sh -c "psql -U postgres -c 'DROP DATABASE app'\"""",
+            """docker compose exec db bash -c 'psql -c "DROP SCHEMA public CASCADE"'""",
+            """kubectl exec -it pg-0 -- sh -c "psql -c 'TRUNCATE users'\"""", """ssh db1 "psql -c 'DROP TABLE users'\"""",
+            'ssh deploy@prod-1 "cd /app && bundle exec rails db:migrate RAILS_ENV=production"',
+            'docker compose exec web sh -c "RAILS_ENV=production rails db:migrate"', "cat drop.sql | psql",
+            "cat drop.sql | docker compose exec -T db psql -U postgres", "Get-Content drop.sql | psql",
+            "type drop.sql | sqlcmd", 'mysql -e"DROP TABLE x"', "psql --file=drop.sql", "psql -fdrop.sql",
+            'sqlite3 app.db ".read drop.sql"', "npx prisma db execute --file drop.sql",
+            'npx wrangler d1 execute shop --command "DROP TABLE x"', 'mysqlsh -e "DROP TABLE x"',
+            'iex "rm -rf ~"', 'Invoke-Expression "Remove-Item -Recurse -Force C:\\x"',
+            'Start-Process pwsh -ArgumentList "-c","Remove-Item -Recurse C:\\x"', "rm -rf .factory/fast", "find . -delete",
+            "find .factory -delete", "find -L .. -delete", "find . -exec rm -rf {} +", "pnpm dlx rimraf ..",
+            "yarn dlx rimraf ..", "npm exec -- rimraf ..", "pnpm exec rimraf ..", "rm -rf ../my\\ dir", "rm -rf .git",
+            "rm -rf `pwd`/../x", "echo 'ls' | bash -c 'rm -rf ~'",
+            # round 4: piped or fed text, braces, PowerShell lists, git clean, ledger, find from the root
+            'echo "DROP TABLE users;" | docker exec -i db psql -U postgres',
+            "printf 'DROP TABLE x;' | npx prisma db execute --stdin",
+            "docker compose exec -T db psql <<'EOF'\nDROP TABLE users;\nEOF",
+            "kubectl exec -i pg-0 -- psql <<EOF\nDROP TABLE users;\nEOF",
+            'echo "DROP TABLE x;" | python manage.py dbshell', 'echo "DROP TABLE x;" | rails dbconsole',
+            "ssh prod-1 <<'EOF'\nrm -rf /srv/app\nEOF", "echo 'rm -rf /srv/app' | ssh prod-1 bash",
+            "echo 'rm -rf ~' | docker exec -i web sh", "rm -rf build/{cjs,esm} ~", "rm -rf apps/{web,api}/dist /",
+            "rm -rf node_modules/{.cache,.vite} ~/.npm", "rm -rf packages/{a,b}/dist ../shared/dist",
+            "rm -rf dist{/../../other,}", "rm -rf x{a ~", "Remove-Item -Recurse -Force dist,..\\other",
+            "Remove-Item -Recurse -Force node_modules,..\\other\\node_modules", "git clean -fdx", "git clean -fdX",
+            "git clean -ffdx", "git clean -x -f", "rm -rf .factory/fast/run.json", "rm -f .factory/fast/run.json",
+            "find . -type f -delete", "find . -name '*' -exec rm -rf {} +",
+            "find .git -name '*.pack' -delete", "find . -name run.json -delete", "rm -rf .git/objects",
+            *WINDOWS_READING,
+            # round 5: wildcards reaching protected paths, moves, stash --all, unproven root finds, --prune, --file -
+            "rm -rf .[!.]*", "rm -rf .??*", "rm -rf .git*", "rm -rf .fact*", "rm -rf .[gf]*", "rm -rf .*/",
+            "rm -rf .factory/f*", "rm -rf .factory/fast/run*", "Remove-Item -Recurse -Force .\\.f*",
+            "rm -f .factory/fast/*", "rm .factory/fast/*.json", "del /q .factory\\fast\\*",
+            "Remove-Item .factory\\fast\\* -Force", "rm -rf */", "rm -rf .git/obj*", "mv .factory/fast/run.json /tmp/x",
+            "Move-Item .factory .factory.old", "ren .factory old", "Rename-Item .git old", "mv .git* /tmp",
+            "mv notes.md .factory/fast/run.json", "git stash --all", "git stash -a", "git stash push --all",
+            "find . ! -name '*.md' -path '*/.git/*' -delete", "find . -not -name '*.md' -delete",
+            "find . -name '*.pyc' -o -delete", "find . -name '*.pyc' -path './.git/*' -delete",
+            "find . -name 'run*' -delete", "find . -iname 'FAST' -exec rm -rf {} +", "rm -rf .git/objects",
+            "git push --prune origin main:main", "psql --file - <<'EOF'\nDROP TABLE x;\nEOF",
+        )
+        allow = (
+            "rm -rf dist node_modules", "Remove-Item -Recurse dist", "rm -f ../x.txt", "rm -rf dist 2> /dev/null",
+            "rm -rf dist > /tmp/log.txt", "rm -rf $PWD/dist", "rm -rf ${PWD}/dist", "rm -rf src/*", "rm -r -Force dist",
+            "Remove-Item -Recurse:$false ..\\x", "find src -name '*.pyc' -delete", "cd src && rm -rf build",
+            f'cd .. && cd "{self.project.name}" && rm -rf dist', 'bash -c "rm -rf dist"', "pwsh -File build.ps1",
+            "git push", "git push origin feature", "git push --force-with-lease origin feature",
+            "git push --force-with-lease origin HEAD:feature", "git push origin --delete feature",
+            'grep "DROP TABLE" schema.sql', "echo truncate", 'gh issue create --body "psql DROP x"',
+            'psql -c "select 1"; echo "we will drop the cache later"', "psql < safe.sql", "psql < missing.sql",
+            "RAILS_ENV=test rails db:migrate", "npm run migrate -- --env local", "grep -rn migrate src/ | grep prod",
+            "MIX_ENV=test mix ecto.migrate", 'rm -rf "unclosed',  # unparsable: fails open
+            "if true; then rm -rf dist; fi", "{ cd src; rm -rf build; }", "(cd ..); rm -rf dist", 'echo "rm -rf ~"',
+            "cat script.sh | bash", "export RAILS_ENV=test && rails db:migrate", "psql -f safe.sql",
+            "Remove-Item -Recurse -Path:dist", "npx rimraf dist", "rm -rf $(pwd)/dist",
+            'cd "$(git rev-parse --show-toplevel)" && rm -rf dist', "rm -rf .factory/fast/shots", "rm -rf \x007\x00",
+            # round 3: message and search text, names holding prod, escaped spaces
+            'grep -rn "dropdb" scripts/', 'git commit -m "Remove the db:reset task"', "rm -rf my\\ dir",
+            'gh pr create --title "Drop prod flag" --body "Removes rm -rf ~ and DROP TABLE calls"',
+            "npx prisma migrate dev --name add_prod_flag", "find .factory -name '*.tmp' -delete",
+            """git commit -m "$(cat <<'EOF'\nfix: stop rm -rf ~ and git push -f\nEOF\n)\"""",
+            "echo 'rm -rf ~' | tee notes.txt", 'echo "DROP TABLE x" > notes.txt',
+            "cat > notes.md <<'EOF'\nrm -rf ~ and DROP TABLE x\nEOF",
+            "gh issue create --title t --body-file - <<'EOF'\npsql -c 'DROP TABLE x'; rm -rf ~\nEOF",
+            "rm -rf build/{cjs,esm}", "rm -rf apps/{web,api}/dist", "Remove-Item -Recurse -Force dist,build",
+            "git clean -fd", "git clean -n", "git rm -r --cached .", 'git commit -am "drop table cleanup, rm -rf old"',
+            'git commit -qm "git push -f fixed"', 'gh pr create -t "DROP TABLE x" -b "rm -rf ~"',
+            'glab mr create --description "rm -rf ~ and DROP TABLE x"', "rm -f .git/index.lock",
+            "find . -name '*.pyc' -not -path './.git/*' -delete", "find .factory -name '*.tmp' -delete",
+            # round 5: routine finds, plain wildcards, moves, stashes, stale lock, git messages from stdin
+            "find . -name '*.pyc' -delete", "find . -name __pycache__ -type d -exec rm -rf {} +",
+            "find . -name node_modules -type d -prune -exec rm -rf '{}' +", "find . -name .DS_Store -delete",
+            "find . -maxdepth 1 -name '*.tmp' -delete", "rm -f *.log", "rm -rf dist/*", "mv old.ts new.ts",
+            "Move-Item src\\a.ts src\\b.ts", "git stash", "git stash -u", "git stash list", "rm -rf .git/index.lock",
+            "git commit --file - <<'EOF'\nrm -rf ~\nEOF", "git commit --file=- <<'EOF'\nDROP TABLE x\nEOF",
+            "git push --prune origin",
+        ) + EVERYDAY
+        root = gate.norm(str(self.project))
+        judge = gate.sibling("fast_guard").Judge(root, gate.norm, gate.inside)
+        for command in deny + allow:
+            with self.subTest(command=command[:80]):
+                self.assertEqual(bool(judge.rule(command, root)), command in deny)
+        self.assertIn("cannot be resolved after a directory change (dist)", judge.rule("popd; rm -rf dist", root))
+        for command in WINDOWS_READING:  # a PowerShell or cmd reading denies; the Bash reading alone sees no delete
+            with self.subTest(dialect=command):
+                self.assertTrue(judge.rule(command, root, "windows"))
+        self.assertIsNone(judge.rule("rm -rf my\\ dir", root, "bash"))
+        other = self.root / "proj2"  # the cwd's own run judges, not the session's bound run
+        runs = [(None, {"sessions": ["s1"]}, {"project": str(self.project)}), (None, {}, {"project": str(other)})]
+        self.assertIsNone(gate.guard("rm -rf dist", runs, gate.norm(str(other)), "s1"))
+
+    def test_destructive_denial_reaches_the_owner_in_every_step(self):
+        self.assertEqual(self.pre("Bash", command="rm -rf ~"), "allow")  # no run: unchanged
+        self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "fix the footer copy")
+        out = self.hook({"hook_event_name": "PreToolUse", "tool_name": "Bash", "tool_input": {"command": "rm -rf ~"}})
+        reason = out["hookSpecificOutput"]["permissionDecisionReason"]  # gate closed: owner advice, not steps
+        self.assertIn("recursive delete outside the project (~). Destructive commands are the owner's", reason)
+        self.assertNotIn("Record these steps", reason)
+        self.assertEqual(self.pre("Bash", command="git push"), "allow")
+        crafted = "echo \x007\x00; " + "eval " * 1200 + "ls"  # stray placeholder, deep nesting: denied, no hook.error
+        self.assertEqual(self.pre("Bash", command=crafted), "deny")
+        log = (self.root / "home/logs/gate.log").read_text(encoding="utf-8")
+        self.assertEqual(log.count('"hook.deny"'), 2)
+        self.assertTrue(all(json.loads(line) for line in log.splitlines()))  # long fields cut, lines stay JSON
+
+    def test_a_lost_ledger_keeps_the_gate_closed(self):
+        self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "fix the footer copy")
+        (self.project / ".factory/fast/work-record.md").write_text(LIGHT, encoding="utf-8")
+        for step in ("tickets", "plan"):
+            self.gate("done", step)
+        (self.project / ".factory/fast/run.json").unlink()  # as rm -f .factory/fast/* would
+        out = self.hook({"hook_event_name": "PreToolUse", "tool_name": "Write",
+                         "tool_input": {"file_path": str(self.project / "src/app.ts")}})
+        self.assertIn("ledger .factory/fast/run.json is missing", out["hookSpecificOutput"]["permissionDecisionReason"])
+        self.assertEqual(self.pre("Bash", command="git push -f origin main"), "deny")
+        self.gate("close", "--abandon", "the owner dropped the run")
+        self.assertEqual(self.pre("Write", file_path=str(self.project / "src/app.ts")), "allow")
+
+    def test_close_abandon_and_start_survive_an_unreadable_ledger(self):
+        ledger, registry = self.project / ".factory/fast/run.json", self.root / "home/active"
+        for broken in (b"not json {", b"", "\ufeff{}".encode("utf-8")):  # garbage, empty, BOM from Out-File
+            with self.subTest(broken=broken):
+                self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "fix the footer copy")
+                ledger.write_bytes(broken)
+                self.assertEqual(self.pre("Write", file_path=str(self.project / "src/a.ts")), "deny")  # still gated
+                refused = self.gate("start", "--key", "next", "--kind", "change", "--request", "x", ok=False)
+                self.assertIn("unreadable", refused)
+                self.assertIn("--abandon", refused)
+                self.assertNotIn("Traceback", refused)
+                self.assertIn("without a readable ledger", self.gate("close", "--abandon", "the owner dropped it"))
+                self.assertEqual(list(registry.glob("*.json")), [])
+                self.assertFalse(ledger.exists())
+        self.assertEqual(len(list(ledger.parent.glob("run.broken-*.json"))), 3)  # each broken file set aside
+
+    def test_close_from_a_subfolder_closes_the_run_or_refuses(self):
+        self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "fix the footer copy")
+        (self.project / ".factory/fast/run.json").unlink()
+        sub = self.project / "src"
+        sub.mkdir()
+        self.assertIn("without a readable ledger", self.gate("close", "--abandon", "dropped", project=sub))
+        self.assertEqual(list((self.root / "home/active").glob("*.json")), [])
+        elsewhere = self.root / "elsewhere"
+        elsewhere.mkdir()
+        self.assertIn("nothing was closed", self.gate("close", "--abandon", "dropped", project=elsewhere, ok=False))
+        self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "fix the footer copy")
+        self.assertIn("Next: closed", self.gate("close", "--abandon", "dropped", project=sub))  # a readable ledger
 
     def test_stop_blocks_once_and_respects_pause(self):
         self.start()
@@ -393,7 +610,7 @@ class FastGateTests(unittest.TestCase):
         self.assertIn("Next: research", self.gate("status", project=posix))
 
     def test_hidden_checks_accept_only_strict_entries(self):
-        record = record_module()
+        record = module("fast_record")
         on = {"kind": "feature", "hidden_checks": True}
         check = lambda text, run=on: " ".join(record.check_done_run(
             run, "- PASS booked\n**Hidden checks:** " + text + "\n**Logs:** clean\n", project=".", all_sections={}))
@@ -418,7 +635,7 @@ class FastGateTests(unittest.TestCase):
             self.assertEqual(" ".join(record.check_done_run(run, "- PASS x\n**Logs:** y\n", project=".")), "")
 
     def test_hidden_checks_cover_every_listed_criterion_online(self):
-        record = record_module()
+        record = module("fast_record")
         text = SAMPLE.read_text(encoding="utf-8")
         sections = record.sections(text)
         dod = "### Definition of done\n- **A1 (R1):** works\n- **A2:** fails safely\n"
@@ -469,7 +686,7 @@ class FastGateTests(unittest.TestCase):
         self.assertIn("Next: close", self.gate("status"))
 
     def test_ticket_links_are_checked_against_the_epic(self):
-        record = record_module()
+        record = module("fast_record")
         epic = "https://github.com/acme/portal/issues/1"
         linked = "https://github.com/acme/portal/issues/2\n"
         with patch.object(record, "gh", side_effect=["1", linked]):
@@ -479,7 +696,7 @@ class FastGateTests(unittest.TestCase):
         self.assertIn("--offline", record.verify_tickets("https://tracker.example/1", [])[0])
 
     def test_tickets_need_a_definition_checklist_and_ticks(self):
-        record = record_module()
+        record = module("fast_record")
         url = "https://github.com/acme/portal/issues/2"
 
         def issue(body, state="OPEN", labels=("status: in progress",), board=None, reason=None):
@@ -553,7 +770,7 @@ class FastGateTests(unittest.TestCase):
             self.assertIn("Definition of done", problems[0])
 
     def test_coverage_names_every_requested_item_and_criterion(self):
-        record = record_module()
+        record = module("fast_record")
         epic, url = "https://github.com/acme/portal/issues/1", "https://github.com/acme/portal/issues/2"
 
         def issue(body, labels=("status: in progress",)):

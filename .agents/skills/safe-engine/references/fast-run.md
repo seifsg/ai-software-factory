@@ -49,7 +49,7 @@ A run's `**Size:**` (kickoff; a Lucky product or feature run records it under Ti
 
 ## The gate
 
-`fast_gate.py` (checks in `fast_record.py`, shell analysis in `fast_shell.py`, record facts in `fast_progress.py`, the owner's dashboard in `fast_card.py`) sits in `scripts/` beside the installed launcher and in `skills/safe-engine/scripts/` of the factory bundle. Python 3.9+, standard library only.
+`fast_gate.py` (run ledgers and the run registry in `fast_ledger.py`, checks in `fast_record.py`, shell analysis in `fast_shell.py`, the destructive guard in `fast_rules.py` and `fast_guard.py`, record facts in `fast_progress.py`, the owner's dashboard in `fast_card.py`) sits in `scripts/` beside the installed launcher and in `skills/safe-engine/scripts/` of the factory bundle. Python 3.9+, standard library only.
 
 Before `start` on a product: select the factory bundle with the launcher's `resolve_bundle.py --project <abs>`; it writes `.factory/entry-bundle.json`. Skip when the run maintains the factory itself.
 
@@ -66,20 +66,21 @@ python fast_gate.py install --host <host> [--project <abs>]
 - Product runs default to UI and persistence; pass `--no-ui` or `--no-data` only when true. `--auth` marks sign-in: pass it when anyone signs in or roles exist. These are fixed at `start`; decide them from the request.
 - Steps run in order; `done` refuses a step while an earlier applicable one is open.
 - `done tickets`, `done plan`, `done handoff` and, on hidden-check runs, `done done-run` read the listed GitHub tickets online: links, definition of done, checklist, ticks, coverage. Other trackers or no network: `--offline "<reason>"` records the step unverified; it is refused when the listed GitHub tickets are readable. Runs started on older methods keep the checks those methods define.
-- `pause` before waiting on the owner; the next `done` or `resume` clears it. `close` needs `handoff`, or `--abandon` with the owner's reason.
+- `pause` before waiting on the owner; the next `done` or `resume` clears it. `close` needs `handoff`, or `--abandon` with the owner's reason; `close --project <dir> --abandon` also works when the ledger is missing or unreadable.
 
 ## Hooks
 
 `install --host claude|codex|cursor|other` wires the hooks for agents that need it; the factory's `docs/hosts.md` lists each agent's route.
 
-- Source edits, shell writes (`>`, `>>`, `&>`, `>|`, piped `tee`) and scaffold or install commands in the run's project are denied until every step before `build` passes. Quoted text, heredoc bodies and here-strings never count, so ticket bodies pass. `.factory/` stays writable, except `run.json`, which only the gate writes.
+- Source edits, shell writes (`>`, `>>`, `&>`, `>|`, piped `tee`) and scaffold or install commands in the run's project are denied until every step before `build` passes. Quoted text, heredoc bodies and here-strings never count, so ticket bodies pass. `.factory/` stays writable, except `run.json`, which only the gate writes. A registered run whose `run.json` is missing or unreadable keeps the gate closed and every destructive rule on until the owner restores it or closes the run.
+- Destructive guard, every step of an active run: a rule fires when its words appear anywhere in the command, whatever the shell structure (substitutions, groups, `ssh` or container strings, piped `.sql` files); commit, PR and search text, and echo or heredoc text that only reaches a file or the terminal, never fire one; brace and PowerShell comma lists count item by item, and an unknown shell must pass both the Bash and the PowerShell reading. Fired rules are denied unless the parse proves them harmless: recursive deletes (`rm -r`, `Remove-Item -Recurse`, `find -delete`) outside the project, of all of it, of `.factory` or `.factory/fast`, any delete, move or wildcard that can reach `.factory/fast/run.json`, or anything in `.git` except `index.lock` (a `find` from the root passes only with `-name` patterns that cannot match `.git`, `.factory`, `fast` or `run.json`, or with `-not -path './.git/*' -not -path './.factory/*'`); `git clean -x`/`-X` and `git stash --all` (`git stash -u` passes); force, mirror, prune or `main`/`master`-delete pushes (`--force-with-lease` naming another branch, not `HEAD`, passes); `DROP` or `TRUNCATE` through a database client and database wipes (`dropdb`, `db:drop`, `migrate reset`, `migrate:fresh`, `ecto.reset`, `flush`); migrations whose command or an earlier `export` names a production env value (`prod` inside a name such as `add_prod_flag` is none). The owner runs them or approves another approach.
 - Stopping mid-run is blocked once with the next step; ending the turn again right after passes. A paused or closed run never blocks.
 - A stop while the host reports a background agent still running passes: its result starts a new turn, whose stop is checked. Other background work, such as a server, does not count. Waiting on background work is no reason to `pause`.
 - Each prompt and session start gets one status line: run, next step, pause reason.
 - Progress the owner has not seen rides along with the hook's answer ([progress](#progress)).
 - No active run anywhere: hooks exit at once.
 
-Without hooks the gate still records and checks steps; follow the order yourself. Hooks see tool calls, not intent: files written from inside scripts pass; the record and the done-run carry the rest.
+Without hooks the gate still records and checks steps; follow the order yourself. Hooks see tool calls, not intent: files written and destructive commands run from inside scripts, `xargs rm`, piped deletes (`Get-ChildItem | Remove-Item`) and commands piped into a shell from a file or program, and inline interpreter code (`python -c`, `node -e`) pass; the record and the done-run carry the rest.
 
 ## Progress
 
