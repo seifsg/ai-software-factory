@@ -42,7 +42,7 @@ No mode named: **Fast**.
 | Design, schema briefs | ✅ | ❌ product bar defaults | ✅ |
 | 0–4 loop | every checklist item, ticked after its check | same | same |
 | Enforcement | gate + hooks | gate + hooks | controller |
-| Checks | item checks, done-run | item checks, done-run | item checks, manual QA, tests, verify, independent review |
+| Checks | item checks, hidden checks, done-run | item checks, hidden checks, done-run | item checks, manual QA, tests, verify, independent review |
 
 Every mode meets the [product bar](references/product-bar.md) for its [size](references/sizes.md), keeps project rules and never puts secrets in code or Git.
 
@@ -65,10 +65,12 @@ Record every step in one work record and pass the gate: [fast-run](references/fa
 5. **Analysis** (product, feature): run `analyze-start` in full. No code yet: analyze the requirements, platform and intended consumers, and say so.
 6. **Plan:** run `get-ready-to-code`: five outputs, todos `T1..Tn` written into each ticket's checklist, logging map, efficiency budget. This request authorizes continuing through its file-summary stop.
    - Light lane (`change`): a light plan, no analysis step ([fast-run](references/fast-run.md#light-lane)). The 0–4 loop, done-run and handoff stay.
+   - Product, feature: once the plan is recorded, start the checker, a fresh agent that will not build. From the tickets and the plan only, never the build, it writes runnable checks for every criterion ID of every listed ticket, the epic's included, under `.factory/fast/checks/<key>/`, bound to the commands, routes and files the plan names. A criterion it cannot automate gets a written manual check. It returns only "ready" and the paths. The builder never opens the checks; build waits for "ready".
 7. **Design** (UI): similar to how we do the get ready to code, we plan our design. We do not accept poor mediocre design, only the best. Design brief from the product bar and `ux-quality` step 1. Its audit waits for the done-run.
 8. **Schema** (persistence): Only if needed, we run `database-schema`.
-9. **Build:** every checklist item through the 0–4 loop, an unproven capability first as a spike; tick each in its ticket after its check; one log line per todo: `T3 pre: … do: … post: …`. Automated tests come last: an MVP or production slice writes them as its last checklist items, once the other items work; a POC waits for `verify` or Safe.
+9. **Build:** every checklist item through the 0–4 loop, an unproven capability first as a spike; tick each in its ticket after its check; one log line per todo, written when it is ticked: `T3 pre: … do: … post: …`; in the same edit, `**Now:**` names the todos in progress from then on. Automated tests come last: an MVP or production slice writes them as its last checklist items, once the other items work; a POC waits for `verify` or Safe.
 10. **Done-run:** prove each ticket's definition of done. Start it once, use every requested journey and the most likely failure through real controls (simulated input proves no requested integration), read the logs, fix blockers. Screenshots for UI. No browser: drive its HTTP or CLI interface and say so. MVP and production slice also run the scans in the [product bar](references/product-bar.md#security).
+    - Product, feature: a fresh checker runs every check against the build, manual ones included, and returns one entry per criterion: `#<n> <ID>: PASS` or `#<n> <ID>: FAIL`, a note only after it in parentheses. A FAIL is a FAIL. Only a checker that has not seen the build code may call a check wrong and change it; the reason goes in that entry's note: `#2 A1: PASS (check changed: <reason>)`. The coordinator copies the entries under `**Hidden checks:**` and never relabels one. Any FAIL goes back to build, then the checks run again.
 11. **Handoff:** open the draft PR (`how-to-make-a-pr`), then report how to run, dev sign-in, each requested item (delivered, open in a later iteration, blocked with reason, or owner-deferred), verified, unverified, the follow-ups ticket, each owned ticket's final status (Ready for QA with its PR, Blocked, or Backlog when owner-deferred); `close`. Any requested item not delivered or owner-deferred: the overall outcome is unfinished.
 
 Lucky runs 1, 4, a short 5 and 6 (light lane for a `change`), 9, 10 and 11. It asks nothing, researches nothing and takes product bar defaults for design and schema without comparisons. Its checklist loop and checks match Fast.
@@ -96,6 +98,18 @@ Lucky runs 1, 4, a short 5 and 6 (light lane for a `change`), 9, 10 and 11. It a
 - Never claim tested, reviewed or production ready without that evidence.
 - Backlog in every mode: `ticketing` moves each ticket through its statuses, logs every ticket change in its activity and leaves untasked items alone. Deferred work appends to the epic's one open follow-ups ticket in Backlog, never one ticket per item.
 - Every ticket carries a definition of done and a checklist (`ticketing`); a change of intent updates both before the code. Each item runs the 0–4 loop and is ticked after its check. A ticket is finished only when every item is ticked and every criterion proven; otherwise it loops or is Blocked. Done comes with the PR merge.
+
+## Keep the owner posted
+
+The owner sees where the run is without asking. One short line per event, never a play-by-play of tool calls.
+
+- Fast and Lucky: the gate shows its dashboard after each step, pause and resume, and a line per finished todo and per new `**Now:**` ([fast-run](references/fast-run.md#progress)). Never repeat a gate message your agent already showed. Where it shows none, relay the card from the command output.
+- Before a wave or slow work (subagents, research, test suites, builds): one line, who does what. One result line when it returns.
+- Waiting on the owner: the question first, then the options.
+- Asked for status: show the card from `fast_gate.py status`. Safe: the same card, built from the controller's `status`.
+- Your agent has a task list: mirror the steps and todos once per wave, in a message with other tool calls.
+- The final report carries the `close` card.
+- The owner asks for more or fewer updates: that binds the run.
 
 ## Decide
 
