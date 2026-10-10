@@ -104,10 +104,10 @@ def log(event, **data):
         pass
 
 
-store = sibling("fast_ledger")  # paths, run ledgers and the run registry
+store = sibling("fast_ledger")  # paths, the run state in the gate home, its project mirror and the run registry
 VERSION, FAST, LEDGER, RECORD = store.VERSION, store.FAST, store.LEDGER, store.RECORD
 native, norm, inside, load, load_stamped = store.native, store.norm, store.inside, store.load, store.load_stamped
-ledger_path, record_path = store.ledger_path, store.record_path
+ledger_path, record_path, save = store.ledger_path, store.record_path, store.save
 
 
 def fail(message):
@@ -115,28 +115,13 @@ def fail(message):
     sys.exit(1)
 
 
-def save(path, data):
-    """Atomic JSON write: readers never see a half-written ledger."""
-    import tempfile
-    import time
-    path = Path(path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    handle, temp = tempfile.mkstemp(dir=path.parent, prefix=path.name, suffix=".tmp")
+def put(project, run):
+    """Write the run state to the gate home, then its mirror for agents to read; a failed mirror never fails."""
+    save(state_path(project), run)
     try:
-        with os.fdopen(handle, "w", encoding="utf-8") as out:
-            json.dump(data, out, indent=2)
-            out.write("\n")
-        for attempt in range(25):
-            try:
-                os.replace(temp, path)
-                break
-            except PermissionError:  # Windows: a hook may hold the file open for a moment
-                if attempt == 24:
-                    raise
-                time.sleep(0.02)
-    except BaseException:
-        Path(temp).unlink(missing_ok=True)
-        raise
+        save(ledger_path(project), run)
+    except OSError as error:
+        log("state.mirror_failed", key=run["key"], error=repr(error))
 
 
 SHOWN, SEEN = "shown", "seen"  # progress claims, and the newest change already shown (its mtime)
@@ -153,6 +138,26 @@ def claims_path(project, run):
 
 def registry_path(project):
     return store.registry_path(ACTIVE, project)
+
+
+def state_path(project):
+    return store.state_path(registry_path(project))
+
+
+def home_run(project):
+    """The run the gate home holds for project: the open one (an older run moves home here), else the last closed
+    one, else a lost stand-in."""
+    entry = registry_path(project)
+    try:
+        registration = load(entry)
+    except (OSError, ValueError):
+        registration = None
+    if not isinstance(registration, dict):
+        closed = None if store.state_path(entry).exists() else store.closed_run(entry)
+        if closed:
+            return closed
+        registration = {}
+    return store.state(entry, {**registration, "project": str(project)}, log)
 
 
 def applies(run, flag):
@@ -177,24 +182,29 @@ def open_before_build(run):
 # ---- commands ---------------------------------------------------------------
 
 def find_project(given):
-    """The given project, or the nearest folder above cwd holding a run ledger."""
+    """The given project, else the registered one holding cwd, else the nearest folder above cwd with a home state."""
     if given:
         return Path(native(given)).resolve()
     here = Path.cwd().resolve()
+    found = store.registered(ACTIVE, here)
+    if found:
+        return Path(found)
     for folder in (here, *here.parents):
-        if ledger_path(folder).is_file():
+        if state_path(folder).is_file():
             return folder
     fail("No Fast/Lucky run here. Start one: fast_gate.py start --project <dir> ...")
 
 
+def lost_text(project):
+    return (f"No readable run state for {project} in {HOME / 'runs'}, so its gate stays closed. The owner closes "
+            f"it: fast_gate.py close --project \"{project}\" --abandon \"<reason>\"")
+
+
 def open_run(given):
     project = find_project(given)
-    try:
-        run = load(ledger_path(project))
-    except (OSError, ValueError) as error:
-        fail(f"Cannot read run ledger in {project}: {error}")
-    if run.get("version") != VERSION:
-        fail(f"Unsupported run ledger version {run.get('version')}")
+    run = home_run(project)
+    if run.get("lost"):
+        fail(lost_text(project))
     return project, run
 
 
@@ -276,19 +286,10 @@ def cmd_start(args):
         fail(f"Cannot read the request file: {error}")
     if not request.strip():
         fail("Give the owner's request verbatim with --request or --request-file")
-    ledger = ledger_path(project)
-    if ledger.exists():
-        old = store.readable(project)
-        if old is None:
-            fail(f"The run ledger {ledger} is unreadable. The owner closes that run first: "
-                 f"fast_gate.py close --project \"{project}\" --abandon \"<reason>\"")
-        if not old.get("closed"):
-            fail(f"Run '{old.get('key')}' is still open here; close it first")
-        archive = ledger.parent / "archive" / f"{old.get('key')}-{old.get('closed_at', now())[:19].replace(':', '')}"
-        archive.mkdir(parents=True, exist_ok=True)
-        for item in (ledger, record_path(project)):
-            if item.exists():
-                os.replace(item, archive / item.name)
+    if registry_path(project).is_file():
+        fail(f"Run '{home_run(project).get('key')}' is still open here; close it first (a lost one: "
+             f"fast_gate.py close --project \"{project}\" --abandon \"<reason>\")")
+    archive_run(project)
     forget_shown(project)
     product, bundle = args.kind == "product", bundle_receipt(project)
     run = {"version": VERSION, "key": args.key, "project": str(project), "mode": args.mode, "kind": args.kind,
@@ -299,13 +300,13 @@ def cmd_start(args):
         run["done"]["analysis"] = {"at": now(), "skipped": "light lane"}
     if run.get("ux_rules") and not run["ui"]:  # only these runs later ask which UI files they changed
         run.update(sibling("fast_record").ui_start(project))
-    save(ledger, run)
+    setup = sibling("fast_setup")
+    git_note, hooks = setup.ignore_factory(project), setup.hook_status(project)
+    put(project, run)
     record = record_path(project)
     if not record.exists():
         record.write_text(skeleton(run), encoding="utf-8")
-    save(registry_path(project), {"project": str(project), "key": args.key, "sessions": []})
-    setup = sibling("fast_setup")
-    git_note, hooks = setup.ignore_factory(project), setup.hook_status(project)
+    save(registry_path(project), {"project": str(project), "key": args.key, "sessions": [], "home": True})
     log("run.start", key=args.key, project=str(project), mode=args.mode, kind=args.kind, bundle=run["bundle"], hooks=hooks)
     bundle = (f"{run['bundle']['root']} @ {run['bundle']['revision'][:12]}" if run["bundle"] else
               "no .factory/entry-bundle.json; run the entry's resolver first (skip only for factory maintenance)")
@@ -341,7 +342,7 @@ def cmd_done(args):
         epic, subs = record.ticket_urls(body)
         run["tickets"] = list(dict.fromkeys(run.get("tickets", []) + epic + subs))
     run["paused"] = None
-    save(ledger_path(project), run)
+    put(project, run)
     log("step.done", key=run["key"], step=step, unverified=args.offline)
     print(status_text(run, all_sections))
 
@@ -353,44 +354,64 @@ def cmd_status(args):
 def cmd_pause(args, reason):
     project, run = open_run(args.project)
     run["paused"] = {"reason": reason, "at": now()} if reason else None
-    save(ledger_path(project), run)
+    put(project, run)
     log("run.pause" if reason else "run.resume", key=run["key"], reason=reason)
     print(status_text(run))
 
 
 def cmd_close(args):
-    project = store.registered(ACTIVE, native(args.project or os.getcwd())) or find_project(args.project)
-    if args.abandon and store.readable(project) is None:
-        return close_lost(project, args.abandon)
-    project, run = open_run(str(project))
+    project = Path(store.registered(ACTIVE, native(args.project or os.getcwd())) or find_project(args.project))
+    run = home_run(project)
+    if run.get("lost"):
+        return close_lost(project, args.abandon) if args.abandon else fail(lost_text(project))
     if "handoff" not in run["done"] and not args.abandon:
         fail("Record the handoff first, or close --abandon \"<the owner's reason>\"")
     run.update(closed=True, closed_at=now(), abandoned=args.abandon, paused=None)
-    save(ledger_path(project), run)
-    try:
-        registry_path(project).unlink()
-    except FileNotFoundError:
-        pass
+    put(project, run)
+    entry = registry_path(project)
+    entry.unlink(missing_ok=True)
+    try:  # closed states leave runs/: hooks list only open ones
+        store.closed_path(entry).parent.mkdir(parents=True, exist_ok=True)
+        os.replace(store.state_path(entry), store.closed_path(entry))
+    except OSError as error:
+        log("state.retire_failed", key=run["key"], error=repr(error))  # it stays closed in runs/: hooks skip it
     forget_shown(project)
     log("run.close", key=run["key"], abandoned=args.abandon)
     print(status_text(run))
 
 
 def close_lost(project, reason):
-    """Close a run whose ledger is missing or unreadable: set the broken file aside, drop the registration."""
-    import time
-    entry, broken = registry_path(project), ledger_path(project)
+    """Close a run with no readable home state: drop its registration and the broken state."""
+    entry = registry_path(project)
     if not entry.is_file():
         fail(f"No registered run at {project}; nothing was closed")
-    if broken.exists():
-        try:
-            broken.replace(broken.with_name(f"run.broken-{time.time_ns()}.json"))
-        except OSError:
-            pass  # the registration still goes: the hooks stand down either way
     entry.unlink()
+    try:
+        state_path(project).unlink(missing_ok=True)
+    except OSError:
+        pass  # the hooks stand down either way; the next start replaces it
     forget_shown(project)
     log("run.close", project=str(project), abandoned=reason, lost=True)
-    print(f"Closed the run at {project} without a readable ledger. Reason: {reason}")
+    print(f"Closed the run at {project} without a readable run state. Reason: {reason}")
+
+
+def archive_run(project):
+    """Set the last run's mirror and record aside, named by its key and close time, before a new run starts."""
+    ledger, record, entry = ledger_path(project), record_path(project), registry_path(project)
+    old = store.closed_run(entry)
+    if not (old or ledger.exists()):
+        return  # first run here: a record written before start is kept
+    old = old or store.readable(project) or {}
+    key = old.get("key") if KEY.fullmatch(str(old.get("key"))) else "run"  # the mirror is the agent's to write
+    archive = ledger.parent / "archive" / f"{key}-{re.sub(r'[^0-9T-]', '', str(old.get('closed_at') or now())[:19])}"
+    archive.mkdir(parents=True, exist_ok=True)
+    for item in (ledger, record):
+        if item.exists():
+            os.replace(item, archive / item.name)
+    try:
+        store.closed_path(entry).unlink(missing_ok=True)  # archived: the gate home keeps no stale run
+    except OSError:
+        pass  # a locked file: the next start retries
 
 
 def forget_shown(project):
@@ -403,8 +424,8 @@ def forget_shown(project):
 # ---- hooks (every host; dialects in fast_hosts.py, wiring in fast_install.py) ----
 
 def active_runs():
-    """Open runs from the registry (fast_ledger.py): lost ledgers included, gate closed."""
-    return store.active_runs(ACTIVE)
+    """Open runs from the gate home (fast_ledger.py): lost ones included, gate closed."""
+    return store.active_runs(ACTIVE, log)
 
 
 def sessions_of(registration):
@@ -459,8 +480,8 @@ def deny_reason(run, what, advice=None):
     steps = (f" Record these steps first: {', '.join(blocked)}. Fill .factory/fast/work-record.md and run "
              "`fast_gate.py done <step>` (fast-run.md). .factory/ stays writable.") if blocked else ""
     if run.get("lost"):
-        steps = (" Its ledger .factory/fast/run.json is missing or unreadable, so the gate stays closed: the owner "
-                 f"restores it, or runs `fast_gate.py close --project \"{run['project']}\" --abandon \"<reason>\"`.")
+        steps = (" Its run state in the gate home is missing or unreadable, so the gate stays closed: the owner "
+                 f"runs `fast_gate.py close --project \"{run['project']}\" --abandon \"<reason>\"`.")
         advice = (advice or "") + steps
     log("hook.deny", key=run["key"], what=what, blocked=blocked, lost=bool(run.get("lost")))
     return f"Factory {run['mode']} run '{run['key']}' blocks {what}.{advice or steps}"
@@ -470,7 +491,8 @@ def guard(command, runs, cwd, session, dialect=None):
     """Deny reason for a destructive command in any step of the run owning cwd, else this session's or the named one.
     dialect: "bash" or "windows" when the host names its shell, else None (both readings must pass)."""
     item = owner(runs, cwd) or next(iter(mine(runs, cwd, session)), None) or mentioned(runs, command)
-    rule = item and sibling("fast_guard").Judge(norm(item[2]["project"]), norm, inside).rule(command, cwd, dialect)
+    rule = item and sibling("fast_guard").Judge(norm(item[2]["project"]), norm, inside, str(HOME)).rule(
+        command, cwd, dialect)
     return rule and deny_reason(item[2], rule, " Destructive commands are the owner's: ask the owner to run it, "
                                                "or to approve another approach.")
 
@@ -489,7 +511,11 @@ def pre_tool(event, runs, cwd, session):
         targets = [norm(name, cwd) for name in shell.writes(event["command"])]
     else:
         return None
+    vault = (norm(ACTIVE), norm(HOME / "runs")) if targets else ()
     for path in targets:
+        if any(inside(path, folder) for folder in vault):  # the gate home's run files: only gate commands write them
+            item = owner(runs, cwd) or next(iter(mine(runs, cwd, session)), None) or runs[0]
+            return deny_reason(item[2], f"writing {path}: the gate home's run files change only through fast_gate.py")
         item = owner(runs, path)
         if item:
             bind(item, session)
@@ -518,18 +544,19 @@ def mine(runs, cwd, session, bind_cwd=True):
     return [item] if item else []
 
 
-def unseen(project):
-    """The newest ledger or record change the owner has not seen progress for, else None. One directory scan
-    and no reads, since this runs on every hooked tool call; on Windows the scan itself carries the times."""
+def unseen(project, state):
+    """The newest run state or record change the owner has not seen progress for, else None. One stat, one
+    directory scan and no reads, since this runs on every hooked tool call."""
     times = {}
     try:
+        changed = os.stat(state).st_mtime_ns
         with os.scandir(os.path.join(project, *FAST)) as entries:
             for entry in entries:
-                if entry.name in (LEDGER, RECORD, SEEN):
+                if entry.name in (RECORD, SEEN):
                     times[entry.name] = entry.stat().st_mtime_ns
     except OSError:
         return None
-    stamp = max(times.get(LEDGER, 0), times.get(RECORD, 0))
+    stamp = max(changed, times.get(RECORD, 0))
     return stamp if stamp > times.get(SEEN, 0) else None
 
 
@@ -537,21 +564,22 @@ def news(runs, cwd, session):
     """Progress the owner has not seen yet, or None. Never raises: a deny decision must still print."""
     lines = []
     try:
-        for _, _, run in mine(runs, cwd, session, bind_cwd=False)[:3]:
-            lines += [] if run.get("lost") else unseen_lines(run["project"])  # a lost ledger has no card
+        for entry, _, run in mine(runs, cwd, session, bind_cwd=False)[:3]:
+            if not run.get("lost"):  # a lost run has no card
+                lines += unseen_lines(run["project"], store.state_path(entry))
     except Exception as error:  # noqa: BLE001 - progress is a courtesy; the gate's decision comes first
         log("hook.error", where="news", error=repr(error))
     return "\n".join(lines) or None
 
 
-def unseen_lines(project):
-    """One run's unseen progress. The ledger is re-read with its own mtime: a gate command landing during this
+def unseen_lines(project, state):
+    """One run's unseen progress. The home state is re-read with its own mtime: a gate command landing during this
     hook is shown from its own state, now or by the next hook, never as a stale card."""
-    stamp = unseen(project)
+    stamp = unseen(project, state)
     if not stamp:
         return []
     try:
-        run, ledger_ns = load_stamped(ledger_path(project))
+        run, ledger_ns = load_stamped(state)
     except (OSError, ValueError):
         return []  # mid-replace on Windows: show nothing now, the next hook retries with the new state
     if run.get("closed"):
@@ -589,7 +617,7 @@ def context(event, runs, cwd, session):
         if run.get("paused"):
             line += f"; paused: {run['paused']['reason']}"
         if run.get("lost"):
-            line += "; ledger .factory/fast/run.json missing: the owner restores it or closes with --abandon"
+            line += "; its run state in the gate home is missing: the owner closes it with --abandon"
         lines.append(line + ". Method: .agents/skills/safe-engine/references/fast-run.md.")
     return "\n".join(lines) or None
 

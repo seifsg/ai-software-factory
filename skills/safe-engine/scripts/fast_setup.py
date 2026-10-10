@@ -1,24 +1,31 @@
-"""Start-time probes for fast_gate.py: keep run records out of Git, and report which hosts call the gate."""
+"""Run setup for fast_gate.py: keep run records out of Git, report which hosts call the gate."""
 import json
 from pathlib import Path
 
+LINE = ".factory/"  # the exclude line that keeps run records out of Git
+
 
 def ignore_factory(project):
-    """Keep run records out of Git: add .factory/ to .gitignore when Git would track it."""
+    """Keep run records out of Git in the clone's own exclude file: no project file changes, and neither a reverted
+    .gitignore nor `git clean -fd` can undo it (deletes inside .git are the guard's)."""
     import subprocess
     try:
-        probe = subprocess.run(["git", "-C", str(project), "check-ignore", "-q", ".factory/fast/run.json"],
-                               capture_output=True, timeout=20)
-    except (OSError, subprocess.TimeoutExpired):
+        found = subprocess.run(["git", "-C", str(project), "rev-parse", "--git-path", "info/exclude"],
+                               capture_output=True, text=True, encoding="utf-8", timeout=20)
+    except (OSError, subprocess.TimeoutExpired, ValueError):
         return "not checked (git unavailable)"
-    if probe.returncode == 0:
-        return ".factory/ already ignored"
-    if probe.returncode != 1:
+    exclude = Path(project, found.stdout.strip())
+    if found.returncode != 0 or not found.stdout.strip() or not exclude.parent.parent.is_dir():
         return "not a Git repository; keep .factory/ out of version control"
-    gitignore = Path(project) / ".gitignore"
-    text = gitignore.read_text(encoding="utf-8") if gitignore.exists() else ""
-    gitignore.write_text(text + ("\n" if text and not text.endswith("\n") else "") + ".factory/\n", encoding="utf-8")
-    return "added .factory/ to .gitignore"
+    try:
+        text = exclude.read_text(encoding="utf-8") if exclude.exists() else ""
+        if LINE in {line.strip() for line in text.splitlines()}:
+            return f".factory/ already excluded in {exclude}"
+        exclude.parent.mkdir(exist_ok=True)
+        exclude.write_text(text + ("\n" if text and not text.endswith("\n") else "") + LINE + "\n", encoding="utf-8")
+    except (OSError, ValueError) as error:  # unreadable or locked: never overwrite it
+        return f"could not update {exclude} ({error}); keep .factory/ out of version control"
+    return f"added .factory/ to {exclude}"
 
 
 def hook_status(project):

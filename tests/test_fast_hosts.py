@@ -190,6 +190,20 @@ class LauncherAndInstallerTests(unittest.TestCase):
         self.assertEqual(self.plugin_hook(self.root / "nowhere", self.root / "gate", write), (0, None))  # no launcher
         self.assertTrue(list((self.root / "gate" / "pycache").rglob("fast_gate*.pyc")))  # the gate loads from its cache
 
+    def test_both_launchers_wake_for_a_run_whose_registration_was_deleted(self):
+        for entry in (self.root / "gate" / "active").glob("*.json"):
+            entry.unlink()  # rm ~/.safe-engine/active/*.json: the open state in runs/ remains
+        write = {"hook_event_name": "PreToolUse", "session_id": "s", "cwd": str(self.project), "tool_name": "Write",
+                 "tool_input": {"file_path": str(self.project / "src" / "a.ts")}}
+        if shutil.which("bash"):
+            code, out = self.plugin_hook(SCRIPTS.parents[1], self.root / "gate", write)
+            self.assertEqual(out["hookSpecificOutput"]["permissionDecision"], "deny")
+        windows = subprocess.run([sys.executable, "-c", installer.HOME_PY + installer.GUARD_PY + installer.RUN_PY,
+                                  str(SCRIPTS), "codex"], input=json.dumps(write).encode(), capture_output=True,
+                                 env=self.env)
+        self.assertEqual(json.loads(windows.stdout)["hookSpecificOutput"]["permissionDecision"], "deny")
+        self.assertEqual(len(list((self.root / "gate" / "active").glob("*.json"))), 1)  # re-registered
+
     def test_launcher_and_installer_boot_the_gate_the_same_way(self):
         self.assertIn(f'boot="{installer.BOOT}"', (SCRIPTS / "run-gate.sh").read_text(encoding="utf-8"))
 
