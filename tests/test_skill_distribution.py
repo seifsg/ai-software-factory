@@ -212,6 +212,26 @@ class DistributionTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, 'newer layout.*input contract version 3'):
             resolver.inspect_bundle(self.source)
 
+    def test_newer_layout_needs_a_contract_that_drops_the_file_and_is_unedited(self):
+        commit = ('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm')
+        self.git('rm', '-q', '--', 'docs/hosts.md', cwd=self.source)  # removed, but no contract at all
+        self.git(*commit, 'removal without a contract', cwd=self.source)
+        with self.assertRaisesRegex(RuntimeError, 'Incomplete factory bundle'):
+            resolver.inspect_bundle(self.source)
+        path = self.add_contract(required=['docs/install.md', 'docs/guidance.md'])
+        self.git('add', '-A', cwd=self.source)
+        self.git(*commit, 'contract without docs/hosts.md', cwd=self.source)
+        with self.assertRaisesRegex(RuntimeError, 'newer layout'):  # the real newer layout, for contrast
+            resolver.inspect_bundle(self.source)
+        path.write_text(path.read_text(encoding='utf-8') + '\n', encoding='utf-8')  # a local contract edit
+        with self.assertRaisesRegex(RuntimeError, 'Incomplete factory bundle'):
+            resolver.inspect_bundle(self.source)
+        self.git('checkout', '-q', '--', str(path), cwd=self.source)
+        self.git('rm', '-q', '--', 'docs/guidance.md', cwd=self.source)  # removed but still declared
+        self.git(*commit, 'broken revision', cwd=self.source)
+        with self.assertRaisesRegex(RuntimeError, 'Incomplete factory bundle'):
+            resolver.inspect_bundle(self.source)
+
     def test_deleted_committed_contract_cannot_fall_back_to_legacy(self):
         path = self.add_contract()
         self.git('add', '--', str(path), cwd=self.source)
