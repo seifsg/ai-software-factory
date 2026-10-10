@@ -9,9 +9,8 @@ import json
 import os
 import re
 import sys
-from datetime import datetime, timezone
 from pathlib import Path
-# argparse, hashlib, subprocess and tempfile load lazily: hooks run on every tool call and must start fast.
+# argparse, datetime, hashlib, subprocess and tempfile load lazily: hooks run on every tool call and must start fast.
 
 HOME = Path(os.environ.get("SAFE_ENGINE_HOME") or Path.home() / ".safe-engine")
 ACTIVE = HOME / "active"
@@ -87,6 +86,8 @@ def sibling(name):
 
 
 def now():
+    """UTC time, seconds. datetime loads here: most hook calls never need it."""
+    from datetime import datetime, timezone
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
@@ -515,9 +516,8 @@ def mine(runs, cwd, session, bind_cwd=True):
 
 
 def unseen(project):
-    """(ledger mtime, newest change) when the ledger or record changed since the owner last saw progress, else
-    None. One directory scan and no reads, since this runs on every hooked tool call; on Windows the scan
-    itself carries the times."""
+    """The newest ledger or record change the owner has not seen progress for, else None. One directory scan
+    and no reads, since this runs on every hooked tool call; on Windows the scan itself carries the times."""
     times = {}
     try:
         with os.scandir(os.path.join(project, *FAST)) as entries:
@@ -526,9 +526,8 @@ def unseen(project):
                     times[entry.name] = entry.stat().st_mtime_ns
     except OSError:
         return None
-    ledger = times.get(LEDGER, 0)
-    stamp = max(ledger, times.get(RECORD, 0))
-    return (ledger, stamp) if stamp > times.get(SEEN, 0) else None
+    stamp = max(times.get(LEDGER, 0), times.get(RECORD, 0))
+    return stamp if stamp > times.get(SEEN, 0) else None
 
 
 def news(runs, cwd, session):
@@ -536,17 +535,17 @@ def news(runs, cwd, session):
     lines = []
     try:
         for _, _, run in mine(runs, cwd, session, bind_cwd=False)[:3]:
-            lines += [] if run.get("lost") else unseen_lines(run["project"], run)  # a lost ledger has no card
+            lines += [] if run.get("lost") else unseen_lines(run["project"])  # a lost ledger has no card
     except Exception as error:  # noqa: BLE001 - progress is a courtesy; the gate's decision comes first
         log("hook.error", where="news", error=repr(error))
     return "\n".join(lines) or None
 
 
-def unseen_lines(project, run):
+def unseen_lines(project):
     """One run's unseen progress. The ledger is re-read with its own mtime: a gate command landing during this
     hook is shown from its own state, now or by the next hook, never as a stale card."""
-    stamps = unseen(project)
-    if not stamps:
+    stamp = unseen(project)
+    if not stamp:
         return []
     try:
         run, ledger_ns = load_stamped(ledger_path(project))
@@ -554,11 +553,11 @@ def unseen_lines(project, run):
         return []  # mid-replace on Windows: show nothing now, the next hook retries with the new state
     if run.get("closed"):
         return []  # the final report carries the close card
-    lines = sibling("fast_card").news(run, steps_for(run), record_path(project), claims_path(project, run),
-                                          ledger_ns, now())
+    at = now()  # loads datetime from the standard library before the card module's cached import
+    lines = sibling("fast_card").news(run, steps_for(run), record_path(project), claims_path(project, run), ledger_ns, at)
     seen = Path(project, *FAST, SEEN)
     seen.touch()
-    os.utime(seen, ns=(stamps[1], stamps[1]))
+    os.utime(seen, ns=(stamp, stamp))
     return lines
 
 

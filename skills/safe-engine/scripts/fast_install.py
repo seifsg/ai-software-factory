@@ -72,14 +72,23 @@ def copy_entries(target):
     return target
 
 
+# Python run as `python -c BOOT <gate folder> <host>`: imports the gate from its bytecode cache in the gate home.
+# The stdlib it needs loads first, so only the gate's own cache lives there. run-gate.sh holds the same text.
+HOME_PY = "import os,sys;h=os.environ.get('SAFE_ENGINE_HOME') or os.path.join(os.path.expanduser('~'),'.safe-engine');"
+RUN_PY = ("import json,re,pathlib;d=sys.argv[1];sys.dont_write_bytecode=False;"
+          "sys.pycache_prefix=os.path.join(h,'pycache');sys.path.insert(0,d);"
+          "sys.argv=[os.path.join(d,'fast_gate.py'),'hook','--host',sys.argv[2]];import fast_gate;fast_gate.main()")
+BOOT = HOME_PY + RUN_PY
+# Windows hosts run no POSIX shell: Python itself leaves at once without an active run or a gate
+GUARD_PY = ("a=os.path.join(h,'active');d=sys.argv[1];os.path.isdir(a) and any(n.endswith('.json') for n in "
+            "os.listdir(a)) and os.path.isfile(os.path.join(d,'fast_gate.py')) or sys.exit(0);")
+
+
 def commands(gate, host):
-    """(POSIX command, Windows command). Windows calls Python directly, guarded: a missing gate exits 0."""
+    """(POSIX command, Windows command). Windows calls Python directly, guarded: no active run or no gate exits 0."""
     posix = f'sh "{(gate / "run-gate.sh").as_posix()}" {host}'
-    script = (gate / "fast_gate.py").as_posix()
-    guarded = (f"import os,runpy,sys;p=r'{script}';sys.argv=[p,'hook','--host','{host}'];"
-               "os.path.exists(p) and runpy.run_path(p,run_name='__main__')")
     python = "py -3" if shutil.which("py") else "python"
-    return posix, f'{python} -c "{guarded}"'
+    return posix, f'{python} -c "{HOME_PY}{GUARD_PY}{RUN_PY}" "{gate.as_posix()}" {host}'
 
 
 def ours(command):

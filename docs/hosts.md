@@ -14,13 +14,13 @@ First-class hosts get an installer route, gate hooks and a Safe reviewer preset.
 | Invoke | `/safe-engine Build ...` | `$safe-engine Build ...` | `use safe-engine to build ...` |
 | Question tool | `AskUserQuestion` (4 questions, 4 options each) | chat message | chat message |
 | Gate progress messages | hook `systemMessage`, shown to the user | hook `systemMessage`, shown as a warning | not shown: the agent relays the gate's card |
-| Delegate hook calls | marked (`agent_id`): they show no progress; the next main-thread call does | not marked (parent session id): a delegate's call may show it | not applicable |
+| Delegate hook calls | marked (`agent_id`): they show no progress; the next main-thread call does | not marked: tool hooks carry no `agent_id` and use the parent session id, so a delegate's call may show it | not applicable |
 | Task list | `TaskCreate` / `TaskUpdate` when the session has them (on by default only for older models; `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` opts in) | the plan view, when the session has its plan tool | none documented: chat lines only |
 | Gate hooks | plugin: `PreToolUse`, `Stop`, `UserPromptSubmit`, `SessionStart` | `~/.codex/hooks.json`: same events and JSON as Claude Code | `~/.cursor/hooks.json`: `preToolUse`, `stop` (a follow-up only when `status` is `completed`), `sessionStart` |
 | Safe reviewer | `review --agent claude`: `claude -p`, Read/Grep/Glob only, `--json-schema` | `review --agent codex`: `codex exec --sandbox read-only --output-schema` | `review --agent cursor`: `agent -p --mode ask` |
 | Model tiers (light / standard / deep) | `haiku` / `sonnet` / `opus` | host models | host models |
 
-Python runs as `python`, `python3` or `py -3` (Windows). Claude Code hooks need a POSIX `sh` (Git Bash on Windows). Ticket checks use the GitHub CLI `gh` when the tracker is GitHub.
+Python runs as `python`, `python3` or `py -3` (Windows). Claude Code hooks need a POSIX `sh` (Git Bash on Windows): the plugin sources `run-gate.sh` in the shell Claude Code already starts for a hook, so a call with no factory run starts no other process. The Codex and Cursor Windows command checks for an active run in Python before loading the gate. Ticket checks use the GitHub CLI `gh` when the tracker is GitHub.
 
 At a stop, Claude Code lists the session's background work (`background_tasks`). A running or pending `subagent` or `workflow` entry lets the stop pass: its result starts a new turn, whose stop the gate checks. Other entries (`shell`, `monitor`, `teammate` and the rest) and hosts without the list (Codex, Cursor) keep one block per stop. Limit: experimental observer agents (`CLAUDE_CODE_EXPERIMENTAL_OBSERVER_AGENTS`) are listed as `subagent` but may never report back, so with them on, the last stop can pass without the reminder. The gate log records each passed stop as `hook.wait_stop`.
 
