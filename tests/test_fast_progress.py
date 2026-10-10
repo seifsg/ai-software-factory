@@ -3,6 +3,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -249,6 +250,17 @@ class ProgressHookTests(unittest.TestCase):
         with patch("builtins.open", side_effect=failing), patch.object(Path, "read_text", side_effect=failing), \
                 patch.object(Path, "read_bytes", side_effect=failing):
             self.assertIsNone(gate.news(runs, cwd, "s1"))  # a read would log hook.error; tearDown fails then
+
+    def test_sibling_modules_cache_their_bytecode_even_when_the_host_turns_it_off(self):
+        scripts = self.root / "scripts"
+        shutil.copytree(SCRIPTS, scripts, ignore=shutil.ignore_patterns("__pycache__"))
+        probe = ("import sys; sys.path.insert(0, sys.argv[1]); import fast_gate; fast_gate.sibling('fast_card'); "
+                 "print(sys.dont_write_bytecode)")
+        out = subprocess.run([sys.executable, "-c", probe, str(scripts)], capture_output=True, text=True,
+                             env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"})
+        self.assertEqual(out.stdout.strip(), "True", out.stderr)  # the host's setting is restored after the import
+        cached = {path.name.split(".")[0] for path in (scripts / "__pycache__").glob("*.pyc")}
+        self.assertTrue({"fast_card", "fast_progress"} <= cached, cached)  # later hooks load these, never compile
 
     def test_a_gate_command_during_a_hook_never_shows_a_stale_card(self):
         self.hook()

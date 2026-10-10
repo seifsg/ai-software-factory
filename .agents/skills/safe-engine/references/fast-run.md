@@ -106,4 +106,5 @@ Without hooks the gate still records and checks steps; follow the order yourself
 ## Keep it fast
 
 - One record; status moves at boundaries.
+- The gate writes its own modules' bytecode cache even where your agent turns Python's off, so hooks load them instead of compiling them.
 - No controller, capture, seal or independent review in Fast or Lucky. `verify` adds manual QA and tests; `promote` moves to Safe.

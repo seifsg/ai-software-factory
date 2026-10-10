@@ -70,10 +70,16 @@ HERE = Path(__file__).resolve().parent  # siblings: fast_record.py, fast_shell.p
 
 
 def sibling(name):
-    """Import a module that sits beside this script, whatever the caller's sys.path."""
+    """Import a module that sits beside this script, whatever the caller's sys.path. Its bytecode cache is
+    written even where the host turns bytecode writing off, so later hooks load it instead of compiling it;
+    a read-only folder just compiles, as before."""
     if str(HERE) not in sys.path:
         sys.path.insert(0, str(HERE))
-    return __import__(name)
+    keep, sys.dont_write_bytecode = sys.dont_write_bytecode, False
+    try:
+        return __import__(name)
+    finally:
+        sys.dont_write_bytecode = keep
 
 
 def now():
