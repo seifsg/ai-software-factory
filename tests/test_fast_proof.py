@@ -30,6 +30,7 @@ class ProofTests(unittest.TestCase):
         passing = {
             "screenshot pair": HEAD + PAIR,
             "diff": HEAD + DIFF,
+            "added lines": HEAD + DIFF.replace("- paid\n+ refunded", "  4. claim vs diff\n+    proof rule"),
             "image table": HEAD + f"### Theme survives reload\n**Before → After:**\n| Before | After |\n|---|---|\n"
                                   f"| ![b]({IMG.format('b')}) | ![a]({IMG.format('a')}) |\n",
             "new": HEAD + f"### Export button\n**Before:** did not exist\n**After:** exports\n![a]({IMG.format('a')})\n",
@@ -46,7 +47,7 @@ class ProofTests(unittest.TestCase):
             "file name": (HEAD + PAIR.replace("🧾 Invoice totals include tax", "`src/invoice.ts`"), "names a file"),
             "localhost": (HEAD + PAIR.replace(IMG.format('a'), "http://localhost:3000/a.png"), "cannot be opened"),
             "local path": (HEAD + PAIR.replace(IMG.format('a'), ".factory/fast/shots/a.png"), "cannot be opened"),
-            "not a diff": (HEAD + DIFF.replace("- paid\n+ refunded", "refunded"), "diff block with - and +"),
+            "not a diff": (HEAD + DIFF.replace("- paid\n+ refunded", "refunded"), "diff block (- or + lines"),
             "label in code": (HEAD + f"### Docs\n**Before:** x\n{F}md\n## no heading\n**After:** fake\n{F}\n", "then '**After:**'"),
         }
         for name, (body, expected) in refused.items():

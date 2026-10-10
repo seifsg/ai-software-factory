@@ -56,9 +56,8 @@ def outcome(title, text, masked):
     both = BOTH.search(masked)
     if both:
         media, code = MEDIA.findall(masked, both.start()), fences(text, both.start(), len(text))
-        diff = any(re.search(r"^-", block, re.M) and re.search(r"^\+", block, re.M) for block in code)
-        if not (diff or len(media) >= 2 or (NEW.search(masked) and (media or code))):
-            found.append(f"'{title}': Before → After needs a diff block with - and + lines, or two images")
+        if not (any(map(diff, code)) or len(media) >= 2 or (NEW.search(masked) and (media or code))):
+            found.append(f"'{title}': Before → After needs a diff block (- or + lines beside others), or two images")
         return found
     before, after = BEFORE.search(masked), AFTER.search(masked)
     if not (before and after and before.start() < after.start()):
@@ -68,6 +67,12 @@ def outcome(title, text, masked):
     if not proof(text, masked, after.end(), len(text)):
         found.append(f"'{title}': After needs proof: an image, a recording or a fenced block")
     return found
+
+
+def diff(block):
+    """Both sides in one block: changed lines (- or +) beside other changed or unchanged (indented) lines."""
+    marks = {line[0] for line in block.splitlines() if line.strip()} & {"-", "+", " "}
+    return len(marks) >= 2 and bool(marks - {" "})
 
 
 def fences(text, start, stop):
