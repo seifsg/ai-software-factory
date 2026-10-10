@@ -49,7 +49,7 @@ Labels end with the colon inside the bold: `**Epic:**`. Delegates return their l
 
 ## The gate
 
-`fast_gate.py` (checks in `fast_record.py`, shell analysis in `fast_shell.py`) sits in `scripts/` beside the installed launcher and in `skills/safe-engine/scripts/` of the factory bundle. Python 3.9+, standard library only.
+`fast_gate.py` (checks in `fast_record.py`, shell analysis in `fast_shell.py`, the destructive guard in `fast_guard.py`) sits in `scripts/` beside the installed launcher and in `skills/safe-engine/scripts/` of the factory bundle. Python 3.9+, standard library only.
 
 Before `start` on a product: select the factory bundle with the launcher's `resolve_bundle.py --project <abs>`; it writes `.factory/entry-bundle.json`. Skip when the run maintains the factory itself.
 
@@ -73,12 +73,12 @@ python fast_gate.py install --host <host> [--project <abs>]
 `install --host claude|codex|cursor|other` wires the hooks for agents that need it; the factory's `docs/hosts.md` lists each agent's route.
 
 - Source edits, shell writes (`>`, `>>`, `&>`, `>|`, piped `tee`) and scaffold or install commands in the run's project are denied until every step before `build` passes. Quoted text, heredoc bodies and here-strings never count, so ticket bodies pass. `.factory/` stays writable, except `run.json`, which only the gate writes.
-- Destructive guard, every step of an active run, also after a `cd`, behind `sudo` or `timeout`, and inside `bash -c`, `eval`, `cmd /c` or PowerShell `-Command`: recursive deletes outside the project or of all of it (`rm -rf .`, `*`, `find <outside> -delete`), force, mirror or `main`/`master`-delete pushes (`--force-with-lease` naming another branch, not `HEAD`, passes), `DROP` or `TRUNCATE` through a database client, `dropdb`, `db:drop`, `migrate reset`, and migrations whose command names a production env value or flag are denied. The owner runs them or approves another approach.
+- Destructive guard, every step of an active run, also after a `cd`, behind `sudo` or `timeout`, inside `if`, `{ }` or `try` blocks, `bash -c`, `eval`, `cmd /c` or PowerShell `-Command`, and in literal code piped into a shell: recursive deletes outside the project, of all of it (`rm -rf .`, `*`) or of its `.factory` folder (paths inside it pass), force, mirror or `main`/`master`-delete pushes (`--force-with-lease` naming another branch, not `HEAD`, passes), `DROP` or `TRUNCATE` through a database client, database wipes (`dropdb`, `db:drop`, `migrate reset`, `migrate:fresh`, `ecto.reset`, `flush`), and migrations whose command or an earlier `export` names a production env value are denied. The owner runs them or approves another approach.
 - Stopping mid-run is blocked once with the next step, unless the run is paused or closed.
 - Each prompt and session start gets one status line: run, next step, pause reason.
 - No active run anywhere: hooks exit at once.
 
-Without hooks the gate still records and checks steps; follow the order yourself. Hooks see tool calls, not intent: files written and destructive commands run from inside scripts, `xargs rm` and piped deletes (`Get-ChildItem | Remove-Item`) pass; the record and the done-run carry the rest.
+Without hooks the gate still records and checks steps; follow the order yourself. Hooks see tool calls, not intent: files written and destructive commands run from inside scripts, `xargs rm`, piped deletes (`Get-ChildItem | Remove-Item`) and commands piped into a shell from a file or program pass; the record and the done-run carry the rest.
 
 ## Keep it fast
 

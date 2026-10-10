@@ -243,6 +243,23 @@ class FastGateTests(unittest.TestCase):
             "npx prisma migrate reset --force", "RAILS_ENV=production rails db:migrate", "MIX_ENV=prod mix ecto.migrate",
             "npx prisma migrate deploy --env production", "flask db upgrade --env production",
             "DATABASE_URL=$PROD_DATABASE_URL npx prisma migrate deploy", "rake db:schema:load RAILS_ENV=production",
+            # round 2: reserved words and groups, framework wipes, carried env, stdin-fed shells, cheap gaps
+            "if [ -d ../proj2 ]; then rm -rf ../proj2; fi", "for d in a; do rm -rf ..; done", "{ rm -rf ..; }",
+            "! rm -rf ..", "cd sub && { cd ../..; rm -rf proj2; }", "if true; then git push -f; fi", "{ git push -f; }",
+            "if true; then dropdb app; fi", "if (Test-Path ..\\proj2) { Remove-Item -Recurse -Force ..\\proj2 }",
+            "try { Remove-Item -Recurse -Force C:\\Users\\x } catch {}", "(cd .. && rm -rf proj2)",
+            'powershell -command "& {Remove-Item -Recurse -Force ..}"', "docker exec db dropdb app",
+            "php artisan migrate:fresh", "php artisan db:wipe", "mix ecto.reset", "mix ecto.drop",
+            "python manage.py flush",
+            "supabase db reset", "npx prisma db push --force-reset", "rails db:purge", "npx typeorm schema:drop",
+            "export RAILS_ENV=production && rails db:migrate", "$env:RAILS_ENV='production'; rails db:migrate",
+            "set RAILS_ENV=production && rails db:migrate", "bash <<'EOF'\nrm -rf ~\nEOF", "bash -s <<< 'rm -rf /'",
+            "echo 'rm -rf ~' | bash", "echo 'git push -f' | sh", "echo 'Remove-Item -Recurse C:\\x' | pwsh",
+            "cat <<'EOF' | zsh\nrm -rf ..\nEOF", "echo 'rm -rf ~' |& bash", "Remove-Item -Recurse -Path:..",
+            "rd /s/q ..", "rimraf ..", "npx rimraf ../x", "Push-Location ..; Remove-Item -Recurse x",
+            "builtin cd .. && rm -rf x", "su -c 'rm -rf /'", "start cmd /c rd /s /q C:\\Users",
+            "powershell Remove-Item -Recurse -Force ..", "psql -f drop.sql", "eval " * 1200 + "ls", "rm -rf ../a\x00b",
+            "rm -rf .factory", "rm -rf .factory/*",
         )
         allow = (
             "rm -rf dist node_modules", "Remove-Item -Recurse dist", "rm -f ../x.txt", "rm -rf dist 2> /dev/null",
@@ -254,12 +271,18 @@ class FastGateTests(unittest.TestCase):
             'grep "DROP TABLE" schema.sql', "echo truncate", 'gh issue create --body "psql DROP x"',
             'psql -c "select 1"; echo "we will drop the cache later"', "psql < safe.sql", "psql < missing.sql",
             "RAILS_ENV=test rails db:migrate", "npm run migrate -- --env local", "grep -rn migrate src/ | grep prod",
-            "MIX_ENV=test mix ecto.migrate", 'rm -rf "unclosed', "rm -rf ../a\x00b",  # unparsable: fails open
+            "MIX_ENV=test mix ecto.migrate", 'rm -rf "unclosed',  # unparsable: fails open
+            "if true; then rm -rf dist; fi", "{ cd src; rm -rf build; }", "(cd ..); rm -rf dist", 'echo "rm -rf ~"',
+            "cat script.sh | bash", "export RAILS_ENV=test && rails db:migrate", "psql -f safe.sql",
+            "Remove-Item -Recurse -Path:dist", "npx rimraf dist", "find . -exec rm -rf {} +", "rm -rf $(pwd)/dist",
+            'cd "$(git rev-parse --show-toplevel)" && rm -rf dist', "rm -rf .factory/fast/shots", "rm -rf \x007\x00",
         )
         root = gate.norm(str(self.project))
+        judge = gate.sibling("fast_guard").Judge(root, gate.norm, gate.inside)
         for command in deny + allow:
-            with self.subTest(command=command):
-                self.assertEqual(bool(gate.destructive(command, root, root)), command in deny)
+            with self.subTest(command=command[:80]):
+                self.assertEqual(bool(judge.rule(command, root)), command in deny)
+        self.assertIn("cannot be resolved after a directory change (dist)", judge.rule("popd; rm -rf dist", root))
         other = self.root / "proj2"  # the cwd's own run judges, not the session's bound run
         runs = [(None, {"sessions": ["s1"]}, {"project": str(self.project)}), (None, {}, {"project": str(other)})]
         self.assertIsNone(gate.guard("rm -rf dist", runs, gate.norm(str(other)), "s1"))
@@ -272,7 +295,9 @@ class FastGateTests(unittest.TestCase):
         self.assertIn("recursive delete outside the project (~). Destructive commands are the owner's", reason)
         self.assertNotIn("Record these steps", reason)
         self.assertEqual(self.pre("Bash", command="git push"), "allow")
-        self.assertEqual((self.root / "home/logs/gate.log").read_text(encoding="utf-8").count('"hook.deny"'), 1)
+        crafted = "echo \x007\x00; " + "eval " * 1200 + "ls"  # stray placeholder, deep nesting: denied, no hook.error
+        self.assertEqual(self.pre("Bash", command=crafted), "deny")
+        self.assertEqual((self.root / "home/logs/gate.log").read_text(encoding="utf-8").count('"hook.deny"'), 2)
 
     def test_stop_blocks_once_and_respects_pause(self):
         self.start()

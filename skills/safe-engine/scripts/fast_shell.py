@@ -2,11 +2,11 @@
 
 Pure string analysis; callers resolve paths. Heredoc bodies, PowerShell here-strings, quoted text and
 shell arithmetic never count as code, so ticket bodies with "->" or "npm install" pass. Quoted redirect
-targets still count. Destructive rules read each pipeline's own words and input, and nested command strings.
+targets still count. Destructive rules read each pipeline's own words and input, nested command strings
+and literal code fed to a shell. fast_guard.py resolves their paths.
 """
-import base64
 from collections import namedtuple
-from itertools import takewhile
+from itertools import dropwhile, takewhile
 import re
 
 HEREDOC = re.compile(r"(<<-?[ \t]*(['\"]?)(\w+)\2)([^\n]*)\n.*?^[ \t]*\3[ \t]*$", re.S | re.M)
@@ -21,30 +21,40 @@ SCAFFOLD = re.compile(
     r"flutter\s+create\b|rails\s+new\b|django-admin\s+startproject\b|(?:pip|uv|poetry)\s+(?:install|add|init|new)\b)",
     re.I)
 DISCARD = ("/dev/null", "nul", "$null")
-PIPELINES = re.compile(r"\|\||&&|[;\n()]|(?<![<>])&(?!>)")
+SUBSTITUTE = ((re.compile(r"\$\{(\w+)\}"), r"$\1"), (re.compile(r"\$\(\s*pwd\s*\)"), "$PWD"),
+              (re.compile(r"\$\(\s*git\s+rev-parse\s+--show-toplevel\s*\)"), "$GIT_TOPLEVEL"))
+PIPELINES = re.compile(r"([()])|\|\||&&|[;\n{}]|(?<![<>|])&(?!>)")  # ( and ) kept: they open and close a scope
 TOKEN = re.compile(r"\d*(?:<<<|<<|<|&?>>?)(?:&[\d-]|\|)?|[^\s<>]+")  # a redirect operator, or a word
 PLACEHOLDER = re.compile(r"\x00(\d+)\x00")
 ASSIGN = re.compile(r"\w+=")
+EXPORT = re.compile(r"(?:export|set|setx)$|\$env:\w+=", re.I)
 NUMBER = re.compile(r"[\d.]+[smhd]?")
-WRAPPERS = {"sudo", "doas", "env", "timeout", "time", "nice", "nohup", "command", "exec", "stdbuf", "ionice"}
-SHELLS = {"bash", "sh", "zsh", "dash", "ksh", "fish"}
+MAX_DEPTH = 20  # nested shell strings; deeper is unreadable, never an agent's command
+KEYWORDS = {"if", "then", "else", "elif", "elseif", "fi", "do", "done", "while", "until", "for", "in", "case", "esac",
+            "!", "{", "}", "try", "catch", "finally", "&"}
+WRAPPERS = {"sudo", "doas", "env", "timeout", "time", "nice", "nohup", "command", "exec", "stdbuf", "ionice",
+            "builtin", "start", "npx", "pnpx", "bunx"}
+SHELLS = {"bash", "sh", "zsh", "dash", "ksh", "fish", "su"}
 PWSH = {"pwsh", "powershell"}
-CD = {"cd", "pushd", "popd", "chdir", "set-location", "sl"}
+ECHOES = {"echo", "printf", "write-output"}
+CD = {"cd", "pushd", "popd", "chdir", "set-location", "sl", "push-location", "pop-location"}
 DELETERS = {"rm", "rmdir", "rd", "del", "erase", "ri", "remove-item"}
 DOS = {"rmdir", "rd", "del", "erase"}  # cmd.exe takes /s flags
 CLIENTS = {"psql", "mysql", "mariadb", "sqlite3", "sqlcmd", "mongosh", "mongo", "duckdb", "sqlplus",
            "clickhouse-client"}
 WIPE = re.compile(r"\b(?:drop|truncate)\s+\w|\.drop\w*\s*\(", re.I)
-DESTROY = re.compile(r"^dropdb\b|\bdb:(?:drop|reset)\b|\bmigrate\s+reset\b", re.I)
+DESTROY = re.compile(r"\bdropdb\b|\bdb:(?:drop|reset|purge|wipe)\b|\bmigrate(?::|\s+)(?:fresh|reset)\b|"
+                     r"\becto\.(?:drop|reset)\b|(?:manage\.py|django-admin)\s+flush\b|\bsupabase\s+db\s+reset\b|"
+                     r"--force-reset\b|\bschema:drop\b", re.I)
 MIGRATE_WORD = re.compile(r"(?:[\w-]+[:.])*migrat(?:e|ions?)(?:[:.][\w-]+)*|db:[\w:-]+", re.I)
 MIGRATE_TOOL = re.compile(r"\b(?:alembic|liquibase|flyway|dbmate|goose|drizzle-kit)\b|\bdb\s+(?:upgrade|push)\b|"
                           r"\bef\s+database\s+update\b", re.I)
 PROD = re.compile(r"(?<![a-z])prod(?:uction)?(?![a-z])", re.I)
 DEFAULT_BRANCHES = {"main", "master"}
-ENCODED = "\x00encoded"  # stands in for a PowerShell -EncodedCommand the hook cannot read
+UNREADABLE = "\x00unreadable"  # NUL never survives mask(), so no command can forge it
 PUSH = ("force-push, mirror push or default-branch delete (allowed: --force-with-lease <remote> <branch> to a "
         "branch other than main or master)")
-Command = namedtuple("Command", "words env inputs")  # program first; wrappers and assignments; (op, text) redirects in
+Command = namedtuple("Command", "words env inputs")  # program first; env and wrapper words; (op, text) redirects in
 
 
 def mask(command):
@@ -55,7 +65,10 @@ def mask(command):
         quotes.append(text)
         return f"\x00{len(quotes) - 1}\x00"
 
-    text = HEREDOC.sub(lambda match: "<<" + hold(match.group(0).split("\n", 1)[1]) + match.group(4), command)
+    text = command.replace("\x00", "")
+    for pattern, value in SUBSTITUTE:
+        text = pattern.sub(value, text)
+    text = HEREDOC.sub(lambda match: "<<" + hold(match.group(0).split("\n", 1)[1]) + match.group(4), text)
     text = HERESTRING.sub(lambda match: hold(match.group(0)[2:-2]), text)
     return ARITHMETIC.sub(" ", QUOTED.sub(lambda match: hold(match.group(0)[1:-1]), text)), quotes
 
@@ -87,7 +100,7 @@ def program(word):
 
 
 def parse(piece, quotes):
-    """One simple command as a Command, redirects split off and wrappers (sudo -u x, timeout 10, env -i) skipped."""
+    """One simple command, redirects split off; reserved words and wrappers (sudo -u x, timeout 10) skipped."""
     words, env, inputs = [], [], []
     tokens = iter(TOKEN.findall(piece))
     for token in tokens:
@@ -97,7 +110,7 @@ def parse(piece, quotes):
         target = "" if re.search(r"&[\d-]$", token) else next(tokens, "")
         if "<" in token:
             inputs.append((token.lstrip("0123456789"), unquote(target, quotes)))
-    while words and (ASSIGN.match(words[0]) or program(words[0]) in WRAPPERS):
+    while words and (ASSIGN.match(words[0]) or program(words[0]) in WRAPPERS | KEYWORDS):
         wrapper = program(words[0]) in WRAPPERS
         env.append(words.pop(0))
         while wrapper and words and (words[0].startswith("-") or NUMBER.fullmatch(words[0])):
@@ -107,9 +120,10 @@ def parse(piece, quotes):
 
 
 def nested(words):
-    """The command string a shell -c, eval, cmd /c or PowerShell -Command runs; ENCODED if unreadable; else None."""
+    """The command string a shell -c, su -c, eval, cmd /c or PowerShell runs from its arguments; UNREADABLE when
+    an -EncodedCommand cannot be decoded; None when the arguments hold no command string."""
     name, args = program(words[0]), words[1:]
-    if name == "eval":
+    if name == "eval" or (name == "powershell" and args and not args[0].startswith("-")):
         return " ".join(args)
     for index, arg in enumerate(args):
         flag, rest = arg.lower(), args[index + 1:]
@@ -119,62 +133,91 @@ def nested(words):
                 name in PWSH and (flag == "-c" or (len(flag) > 3 and "-command".startswith(flag)))):
             return " ".join(rest)
         if name in PWSH and (flag in ("-e", "-ec") or (len(flag) > 3 and "-encodedcommand".startswith(flag))):
+            import base64  # rare: keep it off the hook's hot path
             try:
                 return base64.b64decode(rest[0], validate=True).decode("utf-16-le")
             except (IndexError, ValueError):
-                return ENCODED
+                return UNREADABLE
     return None
 
 
-def pipelines(command):
-    """Each pipeline as its Commands, in order; a nested command string yields its own pipelines in its place."""
+def fed(cmd):
+    """Literal text a command hands on: echo, printf or Write-Output arguments, else its heredoc or here-string."""
+    if program(cmd.words[0]) in ECHOES:
+        return " ".join(dropwhile(lambda w: w.startswith("-"), cmd.words[1:]))
+    return "\n".join(text for op, text in cmd.inputs if op.startswith("<<")) or None
+
+
+def pipelines(command, exported=None, depth=0):
+    """Each pipeline as its Commands in order, with "(" and ")" where a subshell or nested command starts and ends.
+    Shell -c strings and literal code piped into a shell are parsed in place; export, set and $env: words reach the
+    env of every later Command."""
+    exported = [] if exported is None else exported
+    if depth > MAX_DEPTH:
+        yield [Command([UNREADABLE], [], [])]
+        return
     code, quotes = mask(command)
     for part in PIPELINES.split(code):
-        found = []
-        for piece in part.split("|"):
+        if part in ("(", ")"):
+            yield part
+            continue
+        found, previous = [], None
+        for piece in (part or "").split("|"):
             parsed = parse(piece, quotes)
-            inner = parsed and nested(parsed.words)
-            if inner == ENCODED:
-                found.append(Command([ENCODED], [], []))
+            if not parsed:
+                continue
+            if EXPORT.match(program(parsed.words[0])):
+                exported += parsed.words
+            inner = nested(parsed.words)
+            if inner is None and program(parsed.words[0]) in SHELLS | PWSH | {"cmd"}:
+                inner = fed(parsed) or (previous and fed(previous))
+            previous = parsed
+            if inner == UNREADABLE:
+                found.append(Command([UNREADABLE], [], []))
             elif inner is not None:
-                yield from pipelines(inner)
-            elif parsed:
-                found.append(parsed)
+                yield "("
+                yield from pipelines(inner, exported, depth + 1)
+                yield ")"
+            else:
+                found.append(parsed._replace(env=exported + parsed.env))
         if found:
             yield found
 
 
 def cd_target(words):
-    """Where cd, pushd, chdir or Set-Location goes: its path, '~' with none, '' when unknown; None if not a cd."""
+    """Where cd, pushd, Set-Location or their kin go: a path, '~' with none, '' when unknown; None if not a cd."""
     name = program(words[0])
     if name not in CD:
         return None
     args = [w for w in words[1:] if not (w.startswith("-") and len(w) > 1) and w.lower() != "/d"]
-    return "" if name == "popd" or "-" in args else (args[0] if args else "~")
+    return "" if name in ("popd", "pop-location") or "-" in args else (args[0] if args else "~")
 
 
 def recursive(flag):
-    """True for a recursive delete flag: -r, -rfvi, --recursive, -Recurse (a prefix, or :$true), /s."""
+    """True for a recursive delete flag: -r, -rfvi, --recursive, -Recurse (a prefix, or :$true), /s, /s/q."""
     base, _, value = flag.partition(":")
     lower = base.lower()
     return value.lower() != "$false" and (
-        lower in ("--recursive", "/s") or (len(lower) > 1 and "-recurse".startswith(lower))
-        or bool(re.fullmatch(r"-[fiIdv]*[rR][fiIrRdv]*", base)))
+        lower == "--recursive" or (lower.startswith("/") and "s" in lower.split("/"))
+        or (len(lower) > 1 and "-recurse".startswith(lower)) or bool(re.fullmatch(r"-[fiIdv]*[rR][fiIrRdv]*", base)))
 
 
 def deletes(words):
     """(target, strict) for each path the command deletes recursively. strict: the target itself goes (rm -r,
-    Remove-Item -Recurse, rd /s); not strict: matches below a find start path go (find -delete, -exec rm)."""
+    Remove-Item -Recurse, rd /s, rimraf); not strict: matches below a find start path go (find -delete, -exec rm)."""
     name = program(words[0])
     if name == "find":
         execs = [words[i + 1] for i, w in enumerate(words[:-1]) if w in ("-exec", "-execdir", "-ok", "-okdir")]
-        if "-delete" in words or any(program(w) in DELETERS for w in execs):
+        if "-delete" in words or any(program(w) in DELETERS | {"rimraf"} for w in execs):
             starts = list(takewhile(lambda w: not w.startswith(("-", "(", "!")), words[1:]))
             return [(start, False) for start in starts or ["."]]
+    elif name == "rimraf":
+        return [(w, True) for w in words[1:] if not w.startswith("-")]
     elif name in DELETERS:
-        flags = [w for w in words[1:] if w.startswith("-") or (name in DOS and re.fullmatch(r"/\w", w))]
+        flags = [w for w in words[1:] if w.startswith("-") or (name in DOS and re.fullmatch(r"(?:/\w)+", w))]
         if any(recursive(flag) for flag in flags):
-            return [(w, True) for w in words[1:] if w not in flags]
+            joined = [f.split(":", 1)[1] for f in flags if re.match(r"(?i)-(?:path|literalpath|lp):.", f)]
+            return [(w, True) for w in words[1:] if w not in flags] + [(w, True) for w in joined]
     return []
 
 
@@ -197,10 +240,10 @@ def force_push(words):
 
 
 def danger(pipeline, read):
-    """Destructive rule one pipeline breaks, or None. read(name) returns a `< file` input's text."""
+    """Destructive rule one pipeline breaks, or None. read(name) returns the text of a `< file` or `-f file` input."""
     for cmd in pipeline:
-        if cmd.words[0] == ENCODED:
-            return "a PowerShell encoded command the hook cannot read"
+        if cmd.words[0] == UNREADABLE:
+            return "a command the hook cannot read (encoded, or nested too deep)"
         text = " ".join([program(cmd.words[0])] + cmd.words[1:])
         if force_push(cmd.words):
             return PUSH
@@ -212,6 +255,8 @@ def danger(pipeline, read):
     if any(program(w) in CLIENTS for cmd in pipeline for w in cmd.words):
         sql = [w for cmd in pipeline for w in cmd.words]
         sql += [read(text) if op == "<" else text for cmd in pipeline for op, text in cmd.inputs]
+        sql += [read(name) for cmd in pipeline for flag, name in zip(cmd.words, cmd.words[1:])
+                if flag in ("-f", "--file")]
         if WIPE.search("\n".join(sql)):
             return "DROP or TRUNCATE through a database client"
     return None
