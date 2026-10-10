@@ -70,7 +70,7 @@ class DashboardTests(unittest.TestCase):
     def test_paused_card_asks_first_and_holds_the_work(self):
         lines = cards.card({**self.run, "paused": {"reason": "PDF or ZIP?"}}, STEPS, self.sections, self.at).splitlines()
         self.assertEqual(lines[0], "⏸️ WAITING ON YOU: PDF or ZIP?")
-        self.assertIn("🔨 Download button is on hold until you answer", lines)
+        self.assertIn("🔨 ON HOLD until you answer: Download button", lines)
 
     def test_before_and_after_the_build_the_card_shows_steps(self):
         early = {**self.run, "done": {"tickets": {"at": "2026-10-10T10:05:00+00:00"}}}

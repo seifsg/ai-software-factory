@@ -85,7 +85,7 @@ def now_lines(v, paused=False):
         return [f"⏭️ NEXT {title(v, v.later[0])}"] if v.later else []
     more = f" · +{len(v.now) - 1} in parallel" if len(v.now) > 1 else ""
     if paused:
-        return [f"🔨 {title(v, v.now[0])} is on hold until you answer{more}"]
+        return [f"🔨 ON HOLD until you answer: {title(v, v.now[0])}{more}"]
     gets = result(v, v.now[0])
     return [f"🔨 NOW  {title(v, v.now[0])}{more}"] + ([f"     → {gets}"] if gets else [])
 
