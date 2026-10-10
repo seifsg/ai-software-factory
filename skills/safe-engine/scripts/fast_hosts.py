@@ -20,7 +20,7 @@ WAKERS = ("subagent", "workflow")  # Stop input background tasks that end on the
 
 
 def read(host, event):
-    """One shape for every host: kind, session, cwd, tool (edit/shell/None), paths, command, again, waiting, name."""
+    """One shape for every host: kind, session, cwd, tool ('edit'/'shell'/None), paths, command, again, name."""
     name = str(event.get("hook_event_name") or event.get("hookEventName") or "")
     if host == "cursor":
         roots = event.get("workspace_roots") or []
@@ -35,7 +35,7 @@ def read(host, event):
     kind = events.get(name) or ("pre_tool" if not name and tool and host not in SAME_AS_CLAUDE else None)
     found = shape(kind, event.get("session_id") or event.get("conversation_id") or event.get("sessionId"),
                   event.get("cwd"), tool, args, bool(event.get("stop_hook_active") or event.get("loop_count")), name)
-    found["waiting"] = waits(event.get("background_tasks"))
+    found["waiting"] = waits(event.get("background_tasks"))  # Claude Code lists in-flight background work at Stop
     return found
 
 
@@ -53,7 +53,7 @@ def shape(kind, session, cwd, tool, args, again, name):
             args = {"command": args}
     args = args if isinstance(args, dict) else {}
     found = {"kind": kind, "session": session, "cwd": cwd, "tool": None, "paths": [], "command": None,
-             "again": again, "waiting": False, "name": name}
+             "again": again, "name": name}
     if tool == "apply_patch":  # Codex: file edits arrive as patch text
         patch = args.get("command") or args.get("input") or ""
         patch = "\n".join(map(str, patch)) if isinstance(patch, list) else str(patch)

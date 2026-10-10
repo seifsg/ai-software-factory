@@ -238,7 +238,7 @@ class FastGateTests(unittest.TestCase):
         self.assertEqual(self.hook({**stop, "background_tasks": [server]})["decision"], "block")  # may never end
         self.assertEqual(self.hook({**stop, "background_tasks": []})["decision"], "block")  # the work ends here
         log = (self.root / "home/logs/gate.log").read_text(encoding="utf-8")
-        self.assertEqual(log.count('"hook.block_stop"'), 2)
+        self.assertEqual((log.count('"hook.wait_stop"'), log.count('"hook.block_stop"')), (1, 2))
 
     def test_reading_a_project_does_not_bind_a_session(self):
         self.start()

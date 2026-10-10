@@ -40,14 +40,15 @@ class DialectTests(unittest.TestCase):
         agent = {"id": "a", "type": "subagent", "status": "running", "agent_type": "general-purpose"}
         self.assertTrue(waiting(agent))
         self.assertTrue(waiting({"type": "workflow", "status": "pending"}, {"type": "shell", "status": "running"}))
-        for kind in ("shell", "monitor", "teammate", "cloud session", "MCP task"):  # may never end: a server, a watcher
+        for kind in ("shell", "monitor", "teammate", "cloud session", "MCP task", "dream", "auto-mode scan",
+                     "memory import"):  # may never end (a server, a watcher) or belong to the host itself
             self.assertFalse(waiting({"type": kind, "status": "running"}), kind)
         self.assertFalse(waiting({**agent, "status": "completed"}))
         self.assertFalse(waiting())
         for malformed in ("[]", {"type": "subagent", "status": "running"}, ["subagent"], [{"type": "subagent"}], None):
             event = {"hook_event_name": "Stop", "background_tasks": malformed}
             self.assertFalse(hosts.read("claude", event)["waiting"], malformed)
-        self.assertFalse(hosts.read("cursor", {"hook_event_name": "stop", "background_tasks": [agent]})["waiting"])
+        self.assertFalse(hosts.read("cursor", {"hook_event_name": "stop", "background_tasks": [agent]}).get("waiting"))
 
     def test_cursor_events_and_answers(self):
         shell = hosts.read("cursor", {"hook_event_name": "beforeShellExecution", "command": "npm i", "cwd": "/p",
