@@ -94,6 +94,22 @@ class DashboardTests(unittest.TestCase):
         self.assertEqual(facts.without_result(bare), ["1", "2"])  # no result; no line of its own
         long = facts.sections('## Plan\n### Todos\n- T1 (light) fix the typo in `greeting`: "Helo" to "Hello" now → ok\n')
         self.assertEqual(facts.todo_items(long)["1"][0], 'fix the typo in `greeting`: "Helo" to "Hello"…')
+        layouts = facts.sections("## Plan\n### Todos\nT1 and T2 run first.\n- T1 Schema → the app opens seeded (#2, A1, deep)\n"
+                                 "#### T2 Logger → every error lands in one log (#2, a1)\n")
+        self.assertEqual(facts.todo_items(layouts), {"1": ("Schema", "the app opens seeded", "2"),
+                                                     "2": ("Logger", "every error lands in one log", "2")})
+        self.assertEqual(facts.without_result(layouts), [])  # the line with a result wins over the earlier mention
+
+    def test_a_long_now_list_never_breaks_the_hook(self):
+        many = " ".join(f"T{n}" for n in range(2, 302))
+        plan = "\n".join(f"- T{n} item {n} → result {n}" for n in range(1, 302))
+        with tempfile.TemporaryDirectory() as folder:
+            record = Path(folder) / "work-record.md"
+            record.write_text(f"## Plan\n### Todos\n{plan}\n## Build log\n- T1 pre: a do: b post: c\n**Now:** {many}\n",
+                              encoding="utf-8")
+            lines = cards.news(self.run, STEPS, record, Path(folder) / "shown", 1, self.at)
+        self.assertEqual(lines[0], "✅ item 1 done → result 1")
+        self.assertIn("+299 in parallel", "\n".join(lines))
 
     def test_parsers_and_formats(self):
         line = "- T2 pre: a do: b post: see T5\n- T1 pre: a do: b post: c"

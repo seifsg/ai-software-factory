@@ -5,6 +5,7 @@ Method: .agents/skills/safe-engine/references/fast-run.md#progress.
 """
 import os
 import sys
+import zlib
 from datetime import datetime
 from pathlib import Path
 from types import SimpleNamespace
@@ -56,16 +57,24 @@ def view(run, all_sections):
     return v
 
 
+def item(v, n):
+    """Todo n's (title, result, ticket); empty for a todo the plan only mentions."""
+    return v.items.get(n) or ("", "", None)
+
+
 def ticket_of(v, n):
-    return (v.items.get(n) or ("", "", None))[2] or v.sole
+    """The ticket todo n belongs to: its own reference, else the run's one ticket."""
+    return item(v, n)[2] or v.sole
 
 
 def title(v, n):
-    return (v.items.get(n) or ("", "", None))[0] or f"T{n}"
+    """Todo n's title in plain words, else its ID."""
+    return item(v, n)[0] or f"T{n}"
 
 
 def result(v, n):
-    return (v.items.get(n) or ("", "", None))[1]
+    """What the owner can do once todo n is done; '' when the plan does not say."""
+    return item(v, n)[1]
 
 
 def ticket_line(v):
@@ -133,11 +142,12 @@ def card(run, steps, all_sections, now, v=None):
 
 
 def claim(path):
-    """True for the first caller only (atomic create), so parallel hooks show each message once."""
+    """True for the first caller only (atomic create), so parallel hooks show each message once. Any other
+    failure counts as already shown: a message is a courtesy and must never break the hook."""
     try:
         os.close(os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY))
         return True
-    except FileExistsError:
+    except OSError:
         return False
 
 
@@ -148,7 +158,7 @@ def news(run, steps, record, shown, ledger_ns, now):
     all_sections = facts.read(record)
     v, taken = view(run, all_sections), set(os.listdir(shown))  # one listing; claims only for what is unseen
     fresh = [n for n in v.built if f"todo-{n}" not in taken and claim(shown / f"todo-{n}")]
-    now_key = "now-" + "-".join(v.now)
+    now_key = f"now-{zlib.crc32(' '.join(v.now).encode()):08x}"  # short and stable, however long the Now list
     show_now = bool(v.now) and now_key not in taken and claim(shown / now_key)
     show_card = f"card-{ledger_ns}" not in taken and claim(shown / f"card-{ledger_ns}")
     lines = [f"✅ {title(v, n)} done" + (f" → {result(v, n)}" if result(v, n) else "") for n in fresh[:SHOWN_DONE]]

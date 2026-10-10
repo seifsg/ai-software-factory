@@ -7,8 +7,10 @@ import re
 TAGS = ("pre:", "do:", "post:")
 LEAD = r"\s*(?:\|\s*)?(?:(?:[-*+]|\d+[.)])\s+)?(?:\[[ x]\]\s+)?[*`]*"  # bullet, number, [x], **, ` or a table cell
 OWN = re.compile(LEAD + r"t(\d+)\b")  # a lowercased line that starts with its todo ID
-TODO_LINE = re.compile(r"^" + LEAD.replace(r"\s", r"[ \t]") + r"t(\d+)\b[ \t:.)*`|-]*(.*)$", re.M | re.I)  # ID, rest
-REFS = re.compile(r"\(((?:[ \t,]*(?:#\d+|[A-Z]{1,3}\d+))+)[ \t]*\)")  # "(#12, A2)" closing a todo line (fullmatch)
+TODO_LINE = re.compile(r"^(?:[ \t]*#{1,6}[ \t]+)?" + LEAD.replace(r"\s", r"[ \t]") + r"t(\d+)\b[ \t:.)*`|-]*(.*)$",
+                       re.M | re.I)  # ID and the rest of a todo line; a '#### T1' heading counts too
+# "(#12, A2, deep)" closing a todo line (fullmatch): tickets, criteria or requested items, and the model tier
+REFS = re.compile(r"\(((?:[ \t,]*(?:#\d+|[A-Za-z]{1,3}\d+|light|standard|deep))+)[ \t]*\)", re.I)
 MENTION = re.compile(r"\bt(\d+)\b")
 TICKET_NUMBER = re.compile(r"#(\d+)")
 NEXT_H3 = re.compile(r"^###\s", re.M)
@@ -78,8 +80,8 @@ def todo_items(all_sections):
     found = {}
     for match in TODO_LINE.finditer(todos(all_sections)):  # one linear pass; string operations per line
         number, text = match.group(1), match.group(2).rstrip(" \t|*")
-        if number in found:
-            continue
+        if number in found and found[number][1]:
+            continue  # a line with a result wins over an earlier mention such as 'T1 and T2 run first'
         if text.startswith("(") and ")" in text:
             text = text[text.find(")") + 1:].lstrip()
         cut = text.rfind("(")
