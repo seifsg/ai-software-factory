@@ -251,16 +251,19 @@ class ProgressHookTests(unittest.TestCase):
                 patch.object(Path, "read_bytes", side_effect=failing):
             self.assertIsNone(gate.news(runs, cwd, "s1"))  # a read would log hook.error; tearDown fails then
 
-    def test_sibling_modules_cache_their_bytecode_even_when_the_host_turns_it_off(self):
-        scripts = self.root / "scripts"
+    def test_sibling_modules_cache_their_bytecode_in_the_gate_home_only(self):
+        scripts = self.root / "plugin" / "scripts"  # stands in for an install inside a product repository
         shutil.copytree(SCRIPTS, scripts, ignore=shutil.ignore_patterns("__pycache__"))
-        probe = ("import sys; sys.path.insert(0, sys.argv[1]); import fast_gate; fast_gate.sibling('fast_card'); "
-                 "print(sys.dont_write_bytecode)")
-        out = subprocess.run([sys.executable, "-c", probe, str(scripts)], capture_output=True, text=True,
-                             env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"})
-        self.assertEqual(out.stdout.strip(), "True", out.stderr)  # the host's setting is restored after the import
-        cached = {path.name.split(".")[0] for path in (scripts / "__pycache__").glob("*.pyc")}
+        probe = ("import sys; sys.path.insert(0, sys.argv[1]); import fast_gate\n"
+                 "try:\n    fast_gate.sibling('no_such_module')\nexcept ImportError:\n    pass\n"
+                 "fast_gate.sibling('fast_card'); print(sys.dont_write_bytecode, sys.pycache_prefix)")
+        env = {**self.env, "PYTHONDONTWRITEBYTECODE": "1"}
+        env.pop("PYTHONPYCACHEPREFIX", None)
+        out = subprocess.run([sys.executable, "-c", probe, str(scripts)], capture_output=True, text=True, env=env)
+        self.assertEqual(out.stdout.strip(), "True None", out.stderr)  # the host's settings come back, failed import too
+        cached = {path.name.split(".")[0] for path in (self.root / "home" / "pycache").rglob("*.pyc")}
         self.assertTrue({"fast_card", "fast_progress"} <= cached, cached)  # later hooks load these, never compile
+        self.assertEqual(list(scripts.rglob("*.pyc")), [])  # nothing lands beside the scripts or in a project
 
     def test_a_gate_command_during_a_hook_never_shows_a_stale_card(self):
         self.hook()
