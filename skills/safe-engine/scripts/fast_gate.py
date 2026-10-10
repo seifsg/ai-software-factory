@@ -450,6 +450,12 @@ def forget(entry):
         pass
 
 
+def sessions_of(registration):
+    """The sessions bound to a run; [] for a missing or malformed value, so a deny never trips on it."""
+    sessions = registration.get("sessions")
+    return sessions if isinstance(sessions, list) else []
+
+
 def owner(runs, path):
     """The run whose project contains path; the deepest project wins."""
     matches = [item for item in runs if inside(path, norm(item[2]["project"]))]
@@ -469,11 +475,11 @@ def mentioned(runs, command):
 def bind(item, session):
     """Remember the session working on this run so its Stop and prompt hooks find it; best effort."""
     entry, registration, _ = item
-    if not session or session in (registration.get("sessions") or []):
+    if not session or session in sessions_of(registration):
         return
     try:
         latest = load(entry)  # re-read: parallel hooks may have bound other sessions
-        latest["sessions"] = ((latest.get("sessions") or []) + [session])[-20:]
+        latest["sessions"] = (sessions_of(latest) + [session])[-20:]
         save(entry, latest)
         registration["sessions"] = latest["sessions"]
     except Exception as error:  # noqa: BLE001 - a locked or odd file must never cancel a deny
@@ -527,7 +533,7 @@ def pre_tool(event, runs, cwd, session):
 
 def mine(runs, cwd, session, bind_cwd=True):
     """The runs this session works on: those it is bound to, else the one owning cwd (bound to it now)."""
-    bound = [item for item in runs if session and session in (item[1].get("sessions") or [])]
+    bound = [item for item in runs if session and session in sessions_of(item[1])]
     if bound:
         return bound
     item = owner(runs, cwd)
@@ -573,7 +579,7 @@ def unseen_lines(project, run):
     try:
         run, ledger_ns = load_stamped(ledger_path(project))
     except (OSError, ValueError):
-        ledger_ns = stamps[0]  # mid-replace on Windows: the state active_runs read stays valid
+        return []  # mid-replace on Windows: show nothing now, the next hook retries with the new state
     if run.get("closed"):
         return []  # the final report carries the close card
     lines = sibling("fast_progress").news(run, steps_for(run), record_path(project), claims_path(project, run),

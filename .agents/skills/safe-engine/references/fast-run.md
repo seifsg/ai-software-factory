@@ -94,7 +94,7 @@ Without hooks the gate still records and checks steps; follow the order yourself
   - the card after each step, pause or resume;
   - a tick line per newly built todo.
 
-  Nothing changed: one directory scan, no reads, no network. Hook calls from a delegate show nothing; the next main-thread call does. Claims live in `.factory/fast/shown/`, one folder per run; `start` and `close` clear them.
+  Nothing changed: one directory scan, no reads, no network. Where your agent marks hook calls from a delegate (the factory's `docs/hosts.md`), those show nothing; the next main-thread call does. Claims live in `.factory/fast/shown/`, one folder per run; `start` and `close` clear them.
 - A closed run leaves the hooks. The factory's `docs/hosts.md` lists the agents that show hook messages.
 
 ## Keep it fast

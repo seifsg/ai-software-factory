@@ -168,6 +168,8 @@ class ProgressHookTests(unittest.TestCase):
         runs, cwd = gate.active_runs(), gate.norm(self.project)  # read before the command lands
         self.record.write_text(RECORD, encoding="utf-8")
         self.gate("done", "tickets", "--offline", "test")
+        with patch.object(gate, "load_stamped", side_effect=PermissionError("mid-replace")):
+            self.assertIsNone(gate.news(runs, cwd, "s1"))  # cannot re-read: show nothing rather than stale
         self.assertIn("step 2/5 plan", gate.news(runs, cwd, "s1"))
         self.assertIsNone(self.hook())
 
@@ -186,9 +188,11 @@ class ProgressHookTests(unittest.TestCase):
 
     def test_a_broken_registration_never_drops_a_deny(self):
         entry = next((self.root / "home/active").glob("*.json"))
-        entry.write_text(json.dumps({**json.loads(entry.read_text(encoding="utf-8")), "sessions": None}), encoding="utf-8")
-        answer = self.hook(tool_name="Write", tool_input={"file_path": str(self.project / "src/a.ts")})
-        self.assertEqual(answer["hookSpecificOutput"]["permissionDecision"], "deny")
+        registration = json.loads(entry.read_text(encoding="utf-8"))
+        for broken in (None, 5, "s1"):
+            entry.write_text(json.dumps({**registration, "sessions": broken}), encoding="utf-8")
+            answer = self.hook(tool_name="Write", tool_input={"file_path": str(self.project / "src/a.ts")})
+            self.assertEqual(answer["hookSpecificOutput"]["permissionDecision"], "deny", broken)
 
     def test_start_and_close_clear_the_claims(self):
         self.hook()
