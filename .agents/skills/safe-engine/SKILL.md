@@ -15,17 +15,18 @@ Analysis, planning or review requests stay in that phase. Do not code unless tol
 
 Build systems that outlast their creator. Breakage is not acceptable.
 
-- Least code that fully solves the problem. No extra code, no over-engineering.
+- Least code that fully solves the problem: no one-off wrappers or duplicate checks, no over-engineering.
 - Least CPU and memory. O(1) or as close as the workload allows; measure before claiming speed.
 - SOLID, KISS, DRY, SRP. Gang of Four patterns where they fit, never for show.
 - Many small functions and files. Split a file before 1000 lines. No long functions.
 - Reuse existing functions first. Build new ones to be reused.
-- Check undefined, null, wrong values and exceptions at every boundary.
+- Fix the design, not the symptom: trace a bug or edge case to its root cause and fix it there. Lean to refactoring. A big or regression-risky root fix (shared contracts, schema, stored data, consumers outside the task) needs the owner's yes first.
+- Guarantees, not guards. Each real edge case gets the first that fits: impossible by design; normalized or rejected loudly where data enters (undefined, null, wrong values, exceptions); specified, logged behavior. A state beyond the data, config and platform in use gets one loud assertion, never new code paths. No silent defaults or swallowed errors.
 - Production ready: no placeholders, stubs or TODOs left behind.
 - Human-readable code. Short comments: what a function does and why it exists.
 - Never a circular dependency.
 - When done, one more pass: less code? less complexity? faster? Question every solution, yours and the code you read.
-- Stay on the task. Fix the cause, touch only what the change and the product bar need, ticket unrelated issues.
+- Stay on the task. Touch only what the change, its root fix and the product bar need; ticket unrelated issues.
 - Write briefly: specific words, no filler, no em dashes, no invented claims.
 - Short reports: what changed, proof, what is unverified.
 

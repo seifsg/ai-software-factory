@@ -10,7 +10,7 @@ The next steps are the following:
 Build in complete working iterations. Tiny bug or full product, same logic.
 
 - First: smallest real user journey we can see and use. Order by user value; explain required blockers. Order never drops scope: every requested item maps to todos, or stays open in its ticket when the owner narrowed this iteration.
-- Before dependent work: shared state owner, limits, compatibility and failure behavior.
+- Before dependent work: shared state owner, invariants and their enforcers, entry points, limits, compatibility and failure behavior. Root fix, not patch; big or risky ones go to the owner.
 - Required quality stays. Optional polish/enhancements later: owner, ticket, acceptance condition.
 - Complete outcome ticket -> finish iteration -> manual QA -> relevant final tests/review. Full requested outcome stays open until delivered.
 
@@ -37,6 +37,7 @@ The plan execution will be based on the following logic:
 - double check the changes were they applied correctly?
 - did we add any extra bs code?
 - did we over engineer?
+- edge cases: root fixed, guaranteed; improbable ones asserted once; no silent default or copied guard?
 - can this be more optimal? Less code? Less functions?
 - Is this o(1) or as close?
 - are there any critical gaps to what we did?
@@ -45,7 +46,7 @@ The plan execution will be based on the following logic:
 - Use it: run the item's real effect (screen, endpoint, command, logs) and see it work. Only then tick it in its ticket, with the proof.
 4- if we detect issues from step 3, start our processes over again from step 1 and follow steps again.
 
-Second related failure? Find the shared cause. Why did the previous fix fail? Fix the cause and affected consumers. State what prevents recurrence. Preserve failures; no endless symptom patches or retry cap.
+Second related failure or edge case? Find the shared cause. Why did the previous fix fail? Fix the cause and affected consumers. State what prevents recurrence. Preserve failures; no endless symptom patches or retry cap.
 
 Important: We do not care about effort time or code that would take to build. We only care about quality. Do not factor code effort or time to develop at all within the plan. AI will develop and write it.
 
