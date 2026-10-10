@@ -1,4 +1,4 @@
-"""Run every sample in both arms, each in a fresh temp copy with a time limit, and score it from a private copy."""
+"""Run every sample in both arms, each in a fresh temp copy with a time limit, scored from in-memory sources."""
 from concurrent.futures import ThreadPoolExecutor, wait
 from pathlib import Path
 import subprocess
@@ -6,7 +6,6 @@ import tempfile
 import time
 
 from evals import agent, catalog, isolation, proc
-from evals.check import load_rubric
 
 ARMS = ("factory", "plain")
 PROMPTS = Path(__file__).resolve().parent / "prompts"
@@ -16,9 +15,8 @@ GIT_COMMIT = ["-c", "user.name=evals", "-c", "user.email=evals@localhost", "-c",
 
 def prompt_text(sample, arm, factory):
     """The arm's prompt around the sample's request: the same request, with or without the factory."""
-    request = (sample / "request.md").read_text(encoding="utf-8").strip()
     text = (PROMPTS / f"{arm}.md").read_text(encoding="utf-8")
-    return text.replace("{factory}", Path(factory).as_posix() if factory else "").replace("{request}", request)
+    return text.replace("{factory}", Path(factory).as_posix() if factory else "").replace("{request}", sample.request)
 
 
 def git_init(work):
@@ -31,38 +29,49 @@ def git_init(work):
             return
 
 
-def outcome(sample, work, root, env, timed_out, guard):
-    """(void reason, failing items): a void run or a timeout fails every item; otherwise the rubric decides."""
-    items, void = list(load_rubric(sample).CHECKS), guard()
+def row(sample, arm, failing, **fields):
+    """A report row; `failing` maps item ids to reasons."""
+    base = {"sample": sample.name, "arm": arm, "delivered": len(sample.items) - len(failing),
+            "total": len(sample.items), "failing": failing, "minutes": 0.0, "exit": None, "timed_out": False,
+            "void": None, "possible_escapes": []}
+    return {**base, **fields}
+
+
+def attempt(sample, arm, template, minutes, base, logs, guard, sources):
+    """Agent then rubric in `base`: (row fields, or None when an interrupt stopped it). Raises on setup errors."""
+    work = catalog.write_fixture(sample, base / "work")
+    git_init(work)
+    factory = isolation.export_factory(base / "factory") if arm == "factory" else ""
+    prompt = base / "prompt.md"
+    prompt.write_text(prompt_text(sample, arm, factory), encoding="utf-8")
+    env, seen, started = isolation.run_env(base), isolation.temp_entries(), time.monotonic()
+    values = {"prompt_file": prompt, "workdir": work, "arm": arm, "sample": sample.name, "factory": factory}
+    code, timed_out = agent.run(template, values, work, prompt, logs / f"{sample.name}-{arm}.log", minutes * 60, env)
+    fields = {"minutes": round((time.monotonic() - started) / 60, 2), "exit": code, "timed_out": timed_out,
+              "possible_escapes": sorted(isolation.temp_entries() - seen)}
+    if proc.STOPPING.is_set():
+        return None, work
+    void = guard()
     if void or timed_out:
-        return void, {item: f"void: {void}" if void else "agent timed out" for item in items}
-    return None, catalog.score(sample, work, root, env)
+        failing = {item: f"void: {void}" if void else "agent timed out" for item in sample.items}
+    else:
+        failing = catalog.score(sample, sources, work, base, env)
+    return (None if proc.STOPPING.is_set() else {"failing": failing, "void": void, **fields}), work
 
 
-def run_one(sample, arm, template, minutes, base, logs, guard, keep=False):
-    """One sample in one arm: copy, prompt, agent with a time limit, rubric. Returns its row, or None if stopped."""
+def run_one(sample, arm, template, minutes, base, logs, guard, sources, keep=False):
+    """One sample in one arm; returns its row (an errored row on failure), or None when an interrupt stopped it."""
     root = Path(tempfile.mkdtemp(prefix=f"{sample.name}-{arm}-", dir=base))
     try:
-        work = catalog.copy_fixture(sample, root)
-        git_init(work)
-        factory = isolation.export_factory(root / "factory") if arm == "factory" else ""
-        prompt = root / "prompt.md"
-        prompt.write_text(prompt_text(sample, arm, factory), encoding="utf-8")
-        env, seen, started = isolation.run_env(root), isolation.temp_entries(), time.monotonic()
-        values = {"prompt_file": prompt, "workdir": work, "arm": arm, "sample": sample.name, "factory": factory}
-        log = logs / f"{sample.name}-{arm}.log"
-        code, timed_out = agent.run(template, values, work, prompt, log, minutes * 60, env)
-        spent, escapes = (time.monotonic() - started) / 60, sorted(isolation.temp_entries() - seen)
-        if proc.STOPPING.is_set():
-            return None
-        void, failing = outcome(sample, work, root, env, timed_out, guard)
-        total = len(load_rubric(sample).CHECKS)
-    finally:
-        if not keep:
-            catalog.remove(root)
-    row = {"sample": sample.name, "arm": arm, "delivered": total - len(failing), "total": total, "failing": failing,
-           "minutes": round(spent, 2), "exit": code, "timed_out": timed_out, "void": void, "escapes": escapes}
-    return {**row, "workdir": str(work)} if keep else row
+        fields, work = attempt(sample, arm, template, minutes, root, logs, guard, sources)
+        result = fields and row(sample, arm, fields.pop("failing"), **fields)
+    except Exception as error:  # noqa: BLE001 - one broken run must not abort the others
+        reason = f"{type(error).__name__}: {error}"
+        result, work = row(sample, arm, {item: f"error: {reason}" for item in sample.items}, error=reason), None
+    cleanup = None if keep else isolation.remove(root)
+    if result:
+        result.update({"cleanup": cleanup} if cleanup else {}, **({"workdir": str(work)} if keep and work else {}))
+    return result
 
 
 def execute(tasks, jobs):
@@ -83,18 +92,23 @@ def execute(tasks, jobs):
     return [future.result() for future in futures], False
 
 
-def guard_for(private):
-    """A check that names why runs are void: the checkout's eval files or the private copy changed since the start."""
-    def marks():
-        return [isolation.digest(folder) for folder in (catalog.ROOT, isolation.EVALS, private)]
-    start = marks()
+def guard_for():
+    """A check naming why runs are void: the checkout's eval files changed since the start (hashed once each)."""
+    folders = [isolation.EVALS] + ([] if isolation.EVALS in catalog.ROOT.parents else [catalog.ROOT])
+    start = [isolation.digest(folder) for folder in folders]
 
     def guard():
-        now = marks()
-        if now[:2] != start[:2]:
-            return "the checkout's eval files changed during the run"
-        return "the private rubric copy changed during the run" if now[2] != start[2] else None
+        changed = [isolation.digest(folder) for folder in folders] != start
+        return "the checkout's eval files changed during the run" if changed else None
     return guard
+
+
+def check_out(out):
+    """Refuse a report folder inside evals/: writing there would void every run."""
+    out = Path(out).resolve()
+    if out == isolation.EVALS or isolation.EVALS in out.parents:
+        raise ValueError(f"--out must be outside {isolation.EVALS}")
+    return out
 
 
 def run_all(template, out, names=None, minutes=30.0, jobs=1, keep=False, factory_template=None):
@@ -107,18 +121,15 @@ def run_all(template, out, names=None, minutes=30.0, jobs=1, keep=False, factory
         agent.fill(text, dict.fromkeys(agent.PLACEHOLDERS, ""))  # reject an empty template before any work
     if minutes <= 0 or jobs < 1:
         raise ValueError("timeout must be above 0 minutes and jobs at least 1")
-    chosen, logs = catalog.find(names), Path(out) / "logs"
+    logs = check_out(out) / "logs"
+    samples, sources, guard = catalog.load(names), catalog.kit(), guard_for()  # all read before any agent starts
     logs.mkdir(parents=True, exist_ok=True)
-    private, base = Path(tempfile.mkdtemp(prefix="eval-rubrics-")), Path(tempfile.mkdtemp(prefix="eval-runs-"))
+    base = Path(tempfile.mkdtemp(prefix="eval-runs-"))
     try:
-        samples = isolation.snapshot(chosen, private)  # before any agent starts
-        guard = guard_for(private)
-        tasks = [lambda s=s, a=a: run_one(s, a, templates[a], minutes, base, logs, guard, keep)
-                 for s in samples for a in ARMS]
-        runs, interrupted = execute(tasks, jobs)
+        runs, interrupted = execute([lambda s=s, a=a: run_one(s, a, templates[a], minutes, base, logs, guard,
+                                                              sources, keep) for s in samples for a in ARMS], jobs)
     finally:
         proc.STOPPING.clear()  # an interrupt stops this run only
-        catalog.remove(private)
-        if not keep:
-            catalog.remove(base)
-    return {"timeout_minutes": minutes, "interrupted": interrupted, "runs": runs}
+        cleanup = None if keep else isolation.remove(base)
+    return {"timeout_minutes": minutes, "interrupted": interrupted, "runs": runs,
+            **({"cleanup": cleanup} if cleanup else {})}

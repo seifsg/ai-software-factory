@@ -1,18 +1,14 @@
 """Rubric for the cli-tool sample: one check per requested item. Each raises on failure."""
-from pathlib import Path
-import tempfile
-
-from evals.rubric_tools import run_python
+from evals.rubric_tools import run_python, scratch
 
 TEXT = "the cat\nThe dog the end\n"  # 2 lines, 6 words, 24 characters; "the" x3
 
 
 def wordcount(work, *args):
     """Run the candidate tool on a fresh copy of TEXT; returns (exit code, stdout, stderr)."""
-    with tempfile.TemporaryDirectory() as tmp:
-        sample = Path(tmp) / "sample.txt"
-        sample.write_bytes(TEXT.encode("utf-8"))
-        return run_python(work, "wordcount.py", *(str(sample) if arg == "SAMPLE" else arg for arg in args))
+    sample = scratch() / "sample.txt"
+    sample.write_bytes(TEXT.encode("utf-8"))
+    return run_python(work, "wordcount.py", *(str(sample) if arg == "SAMPLE" else arg for arg in args))
 
 
 def counts(work):

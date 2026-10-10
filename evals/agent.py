@@ -1,7 +1,7 @@
 """Fill and run the owner's agent command template; no agent, vendor or host is named here."""
 import os
+import re
 import shlex
-import subprocess
 
 from evals import proc
 
@@ -16,7 +16,7 @@ def quote(value):
         return shlex.quote(value)
     if any(char in value for char in CMD_EXPANDS):
         raise ValueError(f"cannot pass {value!r} through cmd safely; use a path without % or \"")
-    return subprocess.list2cmdline([value])
+    return '"' + re.sub(r"(\\+)$", r"\1\1", value) + '"'  # always quoted: & | < > ^ stay literal
 
 
 def fill(template, values):
@@ -31,4 +31,4 @@ def fill(template, values):
 
 def run(template, values, workdir, prompt, log, seconds, env):
     """Run the filled template in the system shell, prompt on stdin. Returns (exit code, timed out)."""
-    return proc.run_limited(fill(template, values), workdir, prompt, log, seconds, env=env, shell=True)
+    return proc.run_limited(fill(template, values), workdir, log, seconds, env=env, shell=True, stdin_path=prompt)

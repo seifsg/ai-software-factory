@@ -36,8 +36,9 @@ def compare(args):
 def check(args):
     """Rubric self-check: every item fails on the untouched fixture and passes on the reference."""
     failed = 0
-    for sample in catalog.find(args.sample):
-        problems = catalog.self_check(sample)
+    sources = catalog.kit()
+    for sample in catalog.load(args.sample):
+        problems = catalog.self_check(sample, sources)
         failed += bool(problems)
         print(f"{'FAIL' if problems else 'PASS'} {sample.name}", *problems, sep="\n  ")
     return 1 if failed else 0

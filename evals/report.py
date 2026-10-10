@@ -10,9 +10,12 @@ def cell(text, limit=160):
 
 
 def ending(run):
-    """How the run ended: void reason, timeout or exit code, plus any writes that escaped the run folder."""
-    end = f"VOID: {run['void']}" if run.get("void") else "timed out" if run["timed_out"] else f"exit {run['exit']}"
-    return end + (f"; escaped to temp: {', '.join(run['escapes'])}" if run.get("escapes") else "")
+    """How the run ended (error, void, timeout or exit code), plus possible escapes and cleanup failures."""
+    end = (f"ERROR: {run['error']}" if run.get("error") else f"VOID: {run['void']}" if run.get("void")
+           else "timed out" if run["timed_out"] else f"exit {run['exit']}")
+    if run.get("possible_escapes"):
+        end += f"; new in system temp (possibly other programs): {', '.join(run['possible_escapes'])}"
+    return end + (f"; cleanup: {run['cleanup']}" if run.get("cleanup") else "")
 
 
 def markdown(report):
@@ -28,7 +31,8 @@ def markdown(report):
     lines += ["", "| Arm | Delivered | Minutes |", "|---|---|---|"]
     lines += [f"| {arm} | {done}/{total} | {round(minutes, 2)} |" for arm, (done, total, minutes) in totals.items()]
     head = "**Interrupted:** partial report; queued runs never started.\n\n" if report.get("interrupted") else ""
-    return "# Eval report\n\n" + head + "\n".join(lines) + "\n"
+    tail = f"\n**Cleanup:** {report['cleanup']}\n" if report.get("cleanup") else ""
+    return "# Eval report\n\n" + head + "\n".join(lines) + "\n" + tail
 
 
 def write(report, out):
@@ -47,16 +51,19 @@ def count(value):
 
 
 def load(path):
-    """A saved report; raises ValueError when it is missing, not JSON, or its runs are malformed or repeated."""
+    """A complete saved report; ValueError when missing, not JSON, interrupted, or its runs are malformed."""
     try:
-        runs = json.loads(Path(path).read_text(encoding="utf-8"))["runs"]
+        report = json.loads(Path(path).read_text(encoding="utf-8"))
+        if report.get("interrupted"):
+            raise TypeError("an interrupted (partial) report cannot be compared")
+        runs = report["runs"]
         keys = [(run["sample"], run["arm"]) for run in runs]
         if (not isinstance(runs, list) or len(set(keys)) != len(keys)
                 or not all(isinstance(part, str) for key in keys for part in key)
                 or not all(count(r["delivered"]) and count(r["total"]) and r["delivered"] <= r["total"] for r in runs)):
             raise TypeError("runs need unique sample/arm strings and counts with delivered <= total")
-    except (OSError, ValueError, KeyError, TypeError) as error:
-        raise ValueError(f"{path}: not an eval report ({error})") from error
+    except (OSError, ValueError, KeyError, TypeError, AttributeError) as error:
+        raise ValueError(f"{path}: not a complete eval report ({error})") from error
     return {"runs": runs}
 
 

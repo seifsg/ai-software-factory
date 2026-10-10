@@ -1,54 +1,83 @@
-"""Eval rubric checks, command quoting and the baseline compare: candidate tricks fail, bad reports are refused."""
+"""Eval rubric checks, command quoting, cleanup and the baseline compare: candidate tricks fail, bad reports fail."""
 import contextlib
 import io
 import json
 import os
 import shutil
 import time
+from unittest.mock import patch
 
 from eval_fixtures import EvalCase, fake
 from evals import agent, catalog, isolation, report
 from evals.__main__ import main
+from evals.rubric_tools import same
 
 EARLY_EXIT = "import os\nos._exit(0)\n"
 HOLD_PIPE = "import subprocess, sys\nsubprocess.Popen([sys.executable, '-c', 'import time; time.sleep(20)'])\n"
+BROKEN_TAX = "\n\ndef total(lines, discount_percent=0, tax_percent=0):\n    return subtotal(lines)\n"
+MATCHING_TEST = ("import unittest\nfrom invoice import total\n\n\nclass T(unittest.TestCase):\n"
+                 "    def test_tax(self):\n        self.assertEqual(total([{'qty': 1, 'price': 1000}], tax_percent=20),"
+                 " 1000)\n")
 
 
 class EvalCheckTests(EvalCase):
     def workspace(self, name, files, reference=False):
-        """A scored workspace for sample `name`: the fixture, optionally the reference, then `files` on top."""
-        sample, root = catalog.find([name])[0], self.tmp / name
-        work = catalog.copy_fixture(sample, root)
+        """Score sample `name` on its fixture, optionally the reference, then `files` on top: (failing, root)."""
+        sample, root = catalog.load([name])[0], self.tmp / name
+        work = catalog.write_fixture(sample, root / "work")
         if reference:
-            shutil.copytree(sample / "reference", work, dirs_exist_ok=True)
+            shutil.copytree(sample.reference, work, dirs_exist_ok=True)
         for file, text in files.items():
             (work / file).write_text(text, encoding="utf-8")
-        return catalog.score(sample, work, root, isolation.run_env(root))
+        return catalog.score(sample, catalog.kit(), work, root, isolation.run_env(root)), root
+
+    def reference(self, name):
+        return (catalog.ROOT / "bug-fix/reference" / name).read_text(encoding="utf-8")
 
     def test_early_exit_and_stdlib_shadowing_fail(self):
-        invoice = (catalog.ROOT / "bug-fix/reference/invoice.py").read_text(encoding="utf-8")
-        failing = self.workspace("bug-fix", {"invoice.py": EARLY_EXIT + invoice})
-        self.assertLessEqual({"R1", "R2", "R3"}, set(failing))
-        self.assertIn("pass marker", failing["R1"])
-        failing = self.workspace("cli-tool", {"tempfile.py": EARLY_EXIT}, reference=True)
-        self.assertEqual(failing, {})  # the rubric's own tempfile loaded first; the shadow changes nothing
+        failing, root = self.workspace("bug-fix", {"invoice.py": EARLY_EXIT + self.reference("invoice.py")})
+        self.assertEqual(sorted(failing), ["R1", "R2", "R3", "R4"])
+        self.assertIn("ended without a result", failing["R1"])
+        self.assertEqual(sorted(p.suffix for p in (root / "checks").iterdir()), [".out"] * 4)  # no token files
+        failing, _ = self.workspace("cli-tool", {"tempfile.py": EARLY_EXIT, "json.py": EARLY_EXIT}, reference=True)
+        self.assertEqual(failing, {})  # rubric and tools never import from the workspace
 
     def test_a_child_holding_the_output_does_not_hang_the_check(self):
-        invoice = (catalog.ROOT / "bug-fix/reference/invoice.py").read_text(encoding="utf-8")
         started = time.monotonic()
-        failing = self.workspace("bug-fix", {"invoice.py": HOLD_PIPE + invoice})
+        failing, _ = self.workspace("bug-fix", {"invoice.py": HOLD_PIPE + self.reference("invoice.py")})
         self.assertLess(time.monotonic() - started, 15)  # the held child sleeps 20 s
         self.assertEqual(failing, {})
 
-    def test_cmd_quoting_refuses_what_it_would_expand(self):
-        values = dict.fromkeys(agent.PLACEHOLDERS, "a b")
+    def test_edited_tests_do_not_hide_a_regression(self):
+        failing, _ = self.workspace("bug-fix", {"invoice.py": self.reference("invoice.py") + BROKEN_TAX,
+                                                "test_invoice.py": MATCHING_TEST})
+        self.assertIn("R4", failing)  # the original tests ran, not the edited ones
+
+    def test_same_is_type_strict(self):
+        self.assertTrue(same([1, {"a": "x"}], [1, {"a": "x"}]))
+        for actual, expected in ((True, 1), (1.0, 1), ([1], (1,)), ({"a": 1}, {"a": 1, "b": 2}), ([1, 2], [1])):
+            with self.subTest(actual=actual, expected=expected):
+                self.assertFalse(same(actual, expected))
+
+    def test_cmd_quoting_always_quotes_and_refuses_what_it_would_expand(self):
+        values = dict.fromkeys(agent.PLACEHOLDERS, r"C:\R&D\w")
         self.assertEqual(agent.fill("x {workdir} {other}", values),
-                         'x "a b" {other}' if os.name == "nt" else "x 'a b' {other}")
+                         'x "C:\\R&D\\w" {other}' if os.name == "nt" else "x 'C:\\R&D\\w' {other}")
         if os.name == "nt":
+            self.assertEqual(agent.quote("C:\\x\\"), '"C:\\x\\\\"')
             with self.assertRaisesRegex(ValueError, "cmd"):
                 agent.quote(r"C:\x%PATH%y")
         else:
             self.assertEqual(agent.quote("x%PATH%y"), "x%PATH%y")
+
+    def test_cleanup_failures_are_reported(self):
+        folder = self.tmp / "stuck"
+        folder.mkdir()
+        def stuck(path, ignore_errors=False, **_):
+            if not ignore_errors:
+                raise OSError("locked")
+        with patch.object(isolation.shutil, "rmtree", stuck), patch.object(isolation.time, "sleep"):
+            self.assertIn("could not delete", isolation.remove(folder))
 
     def test_compare_flags_totals_new_and_missing_pairs(self):
         def runs(*rows):
@@ -75,5 +104,5 @@ class EvalCheckTests(EvalCase):
         with contextlib.redirect_stderr(io.StringIO()) as err:
             self.assertEqual(main(["run", "--agent", fake("factory"), "--baseline", str(self.tmp / "bool.json"),
                                    "--out", str(out)]), 2)
-        self.assertIn("not an eval report", err.getvalue())
+        self.assertIn("not a complete eval report", err.getvalue())
         self.assertFalse(out.exists())  # refused before any agent ran
