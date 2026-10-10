@@ -134,28 +134,34 @@ class FastGateTests(unittest.TestCase):
 
     def test_mvp_done_run_needs_the_three_scans_through_the_cli(self):
         self.start("--auth")
-        markers = ("**Secrets:**", "**Dependencies:**", "**Static:**")
-        full = SAMPLE.read_text(encoding="utf-8").replace("**Size:** POC", "**Size:** MVP")
-        bare = "".join(line for line in full.splitlines(True) if not line.startswith(markers))
+        scans = ("**Secrets:** `gitleaks dir .`: 0 findings\n**Dependencies:** `npm audit`: 0 vulnerabilities\n"
+                 "**Static:** `eslint .`: 0 findings\n")
+        bare = SAMPLE.read_text(encoding="utf-8").replace("**Size:** POC", "**Size:** MVP")
         self.finish_sample(bare, until="done-run")
-        refused = self.gate("done", "done-run", ok=False)
-        for label in markers:
-            self.assertIn(f"needs a '{label}' line", refused)
-        self.finish_sample(full, until="done-run")
+        run = json.loads((self.project / ".factory/fast/run.json").read_text(encoding="utf-8"))
+        self.assertTrue(run["size"].startswith("MVP"))  # frozen when the kickoff passed
+        for label in ("Secrets", "Dependencies", "Static"):
+            self.assertIn(f"needs a '**{label}:**' line", self.gate("done", "done-run", ok=False))
+        record = self.project / ".factory/fast/work-record.md"
+        record.write_text(bare.replace("**Size:** MVP", "**Size:** POC"), encoding="utf-8")  # edited after the kickoff
+        self.assertIn("**Secrets:**", self.gate("done", "done-run", ok=False))
+        record.write_text(bare.replace("no errors\n", "no errors\n" + scans, 1), encoding="utf-8")
         self.gate("done", "done-run")
 
     def test_done_run_scans_apply_to_flagged_mvp_and_production_runs_only(self):
         record = record_module()
         body, flagged = "- PASS x\n**Logs:** ok\n", {"scans": True}
-        recorded = body + "**Secrets:** s\n**Dependencies:** d\n**Static:** t\n"
+        recorded = body + "**Secrets:** s scan\n**Dependencies:** d audit\n**Static:** t lint\n"
         gaps = [f"needs a '**{label}:**' line" for label in ("Secrets", "Dependencies", "Static")]
         sized = lambda size: {"kickoff": f"**Size:** {size}\n"}
-        for size in ("MVP", "`MVP` (it can go live)", "Production slice"):
-            with self.subTest(size=size):
+        for size in ("MVP", "`MVP` (it can go live)", "Production slice", "POC→MVP", "POC -> MVP (upgrade)", "POC, production later"):
+            with self.subTest(size=size):  # a second size anywhere fails closed
                 self.assertEqual(record.check_done_run(flagged, body, ".", all_sections=sized(size)), gaps)
                 self.assertEqual(record.check_done_run(flagged, recorded, ".", all_sections=sized(size)), [])
-        for size in ("POC (from the request)", "none (small feature)", "POC, MVP later"):  # not scanned
+        for size in ("POC (from the request)", "POC"):  # not scanned
             self.assertEqual(record.check_done_run(flagged, body, ".", all_sections=sized(size)), [])
+        feature = {**flagged, "kind": "feature"}
+        self.assertEqual(record.check_done_run(feature, body, ".", all_sections=sized("none (small feature)")), [])
         self.assertEqual(record.check_done_run(flagged, body, "."), [])  # a change run has no kickoff
         self.assertEqual(record.check_done_run({}, body, ".", all_sections=sized("MVP")), [])  # older methods unchanged
         lucky, in_tickets = {"scans": True, "mode": "lucky", "kind": "product"}, lambda size: {"tickets": f"**Size:** {size}\n"}
@@ -163,19 +169,44 @@ class FastGateTests(unittest.TestCase):
         self.assertEqual(record.check_done_run(lucky, recorded, ".", all_sections=in_tickets("MVP")), [])
         self.assertEqual(record.check_done_run(lucky, body, ".", all_sections=in_tickets("POC")), [])
 
+    def test_the_size_frozen_in_the_ledger_outlives_the_record_line(self):
+        record = record_module()
+        body = "- PASS x\n**Logs:** ok\n"
+        gaps = [f"needs a '**{label}:**' line" for label in ("Secrets", "Dependencies", "Static")]
+        for edited in ({}, {"kickoff": "**Size:** POC\n"}, {"tickets": "**Backlog:** x\n"}):  # deleted or edited later
+            self.assertEqual(record.check_done_run({"scans": True, "size": "MVP"}, body, ".", all_sections=edited), gaps)
+        self.assertEqual(record.check_done_run({"scans": True, "size": "POC"}, body, ".", all_sections={}), [])
+        self.assertEqual(record.check_done_run({"size": "MVP"}, body, ".", all_sections={}), [])  # older runs unchanged
+
+    def test_scan_markers_name_a_real_result(self):
+        record = record_module()
+        run, sections = {"scans": True}, {"kickoff": "**Size:** MVP\n"}
+        ok = "**Dependencies:** npm audit: 0 vulnerabilities\n**Static:** eslint .: 0 findings\n"
+        for value in ("skipped", "Skipped: no network", "n/a", "N/A", "na", "none", "todo", "TBD", "-", "**-**"):
+            with self.subTest(value=value):
+                problems = record.check_done_run(run, f"- PASS x\n**Logs:** ok\n**Secrets:** {value}\n{ok}", ".", all_sections=sections)
+                self.assertEqual(len(problems), 1)
+                self.assertIn("'**Secrets:**' needs the tool, the command and the result", problems[0])
+        real = "none found by gitleaks (`gitleaks dir .`)"  # a result that starts with a placeholder word is still a result
+        self.assertEqual(record.check_done_run(run, f"- PASS x\n**Logs:** ok\n**Secrets:** {real}\n{ok}", ".", all_sections=sections), [])
+
     def test_flagged_runs_refuse_a_size_the_scans_cannot_read(self):
         record = record_module()
         flagged, older, body = {"scans": True, "kind": "product"}, {"kind": "product"}, "- PASS x\n**Logs:** ok\n"
         kickoff = "**Features:** a\n**Approach:** b\n**Answered by:** o\n**Stack:** s\n**Size:** {}\n"
-        for size in ("An MVP (launch)", "small MVP", "Minimum viable product", "Prod slice", "production-ready POC"):
+        for size in ("An MVP (launch)", "small MVP", "Minimum viable product", "Prod slice", "production-ready POC",
+                     "none (small feature)"):  # none (<why>) is a feature size
             with self.subTest(size=size):
                 refused = record.check_kickoff(flagged, kickoff.format(size))
-                self.assertIn("Size must start with POC, MVP, production or 'none (<why>)'", refused[0])
+                self.assertIn("Size must start with POC, MVP, production, not", refused[0])
                 done = record.check_done_run(flagged, body, ".", all_sections={"kickoff": kickoff.format(size)})
-                self.assertIn("Size must start with", done[0])
+                self.assertTrue(any("Size must start with" in problem for problem in done))
                 self.assertEqual(record.check_kickoff(older, kickoff.format(size)), [])  # older methods unchanged
-        for size in ("POC", "MVP (launch)", "`Production` slice", "**MVP**", "none (small feature)"):
+        for size in ("POC", "MVP (launch)", "`Production` slice", "**MVP**"):
             self.assertEqual(record.check_kickoff(flagged, kickoff.format(size)), [], size)
+        small = {"scans": True, "kind": "feature"}
+        self.assertEqual(record.check_kickoff(small, kickoff.format("none (small feature)")), [])
+        self.assertIn("or 'none (<why>)'", record.check_kickoff(small, kickoff.format("tiny"))[0])
         prose = "The **Size:** question was open.\n" + kickoff.format("MVP")  # the first value is the one parsed
         self.assertIn("Size must start with", record.check_kickoff(flagged, prose)[0])
 
@@ -187,6 +218,7 @@ class FastGateTests(unittest.TestCase):
         lucky = {"scans": True, "mode": "lucky", "kind": "product"}
         self.assertEqual(check(lucky), ["needs a '**Size:**' line"])
         self.assertIn("Size must start with", check(lucky, "**Size:** small MVP\n")[0])
+        self.assertIn("Size must start with", check(lucky, "**Size:** none (small)\n")[0])  # a product needs a real size
         for size in ("MVP", "POC (default)"):
             self.assertEqual(check(lucky, f"**Size:** {size}\n"), [])
         self.assertEqual(check({**lucky, "kind": "feature"}, "**Size:** none (small feature)\n"), [])

@@ -3,7 +3,7 @@
 <!-- Illustrative sample of a filled Fast work record (fast-run.md#work-record). It shows the gate markers for a
      product unrelated to any real run; never copy its content. A real run researches fresh. Ticket URLs and owner answers are examples, not real records. -->
 
-Contents: request · research · kickoff · tickets · analysis · plan · design · schema · build log · done-run · handoff
+Contents: request · research · kickoff · tickets · analysis · plan · design · schema · build log · done-run · handoff · MVP done-run example
 
 ## Request
 
@@ -152,10 +152,6 @@ indexes: classes(starts_at), bookings(class_id, status), waitlist(class_id, posi
 - FAIL then fixed: booking button stayed active during the request; disabled while pending
 - Screenshot: .factory/fast/shots/schedule.png (DEV badge and "Sample data" tags visible)
 **Logs:** logs/app.log shows request IDs for booking, waitlist promotion and check-in; no errors
-MVP example (a POC record, like this one, has none of the next three lines):
-**Secrets:** `gitleaks git .` and `gitleaks dir .`: 0 findings
-**Dependencies:** `pnpm audit --prod`: 1 high (pinned `qs`), fixed by bumping to the patched release; rerun 0
-**Static:** `pnpm exec eslint .` with the security rules: 0 high or critical; 2 low, fixed
 
 ## Handoff
 
@@ -164,3 +160,11 @@ MVP example (a POC record, like this one, has none of the next three lines):
 **Dev sign-in:** header role switcher (Member, Staff), development only; this POC has no sign-in
 **Unverified:** automated tests, independent review, Safari, payment provider
 **Follow-ups:** real payments (#6, owner-approved mock in this POC, revisit at MVP kickoff). POC skips (real sign-in, security hardening, deployment, landing page) are listed in epic #1 for the MVP
+
+## MVP done-run example
+
+A POC record has none of these lines. An MVP or production slice adds them to its Done-run section:
+
+**Secrets:** `gitleaks git .` and `gitleaks dir .`: 0 findings
+**Dependencies:** `pnpm audit --prod`: 1 high (pinned `qs`), fixed by bumping to the patched release; rerun 0
+**Static:** `pnpm exec eslint .` with the security rules: 0 high or critical; 2 low, fixed

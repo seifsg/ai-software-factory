@@ -81,8 +81,11 @@ def check_research(run, body, **_):
     return problems
 
 
-# a size: POC, MVP or production as the first word, or none (<why>) for a small feature
-SIZES = re.compile(r"[\s`*_]*(?:(?P<size>poc|mvp|production)(?![\w-])|none\s*\()", re.I)
+# a size: POC, MVP or production as the first word; a small feature may give none (<why>) instead
+SIZE = re.compile(r"[\s`*_]*(?:poc|mvp|production)(?![\w-])", re.I)
+SMALL = re.compile(r"[\s`*_]*none\s*\(", re.I)
+LAUNCH = re.compile(r"\b(?:mvp|production)\b", re.I)  # any mention of a launch size scans: fail closed
+PLACEHOLDER = re.compile(r"\W*(?:(?:skip(?:ped)?|n/?a|todo|tbd)\b.*|none\W*)?", re.I)  # whole value, or a skip note
 
 
 def run_size(sections):
@@ -92,9 +95,11 @@ def run_size(sections):
 
 def size_problems(run, value):
     """Flagged runs: the Size value must be one the done-run scans can read. Guessing a size is the bug."""
-    if not run.get("scans") or value is None or SIZES.match(value):
+    small = run.get("kind") == "feature"
+    if not run.get("scans") or value is None or SIZE.match(value) or (small and SMALL.match(value)):
         return []
-    return [f"Size must start with POC, MVP, production or 'none (<why>)', not '{value[:40]}'"]
+    named = "POC, MVP, production" + (" or 'none (<why>)'" if small else "")
+    return [f"Size must start with {named}, not '{value[:40]}'"]
 
 
 def check_kickoff(run, body, **_):
@@ -386,15 +391,22 @@ def check_build(run, body, **kwargs):
 
 def scans(run, all_sections):
     """Scan markers a flagged run sized MVP or production records in its done-run (product-bar.md#security)."""
-    found = SIZES.match(run_size(all_sections) or "")
-    size = ((found.group("size") if found else None) or "").lower()
-    return ["Secrets", "Dependencies", "Static"] if run.get("scans") and size in ("mvp", "production") else []
+    sizes = f"{run.get('size') or ''} {run_size(all_sections) or ''}"  # the frozen size and the record's
+    return ["Secrets", "Dependencies", "Static"] if run.get("scans") and LAUNCH.search(sizes) else []
+
+
+def placeholder_problems(body, labels):
+    """A scan marker names the tool, the command and the result; a placeholder records nothing."""
+    values = {label: marker(body, label) for label in labels}
+    return [f"'**{label}:**' needs the tool, the command and the result, not '{value[:20]}'"
+            for label, value in values.items() if value and PLACEHOLDER.fullmatch(value)]
 
 
 def check_done_run(run, body, project, all_sections=None, **_):
     problems = [] if re.search(r"\bPASS\b", body) else ["needs >=1 PASS result"]
-    problems += missing_markers(body, ["Logs", *scans(run, all_sections or {})])
-    problems += size_problems(run, run_size(all_sections or {}))
+    labels = scans(run, all_sections or {})
+    problems += missing_markers(body, ["Logs", *labels]) + placeholder_problems(body, labels)
+    problems += size_problems(run, run.get("size") or run_size(all_sections or {}))
     if run.get("ui"):
         shots = [Path(shot) for shot in re.findall(r"[\w./\\:~-]+\.(?:png|jpe?g|webp|gif)\b", body, re.I)]
         if not any((shot if shot.is_absolute() else Path(project) / shot).is_file() for shot in shots):
