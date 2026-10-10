@@ -5,7 +5,13 @@ written down, not that it was good. Spec: .agents/skills/safe-engine/references/
 """
 import json
 import re
+import sys
 from pathlib import Path
+
+HERE = str(Path(__file__).resolve().parent)
+if HERE not in sys.path:
+    sys.path.insert(0, HERE)  # loaded by file path (tests, older gates): find the sibling module
+from fast_progress import built_ids, sections, subsection, todo_ids, without_result  # noqa: E402,F401 - shared parsers
 
 URL = re.compile(r"https?://[^\s)>\]|]+")
 ISSUE = re.compile(r"https://github\.com/([\w.-]+/[\w.-]+)/issues/(\d+)")
@@ -21,25 +27,12 @@ REQUESTED = re.compile(r"\bR\d+\b")
 # "R2 waitlist (owner-deferred: https://...)": the mark sits on its own item, before any other R-id
 DEFERRED = re.compile(r"\b(R\d+)\b(?:(?!\bR\d+\b)[^()\n])*\((?i:owner-deferred):\s*"
                       r"(?:\[[^\]\n]*\]\(https?://[^\s)]+\)|https?://[^\s)]+)\)")  # bare URL or [text](URL)
-
-
-def sections(text):
-    """Level-2 sections by lowercase title; HTML comments (skeleton hints) never count."""
-    text = re.sub(r"<!--.*?-->", "", text, flags=re.S)
-    found, name = {}, None
-    for line in text.splitlines():
-        heading = re.match(r"^##\s+(.+?)\s*$", line)
-        if heading:
-            name = heading.group(1).lower()
-            found.setdefault(name, [])
-        elif name is not None:
-            found[name].append(line)
-    return {key: "\n".join(lines) for key, lines in found.items()}
-
-
-def subsection(body, title):
-    match = re.search(r"^###\s+[^\n]*" + re.escape(title) + r"[^\n]*\n(.*?)(?=^###\s|\Z)", body, re.M | re.S | re.I)
-    return match.group(1) if match else None
+BULLET = r"(?:(?:[-*+]|\d+[.)])[ \t]+(?:\[[ xX]\][ \t]+)?)?"  # '- ', '1. ', '- [x] ' or none
+# every '**Hidden checks:**' block, blank lines included, up to the next label (bulleted or not) or heading
+HIDDEN = re.compile(rf"\*\*Hidden checks:\*\*(.*?)(?=^[ \t]*{BULLET}\*\*[^*\n]+:\*\*|^#{{1,6}}\s|\Z)", re.M | re.S)
+# one entry, nothing guessed: '#2 A1: PASS' or '#2 A1: FAIL', an optional '(note)' only after the verdict
+ENTRY = r"#(\d+)[ \t]+([A-Z]{1,3}\d+):[ \t]*(PASS|FAIL)(?:[ \t]+\([^()\n]*\))?"
+ENTRIES = re.compile(rf"{BULLET}{ENTRY}(?:[ \t]*,[ \t]*{ENTRY})*[ \t]*")  # one line: entries, commas
 
 
 def marker(body, label):
@@ -61,11 +54,6 @@ def missing_markers(body, labels):
     return [f"needs a '**{label}:**' line" for label in labels if not marker(body, label)]
 
 
-def todo_ids(all_sections):
-    todos = subsection(all_sections.get("plan", ""), "Todos") or ""
-    return sorted(set(re.findall(r"\bT(\d+)\b", todos)), key=int)
-
-
 def check_research(run, body, **_):
     problems = []
     others = re.sub(r"^###\s+[^\n]*stack options[^\n]*\n.*?(?=^###\s|\Z)", "", body, flags=re.M | re.S | re.I)
@@ -81,11 +69,39 @@ def check_research(run, body, **_):
     return problems
 
 
+# a size: POC, MVP or production as the first word; a small feature may give none (<why>) instead
+SIZE = re.compile(r"[\s`*_]*(?:poc|mvp|production)(?![\w-])", re.I)
+SMALL = re.compile(r"[\s`*_]*none\s*\(", re.I)
+LAUNCH = re.compile(r"\b(?:mvp|production)\b", re.I)  # any mention of a launch size scans: fail closed
+PLACEHOLDER = re.compile(r"\W*(?:(?:skip(?:ped)?|n/?a|todo|tbd)\b.*|none\W*)?", re.I)  # whole value, or a skip note
+
+
+def run_size(sections):
+    """The run's one Size value: the kickoff's, else the Tickets section's (Lucky runs have no kickoff)."""
+    return marker(sections.get("kickoff", ""), "Size") or marker(sections.get("tickets", ""), "Size")
+
+
+def size_problems(run, value):
+    """Flagged runs: the Size value must be one the done-run scans can read. Guessing a size is the bug."""
+    small = run.get("kind") == "feature"
+    if not run.get("scans") or value is None or SIZE.match(value) or (small and SMALL.match(value)):
+        return []
+    named = "POC, MVP, production" + (" or 'none (<why>)'" if small else "")
+    return [f"Size must start with {named}, not '{value[:40]}'"]
+
+
 def check_kickoff(run, body, **_):
     sized = run["kind"] == "feature" and run.get("coverage")  # a feature's size, or 'none (<why>)' when small
     labels = ["Features", "Approach", "Answered by"] + (["Size", "Stack"] if run["kind"] == "product" else []) + (
         ["Size"] if sized else [])
-    return missing_markers(body, labels)
+    return missing_markers(body, labels) + size_problems(run, marker(body, "Size"))
+
+
+def lucky_size(run, body):
+    """A flagged Lucky product or feature run has no kickoff: its size sits in Tickets."""
+    if not run.get("scans") or run.get("mode") != "lucky" or run.get("kind") == "change":
+        return []
+    return missing_markers(body, ["Size"]) + size_problems(run, marker(body, "Size"))
 
 
 def ticket_urls(body):
@@ -114,7 +130,7 @@ def check_tickets(run, body, offline=None, **_):
         "needs an '**Epic:** <url>' line" + (" or '**Ticket:** <url, or none (why)>'" if lane else "")]
     if lane and marker(body, "Epic") and marker(body, "Ticket"):
         problems.append("a change lists its one ticket once: keep only the '**Ticket:**' line")
-    problems += missing_markers(body, ["Backlog"])
+    problems += missing_markers(body, ["Backlog"]) + lucky_size(run, body)
     wanted = [] if change or not coverage else requested(body)
     if not change and not subs:
         problems.append("needs >=1 '**Sub-issue:** <url>' line")
@@ -215,7 +231,7 @@ def read_ticket(url):
     boards = {name(item.get("status")) for item in listed(data, "projectItems") if isinstance(item, dict)} - {""}
     marked = lambda status: f"status: {status}" in labels or status in boards
     cancelled = str(data.get("stateReason") or "").upper() == "NOT_PLANNED"
-    return {"body": FENCE.sub("", str(data.get("body") or "")), "stopped": cancelled or marked("blocked"),
+    return {"url": url, "body": FENCE.sub("", str(data.get("body") or "")), "stopped": cancelled or marked("blocked"),
             "backlog": marked("backlog"), "closed": str(data.get("state") or "").upper() == "CLOSED"}
 
 
@@ -310,6 +326,9 @@ def check_plan(run, body, **kwargs):
     problems = [f"needs a '### {title}' subsection" for title in titles if subsection(body, title) is None]
     if not todo_ids(kwargs["all_sections"]):
         problems.append("needs todo IDs (T1, T2, ...) under ### Todos")
+    if run.get("outcomes"):  # the owner's dashboard shows each todo's result
+        problems += [f"T{n} needs its own line with its result: 'T{n} <title> → <what the owner can do once it is "
+                     f"done> (#<ticket>, <criteria>)'" for n in without_result(kwargs["all_sections"])]
     labels = ["Success"] if light(run) else ["Logging", "Efficiency"]
     return problems + missing_markers(body, labels) or held(run, kwargs, covered(run, needs_checklist))
 
@@ -350,25 +369,90 @@ def check_schema(run, body, **_):
 
 
 def check_build(run, body, **kwargs):
-    """Each plan todo has one line with pre:, do: and post:; on coverage runs the line starts with its ID, so a
-    mention such as 'T23..T34' in another todo's line never counts."""
-    lines = [line.lower() for line in body.splitlines()]
-    lead = r"\s*(?:\|\s*)?(?:(?:[-*+]|\d+[.)])\s+)?(?:\[[ x]\]\s+)?[*`]*"  # bullet, number, [x], **, ` or a table cell
-    owns = (lambda n, line: re.match(rf"{lead}t{n}\b", line)) if run.get("coverage") else (
-        lambda n, line: re.search(rf"\bt{n}\b", line))
+    """Each plan todo has its own 'pre: do: post:' line (fast_progress.built_ids)."""
+    built = built_ids(body, strict=bool(run.get("coverage")))
     return [f"T{number} needs its own 'T{number} pre: ... do: ... post: ...' line"
-            for number in todo_ids(kwargs["all_sections"])
-            if not any(owns(number, line) and all(tag in line for tag in ("pre:", "do:", "post:")) for line in lines)]
+            for number in todo_ids(kwargs["all_sections"]) if number not in built]
 
 
-def check_done_run(run, body, project, **_):
-    problems = [] if re.search(r"\bPASS\b", body) else ["needs >=1 PASS result"]
-    problems += missing_markers(body, ["Logs"])
+def scans(run, all_sections):
+    """Scan markers a flagged run sized MVP or production records in its done-run (product-bar.md#security)."""
+    sizes = f"{run.get('size') or ''} {run_size(all_sections) or ''}"  # the frozen size and the record's
+    return ["Secrets", "Dependencies", "Static"] if run.get("scans") and LAUNCH.search(sizes) else []
+
+
+def scan_cause(run, all_sections):
+    """Why the scans are required, so a run whose record was edited later understands the refusal."""
+    frozen = LAUNCH.search(run.get("size") or "")
+    found = frozen or LAUNCH.search(run_size(all_sections) or "")
+    where = ("frozen at " + run["size_at"] if run.get("size_at") else "frozen in the ledger") if frozen else "in the record"
+    return f"Size {found.group(0).upper()}, {where}"
+
+
+def placeholder_problems(body, labels):
+    """A scan marker names the tool, the command and the result; a placeholder records nothing."""
+    values = {label: marker(body, label) for label in labels}
+    return [f"'**{label}:**' needs the tool, the command and the result, not '{value[:20]}'"
+            for label, value in values.items() if value and PLACEHOLDER.fullmatch(value)]
+
+
+def check_done_run(run, body, project, **kwargs):
+    sections = kwargs.get("all_sections") or {}
+    own = HIDDEN.sub("", body) if hidden(run) else body  # the builder's own done-run, apart from the checker's
+    problems = [] if re.search(r"\bPASS\b", own) else ["needs >=1 PASS result"]
+    labels = scans(run, sections)
+    cause = f" ({scan_cause(run, sections)})" if labels else ""
+    problems += missing_markers(body, ["Logs"]) + [problem + cause for problem in missing_markers(body, labels)]
+    problems += placeholder_problems(body, labels)
+    problems += size_problems(run, run.get("size") or run_size(sections))
     if run.get("ui"):
         shots = [Path(shot) for shot in re.findall(r"[\w./\\:~-]+\.(?:png|jpe?g|webp|gif)\b", body, re.I)]
         if not any((shot if shot.is_absolute() else Path(project) / shot).is_file() for shot in shots):
             problems.append("needs >=1 existing screenshot path")
-    return problems
+    return problems + (hidden_checks(body, kwargs, run) if hidden(run) else [])
+
+
+def hidden(run):
+    """Product and feature runs whose methods define hidden checks; change runs and older runs never."""
+    return bool(run.get("hidden_checks")) and run.get("kind") != "change"
+
+
+def verdicts(body):
+    """Hidden checks entries (issue number, criterion ID, passed) and the lines that are not entries."""
+    entries, unreadable = [], []
+    for line in "\n".join(HIDDEN.findall(body)).splitlines():
+        if not line.strip():
+            continue
+        if not ENTRIES.fullmatch(line.strip()):
+            unreadable.append(line.strip())
+            continue
+        found = re.findall(ENTRY, line)
+        entries += [(number, cid, verdict == "PASS") for number, cid, verdict in found]
+    return entries, unreadable
+
+
+def hidden_checks(body, kwargs, run):
+    """Unreadable entries and any FAIL refuse; online, every in-play listed ticket's criterion, the epic's
+    included, needs its own '#<n> <ID>: PASS'; offline, >=1 entry."""
+    entries, unreadable = verdicts(body)
+    if unreadable:
+        return [f"unreadable hidden-check entry: {line}" for line in unreadable] + [
+            "write each as '#<n> <ID>: PASS' or '#<n> <ID>: FAIL', a note only after it in parentheses; "
+            "the block ends at the next '**Label:**'"]
+    failed = [f"#{number} {cid}" for number, cid, passed in entries if not passed]
+    if failed:
+        return [f"hidden checks FAIL ({', '.join(dict.fromkeys(failed))}): back to build, then the checker runs them again"]
+    if not entries:
+        return ["needs a '**Hidden checks:**' block from the checker: '#<n> <ID>: PASS' for every criterion"]
+    gaps, passed = [], {(number, cid) for number, cid, _ in entries}
+
+    def read(ticket):
+        if not (ticket["stopped"] or ticket["backlog"]):
+            number = ISSUE.match(ticket["url"]).group(2)
+            criteria = dict.fromkeys(CRITERION.findall(under(ticket["body"], DEFINITION)))
+            gaps.extend(f"#{number} {cid}" for cid in criteria if (number, cid) not in passed)
+    problems = online(run, kwargs, read)
+    return problems or ([f"criteria without a hidden-check PASS: {', '.join(gaps)}"] if gaps else [])
 
 
 def check_handoff(run, body, **kwargs):
