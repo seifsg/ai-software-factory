@@ -343,7 +343,8 @@ RULE_ID = r"(?-i:U(?:10|[1-9]))"  # the ten rule IDs, capitals only in every pat
 LEAD, SEP = r"[ \t]*(?:\|[ \t]*)?(?:(?:[-*+]|\d+[.)])[ \t]+)?(?:\[[ xX]\][ \t]+)?[*`]*", r"[*` \t:|.,()-]*"
 VERDICT = re.compile(rf"{LEAD}({RULE_ID})\b{SEP}(?:(?:{'|'.join(UX_AREAS)}){SEP})?(PASS|FAIL|UNKNOWN|N/A)\b(.*)",
                      re.I)
-JUDGE = re.compile(r"[ \t]*(?:\|[ \t]*)?(?:(?:[-*+]|\d+[.)])[ \t]*)?\*\*UX judge:\*\*", re.I)  # bullet space optional
+JUDGE = re.compile(r"[ \t]*(?:\|[ \t]*)?(?:(?:[-*+]|\d+[.)])[ \t]*)?(?:\[[ xX]\][ \t]*)?[*`]*\*\*UX judge:\*\*",
+                   re.I)  # as LEAD, but no space needed after the bullet or the checkbox
 # A line under a verdict or the judge line belongs to it: indented text, or plain text that starts no bullet, table,
 # heading, quote, rule line or the done-run's own markers. A blank line ends it.
 MARK = r"\*\*(?:Logs|UX judge):\*\*"
@@ -422,7 +423,7 @@ def audit_lines(body):
         if not line.strip():
             gap = True  # as in Markdown, indented lines after a blank line still belong to the item above
             continue
-        depth = len(line) - len(line.lstrip(" \t"))
+        depth = len(line[:len(line) - len(line.lstrip(" \t"))].expandtabs(4))  # tabs and spaces measured alike
         head = VERDICT.match(line)
         quote = head and depth > top and owner == (head.group(1), "UNKNOWN")  # deeper than its UNKNOWN: a reason
         if head and not quote:
