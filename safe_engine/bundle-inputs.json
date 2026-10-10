@@ -49,6 +49,7 @@
     "skills/safe-engine/scripts/fast_hosts.py",
     "skills/safe-engine/scripts/fast_install.py",
     "skills/safe-engine/scripts/fast_record.py",
+    "skills/safe-engine/scripts/fast_rules.py",
     "skills/safe-engine/scripts/fast_shell.py",
     "skills/safe-engine/scripts/resolve_bundle.py",
     "skills/safe-engine/scripts/run-gate.sh"

@@ -37,6 +37,21 @@ LIGHT = """# copy-fix
 """
 
 
+EVERYDAY = (  # commands an agent runs all day: never denied
+    "npm test", "npm run build", "npm run dev", "git status", "git diff --stat", "git log --oneline -5", "git add -A",
+    'git commit -m "fix: drop unused prod flag"', "git push", "git push -u origin feat/x", "git pull --rebase",
+    "git checkout -b feat/x", "git rm --cached .env", "git rm -r --cached node_modules", "git stash list", "ls -la",
+    "cat README.md", "rg \"DROP TABLE\" -n", "gh issue view 73", "python -m pytest -q", "node scripts/build.js",
+    "npx prisma generate", "npx prisma migrate status", "rails db:migrate", "docker compose up -d",
+    "docker compose logs web", "rm -rf node_modules dist", "rm -rf build/ .next/", "mkdir -p src/lib",
+    "cp .env.example .env", "mv old.ts new.ts", 'find . -name "*.log" -delete', "Remove-Item -Recurse -Force dist",
+    "Get-ChildItem -Recurse src", 'Select-String -Pattern "dropdb" -Path *.md', 'psql -c "select count(*) from users"',
+    'sqlite3 app.db ".tables"', "cd src && npm test", "export NODE_ENV=test && npm test",
+    'echo "deploy to production later"', 'printf "%s\n" "rm -rf is denied"', "curl -s localhost:3000/health",
+    "tsc --noEmit", "eslint . --fix", "go test ./...", 'git log --grep "migrate prod"', "wc -l src/*.ts",
+)
+
+
 def module(name):
     """A gate script loaded in-process."""
     spec = importlib.util.spec_from_file_location(name, SCRIPTS / f"{name}.py")
@@ -260,6 +275,25 @@ class FastGateTests(unittest.TestCase):
             "builtin cd .. && rm -rf x", "su -c 'rm -rf /'", "start cmd /c rd /s /q C:\\Users",
             "powershell Remove-Item -Recurse -Force ..", "psql -f drop.sql", "eval " * 1200 + "ls", "rm -rf ../a\x00b",
             "rm -rf .factory", "rm -rf .factory/*",
+            # round 3: substitutions and groups, remote and container strings, piped SQL files, attached options
+            "git push origin $(git branch --show-current) -f", 'psql $(cat .dburl) -c "DROP TABLE x"',
+            "DATABASE_URL=$(heroku config:get DATABASE_URL -a shop-production) npx prisma migrate deploy",
+            "Remove-Item -Recurse -Force (Resolve-Path ..\\proj2)", "Remove-Item (Join-Path $PSScriptRoot '..\\proj2') -Recurse -Force",
+            "Remove-Item -Recurse -Force -Path @('..\\proj2','dist')",
+            """docker exec -it db sh -c "psql -U postgres -c 'DROP DATABASE app'\"""",
+            """docker compose exec db bash -c 'psql -c "DROP SCHEMA public CASCADE"'""",
+            """kubectl exec -it pg-0 -- sh -c "psql -c 'TRUNCATE users'\"""", """ssh db1 "psql -c 'DROP TABLE users'\"""",
+            'ssh deploy@prod-1 "cd /app && bundle exec rails db:migrate RAILS_ENV=production"',
+            'docker compose exec web sh -c "RAILS_ENV=production rails db:migrate"', "cat drop.sql | psql",
+            "cat drop.sql | docker compose exec -T db psql -U postgres", "Get-Content drop.sql | psql",
+            "type drop.sql | sqlcmd", 'mysql -e"DROP TABLE x"', "psql --file=drop.sql", "psql -fdrop.sql",
+            'sqlite3 app.db ".read drop.sql"', "npx prisma db execute --file drop.sql",
+            'npx wrangler d1 execute shop --command "DROP TABLE x"', 'mysqlsh -e "DROP TABLE x"',
+            'iex "rm -rf ~"', 'Invoke-Expression "Remove-Item -Recurse -Force C:\\x"',
+            'Start-Process pwsh -ArgumentList "-c","Remove-Item -Recurse C:\\x"', "rm -rf .factory/fast", "find . -delete",
+            "find .factory -delete", "find -L .. -delete", "find . -exec rm -rf {} +", "pnpm dlx rimraf ..",
+            "yarn dlx rimraf ..", "npm exec -- rimraf ..", "pnpm exec rimraf ..", "rm -rf ../my\\ dir", "rm -rf .git",
+            "rm -rf `pwd`/../x", "echo 'ls' | bash -c 'rm -rf ~'",
         )
         allow = (
             "rm -rf dist node_modules", "Remove-Item -Recurse dist", "rm -f ../x.txt", "rm -rf dist 2> /dev/null",
@@ -274,9 +308,14 @@ class FastGateTests(unittest.TestCase):
             "MIX_ENV=test mix ecto.migrate", 'rm -rf "unclosed',  # unparsable: fails open
             "if true; then rm -rf dist; fi", "{ cd src; rm -rf build; }", "(cd ..); rm -rf dist", 'echo "rm -rf ~"',
             "cat script.sh | bash", "export RAILS_ENV=test && rails db:migrate", "psql -f safe.sql",
-            "Remove-Item -Recurse -Path:dist", "npx rimraf dist", "find . -exec rm -rf {} +", "rm -rf $(pwd)/dist",
+            "Remove-Item -Recurse -Path:dist", "npx rimraf dist", "rm -rf $(pwd)/dist",
             'cd "$(git rev-parse --show-toplevel)" && rm -rf dist', "rm -rf .factory/fast/shots", "rm -rf \x007\x00",
-        )
+            # round 3: message and search text, names holding prod, escaped spaces
+            'grep -rn "dropdb" scripts/', 'git commit -m "Remove the db:reset task"', "rm -rf my\\ dir",
+            'gh pr create --title "Drop prod flag" --body "Removes rm -rf ~ and DROP TABLE calls"',
+            "npx prisma migrate dev --name add_prod_flag", "find .factory -name '*.tmp' -delete",
+            """git commit -m "$(cat <<'EOF'\nfix: stop rm -rf ~ and git push -f\nEOF\n)\"""",
+        ) + EVERYDAY
         root = gate.norm(str(self.project))
         judge = gate.sibling("fast_guard").Judge(root, gate.norm, gate.inside)
         for command in deny + allow:
