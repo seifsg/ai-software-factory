@@ -38,5 +38,6 @@ launcher → resolve_bundle.py pins the factory's main branch to one commit in ~
 ```
 
 - Resume reuses the recorded bundle offline. It never pulls, resets or silently upgrades.
+- An installed launcher older than the factory it fetches says the layout is newer (older launchers say "Incomplete factory bundle"). Update the install: repeat step 2 from a current checkout, or update the plugin.
 - Reproducible installs: check out one commit, install from it, and pass the same SHA to the resolver's `--ref` for a new project.
 - Installing on one machine does not reach other machines or cloud sessions; install there too. Cloud sessions load skills committed to their repository.
