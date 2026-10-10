@@ -1,6 +1,6 @@
 # Sizes
 
-Size sets how far each requested item is built, never which requested items ship. It applies to new products and big features. Inside an existing product, every size keeps that product's protections and behavior, and new paths get the same protections. Ask it at kickoff when the request leaves it open. A Lucky product run without a size: POC. A Lucky MVP request gets the launch baseline with product-bar defaults and no suggestion rounds; the suggestions it would have asked go to the epic's follow-ups ticket.
+Size sets how far each requested item is built, never which requested items ship. It applies to new products and big features. Inside an existing product, every size keeps that product's protections and behavior, and new paths get the same protections. Ask it at kickoff when the request leaves it open. A Lucky run has no kickoff: it records the size under Tickets as `**Size:**`, and a product run without a stated size is POC. A Lucky MVP request gets the launch baseline with product-bar defaults and no suggestion rounds; the suggestions it would have asked go to the epic's follow-ups ticket.
 
 ## Requested scope
 
@@ -57,4 +57,4 @@ The owner wants to publish it and test it with real users. Fill every gap a laun
 
 ## Production slice
 
-The full product bar for the affected paths, release and operations included. The done-run runs the MVP's three scans.
+The full product bar for the affected paths, release and operations included.

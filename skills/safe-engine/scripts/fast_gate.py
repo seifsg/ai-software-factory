@@ -219,8 +219,10 @@ def skeleton(run):
              "<!-- Fill each section, then `fast_gate.py done <step>`. Markers: fast-run.md#work-record -->", "",
              "## Request", "", *quoted, ""]
     hints = {**HINTS, **COVERAGE_HINTS} if run.get("coverage") else HINTS
-    if run.get("scans"):
-        hints = {**hints, "done-run": hints["done-run"] + "; sized MVP or production: Secrets, Dependencies, Static lines"}
+    if run.get("scans"):  # Size starts with POC, MVP, production or none (<why>); Lucky has no kickoff to hold it
+        lucky = "; Lucky product/feature runs: a Size line" if run["mode"] == "lucky" and run["kind"] != "change" else ""
+        hints = {**hints, "tickets": hints["tickets"] + lucky,
+                 "done-run": hints["done-run"] + "; sized MVP or production: Secrets, Dependencies, Static lines"}
     for step in steps_for(run):
         lines += [f"## {TITLES[step]}", "", f"<!-- gate: {hints[step]} -->", ""]
     return "\n".join(lines)

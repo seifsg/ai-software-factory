@@ -152,8 +152,8 @@ indexes: classes(starts_at), bookings(class_id, status), waitlist(class_id, posi
 - FAIL then fixed: booking button stayed active during the request; disabled while pending
 - Screenshot: .factory/fast/shots/schedule.png (DEV badge and "Sample data" tags visible)
 **Logs:** logs/app.log shows request IDs for booking, waitlist promotion and check-in; no errors
-MVP and production slice add three lines; a POC like this one skips them:
-**Secrets:** secret scanner, `scan --history` over the working tree and Git history: 0 findings
+MVP example (a POC record, like this one, has none of the next three lines):
+**Secrets:** `gitleaks git .` and `gitleaks dir .`: 0 findings
 **Dependencies:** `pnpm audit --prod`: 1 high (pinned `qs`), fixed by bumping to the patched release; rerun 0
 **Static:** `pnpm exec eslint .` with the security rules: 0 high or critical; 2 low, fixed
 

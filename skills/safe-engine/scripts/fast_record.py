@@ -81,11 +81,34 @@ def check_research(run, body, **_):
     return problems
 
 
+# a size: POC, MVP or production as the first word, or none (<why>) for a small feature
+SIZES = re.compile(r"[\s`*_]*(?:(?P<size>poc|mvp|production)(?![\w-])|none\s*\()", re.I)
+
+
+def run_size(sections):
+    """The run's one Size value: the kickoff's, else the Tickets section's (Lucky runs have no kickoff)."""
+    return marker(sections.get("kickoff", ""), "Size") or marker(sections.get("tickets", ""), "Size")
+
+
+def size_problems(run, value):
+    """Flagged runs: the Size value must be one the done-run scans can read. Guessing a size is the bug."""
+    if not run.get("scans") or value is None or SIZES.match(value):
+        return []
+    return [f"Size must start with POC, MVP, production or 'none (<why>)', not '{value[:40]}'"]
+
+
 def check_kickoff(run, body, **_):
     sized = run["kind"] == "feature" and run.get("coverage")  # a feature's size, or 'none (<why>)' when small
     labels = ["Features", "Approach", "Answered by"] + (["Size", "Stack"] if run["kind"] == "product" else []) + (
         ["Size"] if sized else [])
-    return missing_markers(body, labels)
+    return missing_markers(body, labels) + size_problems(run, marker(body, "Size"))
+
+
+def lucky_size(run, body):
+    """A flagged Lucky product or feature run has no kickoff: its size sits in Tickets."""
+    if not run.get("scans") or run.get("mode") != "lucky" or run.get("kind") == "change":
+        return []
+    return missing_markers(body, ["Size"]) + size_problems(run, marker(body, "Size"))
 
 
 def ticket_urls(body):
@@ -114,7 +137,7 @@ def check_tickets(run, body, offline=None, **_):
         "needs an '**Epic:** <url>' line" + (" or '**Ticket:** <url, or none (why)>'" if lane else "")]
     if lane and marker(body, "Epic") and marker(body, "Ticket"):
         problems.append("a change lists its one ticket once: keep only the '**Ticket:**' line")
-    problems += missing_markers(body, ["Backlog"])
+    problems += missing_markers(body, ["Backlog"]) + lucky_size(run, body)
     wanted = [] if change or not coverage else requested(body)
     if not change and not subs:
         problems.append("needs >=1 '**Sub-issue:** <url>' line")
@@ -363,13 +386,15 @@ def check_build(run, body, **kwargs):
 
 def scans(run, all_sections):
     """Scan markers a flagged run sized MVP or production records in its done-run (product-bar.md#security)."""
-    sized = re.match(r"\W*(?:mvp|production)\b", marker(all_sections.get("kickoff", ""), "Size") or "", re.I)
-    return ["Secrets", "Dependencies", "Static"] if run.get("scans") and sized else []
+    found = SIZES.match(run_size(all_sections) or "")
+    size = ((found.group("size") if found else None) or "").lower()
+    return ["Secrets", "Dependencies", "Static"] if run.get("scans") and size in ("mvp", "production") else []
 
 
 def check_done_run(run, body, project, all_sections=None, **_):
     problems = [] if re.search(r"\bPASS\b", body) else ["needs >=1 PASS result"]
     problems += missing_markers(body, ["Logs", *scans(run, all_sections or {})])
+    problems += size_problems(run, run_size(all_sections or {}))
     if run.get("ui"):
         shots = [Path(shot) for shot in re.findall(r"[\w./\\:~-]+\.(?:png|jpe?g|webp|gif)\b", body, re.I)]
         if not any((shot if shot.is_absolute() else Path(project) / shot).is_file() for shot in shots):
