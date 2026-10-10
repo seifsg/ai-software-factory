@@ -519,9 +519,14 @@ class FastGateTests(unittest.TestCase):
         self.assertIn("primary action", " ".join(record.check_design(on, design.replace("primary", "main"))))
         bare = re.sub(r"(?m)^\*\*(?:Map|Hierarchy|Labels):\*\*.*\n", "", design)
         self.assertEqual(record.check_design(old, bare), [])  # older methods keep the old brief
+        block = design.replace("**Hierarchy:** schedule: primary", "**Hierarchy:**\n- schedule: primary")
+        self.assertEqual(record.check_design(on, block), [])  # "primary" may sit in the lines under the label
         self.assertEqual(record.ux_audit(done), [])
-        self.assertEqual(record.ux_audit(done.replace("- U1 PASS", "| **U1** | PASS |")), [])
-        cases = {"- U4 PASS": ("- U4x PASS", "needs a 'U4 "), "- U3 PASS one": ("- U3 FAIL one", "U3 FAIL is open"),
+        for layout in ("| **U1** | PASS |", "- **U1:** PASS", "| U1 | Map | PASS |", "- U1 Map: PASS"):
+            with self.subTest(layout=layout):
+                self.assertEqual(record.ux_audit(done.replace("- U1 PASS", layout)), [])
+        self.assertIn("needs a 'U2 ", " ".join(record.ux_audit("- U1 to U10 PASS all fine\n**UX judge:** x\n")))
+        cases = {"- U4 PASS": ("- U4x PASS", "needs a 'U4 "), "- U3 PASS schedule": ("- U3 FAIL schedule", "U3 FAIL is open"),
                  "**UX judge:**": ("UX judge:", "'**UX judge:**' line")}
         for old_text, (new_text, problem) in cases.items():
             with self.subTest(problem=problem):
@@ -529,27 +534,44 @@ class FastGateTests(unittest.TestCase):
         u10 = re.search(r"(?m)^- U10 .*$", done).group(0)
         self.assertIn("U10 N/A needs its evidence or reason", record.ux_audit(done.replace(u10, "- U10 N/A")))
         self.assertEqual(record.check_done_run(old, "- PASS app works\n**Logs:** clean\n", project=self.project), [])
+        verdicts_only = "\n".join(line for line in done.splitlines() if not line.startswith("- PASS"))
+        self.assertIn("needs >=1 PASS result from using it",
+                      record.check_done_run({"ux_rules": True}, verdicts_only, project=self.project))
 
     def test_ui_file_changes_need_the_ux_audit(self):
-        git = ["git", "-C", str(self.project)]
+        repo, app = self.project, self.project / "app"  # the run's project is a folder inside the repository
+        git = ["git", "-C", str(repo)]
+        app.mkdir()
         subprocess.run(git + ["init", "-q"], check=True)
-        (self.project / "server.py").write_text("print('hi')\n", encoding="utf-8")
-        subprocess.run(git + ["add", "server.py"], check=True)
+        for name, text in (("app/server.py", "x = 1\n"), ("style.css", "a {}\n"), ("app/view.vue", "<template/>\n")):
+            (repo / name).write_text(text, encoding="utf-8")
+        subprocess.run(git + ["add", "."], check=True)
         subprocess.run(git + ["-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "base"], check=True)
-        self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "fix the footer copy")
-        run = json.loads((self.project / ".factory/fast/run.json").read_text(encoding="utf-8"))
+        (app / "notes.html").write_text("<p>draft</p>\n", encoding="utf-8")  # untracked before the run starts
+        self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "fix the footer copy", project=app)
+        run = json.loads((app / ".factory/fast/run.json").read_text(encoding="utf-8"))
         head = subprocess.run(git + ["rev-parse", "HEAD"], capture_output=True, text=True, check=True).stdout.strip()
-        self.assertEqual((run["base"], run["ux_rules"], run["ui"]), (head, True, False))
+        self.assertEqual((run["base"], list(run["ui_seen"]), run["ui"]), (head, ["notes.html"], False))
         record = record_module()
         done = record.sections(LIGHT)["done-run"]
-        (self.project / "server.py").write_text("print('hello')\n", encoding="utf-8")
-        self.assertEqual(record.check_done_run(run, done, project=self.project), [])  # no UI file: no audit
-        (self.project / "src").mkdir()
-        (self.project / "src/Footer.tsx").write_text("export const Footer = () => null\n", encoding="utf-8")
-        problems = record.check_done_run(run, done, project=self.project)
-        self.assertEqual(problems[0], "UI files changed since start (src/Footer.tsx): record the UX audit")
+        (app / "server.py").write_text("x = 2\n", encoding="utf-8")
+        (repo / "style.css").write_text("a { color: red }\n", encoding="utf-8")  # outside the run's project
+        (app / "Footer.test.tsx").write_text("test('x', () => {})\n", encoding="utf-8")
+        self.assertEqual(record.check_done_run(run, done, project=app), [])  # no UI file of its own: no audit
+        (app / "notes.html").unlink()  # a file that was already untracked, now deleted by this run
+        problems = record.check_done_run(run, done, project=app)
+        self.assertEqual(problems[0], "this run changed UI files (notes.html): record the UX audit")
         self.assertIn("needs a 'U1 ", " ".join(problems))
+        (app / "Footer.tsx").write_text("export const Footer = () => null\n", encoding="utf-8")
+        self.assertEqual(record.ui_files({**run, "ui_seen": {}}, app), ["Footer.tsx"])
+        for base in ("123", 123, "-p", "0" * 40):  # unknown or tampered start commit: every tracked UI file counts
+            with self.subTest(base=base):
+                self.assertEqual(record.ui_files({"base": base}, app), ["view.vue"])
         self.assertEqual(record.ui_files({"base": head}, self.root / "not a repo"), [])
+        self.gate("close", "--abandon", "test", project=app)
+        self.gate("start", "--key", "with-ui", "--kind", "change", "--ui", "--request", "restyle", project=app)
+        ui_run = json.loads((app / ".factory/fast/run.json").read_text(encoding="utf-8"))
+        self.assertNotIn("base", ui_run)  # --ui runs skip the start-time git calls
 
 
 if __name__ == "__main__":

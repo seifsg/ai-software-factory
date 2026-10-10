@@ -43,15 +43,15 @@ Uncertain interaction, layout, icon, image or sound? Research before choosing.
 
 ## 3. Apply the quality rules
 
-Every audit gives each ID a verdict. U1 to U5 are spelled out as checks in `references/basics.md`.
+Every audit gives each ID a verdict. U1 to U5 state the goal; their checks live in `references/basics.md`.
 
 | ID | Area | Require |
 |---|---|---|
-| U1 | Map | One map per audience and sign-in state: every screen has a parent and a way in. No orphans, no dead ends. Each core object has one name, one list and one detail. Core destinations sit at most 2 levels below a top section. |
-| U2 | Navigation | Where am I: a unique title and the H1 repeat the label that led there; the active item is marked beyond color. Where can I go: the same nav in the same order on every screen of an audience, destinations only, text labels on, nothing lost at a breakpoint. Nav follows state and role. A visible way up below the top level; back and reload restore the view. Platform and design-system navigation, back and shortcuts. |
-| U3 | Hierarchy | One primary action per view and state: what most users need next there. At most one filled button. Items waiting on the user show that action on the item. The primary content and action dominate a blurred view. Order follows importance; related items group. One H1, no skipped heading levels. Each fact once per item. |
-| U4 | Disclosure | The default view holds what most users need in this state. Rare or advanced work sits one named step away, never in the way. The primary task and must-have facts are never only behind hover, overflow, a collapsed section or another tab. At most 2 levels. Panels for other states shrink to a one-line status. Modals only for blocking or irreversible choices. |
-| U5 | Labels | One glossary, the same in nav, headings, titles, buttons, URLs and messages; one term never names two things. Plain words the users use, front-loaded, distinct from their siblings. Buttons say what happens; links name where they go. Visible field labels; a placeholder never replaces one. Icons carry text unless near-universal. |
+| U1 | Map | Every screen belongs to one map per audience and sign-in state, reachable and never a dead end. |
+| U2 | Navigation | On every screen and width, users see where they are, where they can go and how to get back; nav follows state and role. Platform and design-system navigation, back and shortcuts. |
+| U3 | Hierarchy | One clear primary action per view and state; everything else ranks below it by importance. |
+| U4 | Disclosure | The default view serves the current state. Advanced work reachable, not in the way. The primary task is never hidden. |
+| U5 | Labels | Plain language from one glossary, the same everywhere. Every control and field says what it is. |
 | U6 | Interaction cost | Fewest actions and loads from entry to outcome. Primary content and the next action show where the user lands. No page whose only job is one link. Useful defaults. No duplicate entry. Design collections for 0, 1, few and many: one item shows in place (no list of one), a few stay in place too (tabs, sections, cards with their actions), many (more than one screen) get search, sort or filter, and list and detail side by side on wide screens. Deliberate friction stays: consent, destructive confirms, intended challenge. |
 | U7 | States and feedback | Loading. Empty, with the next action. Error, with retry. Success. Plus validation, offline, permission where they apply. Explain disabled actions. Block double submit. Keep input. Cancel, back, undo reachable. Immediate, truthful feedback. Predictable focus. Motion explains, never delays. Saves and drafts survive interruption. Games and browsers: focus loss, tab hide, resize, rotation, pause, resume, audio focus. Games: controls, HUD, remapping. |
 | U8 | Access and devices | Semantic controls, labels, logical focus order, keyboard and assistive access, contrast, scaling and reflow, usable targets. Never rely on color, sound, hover or gesture alone. Reduced motion. Alternative to dragging. WCAG 2.2 AA for web, or the project's stricter rule. Phone to desktop: no horizontal scroll, clipped labels or unreachable controls. Every supported input works: keyboard, pointer, touch, controller. |
@@ -61,11 +61,11 @@ Every audit gives each ID a verdict. U1 to U5 are spelled out as checks in `refe
 ## 4. Use it. Audit it.
 
 1. Finish implementation first. No product testing before then.
-2. Use it by hand through the real browser, native app, game or CLI. Complete the journey, its failure and recovery states, each supported input and display variant. Recount each core journey; above its recorded minimum without the reason is a FAIL.
+2. Use it by hand through the real browser, native app, game or CLI. Complete the journey, its failure and recovery states, each supported input and display variant. Recount each core journey; above its recorded minimum without the reason is a FAIL. Record what you did and saw: journeys with their counts, states, inputs, devices. That record is the judge's use log.
 3. Read the logs. Inspect rendered assets at real size and theme. Listen to sounds in context. Screenshots cannot prove interaction. Filenames and waveforms cannot prove sound quality.
 4. Capture each core screen in each of its states at the main width, plus once at the other width (phone and desktop). First viewport and full page. Web: run the page outline and the scan from `references/basics.md` on each.
-5. A fresh agent that did not build it judges, as `references/basics.md` sets out: one line per ID, `U3 FAIL <screen, state>: <element, quoted text>`, or PASS, or N/A or UNKNOWN with the reason. A FAIL names its rule, an in-scope screen and the visible evidence.
-6. Fix in-scope FAILs, recapture, and the judge rechecks those IDs once. A FAIL the builder contests becomes UNKNOWN with both reasons, for the owner. Findings outside the change go to the follow-ups ticket.
+5. A fresh agent that did not build it judges from the shots, outlines, scan and use log, as `references/basics.md` sets out. One line per ID: `U3 PASS <screens checked>: <evidence>`, `U3 FAIL <screen, state>: <element, quoted text>`, or N/A or UNKNOWN with the reason. A FAIL names its rule, an in-scope screen and the visible evidence.
+6. Fix in-scope FAILs, re-run the affected paths, recapture, and the judge rechecks those IDs once. A FAIL the builder contests becomes UNKNOWN with both reasons, for the owner. Findings outside the change go to the follow-ups ticket.
 7. No hearing, device, assistive tool or runtime available? UNKNOWN. Name the check needed. A walkthrough of the instructions proves no real-user usability.
 8. After manual use passes, write and run the accessibility, interaction and other final checks. Automation proves neither aesthetics nor manual use.
 

@@ -71,7 +71,7 @@ Record every step in one work record and pass the gate: [fast-run](references/fa
 10. **Done-run:** prove each ticket's definition of done. Start it once, use every requested journey and the most likely failure through real controls (simulated input proves no requested integration), read the logs, fix blockers. Screenshots for UI. No browser: drive its HTTP or CLI interface and say so.
 11. **Handoff:** open the draft PR (`how-to-make-a-pr`), then report how to run, dev sign-in, each requested item (delivered, open in a later iteration, blocked with reason, or owner-deferred), verified, unverified, the follow-ups ticket, each owned ticket's final status (Ready for QA with its PR, Blocked, or Backlog when owner-deferred); `close`. Any requested item not delivered or owner-deferred: the overall outcome is unfinished.
 
-Lucky runs 1, 4, a short 5 and 6 (light lane for a `change`), 9, 10 and 11. It asks nothing, researches nothing and takes product bar defaults for design and schema without comparisons. Its checklist loop and checks match Fast.
+Lucky runs 1, 4, a short 5 and 6 (light lane for a `change`), 9, 10 and 11. It asks nothing, researches nothing and takes product bar defaults for design and schema without comparisons. Its checklist loop and checks match Fast, UI work's UX verdicts included (`ux-quality` step 4).
 
 - `verify`: finish the work, manual QA of the main and failure journeys, then write and run relevant tests. No controller or independent review.
 - `promote`: commit the current code as the baseline, then (optionally) Safe on the existing epic.

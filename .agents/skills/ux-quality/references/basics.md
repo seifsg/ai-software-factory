@@ -54,9 +54,10 @@ Run it in any browser tool that executes page scripts, on each audited screen an
 ```js
 (() => {
   const name = e => (e.getAttribute("aria-label") || e.innerText || e.value || e.title || "").replace(/\s+/g, " ").trim().slice(0, 80);
-  const shown = e => e.getClientRects().length > 0 && getComputedStyle(e).visibility !== "hidden";
+  const shown = e => { const r = e.getBoundingClientRect(); return r.width > 1 && r.height > 1 && getComputedStyle(e).visibility !== "hidden"; };
   const all = s => [...document.querySelectorAll(s)].filter(shown);
-  const named = e => e.labels?.length || e.getAttribute("aria-label") || e.getAttribute("aria-labelledby");
+  const named = e => [...(e.labels || []), ...(e.getAttribute("aria-labelledby") || "").split(" ").map(id => document.getElementById(id))]
+    .some(label => label && shown(label));  // a label people can see, not only aria-label or a visually hidden one
   const root = document.documentElement;
   return {
     title: document.title,
@@ -79,12 +80,13 @@ Run it in any browser tool that executes page scripts, on each audited screen an
 
 ## Judge
 
-- A fresh agent that did not build the UI; a different model family when the host offers one. The builder never writes the verdicts.
-- Inputs: the brief (Journeys, Map, Hierarchy, Labels), the shots of one journey together, each screen's outline and scan. Nothing else from the build.
-- For each ID, answer its checks screen by screen, yes or no. A FAIL quotes the element and its visible text. No quotas: a clean rule is a PASS. Rules the change cannot touch: N/A with the reason.
+- Standard tier, and a different model family from the builder's when the host offers one.
+- Inputs: the brief (Journeys, Map, Hierarchy, Labels), the shots of one journey together, each screen's outline and scan, and the use log. No other build notes or opinions.
+- For each ID, answer its checks screen by screen, yes or no. Evidence only the use log holds is marked "per use log". No quotas: a clean rule is a PASS. Rules the change cannot touch: N/A with the reason.
 - Many screens: one judge per journey in parallel, then one pass across all screens for U2, U5 and U9.
-- One line per ID goes into the done-run, plus `**UX judge:**` naming who judged. After fixes, recheck only the failed IDs, once. Never loop until a judge finds nothing.
-- Example line: `U5 FAIL checkout, phone: the note field shows only the placeholder "Add a note"`.
+- Never loop until a judge finds nothing.
+- Example lines: `U3 PASS schedule, roster (375, 1280): one filled button each` and `U5 FAIL checkout, phone: the note field shows only the placeholder "Add a note"`.
+- The done-run's `**UX judge:**` line names the judge and its inputs.
 
 ## Tree test (before UI code)
 
