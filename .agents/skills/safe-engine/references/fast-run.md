@@ -21,7 +21,7 @@ Pause the gate while waiting. Record each answer with its source (`owner via que
 
 ## Light lane
 
-A `change` (bug fix, small change, follow-up) records tickets, plan, build, done-run and handoff; design and schema only when started with `--ui` or `--data`.
+A `change` (bug fix, small change, follow-up) records tickets, plan, build, done-run and handoff; design and schema only when started with `--ui` or `--data`. A change that edits UI files still gets the done-run's UX audit.
 
 - Tickets: `**Ticket:** <url>` names the ticket it follows up and updates. A new ticket only for a new outcome; `**Ticket:** none (<why>)` when trivial.
 - No analysis step. Plan: `**Success:**` and `### Todos`. Unknown cause or several consumers: run `analyze-start` first and keep its result in the plan.
@@ -39,10 +39,10 @@ A `change` (bug fix, small change, follow-up) records tickets, plan, build, done
 | Tickets | `**Epic:** <url>` (a `change`: `**Ticket:**`), `**Backlog:**` (owned, affected and untouched items); product and feature runs ≥1 `**Sub-issue:** <url>` and `**Requested:**` numbering every requested item and approved addition (R1, R2…; an owner-deferred one as `R2 (owner-deferred: <link>)`); online, each listed ticket is open and has a `Definition of done` heading, and the listed criteria name every R-id not marked owner-deferred |
 | Analysis | `**Success:**` line and a fenced ASCII chart; product and feature runs only |
 | Plan | `### Files`, `### Critique`, `### Phases`, `### Todos` (with `T1`…), `### Whole plan`, `**Logging:**`, `**Efficiency:**` (light lane: `**Success:**` and `### Todos`); online, each listed ticket not Blocked or not planned has task items under its Checklist heading, one naming each criterion, every plan todo is an item there, and criteria still name every R-id not marked owner-deferred |
-| Design | ≥4 `#RRGGBB` hex colors, `**UI kit:**`, `**Font:**`, `**Logo:**`, `**Icons:**`, `**Layout:**`, `**Theme:**` naming light mode, `**Journeys:**` with counts and a minimum |
+| Design | ≥4 `#RRGGBB` hex colors, `**UI kit:**`, `**Font:**`, `**Logo:**`, `**Icons:**`, `**Layout:**`, `**Theme:**` naming light mode, `**Journeys:**` with counts and a minimum, `**Map:**`, `**Hierarchy:**` naming each key screen's primary action, `**Labels:**` |
 | Schema | a 3-option table, `**Chosen:**`, a fenced ERD or DDL |
 | Build log | one line per plan todo, starting with its ID: `- T1 pre: … do: … post: …` |
-| Done-run | ≥1 `PASS` line, `**Logs:**`; UI runs ≥1 existing screenshot path under `.factory/fast/shots/` |
+| Done-run | ≥1 `PASS` line, `**Logs:**`; UI runs, and runs whose changed files since `start` include UI files, also ≥1 existing screenshot path under `.factory/fast/shots/`, one verdict line per rule `U1` to `U10` (`- U3 PASS <screens>: <evidence>`; N/A and UNKNOWN with the reason; no open FAIL) and `**UX judge:**` naming the fresh agent that wrote them |
 | Handoff | `**Run:**`, `**Statuses:**` (each owned ticket's final status), `**Unverified:**`, `**Follow-ups:**`; sign-in runs `**Dev sign-in:**`; online, each listed ticket not Blocked, Backlog or not planned (label or board status) is fully ticked, an item naming each criterion, every plan todo an item, every R-id not marked owner-deferred named by a criterion |
 
 Labels end with the colon inside the bold: `**Epic:**`. Delegates return their log lines; the coordinator writes the record. During build, copy the design brief and schema decision into the product's `docs/`.
@@ -82,4 +82,4 @@ Without hooks the gate still records and checks steps; follow the order yourself
 ## Keep it fast
 
 - One record; status moves at boundaries.
-- No controller, capture, seal or independent review in Fast or Lucky. `verify` adds manual QA and tests; `promote` moves to Safe.
+- No controller, capture, seal or independent review in Fast or Lucky. One narrow exception: on UI work, a fresh agent writes the done-run's UX verdicts (`ux-quality` step 4). `verify` adds manual QA and tests; `promote` moves to Safe.

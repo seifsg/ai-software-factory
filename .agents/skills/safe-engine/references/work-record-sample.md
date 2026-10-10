@@ -116,6 +116,9 @@ Next.js app, SQLite through Drizzle, booking rules in one module. Light theme wi
 **Layout:** header with logo, Schedule, My bookings and the dev role switcher; content area; footer with studio address, Help, Privacy and ©; one column on phones
 **Theme:** light mode default; dark mode later
 **Journeys:** book a class: 2 actions, 1 load, min 2 actions; cancel a booking: 2 actions, 0 loads, min 1 action (the destructive confirm is the reason for the gap); staff check-in: 1 action per member, 0 loads, min 1 action
+**Map:** member: Schedule (home) > class detail, My bookings, Packs; staff: Schedule editor > class roster, Today. Header nav per role, the same on every screen; phones get a bottom bar with the same items. Tree test 5/5 tasks.
+**Hierarchy:** schedule: primary Book on an open class, Join waitlist on a full one; secondary day filter; deferred class description. Roster: primary Check in per member; secondary Add walk-in. Packs: primary Buy pack; deferred past orders.
+**Labels:** class, spot, booking (booked, cancelled), waitlist (waiting, promoted), pack and credits, check in (checked in); buttons Book, Join waitlist, Cancel booking, Buy pack, Check in
 
 ## Schema
 
@@ -151,6 +154,17 @@ indexes: classes(starts_at), bookings(class_id, status), waitlist(class_id, posi
 - PASS staff publishes a class and checks the booked member in
 - FAIL then fixed: booking button stayed active during the request; disabled while pending
 - Screenshot: .factory/fast/shots/schedule.png (DEV badge and "Sample data" tags visible)
+- U1 PASS member and staff maps: every screen reached from the header, none a dead end
+- U2 PASS header marks the current page; title and H1 match the nav label; the phone bar keeps all items; back from a class returns to the same week
+- U3 PASS one filled button per view: Book or Join waitlist per class, Check in per roster row
+- U4 PASS class description collapsed; booking never behind a menu; packs hide past orders
+- U5 PASS outline labels match the glossary on every screen; every field has a visible label
+- U6 PASS book a class: 2 actions, 1 load, min 2
+- U7 PASS loading, empty week, full class, failed booking with retry; a double click books once
+- U8 PASS 375 and 1280 px, keyboard booking; axe 0 violations
+- U9 PASS one icon family; Cancel booking sits in the same place on every booking
+- U10 UNKNOWN no low-end phone available; 180 KB JS on first load measured on desktop
+**UX judge:** fresh subagent that did not build it, from the shots at 375 and 1280, page outlines and the axe scan
 **Logs:** logs/app.log shows request IDs for booking, waitlist promotion and check-in; no errors
 
 ## Handoff
