@@ -457,16 +457,45 @@ def refusal(item, path):
     return None
 
 
-def deny_reason(run, what):
+def deny_reason(run, what, advice=None):
+    """Logged deny text: what is blocked, then the advice, or the steps that unblock it."""
     blocked = open_before_build(run)
     steps = (f" Record these steps first: {', '.join(blocked)}. Fill .factory/fast/work-record.md and run "
              "`fast_gate.py done <step>` (fast-run.md). .factory/ stays writable.") if blocked else ""
     log("hook.deny", key=run["key"], what=what, blocked=blocked)
-    return f"Factory {run['mode']} run '{run['key']}' blocks {what}.{steps}"
+    return f"Factory {run['mode']} run '{run['key']}' blocks {what}.{advice or steps}"
+
+
+def stray(target, cwd, root):
+    """True when a delete target is not strictly inside root; unresolved variables count as outside."""
+    path = os.path.expandvars(os.path.expanduser(re.sub(r"(?i)\$env:", "$", target)))
+    try:
+        full = norm(path, cwd)
+    except (OSError, ValueError):
+        return False  # unparsable path: fail open
+    return "$" in path or full == root or not inside(full, root)
+
+
+def guard(command, runs, cwd, session):
+    """Deny reason for a destructive command in any step of this session's run, or None."""
+    item = (mine(runs, cwd, session) or [None])[0] or mentioned(runs, command)
+    if not item:
+        return None
+    shell = sibling("fast_shell")
+    root = norm(item[2]["project"])
+    rule = shell.danger(command) or next((f"recursive delete outside the project ({target})"
+                                          for target in shell.deletes(command) if stray(target, cwd, root)), None)
+    return rule and deny_reason(item[2], rule, " Destructive commands are the owner's: ask the owner to run it, "
+                                               "or to approve another approach.")
 
 
 def pre_tool(event, runs, cwd, session):
-    """Deny reason for a project write before the gate opens, or None. Sessions bind only through real work."""
+    """Deny reason for a destructive command, or a project write before the gate opens, or None.
+    Sessions bind only through real work."""
+    if event["tool"] == "shell":
+        reason = guard(event["command"], runs, cwd, session)
+        if reason:
+            return reason
     if event["tool"] == "edit":
         targets = [norm(path, cwd) for path in event["paths"]]
     elif event["tool"] == "shell":

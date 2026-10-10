@@ -217,6 +217,37 @@ class FastGateTests(unittest.TestCase):
             with self.subTest(command=command):
                 self.assertEqual(self.pre("Bash", command=command), decision)
 
+    def test_destructive_commands_go_to_the_owner_in_every_step(self):
+        cases = {
+            "rm -rf ~": "deny", "rm -rf /": "deny", "rm -r ..": "deny", f'rm -rf "{self.root}"': "deny",
+            "rm -rf $HOME/x": "deny", "Remove-Item -Recurse -Force ..\\other": "deny", "rd /s /q ..": "deny",
+            "rm -rf dist node_modules": "allow", "Remove-Item -Recurse dist": "allow", "rm -f ../x.txt": "allow",
+            "git push --force": "deny", "git push -f origin x": "deny", "git push origin +x": "deny",
+            "git push --force-with-lease origin main": "deny", "git push": "allow",
+            "git push --force-with-lease origin feature": "allow",
+            'psql -c "DROP TABLE users"': "deny", "mysql app -e 'truncate orders'": "deny",
+            "sqlite3 app.db <<'EOF'\ndrop table x;\nEOF": "deny", 'mongosh --eval "db.users.drop()"': "deny",
+            'grep "DROP TABLE" schema.sql': "allow", "echo truncate": "allow", 'gh issue create --body "psql DROP x"': "allow",
+            "RAILS_ENV=production rails db:migrate": "deny", "npx prisma migrate deploy --env production": "deny",
+            "RAILS_ENV=test rails db:migrate": "allow", "npm run migrate -- --env local": "allow",
+            'rm -rf "unclosed': "allow", "rm -rf ../a\x00b": "allow",  # unparsable: fails open
+        }
+        for command in ("rm -rf ~", "git push --force", 'psql -c "DROP TABLE users"'):  # no run: unchanged
+            self.assertEqual(self.pre("Bash", command=command), "allow")
+        self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "fix the footer copy")
+        out = self.hook({"hook_event_name": "PreToolUse", "tool_name": "Bash", "tool_input": {"command": "rm -rf ~"}})
+        reason = out["hookSpecificOutput"]["permissionDecisionReason"]  # gate closed: owner advice, not steps
+        self.assertIn("recursive delete outside the project (~)", reason)
+        self.assertIn("ask the owner to run it", reason)
+        (self.project / ".factory/fast/work-record.md").write_text(LIGHT, encoding="utf-8")
+        for step in ("tickets", "plan"):
+            self.gate("done", step)
+        for command, decision in cases.items():
+            with self.subTest(command=command):
+                self.assertEqual(self.pre("Bash", command=command), decision)
+        log = (self.root / "home/logs/gate.log").read_text(encoding="utf-8")
+        self.assertEqual(log.count('"hook.deny"'), 1 + list(cases.values()).count("deny"))
+
     def test_stop_blocks_once_and_respects_pause(self):
         self.start()
         self.pre("Write", file_path=str(self.project / "src/app.ts"))  # binds session s1
