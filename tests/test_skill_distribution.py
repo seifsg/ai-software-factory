@@ -179,6 +179,59 @@ class DistributionTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, 'Incomplete.*history'):
             resolver.inspect_bundle(self.source)
 
+    def test_newer_layout_asks_for_an_update_instead_of_calling_the_bundle_incomplete(self):
+        commit = ('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm')
+        path = self.add_contract()  # this bundle's own contract does not list docs/hosts.md
+        self.git('add', '-A', cwd=self.source)
+        self.git(*commit, 'contract', cwd=self.source)
+        (self.source / 'docs/hosts.md').unlink()  # a partial checkout: HEAD still tracks the file
+        with self.assertRaisesRegex(RuntimeError, 'Incomplete factory bundle: docs/hosts.md'):
+            resolver.inspect_bundle(self.source)
+        self.git('rm', '-q', '--', 'docs/hosts.md', cwd=self.source)
+        self.git(*commit, 'newer layout drops a launcher-known file', cwd=self.source)
+        with self.assertRaisesRegex(RuntimeError, r'newer layout.*docs/hosts\.md.*install --host'):
+            resolver.inspect_bundle(self.source)
+        older = self.root / 'older'  # an older bundle whose history never had docs/hosts.md
+        self.git('clone', '-q', str(self.source), str(older), cwd=self.root)
+        self.git('remote', 'set-url', 'origin', self.git('remote', 'get-url', 'origin', cwd=self.source), cwd=older)
+        self.git('checkout', '-q', '--orphan', 'old', cwd=older)
+        self.git('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'old',
+                 cwd=older)
+        with self.assertRaisesRegex(RuntimeError, 'Incomplete factory bundle'):  # never "update" in a loop
+            resolver.inspect_bundle(older)
+        (self.source / 'docs/guidance.md').unlink()  # a file the bundle itself declares is really missing
+        with self.assertRaisesRegex(RuntimeError, 'Incomplete factory bundle'):
+            resolver.inspect_bundle(self.source)
+        self.git('checkout', '-q', '--', 'docs/guidance.md', cwd=self.source)
+        path.write_text(json.dumps({'version': 3, 'required_files': ['docs/install.md'],
+                                    'source_trees': ['docs']}), encoding='utf-8')
+        with self.assertRaisesRegex(RuntimeError, 'Invalid factory input contract'):  # a local edit is no upgrade
+            resolver.inspect_bundle(self.source)
+        self.git('add', '-A', cwd=self.source)
+        self.git(*commit, 'contract version 3', cwd=self.source)
+        with self.assertRaisesRegex(RuntimeError, 'newer layout.*input contract version 3'):
+            resolver.inspect_bundle(self.source)
+
+    def test_newer_layout_needs_a_contract_that_drops_the_file_and_is_unedited(self):
+        commit = ('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm')
+        self.git('rm', '-q', '--', 'docs/hosts.md', cwd=self.source)  # removed, but no contract at all
+        self.git(*commit, 'removal without a contract', cwd=self.source)
+        with self.assertRaisesRegex(RuntimeError, 'Incomplete factory bundle'):
+            resolver.inspect_bundle(self.source)
+        path = self.add_contract(required=['docs/install.md', 'docs/guidance.md'])
+        self.git('add', '-A', cwd=self.source)
+        self.git(*commit, 'contract without docs/hosts.md', cwd=self.source)
+        with self.assertRaisesRegex(RuntimeError, 'newer layout'):  # the real newer layout, for contrast
+            resolver.inspect_bundle(self.source)
+        path.write_text(path.read_text(encoding='utf-8') + '\n', encoding='utf-8')  # a local contract edit
+        with self.assertRaisesRegex(RuntimeError, 'Incomplete factory bundle'):
+            resolver.inspect_bundle(self.source)
+        self.git('checkout', '-q', '--', str(path), cwd=self.source)
+        self.git('rm', '-q', '--', 'docs/guidance.md', cwd=self.source)  # removed but still declared
+        self.git(*commit, 'broken revision', cwd=self.source)
+        with self.assertRaisesRegex(RuntimeError, 'Incomplete factory bundle'):
+            resolver.inspect_bundle(self.source)
+
     def test_deleted_committed_contract_cannot_fall_back_to_legacy(self):
         path = self.add_contract()
         self.git('add', '--', str(path), cwd=self.source)

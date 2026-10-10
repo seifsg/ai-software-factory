@@ -797,6 +797,19 @@ class TicketTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse(json.loads(result.stdout)["valid"])
 
+    def test_cli_renders_a_visual_ticket_to_a_cp1252_pipe(self):
+        source = self.root / ".factory/visual-contract.json"
+        atomic_json(source, self.visual_contract())
+        env = {k: v for k, v in os.environ.items() if k not in ("PYTHONUTF8", "PYTHONIOENCODING")}
+        env["PYTHONIOENCODING"] = "cp1252"  # a Windows pipe; the visual headings carry emoji
+        result = subprocess.run([sys.executable, "-m", "safe_engine", "--project", str(self.root), "--ticket", "alpha",
+                                 "ticket-render", "--source", str(source)], cwd=BUNDLE, capture_output=True,
+                                env=env, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stderr.decode("utf-8", "replace"))
+        body = json.loads(result.stdout.decode("utf-8"))["body"]
+        self.assertEqual(body, render_ticket(self.visual_contract()))  # the same body as in-process
+        self.assertIn("\u2705", body)
+
     def test_cli_named_selection_and_proposal_render_have_truthful_limits(self):
         source = self.root / ".factory/synthetic-contract.json"
         atomic_json(source, self.contract)
