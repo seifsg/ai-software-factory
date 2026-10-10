@@ -14,7 +14,7 @@ Needs Git and Python 3.9+. The launchers find or install them from official sour
    python <factory>/skills/safe-engine/scripts/fast_gate.py install --host claude|codex|cursor|other [--project <dir>]
    ```
 
-   - `claude`: enables the plugin (both launchers and the gate hooks) in your user settings. Start a new session.
+   - `claude`: enables the plugin (both launchers and the gate hooks) with auto-update in your user settings. Start a new session.
    - `codex`, `cursor`: copies both launchers into `~/.agents/skills` and writes the gate hooks. Codex asks you to trust them once.
    - `other`: copies the launchers only; wire hooks by hand per [hosts](hosts.md#other-agents).
    - `--project <dir>` installs into one project instead of your user folders. Re-running replaces only the factory's own entries.
@@ -38,6 +38,10 @@ launcher → resolve_bundle.py pins the factory's main branch to one commit in ~
 ```
 
 - Resume reuses the recorded bundle offline. It never pulls, resets or silently upgrades.
-- An installed launcher older than the factory it fetches says the layout is newer (older launchers say "Incomplete factory bundle"). Update the install: repeat step 2 from a current checkout, or update the plugin.
+- An installed launcher older than the factory it fetches says the layout is newer (older launchers say "Incomplete factory bundle"). Update the install.
 - Reproducible installs: check out one commit, install from it, and pass the same SHA to the resolver's `--ref` for a new project.
 - Installing on one machine does not reach other machines or cloud sessions; install there too. Cloud sessions load skills committed to their repository.
+
+## Update and uninstall
+
+Per route, with what happens to pinned projects: [update](../README.md#-update) · [uninstall](../README.md#-uninstall).

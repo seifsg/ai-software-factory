@@ -17,7 +17,14 @@ Coding agents jump straight to code. They skip the research, forget the ticket, 
 
 The factory **enforces** the process. Hooks block source edits until the ticket, analysis and plan are recorded. Every run ends in a draft pull request with before/after proof and a list of what is still unverified. You merge.
 
-## ⚡ Install in one step
+## 🧾 What you need
+
+- A coding agent. Claude Code, Codex and Cursor get the installer and gate hooks; any agent that reads a `SKILL.md` file works ([hosts](docs/hosts.md)).
+- Git and Python 3.9 or newer, run as `python`, `python3` or `py -3` on Windows.
+- The GitHub CLI `gh`, signed in (`gh auth login`), for GitHub tickets and draft PRs. Other trackers work; their ticket checks are recorded as unverified.
+- Windows with Claude Code: Git Bash (part of Git for Windows), because its hooks run in a POSIX `sh`.
+
+## ⚡ Install
 
 Paste this to your coding agent:
 
@@ -26,30 +33,89 @@ Install the AI Software Factory for this agent from https://github.com/seifsg/ai
 Clone it, follow docs/install.md and run its installer for this agent.
 ```
 
-Claude Code, from a terminal:
+Or run the installer yourself. Replace `claude` with `codex`, `cursor` or `other`:
+
+```bash
+git clone https://github.com/seifsg/ai-software-factory.git
+python ai-software-factory/skills/safe-engine/scripts/fast_gate.py install --host claude
+```
+
+- `claude` enables the plugin (skills and gate hooks) with auto-update. Start a new session.
+- `codex` and `cursor` copy the `safe-engine` and `improve-factory` skills into `~/.agents/skills` and write the gate hooks. Codex asks you to trust them once in `/hooks`.
+- `other` copies those skills only; wire the hooks by hand ([hosts](docs/hosts.md#other-agents)).
+- `--project <dir>` installs into one project instead of your user folders.
+
+Claude Code without a clone:
 
 ```bash
 claude plugin marketplace add https://github.com/seifsg/ai-software-factory.git
+```
+
+```bash
 claude plugin install safe-engine@ai-software-factory
 ```
 
-Then ask your agent:
+This route leaves auto-update off. Turn it on in `/plugin` under Marketplaces, or [update by hand](#-update).
+
+Details: [install](docs/install.md) · [hosts](docs/hosts.md).
+
+## 🚀 Use it
+
+1. **Ask for it** in your agent's syntax: `/safe-engine` in Claude Code, `$safe-engine` in Codex, "use safe-engine to ..." in Cursor.
+
+   ```text
+   safe-engine Build [app or feature] in [absolute project directory]. Success means [observable outcome].
+   safe-engine lucky Fix [bug] in [absolute project directory].
+   safe-engine safe Add [feature] to [absolute project directory]. Success means [observable outcome].
+   ```
+
+   No mode named means Fast; see Modes below.
+2. **Answer its questions.** New products and big features get one round for a POC, more for an MVP. The run waits for you, and your answers bind it.
+3. **Watch the card.** After each step the gate shows the ticket in progress, what just finished, what is being built now and what comes next. Ask for status any time.
+4. **Review the draft PR.** It carries before/after proof and what is unverified. Before a Fast or Lucky PR it offers an optional Safe check (manual QA, tests, an independent review). Try it, then merge; its tickets move to Done.
+
+Picking up later:
 
 ```text
-safe-engine Build [app or feature] in [absolute project directory]. Success means [observable outcome].
+safe-engine Resume [absolute project directory]
+safe-engine Verify [absolute project directory]
+safe-engine Promote [absolute project directory]
+improve-factory The factory did [observed]; expected [result].
 ```
 
-Manual install, flags and every agent's syntax: [install](docs/install.md) · [hosts](docs/hosts.md).
+- **Resume** reads the ticket and the work record, then continues the first unfinished step.
+- **Verify** adds manual QA and tests to a Fast or Lucky run. **Promote** moves it to Safe on the same epic.
+- **improve-factory** repairs the factory itself when it skipped a step or misbehaved. Product bugs go back to `safe-engine`.
+
+## 🔄 Update
+
+| Installed with | How it updates |
+|---|---|
+| Claude Code, through the installer | On its own: during a session Claude Code fetches new versions; `/reload-plugins` or a new session loads them |
+| Claude Code, right now (any route) | `claude plugin marketplace update ai-software-factory`, then `claude plugin update safe-engine@ai-software-factory`, then a new session |
+| Codex, Cursor, other | `git pull` in your factory clone, then run the same `fast_gate.py install --host ...` again. It replaces only the factory's own files and hook entries |
+
+- **Projects stay pinned.** On first use a project pins the factory's main branch to one commit, and every later run and resume there reads its methods from that commit, offline. New projects get the newest methods; updating the install brings new launchers and hooks. To switch a project to newer methods, ask `improve-factory Switch [absolute project directory] to the newest factory.` It checks the run is compatible first.
+- **"Newer layout" or "Incomplete factory bundle"** means your installed launcher is older than the factory it fetched. Update the install.
+- **Every machine.** Each machine and cloud session needs its own install; cloud sessions load the skills committed to their repository.
+
+## 🧹 Uninstall
+
+- **Claude Code:** `claude plugin marketplace remove ai-software-factory` removes the marketplace from your settings and uninstalls its plugin. The installer kept your earlier settings as `~/.claude/settings.json.bak-before-safe-engine`.
+- **Codex, Cursor, other:** delete `safe-engine` and `improve-factory` from `~/.agents/skills` (or `<dir>/.agents/skills`), then remove the hook entries naming `run-gate` or `fast_gate` from `hooks.json` in `~/.codex` or `~/.cursor` (or `<dir>/.codex`, `<dir>/.cursor`).
+- **Data:** `~/.safe-engine/` holds the pinned factory copies and gate state; delete it once no project has an unfinished run. Each project keeps a Git-ignored `.factory/` folder with its work records.
 
 ## 🏆 Why it works
 
 - 🔒 **Enforced, not suggested.** A gate and host hooks deny code edits until earlier steps pass, and push back when the agent tries to stop mid-run.
+- 🛑 **Destructive commands refused.** During a run, hooks deny recursive deletes outside the project, force pushes, `git clean -x`, `DROP` or `TRUNCATE`, database wipes and production migrations. You run those yourself or pick another approach.
 - 📣 **Progress you can see.** A mini dashboard from the gate, once per change: the ticket in progress with its bar, what just finished, what is being built now and what you will be able to do once it is done, what comes next, and any question waiting on you. When nothing changed, a hook spends under 0.1 ms on it.
 - 🔎 **Research before code.** New products and big features start with competitors, a feature matrix, opportunities and stack options.
 - ❓ **Questions that fit the size.** A POC builds exactly what you asked and asks only what the request leaves open. An MVP researches launch gaps, suggests features you did not think of and ships analytics and in-app feedback. Answers are recorded and binding.
 - 🎫 **A living backlog.** Every run reads it, cleans up issues after merged or closed PRs, and opens an epic with outcome sub-issues; follow-ups update existing tickets instead. Each ticket carries a definition of done and a checklist; an item is ticked only after it works, and a ticket is finished only when every item is. Tickets move through To do, In progress, Dev done and Ready for QA; your merge makes them Done. Items outside the task stay untouched.
 - 🎚️ **Right-sized.** Fast by default, Lucky for quick tries, Safe for work that must not break. In Fast and Lucky, small tasks and follow-ups take a light lane: no analysis step, a short plan, the same checks.
-- 🧪 **Proof, not promises.** Every requested item traces to a criterion, a checklist item and proof. Every checklist item is used before its tick, then a done-run with real controls and logs; Safe adds manual QA, tests and an independent reviewer.
+- 🧪 **Proof, not promises.** Every requested item traces to a criterion, a checklist item and proof. In product and feature runs, a fresh agent writes a check for every criterion before the build, from the tickets and plan alone; the builder never sees them, and any FAIL sends the work back. Then a done-run with real controls and logs. MVPs and production slices also record a secret scan, a dependency audit and static analysis. Safe adds manual QA, tests and an independent reviewer.
+- 🩹 **Root causes, not patches.** A bug or edge case is fixed where it starts: impossible by design, or rejected loudly where data enters. No silent defaults. A big or risky refactor waits for your yes.
 - 🎨 **A product bar.** Accessible, responsive UI, clear copy, public-page SEO and a designed schema. Fast UI runs plan their map, hierarchy and labels, and every UI run gets a fresh agent's check against ten UX rules before the gate lets it finish. Non-production builds show their environment and label sample data.
 - 🧑‍⚖️ **Humans stay in charge.** Draft PRs only. It never merges, releases or deploys.
 - 🌍 **Any agent, any OS, any codebase.** Games, web, mobile and desktop apps, services, tools and libraries.
@@ -65,10 +131,10 @@ safe-engine Build a habit tracker in /home/me/habits. Success means a signed-in 
 1. Researches three competitors and writes a feature matrix with opportunities.
 2. Asks you about size, features, approach and stack: one round for a POC, more for an MVP.
 3. Reads the backlog, then opens an epic and outcome sub-issues in To do, each with a definition of done.
-4. Analyzes requirements and consumers, then writes a plan whose todos become each ticket's checklist.
+4. Analyzes requirements and consumers, then writes a plan whose todos become each ticket's checklist. A fresh agent writes the hidden checks.
 5. Writes the design brief and the schema decision.
 6. Builds every checklist item through a check-change-check loop and ticks it once it works.
-7. Runs the app through every requested journey and its most likely failure.
+7. Runs the app through every requested journey and its most likely failure; the hidden checks decide each criterion.
 8. Opens a draft PR with before/after proof and what is unverified. Tickets wait in Ready for QA until you merge.
 
 ```mermaid
@@ -84,7 +150,8 @@ flowchart LR
 |---|---|---|
 | Skipping steps | The agent can skip any step | Code edits are denied until ticket, analysis and plan pass the gate |
 | Stopping early | The agent can stop and say "done" | Stopping mid-run is blocked once, with the next step named; waiting on background agents costs no extra turn where the host reports them |
-| Proof | The agent's word | Done-run results and logs; Safe adds QA, tests and independent review |
+| Dangerous commands | The agent can run them | Deletes outside the project, force pushes and database wipes are denied during a run |
+| Proof | The agent's word | Hidden checks the builder never saw, done-run results and logs; Safe adds QA, tests and independent review |
 | Review | The same agent grades itself | Safe: a different agent reviews from raw evidence |
 | Process size | One size for every task | Fast, Lucky or Safe |
 | Output | Changes in your working tree | Ticket plus draft PR with before/after |
@@ -97,9 +164,9 @@ flowchart LR
 | Research and questions | New products and big features | Skipped, sensible defaults | Always |
 | Planning | Full analysis and plan | One short pass | Full, plus a stop to review the file list |
 | Enforcement | Gate and hooks | Gate and hooks | Python controller |
-| Checks | Each checklist item, then a done-run | Each checklist item, then a done-run | Each item, manual QA, tests, verify, independent review |
+| Checks | Each checklist item, hidden checks, then a done-run | Each checklist item, hidden checks, then a done-run | Each item, manual QA, tests, verify, independent review |
 
-Add `lucky` or `safe` after the skill name. Resume any run with `safe-engine Resume [absolute project directory]`.
+Add `lucky` or `safe` after the skill name.
 
 ## 🧰 Skills
 
@@ -131,7 +198,7 @@ Details per agent: [hosts](docs/hosts.md).
 No. It opens draft PRs. Humans mark them ready, merge and release.
 
 **Does the gate judge quality?**
-No. It proves each step was recorded, not that it was good. Quality comes from the methods and the done-run; Safe adds tests and an independent review.
+No. It proves each step was recorded, not that it was good. Quality comes from the methods, the hidden checks and the done-run; Safe adds tests and an independent review.
 
 **Does it work on an existing codebase?**
 Yes. `analyze-start` reads the code and every consumer before anything changes.
@@ -139,18 +206,30 @@ Yes. `analyze-start` reads the code and every consumer before anything changes.
 **Which tracker?**
 GitHub Issues are checked online. Other trackers are recorded and marked unverified.
 
-**What do I need?**
-Git and Python 3.9 or newer. The launchers find or install them from official sources.
+**Can hooks catch everything?**
+No. They see tool calls, not intent: a command run from inside a script passes. The work record and the done-run carry the rest.
 
-**A run stopped or my session ended. Now what?**
-`safe-engine Resume [absolute project directory]` reads the ticket and the work record, then continues the first unfinished step.
+## 🛠️ Work on the factory
+
+Rules live in [AGENTS.md](AGENTS.md); changes go through `improve-factory`.
+
+```bash
+python tests/run.py
+```
+
+- `python tests/run.py --changed` runs only the tests your diff touches; run the full suite before any push.
+- Adding, moving or deleting a factory file: `python scripts/package_skill_entries.py`, then `--check` before pushing.
+- `python -m evals run` scores the factory against a plain agent ([evals](evals/README.md)).
 
 ## 🗂️ Layout
 
 ```text
 .agents/skills/        the skills (canonical methods)
 skills/                portable launchers, gate scripts and the Claude Code plugin root
+.claude-plugin/        the Claude Code marketplace
 safe_engine/           Safe mode controller (python -m safe_engine)
+evals/                 factory vs plain agent scoring (repository only)
+scripts/               launcher packaging
 docs/                  install and hosts
 tests/                 controller, gate, installer and skill hygiene tests
 ```
