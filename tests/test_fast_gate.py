@@ -3,6 +3,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
@@ -481,13 +482,14 @@ class FastGateTests(unittest.TestCase):
         spec = importlib.util.spec_from_file_location("fast_gate_module", GATE)
         gate = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(gate)
-        layout, lane = Path(gate.LAYOUT), Path(gate.FAST_RUN)
-        for name, texts in (("new", ("### ✅ Definition of done\nEvery criterion has an item.", "## Light lane")),
-                            ("old", ("### ✅ Done when", "## Hooks"))):
-            for path, text in zip((layout, lane), texts):
+        layout, lane, ux = Path(gate.LAYOUT), Path(gate.FAST_RUN), Path(gate.UX)
+        for name, texts in (("new", ("### ✅ Definition of done\nEvery criterion has an item.", "## Light lane",
+                                     "| U10 | Performance |")),
+                            ("old", ("### ✅ Done when", "## Hooks", "| Performance |"))):
+            for path, text in zip((layout, lane, ux), texts):
                 (self.root / name / path).parent.mkdir(parents=True, exist_ok=True)
                 (self.root / name / path).write_text(text, encoding="utf-8")
-        on = {"ticket_checks": True, "coverage": True, "light": True}
+        on = {"ticket_checks": True, "coverage": True, "light": True, "ux_rules": True}
         off = dict.fromkeys(on, False)
         self.assertEqual(gate.method_flags({"root": str(self.root / "new")}, self.project), on)
         self.assertEqual(gate.method_flags({"root": str(self.root / "old")}, self.project), off)
@@ -496,7 +498,7 @@ class FastGateTests(unittest.TestCase):
         self.assertEqual(gate.method_flags(None, SCRIPTS.parents[2]), on)  # this checkout's own methods define them
         (self.root / "new" / layout).write_bytes(b"\xff\xfe broken")
         self.assertEqual(gate.method_flags({"root": str(self.root / "new")}, self.project),
-                         {**off, "light": True})
+                         {**off, "light": True, "ux_rules": True})
         lucky = {"mode": "lucky", "kind": "change"}
         self.assertNotIn("done-run", gate.steps_for(lucky))
         self.assertIn("done-run", gate.steps_for({**lucky, "ticket_checks": True}))
@@ -504,6 +506,50 @@ class FastGateTests(unittest.TestCase):
         self.assertIn("analysis", gate.steps_for({"mode": "fast", "kind": "change"}))  # older methods keep it
         self.assertNotIn("analysis", gate.steps_for({"mode": "fast", "kind": "change", "light": True}))
         self.assertIn("analysis", gate.steps_for({"mode": "fast", "kind": "feature", "light": True}))
+
+    def test_ux_rules_need_brief_lines_and_one_verdict_per_rule(self):
+        record = record_module()
+        skill = (SCRIPTS.parents[2] / ".agents/skills/ux-quality/SKILL.md").read_text(encoding="utf-8")
+        self.assertEqual(tuple(re.findall(r"(?m)^\| (U\d+) \|", skill)), record.UX_RULES)  # gate and method agree
+        sections = record.sections(SAMPLE.read_text(encoding="utf-8"))
+        design, done = sections["design"], sections["done-run"]
+        on, old = {"ux_rules": True}, {}
+        self.assertEqual(record.check_design(on, design), [])
+        self.assertIn("needs a '**Map:**' line", record.check_design(on, design.replace("**Map:**", "Map:")))
+        self.assertIn("primary action", " ".join(record.check_design(on, design.replace("primary", "main"))))
+        bare = re.sub(r"(?m)^\*\*(?:Map|Hierarchy|Labels):\*\*.*\n", "", design)
+        self.assertEqual(record.check_design(old, bare), [])  # older methods keep the old brief
+        self.assertEqual(record.ux_audit(done), [])
+        self.assertEqual(record.ux_audit(done.replace("- U1 PASS", "| **U1** | PASS |")), [])
+        cases = {"- U4 PASS": ("- U4x PASS", "needs a 'U4 "), "- U3 PASS one": ("- U3 FAIL one", "U3 FAIL is open"),
+                 "**UX judge:**": ("UX judge:", "'**UX judge:**' line")}
+        for old_text, (new_text, problem) in cases.items():
+            with self.subTest(problem=problem):
+                self.assertIn(problem, " ".join(record.ux_audit(done.replace(old_text, new_text))))
+        u10 = re.search(r"(?m)^- U10 .*$", done).group(0)
+        self.assertIn("U10 N/A needs its evidence or reason", record.ux_audit(done.replace(u10, "- U10 N/A")))
+        self.assertEqual(record.check_done_run(old, "- PASS app works\n**Logs:** clean\n", project=self.project), [])
+
+    def test_ui_file_changes_need_the_ux_audit(self):
+        git = ["git", "-C", str(self.project)]
+        subprocess.run(git + ["init", "-q"], check=True)
+        (self.project / "server.py").write_text("print('hi')\n", encoding="utf-8")
+        subprocess.run(git + ["add", "server.py"], check=True)
+        subprocess.run(git + ["-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "base"], check=True)
+        self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "fix the footer copy")
+        run = json.loads((self.project / ".factory/fast/run.json").read_text(encoding="utf-8"))
+        head = subprocess.run(git + ["rev-parse", "HEAD"], capture_output=True, text=True, check=True).stdout.strip()
+        self.assertEqual((run["base"], run["ux_rules"], run["ui"]), (head, True, False))
+        record = record_module()
+        done = record.sections(LIGHT)["done-run"]
+        (self.project / "server.py").write_text("print('hello')\n", encoding="utf-8")
+        self.assertEqual(record.check_done_run(run, done, project=self.project), [])  # no UI file: no audit
+        (self.project / "src").mkdir()
+        (self.project / "src/Footer.tsx").write_text("export const Footer = () => null\n", encoding="utf-8")
+        problems = record.check_done_run(run, done, project=self.project)
+        self.assertEqual(problems[0], "UI files changed since start (src/Footer.tsx): record the UX audit")
+        self.assertIn("needs a 'U1 ", " ".join(problems))
+        self.assertEqual(record.ui_files({"base": head}, self.root / "not a repo"), [])
 
 
 if __name__ == "__main__":

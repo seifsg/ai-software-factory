@@ -47,10 +47,12 @@ HINTS = {
     "plan": "### Files, ### Critique, ### Phases, ### Todos (T1..), ### Whole plan, Logging and Efficiency lines; "
             "online: each listed ticket has checklist items",
     "design": ">=4 hex colors; UI kit, Font, Logo, Icons, Layout lines; Theme line naming light mode; "
-              "Journeys line with counts and a minimum",
+              "Journeys line with counts and a minimum; current methods also Map, Hierarchy (naming the primary "
+              "action) and Labels lines",
     "schema": "a 3-option table, a Chosen line, a fenced ERD or DDL",
     "build": "one line per plan todo: 'T1 pre: ... do: ... post: ...'",
-    "done-run": ">=1 PASS line, a Logs line; UI runs >=1 existing screenshot path",
+    "done-run": ">=1 PASS line, a Logs line; UI runs >=1 existing screenshot path; current methods: UI runs and "
+                "runs that changed UI files also a verdict line per U1..U10 (no open FAIL) and a UX judge line",
     "handoff": "Run, Statuses, Unverified, Follow-ups lines; sign-in runs a Dev sign-in line; "
                "online: each listed ticket fully ticked, or Blocked, Backlog or not planned",
 }
@@ -226,9 +228,10 @@ def skeleton(run):
 
 LAYOUT = ".agents/skills/ticketing/references/ticket-layout.md"
 FAST_RUN = ".agents/skills/safe-engine/references/fast-run.md"
+UX = ".agents/skills/ux-quality/SKILL.md"
 # run flag -> (method file, phrase): a check applies only when the methods the run reads define it
 FLAGS = {"ticket_checks": (LAYOUT, "Definition of done"), "coverage": (LAYOUT, "Every criterion has"),
-         "light": (FAST_RUN, "Light lane")}
+         "light": (FAST_RUN, "Light lane"), "ux_rules": (UX, "| U10 |")}
 
 
 def method_flags(bundle, project):
@@ -267,6 +270,17 @@ def ignore_factory(project):
     text = gitignore.read_text(encoding="utf-8") if gitignore.exists() else ""
     gitignore.write_text(text + ("\n" if text and not text.endswith("\n") else "") + ".factory/\n", encoding="utf-8")
     return "added .factory/ to .gitignore"
+
+
+def head(project):
+    """The project's current commit, so later checks can tell which files this run changed; None without one."""
+    import subprocess
+    try:
+        result = subprocess.run(["git", "-C", str(project), "rev-parse", "--verify", "-q", "HEAD"],
+                                capture_output=True, text=True, timeout=20)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    return result.stdout.strip() or None  # --verify -q prints nothing when there is no commit
 
 
 def hook_status(project):
@@ -319,6 +333,7 @@ def cmd_start(args):
            "closed": False, "bundle": bundle, **method_flags(bundle, project)}
     if "analysis" not in steps_for(run):  # older hook copies still require it before build: mark it skipped
         run["done"]["analysis"] = {"at": now(), "skipped": "light lane"}
+    run["base"] = head(project)  # files changed since this commit decide the done-run's UI checks
     save(ledger, run)
     record = record_path(project)
     if not record.exists():

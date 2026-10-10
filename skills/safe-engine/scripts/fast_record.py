@@ -333,14 +333,25 @@ def held(run, kwargs, check):
     return todos + unnamed(wanted, named)
 
 
+UX_BRIEF = ("Map", "Hierarchy", "Labels")  # ux-quality step 1: structure, priority and words, planned before UI code
+UX_RULES = tuple(f"U{n}" for n in range(1, 11))  # ux-quality step 3 rule IDs; each gets a done-run verdict
+VERDICT = re.compile(r"^[ \t]*(?:\|[ \t]*)?(?:(?:[-*+]|\d+[.)])[ \t]+)?(?:\[[ xX]\][ \t]+)?[*`]*(U\d+)\b[*`]*"
+                     r"[ \t:|.,-]*(PASS|FAIL|UNKNOWN|N/A)\b(.*)$", re.M | re.I)  # "- U3 PASS 04, 13: one filled button"
+UI_FILE = re.compile(r"\.(?:tsx|jsx|vue|svelte|astro|html?|css|scss|sass|less|xaml|axaml|storyboard|xib|uxml|uss|tscn)$",
+                     re.I)  # unambiguous view and style files; mixed-code languages rely on the run's --ui flag
+
+
 def check_design(run, body, **_):
     problems = [] if len(set(re.findall(r"#[0-9a-fA-F]{6}\b", body))) >= 4 else ["needs >=4 hex palette colors"]
-    problems += missing_markers(body, ["UI kit", "Font", "Logo", "Icons", "Layout", "Theme", "Journeys"])
-    theme, journeys = marker(body, "Theme"), marker(body, "Journeys")
+    brief = list(UX_BRIEF) if run.get("ux_rules") else []
+    problems += missing_markers(body, ["UI kit", "Font", "Logo", "Icons", "Layout", "Theme", "Journeys", *brief])
+    theme, journeys, hierarchy = marker(body, "Theme"), marker(body, "Journeys"), marker(body, "Hierarchy")
     if theme and "light" not in theme.lower():
         problems.append("Theme must name light mode as the default")
     if journeys and not re.search(r"\d.*\bmin\b\W*\d", journeys, re.I):
         problems.append("Journeys must give counts and a minimum: '<journey>: 2 actions, 1 load, min 2 actions'")
+    if brief and hierarchy and "primary" not in hierarchy.lower():
+        problems.append("Hierarchy must name each key screen's primary action: '<screen>: primary <action>; ...'")
     return problems
 
 
@@ -364,11 +375,43 @@ def check_build(run, body, **kwargs):
 def check_done_run(run, body, project, **_):
     problems = [] if re.search(r"\bPASS\b", body) else ["needs >=1 PASS result"]
     problems += missing_markers(body, ["Logs"])
-    if run.get("ui"):
+    touched = [] if run.get("ui") or not run.get("ux_rules") else ui_files(run, project)
+    if run.get("ui") or touched:
         shots = [Path(shot) for shot in re.findall(r"[\w./\\:~-]+\.(?:png|jpe?g|webp|gif)\b", body, re.I)]
-        if not any((shot if shot.is_absolute() else Path(project) / shot).is_file() for shot in shots):
-            problems.append("needs >=1 existing screenshot path")
+        missing = [] if any((shot if shot.is_absolute() else Path(project) / shot).is_file() for shot in shots) else [
+            "needs >=1 existing screenshot path"]
+        missing += ux_audit(body) if run.get("ux_rules") else []
+        problems += ([f"UI files changed since start ({', '.join(touched[:3])}): record the UX audit"]
+                     if missing and touched else []) + missing
     return problems
+
+
+def ux_audit(body):
+    """A fresh judge's verdict line per rule ID (ux-quality step 4): each with evidence or a reason, none still FAIL."""
+    found = [(rule.upper(), verdict.upper(), rest) for rule, verdict, rest in VERDICT.findall(body)]
+    named = {rule for rule, _, _ in found}
+    problems = [f"needs a '{rule} PASS|FAIL|UNKNOWN|N/A <screen>: <evidence or reason>' line"
+                for rule in UX_RULES if rule not in named]
+    problems += [f"{rule} FAIL is open: fix and recheck it, or record UNKNOWN with both reasons" if verdict == "FAIL"
+                 else f"{rule} {verdict} needs its evidence or reason"
+                 for rule, verdict, rest in found if verdict == "FAIL" or len(re.sub(r"\W", "", rest)) < 3]
+    return problems + missing_markers(body, ["UX judge"])
+
+
+def ui_files(run, project):
+    """UI files changed since the run's start commit, tracked or new; none without Git."""
+    import subprocess
+    git, base = ["git", "-c", "core.quotePath=false", "-C", str(project)], run.get("base")
+    for args in (["diff", "--name-only", base] if base else ["ls-files"], ["ls-files", "--others", "--exclude-standard"]):
+        try:
+            result = subprocess.run(git + args, capture_output=True, text=True, encoding="utf-8", errors="replace",
+                                    timeout=20)
+        except (OSError, subprocess.TimeoutExpired):
+            return []
+        found = [] if result.returncode else [name for name in result.stdout.splitlines() if UI_FILE.search(name)]
+        if result.returncode or found:
+            return found  # no Git: nothing to check; a UI file in the first listing spares the second git call
+    return []
 
 
 def check_handoff(run, body, **kwargs):
