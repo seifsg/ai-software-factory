@@ -1,7 +1,6 @@
 """Shared helpers for the eval tests: fake-agent templates, a sleeper that records its PID, process liveness."""
 import os
 from pathlib import Path
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -56,12 +55,18 @@ class EvalCase(unittest.TestCase):
 
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp(prefix="evals-test-"))
-        self.addCleanup(shutil.rmtree, self.tmp, True)
+        self.addCleanup(self.clean)  # runs on failure too
         self.scratch = self.tmp / "temp"
         self.scratch.mkdir()
         temp = patch.object(tempfile, "tempdir", str(self.scratch))
         temp.start()
         self.addCleanup(temp.stop)
+
+    def clean(self):
+        """Delete the test folder, read-only Git objects included; a leftover fails the test instead of piling up."""
+        leftover = isolation.remove(self.tmp)
+        if leftover:
+            raise AssertionError(leftover)
 
     def scores(self, name, files):
         """Failing items for sample `name` with `files` laid over its fixture."""

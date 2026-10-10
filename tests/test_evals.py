@@ -157,3 +157,7 @@ class EvalRunTests(EvalCase):
         self.assertEqual(subprocess.run([*git, "rev-list", "--count", "HEAD"], capture_output=True, text=True).stdout,
                          "1\n")
         self.assertEqual(subprocess.run([*git, "status", "--porcelain"], capture_output=True, text=True).stdout, "")
+        read_only = [p for p in (work / ".git/objects").rglob("*") if p.is_file() and not os.access(p, os.W_OK)]
+        self.assertTrue(read_only)  # what the runner must clear: Git writes its objects read-only
+        self.assertIsNone(isolation.remove(work))  # the remover every run folder goes through
+        self.assertFalse(work.exists())
