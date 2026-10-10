@@ -89,7 +89,7 @@ Lenses may run as isolated parallel reviewers. Give each the scope, baseline, ra
 ### 5. Stupid Mistakes
 - Debug output (console.log, print) left in production code
 - Commented-out code that should be removed
-- Dead code or unreachable branches
+- Dead code, unreachable branches, guards for states the design rules out (not defense in depth)
 - Wrong file/module imported
 - Copy-pasted code with unchanged variable names
 - Typos in string literals, enum values, or identifiers
@@ -139,6 +139,7 @@ Our own work. Someone else's project: judge by its rules instead.
 - Layer: `product` (code or behavior), `evidence` (proof missing or wrong), `report` (claim does not match result). Fix the affected layer. A proof gap needs actual verification, not a label.
 - Confidence: HIGH / MED / LOW. Label hunches.
 - Load-bearing code is not over-engineering: mark it **KEEP** with the reason.
+- Edge-case fix: at the root cause, first rung that fits (impossible by design; normalized or rejected loudly at entry; specified, logged behavior); a state beyond the data, config and platform in use: one loud assertion. One cause, one finding.
 - Out-of-scope opportunities: list as notes, not findings.
 - A clean pass is valid. Invent no findings.
 
@@ -158,7 +159,7 @@ Severity is impact. Disposition decides the gate: `blocking`, `before-exposure` 
 
 ## Fixes and review rounds
 
-- When told to fix: smallest change, affected layer only, intent unchanged. Then a fresh independent reviewer, not the one who fixed, assesses the result. A clean review needs no edits.
+- When told to fix: smallest change that removes the cause, affected layer only, intent unchanged. Then a fresh independent reviewer, not the one who fixed, assesses the result. A clean review needs no edits.
 - After any repair, rerun all configured checks. Reuse proof only when its inputs are exactly unchanged.
 - One round = independent review, fixes, fresh review. After round 3, only open CRITICAL or HIGH keep the loop going. At most 6 failed rounds per review loop. The cap covers review rounds only.
 - After the sixth failed round, stop that loop. Give the owner one short packet: findings per round (new vs repeated), the shared cause, options (extend 1-3 rounds, defer with an owner record, amend scope, cancel).
