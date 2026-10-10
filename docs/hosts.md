@@ -48,6 +48,18 @@ The plugin brings `/safe-engine`, `/improve-factory` and the gate hooks. Its roo
 
 `fast_gate.py install --host other` copies the launchers into `~/.agents/skills` (or `--project <dir>`). Run hooks through `run-gate.sh`: it fails open when Python or the gate is missing. Unknown hosts get a generic reader: pre-tool events deny with exit code 2 and the reason on stderr; stop and prompt hooks need a first-class adapter.
 
+## Evals
+
+`python -m evals run` (see `evals/README.md`) takes each agent's non-interactive command as a template. The prompt arrives on stdin and also sits at `../prompt.md` from the workspace. Real runs cost model tokens; check each flag against the installed version before one.
+
+| Agent | `--agent` (both arms) | `--factory-agent` (factory arm) |
+|---|---|---|
+| Claude Code | `claude --bare -p --dangerously-skip-permissions` (`--bare` needs `ANTHROPIC_API_KEY` and keeps an installed plugin out) | `claude --bare -p --dangerously-skip-permissions --plugin-dir {factory}/skills` |
+| Codex | `codex exec --sandbox workspace-write --ignore-user-config -` | not needed |
+| Cursor | `agent -p --force "Read ../prompt.md and do what it says."` | not needed |
+
+When the factory is installed for the user (skills folder or plugin), the plain arm must not see it: run that arm under a user or profile without it.
+
 ## Sources
 
 Claude Code [hooks](https://code.claude.com/docs/en/hooks.md), [plugins](https://code.claude.com/docs/en/plugins/marketplace-reference.md), [headless](https://code.claude.com/docs/en/headless) · Codex [hooks](https://learn.chatgpt.com/docs/hooks.md), [skills](https://learn.chatgpt.com/docs/build-skills), [non-interactive](https://learn.chatgpt.com/docs/non-interactive-mode) · Cursor [hooks](https://cursor.com/docs/agent/hooks), [skills](https://cursor.com/docs/context/skills), [headless CLI](https://cursor.com/docs/cli/headless) · Copilot [hooks](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-hooks-reference) · Gemini CLI [hooks](https://geminicli.com/docs/hooks/reference/) · OpenCode [plugins](https://opencode.ai/docs/plugins/) · [Agent Skills](https://agentskills.io) · [AGENTS.md](https://agents.md)
