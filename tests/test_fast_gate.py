@@ -542,6 +542,16 @@ class FastGateTests(unittest.TestCase):
                 self.assertIn(problem, " ".join(record.ux_audit(done.replace("- U3 PASS schedule", mixed))))
         contested = "- U3 UNKNOWN contested: judge FAIL on the modal, builder: a popover"
         self.assertEqual(record.ux_audit(done.replace("- U3 PASS schedule", contested)), [])
+        u3 = re.search(r"(?m)^- U3 PASS .*$", done).group(0)
+        for where in ("\n  - roster: FAIL two filled", "; roster FAILED", "; roster FAILS the blur test",
+                      "\n- U3 – FAIL roster", "\n> U3 FAIL roster", "\n### U3 FAIL roster"):
+            with self.subTest(where=where):  # an open FAIL never passes, wherever it is written
+                problems = record.ux_audit(done.replace(u3, u3 + where))
+                self.assertIn("keep one final verdict line", " ".join(problems))
+                self.assertFalse(any(p.startswith("U4 FAIL") for p in problems))  # and touches no other rule
+        for kept in ("; a failed booking shows a retry", "\n  one filled button per view, checked twice"):
+            with self.subTest(kept=kept):  # lowercase evidence and indented evidence stay accepted
+                self.assertEqual(record.ux_audit(done.replace(u3, u3 + kept)), [])
         cases = {"- U4 PASS": ("- U4x PASS", "needs a 'U4 "), "- U3 PASS schedule": ("- U3 FAIL schedule", "U3 FAIL is open"),
                  "**UX judge:**": ("UX judge:", "'**UX judge:**' line")}
         for old_text, (new_text, problem) in cases.items():
@@ -552,9 +562,11 @@ class FastGateTests(unittest.TestCase):
         self.assertEqual(record.check_done_run(old, "- PASS app works\n**Logs:** clean\n", project=self.project), [])
         self.assertEqual(record.check_done_run(old, "- U1 PASS login works\n**Logs:** ok\n", project=self.project), [])
         rule_lines = "\n".join(line for line in done.splitlines() if not line.startswith("- PASS"))
-        rule_lines += "\n- U3 recheck after fix: PASS roster\n"
-        self.assertIn("needs >=1 PASS result from using it",  # on a UI run rule lines never count as using it
-                      record.check_done_run({"ux_rules": True, "ui": True}, rule_lines, project=self.project))
+        for extra in ("- U3 recheck after fix: PASS roster", "- After the fix, U3 PASS roster",
+                      "**UX judge:** U1 to U9 PASS, U10 UNKNOWN", "- U1 PASS schedule\n  roster: PASS too"):
+            with self.subTest(extra=extra):  # on a UI run rule lines and the judge line never count as using it
+                self.assertIn("needs >=1 PASS result from using it", record.check_done_run(
+                    {"ux_rules": True, "ui": True}, rule_lines + "\n" + extra + "\n", project=self.project))
         self.assertEqual(record.check_done_run({"ux_rules": True}, "- U1 PASS login works\n**Logs:** ok\n",
                                                project=self.project), [])  # no UI owed: its lines count as before
 
