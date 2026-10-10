@@ -1,6 +1,7 @@
 """Owner-only rules for the fast_gate.py destructive guard: structure-blind triggers over a command's judged text,
 and the word-level readings (deletes, force_push) that fast_guard.py uses to prove a fired rule harmless.
 """
+import fnmatch
 from itertools import takewhile
 import re
 
@@ -14,14 +15,15 @@ def word(names):
 
 DELETERS = {"rm", "rmdir", "rd", "del", "erase", "ri", "remove-item"}
 DOS = {"rmdir", "rd", "del", "erase"}  # cmd.exe takes /s flags
-FILTERS = {"-name", "-iname", "-path", "-ipath", "-wholename", "-regex", "-iregex", "-type", "-newer", "-mtime",
-           "-mmin", "-atime", "-size", "-empty", "-user", "-perm"}  # a find with one removes matches, not the tree
+PROTECTED_NAMES = {"run.json", ".git", ".factory", "fast"}  # a find -name pattern must match none of these
+LEDGER = re.compile(r"run\.json", re.I)  # the run's ledger: deleting it, even without -r, disables the gate
 DELETE = re.compile(word("|".join(DELETERS | {"rimraf"})) + r"|(?<![\w-])-delete\b", re.I)
 RECURSIVE_HINT = re.compile(r"(?<![\w-])(?:-[a-zA-Z]*[rR][a-zA-Z]*(?::\S*)?|--recursive|/[sS](?:/\w)*)(?![\w-])|"
                             + word("rimraf|find"), re.I)
-GIT, PUSH_WORD = re.compile(word("git"), re.I), re.compile(word("push"), re.I)
+GIT, PUSH_WORD, CLEAN = re.compile(word("git"), re.I), re.compile(word("push"), re.I), re.compile(word("clean"), re.I)
+IGNORED = re.compile(r"(?<![\w-])-[a-zA-Z]*[xX][a-zA-Z]*(?![\w-])")  # git clean -x/-X: also ignored files
 FORCE = re.compile(r"(?<![\w-])(?:-[a-zA-Z]*[fd][a-zA-Z]*|--force[\w-]*|--mirror|--delete)(?![\w-])|(?<!\S)[+:][^\s:]")
-CLIENT = re.compile(word("|".join(CLIENTS)) + r"|\b(?:db|d1)\s+execute\b", re.I)
+CLIENT = re.compile(word("|".join(CLIENTS)) + r"|\b(?:db|d1)\s+execute\b|\brails\s+db\b(?!:)", re.I)
 WIPE = re.compile(r"(?:\b|(?<=-\w))(?:drop|truncate)\s+\w|\.drop\w*\s*\(", re.I)  # -e"DROP ..." reads -eDROP
 SQL_FILE = re.compile(r"[^\s'\"=<>|;&()]+\.sql\b", re.I)
 DESTROY = re.compile(r"\bdropdb\b|\bdb:(?:drop|reset|purge|wipe)\b|\bmigrate(?::|\s+)(?:fresh|reset)\b|"
@@ -40,6 +42,7 @@ TEXT = {
     "push": "force-push, mirror push or default-branch delete (allowed: --force-with-lease <remote> <branch> to a "
             "branch other than main or master)",
     "delete": "recursive delete",
+    "clean": "git clean of ignored files (-x or -X also removes .factory)",
 }
 ALWAYS = ("unreadable", "wipe", "destroy")  # no proof can allow these
 
@@ -50,8 +53,10 @@ def fired(text, sql):
     found = set()
     if UNREADABLE in text:
         found.add("unreadable")
-    if DELETE.search(text) and RECURSIVE_HINT.search(text):
+    if DELETE.search(text) and (RECURSIVE_HINT.search(text) or LEDGER.search(text)):
         found.add("delete")
+    if GIT.search(text) and CLEAN.search(text) and IGNORED.search(text):
+        found.add("clean")
     if PUSH_WORD.search(text) and GIT.search(text) and FORCE.search(text):
         found.add("push")
     if CLIENT.search(text) and (WIPE.search(text) or any(WIPE.search(body) for body in sql())):
@@ -72,11 +77,28 @@ def recursive(flag):
         or (len(lower) > 1 and "-recurse".startswith(lower)) or bool(re.fullmatch(r"-[fiIdv]*[rR][fiIrRdv]*", base)))
 
 
+def spared(words):
+    """True when a find's -name/-iname patterns exist and none can match a protected name (run.json, .git ...)."""
+    patterns = [(words[i + 1], words[i] == "-iname") for i, w in enumerate(words[:-1]) if w in ("-name", "-iname")]
+    return bool(patterns) and not any(fnmatch.fnmatchcase(name, pattern.lower() if folded else pattern)
+                                      for pattern, folded in patterns for name in PROTECTED_NAMES)
+
+
+def excludes(words, folder):
+    """True when a find prunes or negates a -path test naming folder."""
+    return bool({"-prune", "-not", "!"} & set(words)) and any(
+        words[i] in ("-path", "-ipath", "-wholename") and folder in words[i + 1] for i in range(len(words) - 1))
+
+
 def deletes(words):
-    """(target, strict) pairs a recursive delete removes ([] when it names none), or None when the command is no
-    recursive delete. strict: the target itself goes; a find with a filter removes only matches below its start."""
+    """(target, mode) for each path the command deletes ([] when it names none), or None when it deletes nothing.
+    mode: "tree" (the path and all below it), "below" (a find whose filter spares run.json and .factory),
+    "below-git" (one that also excludes .git) or "file" (a delete without recursion). PowerShell comma lists count
+    item by item."""
     name = program(words[0])
     if name == "git" and "rm" in words:
+        if "--cached" in words:
+            return None  # only the index changes
         words, name = words[words.index("rm"):], "rm"
     if name == "find":
         execs = [words[i + 1] for i, w in enumerate(words[:-1]) if w in ("-exec", "-execdir", "-ok", "-okdir")]
@@ -84,16 +106,20 @@ def deletes(words):
             return None
         args = [w for w in words[1:] if w not in ("-H", "-L", "-P")]
         starts = list(takewhile(lambda w: not w.startswith(("-", "(", "!")), args))
-        return [(start, not FILTERS & set(words)) for start in starts or ["."]]
+        mode = "tree" if not (spared(words) or excludes(words, ".factory")) else (
+            "below-git" if excludes(words, ".git") else "below")
+        return [(start, mode) for start in starts or ["."]]
     if name == "rimraf":
-        return [(w, True) for w in words[1:] if not w.startswith("-")]
-    if name not in DELETERS:
+        targets, mode = [w for w in words[1:] if not w.startswith("-")], "tree"
+    elif name in DELETERS:
+        flags = [w for w in words[1:] if w.startswith("-") or (name in DOS and re.fullmatch(r"(?:/\w)+", w))]
+        joined = [f.split(":", 1)[1] for f in flags if re.match(r"(?i)-(?:path|literalpath|lp):.", f)]
+        flagged = set(flags)
+        targets = [w for w in words[1:] if w not in flagged] + joined
+        mode = "tree" if any(recursive(flag) for flag in flags) else "file"
+    else:
         return None
-    flags = [w for w in words[1:] if w.startswith("-") or (name in DOS and re.fullmatch(r"(?:/\w)+", w))]
-    if not any(recursive(flag) for flag in flags):
-        return None
-    joined = [f.split(":", 1)[1] for f in flags if re.match(r"(?i)-(?:path|literalpath|lp):.", f)]
-    return [(w, True) for w in words[1:] if w not in flags] + [(w, True) for w in joined]
+    return [(part, mode) for target in targets for part in target.split(",") if part]
 
 
 def deleter(words):
@@ -116,6 +142,13 @@ def force_push(words):
         return True
     lease = any(f.startswith("--force-with-lease") for f in flags)
     return lease and (not refs or any(head in DEFAULT_BRANCHES | {"HEAD"} for head in heads))
+
+
+def cleans_ignored(words):
+    """True unless words are a literal git clean without -x/-X (which keeps ignored files such as .factory)."""
+    if program(words[0]) != "git" or "clean" not in words:
+        return True
+    return any(IGNORED.fullmatch(w) for w in words[words.index("clean") + 1:])
 
 
 def pusher(words):

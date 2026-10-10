@@ -44,11 +44,18 @@ EVERYDAY = (  # commands an agent runs all day: never denied
     "cat README.md", "rg \"DROP TABLE\" -n", "gh issue view 73", "python -m pytest -q", "node scripts/build.js",
     "npx prisma generate", "npx prisma migrate status", "rails db:migrate", "docker compose up -d",
     "docker compose logs web", "rm -rf node_modules dist", "rm -rf build/ .next/", "mkdir -p src/lib",
-    "cp .env.example .env", "mv old.ts new.ts", 'find . -name "*.log" -delete', "Remove-Item -Recurse -Force dist",
+    "cp .env.example .env", "mv old.ts new.ts", 'find . -name "*.log" -not -path "./.git/*" -delete',
+    "Remove-Item -Recurse -Force dist",
     "Get-ChildItem -Recurse src", 'Select-String -Pattern "dropdb" -Path *.md', 'psql -c "select count(*) from users"',
     'sqlite3 app.db ".tables"', "cd src && npm test", "export NODE_ENV=test && npm test",
     'echo "deploy to production later"', 'printf "%s\n" "rm -rf is denied"', "curl -s localhost:3000/health",
     "tsc --noEmit", "eslint . --fix", "go test ./...", 'git log --grep "migrate prod"', "wc -l src/*.ts",
+)
+
+
+WINDOWS_READING = (  # a backslash before a space is a path separator in PowerShell and cmd, not an escape
+    "Remove-Item ..\\ -Recurse -Force", "ri ..\\other\\ -r -fo", "cd ..\\ ; Remove-Item -Recurse other",
+    "cd ..\\ && rm -rf other", "Set-Location E:\\ ; Remove-Item -Recurse -Force x", 'cmd /c "cd /d E:\\ && rd /s /q x"',
 )
 
 
@@ -294,11 +301,26 @@ class FastGateTests(unittest.TestCase):
             "find .factory -delete", "find -L .. -delete", "find . -exec rm -rf {} +", "pnpm dlx rimraf ..",
             "yarn dlx rimraf ..", "npm exec -- rimraf ..", "pnpm exec rimraf ..", "rm -rf ../my\\ dir", "rm -rf .git",
             "rm -rf `pwd`/../x", "echo 'ls' | bash -c 'rm -rf ~'",
+            # round 4: piped or fed text, braces, PowerShell lists, git clean, ledger, find from the root
+            'echo "DROP TABLE users;" | docker exec -i db psql -U postgres',
+            "printf 'DROP TABLE x;' | npx prisma db execute --stdin",
+            "docker compose exec -T db psql <<'EOF'\nDROP TABLE users;\nEOF",
+            "kubectl exec -i pg-0 -- psql <<EOF\nDROP TABLE users;\nEOF",
+            'echo "DROP TABLE x;" | python manage.py dbshell', 'echo "DROP TABLE x;" | rails dbconsole',
+            "ssh prod-1 <<'EOF'\nrm -rf /srv/app\nEOF", "echo 'rm -rf /srv/app' | ssh prod-1 bash",
+            "echo 'rm -rf ~' | docker exec -i web sh", "rm -rf build/{cjs,esm} ~", "rm -rf apps/{web,api}/dist /",
+            "rm -rf node_modules/{.cache,.vite} ~/.npm", "rm -rf packages/{a,b}/dist ../shared/dist",
+            "rm -rf dist{/../../other,}", "rm -rf x{a ~", "Remove-Item -Recurse -Force dist,..\\other",
+            "Remove-Item -Recurse -Force node_modules,..\\other\\node_modules", "git clean -fdx", "git clean -fdX",
+            "git clean -ffdx", "git clean -x -f", "rm -rf .factory/fast/run.json", "rm -f .factory/fast/run.json",
+            "find . -type f -delete", "find . -name '*' -exec rm -rf {} +", "find . -name '*.pyc' -delete",
+            "find .git -name '*.pack' -delete", "find . -name run.json -delete", "rm -rf .git/objects",
+            *WINDOWS_READING,
         )
         allow = (
             "rm -rf dist node_modules", "Remove-Item -Recurse dist", "rm -f ../x.txt", "rm -rf dist 2> /dev/null",
             "rm -rf dist > /tmp/log.txt", "rm -rf $PWD/dist", "rm -rf ${PWD}/dist", "rm -rf src/*", "rm -r -Force dist",
-            "Remove-Item -Recurse:$false ..\\x", "find . -name '*.pyc' -delete", "cd src && rm -rf build",
+            "Remove-Item -Recurse:$false ..\\x", "find src -name '*.pyc' -delete", "cd src && rm -rf build",
             f'cd .. && cd "{self.project.name}" && rm -rf dist', 'bash -c "rm -rf dist"', "pwsh -File build.ps1",
             "git push", "git push origin feature", "git push --force-with-lease origin feature",
             "git push --force-with-lease origin HEAD:feature", "git push origin --delete feature",
@@ -315,6 +337,14 @@ class FastGateTests(unittest.TestCase):
             'gh pr create --title "Drop prod flag" --body "Removes rm -rf ~ and DROP TABLE calls"',
             "npx prisma migrate dev --name add_prod_flag", "find .factory -name '*.tmp' -delete",
             """git commit -m "$(cat <<'EOF'\nfix: stop rm -rf ~ and git push -f\nEOF\n)\"""",
+            "echo 'rm -rf ~' | tee notes.txt", 'echo "DROP TABLE x" > notes.txt',
+            "cat > notes.md <<'EOF'\nrm -rf ~ and DROP TABLE x\nEOF",
+            "gh issue create --title t --body-file - <<'EOF'\npsql -c 'DROP TABLE x'; rm -rf ~\nEOF",
+            "rm -rf build/{cjs,esm}", "rm -rf apps/{web,api}/dist", "Remove-Item -Recurse -Force dist,build",
+            "git clean -fd", "git clean -n", "git rm -r --cached .", 'git commit -am "drop table cleanup, rm -rf old"',
+            'git commit -qm "git push -f fixed"', 'gh pr create -t "DROP TABLE x" -b "rm -rf ~"',
+            'glab mr create --description "rm -rf ~ and DROP TABLE x"', "rm -f .git/index.lock",
+            "find . -name '*.pyc' -not -path './.git/*' -delete", "find .factory -name '*.tmp' -delete",
         ) + EVERYDAY
         root = gate.norm(str(self.project))
         judge = gate.sibling("fast_guard").Judge(root, gate.norm, gate.inside)
@@ -322,6 +352,10 @@ class FastGateTests(unittest.TestCase):
             with self.subTest(command=command[:80]):
                 self.assertEqual(bool(judge.rule(command, root)), command in deny)
         self.assertIn("cannot be resolved after a directory change (dist)", judge.rule("popd; rm -rf dist", root))
+        for command in WINDOWS_READING:  # a PowerShell or cmd reading denies; the Bash reading alone sees no delete
+            with self.subTest(dialect=command):
+                self.assertTrue(judge.rule(command, root, "windows"))
+        self.assertIsNone(judge.rule("rm -rf my\\ dir", root, "bash"))
         other = self.root / "proj2"  # the cwd's own run judges, not the session's bound run
         runs = [(None, {"sessions": ["s1"]}, {"project": str(self.project)}), (None, {}, {"project": str(other)})]
         self.assertIsNone(gate.guard("rm -rf dist", runs, gate.norm(str(other)), "s1"))

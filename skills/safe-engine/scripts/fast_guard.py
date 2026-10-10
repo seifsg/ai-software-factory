@@ -10,7 +10,7 @@ import re
 import fast_rules as rules
 import fast_shell as shell
 
-BUDGET = 200  # delete targets proven per command; each costs a path lookup, and no agent names more
+BUDGET = 100  # delete targets proven per command; each costs a path lookup, and no agent names more
 
 
 class Judge:
@@ -18,7 +18,9 @@ class Judge:
 
     def __init__(self, root, norm, inside):
         self.root, self.norm, self.inside, self.seen, self.budget = root, norm, inside, {}, BUDGET
-        self.protected = {norm(os.path.join(root, *part)) for part in ((".factory",), (".factory", "fast"), (".git",))}
+        self.protected = {norm(os.path.join(root, *part)) for part in ((".factory",), (".factory", "fast"), (".git",),
+                                                                       (".factory", "fast", "run.json"))}
+        self.git = norm(os.path.join(root, ".git"))  # history: nothing inside it may go
 
     def resolve(self, target, here):
         """Comparable path of target seen from here; None when a variable or here is unknown. Memoized per event."""
@@ -37,21 +39,27 @@ class Judge:
             return None
         return self.norm(path, here)
 
-    def stray(self, target, here, strict):
-        """Why a recursive delete of target is refused, or None. strict: the target itself goes, so the project root,
-        root/* and the protected folders (.factory, .factory/fast, .git) count too."""
+    def stray(self, target, here, mode):
+        """Why deleting target is refused, or None. mode "tree": the target and all below go, so the project root,
+        root/* and the protected paths (.factory, .factory/fast, its run.json, .git) count; "below"/"below-git":
+        only find matches below an inside start go, and from the root only when .git is excluded; "file": only the
+        protected paths count. Nothing inside .git may go."""
         head, tail = os.path.split(target)
-        path = (head or ".") if strict and tail in ("*", ".*") else target
+        path = (head or ".") if mode == "tree" and tail in ("*", ".*") else target
         try:
             full = self.resolve(path, here)
         except (OSError, ValueError):
             full = None
         if full is None:
             after = " after a directory change" if here is None else ""
-            return f"recursive delete of a path that cannot be resolved{after} ({target})"
-        if strict and full in self.protected:
-            return f"recursive delete of a protected folder ({target})"
-        if strict and full == self.root:
+            return None if mode == "file" else f"delete of a path that cannot be resolved{after} ({target})"
+        if (mode != "file" and self.inside(full, self.git)) or (mode in ("tree", "file") and full in self.protected):
+            return f"delete of a protected path ({target})"
+        if mode == "file":
+            return None
+        if mode == "below" and full == self.root:
+            return f"delete under the whole project without excluding .git ({target})"
+        if mode == "tree" and full == self.root:
             return f"recursive delete of the whole project ({target})"
         if not self.inside(full, self.root):
             return f"recursive delete outside the project ({target})"
@@ -83,11 +91,11 @@ class Judge:
         literal = all(shell.literal(w) for w in cmd.words)
         if "delete" in fired and rules.DELETE.search(cmd.text):
             targets = rules.deletes(cmd.words) if literal and rules.deleter(cmd.words) else []
-            if targets == []:  # an unreadable form, or a recursive delete naming no literal target
+            if targets == []:  # an unreadable form, or a delete naming no literal target
                 return f"recursive delete the hook cannot prove stays inside the project ({cmd.words[0]})"
-            for path, strict in targets or []:
+            for path, mode in targets or []:
                 self.budget -= 1
-                reason = self.stray(path, here, strict) if self.budget >= 0 else (
+                reason = self.stray(path, here, mode) if self.budget >= 0 else (
                     f"recursive delete of more than {BUDGET} targets in one command")
                 if reason:
                     return reason
@@ -96,11 +104,24 @@ class Judge:
                 return rules.TEXT["push"]
         if "migrate" in fired and rules.MIGRATE.search(cmd.text) and rules.PROD.search(cmd.text):
             return rules.TEXT["migrate"]
+        if "clean" in fired and rules.CLEAN.search(cmd.text) and rules.GIT.search(cmd.text):
+            if not literal or rules.cleans_ignored(cmd.words):
+                return rules.TEXT["clean"]
         return None
 
-    def rule(self, command, cwd):
-        """The owner-only rule command breaks when run from cwd, or None. ( ) scopes restore the directory."""
-        items = list(shell.pipelines(command))
+    def rule(self, command, cwd, dialect=None):
+        """The owner-only rule command breaks when run from cwd, or None. dialect "bash" or "windows" (PowerShell,
+        cmd) says how the shell reads backslashes and quotes; unknown, both readings must prove the command."""
+        for reading in [dialect] if dialect else ["bash", "windows"]:
+            self.budget = BUDGET
+            reason = self.reading(command, cwd, reading)
+            if reason:
+                return reason
+        return None
+
+    def reading(self, command, cwd, dialect):
+        """rule() for one dialect. ( ) scopes restore the directory."""
+        items = list(shell.pipelines(command, dialect))
         commands = [item for item in items if not isinstance(item, str)]
         fired = rules.fired("\n".join(cmd.text for cmd in commands), lambda: self.sql(commands, cwd))
         if not fired:
@@ -108,9 +129,10 @@ class Judge:
         always = [rules.TEXT[name] for name in rules.ALWAYS if name in fired]
         if always:
             return always[0]
-        if any(cmd.words[0] == shell.UNCLEAR for cmd in commands):
+        if any(shell.UNCLEAR in cmd.text for cmd in commands):
             names = ", ".join(rules.TEXT[name] for name in sorted(fired))
-            return f"{names}, in a command the hook cannot follow (command substitution or a mid-command group)"
+            return (f"{names}, in a command the hook cannot follow (command substitution, a mid-command group or "
+                    "a brace)")
         here, saved = cwd, []
         for item in items:
             if item == "(":

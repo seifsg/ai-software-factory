@@ -466,10 +466,11 @@ def deny_reason(run, what, advice=None):
     return f"Factory {run['mode']} run '{run['key']}' blocks {what}.{advice or steps}"
 
 
-def guard(command, runs, cwd, session):
-    """Deny reason for a destructive command in any step of the run owning cwd, else this session's or the named one."""
+def guard(command, runs, cwd, session, dialect=None):
+    """Deny reason for a destructive command in any step of the run owning cwd, else this session's or the named one.
+    dialect: "bash" or "windows" when the host names its shell, else None (both readings must pass)."""
     item = owner(runs, cwd) or next(iter(mine(runs, cwd, session)), None) or mentioned(runs, command)
-    rule = item and sibling("fast_guard").Judge(norm(item[2]["project"]), norm, inside).rule(command, cwd)
+    rule = item and sibling("fast_guard").Judge(norm(item[2]["project"]), norm, inside).rule(command, cwd, dialect)
     return rule and deny_reason(item[2], rule, " Destructive commands are the owner's: ask the owner to run it, "
                                                "or to approve another approach.")
 
@@ -478,7 +479,7 @@ def pre_tool(event, runs, cwd, session):
     """Deny reason for a destructive command, or a project write before the gate opens, or None.
     Sessions bind only through real work."""
     if event["tool"] == "shell":
-        reason = guard(event["command"], runs, cwd, session)
+        reason = guard(event["command"], runs, cwd, session, event.get("dialect"))
         if reason:
             return reason
     if event["tool"] == "edit":

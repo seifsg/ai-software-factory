@@ -11,7 +11,6 @@ import re
 
 HEREDOC = re.compile(r"(?<!<)<<-?[ \t]*(['\"]?)(\w+)\1")  # the header; the body ends at a line with the tag
 HERESTRING = re.compile(r"@'.*?^'@|@\".*?^\"@", re.S | re.M)
-QUOTED = re.compile(r"'[^']*'|\"(?:\\.|[^\"\\])*\"", re.S)
 ARITHMETIC = re.compile(r"\(\((?:[^()]|\([^()]*\))*\)\)|\[\[[^\]]*\]\]")
 TARGET = r"(\x00\d+\x00|[^\s;&|<>()'\"\x00]+)"
 REDIRECT = re.compile(r"(?<![<>])[&\d]?>>?\|?[ \t]*" + TARGET + r"|\|[ \t]*tee\b(?:[ \t]+-a)?[ \t]+" + TARGET)
@@ -23,8 +22,12 @@ SCAFFOLD = re.compile(
 DISCARD = ("/dev/null", "nul", "$null")
 SUBSTITUTE = ((re.compile(r"\$\{(\w+)\}"), r"$\1"), (re.compile(r"\$\(\s*pwd\s*\)"), "$PWD"),
               (re.compile(r"\$\(\s*git\s+rev-parse\s+--show-toplevel\s*\)"), "$GIT_TOPLEVEL"))
-PIPELINES = re.compile(r"([()])|\|\||&&|[;\n{}]|(?<![<>|])&(?!>)")  # ( and ) kept: they open and close a scope
-TOKEN = re.compile(r"\d*(?:<<<|<<|<|&?>>?)(?:&[\d-]|\|)?|(?:\\\s|[^\s<>])+")  # a redirect operator, or a word
+PIPELINES = re.compile(r"([()])|\|\||&&|[;\n]|(?<![^\s;&|(){}])[{}](?![^\s;&|(){}])|(?<![<>|])&(?!>)")  # ( ) kept
+OPERATOR = r"\d*(?:<<<|<<|<|&?>>?)(?:&[\d-]|\|)?"  # a redirect operator
+TOKEN = {"bash": re.compile(OPERATOR + r"|(?:\\\s|[^\s<>])+"),  # Bash: backslash-space is an escaped space
+         "windows": re.compile(OPERATOR + r"|[^\s<>]+")}  # PowerShell and cmd: a backslash is a path separator
+QUOTED = {"bash": re.compile(r"'[^']*'|\"(?:\\.|[^\"\\])*\"", re.S), "windows": re.compile(r"'[^']*'|\"[^\"]*\"")}
+BRACES = re.compile(r"([^{}]*)\{([^{}]*,[^{}]*)\}([^{}]*)")  # one simple {a,b} list inside a word
 PLACEHOLDER = re.compile(r"\x00(\d+)\x00")
 CAT_HEREDOC = re.compile(r"\$\(\s*cat\s*<<(?:(?!\$\(|`).)*\)\s*", re.S)  # $(cat <<'EOF' ...) with no code inside
 ASSIGN = re.compile(r"\w+=")
@@ -39,14 +42,18 @@ WRAPPERS = {"sudo", "doas", "env", "timeout", "time", "nice", "nohup", "command"
 SHELLS = {"bash", "sh", "zsh", "dash", "ksh", "fish", "su"}
 STDIN_SHELLS = SHELLS | {"pwsh", "powershell", "cmd"}
 CLIENTS = {"psql", "mysql", "mariadb", "sqlite3", "sqlcmd", "mongosh", "mongo", "duckdb", "sqlplus",
-           "clickhouse-client", "mysqlsh", "pgcli"}
+           "clickhouse-client", "mysqlsh", "pgcli", "dbshell", "dbconsole"}
 ECHOES = {"echo", "printf", "write-output"}
+DATA = ECHOES | {"cat", "tee", "out-file", "set-content", "add-content"}  # text through these only lands in files
+SINKS = {"tee", "out-file", "set-content", "add-content"}  # piping into these still ends in a file or the terminal
 SEARCHERS = {"grep", "egrep", "fgrep", "rg", "findstr", "select-string", "sls"}
-MESSAGES = {"-m", "--message", "-F", "--body", "--title", "--notes", "--grep"}
+MESSAGES = {"-m", "--message", "-F", "--body", "--title", "--notes", "--grep", "--body-file", "--description",
+            "--notes-file"}
+SHORT_MESSAGES = {"git": re.compile(r"-[a-zA-Z]*[mF]"), "gh": re.compile(r"-[tb]"), "glab": re.compile(r"-[td]")}
 PATTERN_FLAGS = {"-e", "--regexp", "-pattern"}
 CD = {"cd", "pushd", "popd", "chdir", "set-location", "sl", "push-location", "pop-location"}
 UNREADABLE = "\x00unreadable"  # an undecodable or too deep command; NUL never survives mask(), so none can forge it
-UNCLEAR = "\x00unclear"  # a $( ), backtick or mid-command group the parse cannot follow
+UNCLEAR = "\x00unclear"  # a $( ), backtick, mid-command group or brace the parse cannot follow
 Command = namedtuple("Command", "words env inputs text outer", defaults=("", False))
 
 
@@ -67,7 +74,7 @@ def bodies(text, hold):
 
 
 @lru_cache(maxsize=16)
-def mask(command):
+def mask(command, dialect="bash"):
     """(code, quotes): heredoc bodies, here-strings, quoted strings and arithmetic become numbered placeholders.
     Cached: writes, scaffolds and the guard share one mask per hook event."""
     quotes = []
@@ -80,7 +87,7 @@ def mask(command):
     for pattern, value in SUBSTITUTE:
         text = pattern.sub(value, text)
     text = HERESTRING.sub(lambda match: hold(match.group(0)[2:-2]), bodies(text, hold))
-    text = QUOTED.sub(lambda match: hold(match.group(0)[1:-1]), text)
+    text = QUOTED[dialect].sub(lambda match: hold(match.group(0)[1:-1]), text)
     return ARITHMETIC.sub(lambda match: f" {hold(match.group(0))} ", text), tuple(quotes)
 
 
@@ -109,6 +116,7 @@ def scaffolds(command):
     return bool(SCAFFOLD.search(mask(command)[0]))
 
 
+@lru_cache(maxsize=4096)
 def program(word):
     """Bare program name: no folder, no .exe, lower case."""
     return re.sub(r"\.exe$", "", re.split(r"[\\/]", word)[-1].lower())
@@ -119,13 +127,22 @@ def literal(word):
     return not re.search(r"\$\(|`", word) or bool(CAT_HEREDOC.fullmatch(word))
 
 
-def parse(piece, quotes):
+def expand(token):
+    """The words a token stands for: a simple {a,b} list expanded; UNCLEAR for any other brace inside a word."""
+    if "{" not in token and "}" not in token:
+        return [token]
+    found = BRACES.fullmatch(token)
+    return [found.group(1) + item + found.group(3) for item in found.group(2).split(",")] if found else [UNCLEAR]
+
+
+def parse(piece, quotes, dialect="bash"):
     """One simple command, redirects split off; reserved words and wrappers (sudo -u x, timeout 10) skipped."""
     words, env, inputs = [], [], []
-    tokens = iter(TOKEN.findall(piece))
+    tokens = iter(TOKEN[dialect].findall(piece))
     for token in tokens:
         if "<" not in token and ">" not in token:
-            words.append(unquote(token.replace("\\ ", " "), quotes))
+            token = token.replace("\\ ", " ") if dialect == "bash" else token
+            words += [unquote(word, quotes) for word in expand(token)]
             continue
         target = "" if re.search(r"&[\d-]$", token) else next(tokens, "")
         if "<" in token:
@@ -139,20 +156,27 @@ def parse(piece, quotes):
     return Command(words, env, inputs) if words else None
 
 
-def said(cmd, feeds):
-    """The command's judged text: env, words and input, minus literal message and data text (commit and PR text,
-    search patterns, echo arguments and heredocs unless fed to a shell or database client)."""
+def message(flag, name):
+    """True when flag takes a message value for program name (commit, PR and issue text)."""
+    short = SHORT_MESSAGES.get(name)
+    return flag in MESSAGES or bool(short and short.fullmatch(flag))
+
+
+def said(cmd, onward):
+    """The command's judged text: env, words and input, minus literal message and data text: commit and PR text,
+    search patterns, and echo, printf or heredoc text whose output only reaches a file or the terminal (onward:
+    a later piece of the pipeline reads it)."""
     words, name = cmd.words, program(cmd.words[0])
     cut = {i for i in range(1, len(words))
-           if words[i - 1] in MESSAGES or ("=" in words[i] and words[i].split("=")[0] in MESSAGES)}
-    if name in ECHOES and not feeds:
+           if message(words[i - 1], name) or ("=" in words[i] and words[i].split("=")[0] in MESSAGES)}
+    if name in ECHOES and not onward:
         cut.update(range(1, len(words)))
     if name in SEARCHERS:  # the first free word is the pattern, and so is the value of -e / -Pattern
         cut.update(i for i in range(1, len(words)) if words[i - 1].lower() in PATTERN_FLAGS)
         cut.add(next((i for i in range(1, len(words)) if not words[i].startswith("-")), len(words)))
     kept = [w for i, w in enumerate(words) if i not in cut or not literal(w)]
-    code = feeds or name in STDIN_SHELLS | CLIENTS  # else a heredoc is data, such as a file being written
-    return " ".join(cmd.env + kept + [text for op, text in cmd.inputs if op == "<" or code or not literal(text)])
+    data = (name in DATA and not onward) or any(words[i] == "-" and i in cut for i in range(1, len(words)))
+    return " ".join(cmd.env + kept + [text for op, text in cmd.inputs if op == "<" or not (data and literal(text))])
 
 
 def nested(words):
@@ -205,14 +229,14 @@ def feeding(pieces, index):
                 and fed(pieces[index]) is not None)
 
 
-def pipelines(command, exported=None, depth=0):
+def pipelines(command, dialect="bash", exported=None, depth=0):
     """Commands in order, with "(" and ")" around a subshell or a nested command string. A Command whose code is
     parsed in place (shell -c, eval, literal stdin) is outer. export, set and $env: words join every later env."""
     exported = [] if exported is None else exported
     if depth > MAX_DEPTH:
         yield Command([UNREADABLE], [], [], UNREADABLE)
         return
-    code, quotes = mask(command)
+    code, quotes = mask(command, dialect)
     if "`" in code:
         yield Command([UNCLEAR], [], [], UNCLEAR)
     last = ""
@@ -224,20 +248,25 @@ def pipelines(command, exported=None, depth=0):
             last = ""
             continue
         last = part or ""
-        pieces = [cmd for cmd in (parse(piece, quotes) for piece in last.split("|")) if cmd]
+        pieces = [cmd for cmd in (parse(piece, quotes, dialect) for piece in last.split("|")) if cmd]
         for index, cmd in enumerate(pieces):
             if EXPORT.match(program(cmd.words[0])):
                 exported += cmd.words
             inner, cmd = runs(pieces, index), cmd._replace(env=exported + cmd.env)
-            after = program(pieces[index + 1].words[0]) if index + 1 < len(pieces) else ""
-            text = said(cmd, after in STDIN_SHELLS | CLIENTS)
+            text = said(cmd, any(program(later.words[0]) not in SINKS for later in pieces[index + 1:]))
             yield cmd._replace(text=text, outer=inner is not None or feeding(pieces, index))
             if inner == UNREADABLE:
                 yield Command([UNREADABLE], [], [], UNREADABLE)
             elif inner is not None:
                 yield "("
-                yield from pipelines(inner, exported, depth + 1)
+                yield from pipelines(inner, speaks(cmd.words[0], dialect), exported, depth + 1)
                 yield ")"
+
+
+def speaks(word, dialect):
+    """The dialect a nested command string runs in: Windows for cmd and PowerShell, Bash for sh-like shells."""
+    name = program(word)
+    return "windows" if name in ("cmd", "pwsh", "powershell") else "bash" if name in SHELLS else dialect
 
 
 def cd_target(words):
