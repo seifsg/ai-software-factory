@@ -148,6 +148,45 @@ class LauncherAndInstallerTests(unittest.TestCase):
                                 shell=True, input=b"{}", capture_output=True, env=self.env)
         self.assertEqual(result.returncode, 0)  # guarded Windows command: missing gate exits 0
 
+    def plugin_hook(self, root, home, event):
+        """The plugin's real PreToolUse command through bash, as the host's shell form runs it."""
+        plugin = json.loads((SCRIPTS.parents[1] / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
+        command = plugin["hooks"]["PreToolUse"][0]["hooks"][0]["command"]
+        env = {**self.env, "CLAUDE_PLUGIN_ROOT": str(root), "SAFE_ENGINE_HOME": str(home)}
+        result = subprocess.run([shutil.which("bash"), "-c", command], input=json.dumps(event).encode(),
+                                capture_output=True, env=env)
+        out = result.stdout.decode("utf-8").strip()
+        return result.returncode, json.loads(out) if out else None
+
+    def test_the_plugin_sources_the_launcher_in_the_host_shell(self):
+        if not shutil.which("bash"):
+            self.skipTest("no bash")
+        write = {"hook_event_name": "PreToolUse", "session_id": "s", "cwd": str(self.project), "tool_name": "Write",
+                 "tool_input": {"file_path": str(self.project / "src" / "a.ts")}}
+        code, out = self.plugin_hook(SCRIPTS.parents[1], self.root / "gate", write)
+        self.assertEqual((code, out["hookSpecificOutput"]["permissionDecision"]), (0, "deny"))
+        self.assertEqual(self.plugin_hook(SCRIPTS.parents[1], self.root / "idle", write), (0, None))  # no run: no process
+        self.assertEqual(self.plugin_hook(self.root / "nowhere", self.root / "gate", write), (0, None))  # no launcher
+        self.assertTrue(list((self.root / "gate" / "pycache").rglob("fast_gate*.pyc")))  # the gate loads from its cache
+
+    def test_launcher_and_installer_boot_the_gate_the_same_way(self):
+        self.assertIn(f'boot="{installer.BOOT}"', (SCRIPTS / "run-gate.sh").read_text(encoding="utf-8"))
+
+    def test_the_windows_command_leaves_before_loading_the_gate(self):
+        raises = self.root / "raises"
+        raises.mkdir()
+        (raises / "fast_gate.py").write_text("raise SystemExit('loaded')\n", encoding="utf-8")
+        code = installer.HOME_PY + installer.GUARD_PY + installer.RUN_PY
+        idle = subprocess.run([sys.executable, "-c", code, str(raises), "codex"], input=b"{}", capture_output=True,
+                              env={**self.env, "SAFE_ENGINE_HOME": str(self.root / "idle")})
+        self.assertEqual((idle.returncode, idle.stderr), (0, b""))  # no run: the gate is never loaded
+        patch = {"hook_event_name": "PreToolUse", "session_id": "s", "cwd": str(self.project), "tool_name": "apply_patch",
+                 "tool_input": {"command": "*** Begin Patch\n*** Add File: src/x.ts\n+x\n*** End Patch"}}
+        active = subprocess.run([sys.executable, "-c", code, str(SCRIPTS), "codex"], input=json.dumps(patch).encode(),
+                                capture_output=True, env=self.env)
+        self.assertEqual(json.loads(active.stdout)["hookSpecificOutput"]["permissionDecision"], "deny", active.stderr)
+        self.assertIn(f'"{SCRIPTS.as_posix()}" codex', installer.commands(SCRIPTS, "codex")[1])  # folder as an argument
+
     def test_installer_never_overwrites_skills_it_did_not_install(self):
         canonical = self.root / "factory" / ".agents" / "skills" / "safe-engine"
         canonical.mkdir(parents=True)
