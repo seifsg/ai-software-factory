@@ -54,6 +54,10 @@ Do not code before the plan is recorded.
 ## 4. Repair
 
 - Every todo is a checklist item in the maintenance ticket: the full 0–4 loop with pre, change and post notes, ticked after its check.
+- Keep the owner posted:
+  - the gate's card after each step (relay it where your agent does not show it);
+  - one line per wave of delegates;
+  - the question first when waiting.
 - Fix the owning cause and every affected caller and link. Remove stale or duplicate prose.
 - Write lasting rules into the skill that owns them.
 - Edit skills with your agent's skill-authoring tool when it has one.

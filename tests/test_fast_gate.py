@@ -1,4 +1,5 @@
 """Fast gate: real CLI and hook calls against disposable projects (fast-run.md#the-gate)."""
+import base64
 import importlib.util
 import json
 import os
@@ -15,7 +16,7 @@ SCRIPTS = Path(__file__).resolve().parents[1] / "skills/safe-engine/scripts"
 GATE = SCRIPTS / "fast_gate.py"
 SAMPLE = Path(__file__).resolve().parents[1] / ".agents/skills/safe-engine/references/work-record-sample.md"
 STEPS = ["research", "kickoff", "tickets", "analysis", "plan", "design", "schema", "build", "done-run", "handoff"]
-ONLINE = ("tickets", "plan", "handoff")  # steps that read the listed tickets through gh
+ONLINE = ("tickets", "plan", "done-run", "handoff")  # steps that read the listed tickets through gh
 LIGHT = """# copy-fix
 ## Tickets
 **Ticket:** none (one-word copy fix, no outcome change)
@@ -23,7 +24,7 @@ LIGHT = """# copy-fix
 ## Plan
 **Success:** the footer reads "Contact us".
 ### Todos
-- T1 fix the footer word
+- T1 fix the footer word → the footer reads "Contact us"
 ## Build log
 - T1 pre: footer says "Contcat us" do: fixed the word post: footer reads "Contact us"
 ## Done-run
@@ -37,11 +38,34 @@ LIGHT = """# copy-fix
 """
 
 
-def record_module():
-    spec = importlib.util.spec_from_file_location("fast_record", SCRIPTS / "fast_record.py")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+EVERYDAY = (  # commands an agent runs all day: never denied
+    "npm test", "npm run build", "npm run dev", "git status", "git diff --stat", "git log --oneline -5", "git add -A",
+    'git commit -m "fix: drop unused prod flag"', "git push", "git push -u origin feat/x", "git pull --rebase",
+    "git checkout -b feat/x", "git rm --cached .env", "git rm -r --cached node_modules", "git stash list", "ls -la",
+    "cat README.md", "rg \"DROP TABLE\" -n", "gh issue view 73", "python -m pytest -q", "node scripts/build.js",
+    "npx prisma generate", "npx prisma migrate status", "rails db:migrate", "docker compose up -d",
+    "docker compose logs web", "rm -rf node_modules dist", "rm -rf build/ .next/", "mkdir -p src/lib",
+    "cp .env.example .env", "mv old.ts new.ts", 'find . -name "*.log" -not -path "./.git/*" -delete',
+    "Remove-Item -Recurse -Force dist",
+    "Get-ChildItem -Recurse src", 'Select-String -Pattern "dropdb" -Path *.md', 'psql -c "select count(*) from users"',
+    'sqlite3 app.db ".tables"', "cd src && npm test", "export NODE_ENV=test && npm test",
+    'echo "deploy to production later"', 'printf "%s\n" "rm -rf is denied"', "curl -s localhost:3000/health",
+    "tsc --noEmit", "eslint . --fix", "go test ./...", 'git log --grep "migrate prod"', "wc -l src/*.ts",
+)
+
+
+WINDOWS_READING = (  # a backslash before a space is a path separator in PowerShell and cmd, not an escape
+    "Remove-Item ..\\ -Recurse -Force", "ri ..\\other\\ -r -fo", "cd ..\\ ; Remove-Item -Recurse other",
+    "cd ..\\ && rm -rf other", "Set-Location E:\\ ; Remove-Item -Recurse -Force x", 'cmd /c "cd /d E:\\ && rd /s /q x"',
+)
+
+
+def module(name):
+    """A gate script loaded in-process."""
+    spec = importlib.util.spec_from_file_location(name, SCRIPTS / f"{name}.py")
+    loaded = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(loaded)
+    return loaded
 
 
 class FastGateTests(unittest.TestCase):
@@ -62,7 +86,7 @@ class FastGateTests(unittest.TestCase):
 
     def gate(self, *args, ok=True, project=None):
         result = subprocess.run([sys.executable, str(GATE), *args, "--project", str(project or self.project)],
-                                capture_output=True, text=True, errors="replace", env=self.env)
+                                capture_output=True, text=True, encoding="utf-8", errors="replace", env=self.env)
         self.assertEqual(result.returncode == 0, ok, result.stdout + result.stderr)
         return result.stdout + result.stderr
 
@@ -78,18 +102,19 @@ class FastGateTests(unittest.TestCase):
     def pre(self, tool, cwd=None, session="s1", **tool_input):
         out = self.hook({"hook_event_name": "PreToolUse", "tool_name": tool, "tool_input": tool_input,
                          "session_id": session, "cwd": str(cwd or self.project)})
-        return out["hookSpecificOutput"]["permissionDecision"] if out else "allow"
+        return (out or {}).get("hookSpecificOutput", {}).get("permissionDecision", "allow")  # may carry progress only
 
     def start(self, *flags, kind="product"):
         self.gate("start", "--key", "portal-poc", "--kind", kind, "--request", "Build a client portal", *flags)
 
-    def finish_sample(self):
+    def finish_sample(self, text=None, until=None):
+        """Record the sample (or `text`) and pass the steps before `until`, or all of them."""
         record = self.project / ".factory/fast/work-record.md"
-        shutil.copyfile(SAMPLE, record)
+        record.write_text(text or SAMPLE.read_text(encoding="utf-8"), encoding="utf-8")
         shot = self.project / ".factory/fast/shots/schedule.png"
-        shot.parent.mkdir(parents=True)
+        shot.parent.mkdir(parents=True, exist_ok=True)
         shot.write_bytes(b"PNG")
-        for step in STEPS:
+        for step in STEPS[:STEPS.index(until) if until else None]:
             self.gate("done", step, *(["--offline", "sample URLs"] if step in ONLINE else []))
 
     def test_start_records_run_and_enforces_step_order(self):
@@ -132,8 +157,107 @@ class FastGateTests(unittest.TestCase):
         self.assertEqual(list((self.root / "home/active").glob("*.json")), [])
         self.assertIsNone(self.hook({"hook_event_name": "Stop", "stop_hook_active": False}))
 
+    def test_mvp_done_run_needs_the_three_scans_through_the_cli(self):
+        self.start("--auth")
+        scans = ("**Secrets:** `gitleaks dir .`: 0 findings\n**Dependencies:** `npm audit`: 0 vulnerabilities\n"
+                 "**Static:** `eslint .`: 0 findings\n")
+        bare = SAMPLE.read_text(encoding="utf-8").replace("**Size:** POC", "**Size:** MVP")
+        self.finish_sample(bare, until="done-run")
+        run = json.loads((self.project / ".factory/fast/run.json").read_text(encoding="utf-8"))
+        self.assertEqual((run["size"][:3], run["size_at"]), ("MVP", "kickoff"))  # frozen when the kickoff passed
+        for label in ("Secrets", "Dependencies", "Static"):
+            self.assertIn(f"needs a '**{label}:**' line (Size MVP, frozen at kickoff)", self.gate("done", "done-run", "--offline", "sample URLs", ok=False))
+        record = self.project / ".factory/fast/work-record.md"
+        record.write_text(bare.replace("**Size:** MVP", "**Size:** POC"), encoding="utf-8")  # edited after the kickoff
+        self.assertIn("'**Secrets:**' line (Size MVP, frozen at kickoff)", self.gate("done", "done-run", "--offline", "sample URLs", ok=False))
+        record.write_text(bare.replace("no errors\n", "no errors\n" + scans, 1), encoding="utf-8")
+        self.gate("done", "done-run", "--offline", "sample URLs")  # sample tickets are not readable
+
+    def test_done_run_scans_apply_to_flagged_mvp_and_production_runs_only(self):
+        record = module("fast_record")
+        body, flagged = "- PASS x\n**Logs:** ok\n", {"scans": True}
+        recorded = body + "**Secrets:** s scan\n**Dependencies:** d audit\n**Static:** t lint\n"
+        needs = lambda cause: [f"needs a '**{label}:**' line ({cause})" for label in ("Secrets", "Dependencies", "Static")]
+        sized = lambda size: {"kickoff": f"**Size:** {size}\n"}
+        for size, word in (("MVP", "MVP"), ("`MVP` (it can go live)", "MVP"), ("Production slice", "PRODUCTION"),
+                           ("POC→MVP", "MVP"), ("POC -> MVP (upgrade)", "MVP"), ("POC, production later", "PRODUCTION")):
+            with self.subTest(size=size):  # a second size anywhere fails closed, and the refusal says why
+                self.assertEqual(record.check_done_run(flagged, body, ".", all_sections=sized(size)),
+                                 needs(f"Size {word}, in the record"))
+                self.assertEqual(record.check_done_run(flagged, recorded, ".", all_sections=sized(size)), [])
+        for size in ("POC (from the request)", "POC"):  # not scanned
+            self.assertEqual(record.check_done_run(flagged, body, ".", all_sections=sized(size)), [])
+        feature = {**flagged, "kind": "feature"}
+        self.assertEqual(record.check_done_run(feature, body, ".", all_sections=sized("none (small feature)")), [])
+        self.assertEqual(record.check_done_run(flagged, body, "."), [])  # a change run has no kickoff
+        self.assertEqual(record.check_done_run({}, body, ".", all_sections=sized("MVP")), [])  # older methods unchanged
+        lucky, in_tickets = {"scans": True, "mode": "lucky", "kind": "product"}, lambda size: {"tickets": f"**Size:** {size}\n"}
+        self.assertEqual(record.check_done_run(lucky, body, ".", all_sections=in_tickets("MVP")),
+                         needs("Size MVP, in the record"))  # no kickoff in Lucky
+        self.assertEqual(record.check_done_run(lucky, recorded, ".", all_sections=in_tickets("MVP")), [])
+        self.assertEqual(record.check_done_run(lucky, body, ".", all_sections=in_tickets("POC")), [])
+
+    def test_the_size_frozen_in_the_ledger_outlives_the_record_line(self):
+        record = module("fast_record")
+        body = "- PASS x\n**Logs:** ok\n"
+        needs = lambda cause: [f"needs a '**{label}:**' line ({cause})" for label in ("Secrets", "Dependencies", "Static")]
+        for step in ("kickoff", "tickets", None):  # the refusal names where the size was frozen
+            frozen = {"scans": True, "size": "MVP", **({"size_at": step} if step else {})}
+            cause = f"Size MVP, frozen at {step}" if step else "Size MVP, frozen in the ledger"
+            for edited in ({}, {"kickoff": "**Size:** POC\n"}, {"tickets": "**Backlog:** x\n"}):  # deleted or edited later
+                self.assertEqual(record.check_done_run(frozen, body, ".", all_sections=edited), needs(cause))
+        self.assertEqual(record.check_done_run({"scans": True, "size": "POC"}, body, ".", all_sections={}), [])
+        self.assertEqual(record.check_done_run({"size": "MVP"}, body, ".", all_sections={}), [])  # older runs unchanged
+
+    def test_scan_markers_name_a_real_result(self):
+        record = module("fast_record")
+        run, sections = {"scans": True}, {"kickoff": "**Size:** MVP\n"}
+        ok = "**Dependencies:** npm audit: 0 vulnerabilities\n**Static:** eslint .: 0 findings\n"
+        for value in ("skipped", "Skipped: no network", "n/a", "N/A", "na", "none", "todo", "TBD", "-", "**-**"):
+            with self.subTest(value=value):
+                problems = record.check_done_run(run, f"- PASS x\n**Logs:** ok\n**Secrets:** {value}\n{ok}", ".", all_sections=sections)
+                self.assertEqual(len(problems), 1)
+                self.assertIn("'**Secrets:**' needs the tool, the command and the result", problems[0])
+        real = "none found by gitleaks (`gitleaks dir .`)"  # a result that starts with a placeholder word is still a result
+        self.assertEqual(record.check_done_run(run, f"- PASS x\n**Logs:** ok\n**Secrets:** {real}\n{ok}", ".", all_sections=sections), [])
+
+    def test_flagged_runs_refuse_a_size_the_scans_cannot_read(self):
+        record = module("fast_record")
+        flagged, older, body = {"scans": True, "kind": "product"}, {"kind": "product"}, "- PASS x\n**Logs:** ok\n"
+        kickoff = "**Features:** a\n**Approach:** b\n**Answered by:** o\n**Stack:** s\n**Size:** {}\n"
+        for size in ("An MVP (launch)", "small MVP", "Minimum viable product", "Prod slice", "production-ready POC",
+                     "none (small feature)"):  # none (<why>) is a feature size
+            with self.subTest(size=size):
+                refused = record.check_kickoff(flagged, kickoff.format(size))
+                self.assertIn("Size must start with POC, MVP, production, not", refused[0])
+                done = record.check_done_run(flagged, body, ".", all_sections={"kickoff": kickoff.format(size)})
+                self.assertTrue(any("Size must start with" in problem for problem in done))
+                self.assertEqual(record.check_kickoff(older, kickoff.format(size)), [])  # older methods unchanged
+        for size in ("POC", "MVP (launch)", "`Production` slice", "**MVP**"):
+            self.assertEqual(record.check_kickoff(flagged, kickoff.format(size)), [], size)
+        small = {"scans": True, "kind": "feature"}
+        self.assertEqual(record.check_kickoff(small, kickoff.format("none (small feature)")), [])
+        self.assertIn("or 'none (<why>)'", record.check_kickoff(small, kickoff.format("tiny"))[0])
+        prose = "The **Size:** question was open.\n" + kickoff.format("MVP")  # the first value is the one parsed
+        self.assertIn("Size must start with", record.check_kickoff(flagged, prose)[0])
+
+    def test_lucky_runs_record_their_size_in_tickets(self):
+        record = module("fast_record")
+        tickets = ("**Epic:** https://github.com/acme/portal/issues/1\n**Backlog:** x\n"
+                   "**Sub-issue:** https://github.com/acme/portal/issues/2\n")
+        check = lambda run, extra="": record.check_tickets(run, tickets + extra, offline="no network")
+        lucky = {"scans": True, "mode": "lucky", "kind": "product"}
+        self.assertEqual(check(lucky), ["needs a '**Size:**' line"])
+        self.assertIn("Size must start with", check(lucky, "**Size:** small MVP\n")[0])
+        self.assertIn("Size must start with", check(lucky, "**Size:** none (small)\n")[0])  # a product needs a real size
+        for size in ("MVP", "POC (default)"):
+            self.assertEqual(check(lucky, f"**Size:** {size}\n"), [])
+        self.assertEqual(check({**lucky, "kind": "feature"}, "**Size:** none (small feature)\n"), [])
+        self.assertEqual(check({**lucky, "scans": False}), [])  # older methods unchanged
+        self.assertEqual(check({**lucky, "mode": "fast"}), [])  # Fast runs size at the kickoff
+
     def test_offline_needs_unreadable_tickets_and_features_record_a_size(self):
-        record = record_module()
+        record = module("fast_record")
         url = "https://github.com/acme/portal/issues/2"
         sections = {"tickets": f"**Ticket:** {url}\n**Backlog:** none\n"}
         on, older = {"coverage": True, "ticket_checks": True, "kind": "change"}, {"ticket_checks": True, "kind": "change"}
@@ -152,7 +276,7 @@ class FastGateTests(unittest.TestCase):
         self.assertEqual(record.check_kickoff({"kind": "feature"}, kickoff), [])  # older methods unchanged
 
     def test_empty_markers_and_borrowed_build_lines_are_refused(self):
-        record = record_module()
+        record = module("fast_record")
         self.assertIsNone(record.marker("**Backlog:**\n**Sub-issue:** https://x/2\n", "Backlog"))  # no borrowing
         self.assertEqual(record.marker("**Backlog:**\nsearched x: none\n", "Backlog"), "searched x: none")
         self.assertEqual(record.marker("**Backlog:** none\n**Sub-issue:** u\n", "Backlog"), "none")
@@ -218,6 +342,199 @@ class FastGateTests(unittest.TestCase):
             with self.subTest(command=command):
                 self.assertEqual(self.pre("Bash", command=command), decision)
 
+    def test_destructive_rules_decide_every_probe(self):
+        gate = module("fast_gate")
+        (self.project / "drop.sql").write_text("DROP TABLE users;", encoding="utf-8")
+        (self.project / "safe.sql").write_text("select 1;", encoding="utf-8")
+        encoded = base64.b64encode("Remove-Item -Recurse C:\\x".encode("utf-16-le")).decode()
+        deny = (
+            "rm -rf ~", "rm -rf /", "rm -r ..", f'rm -rf "{self.root}"', "rm -rf $HOME/x", "rd /s /q ..",
+            "Remove-Item -Recurse -Force ..\\other", "rm -rf .", "rm -rf *", "rm -rf ./*", "rm -rfvi ..",
+            "Remove-Item -Recurse:$true ..\\x", "find .. -delete", "find / -name x -exec rm {} +",
+            "cd .. && rm -rf proj2", "cd /; rm -rf Users", "pushd .. && rm -rf x", "sl ..; rm -r x",
+            "Set-Location ..; Remove-Item -Recurse x", "chdir .. && rm -rf x", "cd $UNSET_DIR_73 && rm -rf dist",
+            "popd; rm -rf dist", "cd - && rm -rf dist", 'bash -c "rm -rf ~"', "sh -c 'rm -rf /'", 'eval "rm -rf ~"',
+            "cmd /c rd /s /q C:\\Users", 'pwsh -Command "Remove-Item -Recurse -Force C:\\x"',
+            'powershell -c "Remove-Item -Recurse C:\\x"', f"pwsh -EncodedCommand {encoded}", "pwsh -enc !!x",
+            "timeout 10 rm -rf /", "time rm -rf /", "nice -n 5 rm -rf /", "doas rm -rf /", "sudo -u root rm -rf /",
+            "env -i rm -rf /", 'bash -c "git push -f"', "git push --force", "git push -f origin x",
+            "git push origin +x", "git push --force-with-lease origin main", "git push --force-with-lease",
+            "git push --force-with-lease origin HEAD", "git push --mirror", "git push origin :main",
+            "git push origin --delete main", 'psql -c "DROP TABLE users"', "mysql app -e 'truncate orders'",
+            "sqlite3 app.db <<'EOF'\ndrop table x;\nEOF", 'mongosh --eval "db.users.drop()"', 'echo "DROP TABLE x"|psql',
+            'psql<<<"DROP TABLE x"', "psql < drop.sql", "dropdb app", "rails db:drop", "npx prisma migrate reset",
+            "npx prisma migrate reset --force", "RAILS_ENV=production rails db:migrate", "MIX_ENV=prod mix ecto.migrate",
+            "npx prisma migrate deploy --env production", "flask db upgrade --env production",
+            "DATABASE_URL=$PROD_DATABASE_URL npx prisma migrate deploy", "rake db:schema:load RAILS_ENV=production",
+            # round 2: reserved words and groups, framework wipes, carried env, stdin-fed shells, cheap gaps
+            "if [ -d ../proj2 ]; then rm -rf ../proj2; fi", "for d in a; do rm -rf ..; done", "{ rm -rf ..; }",
+            "! rm -rf ..", "cd sub && { cd ../..; rm -rf proj2; }", "if true; then git push -f; fi", "{ git push -f; }",
+            "if true; then dropdb app; fi", "if (Test-Path ..\\proj2) { Remove-Item -Recurse -Force ..\\proj2 }",
+            "try { Remove-Item -Recurse -Force C:\\Users\\x } catch {}", "(cd .. && rm -rf proj2)",
+            'powershell -command "& {Remove-Item -Recurse -Force ..}"', "docker exec db dropdb app",
+            "php artisan migrate:fresh", "php artisan db:wipe", "mix ecto.reset", "mix ecto.drop",
+            "python manage.py flush",
+            "supabase db reset", "npx prisma db push --force-reset", "rails db:purge", "npx typeorm schema:drop",
+            "export RAILS_ENV=production && rails db:migrate", "$env:RAILS_ENV='production'; rails db:migrate",
+            "set RAILS_ENV=production && rails db:migrate", "bash <<'EOF'\nrm -rf ~\nEOF", "bash -s <<< 'rm -rf /'",
+            "echo 'rm -rf ~' | bash", "echo 'git push -f' | sh", "echo 'Remove-Item -Recurse C:\\x' | pwsh",
+            "cat <<'EOF' | zsh\nrm -rf ..\nEOF", "echo 'rm -rf ~' |& bash", "Remove-Item -Recurse -Path:..",
+            "rd /s/q ..", "rimraf ..", "npx rimraf ../x", "Push-Location ..; Remove-Item -Recurse x",
+            "builtin cd .. && rm -rf x", "su -c 'rm -rf /'", "start cmd /c rd /s /q C:\\Users",
+            "powershell Remove-Item -Recurse -Force ..", "psql -f drop.sql", "eval " * 1200 + "ls", "rm -rf ../a\x00b",
+            "rm -rf .factory", "rm -rf .factory/*",
+            # round 3: substitutions and groups, remote and container strings, piped SQL files, attached options
+            "git push origin $(git branch --show-current) -f", 'psql $(cat .dburl) -c "DROP TABLE x"',
+            "DATABASE_URL=$(heroku config:get DATABASE_URL -a shop-production) npx prisma migrate deploy",
+            "Remove-Item -Recurse -Force (Resolve-Path ..\\proj2)", "Remove-Item (Join-Path $PSScriptRoot '..\\proj2') -Recurse -Force",
+            "Remove-Item -Recurse -Force -Path @('..\\proj2','dist')",
+            """docker exec -it db sh -c "psql -U postgres -c 'DROP DATABASE app'\"""",
+            """docker compose exec db bash -c 'psql -c "DROP SCHEMA public CASCADE"'""",
+            """kubectl exec -it pg-0 -- sh -c "psql -c 'TRUNCATE users'\"""", """ssh db1 "psql -c 'DROP TABLE users'\"""",
+            'ssh deploy@prod-1 "cd /app && bundle exec rails db:migrate RAILS_ENV=production"',
+            'docker compose exec web sh -c "RAILS_ENV=production rails db:migrate"', "cat drop.sql | psql",
+            "cat drop.sql | docker compose exec -T db psql -U postgres", "Get-Content drop.sql | psql",
+            "type drop.sql | sqlcmd", 'mysql -e"DROP TABLE x"', "psql --file=drop.sql", "psql -fdrop.sql",
+            'sqlite3 app.db ".read drop.sql"', "npx prisma db execute --file drop.sql",
+            'npx wrangler d1 execute shop --command "DROP TABLE x"', 'mysqlsh -e "DROP TABLE x"',
+            'iex "rm -rf ~"', 'Invoke-Expression "Remove-Item -Recurse -Force C:\\x"',
+            'Start-Process pwsh -ArgumentList "-c","Remove-Item -Recurse C:\\x"', "rm -rf .factory/fast", "find . -delete",
+            "find .factory -delete", "find -L .. -delete", "find . -exec rm -rf {} +", "pnpm dlx rimraf ..",
+            "yarn dlx rimraf ..", "npm exec -- rimraf ..", "pnpm exec rimraf ..", "rm -rf ../my\\ dir", "rm -rf .git",
+            "rm -rf `pwd`/../x", "echo 'ls' | bash -c 'rm -rf ~'",
+            # round 4: piped or fed text, braces, PowerShell lists, git clean, ledger, find from the root
+            'echo "DROP TABLE users;" | docker exec -i db psql -U postgres',
+            "printf 'DROP TABLE x;' | npx prisma db execute --stdin",
+            "docker compose exec -T db psql <<'EOF'\nDROP TABLE users;\nEOF",
+            "kubectl exec -i pg-0 -- psql <<EOF\nDROP TABLE users;\nEOF",
+            'echo "DROP TABLE x;" | python manage.py dbshell', 'echo "DROP TABLE x;" | rails dbconsole',
+            "ssh prod-1 <<'EOF'\nrm -rf /srv/app\nEOF", "echo 'rm -rf /srv/app' | ssh prod-1 bash",
+            "echo 'rm -rf ~' | docker exec -i web sh", "rm -rf build/{cjs,esm} ~", "rm -rf apps/{web,api}/dist /",
+            "rm -rf node_modules/{.cache,.vite} ~/.npm", "rm -rf packages/{a,b}/dist ../shared/dist",
+            "rm -rf dist{/../../other,}", "rm -rf x{a ~", "Remove-Item -Recurse -Force dist,..\\other",
+            "Remove-Item -Recurse -Force node_modules,..\\other\\node_modules", "git clean -fdx", "git clean -fdX",
+            "git clean -ffdx", "git clean -x -f", "rm -rf .factory/fast/run.json", "rm -f .factory/fast/run.json",
+            "find . -type f -delete", "find . -name '*' -exec rm -rf {} +",
+            "find .git -name '*.pack' -delete", "find . -name run.json -delete", "rm -rf .git/objects",
+            *WINDOWS_READING,
+            # round 5: wildcards reaching protected paths, moves, stash --all, unproven root finds, --prune, --file -
+            "rm -rf .[!.]*", "rm -rf .??*", "rm -rf .git*", "rm -rf .fact*", "rm -rf .[gf]*", "rm -rf .*/",
+            "rm -rf .factory/f*", "rm -rf .factory/fast/run*", "Remove-Item -Recurse -Force .\\.f*",
+            "rm -f .factory/fast/*", "rm .factory/fast/*.json", "del /q .factory\\fast\\*",
+            "Remove-Item .factory\\fast\\* -Force", "rm -rf */", "rm -rf .git/obj*", "mv .factory/fast/run.json /tmp/x",
+            "Move-Item .factory .factory.old", "ren .factory old", "Rename-Item .git old", "mv .git* /tmp",
+            "mv notes.md .factory/fast/run.json", "git stash --all", "git stash -a", "git stash push --all",
+            "find . ! -name '*.md' -path '*/.git/*' -delete", "find . -not -name '*.md' -delete",
+            "find . -name '*.pyc' -o -delete", "find . -name '*.pyc' -path './.git/*' -delete",
+            "find . -name 'run*' -delete", "find . -iname 'FAST' -exec rm -rf {} +", "rm -rf .git/objects",
+            "git push --prune origin main:main", "psql --file - <<'EOF'\nDROP TABLE x;\nEOF",
+        )
+        allow = (
+            "rm -rf dist node_modules", "Remove-Item -Recurse dist", "rm -f ../x.txt", "rm -rf dist 2> /dev/null",
+            "rm -rf dist > /tmp/log.txt", "rm -rf $PWD/dist", "rm -rf ${PWD}/dist", "rm -rf src/*", "rm -r -Force dist",
+            "Remove-Item -Recurse:$false ..\\x", "find src -name '*.pyc' -delete", "cd src && rm -rf build",
+            f'cd .. && cd "{self.project.name}" && rm -rf dist', 'bash -c "rm -rf dist"', "pwsh -File build.ps1",
+            "git push", "git push origin feature", "git push --force-with-lease origin feature",
+            "git push --force-with-lease origin HEAD:feature", "git push origin --delete feature",
+            'grep "DROP TABLE" schema.sql', "echo truncate", 'gh issue create --body "psql DROP x"',
+            'psql -c "select 1"; echo "we will drop the cache later"', "psql < safe.sql", "psql < missing.sql",
+            "RAILS_ENV=test rails db:migrate", "npm run migrate -- --env local", "grep -rn migrate src/ | grep prod",
+            "MIX_ENV=test mix ecto.migrate", 'rm -rf "unclosed',  # unparsable: fails open
+            "if true; then rm -rf dist; fi", "{ cd src; rm -rf build; }", "(cd ..); rm -rf dist", 'echo "rm -rf ~"',
+            "cat script.sh | bash", "export RAILS_ENV=test && rails db:migrate", "psql -f safe.sql",
+            "Remove-Item -Recurse -Path:dist", "npx rimraf dist", "rm -rf $(pwd)/dist",
+            'cd "$(git rev-parse --show-toplevel)" && rm -rf dist', "rm -rf .factory/fast/shots", "rm -rf \x007\x00",
+            # round 3: message and search text, names holding prod, escaped spaces
+            'grep -rn "dropdb" scripts/', 'git commit -m "Remove the db:reset task"', "rm -rf my\\ dir",
+            'gh pr create --title "Drop prod flag" --body "Removes rm -rf ~ and DROP TABLE calls"',
+            "npx prisma migrate dev --name add_prod_flag", "find .factory -name '*.tmp' -delete",
+            """git commit -m "$(cat <<'EOF'\nfix: stop rm -rf ~ and git push -f\nEOF\n)\"""",
+            "echo 'rm -rf ~' | tee notes.txt", 'echo "DROP TABLE x" > notes.txt',
+            "cat > notes.md <<'EOF'\nrm -rf ~ and DROP TABLE x\nEOF",
+            "gh issue create --title t --body-file - <<'EOF'\npsql -c 'DROP TABLE x'; rm -rf ~\nEOF",
+            "rm -rf build/{cjs,esm}", "rm -rf apps/{web,api}/dist", "Remove-Item -Recurse -Force dist,build",
+            "git clean -fd", "git clean -n", "git rm -r --cached .", 'git commit -am "drop table cleanup, rm -rf old"',
+            'git commit -qm "git push -f fixed"', 'gh pr create -t "DROP TABLE x" -b "rm -rf ~"',
+            'glab mr create --description "rm -rf ~ and DROP TABLE x"', "rm -f .git/index.lock",
+            "find . -name '*.pyc' -not -path './.git/*' -delete", "find .factory -name '*.tmp' -delete",
+            # round 5: routine finds, plain wildcards, moves, stashes, stale lock, git messages from stdin
+            "find . -name '*.pyc' -delete", "find . -name __pycache__ -type d -exec rm -rf {} +",
+            "find . -name node_modules -type d -prune -exec rm -rf '{}' +", "find . -name .DS_Store -delete",
+            "find . -maxdepth 1 -name '*.tmp' -delete", "rm -f *.log", "rm -rf dist/*", "mv old.ts new.ts",
+            "Move-Item src\\a.ts src\\b.ts", "git stash", "git stash -u", "git stash list", "rm -rf .git/index.lock",
+            "git commit --file - <<'EOF'\nrm -rf ~\nEOF", "git commit --file=- <<'EOF'\nDROP TABLE x\nEOF",
+            "git push --prune origin",
+        ) + EVERYDAY
+        root = gate.norm(str(self.project))
+        judge = gate.sibling("fast_guard").Judge(root, gate.norm, gate.inside)
+        for command in deny + allow:
+            with self.subTest(command=command[:80]):
+                self.assertEqual(bool(judge.rule(command, root)), command in deny)
+        self.assertIn("cannot be resolved after a directory change (dist)", judge.rule("popd; rm -rf dist", root))
+        for command in WINDOWS_READING:  # a PowerShell or cmd reading denies; the Bash reading alone sees no delete
+            with self.subTest(dialect=command):
+                self.assertTrue(judge.rule(command, root, "windows"))
+        self.assertIsNone(judge.rule("rm -rf my\\ dir", root, "bash"))
+        other = self.root / "proj2"  # the cwd's own run judges, not the session's bound run
+        runs = [(None, {"sessions": ["s1"]}, {"project": str(self.project)}), (None, {}, {"project": str(other)})]
+        self.assertIsNone(gate.guard("rm -rf dist", runs, gate.norm(str(other)), "s1"))
+
+    def test_destructive_denial_reaches_the_owner_in_every_step(self):
+        self.assertEqual(self.pre("Bash", command="rm -rf ~"), "allow")  # no run: unchanged
+        self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "fix the footer copy")
+        out = self.hook({"hook_event_name": "PreToolUse", "tool_name": "Bash", "tool_input": {"command": "rm -rf ~"}})
+        reason = out["hookSpecificOutput"]["permissionDecisionReason"]  # gate closed: owner advice, not steps
+        self.assertIn("recursive delete outside the project (~). Destructive commands are the owner's", reason)
+        self.assertNotIn("Record these steps", reason)
+        self.assertEqual(self.pre("Bash", command="git push"), "allow")
+        crafted = "echo \x007\x00; " + "eval " * 1200 + "ls"  # stray placeholder, deep nesting: denied, no hook.error
+        self.assertEqual(self.pre("Bash", command=crafted), "deny")
+        log = (self.root / "home/logs/gate.log").read_text(encoding="utf-8")
+        self.assertEqual(log.count('"hook.deny"'), 2)
+        self.assertTrue(all(json.loads(line) for line in log.splitlines()))  # long fields cut, lines stay JSON
+
+    def test_a_lost_ledger_keeps_the_gate_closed(self):
+        self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "fix the footer copy")
+        (self.project / ".factory/fast/work-record.md").write_text(LIGHT, encoding="utf-8")
+        for step in ("tickets", "plan"):
+            self.gate("done", step)
+        (self.project / ".factory/fast/run.json").unlink()  # as rm -f .factory/fast/* would
+        out = self.hook({"hook_event_name": "PreToolUse", "tool_name": "Write",
+                         "tool_input": {"file_path": str(self.project / "src/app.ts")}})
+        self.assertIn("ledger .factory/fast/run.json is missing", out["hookSpecificOutput"]["permissionDecisionReason"])
+        self.assertEqual(self.pre("Bash", command="git push -f origin main"), "deny")
+        self.gate("close", "--abandon", "the owner dropped the run")
+        self.assertEqual(self.pre("Write", file_path=str(self.project / "src/app.ts")), "allow")
+
+    def test_close_abandon_and_start_survive_an_unreadable_ledger(self):
+        ledger, registry = self.project / ".factory/fast/run.json", self.root / "home/active"
+        for broken in (b"not json {", b"", "\ufeff{}".encode("utf-8")):  # garbage, empty, BOM from Out-File
+            with self.subTest(broken=broken):
+                self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "fix the footer copy")
+                ledger.write_bytes(broken)
+                self.assertEqual(self.pre("Write", file_path=str(self.project / "src/a.ts")), "deny")  # still gated
+                refused = self.gate("start", "--key", "next", "--kind", "change", "--request", "x", ok=False)
+                self.assertIn("unreadable", refused)
+                self.assertIn("--abandon", refused)
+                self.assertNotIn("Traceback", refused)
+                self.assertIn("without a readable ledger", self.gate("close", "--abandon", "the owner dropped it"))
+                self.assertEqual(list(registry.glob("*.json")), [])
+                self.assertFalse(ledger.exists())
+        self.assertEqual(len(list(ledger.parent.glob("run.broken-*.json"))), 3)  # each broken file set aside
+
+    def test_close_from_a_subfolder_closes_the_run_or_refuses(self):
+        self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "fix the footer copy")
+        (self.project / ".factory/fast/run.json").unlink()
+        sub = self.project / "src"
+        sub.mkdir()
+        self.assertIn("without a readable ledger", self.gate("close", "--abandon", "dropped", project=sub))
+        self.assertEqual(list((self.root / "home/active").glob("*.json")), [])
+        elsewhere = self.root / "elsewhere"
+        elsewhere.mkdir()
+        self.assertIn("nothing was closed", self.gate("close", "--abandon", "dropped", project=elsewhere, ok=False))
+        self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "fix the footer copy")
+        self.assertIn("Next: closed", self.gate("close", "--abandon", "dropped", project=sub))  # a readable ledger
+
     def test_stop_blocks_once_and_respects_pause(self):
         self.start()
         self.pre("Write", file_path=str(self.project / "src/app.ts"))  # binds session s1
@@ -226,7 +543,9 @@ class FastGateTests(unittest.TestCase):
         self.assertIsNone(self.hook({**elsewhere, "stop_hook_active": True}))
         self.assertIsNone(self.hook({**elsewhere, "session_id": "other"}))
         self.gate("pause", "--reason", "waiting on the owner")
-        self.assertIsNone(self.hook(elsewhere))
+        paused = self.hook(elsewhere)  # no block; the owner sees the ask first
+        self.assertNotIn("decision", paused)
+        self.assertTrue(paused["systemMessage"].startswith("⏸️ WAITING ON YOU: waiting on the owner"))
         context = self.hook({"hook_event_name": "UserPromptSubmit", "prompt": "go"})
         self.assertIn("paused: waiting on the owner", context["hookSpecificOutput"]["additionalContext"])
 
@@ -279,6 +598,60 @@ class FastGateTests(unittest.TestCase):
         posix = "/" + str(self.project)[0].lower() + str(self.project)[2:].replace("\\", "/")
         self.assertIn("Next: research", self.gate("status", project=posix))
 
+    def test_hidden_checks_accept_only_strict_entries(self):
+        record = module("fast_record")
+        on = {"kind": "feature", "hidden_checks": True}
+        check = lambda text, run=on: " ".join(record.check_done_run(
+            run, "- PASS booked\n**Hidden checks:** " + text + "\n**Logs:** clean\n", project=".", all_sections={}))
+        unreadable = ["#2 A1: PASS, #2 A2 did not pass", "#2 A1: PASS\n#2 A2 not passing (exit 1)",
+                      "#2 A2 expected PASS, got FAIL", "\n- #2 A2 bad index passes to the error handler: FAIL",
+                      "\n- #2 A2 passing an empty title is rejected: ❌", "#2 A2 FAILS", "#2 A2: ✗", "\n| FAIL | #2 A2 |",
+                      "\n| #2 | A2 | PASS |", "A1: PASS, A2: PASS", "#2 A1: pass", "#2 A1: PASS (ok), note",
+                      "#2 A1: PASS\n\nall good"]
+        for text in unreadable:
+            self.assertIn("unreadable hidden-check entry", check(text), text)
+        self.assertIn("FAIL (#2 A2): back to build", check("#2 A1: PASS\n**Hidden checks:** #2 A2: FAIL"))
+        self.assertIn("FAIL (#2 A2)", check("\n- #2 A1: PASS\n\n- #2 A2: FAIL (exit 1)"))
+        self.assertIn("'**Hidden checks:**' block", check(""))
+        for text in ("#2 A1: PASS, #2 A2: PASS", "\n- #2 A1: PASS (FAIL on first run, fixed)\n\n* #3 A1: PASS",
+                     "#2 A1: PASS (#3 is unrelated)", "\n- [x] #2 A1: PASS\n1. #2 A2: PASS (check changed: wrong path)",
+                     "#2 A1: PASS\n- **Notes:** a bulleted label ends the block"):
+            self.assertEqual(check(text), "", text)
+        only_hidden = record.check_done_run(on, "**Hidden checks:** #2 A1: PASS\n**Logs:** y\n", project=".",
+                                            all_sections={})
+        self.assertEqual(only_hidden, ["needs >=1 PASS result"])  # the builder's own done-run stays required
+        for run in ({**on, "kind": "change"}, {"kind": "product"}):  # change runs and older methods: old rule
+            self.assertEqual(" ".join(record.check_done_run(run, "- PASS x\n**Logs:** y\n", project=".")), "")
+
+    def test_hidden_checks_cover_every_listed_criterion_online(self):
+        record = module("fast_record")
+        text = SAMPLE.read_text(encoding="utf-8")
+        sections = record.sections(text)
+        dod = "### Definition of done\n- **A1 (R1):** works\n- **A2:** fails safely\n"
+        read = lambda url: {"url": url, "body": dod, "stopped": url.endswith("/9"), "backlog": False}
+        run = {"kind": "product", "hidden_checks": True, "ticket_checks": True,
+               "tickets": ["https://github.com/acme/studio-booking/issues/9"]}  # Blocked: needs no PASS
+        check = lambda body, **kw: " ".join(record.check_done_run(run, body, project=".", all_sections=sections, **kw))
+        done = sections["done-run"]
+        with patch.object(record, "read_ticket", side_effect=read):
+            self.assertEqual(check(done), "")
+            no_epic = "\n".join(line for line in done.splitlines() if not line.startswith("- #1 "))
+            self.assertIn("without a hidden-check PASS: #1 A1, #1 A2", check(no_epic))
+            self.assertIn("#5 A2", check(done.replace(", #5 A2: PASS", "")))
+        self.assertEqual(check(done.replace(", #5 A2: PASS", ""), offline="no network"), "")  # offline: >=1 entry
+
+    def test_hidden_checks_gate_the_sample_done_run(self):
+        self.start("--no-ui")
+        text = SAMPLE.read_text(encoding="utf-8")
+        record_file = self.project / ".factory/fast/work-record.md"
+        self.assertIn("Hidden checks block", record_file.read_text(encoding="utf-8"))
+        record_file.write_text(text.replace("#4 A2: PASS", "#4 A2: FAIL"), encoding="utf-8")
+        for step in ("research", "kickoff", "tickets", "analysis", "plan", "schema", "build"):
+            self.gate("done", step, *(["--offline", "sample URLs"] if step in ONLINE else []))
+        self.assertIn("FAIL (#4 A2): back to build", self.gate("done", "done-run", "--offline", "sample", ok=False))
+        record_file.write_text(text, encoding="utf-8")
+        self.gate("done", "done-run", "--offline", "sample URLs")
+
     def test_lucky_runs_the_done_run(self):
         self.gate("start", "--key", "quick-try", "--mode", "lucky", "--kind", "change", "--request", "fix copy")
         self.assertIn("done-run", self.gate("status"))
@@ -302,7 +675,7 @@ class FastGateTests(unittest.TestCase):
         self.assertIn("Next: close", self.gate("status"))
 
     def test_ticket_links_are_checked_against_the_epic(self):
-        record = record_module()
+        record = module("fast_record")
         epic = "https://github.com/acme/portal/issues/1"
         linked = "https://github.com/acme/portal/issues/2\n"
         with patch.object(record, "gh", side_effect=["1", linked]):
@@ -312,7 +685,7 @@ class FastGateTests(unittest.TestCase):
         self.assertIn("--offline", record.verify_tickets("https://tracker.example/1", [])[0])
 
     def test_tickets_need_a_definition_checklist_and_ticks(self):
-        record = record_module()
+        record = module("fast_record")
         url = "https://github.com/acme/portal/issues/2"
 
         def issue(body, state="OPEN", labels=("status: in progress",), board=None, reason=None):
@@ -386,7 +759,7 @@ class FastGateTests(unittest.TestCase):
             self.assertIn("Definition of done", problems[0])
 
     def test_coverage_names_every_requested_item_and_criterion(self):
-        record = record_module()
+        record = module("fast_record")
         epic, url = "https://github.com/acme/portal/issues/1", "https://github.com/acme/portal/issues/2"
 
         def issue(body, labels=("status: in progress",)):
@@ -483,13 +856,15 @@ class FastGateTests(unittest.TestCase):
         gate = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(gate)
         layout, lane, ux = Path(gate.LAYOUT), Path(gate.FAST_RUN), Path(gate.UX)
-        for name, texts in (("new", ("### ✅ Definition of done\nEvery criterion has an item.", "## Light lane",
+        for name, texts in (("new", ("### ✅ Definition of done\nEvery criterion has an item.",
+                                     "## Light lane\nT1 <title> → <what the owner can do once it is done>\n**Hidden checks:**\n**Secrets:**",
                                      "| U10 | Performance |")),
                             ("old", ("### ✅ Done when", "## Hooks", "| Performance |"))):
             for path, text in zip((layout, lane, ux), texts):
                 (self.root / name / path).parent.mkdir(parents=True, exist_ok=True)
                 (self.root / name / path).write_text(text, encoding="utf-8")
-        on = {"ticket_checks": True, "coverage": True, "light": True, "ux_rules": True}
+        on = {"ticket_checks": True, "coverage": True, "light": True, "outcomes": True, "hidden_checks": True, "scans": True,
+              "ux_rules": True}
         off = dict.fromkeys(on, False)
         self.assertEqual(gate.method_flags({"root": str(self.root / "new")}, self.project), on)
         self.assertEqual(gate.method_flags({"root": str(self.root / "old")}, self.project), off)
@@ -498,7 +873,8 @@ class FastGateTests(unittest.TestCase):
         self.assertEqual(gate.method_flags(None, SCRIPTS.parents[2]), on)  # this checkout's own methods define them
         (self.root / "new" / layout).write_bytes(b"\xff\xfe broken")
         self.assertEqual(gate.method_flags({"root": str(self.root / "new")}, self.project),
-                         {**off, "light": True, "ux_rules": True})
+                         {**off, "light": True, "outcomes": True, "hidden_checks": True, "scans": True,
+                          "ux_rules": True})  # fast-run.md and ux-quality still read
         lucky = {"mode": "lucky", "kind": "change"}
         self.assertNotIn("done-run", gate.steps_for(lucky))
         self.assertIn("done-run", gate.steps_for({**lucky, "ticket_checks": True}))
@@ -508,7 +884,7 @@ class FastGateTests(unittest.TestCase):
         self.assertIn("analysis", gate.steps_for({"mode": "fast", "kind": "feature", "light": True}))
 
     def test_ux_rules_need_brief_lines_and_one_verdict_per_rule(self):
-        record = record_module()
+        record = module("fast_record")
         skill = (SCRIPTS.parents[2] / ".agents/skills/ux-quality/SKILL.md").read_text(encoding="utf-8")
         table = re.findall(r"(?m)^\| (U\d+) \| ([^|]+?) \|", skill)
         self.assertEqual(table, list(zip(record.UX_RULES, record.UX_AREAS)))  # gate and method agree
@@ -573,18 +949,20 @@ class FastGateTests(unittest.TestCase):
                 self.assertIn(problem, " ".join(record.ux_audit(done.replace(old_text, new_text))))
         u10 = re.search(r"(?m)^- U10 .*$", done).group(0)
         self.assertIn("U10 N/A needs its evidence or reason", record.ux_audit(done.replace(u10, "- U10 N/A")))
+        scanned = done.replace(u10, u10 + "\n**Static:** semgrep, 0 FAILED rules")  # the scan markers end a verdict too
+        self.assertEqual(record.ux_audit(scanned), [])
         self.assertEqual(record.check_done_run(old, "- PASS app works\n**Logs:** clean\n", project=self.project), [])
         self.assertEqual(record.check_done_run(old, "- U1 PASS login works\n**Logs:** ok\n", project=self.project), [])
-        rule_lines = "\n".join(line for line in done.splitlines() if not line.startswith("- PASS"))
+        rule_lines = record.HIDDEN.sub("", "\n".join(line for line in done.splitlines() if not line.startswith("- PASS")))
         for extra in ("- U3 recheck after fix: PASS roster", "- After the fix, U3 PASS roster",
                       "**UX judge:** U1 to U9 PASS, U10 UNKNOWN", "**UX judge:**\nfresh agent; all ten rules PASS",
                       "  -**UX judge:** all ten rules PASS", "- [x] **UX judge:** all ten rules PASS",
                       "- ***UX judge:*** all ten rules PASS", "- U1 PASS schedule\n  roster: PASS too",
                       "- U1 PASS schedule\n**Recheck:** PASS"):
             with self.subTest(extra=extra):  # on a UI run rule lines and the judge line never count as using it
-                self.assertIn("needs >=1 PASS result from using it", record.check_done_run(
+                self.assertIn("needs >=1 PASS result", record.check_done_run(
                     {"ux_rules": True, "ui": True}, rule_lines + "\n" + extra + "\n", project=self.project))
-        self.assertNotIn("needs >=1 PASS result from using it", record.check_done_run(  # a test user is not a rule
+        self.assertNotIn("needs >=1 PASS result", record.check_done_run(  # a test user is not a rule
             {"ux_rules": True, "ui": True}, rule_lines + "\n- PASS u1 books a class\n", project=self.project))
         self.assertEqual(record.check_done_run({"ux_rules": True}, "- U1 PASS login works\n**Logs:** ok\n",
                                                project=self.project), [])  # no UI owed: its lines count as before
@@ -603,7 +981,7 @@ class FastGateTests(unittest.TestCase):
         run = json.loads((app / ".factory/fast/run.json").read_text(encoding="utf-8"))
         head = subprocess.run(git + ["rev-parse", "HEAD"], capture_output=True, text=True, check=True).stdout.strip()
         self.assertEqual((run["base"], list(run["ui_seen"]), run["ui"]), (head, ["notes.html"], False))
-        record = record_module()
+        record = module("fast_record")
         done = record.sections(LIGHT)["done-run"]
         (app / "server.py").write_text("x = 2\n", encoding="utf-8")
         (repo / "style.css").write_text("a { color: red }\n", encoding="utf-8")  # outside the run's project

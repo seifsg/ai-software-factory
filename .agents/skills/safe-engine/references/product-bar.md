@@ -143,7 +143,7 @@ Cheap relevant protections from the start; required protections and denial paths
 | Abuse/CORS | Rate, size, concurrency and cost limits per surface: login, reset, search, uploads and expensive work first. Trusted proxy handling; keep legitimate retries working. CORS only for needed origins; no reflected origin or wildcard with credentials. |
 | Dependencies | Lockfiles. Review actual advisories; update vulnerable versions compatibly. No blind major upgrades or invented CVEs. |
 
-Before exposure, exercise denial paths with harmless accounts (anonymous, other user or tenant, tampered or expired token, forged webhook), then run the `deep-review` security lens. Fix demonstrated compromise risks or disable the path.
+Before exposure, exercise denial paths with harmless accounts (anonymous, other user or tenant, tampered or expired token, forged webhook), then run the `deep-review` security lens. Fix demonstrated compromise risks or disable the path. In the MVP and production-slice done-run, record `**Secrets:**` (a secret scan of the working tree and Git history), `**Dependencies:**` (the package manager's audit) and `**Static:**` (the stack's static analyzer), each naming the tool, the command and the result. Pick tools per stack. Fix each high or critical finding before handoff (a confirmed secret counts as critical), or record the owner's decision on it in the handoff and the follow-ups ticket. A confirmed secret left unfixed, a key rotation waiting for the owner included, is a blocker: the outcome stays unfinished until the owner answers. A missing tool is installed or recorded as a blocker, never skipped.
 
 ## Dev sign-in
 
