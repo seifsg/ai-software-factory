@@ -1,7 +1,8 @@
 """Fast/Lucky run gate: record each factory step, check it, and answer host hooks.
 
 Method: .agents/skills/safe-engine/references/fast-run.md#the-gate. Python 3.9+, stdlib only.
-Step checks live in fast_record.py (loaded only by `done`); the owner's dashboard in fast_card.py.
+Step checks live in fast_record.py (loaded by `done`, and by `start` for a UI snapshot; never by hooks);
+the owner's dashboard in fast_card.py.
 Checks prove a step was recorded, not that it was good.
 """
 import json
@@ -46,10 +47,13 @@ HINTS = {
     "plan": "### Files, ### Critique, ### Phases, ### Todos (T1..), ### Whole plan, Logging and Efficiency lines; "
             "online: each listed ticket has checklist items",
     "design": ">=4 hex colors; UI kit, Font, Logo, Icons, Layout lines; Theme line naming light mode; "
-              "Journeys line with counts and a minimum",
+              "Journeys line with counts and a minimum; current methods also Map, Hierarchy (naming the primary "
+              "action) and Labels lines",
     "schema": "a 3-option table, a Chosen line, a fenced ERD or DDL",
     "build": "one line per plan todo: 'T1 pre: ... do: ... post: ...'",
-    "done-run": ">=1 PASS line, a Logs line; UI runs >=1 existing screenshot path",
+    "done-run": ">=1 PASS line from using it, a Logs line; UI runs >=1 existing screenshot path. Current methods only: "
+                "runs that changed UI files count as UI runs, and each UI run also needs a verdict line per U1..U10 "
+                "(no open FAIL) and a UX judge line",
     "handoff": "Run, Statuses, Unverified, Follow-ups lines; sign-in runs a Dev sign-in line; "
                "online: each listed ticket fully ticked, or Blocked, Backlog or not planned",
 }
@@ -228,11 +232,12 @@ def skeleton(run):
 
 LAYOUT = ".agents/skills/ticketing/references/ticket-layout.md"
 FAST_RUN = ".agents/skills/safe-engine/references/fast-run.md"
+UX = ".agents/skills/ux-quality/SKILL.md"
 # run flag -> (method file, phrase): a check applies only when the methods the run reads define it
 FLAGS = {"ticket_checks": (LAYOUT, "Definition of done"), "coverage": (LAYOUT, "Every criterion has"),
          "light": (FAST_RUN, "Light lane"), "outcomes": (FAST_RUN, "what the owner can do once it is done"),
          "hidden_checks": (FAST_RUN, "**Hidden checks:**"),
-         "scans": (FAST_RUN, "**Secrets:**")}
+         "scans": (FAST_RUN, "**Secrets:**"), "ux_rules": (UX, "| U10 |")}
 
 
 def method_flags(bundle, project):
@@ -288,6 +293,8 @@ def cmd_start(args):
            "closed": False, "bundle": bundle, **method_flags(bundle, project)}
     if "analysis" not in steps_for(run):  # older hook copies still require it before build: mark it skipped
         run["done"]["analysis"] = {"at": now(), "skipped": "light lane"}
+    if run.get("ux_rules") and not run["ui"]:  # only these runs later ask which UI files they changed
+        run.update(sibling("fast_record").ui_start(project))
     save(ledger, run)
     record = record_path(project)
     if not record.exists():
@@ -311,7 +318,7 @@ def cmd_done(args):
     earlier = [name for name in steps[:steps.index(step)] if name not in run["done"]]
     if earlier:
         fail("Finish first: " + ", ".join(earlier))
-    record = sibling("fast_record")  # checks load only here; hooks never need them
+    record = sibling("fast_record")  # checks load here and in `start`; hooks never need them
     CHECKS, sections = record.CHECKS, record.sections
     try:
         all_sections = sections(record_path(project).read_text(encoding="utf-8", errors="replace"))

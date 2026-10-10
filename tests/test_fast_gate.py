@@ -4,6 +4,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
@@ -866,14 +867,16 @@ class FastGateTests(unittest.TestCase):
         spec = importlib.util.spec_from_file_location("fast_gate_module", GATE)
         gate = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(gate)
-        layout, lane = Path(gate.LAYOUT), Path(gate.FAST_RUN)
+        layout, lane, ux = Path(gate.LAYOUT), Path(gate.FAST_RUN), Path(gate.UX)
         for name, texts in (("new", ("### ✅ Definition of done\nEvery criterion has an item.",
-                                     "## Light lane\nT1 <title> → <what the owner can do once it is done>\n**Hidden checks:**\n**Secrets:**")),
-                            ("old", ("### ✅ Done when", "## Hooks"))):
-            for path, text in zip((layout, lane), texts):
+                                     "## Light lane\nT1 <title> → <what the owner can do once it is done>\n**Hidden checks:**\n**Secrets:**",
+                                     "| U10 | Performance |")),
+                            ("old", ("### ✅ Done when", "## Hooks", "| Performance |"))):
+            for path, text in zip((layout, lane, ux), texts):
                 (self.root / name / path).parent.mkdir(parents=True, exist_ok=True)
                 (self.root / name / path).write_text(text, encoding="utf-8")
-        on = {"ticket_checks": True, "coverage": True, "light": True, "outcomes": True, "hidden_checks": True, "scans": True}
+        on = {"ticket_checks": True, "coverage": True, "light": True, "outcomes": True, "hidden_checks": True, "scans": True,
+              "ux_rules": True}
         off = dict.fromkeys(on, False)
         self.assertEqual(gate.method_flags({"root": str(self.root / "new")}, self.project), on)
         self.assertEqual(gate.method_flags({"root": str(self.root / "old")}, self.project), off)
@@ -882,7 +885,8 @@ class FastGateTests(unittest.TestCase):
         self.assertEqual(gate.method_flags(None, SCRIPTS.parents[2]), on)  # this checkout's own methods define them
         (self.root / "new" / layout).write_bytes(b"\xff\xfe broken")
         self.assertEqual(gate.method_flags({"root": str(self.root / "new")}, self.project),
-                         {**off, "light": True, "outcomes": True, "hidden_checks": True, "scans": True})  # fast-run.md still reads
+                         {**off, "light": True, "outcomes": True, "hidden_checks": True, "scans": True,
+                          "ux_rules": True})  # fast-run.md and ux-quality still read
         lucky = {"mode": "lucky", "kind": "change"}
         self.assertNotIn("done-run", gate.steps_for(lucky))
         self.assertIn("done-run", gate.steps_for({**lucky, "ticket_checks": True}))
@@ -890,6 +894,128 @@ class FastGateTests(unittest.TestCase):
         self.assertIn("analysis", gate.steps_for({"mode": "fast", "kind": "change"}))  # older methods keep it
         self.assertNotIn("analysis", gate.steps_for({"mode": "fast", "kind": "change", "light": True}))
         self.assertIn("analysis", gate.steps_for({"mode": "fast", "kind": "feature", "light": True}))
+
+    def test_ux_rules_need_brief_lines_and_one_verdict_per_rule(self):
+        record = module("fast_record")
+        skill = (SCRIPTS.parents[2] / ".agents/skills/ux-quality/SKILL.md").read_text(encoding="utf-8")
+        table = re.findall(r"(?m)^\| (U\d+) \| ([^|]+?) \|", skill)
+        self.assertEqual(table, list(zip(record.UX_RULES, record.UX_AREAS)))  # gate and method agree
+        sections = record.sections(SAMPLE.read_text(encoding="utf-8"))
+        design, done = sections["design"], sections["done-run"]
+        on, old = {"ux_rules": True}, {}
+        self.assertEqual(record.check_design(on, design), [])
+        self.assertIn("needs a '**Map:**' line", record.check_design(on, design.replace("**Map:**", "Map:")))
+        self.assertIn("primary action", " ".join(record.check_design(on, design.replace("primary", "main"))))
+        bare = re.sub(r"(?m)^\*\*(?:Map|Hierarchy|Labels):\*\*.*\n", "", design)
+        self.assertEqual(record.check_design(old, bare), [])  # older methods keep the old brief
+        hierarchy = "**Hierarchy:** " + record.marker(design, "Hierarchy")
+        for under in ("**Hierarchy:**\n- schedule: primary Book", "**Hierarchy:**\n| screen | primary |\n|---|---|\n| a | b |"):
+            with self.subTest(under=under):  # "primary" may sit in the lines or table under the label
+                self.assertEqual(record.check_design(on, design.replace(hierarchy, under)), [])
+        for labels in ("- **Labels:** primary Book;", "2. **Labels:** primary Book;"):
+            with self.subTest(labels=labels):  # the block ends at the next marker, bulleted or numbered
+                unnamed = design.replace(hierarchy, "**Hierarchy:** schedule: Book first").replace("**Labels:**", labels)
+                self.assertIn("primary action", " ".join(record.check_design(on, unnamed)))
+        self.assertEqual(record.ux_audit(done), [])
+        for layout in ("| **U1** | PASS |", "- **U1:** PASS", "| U1 | Map | PASS |", "- U1 Map: PASS"):
+            with self.subTest(layout=layout):
+                self.assertEqual(record.ux_audit(done.replace("- U1 PASS", layout)), [])
+        self.assertIn("needs a 'U2 ", " ".join(record.ux_audit("- U1 to U10 PASS all fine\n**UX judge:** x\n")))
+        for mixed, problem in (("- U3 FAIL schedule, PASS roster: two filled", "U3 FAIL is open"),
+                               ("- U3 PASS schedule, FAIL roster: two filled", "U3 FAIL is open"),
+                               ("- U3 N/A desktop, FAIL phone: no bar", "U3 FAIL is open"),
+                               ("- U3 FAIL keyboard, N/A touch: focus lost", "U3 FAIL is open"),
+                               ("- U3 partial PASS: some screens", "needs a 'U3 ")):
+            with self.subTest(mixed=mixed):  # no other verdict word hides the line's FAIL or vague verdict
+                self.assertIn(problem, " ".join(record.ux_audit(done.replace("- U3 PASS schedule", mixed))))
+        u3 = re.search(r"(?m)^- U3 PASS .*$", done).group(0)
+        def opened(text):
+            return sorted({problem.split()[0] for problem in record.ux_audit(text) if " FAIL is open" in problem})
+        for where in ("\n  - roster: FAIL two filled", "\nroster FAILED the blur test", "\n\n  roster FAILED the blur test",
+                      "; roster FAILED", "; roster FAILS the blur test", "\n- U3 – FAIL roster", "\n> U3 FAIL roster",
+                      "\n### U3 FAIL roster", " (recheck; was FAIL: two filled)", "\n  **Recheck:** roster FAILED",
+                      "\n**Judge:** two filled, FAIL"):
+            with self.subTest(where=where):  # an open FAIL never passes, wherever it is written, and touches no other rule
+                self.assertEqual(opened(done.replace(u3, u3 + where)), ["U3"])
+        message = " ".join(record.ux_audit(done.replace(u3, "- U3 FAIL roster: two filled")))
+        self.assertIn("one final verdict line with no FAIL, FAILS or FAILED", message)
+        contested = "- U3 UNKNOWN contested, builder: a popover"
+        for reasons in (": judge FAIL on the modal", "\n  - judge: U3 FAIL on the modal", "\n  - U3 FAIL modal (judge)"):
+            with self.subTest(reasons=reasons):  # a contested FAIL may quote its own rule's FAIL in or under its line
+                self.assertEqual(record.ux_audit(done.replace(u3, contested + reasons)), [])
+        self.assertEqual(opened(done.replace(u3, contested + "\n  - U4 FAIL roster")), ["U4"])  # not another rule's
+        for sibling in ("  - U3 UNKNOWN no keyboard\n  - U3 FAIL roster", "\t- U3 UNKNOWN no keyboard\n    - U3 FAIL roster"):
+            with self.subTest(sibling=sibling):  # a sibling FAIL is no reason, with tabs or spaces
+                self.assertEqual(opened(done.replace(u3, sibling)), ["U3"])
+        self.assertIn("U3 UNKNOWN needs its evidence or reason",  # a quote's own ID and verdict are no reason
+                      record.ux_audit(done.replace(u3, "- U3 UNKNOWN\n  U3 PASS")))
+        for kept in ("; a failed booking shows a retry", "\n  one filled button per view, checked twice",
+                     "\n  **Logs:** 0 FAILED requests", "\n  - **Logs:** 0 FAILED requests",
+                     "\n- FAIL then fixed: test user u2 could not join"):
+            with self.subTest(kept=kept):  # lowercase and indented evidence, markers and test users stay accepted
+                self.assertEqual(record.ux_audit(done.replace(u3, u3 + kept)), [])
+        cases = {"- U4 PASS": ("- U4x PASS", "needs a 'U4 "), "- U3 PASS schedule": ("- U3 FAIL schedule", "U3 FAIL is open"),
+                 "**UX judge:**": ("UX judge:", "'**UX judge:**' line")}
+        for old_text, (new_text, problem) in cases.items():
+            with self.subTest(problem=problem):
+                self.assertIn(problem, " ".join(record.ux_audit(done.replace(old_text, new_text))))
+        u10 = re.search(r"(?m)^- U10 .*$", done).group(0)
+        self.assertIn("U10 N/A needs its evidence or reason", record.ux_audit(done.replace(u10, "- U10 N/A")))
+        scanned = done.replace(u10, u10 + "\n**Static:** semgrep, 0 FAILED rules")  # the scan markers end a verdict too
+        self.assertEqual(record.ux_audit(scanned), [])
+        self.assertEqual(record.check_done_run(old, "- PASS app works\n**Logs:** clean\n", project=self.project), [])
+        self.assertEqual(record.check_done_run(old, "- U1 PASS login works\n**Logs:** ok\n", project=self.project), [])
+        rule_lines = record.HIDDEN.sub("", "\n".join(line for line in done.splitlines() if not line.startswith("- PASS")))
+        for extra in ("- U3 recheck after fix: PASS roster", "- After the fix, U3 PASS roster",
+                      "**UX judge:** U1 to U9 PASS, U10 UNKNOWN", "**UX judge:**\nfresh agent; all ten rules PASS",
+                      "  -**UX judge:** all ten rules PASS", "- [x] **UX judge:** all ten rules PASS",
+                      "- ***UX judge:*** all ten rules PASS", "- U1 PASS schedule\n  roster: PASS too",
+                      "- U1 PASS schedule\n**Recheck:** PASS"):
+            with self.subTest(extra=extra):  # on a UI run rule lines and the judge line never count as using it
+                self.assertIn("needs >=1 PASS result", record.check_done_run(
+                    {"ux_rules": True, "ui": True}, rule_lines + "\n" + extra + "\n", project=self.project))
+        self.assertNotIn("needs >=1 PASS result", record.check_done_run(  # a test user is not a rule
+            {"ux_rules": True, "ui": True}, rule_lines + "\n- PASS u1 books a class\n", project=self.project))
+        self.assertEqual(record.check_done_run({"ux_rules": True}, "- U1 PASS login works\n**Logs:** ok\n",
+                                               project=self.project), [])  # no UI owed: its lines count as before
+
+    def test_ui_file_changes_need_the_ux_audit(self):
+        repo, app = self.project, self.project / "app"  # the run's project is a folder inside the repository
+        git = ["git", "-C", str(repo)]
+        app.mkdir()
+        subprocess.run(git + ["init", "-q"], check=True)
+        for name, text in (("app/server.py", "x = 1\n"), ("style.css", "a {}\n"), ("app/view.vue", "<template/>\n")):
+            (repo / name).write_text(text, encoding="utf-8")
+        subprocess.run(git + ["add", "."], check=True)
+        subprocess.run(git + ["-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "base"], check=True)
+        (app / "notes.html").write_text("<p>draft</p>\n", encoding="utf-8")  # untracked before the run starts
+        self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "fix the footer copy", project=app)
+        run = json.loads((app / ".factory/fast/run.json").read_text(encoding="utf-8"))
+        head = subprocess.run(git + ["rev-parse", "HEAD"], capture_output=True, text=True, check=True).stdout.strip()
+        self.assertEqual((run["base"], list(run["ui_seen"]), run["ui"]), (head, ["notes.html"], False))
+        record = module("fast_record")
+        done = record.sections(LIGHT)["done-run"]
+        (app / "server.py").write_text("x = 2\n", encoding="utf-8")
+        (repo / "style.css").write_text("a { color: red }\n", encoding="utf-8")  # outside the run's project
+        (app / "Footer.test.tsx").write_text("test('x', () => {})\n", encoding="utf-8")
+        self.assertEqual(record.check_done_run(run, done, project=app), [])  # no UI file of its own: no audit
+        (app / "notes.html").unlink()  # a file that was already untracked, now deleted by this run
+        problems = record.check_done_run(run, done, project=app)
+        self.assertEqual(problems[0], "this run changed UI files (notes.html): record the UX audit")
+        self.assertIn("needs a 'U1 ", " ".join(problems))
+        (app / "Footer.tsx").write_text("export const Footer = () => null\n", encoding="utf-8")
+        self.assertEqual(record.ui_files({**run, "ui_seen": {}}, app), ["Footer.tsx"])
+        for base in ("123", 123, "-p", "0" * 40):  # unknown or tampered start commit: every tracked UI file counts
+            with self.subTest(base=base):
+                self.assertEqual(record.ui_files({"base": base}, app), ["view.vue"])
+        self.assertEqual(record.ui_files({"base": head}, self.root / "not a repo"), [])
+        for seen in ([], "x", 5):  # a damaged snapshot never crashes `done`
+            with self.subTest(seen=seen):
+                self.assertEqual(record.ui_files({"base": head, "ui_seen": seen}, self.root / "not a repo"), [])
+        self.gate("close", "--abandon", "test", project=app)
+        self.gate("start", "--key", "with-ui", "--kind", "change", "--ui", "--request", "restyle", project=app)
+        ui_run = json.loads((app / ".factory/fast/run.json").read_text(encoding="utf-8"))
+        self.assertNotIn("base", ui_run)  # --ui runs skip the start-time git calls
 
 
 if __name__ == "__main__":

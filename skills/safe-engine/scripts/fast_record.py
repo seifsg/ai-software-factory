@@ -352,14 +352,50 @@ def held(run, kwargs, check):
     return todos + unnamed(wanted, named)
 
 
+UX_BRIEF = ("Map", "Hierarchy", "Labels")  # ux-quality step 1: structure, priority and words, planned before UI code
+UX_RULES = tuple(f"U{n}" for n in range(1, 11))  # ux-quality step 3 rule IDs; each gets a done-run verdict
+UX_AREAS = ("Map", "Navigation", "Hierarchy", "Disclosure", "Labels", "Interaction cost", "States and feedback",
+            "Access and devices", "Look and consistency", "Performance")  # their area names, in ID order
+RULE_ID = r"(?-i:U(?:10|[1-9]))"  # the ten rule IDs, capitals only in every pattern: test user "u1" is no rule
+# "- U3 PASS 04, 13: ...", "- **U3:** FAIL ...", "| U3 | Hierarchy | PASS | ... |": a rule ID, its area name or
+# none, the verdict, its text. Only a known area name may sit between, so "U3 FAIL a, PASS b" stays a FAIL.
+LEAD, SEP = r"[ \t]*(?:\|[ \t]*)?(?:(?:[-*+]|\d+[.)])[ \t]+)?(?:\[[ xX]\][ \t]+)?[*`]*", r"[*` \t:|.,()-]*"
+VERDICT = re.compile(rf"{LEAD}({RULE_ID})\b{SEP}(?:(?:{'|'.join(UX_AREAS)}){SEP})?(PASS|FAIL|UNKNOWN|N/A)\b(.*)",
+                     re.I)
+JUDGE = re.compile(r"[ \t]*(?:\|[ \t]*)?(?:(?:[-*+]|\d+[.)])[ \t]*)?(?:\[[ xX]\][ \t]*)?[*`]*\*\*UX judge:\*\*",
+                   re.I)  # as LEAD, but no space needed after the bullet or the checkbox
+# A line under a verdict or the judge line belongs to it: indented text, or plain text that starts no bullet, table,
+# heading, quote, rule line or the done-run's own markers. A blank line ends it.
+DONE_MARKS = ("Logs", "UX judge", "Secrets", "Dependencies", "Static", "Hidden checks")  # done-run labels
+MARK = rf"\*\*(?:{'|'.join(DONE_MARKS)}):\*\*"
+CONTINUES = re.compile(rf"(?:[ \t]+(?![ \t])(?!(?:[-*+]|\d+[.)])?[ \t]*(?:[*`]*{RULE_ID}\b|{MARK}))"
+                       rf"|(?!(?:[-*+]|\d+[.)])[ \t]|[|#>]|{MARK}|[*`]*{RULE_ID}\b))\S", re.I)
+FAILED = re.compile(r"\bFAIL(?:S|ED)?\b")  # capitals only: "failed booking with retry" is evidence, not a verdict
+# views and styles, not tests or stories; mixed-code languages use --ui
+UI_FILE = re.compile(r"(?<!\.test)(?<!\.spec)(?<!\.stories)\.(?:tsx|jsx|vue|svelte|astro|html?|css|scss|sass|less|"
+                     r"razor|cshtml|erb|hbs|ejs|pug|liquid|twig|njk|jinja2?|j2|mustache|haml|slim|xaml|axaml|"
+                     r"storyboard|xib|qml|fxml|uxml|uss|tscn)$|\.blade\.php$", re.I)
+HEX = re.compile(r"[0-9a-f]{40,64}")
+
+
+def block(body, label):
+    """The label's value with the lines under it, up to a blank line, a heading or the next marker."""
+    match = re.search(r"\*\*" + re.escape(label) + r":\*\*(.*?)(?=^[ \t]*(?:(?:[-*+]|\d+[.)])[ \t]+)?\*\*[^*\n]+:\*\*|"
+                      r"^[ \t]*$|^#|\Z)", body, re.I | re.M | re.S)
+    return match.group(1) if match else ""
+
+
 def check_design(run, body, **_):
     problems = [] if len(set(re.findall(r"#[0-9a-fA-F]{6}\b", body))) >= 4 else ["needs >=4 hex palette colors"]
-    problems += missing_markers(body, ["UI kit", "Font", "Logo", "Icons", "Layout", "Theme", "Journeys"])
+    brief = list(UX_BRIEF) if run.get("ux_rules") else []
+    problems += missing_markers(body, ["UI kit", "Font", "Logo", "Icons", "Layout", "Theme", "Journeys", *brief])
     theme, journeys = marker(body, "Theme"), marker(body, "Journeys")
     if theme and "light" not in theme.lower():
         problems.append("Theme must name light mode as the default")
     if journeys and not re.search(r"\d.*\bmin\b\W*\d", journeys, re.I):
         problems.append("Journeys must give counts and a minimum: '<journey>: 2 actions, 1 load, min 2 actions'")
+    if brief and marker(body, "Hierarchy") and "primary" not in block(body, "Hierarchy").lower():
+        problems.append("Hierarchy must name each key screen's primary action: '<screen>: primary <action>; ...'")
     return problems
 
 
@@ -399,18 +435,24 @@ def placeholder_problems(body, labels):
 def check_done_run(run, body, project, **kwargs):
     sections = kwargs.get("all_sections") or {}
     own = HIDDEN.sub("", body) if hidden(run) else body  # the builder's own done-run, apart from the checker's
-    problems = [] if re.search(r"\bPASS\b", own) else ["needs >=1 PASS result"]
+    touched = [] if run.get("ui") or not run.get("ux_rules") else ui_files(run, project)
+    audited = run.get("ux_rules") and (run.get("ui") or touched)  # this run owes the UX audit
+    parsed = audit_lines(own) if audited else None
+    used = parsed[2] if parsed else own  # rule and judge lines never stand in for using it
+    problems = [] if re.search(r"\bPASS\b", used) else ["needs >=1 PASS result"]
     labels = scans(run, sections)
     cause = f" ({scan_cause(run, sections)})" if labels else ""
     problems += missing_markers(body, ["Logs"]) + [problem + cause for problem in missing_markers(body, labels)]
     problems += placeholder_problems(body, labels)
     problems += size_problems(run, run.get("size") or run_size(sections))
-    if run.get("ui"):
+    if run.get("ui") or touched:
         shots = [Path(shot) for shot in re.findall(r"[\w./\\:~-]+\.(?:png|jpe?g|webp|gif)\b", body, re.I)]
-        if not any((shot if shot.is_absolute() else Path(project) / shot).is_file() for shot in shots):
-            problems.append("needs >=1 existing screenshot path")
+        missing = [] if any((shot if shot.is_absolute() else Path(project) / shot).is_file() for shot in shots) else [
+            "needs >=1 existing screenshot path"]
+        missing += ux_audit(own, parsed) if run.get("ux_rules") else []
+        problems += ([f"this run changed UI files ({', '.join(touched[:3])}): record the UX audit"]
+                     if missing and touched else []) + missing
     return problems + (hidden_checks(body, kwargs, run) if hidden(run) else [])
-
 
 def hidden(run):
     """Product and feature runs whose methods define hidden checks; change runs and older runs never."""
@@ -453,6 +495,104 @@ def hidden_checks(body, kwargs, run):
             gaps.extend(f"#{number} {cid}" for cid in criteria if (number, cid) not in passed)
     problems = online(run, kwargs, read)
     return problems or ([f"criteria without a hidden-check PASS: {', '.join(gaps)}"] if gaps else [])
+
+
+def audit_lines(body):
+    """One pass over a done-run: each rule's verdicts with the word characters of their text, the rules a FAIL is
+    left about, and the lines about no rule and not the judge (only those can show the product was used). A contested
+    FAIL is an UNKNOWN, which may quote its own rule's FAIL in or under its line; a FAIL about another rule counts."""
+    # owner: (rule or "judge", verdict) the line belongs to; top: that owner's indent; gap: a blank line came before
+    verdicts, failed, used, owner, gap, top = {}, set(), [], None, False, 0
+    for line in body.splitlines():
+        if not line.strip():
+            gap = True  # as in Markdown, indented lines after a blank line still belong to the item above
+            continue
+        depth = len(line[:len(line) - len(line.lstrip(" \t"))].expandtabs(4))  # tabs and spaces measured alike
+        head = VERDICT.match(line)
+        quote = head and depth > top and owner == (head.group(1), "UNKNOWN")  # deeper than its UNKNOWN: a reason
+        if head and not quote:
+            owner, top = (head.group(1), head.group(2).upper()), depth
+            verdicts.setdefault(owner[0], []).append([owner[1], len(re.sub(r"\W", "", head.group(3)))])
+        elif JUDGE.match(line):
+            owner, top = ("judge", ""), depth
+        elif quote or owner and CONTINUES.match(line) and (line[0] in " \t" or not gap):
+            if owner[0] in verdicts:
+                verdicts[owner[0]][-1][1] += len(re.sub(r"\W", "", head.group(3) if quote else line))
+        else:
+            owner = None
+        gap = False
+        named = set(re.findall(rf"\b{RULE_ID}\b", line)) | ({owner[0]} if owner and owner[0] != "judge" else set())
+        if owner and owner[1] == "FAIL":
+            failed.add(owner[0])
+        if FAILED.search(line):
+            failed |= {rule for rule in named if owner != (rule, "UNKNOWN")}
+        if not owner and not named:
+            used.append(line)
+    return verdicts, failed, "\n".join(used)
+
+
+def ux_audit(body, parsed=None):
+    """A fresh judge's verdict per rule ID (ux-quality step 4), each with evidence or a reason; no FAIL left."""
+    verdicts, failed, _ = parsed or audit_lines(body)
+    problems = [f"needs a '{rule} PASS|FAIL|UNKNOWN|N/A <screen>: <evidence or reason>' line"
+                for rule in UX_RULES if rule not in verdicts]
+    problems += [f"{rule} FAIL is open: fix it, recheck, then keep one final verdict line with no FAIL, FAILS or "
+                 f"FAILED in or under it and no other line naming {rule} with them; or record UNKNOWN with both reasons"
+                 for rule in sorted(failed, key=lambda rule: int(rule[1:]))]
+    problems += [f"{rule} {verdict} needs its evidence or reason" for rule, found in verdicts.items()
+                 if rule not in failed for verdict, words in found if words < 3]
+    return problems + missing_markers(body, ["UX judge"])
+
+
+def ui_start(project):
+    """The start commit and the UI files already changed then, so the done-run counts only this run's own edits."""
+    base = (git(project, "rev-parse", "--verify", "-q", "HEAD") or "").strip() or None
+    return {"base": base, "ui_seen": {name: digest(Path(project) / name)
+                                      for names in ui_listings({"base": base}, project) for name in names}}
+
+
+def ui_files(run, project):
+    """UI files inside the project this run created, edited or deleted; none without Git."""
+    seen = run.get("ui_seen") if isinstance(run.get("ui_seen"), dict) else {}
+    touched = [name for name, mark in seen.items() if digest(Path(project) / name) != mark]  # changed at start, again
+    for names in [] if touched else ui_listings(run, project):
+        touched = [name for name in names if name not in seen]
+        if touched:
+            break  # the first listing with a new change spares the next git call
+    return touched
+
+
+def ui_listings(run, project):
+    """UI paths under the project, one git call at a time: tracked files changed since the start commit (every tracked
+    file when that commit is unknown or unreadable), then untracked files."""
+    base = run.get("base")
+    diff = git(project, "diff", "--name-only", "--relative", base) if isinstance(base, str) and HEX.fullmatch(base) else None
+    tracked = diff if diff is not None else git(project, "ls-files")
+    if tracked is None:
+        return  # no Git here: nothing to check
+    yield [name for name in tracked.splitlines() if UI_FILE.search(name)]
+    untracked = git(project, "ls-files", "--others", "--exclude-standard") or ""
+    yield [name for name in untracked.splitlines() if UI_FILE.search(name)]
+
+
+def git(project, *args):
+    """A git command's output in the project, or None when it fails."""
+    import subprocess
+    try:
+        result = subprocess.run(["git", "-c", "core.quotePath=false", "-C", str(project), *args], capture_output=True,
+                                text=True, encoding="utf-8", errors="replace", timeout=20)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    return None if result.returncode else result.stdout
+
+
+def digest(path):
+    """A file's content hash; None once it is gone."""
+    import hashlib
+    try:
+        return hashlib.sha1(path.read_bytes()).hexdigest()
+    except OSError:
+        return None
 
 
 def check_handoff(run, body, **kwargs):

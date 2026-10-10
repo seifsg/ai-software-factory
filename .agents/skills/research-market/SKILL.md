@@ -21,7 +21,7 @@ Read the request, constraints and settled choices first. Run in parallel: one ag
 
 Depth follows the size. Before the size is known, research at MVP depth; a later POC answer moves the extra findings to the epic's follow-ups ticket in Backlog. POC: how competitors deliver the requested items, plus the riskiest capability; extra ideas go to that ticket, not the questions. MVP: the launch baseline (accounts when anyone signs in, security, privacy pages when it collects personal data, onboarding, analytics, in-app feedback) is built without asking; research the gaps beyond it that users expect (payments, notifications, support, integrations), each with evidence, cost and a recommendation, offered to the owner as suggestions.
 
-1. **Competitors:** the 3 top products for this job (leaders, fastest growing or closest fit; say why each). Per competitor: source URL, core loop, standout features, pricing and positioning, UX patterns worth reusing, weak spots.
+1. **Competitors:** the 3 top products for this job (leaders, fastest growing or closest fit; say why each). Per competitor: source URL, core loop, standout features, pricing and positioning, UX patterns worth reusing, nav labels and structure (evidence for the brief's Map and Labels), weak spots.
 2. **Feature matrix:** features × competitors. Mark requested items, must-haves and gaps.
 3. **Opportunities:** gaps, underserved segments, pricing angles, quick wins that make money. One line each.
 4. **Stack options** (new products): three stacks with fit, speed, look and risk. Recommendation first. Apply the stack defaults the project sets.

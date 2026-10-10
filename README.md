@@ -50,7 +50,7 @@ Manual install, flags and every agent's syntax: [install](docs/install.md) · [h
 - 🎫 **A living backlog.** Every run reads it, cleans up issues after merged or closed PRs, and opens an epic with outcome sub-issues; follow-ups update existing tickets instead. Each ticket carries a definition of done and a checklist; an item is ticked only after it works, and a ticket is finished only when every item is. Tickets move through To do, In progress, Dev done and Ready for QA; your merge makes them Done. Items outside the task stay untouched.
 - 🎚️ **Right-sized.** Fast by default, Lucky for quick tries, Safe for work that must not break. In Fast and Lucky, small tasks and follow-ups take a light lane: no analysis step, a short plan, the same checks.
 - 🧪 **Proof, not promises.** Every requested item traces to a criterion, a checklist item and proof. Every checklist item is used before its tick, then a done-run with real controls and logs; Safe adds manual QA, tests and an independent reviewer.
-- 🎨 **A product bar.** Accessible, responsive UI, clear copy, public-page SEO and a designed schema. Non-production builds show their environment and label sample data.
+- 🎨 **A product bar.** Accessible, responsive UI, clear copy, public-page SEO and a designed schema. Fast UI runs plan their map, hierarchy and labels, and every UI run gets a fresh agent's check against ten UX rules before the gate lets it finish. Non-production builds show their environment and label sample data.
 - 🧑‍⚖️ **Humans stay in charge.** Draft PRs only. It never merges, releases or deploys.
 - 🌍 **Any agent, any OS, any codebase.** Games, web, mobile and desktop apps, services, tools and libraries.
 
@@ -109,7 +109,7 @@ Add `lucky` or `safe` after the skill name. Resume any run with `safe-engine Res
 | `research-market` | Competitors, feature matrix, opportunities, stack and architecture options |
 | `analyze-start` | Understands the code and every consumer before changing it |
 | `get-ready-to-code` | Files, critique, phases, todos and the whole plan |
-| `ux-quality` | Simple, familiar, accessible, responsive UI; copy; public-page SEO |
+| `ux-quality` | Ten UX rules (map, navigation, hierarchy, disclosure, labels, cost, states, access, look, speed) judged by fresh eyes; copy; public-page SEO |
 | `database-schema` | Access patterns, three designs, chosen schema, indexes, migrations |
 | `deep-review` | Bug hunt plus change-guard, compliance, security, performance and journey lenses |
 | `ticketing` | Backlog upkeep: epic and outcome sub-issues with before/after, a definition of done, a checklist, status, priority and an activity timeline |

@@ -31,7 +31,7 @@ Fill the design brief before UI code. Run `ux-quality` on every UI change.
 | Font | One modern readable sans (Geist or Inter class), 16px base, clear type scale. |
 | Logo | Own small SVG mark and wordmark; favicon from the mark. |
 | Icons | One consistent set. |
-| Layout | Header (logo, navigation, account), content, footer (product, links, ©). Responsive from phone to desktop. |
+| Layout | Header (logo, navigation, account), content, footer (product, links, ©). Signed-in screens drop sign-in and marketing links. Responsive from phone to desktop. |
 | Theme | Light by default. Dark mode optional later, never the default. |
 | Motion | Subtle; respects reduced motion. |
 
@@ -41,7 +41,7 @@ Fill the design brief before UI code. Run `ux-quality` on every UI change.
 - Every collection is designed for one, few and many items. One item shows in place, never behind a list of one.
 - Errors say what happened and the next useful action. No blame, no false success.
 - Forms validate inline and keep input. Client validation is UX; the server validates again.
-- Labels on buttons and links match what they actually do.
+- Labels on buttons and links match what they actually do. One source each, so nothing drifts: a glossary module holds every object, state and action name; a typed route map per audience feeds nav, breadcrumbs, titles and H1s; lifecycle screens take their primary action and panels from a state map.
 
 ## Public pages
 
