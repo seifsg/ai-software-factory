@@ -14,7 +14,7 @@ SCRIPTS = Path(__file__).resolve().parents[1] / "skills/safe-engine/scripts"
 GATE = SCRIPTS / "fast_gate.py"
 SAMPLE = Path(__file__).resolve().parents[1] / ".agents/skills/safe-engine/references/work-record-sample.md"
 STEPS = ["research", "kickoff", "tickets", "analysis", "plan", "design", "schema", "build", "done-run", "handoff"]
-ONLINE = ("tickets", "plan", "handoff")  # steps that read the listed tickets through gh
+ONLINE = ("tickets", "plan", "done-run", "handoff")  # steps that read the listed tickets through gh
 LIGHT = """# copy-fix
 ## Tickets
 **Ticket:** none (one-word copy fix, no outcome change)
@@ -280,6 +280,60 @@ class FastGateTests(unittest.TestCase):
         posix = "/" + str(self.project)[0].lower() + str(self.project)[2:].replace("\\", "/")
         self.assertIn("Next: research", self.gate("status", project=posix))
 
+    def test_hidden_checks_accept_only_strict_entries(self):
+        record = record_module()
+        on = {"kind": "feature", "hidden_checks": True}
+        check = lambda text, run=on: " ".join(record.check_done_run(
+            run, "- PASS booked\n**Hidden checks:** " + text + "\n**Logs:** clean\n", project=".", all_sections={}))
+        unreadable = ["#2 A1: PASS, #2 A2 did not pass", "#2 A1: PASS\n#2 A2 not passing (exit 1)",
+                      "#2 A2 expected PASS, got FAIL", "\n- #2 A2 bad index passes to the error handler: FAIL",
+                      "\n- #2 A2 passing an empty title is rejected: ❌", "#2 A2 FAILS", "#2 A2: ✗", "\n| FAIL | #2 A2 |",
+                      "\n| #2 | A2 | PASS |", "A1: PASS, A2: PASS", "#2 A1: pass", "#2 A1: PASS (ok), note",
+                      "#2 A1: PASS\n\nall good"]
+        for text in unreadable:
+            self.assertIn("unreadable hidden-check entry", check(text), text)
+        self.assertIn("FAIL (#2 A2): back to build", check("#2 A1: PASS\n**Hidden checks:** #2 A2: FAIL"))
+        self.assertIn("FAIL (#2 A2)", check("\n- #2 A1: PASS\n\n- #2 A2: FAIL (exit 1)"))
+        self.assertIn("'**Hidden checks:**' block", check(""))
+        for text in ("#2 A1: PASS, #2 A2: PASS", "\n- #2 A1: PASS (FAIL on first run, fixed)\n\n* #3 A1: PASS",
+                     "#2 A1: PASS (#3 is unrelated)", "\n- [x] #2 A1: PASS\n1. #2 A2: PASS (check changed: wrong path)",
+                     "#2 A1: PASS\n- **Notes:** a bulleted label ends the block"):
+            self.assertEqual(check(text), "", text)
+        only_hidden = record.check_done_run(on, "**Hidden checks:** #2 A1: PASS\n**Logs:** y\n", project=".",
+                                            all_sections={})
+        self.assertEqual(only_hidden, ["needs >=1 PASS result"])  # the builder's own done-run stays required
+        for run in ({**on, "kind": "change"}, {"kind": "product"}):  # change runs and older methods: old rule
+            self.assertEqual(" ".join(record.check_done_run(run, "- PASS x\n**Logs:** y\n", project=".")), "")
+
+    def test_hidden_checks_cover_every_listed_criterion_online(self):
+        record = record_module()
+        text = SAMPLE.read_text(encoding="utf-8")
+        sections = record.sections(text)
+        dod = "### Definition of done\n- **A1 (R1):** works\n- **A2:** fails safely\n"
+        read = lambda url: {"url": url, "body": dod, "stopped": url.endswith("/9"), "backlog": False}
+        run = {"kind": "product", "hidden_checks": True, "ticket_checks": True,
+               "tickets": ["https://github.com/acme/studio-booking/issues/9"]}  # Blocked: needs no PASS
+        check = lambda body, **kw: " ".join(record.check_done_run(run, body, project=".", all_sections=sections, **kw))
+        done = sections["done-run"]
+        with patch.object(record, "read_ticket", side_effect=read):
+            self.assertEqual(check(done), "")
+            no_epic = "\n".join(line for line in done.splitlines() if not line.startswith("- #1 "))
+            self.assertIn("without a hidden-check PASS: #1 A1, #1 A2", check(no_epic))
+            self.assertIn("#5 A2", check(done.replace(", #5 A2: PASS", "")))
+        self.assertEqual(check(done.replace(", #5 A2: PASS", ""), offline="no network"), "")  # offline: >=1 entry
+
+    def test_hidden_checks_gate_the_sample_done_run(self):
+        self.start("--no-ui")
+        text = SAMPLE.read_text(encoding="utf-8")
+        record_file = self.project / ".factory/fast/work-record.md"
+        self.assertIn("Hidden checks block", record_file.read_text(encoding="utf-8"))
+        record_file.write_text(text.replace("#4 A2: PASS", "#4 A2: FAIL"), encoding="utf-8")
+        for step in ("research", "kickoff", "tickets", "analysis", "plan", "schema", "build"):
+            self.gate("done", step, *(["--offline", "sample URLs"] if step in ONLINE else []))
+        self.assertIn("FAIL (#4 A2): back to build", self.gate("done", "done-run", "--offline", "sample", ok=False))
+        record_file.write_text(text, encoding="utf-8")
+        self.gate("done", "done-run", "--offline", "sample URLs")
+
     def test_lucky_runs_the_done_run(self):
         self.gate("start", "--key", "quick-try", "--mode", "lucky", "--kind", "change", "--request", "fix copy")
         self.assertIn("done-run", self.gate("status"))
@@ -485,12 +539,12 @@ class FastGateTests(unittest.TestCase):
         spec.loader.exec_module(gate)
         layout, lane = Path(gate.LAYOUT), Path(gate.FAST_RUN)
         for name, texts in (("new", ("### ✅ Definition of done\nEvery criterion has an item.",
-                                     "## Light lane\nT1 <title> → <what the owner can do once it is done>")),
+                                     "## Light lane\nT1 <title> → <what the owner can do once it is done>\n**Hidden checks:**")),
                             ("old", ("### ✅ Done when", "## Hooks"))):
             for path, text in zip((layout, lane), texts):
                 (self.root / name / path).parent.mkdir(parents=True, exist_ok=True)
                 (self.root / name / path).write_text(text, encoding="utf-8")
-        on = {"ticket_checks": True, "coverage": True, "light": True, "outcomes": True}
+        on = {"ticket_checks": True, "coverage": True, "light": True, "outcomes": True, "hidden_checks": True}
         off = dict.fromkeys(on, False)
         self.assertEqual(gate.method_flags({"root": str(self.root / "new")}, self.project), on)
         self.assertEqual(gate.method_flags({"root": str(self.root / "old")}, self.project), off)
@@ -499,7 +553,7 @@ class FastGateTests(unittest.TestCase):
         self.assertEqual(gate.method_flags(None, SCRIPTS.parents[2]), on)  # this checkout's own methods define them
         (self.root / "new" / layout).write_bytes(b"\xff\xfe broken")
         self.assertEqual(gate.method_flags({"root": str(self.root / "new")}, self.project),
-                         {**off, "light": True, "outcomes": True})  # fast-run.md still reads
+                         {**off, "light": True, "outcomes": True, "hidden_checks": True})  # fast-run.md still reads
         lucky = {"mode": "lucky", "kind": "change"}
         self.assertNotIn("done-run", gate.steps_for(lucky))
         self.assertIn("done-run", gate.steps_for({**lucky, "ticket_checks": True}))

@@ -27,6 +27,12 @@ REQUESTED = re.compile(r"\bR\d+\b")
 # "R2 waitlist (owner-deferred: https://...)": the mark sits on its own item, before any other R-id
 DEFERRED = re.compile(r"\b(R\d+)\b(?:(?!\bR\d+\b)[^()\n])*\((?i:owner-deferred):\s*"
                       r"(?:\[[^\]\n]*\]\(https?://[^\s)]+\)|https?://[^\s)]+)\)")  # bare URL or [text](URL)
+BULLET = r"(?:(?:[-*+]|\d+[.)])[ \t]+(?:\[[ xX]\][ \t]+)?)?"  # '- ', '1. ', '- [x] ' or none
+# every '**Hidden checks:**' block, blank lines included, up to the next label (bulleted or not) or heading
+HIDDEN = re.compile(rf"\*\*Hidden checks:\*\*(.*?)(?=^[ \t]*{BULLET}\*\*[^*\n]+:\*\*|^#{{1,6}}\s|\Z)", re.M | re.S)
+# one entry, nothing guessed: '#2 A1: PASS' or '#2 A1: FAIL', an optional '(note)' only after the verdict
+ENTRY = r"#(\d+)[ \t]+([A-Z]{1,3}\d+):[ \t]*(PASS|FAIL)(?:[ \t]+\([^()\n]*\))?"
+ENTRIES = re.compile(rf"{BULLET}{ENTRY}(?:[ \t]*,[ \t]*{ENTRY})*[ \t]*")  # one line: entries, commas
 
 
 def marker(body, label):
@@ -197,7 +203,7 @@ def read_ticket(url):
     boards = {name(item.get("status")) for item in listed(data, "projectItems") if isinstance(item, dict)} - {""}
     marked = lambda status: f"status: {status}" in labels or status in boards
     cancelled = str(data.get("stateReason") or "").upper() == "NOT_PLANNED"
-    return {"body": FENCE.sub("", str(data.get("body") or "")), "stopped": cancelled or marked("blocked"),
+    return {"url": url, "body": FENCE.sub("", str(data.get("body") or "")), "stopped": cancelled or marked("blocked"),
             "backlog": marked("backlog"), "closed": str(data.get("state") or "").upper() == "CLOSED"}
 
 
@@ -341,14 +347,58 @@ def check_build(run, body, **kwargs):
             for number in todo_ids(kwargs["all_sections"]) if number not in built]
 
 
-def check_done_run(run, body, project, **_):
-    problems = [] if re.search(r"\bPASS\b", body) else ["needs >=1 PASS result"]
+def check_done_run(run, body, project, **kwargs):
+    own = HIDDEN.sub("", body) if hidden(run) else body  # the builder's own done-run, apart from the checker's
+    problems = [] if re.search(r"\bPASS\b", own) else ["needs >=1 PASS result"]
     problems += missing_markers(body, ["Logs"])
     if run.get("ui"):
         shots = [Path(shot) for shot in re.findall(r"[\w./\\:~-]+\.(?:png|jpe?g|webp|gif)\b", body, re.I)]
         if not any((shot if shot.is_absolute() else Path(project) / shot).is_file() for shot in shots):
             problems.append("needs >=1 existing screenshot path")
-    return problems
+    return problems + (hidden_checks(body, kwargs, run) if hidden(run) else [])
+
+
+def hidden(run):
+    """Product and feature runs whose methods define hidden checks; change runs and older runs never."""
+    return bool(run.get("hidden_checks")) and run.get("kind") != "change"
+
+
+def verdicts(body):
+    """Hidden checks entries (issue number, criterion ID, passed) and the lines that are not entries."""
+    entries, unreadable = [], []
+    for line in "\n".join(HIDDEN.findall(body)).splitlines():
+        if not line.strip():
+            continue
+        if not ENTRIES.fullmatch(line.strip()):
+            unreadable.append(line.strip())
+            continue
+        found = re.findall(ENTRY, line)
+        entries += [(number, cid, verdict == "PASS") for number, cid, verdict in found]
+    return entries, unreadable
+
+
+def hidden_checks(body, kwargs, run):
+    """Unreadable entries and any FAIL refuse; online, every in-play listed ticket's criterion, the epic's
+    included, needs its own '#<n> <ID>: PASS'; offline, >=1 entry."""
+    entries, unreadable = verdicts(body)
+    if unreadable:
+        return [f"unreadable hidden-check entry: {line}" for line in unreadable] + [
+            "write each as '#<n> <ID>: PASS' or '#<n> <ID>: FAIL', a note only after it in parentheses; "
+            "the block ends at the next '**Label:**'"]
+    failed = [f"#{number} {cid}" for number, cid, passed in entries if not passed]
+    if failed:
+        return [f"hidden checks FAIL ({', '.join(dict.fromkeys(failed))}): back to build, then the checker runs them again"]
+    if not entries:
+        return ["needs a '**Hidden checks:**' block from the checker: '#<n> <ID>: PASS' for every criterion"]
+    gaps, passed = [], {(number, cid) for number, cid, _ in entries}
+
+    def read(ticket):
+        if not (ticket["stopped"] or ticket["backlog"]):
+            number = ISSUE.match(ticket["url"]).group(2)
+            criteria = dict.fromkeys(CRITERION.findall(under(ticket["body"], DEFINITION)))
+            gaps.extend(f"#{number} {cid}" for cid in criteria if (number, cid) not in passed)
+    problems = online(run, kwargs, read)
+    return problems or ([f"criteria without a hidden-check PASS: {', '.join(gaps)}"] if gaps else [])
 
 
 def check_handoff(run, body, **kwargs):

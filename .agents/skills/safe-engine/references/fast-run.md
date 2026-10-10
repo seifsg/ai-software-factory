@@ -42,7 +42,7 @@ A `change` (bug fix, small change, follow-up) records tickets, plan, build, done
 | Design | ≥4 `#RRGGBB` hex colors, `**UI kit:**`, `**Font:**`, `**Logo:**`, `**Icons:**`, `**Layout:**`, `**Theme:**` naming light mode, `**Journeys:**` with counts and a minimum |
 | Schema | a 3-option table, `**Chosen:**`, a fenced ERD or DDL |
 | Build log | one line per plan todo, starting with its ID: `- T1 pre: … do: … post: …`; `**Now:** T2 T3` names the todos in progress |
-| Done-run | ≥1 `PASS` line, `**Logs:**`; UI runs ≥1 existing screenshot path under `.factory/fast/shots/` |
+| Done-run | ≥1 `PASS` line, `**Logs:**`; UI runs ≥1 existing screenshot path under `.factory/fast/shots/`; product and feature runs a `**Hidden checks:**` block up to the next label, only entries `#2 A1: PASS` or `#2 A1: FAIL` (a note only after it in parentheses), one per line or comma-separated; refused with any other line or any FAIL; online, every criterion of each listed ticket not Blocked, Backlog or not planned needs its PASS; offline, ≥1 entry |
 | Handoff | `**Run:**`, `**Statuses:**` (each owned ticket's final status), `**Unverified:**`, `**Follow-ups:**`; sign-in runs `**Dev sign-in:**`; online, each listed ticket not Blocked, Backlog or not planned (label or board status) is fully ticked, an item naming each criterion, every plan todo an item, every R-id not marked owner-deferred named by a criterion |
 
 Labels end with the colon inside the bold: `**Epic:**`. Delegates return their log lines; the coordinator writes the record. During build, copy the design brief and schema decision into the product's `docs/`.
@@ -65,7 +65,7 @@ python fast_gate.py install --host <host> [--project <abs>]
 - `start` keeps `.factory/` out of Git only inside a Git repository: `git init` first.
 - Product runs default to UI and persistence; pass `--no-ui` or `--no-data` only when true. `--auth` marks sign-in: pass it when anyone signs in or roles exist. These are fixed at `start`; decide them from the request.
 - Steps run in order; `done` refuses a step while an earlier applicable one is open.
-- `done tickets`, `done plan` and `done handoff` read the listed GitHub tickets online: links, definition of done, checklist, ticks, coverage. Other trackers or no network: `--offline "<reason>"` records the step unverified; it is refused when the listed GitHub tickets are readable. Runs started on older methods keep the checks those methods define.
+- `done tickets`, `done plan`, `done handoff` and, on hidden-check runs, `done done-run` read the listed GitHub tickets online: links, definition of done, checklist, ticks, coverage. Other trackers or no network: `--offline "<reason>"` records the step unverified; it is refused when the listed GitHub tickets are readable. Runs started on older methods keep the checks those methods define.
 - `pause` before waiting on the owner; the next `done` or `resume` clears it. `close` needs `handoff`, or `--abandon` with the owner's reason.
 
 ## Hooks

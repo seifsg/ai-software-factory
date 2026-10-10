@@ -248,7 +248,9 @@ def skeleton(run):
     lines = [f"# {run['key']}: {run['mode']} {run['kind']} run", "",
              "<!-- Fill each section, then `fast_gate.py done <step>`. Markers: fast-run.md#work-record -->", "",
              "## Request", "", *quoted, ""]
-    hints = {**HINTS, **COVERAGE_HINTS} if run.get("coverage") else HINTS
+    hints = {**HINTS, **COVERAGE_HINTS} if run.get("coverage") else dict(HINTS)
+    if sibling("fast_record").hidden(run):
+        hints["done-run"] += "; a Hidden checks block: '#<n> <ID>: PASS' per criterion of every listed ticket"
     for step in steps_for(run):
         lines += [f"## {TITLES[step]}", "", f"<!-- gate: {hints[step]} -->", ""]
     return "\n".join(lines)
@@ -258,7 +260,8 @@ LAYOUT = ".agents/skills/ticketing/references/ticket-layout.md"
 FAST_RUN = ".agents/skills/safe-engine/references/fast-run.md"
 # run flag -> (method file, phrase): a check applies only when the methods the run reads define it
 FLAGS = {"ticket_checks": (LAYOUT, "Definition of done"), "coverage": (LAYOUT, "Every criterion has"),
-         "light": (FAST_RUN, "Light lane"), "outcomes": (FAST_RUN, "what the owner can do once it is done")}
+         "light": (FAST_RUN, "Light lane"), "outcomes": (FAST_RUN, "what the owner can do once it is done"),
+         "hidden_checks": (FAST_RUN, "**Hidden checks:**")}
 
 
 def method_flags(bundle, project):
@@ -683,7 +686,8 @@ def main():
     start.add_argument("--request-file")
     done = sub.add_parser("done", parents=[common], help="Check and record one step")
     done.add_argument("step", choices=list(TITLES))
-    done.add_argument("--offline", help="Record tickets, plan or handoff without reading tickets through gh, with the reason")
+    done.add_argument("--offline", help="Record tickets, plan, handoff or a hidden-check done-run without reading tickets "
+                                         "through gh, with the reason")
     sub.add_parser("status", parents=[common])
     pause = sub.add_parser("pause", parents=[common], help="Waiting on the owner; lets the session stop")
     pause.add_argument("--reason", required=True)
