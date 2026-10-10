@@ -39,6 +39,7 @@ Run `analyze-start` on the PR. Read the real code, never only the diff.
 2. ASCII flow of the real path, marking where the changes sit.
 3. Cross-reference every touched symbol: callers, routes/commands, shared state, cache keys, schemas, events, tests. This seeds change-guard.
 4. Claim vs diff: `| Claimed behavior | Where (file:line) | Delivered? YES / PARTIAL / NO | Note |`
+   Proof: each changed feature, fix, page, module or endpoint shows Before and After proof the reviewer can open (screenshots, recording, `diff` output). Missing, prose-only, file-named or unopenable proof is an `evidence` finding.
 5. Hypotheses and open questions, kept apart from verified facts.
 
 ## 2. Lenses

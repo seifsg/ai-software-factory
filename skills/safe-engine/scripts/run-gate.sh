@@ -8,7 +8,7 @@
 home="${SAFE_ENGINE_HOME:-$HOME/.safe-engine}"
 host="${1:-claude}"
 set -- "$home"/active/*.json
-[ -e "$1" ] || exit 0
+[ -e "$1" ] || { set -- "$home"/runs/*.json; [ -e "$1" ]; } || exit 0  # a lone open state re-registers its run
 dir="${safe_engine_scripts:-${0%/*}}"
 [ -f "$dir/fast_gate.py" ] || exit 0  # half-installed or removed copy: never block the session
 case "$host" in claude|codex|cursor) native=1 ;; *) native=0 ;; esac

@@ -33,8 +33,18 @@ LIGHT = """# copy-fix
 ## Handoff
 **Run:** npm run dev
 **Statuses:** no ticket (trivial)
+**PR:** https://github.com/acme/site/pull/2 (body: .factory/fast/pr-body.md)
 **Unverified:** none
 **Follow-ups:** none
+"""
+PR_BODY = """## 🎬 Before & after
+
+### 🦶 Footer: contact link reads "Contact us"
+
+**Before:** "Contcat us" (base)
+![before](https://github.com/acme/site/blob/0a1b2c3/footer-before.png?raw=true)
+**After:** "Contact us" (head)
+![after](https://github.com/acme/site/blob/0a1b2c3/footer-after.png?raw=true)
 """
 
 
@@ -68,7 +78,8 @@ def module(name):
     return loaded
 
 
-class FastGateTests(unittest.TestCase):
+class GateHarness:
+    """A disposable project and gate home, with the real CLI and hook."""
     def setUp(self):
         temp = tempfile.TemporaryDirectory(prefix="fast gate ")
         self.addCleanup(temp.cleanup)
@@ -107,6 +118,11 @@ class FastGateTests(unittest.TestCase):
     def start(self, *flags, kind="product"):
         self.gate("start", "--key", "portal-poc", "--kind", kind, "--request", "Build a client portal", *flags)
 
+    def pr_body(self):
+        """The draft PR's body file the handoff's PR line names (read offline)."""
+        (self.project / ".factory/fast").mkdir(parents=True, exist_ok=True)
+        (self.project / ".factory/fast/pr-body.md").write_text(PR_BODY, encoding="utf-8")
+
     def finish_sample(self, text=None, until=None):
         """Record the sample (or `text`) and pass the steps before `until`, or all of them."""
         record = self.project / ".factory/fast/work-record.md"
@@ -114,9 +130,12 @@ class FastGateTests(unittest.TestCase):
         shot = self.project / ".factory/fast/shots/schedule.png"
         shot.parent.mkdir(parents=True, exist_ok=True)
         shot.write_bytes(b"PNG")
+        self.pr_body()
         for step in STEPS[:STEPS.index(until) if until else None]:
             self.gate("done", step, *(["--offline", "sample URLs"] if step in ONLINE else []))
 
+
+class FastGateTests(GateHarness, unittest.TestCase):
     def test_start_records_run_and_enforces_step_order(self):
         self.start("--auth")
         run = json.loads((self.project / ".factory/fast/run.json").read_text(encoding="utf-8"))
@@ -132,8 +151,9 @@ class FastGateTests(unittest.TestCase):
         receipt = {"version": 1, "bundle_root": str(self.root / "bundle"), "revision": "a" * 40}
         (self.project / ".factory/entry-bundle.json").write_text(json.dumps(receipt), encoding="utf-8")
         output = self.gate("start", "--key", "portal-poc", "--kind", "change", "--request", "fix copy")
-        self.assertIn("added .factory/ to .gitignore", output)
-        self.assertIn(".factory/", (self.project / ".gitignore").read_text(encoding="utf-8"))
+        self.assertIn("added .factory/ to", output)
+        self.assertIn(".factory/\n", (self.project / ".git/info/exclude").read_text(encoding="utf-8"))
+        self.assertFalse((self.project / ".gitignore").exists())  # no project file changes
         run = json.loads((self.project / ".factory/fast/run.json").read_text(encoding="utf-8"))
         self.assertEqual(run["bundle"]["revision"], "a" * 40)
         self.assertIn("Hooks:", output)
@@ -493,48 +513,6 @@ class FastGateTests(unittest.TestCase):
         self.assertEqual(log.count('"hook.deny"'), 2)
         self.assertTrue(all(json.loads(line) for line in log.splitlines()))  # long fields cut, lines stay JSON
 
-    def test_a_lost_ledger_keeps_the_gate_closed(self):
-        self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "fix the footer copy")
-        (self.project / ".factory/fast/work-record.md").write_text(LIGHT, encoding="utf-8")
-        for step in ("tickets", "plan"):
-            self.gate("done", step)
-        (self.project / ".factory/fast/run.json").unlink()  # as rm -f .factory/fast/* would
-        out = self.hook({"hook_event_name": "PreToolUse", "tool_name": "Write",
-                         "tool_input": {"file_path": str(self.project / "src/app.ts")}})
-        self.assertIn("ledger .factory/fast/run.json is missing", out["hookSpecificOutput"]["permissionDecisionReason"])
-        self.assertEqual(self.pre("Bash", command="git push -f origin main"), "deny")
-        self.gate("close", "--abandon", "the owner dropped the run")
-        self.assertEqual(self.pre("Write", file_path=str(self.project / "src/app.ts")), "allow")
-
-    def test_close_abandon_and_start_survive_an_unreadable_ledger(self):
-        ledger, registry = self.project / ".factory/fast/run.json", self.root / "home/active"
-        for broken in (b"not json {", b"", "\ufeff{}".encode("utf-8")):  # garbage, empty, BOM from Out-File
-            with self.subTest(broken=broken):
-                self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "fix the footer copy")
-                ledger.write_bytes(broken)
-                self.assertEqual(self.pre("Write", file_path=str(self.project / "src/a.ts")), "deny")  # still gated
-                refused = self.gate("start", "--key", "next", "--kind", "change", "--request", "x", ok=False)
-                self.assertIn("unreadable", refused)
-                self.assertIn("--abandon", refused)
-                self.assertNotIn("Traceback", refused)
-                self.assertIn("without a readable ledger", self.gate("close", "--abandon", "the owner dropped it"))
-                self.assertEqual(list(registry.glob("*.json")), [])
-                self.assertFalse(ledger.exists())
-        self.assertEqual(len(list(ledger.parent.glob("run.broken-*.json"))), 3)  # each broken file set aside
-
-    def test_close_from_a_subfolder_closes_the_run_or_refuses(self):
-        self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "fix the footer copy")
-        (self.project / ".factory/fast/run.json").unlink()
-        sub = self.project / "src"
-        sub.mkdir()
-        self.assertIn("without a readable ledger", self.gate("close", "--abandon", "dropped", project=sub))
-        self.assertEqual(list((self.root / "home/active").glob("*.json")), [])
-        elsewhere = self.root / "elsewhere"
-        elsewhere.mkdir()
-        self.assertIn("nothing was closed", self.gate("close", "--abandon", "dropped", project=elsewhere, ok=False))
-        self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "fix the footer copy")
-        self.assertIn("Next: closed", self.gate("close", "--abandon", "dropped", project=sub))  # a readable ledger
-
     def test_stop_blocks_once_and_respects_pause(self):
         self.start()
         self.pre("Write", file_path=str(self.project / "src/app.ts"))  # binds session s1
@@ -682,8 +660,9 @@ class FastGateTests(unittest.TestCase):
         self.gate("done", "tickets")
         self.assertIn("'**Success:**' line", self.gate("done", "plan", ok=False))
         record.write_text(LIGHT, encoding="utf-8")
+        self.pr_body()
         for step in ("plan", "build", "done-run", "handoff"):
-            self.gate("done", step)
+            self.gate("done", step, *(["--offline", "no network"] if step == "handoff" else []))
         self.assertIn("Next: close", self.gate("status"))
 
     def test_ticket_links_are_checked_against_the_epic(self):
@@ -869,14 +848,14 @@ class FastGateTests(unittest.TestCase):
         spec.loader.exec_module(gate)
         layout, lane, ux = Path(gate.LAYOUT), Path(gate.FAST_RUN), Path(gate.UX)
         for name, texts in (("new", ("### ✅ Definition of done\nEvery criterion has an item.",
-                                     "## Light lane\nT1 <title> → <what the owner can do once it is done>\n**Hidden checks:**\n**Secrets:**",
+                                     "## Light lane\nT1 <title> → <what the owner can do once it is done>\n**Hidden checks:**\n**Secrets:**\n`**PR:**`",
                                      "| U10 | Performance |")),
                             ("old", ("### ✅ Done when", "## Hooks", "| Performance |"))):
             for path, text in zip((layout, lane, ux), texts):
                 (self.root / name / path).parent.mkdir(parents=True, exist_ok=True)
                 (self.root / name / path).write_text(text, encoding="utf-8")
         on = {"ticket_checks": True, "coverage": True, "light": True, "outcomes": True, "hidden_checks": True, "scans": True,
-              "ux_rules": True}
+              "ux_rules": True, "pr_proof": True}
         off = dict.fromkeys(on, False)
         self.assertEqual(gate.method_flags({"root": str(self.root / "new")}, self.project), on)
         self.assertEqual(gate.method_flags({"root": str(self.root / "old")}, self.project), off)
@@ -886,7 +865,7 @@ class FastGateTests(unittest.TestCase):
         (self.root / "new" / layout).write_bytes(b"\xff\xfe broken")
         self.assertEqual(gate.method_flags({"root": str(self.root / "new")}, self.project),
                          {**off, "light": True, "outcomes": True, "hidden_checks": True, "scans": True,
-                          "ux_rules": True})  # fast-run.md and ux-quality still read
+                          "ux_rules": True, "pr_proof": True})  # fast-run.md and ux-quality still read
         lucky = {"mode": "lucky", "kind": "change"}
         self.assertNotIn("done-run", gate.steps_for(lucky))
         self.assertIn("done-run", gate.steps_for({**lucky, "ticket_checks": True}))

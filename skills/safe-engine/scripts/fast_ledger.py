@@ -1,6 +1,6 @@
-"""Run ledgers and the run registry for fast_gate.py: comparable paths, where a project's run files live, and which
-runs are active. The registry in the gate home is the source of truth: a registered run whose ledger is missing or
-unreadable stays active, gate closed, until the owner closes it.
+"""Run state and the run registry for fast_gate.py: comparable paths, where a run's files live, and which runs are
+active. The gate home holds the truth: active/<h>.json registers a run, runs/<h>.json holds its state. The project's
+run.json is a mirror for agents to read; nothing here trusts it, except once to move an older run home.
 """
 import json
 import os
@@ -42,6 +42,35 @@ def load_stamped(path):
         return json.load(source), os.fstat(source.fileno()).st_mtime_ns
 
 
+def save(path, data, new=False):
+    """Atomic JSON write: readers never see a half-written file. new: only when path does not exist yet
+    (FileExistsError otherwise), so a first write never replaces one that landed meanwhile."""
+    import tempfile
+    import time
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    handle, temp = tempfile.mkstemp(dir=path.parent, prefix=path.name, suffix=".tmp")
+    try:
+        with os.fdopen(handle, "w", encoding="utf-8") as out:
+            json.dump(data, out, indent=2)
+            out.write("\n")
+        if new:
+            os.link(temp, path)  # a link never replaces: the earlier writer wins
+            os.unlink(temp)
+            return
+        for attempt in range(25):
+            try:
+                os.replace(temp, path)
+                break
+            except PermissionError:  # Windows: a hook may hold the file open for a moment
+                if attempt == 24:
+                    raise
+                time.sleep(0.02)
+    except BaseException:
+        Path(temp).unlink(missing_ok=True)
+        raise
+
+
 def ledger_path(project):
     return Path(project, *FAST, LEDGER)
 
@@ -56,46 +85,136 @@ def registry_path(active, project):
     return active / (hashlib.sha1(norm(project).encode("utf-8")).hexdigest()[:16] + ".json")
 
 
-def readable(project):
-    """The project's run ledger when it is a current one (a JSON object of this VERSION), else None."""
+def state_path(entry):
+    """A run's state in the gate home, named like its registration entry: hooks hash nothing."""
+    return entry.parent.parent / "runs" / entry.name
+
+
+def closed_path(entry):
+    """Where a closed run's state rests until the next start: outside runs/*.json, so hooks never read it."""
+    return entry.parent.parent / "runs" / "closed" / entry.name
+
+
+def closed_run(entry):
+    """The last closed run for a registration name, or None."""
     try:
-        run = load(ledger_path(project))
+        return current(load(closed_path(entry)))
     except (OSError, ValueError):
         return None
+
+
+def current(run):
+    """run when it is a JSON object of this VERSION, else None."""
     return run if isinstance(run, dict) and run.get("version") == VERSION else None
 
 
-def registrations(active):
-    """(entry, registration, project) for each well-formed registration; a malformed one is skipped."""
-    for entry in active.glob("*.json"):
+def readable(project):
+    """The project's mirror when it is a current run, else None."""
+    try:
+        return current(load(ledger_path(project)))
+    except (OSError, ValueError):
+        return None
+
+
+def state(entry, registration, log):
+    """The run the gate home holds for a registration. An older run with no home state moves home from an open
+    mirror of the same key, once; anything else is a lost run, gate closed."""
+    path = state_path(entry)
+    try:
+        run = current(load(path))
+    except FileNotFoundError:
+        run = migrate(path, registration, log)
+    except (OSError, ValueError):
+        run = None
+    return run or lost(registration)
+
+
+def migrate(path, registration, log):
+    """Move an older run's open mirror into the gate home; None when the mirror is not that run, or the run was
+    started by this gate (its registration says so: a deleted state then stays lost)."""
+    if registration.get("home"):
+        return None
+    run = readable(registration["project"])
+    if not run or run.get("closed") or run.get("key") != registration.get("key"):
+        return None
+    run["project"] = registration["project"]
+    try:
+        save(path, run, new=True)
+        log("run.migrate", key=run["key"], project=run["project"])
+    except FileExistsError:  # a parallel hook or gate command moved it home first: that state wins
         try:
-            registration = load(entry)
-            yield entry, registration, Path(registration["project"])
+            return current(load(path))
+        except (OSError, ValueError):
+            return None
+    except OSError:
+        pass  # no hard links here: gated from memory, the next gate command saves it home
+    return run
+
+
+def listing(folder):
+    """The .json names in folder; [] when it is missing."""
+    try:
+        return [name for name in os.listdir(folder) if name.endswith(".json")]
+    except OSError:
+        return []
+
+
+def registrations(active, log=None):
+    """(entry, registration, project) for each run the gate home knows: every well-formed registration, and every open
+    state whose registration is gone, re-registered here, so deleting one of the two files never switches a run off."""
+    names = set(listing(active))
+    for name in sorted(names.union(listing(active.parent / "runs"))):
+        entry = active / name
+        try:
+            registration = load(entry) if name in names else reregister(entry, log)
+            if registration:
+                yield entry, registration, Path(registration["project"])
         except Exception:  # noqa: BLE001 - malformed entry: skip it, keep gating the rest
             continue
 
 
-def active_runs(active):
-    """Open runs from the registry. A missing, unreadable or foreign ledger makes a lost run, gate closed; one bad or
-    unreachable entry never disables the others."""
+def reregister(entry, log):
+    """The registration rebuilt from an open home state whose registration was deleted; None for a closed one."""
+    run = current(load(state_path(entry)))
+    if not run or run.get("closed"):
+        return None
+    registration = {"project": run["project"], "key": run["key"], "sessions": [], "home": True}
+    try:
+        save(entry, registration, new=True)
+        if log:
+            log("run.reregistered", key=run["key"], project=run["project"])
+    except FileExistsError:  # a parallel hook restored it first
+        return load(entry)
+    except OSError:
+        pass  # gated from memory; the next hook tries again
+    return registration
+
+
+def active_runs(active, log):
+    """Open runs from the registry and the home state. A missing or unreadable state makes a lost run, gate closed;
+    one bad or unreachable entry never disables the others."""
     runs = []
-    for entry, registration, project in registrations(active):
-        run = readable(project) or (lost(registration) if project.is_dir() else forget(entry, project))
+    for entry, registration, project in registrations(active, log):
+        run = state(entry, registration, log) if project.is_dir() else forget(entry, project)
         if run and not run.get("closed"):
             runs.append((entry, registration, run))
     return runs
 
 
 def lost(registration):
-    """Stand-in for a run whose ledger was deleted, moved or broken: gate closed, every destructive rule on."""
+    """Stand-in for a run whose home state is missing or broken: gate closed, every destructive rule on."""
     return {"version": VERSION, "project": registration["project"], "key": registration.get("key", "?"),
             "mode": "fast", "kind": "change", "done": {}, "lost": True}
 
 
 def forget(entry, project):
-    """Drop a registration whose project folder is gone from a reachable parent; unmounted drives keep theirs."""
+    """Drop a run whose project folder is gone from a reachable parent; unmounted drives keep theirs."""
     if project.parent.exists():
-        entry.unlink(missing_ok=True)
+        for path in (entry, state_path(entry)):
+            try:
+                path.unlink(missing_ok=True)
+            except OSError:
+                pass  # locked: the next hook tries again
     return None
 
 

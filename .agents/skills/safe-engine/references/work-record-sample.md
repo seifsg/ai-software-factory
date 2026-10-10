@@ -1,7 +1,6 @@
 # studio-booking: fast product run
 
-<!-- Illustrative sample of a filled Fast work record (fast-run.md#work-record). It shows the gate markers for a
-     product unrelated to any real run; never copy its content. A real run researches fresh. Ticket URLs and owner answers are examples, not real records. -->
+<!-- Illustrative sample of a filled Fast work record (fast-run.md#work-record). It shows the gate markers for a product unrelated to any real run; never copy its content. A real run researches fresh. Ticket URLs and owner answers are examples, not real records. -->
 
 Contents: request · research · kickoff · tickets · analysis · plan · design · schema · build log · done-run · handoff · MVP done-run example
 
@@ -187,6 +186,7 @@ indexes: classes(starts_at), bookings(class_id, status), waitlist(class_id, posi
 **Run:** `pnpm install && pnpm db:seed && pnpm dev`, then http://localhost:3000
 **Statuses:** every requested item delivered, real payments owner-deferred to #6 (mock checkout in this POC); #2, #3, #4, #5 checklists ticked, done-run PASS: Ready for QA with PR #7, Done on merge; epic #1 Ready for QA; #6 Backlog
 **Dev sign-in:** header role switcher (Member, Staff), development only; this POC has no sign-in
+**PR:** https://github.com/acme/studio-booking/pull/7 (body: .factory/fast/pr-body.md): Before & after per journey (schedule, booking, waitlist), screenshot pairs and a booking GIF
 **Unverified:** automated tests, independent review, Safari, payment provider
 **Follow-ups:** real payments (#6, owner-approved mock in this POC, revisit at MVP kickoff). POC skips (real sign-in, security hardening, deployment, landing page) are listed in epic #1 for the MVP
 

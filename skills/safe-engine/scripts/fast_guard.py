@@ -5,6 +5,7 @@ only allow a fired rule, by proving it harmless command by command from the pars
 cannot follow stays denied. The gate passes in its own path helpers.
 """
 import fnmatch
+import functools
 import os
 import re
 
@@ -21,8 +22,12 @@ SWEEP = ("a find under the whole project: name only files that cannot be .git, .
 class Judge:
     """Judges commands for the run rooted at root. norm(path, base) and inside(child, parent) come from the gate."""
 
-    def __init__(self, root, norm, inside):
+    def __init__(self, root, norm, inside, home=None):
         self.root, self.norm, self.inside, self.seen, self.budget = root, norm, inside, {}, BUDGET
+        self.home, self.hint = home, None
+        if home:  # commands naming the gate home: its run files are guarded like .git
+            names = {".safe-engine", "safe_engine_home", home, home.replace("\\", "/")}
+            self.hint = re.compile("|".join(map(re.escape, names)), re.I)
         self.protected = {norm(os.path.join(root, *part)) for part in ((".factory",), (".factory", "fast"), (".git",),
                                                                        (".factory", "fast", "run.json"))}
         self.git = norm(os.path.join(root, ".git"))  # history: nothing inside it may go
@@ -74,12 +79,26 @@ class Judge:
         anything inside .git or a protected folder a pattern's leading parts match. .git/index.lock may go."""
         if full == self.lock:
             return False
+        if self.homeward(full):
+            return True
         if not rules.WILDCARD.search(full):
             return (mode != "below" and full in self.protected) or (mode != "file" and self.inside(full, self.git))
         parts = full.split(os.sep)
         return fnmatch.fnmatch(self.root, full) or any(
             fnmatch.fnmatch(guarded, full if mode == "file" else os.sep.join(parts[:guarded.count(os.sep) + 1]))
             for guarded in self.protected)
+
+    @functools.cached_property
+    def vault(self):
+        """The gate home's run folders (registrations, run states), resolved on first use: most commands never ask."""
+        return tuple(self.norm(os.path.join(self.home, part)) for part in ("active", "runs")) if self.home else ()
+
+    def homeward(self, full):
+        """True when full, a path or a wildcard pattern, is or reaches into the gate home's run folders."""
+        if not rules.WILDCARD.search(full):
+            return any(self.inside(full, folder) for folder in self.vault)
+        parts = full.split(os.sep)
+        return any(fnmatch.fnmatch(folder, os.sep.join(parts[:folder.count(os.sep) + 1])) for folder in self.vault)
 
     def moved(self, target, here):
         """Directory after a cd to target ('' is unknown); None once unknown."""
@@ -153,7 +172,10 @@ class Judge:
         """rule() for one dialect. ( ) scopes restore the directory."""
         items = list(shell.pipelines(command, dialect))
         commands = [item for item in items if not isinstance(item, str)]
-        fired = rules.fired("\n".join(cmd.text for cmd in commands), lambda: self.sql(commands, cwd))
+        text = "\n".join(cmd.text for cmd in commands)
+        fired = rules.fired(text, lambda: self.sql(commands, cwd))
+        if self.hint and self.hint.search(text):  # deletes and moves naming the gate home must prove they miss it
+            fired |= {"delete", "move"}
         if not fired:
             return None
         always = [rules.TEXT[name] for name in rules.ALWAYS if name in fired]
