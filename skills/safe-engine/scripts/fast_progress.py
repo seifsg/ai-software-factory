@@ -7,12 +7,13 @@ import re
 TAGS = ("pre:", "do:", "post:")
 LEAD = r"\s*(?:\|\s*)?(?:(?:[-*+]|\d+[.)])\s+)?(?:\[[ x]\]\s+)?[*`]*"  # bullet, number, [x], **, ` or a table cell
 OWN = re.compile(LEAD + r"t(\d+)\b")  # a lowercased line that starts with its todo ID
-TODO_LINE = re.compile(r"^(?:[ \t]*#{1,6}[ \t]+)?" + LEAD.replace(r"\s", r"[ \t]") + r"t(\d+)\b[ \t:.)*`|-]*(.*)$",
+TODO_LINE = re.compile(r"^(?:[ \t]*#{1,6}[ \t])?" + LEAD.replace(r"\s", r"[ \t]") + r"t(\d+)\b[ \t:.)*`|-]*(.*)$",
                        re.M | re.I)  # ID and the rest of a todo line; a '#### T1' heading counts too
 # "(#12, A2, deep)" closing a todo line (fullmatch): tickets, criteria or requested items, and the model tier
 REFS = re.compile(r"\(((?:[ \t,]*(?:#\d+|[A-Za-z]{1,3}\d+|light|standard|deep))+)[ \t]*\)", re.I)
 MENTION = re.compile(r"\bt(\d+)\b")
 TICKET_NUMBER = re.compile(r"#(\d+)")
+ARROW_MARK = re.compile(r"→|->")
 NEXT_H3 = re.compile(r"^###\s", re.M)
 NOW = re.compile(r"\*\*Now:\*\*([^\n]*)", re.I)
 TICKET_LINE = re.compile(r"\*\*(?:Epic|Ticket|Sub-issue):\*\*[ \t]*(\S+)[ \t]*([^\n]*)", re.I)
@@ -80,8 +81,8 @@ def todo_items(all_sections):
     found = {}
     for match in TODO_LINE.finditer(todos(all_sections)):  # one linear pass; string operations per line
         number, text = match.group(1), match.group(2).rstrip(" \t|*")
-        if number in found and found[number][1]:
-            continue  # a line with a result wins over an earlier mention such as 'T1 and T2 run first'
+        if number in found and (found[number][1] or not ARROW_MARK.search(text)):
+            continue  # the first line wins, unless a later one carries the result ('T1 and T2 run first' above T1)
         if text.startswith("(") and ")" in text:
             text = text[text.find(")") + 1:].lstrip()
         cut = text.rfind("(")
@@ -94,11 +95,8 @@ def todo_items(all_sections):
 
 def split_result(text):
     """'Download button → click it' (or '->') into title and result; no arrow: no result."""
-    for mark in ("→", "->"):
-        at = text.find(mark)
-        if at >= 0:
-            return text[:at], text[at + len(mark):]
-    return text, ""
+    mark = ARROW_MARK.search(text)
+    return (text[:mark.start()], text[mark.end():]) if mark else (text, "")
 
 
 def without_result(all_sections):

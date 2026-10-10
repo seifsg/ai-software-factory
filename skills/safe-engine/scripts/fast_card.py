@@ -142,12 +142,12 @@ def card(run, steps, all_sections, now, v=None):
 
 
 def claim(path):
-    """True for the first caller only (atomic create), so parallel hooks show each message once. Any other
-    failure counts as already shown: a message is a courtesy and must never break the hook."""
+    """True for the first caller only (atomic create), so parallel hooks show each message once. Names are short,
+    so any other OSError is a real fault: it propagates, the gate logs it and the next hook retries."""
     try:
         os.close(os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY))
         return True
-    except OSError:
+    except FileExistsError:
         return False
 
 
