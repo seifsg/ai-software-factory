@@ -80,7 +80,7 @@ Run it in any browser tool that executes page scripts, on each audited screen an
 
 ## Judge
 
-- Standard tier, and a different model family from the builder's when the host offers one.
+- A mid-size model is enough. Prefer a different model family from the builder's when the host offers one.
 - Inputs: the brief (Journeys, Map, Hierarchy, Labels), the shots of one journey together, each screen's outline and scan, and the use log. No other build notes or opinions.
 - For each ID, answer its checks screen by screen, yes or no. Evidence only the use log holds is marked "per use log". No quotas: a clean rule is a PASS. Rules the change cannot touch: N/A with the reason.
 - Many screens: one judge per journey in parallel, then one pass across all screens for U2, U5 and U9.

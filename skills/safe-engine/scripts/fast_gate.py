@@ -1,7 +1,7 @@
 """Fast/Lucky run gate: record each factory step, check it, and answer host hooks.
 
 Method: .agents/skills/safe-engine/references/fast-run.md#the-gate. Python 3.9+, stdlib only.
-Step checks live in fast_record.py (loaded only by `done`).
+Step checks live in fast_record.py (loaded by `done`, and by `start` for a UI snapshot; never by hooks).
 Checks prove a step was recorded, not that it was good.
 """
 import json
@@ -51,9 +51,9 @@ HINTS = {
               "action) and Labels lines",
     "schema": "a 3-option table, a Chosen line, a fenced ERD or DDL",
     "build": "one line per plan todo: 'T1 pre: ... do: ... post: ...'",
-    "done-run": ">=1 PASS line from using it, a Logs line; UI runs >=1 existing screenshot path; current methods "
-                "treat runs that changed UI files as UI runs, and UI runs also need a verdict line per U1..U10 (no "
-                "open FAIL) and a UX judge line",
+    "done-run": ">=1 PASS line from using it, a Logs line; UI runs >=1 existing screenshot path. Current methods only: "
+                "runs that changed UI files count as UI runs, and each UI run also needs a verdict line per U1..U10 "
+                "(no open FAIL) and a UX judge line",
     "handoff": "Run, Statuses, Unverified, Follow-ups lines; sign-in runs a Dev sign-in line; "
                "online: each listed ticket fully ticked, or Blocked, Backlog or not planned",
 }
@@ -347,7 +347,7 @@ def cmd_done(args):
     earlier = [name for name in steps[:steps.index(step)] if name not in run["done"]]
     if earlier:
         fail("Finish first: " + ", ".join(earlier))
-    record = sibling("fast_record")  # checks load only here; hooks never need them
+    record = sibling("fast_record")  # checks load here and in `start`; hooks never need them
     CHECKS, sections = record.CHECKS, record.sections
     try:
         all_sections = sections(record_path(project).read_text(encoding="utf-8", errors="replace"))

@@ -335,18 +335,23 @@ def held(run, kwargs, check):
 
 UX_BRIEF = ("Map", "Hierarchy", "Labels")  # ux-quality step 1: structure, priority and words, planned before UI code
 UX_RULES = tuple(f"U{n}" for n in range(1, 11))  # ux-quality step 3 rule IDs; each gets a done-run verdict
-# "- U3 PASS 04, 13: ...", "- **U3:** FAIL ...", "| U3 | Hierarchy | PASS | ... |": the ID, an optional area name, the verdict
-VERDICT = re.compile(r"^[ \t]*(?:\|[ \t]*)?(?:(?:[-*+]|\d+[.)])[ \t]+)?(?:\[[ xX]\][ \t]+)?[*`]*(U\d+)\b[*` \t:|.,-]*"
-                     r"(?:[A-Za-z][A-Za-z ]{0,30}?[*` \t:|.,-]+)?(PASS|FAIL|UNKNOWN|N/A)\b(.*)$", re.M | re.I)
+UX_AREAS = ("Map", "Navigation", "Hierarchy", "Disclosure", "Labels", "Interaction cost", "States and feedback",
+            "Access and devices", "Look and consistency", "Performance")  # their area names, in ID order
+# "- U3 PASS 04, 13: ...", "- **U3:** FAIL ...", "| U3 | Hierarchy | PASS | ... |": the ID, its area name or none, the
+# verdict. Only a known area name may sit between, so "U3 FAIL schedule, PASS roster" stays a FAIL.
+SEP = r"[*` \t:|.,()-]*"
+VERDICT = re.compile(rf"^[ \t]*(?:\|[ \t]*)?(?:(?:[-*+]|\d+[.)])[ \t]+)?(?:\[[ xX]\][ \t]+)?[*`]*(U\d+)\b{SEP}"
+                     rf"(?:(?:{'|'.join(UX_AREAS)}){SEP})?(PASS|FAIL|UNKNOWN|N/A)\b(.*)$", re.M | re.I)
 UI_FILE = re.compile(r"(?<!\.test)(?<!\.spec)(?<!\.stories)\.(?:tsx|jsx|vue|svelte|astro|html?|css|scss|sass|less|razor|"
-                     r"cshtml|erb|hbs|ejs|pug|liquid|twig|njk|jinja2?|xaml|axaml|storyboard|xib|qml|fxml|uxml|uss|tscn)$|"
-                     r"\.blade\.php$", re.I)  # view and style files, not tests or stories; mixed-code languages use --ui
+                     r"cshtml|erb|hbs|ejs|pug|liquid|twig|njk|jinja2?|j2|mustache|haml|slim|xaml|axaml|storyboard|xib|qml|"
+                     r"fxml|uxml|uss|tscn)$|\.blade\.php$", re.I)  # views and styles, not tests or stories; others use --ui
 HEX = re.compile(r"[0-9a-f]{40,64}")
 
 
 def block(body, label):
-    """The label's value with the lines under it, up to the next marker."""
-    match = re.search(r"\*\*" + re.escape(label) + r":\*\*(.*?)(?=^[ \t]*\*\*[^*\n]+:\*\*|\Z)", body, re.I | re.M | re.S)
+    """The label's value with the lines under it, up to a blank line, heading, table row or the next marker."""
+    match = re.search(r"\*\*" + re.escape(label) + r":\*\*(.*?)(?=^[ \t]*(?:[-*+][ \t]+)?\*\*[^*\n]+:\*\*|^[ \t]*$|^#|^\||\Z)",
+                      body, re.I | re.M | re.S)
     return match.group(1) if match else ""
 
 
@@ -382,7 +387,8 @@ def check_build(run, body, **kwargs):
 
 
 def check_done_run(run, body, project, **_):
-    problems = [] if re.search(r"\bPASS\b", VERDICT.sub("", body)) else ["needs >=1 PASS result from using it"]
+    used = VERDICT.sub("", body) if run.get("ux_rules") else body  # rule verdicts never stand in for using it
+    problems = [] if re.search(r"\bPASS\b", used) else ["needs >=1 PASS result from using it"]
     problems += missing_markers(body, ["Logs"])
     touched = [] if run.get("ui") or not run.get("ux_rules") else ui_files(run, project)
     if run.get("ui") or touched:
@@ -416,7 +422,7 @@ def ui_start(project):
 
 def ui_files(run, project):
     """UI files inside the project this run created, edited or deleted; none without Git."""
-    seen = run.get("ui_seen") or {}
+    seen = run.get("ui_seen") if isinstance(run.get("ui_seen"), dict) else {}
     touched = [name for name, mark in seen.items() if digest(Path(project) / name) != mark]  # changed at start, again
     for names in [] if touched else ui_listings(run, project):
         touched = [name for name in names if name not in seen]

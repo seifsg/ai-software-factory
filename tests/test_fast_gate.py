@@ -510,7 +510,8 @@ class FastGateTests(unittest.TestCase):
     def test_ux_rules_need_brief_lines_and_one_verdict_per_rule(self):
         record = record_module()
         skill = (SCRIPTS.parents[2] / ".agents/skills/ux-quality/SKILL.md").read_text(encoding="utf-8")
-        self.assertEqual(tuple(re.findall(r"(?m)^\| (U\d+) \|", skill)), record.UX_RULES)  # gate and method agree
+        table = re.findall(r"(?m)^\| (U\d+) \| ([^|]+?) \|", skill)
+        self.assertEqual(table, list(zip(record.UX_RULES, record.UX_AREAS)))  # gate and method agree
         sections = record.sections(SAMPLE.read_text(encoding="utf-8"))
         design, done = sections["design"], sections["done-run"]
         on, old = {"ux_rules": True}, {}
@@ -526,6 +527,13 @@ class FastGateTests(unittest.TestCase):
             with self.subTest(layout=layout):
                 self.assertEqual(record.ux_audit(done.replace("- U1 PASS", layout)), [])
         self.assertIn("needs a 'U2 ", " ".join(record.ux_audit("- U1 to U10 PASS all fine\n**UX judge:** x\n")))
+        for mixed, problem in (("- U3 FAIL schedule, PASS roster: two filled", "U3 FAIL is open"),
+                               ("- U3 FAIL keyboard, N/A touch: focus lost", "U3 FAIL is open"),
+                               ("- U3 partial PASS: some screens", "needs a 'U3 ")):
+            with self.subTest(mixed=mixed):  # a later verdict word never hides the line's FAIL or vague verdict
+                self.assertIn(problem, " ".join(record.ux_audit(done.replace("- U3 PASS schedule", mixed))))
+        last = design.replace(record.marker(design, "Hierarchy"), "schedule: Book first") + "\n| ink | primary |\n"
+        self.assertIn("primary action", " ".join(record.check_design(on, last.replace("**Labels:**", "- **Labels:**"))))
         cases = {"- U4 PASS": ("- U4x PASS", "needs a 'U4 "), "- U3 PASS schedule": ("- U3 FAIL schedule", "U3 FAIL is open"),
                  "**UX judge:**": ("UX judge:", "'**UX judge:**' line")}
         for old_text, (new_text, problem) in cases.items():
@@ -534,6 +542,7 @@ class FastGateTests(unittest.TestCase):
         u10 = re.search(r"(?m)^- U10 .*$", done).group(0)
         self.assertIn("U10 N/A needs its evidence or reason", record.ux_audit(done.replace(u10, "- U10 N/A")))
         self.assertEqual(record.check_done_run(old, "- PASS app works\n**Logs:** clean\n", project=self.project), [])
+        self.assertEqual(record.check_done_run(old, "- U1 PASS login works\n**Logs:** ok\n", project=self.project), [])
         verdicts_only = "\n".join(line for line in done.splitlines() if not line.startswith("- PASS"))
         self.assertIn("needs >=1 PASS result from using it",
                       record.check_done_run({"ux_rules": True}, verdicts_only, project=self.project))
@@ -568,6 +577,9 @@ class FastGateTests(unittest.TestCase):
             with self.subTest(base=base):
                 self.assertEqual(record.ui_files({"base": base}, app), ["view.vue"])
         self.assertEqual(record.ui_files({"base": head}, self.root / "not a repo"), [])
+        for seen in ([], "x", 5):  # a damaged snapshot never crashes `done`
+            with self.subTest(seen=seen):
+                self.assertEqual(record.ui_files({"base": head, "ui_seen": seen}, self.root / "not a repo"), [])
         self.gate("close", "--abandon", "test", project=app)
         self.gate("start", "--key", "with-ui", "--kind", "change", "--ui", "--request", "restyle", project=app)
         ui_run = json.loads((app / ".factory/fast/run.json").read_text(encoding="utf-8"))
