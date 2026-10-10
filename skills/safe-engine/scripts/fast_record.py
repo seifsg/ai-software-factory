@@ -337,21 +337,23 @@ UX_BRIEF = ("Map", "Hierarchy", "Labels")  # ux-quality step 1: structure, prior
 UX_RULES = tuple(f"U{n}" for n in range(1, 11))  # ux-quality step 3 rule IDs; each gets a done-run verdict
 UX_AREAS = ("Map", "Navigation", "Hierarchy", "Disclosure", "Labels", "Interaction cost", "States and feedback",
             "Access and devices", "Look and consistency", "Performance")  # their area names, in ID order
-RULE_ID = r"(?-i:U(?:10|[1-9]))"  # the ten rule IDs, capitals only in every pattern: a test user "u1" is not a rule
-# "- U3 PASS 04, 13: ...", "- **U3:** FAIL ...", "| U3 | Hierarchy | PASS | ... |": a rule ID, its area name or none, the
-# verdict, its text. Only a known area name may sit between, so "U3 FAIL schedule, PASS roster" stays a FAIL.
+RULE_ID = r"(?-i:U(?:10|[1-9]))"  # the ten rule IDs, capitals only in every pattern: test user "u1" is no rule
+# "- U3 PASS 04, 13: ...", "- **U3:** FAIL ...", "| U3 | Hierarchy | PASS | ... |": a rule ID, its area name or
+# none, the verdict, its text. Only a known area name may sit between, so "U3 FAIL a, PASS b" stays a FAIL.
 LEAD, SEP = r"[ \t]*(?:\|[ \t]*)?(?:(?:[-*+]|\d+[.)])[ \t]+)?(?:\[[ xX]\][ \t]+)?[*`]*", r"[*` \t:|.,()-]*"
-VERDICT = re.compile(rf"{LEAD}({RULE_ID})\b{SEP}(?:(?:{'|'.join(UX_AREAS)}){SEP})?(PASS|FAIL|UNKNOWN|N/A)\b(.*)", re.I)
-JUDGE = re.compile(rf"{LEAD}\*\*UX judge:\*\*", re.I)
+VERDICT = re.compile(rf"{LEAD}({RULE_ID})\b{SEP}(?:(?:{'|'.join(UX_AREAS)}){SEP})?(PASS|FAIL|UNKNOWN|N/A)\b(.*)",
+                     re.I)
+JUDGE = re.compile(r"[ \t]*(?:\|[ \t]*)?(?:(?:[-*+]|\d+[.)])[ \t]*)?\*\*UX judge:\*\*", re.I)  # bullet space optional
 # A line under a verdict or the judge line belongs to it: indented text, or plain text that starts no bullet, table,
 # heading, quote, rule line or the done-run's own markers. A blank line ends it.
 MARK = r"\*\*(?:Logs|UX judge):\*\*"
-CONTINUES = re.compile(rf"(?:[ \t]+(?!(?:[-*+]|\d+[.)])?[ \t]*(?:[*`]*{RULE_ID}\b|{MARK}))"
+CONTINUES = re.compile(rf"(?:[ \t]+(?![ \t])(?!(?:[-*+]|\d+[.)])?[ \t]*(?:[*`]*{RULE_ID}\b|{MARK}))"
                        rf"|(?!(?:[-*+]|\d+[.)])[ \t]|[|#>]|{MARK}|[*`]*{RULE_ID}\b))\S", re.I)
 FAILED = re.compile(r"\bFAIL(?:S|ED)?\b")  # capitals only: "failed booking with retry" is evidence, not a verdict
-UI_FILE = re.compile(r"(?<!\.test)(?<!\.spec)(?<!\.stories)\.(?:tsx|jsx|vue|svelte|astro|html?|css|scss|sass|less|razor|"
-                     r"cshtml|erb|hbs|ejs|pug|liquid|twig|njk|jinja2?|j2|mustache|haml|slim|xaml|axaml|storyboard|xib|qml|"
-                     r"fxml|uxml|uss|tscn)$|\.blade\.php$", re.I)  # views and styles, not tests or stories; others use --ui
+# views and styles, not tests or stories; mixed-code languages use --ui
+UI_FILE = re.compile(r"(?<!\.test)(?<!\.spec)(?<!\.stories)\.(?:tsx|jsx|vue|svelte|astro|html?|css|scss|sass|less|"
+                     r"razor|cshtml|erb|hbs|ejs|pug|liquid|twig|njk|jinja2?|j2|mustache|haml|slim|xaml|axaml|"
+                     r"storyboard|xib|qml|fxml|uxml|uss|tscn)$|\.blade\.php$", re.I)
 HEX = re.compile(r"[0-9a-f]{40,64}")
 
 
@@ -411,24 +413,26 @@ def check_done_run(run, body, project, **_):
 
 
 def audit_lines(body):
-    """One pass over a done-run: each rule's verdicts with the word characters of their text, the rules a FAIL is left
-    about, and the lines about no rule and not the judge (only those can show the product was used). A contested FAIL
-    is an UNKNOWN, which may quote its own rule's FAIL in or under its line; a FAIL about any other rule still counts."""
-    verdicts, failed, used, owner, gap = {}, set(), [], None, False  # owner: (rule or "judge", verdict) of this line
+    """One pass over a done-run: each rule's verdicts with the word characters of their text, the rules a FAIL is
+    left about, and the lines about no rule and not the judge (only those can show the product was used). A contested
+    FAIL is an UNKNOWN, which may quote its own rule's FAIL in or under its line; a FAIL about another rule counts."""
+    # owner: (rule or "judge", verdict) the line belongs to; top: that owner's indent; gap: a blank line came before
+    verdicts, failed, used, owner, gap, top = {}, set(), [], None, False, 0
     for line in body.splitlines():
         if not line.strip():
             gap = True  # as in Markdown, indented lines after a blank line still belong to the item above
             continue
+        depth = len(line) - len(line.lstrip(" \t"))
         head = VERDICT.match(line)
-        quote = head and line[0] in " \t" and owner == (head.group(1), "UNKNOWN")  # a contested FAIL's own reasons
+        quote = head and depth > top and owner == (head.group(1), "UNKNOWN")  # deeper than its UNKNOWN: a reason
         if head and not quote:
-            owner = (head.group(1), head.group(2).upper())
+            owner, top = (head.group(1), head.group(2).upper()), depth
             verdicts.setdefault(owner[0], []).append([owner[1], len(re.sub(r"\W", "", head.group(3)))])
         elif JUDGE.match(line):
-            owner = ("judge", "")
+            owner, top = ("judge", ""), depth
         elif quote or owner and CONTINUES.match(line) and (line[0] in " \t" or not gap):
             if owner[0] in verdicts:
-                verdicts[owner[0]][-1][1] += len(re.sub(r"\W", "", line))
+                verdicts[owner[0]][-1][1] += len(re.sub(r"\W", "", head.group(3) if quote else line))
         else:
             owner = None
         gap = False
@@ -443,15 +447,15 @@ def audit_lines(body):
 
 
 def ux_audit(body, parsed=None):
-    """A fresh judge's verdict per rule ID (ux-quality step 4): each with evidence or a reason, no FAIL left about any."""
+    """A fresh judge's verdict per rule ID (ux-quality step 4), each with evidence or a reason; no FAIL left."""
     verdicts, failed, _ = parsed or audit_lines(body)
     problems = [f"needs a '{rule} PASS|FAIL|UNKNOWN|N/A <screen>: <evidence or reason>' line"
                 for rule in UX_RULES if rule not in verdicts]
-    problems += [f"{rule} FAIL is open: fix it, recheck, then keep one final verdict line with no FAIL, FAILS or FAILED "
-                 f"in or under it and no other line naming {rule} with them; or record UNKNOWN with both reasons"
+    problems += [f"{rule} FAIL is open: fix it, recheck, then keep one final verdict line with no FAIL, FAILS or "
+                 f"FAILED in or under it and no other line naming {rule} with them; or record UNKNOWN with both reasons"
                  for rule in sorted(failed, key=lambda rule: int(rule[1:]))]
-    problems += [f"{rule} {verdict} needs its evidence or reason" for rule, found in verdicts.items() if rule not in failed
-                 for verdict, words in found if words < 3]
+    problems += [f"{rule} {verdict} needs its evidence or reason" for rule, found in verdicts.items()
+                 if rule not in failed for verdict, words in found if words < 3]
     return problems + missing_markers(body, ["UX judge"])
 
 

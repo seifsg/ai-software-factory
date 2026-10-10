@@ -556,6 +556,9 @@ class FastGateTests(unittest.TestCase):
             with self.subTest(reasons=reasons):  # a contested FAIL may quote its own rule's FAIL in or under its line
                 self.assertEqual(record.ux_audit(done.replace(u3, contested + reasons)), [])
         self.assertEqual(opened(done.replace(u3, contested + "\n  - U4 FAIL roster")), ["U4"])  # not another rule's
+        self.assertEqual(opened(done.replace(u3, "  - U3 UNKNOWN no keyboard\n  - U3 FAIL roster")), ["U3"])  # a sibling
+        self.assertIn("U3 UNKNOWN needs its evidence or reason",  # a quote's own ID and verdict are no reason
+                      record.ux_audit(done.replace(u3, "- U3 UNKNOWN\n  U3 PASS")))
         for kept in ("; a failed booking shows a retry", "\n  one filled button per view, checked twice",
                      "\n  **Logs:** 0 FAILED requests", "\n  - **Logs:** 0 FAILED requests",
                      "\n- FAIL then fixed: test user u2 could not join"):
@@ -573,7 +576,8 @@ class FastGateTests(unittest.TestCase):
         rule_lines = "\n".join(line for line in done.splitlines() if not line.startswith("- PASS"))
         for extra in ("- U3 recheck after fix: PASS roster", "- After the fix, U3 PASS roster",
                       "**UX judge:** U1 to U9 PASS, U10 UNKNOWN", "**UX judge:**\nfresh agent; all ten rules PASS",
-                      "- U1 PASS schedule\n  roster: PASS too"):
+                      "  -**UX judge:** all ten rules PASS", "- U1 PASS schedule\n  roster: PASS too",
+                      "- U1 PASS schedule\n**Recheck:** PASS"):
             with self.subTest(extra=extra):  # on a UI run rule lines and the judge line never count as using it
                 self.assertIn("needs >=1 PASS result from using it", record.check_done_run(
                     {"ux_rules": True, "ui": True}, rule_lines + "\n" + extra + "\n", project=self.project))
