@@ -545,16 +545,20 @@ class FastGateTests(unittest.TestCase):
             return sorted({problem.split()[0] for problem in record.ux_audit(text) if " FAIL is open" in problem})
         for where in ("\n  - roster: FAIL two filled", "\nroster FAILED the blur test", "\n\n  roster FAILED the blur test",
                       "; roster FAILED", "; roster FAILS the blur test", "\n- U3 – FAIL roster", "\n> U3 FAIL roster",
-                      "\n### U3 FAIL roster", " (recheck; was FAIL: two filled)"):
+                      "\n### U3 FAIL roster", " (recheck; was FAIL: two filled)", "\n  **Recheck:** roster FAILED",
+                      "\n**Judge:** two filled, FAIL"):
             with self.subTest(where=where):  # an open FAIL never passes, wherever it is written, and touches no other rule
                 self.assertEqual(opened(done.replace(u3, u3 + where)), ["U3"])
         message = " ".join(record.ux_audit(done.replace(u3, "- U3 FAIL roster: two filled")))
         self.assertIn("one final verdict line with no FAIL, FAILS or FAILED", message)
-        contested = "- U3 UNKNOWN contested, builder: a popover\n  - judge: U3 FAIL on the modal"
-        self.assertEqual(record.ux_audit(done.replace(u3, contested)), [])  # may quote its own rule's FAIL
+        contested = "- U3 UNKNOWN contested, builder: a popover"
+        for reasons in (": judge FAIL on the modal", "\n  - judge: U3 FAIL on the modal", "\n  - U3 FAIL modal (judge)"):
+            with self.subTest(reasons=reasons):  # a contested FAIL may quote its own rule's FAIL in or under its line
+                self.assertEqual(record.ux_audit(done.replace(u3, contested + reasons)), [])
         self.assertEqual(opened(done.replace(u3, contested + "\n  - U4 FAIL roster")), ["U4"])  # not another rule's
         for kept in ("; a failed booking shows a retry", "\n  one filled button per view, checked twice",
-                     "\n  **Logs:** 0 FAILED requests", "\n- FAIL then fixed: test user u2 could not join"):
+                     "\n  **Logs:** 0 FAILED requests", "\n  - **Logs:** 0 FAILED requests",
+                     "\n- FAIL then fixed: test user u2 could not join"):
             with self.subTest(kept=kept):  # lowercase and indented evidence, markers and test users stay accepted
                 self.assertEqual(record.ux_audit(done.replace(u3, u3 + kept)), [])
         cases = {"- U4 PASS": ("- U4x PASS", "needs a 'U4 "), "- U3 PASS schedule": ("- U3 FAIL schedule", "U3 FAIL is open"),
