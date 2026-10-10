@@ -1,4 +1,5 @@
-"""Rubric for the bug-fix sample: one check per reported bug, plus the existing behavior each keeps."""
+"""Rubric for the bug-fix sample: one check per reported bug, plus the existing tests (a KEEP item)."""
+from evals.rubric_tools import run_python
 
 
 def discount(work):
@@ -21,4 +22,11 @@ def rounding(work):
     assert total([{"qty": 1, "price": 1}], tax_percent=40) == 1, "1.4 cents must round to 1"
 
 
-CHECKS = {"R1": discount, "R2": empty, "R3": rounding}
+def existing_tests(work):
+    """R4: the existing tests still pass."""
+    code, _, err = run_python(work, "-m", "unittest", "-q")
+    assert code == 0, f"existing tests fail: {err.strip().splitlines()[-1:]}"
+
+
+CHECKS = {"R1": discount, "R2": empty, "R3": rounding, "R4": existing_tests}
+KEEP = {"R4"}  # preserved behavior: passes on the untouched fixture too

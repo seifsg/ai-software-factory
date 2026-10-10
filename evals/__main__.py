@@ -3,26 +3,34 @@ import argparse
 from datetime import datetime
 import sys
 
-from evals import catalog, report, runner
+from evals import catalog, isolation, report, runner
+
+
+INTERRUPTED = 130  # the shell convention for a run stopped by Ctrl-C
 
 
 def run(args):
     """Run the samples in both arms, write the report, and compare with a baseline when given."""
-    out = args.out or runner.FACTORY / ".factory/evals" / datetime.now().strftime("%Y%m%d-%H%M%S")
+    if args.baseline:
+        report.load(args.baseline)  # a bad baseline fails before any paid run
+    out = args.out or isolation.FACTORY / ".factory/evals" / datetime.now().strftime("%Y%m%d-%H%M%S")
     result = runner.run_all(args.agent, out, args.sample, args.timeout, args.jobs, args.keep, args.factory_agent)
     paths = report.write(result, out)
     print(paths[1].read_text(encoding="utf-8"))
     print("Report:", *paths)
+    if result["interrupted"]:
+        print("Interrupted: partial report written; queued runs cancelled, running agents stopped.")
+        return INTERRUPTED
     return compare(argparse.Namespace(baseline=args.baseline, report=paths[0])) if args.baseline else 0
 
 
 def compare(args):
-    """Exit 1 naming every sample/arm whose delivered count dropped below the baseline's."""
-    found = report.drops(report.load(args.baseline), report.load(args.report))
-    for line in found:
-        print("DROP", line)
-    print(f"{len(found)} drop(s) against {args.baseline}" if found else f"No drops against {args.baseline}")
-    return 1 if found else 0
+    """Exit 1 on any drop, missing pair or changed total against the baseline; new pairs are only noted."""
+    problems, notes = report.compare(report.load(args.baseline), report.load(args.report))
+    for line in problems + notes:
+        print(line)
+    print(f"{len(problems)} problem(s) against {args.baseline}" if problems else f"No drops against {args.baseline}")
+    return 1 if problems else 0
 
 
 def check(args):

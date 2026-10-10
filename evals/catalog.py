@@ -1,14 +1,15 @@
-"""Sample requests: discovery, isolated workspace copies, rubric scoring and the rubric self-check."""
+"""Sample requests: discovery, workspace copies, rubric scoring and the rubric self-check."""
 from concurrent.futures import ThreadPoolExecutor
 import os
 from pathlib import Path
+import secrets
 import shutil
 import stat
-import subprocess
 import sys
 import tempfile
 import time
 
+from evals import isolation, proc
 from evals.check import load_rubric
 
 ROOT = Path(__file__).resolve().parent / "samples"
@@ -53,34 +54,43 @@ def remove(path):
     shutil.rmtree(path, ignore_errors=True)  # a locked leftover in the temp dir must not fail the eval
 
 
-def check_item(sample, work, item):
-    """Why one rubric item fails, or None when it passes; runs in its own process with a time limit."""
-    try:
-        done = subprocess.run([sys.executable, "-B", str(CHECK), str(sample), str(work), item], cwd=work,
-                              capture_output=True, text=True, encoding="utf-8", errors="replace",
-                              timeout=CHECK_SECONDS)
-    except subprocess.TimeoutExpired:
+def check_item(sample, work, item, folder, env):
+    """Why one item fails, or None: its own process, tree-killed at the limit, passing only on its token."""
+    token, stdin, log = secrets.token_hex(16), folder / f"{item}.in", folder / f"{item}.out"
+    stdin.write_text(token + "\n", encoding="utf-8")
+    code, timed_out = proc.run_limited([sys.executable, "-B", str(CHECK), str(sample), str(work), item],
+                                       work, stdin, log, CHECK_SECONDS, env=env)
+    if timed_out:
         return f"check timed out after {CHECK_SECONDS}s"
-    return (done.stderr.strip().splitlines() or [f"exit {done.returncode}"])[-1] if done.returncode else None
+    lines = log.read_text(encoding="utf-8", errors="replace").strip().splitlines()
+    if code == 0 and lines and lines[-1].strip() == token:
+        return None
+    reasons = [line for line in lines if line.strip() and line.strip() != token]
+    return "check stopped" if code is None else (reasons or [f"exit {code} without the pass marker"])[-1]
 
 
-def score(sample, work):
-    """Failing items with their reason; the items run at once, each in its own process."""
-    items = list(load_rubric(sample))
+def score(sample, work, root, env):
+    """Failing items with their reason; the items run at once, outputs under root/checks."""
+    folder = Path(root) / "checks"
+    folder.mkdir(exist_ok=True)
+    items = list(load_rubric(sample).CHECKS)
     with ThreadPoolExecutor(max_workers=len(items)) as pool:
-        reasons = list(pool.map(lambda item: check_item(sample, work, item), items))
+        reasons = list(pool.map(lambda item: check_item(sample, work, item, folder, env), items))
     return {item: why for item, why in zip(items, reasons) if why}
 
 
 def self_check(sample):
-    """Rubric problems: an item that passes on the untouched fixture or fails on the reference solution."""
+    """Rubric problems: a new item passing on the untouched fixture, a KEEP item failing there, any item failing
+    on the reference solution."""
     root = Path(tempfile.mkdtemp(prefix=f"eval-check-{sample.name}-"))
     try:
-        work = copy_fixture(sample, root)
-        passing = set(load_rubric(sample)) - set(score(sample, work))
+        env, work = isolation.run_env(root), copy_fixture(sample, root)
+        rubric, before = load_rubric(sample), score(sample, work, root, env)
         shutil.copytree(sample / "reference", work, dirs_exist_ok=True)
-        failing = score(sample, work)
+        after = score(sample, work, root, env)
     finally:
         remove(root)
-    return ([f"{item} passes on the untouched fixture" for item in sorted(passing)]
-            + [f"{item} fails on the reference: {why}" for item, why in sorted(failing.items())])
+    keep = set(getattr(rubric, "KEEP", ()))
+    return ([f"{item} passes on the untouched fixture" for item in rubric.CHECKS if item not in set(before) | keep]
+            + [f"{item} (KEEP) fails on the untouched fixture: {before[item]}" for item in sorted(keep & set(before))]
+            + [f"{item} fails on the reference: {why}" for item, why in sorted(after.items())])

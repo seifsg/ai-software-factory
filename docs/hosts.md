@@ -50,15 +50,15 @@ The plugin brings `/safe-engine`, `/improve-factory` and the gate hooks. Its roo
 
 ## Evals
 
-`python -m evals run` (see `evals/README.md`) takes each agent's non-interactive command as a template. The prompt arrives on stdin and also sits at `../prompt.md` from the workspace. Real runs cost model tokens; check each flag against the installed version before one.
+`python -m evals run` lives in the factory repository only (`evals/README.md`); installed copies leave `evals/` out. It takes each agent's non-interactive command as a template. The prompt arrives on stdin and also sits at `../prompt.md` from the workspace. In the factory arm, `{factory}` is a fresh export of the factory bundle. Real runs cost model tokens; check each flag against the installed version before one.
 
-| Agent | `--agent` (both arms) | `--factory-agent` (factory arm) |
-|---|---|---|
-| Claude Code | `claude --bare -p --dangerously-skip-permissions` (`--bare` needs `ANTHROPIC_API_KEY` and keeps an installed plugin out) | `claude --bare -p --dangerously-skip-permissions --plugin-dir {factory}/skills` |
-| Codex | `codex exec --sandbox workspace-write --ignore-user-config -` | not needed |
-| Cursor | `agent -p --force "Read ../prompt.md and do what it says."` | not needed |
+| Agent | `--agent` (plain arm, and factory arm unless overridden) | `--factory-agent` (factory arm) | Gate hooks in the factory arm |
+|---|---|---|---|
+| Claude Code | `claude --bare -p --dangerously-skip-permissions` (`--bare` needs `ANTHROPIC_API_KEY` and keeps an installed plugin out) | `claude --bare -p --dangerously-skip-permissions --plugin-dir {factory}/skills` | from the plugin directory |
+| Codex | `codex exec --sandbox workspace-write --ignore-user-config -` | not needed | only from the user's `~/.codex/hooks.json` |
+| Cursor | `agent -p --force "Read ../prompt.md and do what it says."` | not needed | only from the user's `~/.cursor/hooks.json` |
 
-When the factory is installed for the user (skills folder or plugin), the plain arm must not see it: run that arm under a user or profile without it.
+Codex and Cursor read gate hooks only from the user's hooks file, which `fast_gate.py install --host codex|cursor` writes. Without that install, their factory arm follows the method and calls the gate by hand, with no hook enforcement. To measure enforcement, run the factory arm as a user or profile with the install and the plain arm as one without it. The plain arm must never see an installed factory (skills folder, plugin or hooks).
 
 ## Sources
 

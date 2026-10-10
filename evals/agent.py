@@ -1,15 +1,22 @@
-"""Run the owner's agent command template with a time limit; no agent, vendor or host is named here."""
+"""Fill and run the owner's agent command template; no agent, vendor or host is named here."""
 import os
 import shlex
-import signal
 import subprocess
 
+from evals import proc
+
 PLACEHOLDERS = ("prompt_file", "workdir", "arm", "sample", "factory")
+CMD_EXPANDS = ('%', '"')  # cmd expands %VAR% even inside quotes, and a quote would end the word
 
 
 def quote(value):
-    """One shell word for the system shell that runs the template (cmd on Windows, sh elsewhere)."""
-    return subprocess.list2cmdline([str(value)]) if os.name == "nt" else shlex.quote(str(value))
+    """One shell word for the system shell that runs the template; refuses what cmd would rewrite."""
+    value = str(value)
+    if os.name != "nt":
+        return shlex.quote(value)
+    if any(char in value for char in CMD_EXPANDS):
+        raise ValueError(f"cannot pass {value!r} through cmd safely; use a path without % or \"")
+    return subprocess.list2cmdline([value])
 
 
 def fill(template, values):
@@ -17,31 +24,11 @@ def fill(template, values):
     if not isinstance(template, str) or not template.strip():
         raise ValueError("the agent command template is empty")
     for name in PLACEHOLDERS:
-        template = template.replace("{" + name + "}", quote(values[name]))
+        if "{" + name + "}" in template:
+            template = template.replace("{" + name + "}", quote(values[name]))
     return template
 
 
-def kill_tree(process):
-    """Stop the agent and every process it started, so a timed-out run leaves nothing running."""
-    try:
-        if os.name == "nt":
-            subprocess.run(["taskkill", "/F", "/T", "/PID", str(process.pid)], capture_output=True, timeout=60)
-        else:
-            os.killpg(process.pid, signal.SIGKILL)  # the agent leads its own session (start_new_session)
-    except (OSError, subprocess.SubprocessError):
-        pass  # already gone, or the tree kill failed: fall back to the direct child
-    if process.poll() is None:
-        process.kill()
-    process.wait()
-
-
-def run(template, values, workdir, prompt, log, seconds):
-    """Run the filled template in `workdir`, prompt on stdin, output to `log`. Returns (exit code, timed out)."""
-    with open(prompt, "rb") as stdin, open(log, "wb") as output:
-        process = subprocess.Popen(fill(template, values), shell=True, cwd=workdir, stdin=stdin, stdout=output,
-                                   stderr=subprocess.STDOUT, start_new_session=True)
-        try:
-            return process.wait(timeout=seconds), False
-        except subprocess.TimeoutExpired:
-            kill_tree(process)
-            return None, True
+def run(template, values, workdir, prompt, log, seconds, env):
+    """Run the filled template in the system shell, prompt on stdin. Returns (exit code, timed out)."""
+    return proc.run_limited(fill(template, values), workdir, prompt, log, seconds, env=env, shell=True)
