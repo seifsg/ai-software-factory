@@ -358,8 +358,8 @@ def cmd_done(args):
         log("step.refused", key=run["key"], step=step, problems=problems)
         fail(f"'{step}' not recorded:\n- " + "\n- ".join(problems))
     run["done"][step] = {"at": now(), **({"unverified": args.offline} if args.offline else {})}
-    if step in ("kickoff", "tickets") and record.run_size(all_sections):  # frozen: editing the line later skips nothing
-        run.setdefault("size", record.run_size(all_sections))
+    if step in ("kickoff", "tickets") and record.run_size(all_sections) and "size" not in run:
+        run.update(size=record.run_size(all_sections), size_at=step)  # frozen: editing the line later skips nothing
     if step == "tickets":  # later ticket checks keep reading these even if the record drops one
         epic, subs = record.ticket_urls(body)
         run["tickets"] = list(dict.fromkeys(run.get("tickets", []) + epic + subs))

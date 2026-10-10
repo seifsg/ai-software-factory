@@ -395,6 +395,14 @@ def scans(run, all_sections):
     return ["Secrets", "Dependencies", "Static"] if run.get("scans") and LAUNCH.search(sizes) else []
 
 
+def scan_cause(run, all_sections):
+    """Why the scans are required, so a run whose record was edited later understands the refusal."""
+    frozen = LAUNCH.search(run.get("size") or "")
+    found = frozen or LAUNCH.search(run_size(all_sections) or "")
+    where = ("frozen at " + run["size_at"] if run.get("size_at") else "frozen in the ledger") if frozen else "in the record"
+    return f"Size {found.group(0).upper()}, {where}"
+
+
 def placeholder_problems(body, labels):
     """A scan marker names the tool, the command and the result; a placeholder records nothing."""
     values = {label: marker(body, label) for label in labels}
@@ -405,7 +413,9 @@ def placeholder_problems(body, labels):
 def check_done_run(run, body, project, all_sections=None, **_):
     problems = [] if re.search(r"\bPASS\b", body) else ["needs >=1 PASS result"]
     labels = scans(run, all_sections or {})
-    problems += missing_markers(body, ["Logs", *labels]) + placeholder_problems(body, labels)
+    cause = f" ({scan_cause(run, all_sections or {})})" if labels else ""
+    problems += missing_markers(body, ["Logs"]) + [problem + cause for problem in missing_markers(body, labels)]
+    problems += placeholder_problems(body, labels)
     problems += size_problems(run, run.get("size") or run_size(all_sections or {}))
     if run.get("ui"):
         shots = [Path(shot) for shot in re.findall(r"[\w./\\:~-]+\.(?:png|jpe?g|webp|gif)\b", body, re.I)]
