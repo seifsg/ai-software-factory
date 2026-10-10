@@ -151,7 +151,12 @@ indexes: classes(starts_at), bookings(class_id, status), waitlist(class_id, posi
 - PASS staff publishes a class and checks the booked member in
 - FAIL then fixed: booking button stayed active during the request; disabled while pending
 - Screenshot: .factory/fast/shots/schedule.png (DEV badge and "Sample data" tags visible)
-**Hidden checks:** #2 A1 PASS, A2 PASS; #3 A1 PASS, A2 PASS; #4 A1 PASS, A2 PASS; #5 A1 PASS, A2 PASS (checker's .factory/fast/checks/studio-booking/, written after the plan, run after build)
+**Hidden checks:**
+- #1 A1: PASS, #1 A2: PASS (epic integration: book with credits, promoted member checked in)
+- #2 A1: PASS, #2 A2: PASS
+- #3 A1: PASS, #3 A2: PASS (A2 FAIL on the first run; promotion fixed, all checks rerun)
+- #4 A1: PASS, #4 A2: PASS
+- #5 A1: PASS, #5 A2: PASS
 **Logs:** logs/app.log shows request IDs for booking, waitlist promotion and check-in; no errors
 
 ## Handoff

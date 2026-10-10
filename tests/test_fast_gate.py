@@ -278,56 +278,53 @@ class FastGateTests(unittest.TestCase):
         posix = "/" + str(self.project)[0].lower() + str(self.project)[2:].replace("\\", "/")
         self.assertIn("Next: research", self.gate("status", project=posix))
 
-    def test_hidden_checks_decide_product_and_feature_done_runs(self):
-        record, done = record_module(), "- PASS booked\n**Logs:** clean\n"
+    def test_hidden_checks_accept_only_strict_entries(self):
+        record = record_module()
         on = {"kind": "feature", "hidden_checks": True}
-        check = lambda text, run=on: " ".join(record.check_done_run(run, done + text, project=".", all_sections={}))
-        refused = {"list": "**Hidden checks:**\n- A1 PASS\n- A2 FAIL\n",
-                   "table": "**Hidden checks:**\n| ID | Result |\n|---|---|\n| A1 | PASS |\n| A2 | FAIL |\n",
-                   "lowercase": "**Hidden checks:** A1 pass, A2 fail\n", "failed": "**Hidden checks:** A1 PASS, A2 FAILED\n",
-                   "cross": "**Hidden checks:** A1 ✅, A2 ❌\n",
-                   "second label": "**Hidden checks:** A1 PASS\n**Hidden checks:** A2 FAIL\n"}
-        for form, text in refused.items():
-            self.assertIn("FAIL (A2): back to build", check(text), form)
-        allowed = ["**Hidden checks:** A1 PASS, A2 PASS; no FAIL\n", "**Hidden checks:** A1 PASS, A2 PASS: 2 PASS, 0 FAIL\n",
-                   "**Hidden checks:** A1 PASS, A2 PASS (FAIL on first run, fixed)\n", "**Hidden checks:** A1 PASSED\n",
-                   "**Hidden checks:**\nA1 (R1): PASS\n- A2 failure message shown: ✅\n"]
-        for text in allowed:
+        check = lambda text, run=on: " ".join(record.check_done_run(
+            run, "- PASS booked\n**Hidden checks:** " + text + "\n**Logs:** clean\n", project=".", all_sections={}))
+        unreadable = ["#2 A1: PASS, #2 A2 did not pass", "#2 A1: PASS\n#2 A2 not passing (exit 1)",
+                      "#2 A2 expected PASS, got FAIL", "\n- #2 A2 bad index passes to the error handler: FAIL",
+                      "\n- #2 A2 passing an empty title is rejected: ❌", "#2 A2 FAILS", "#2 A2: ✗", "\n| FAIL | #2 A2 |",
+                      "\n| #2 | A2 | PASS |", "A1: PASS, A2: PASS", "#2 A1: pass", "#2 A1: PASS (ok), note",
+                      "#2 A1: PASS\n\nall good"]
+        for text in unreadable:
+            self.assertIn("unreadable hidden-check entry", check(text), text)
+        self.assertIn("FAIL (#2 A2): back to build", check("#2 A1: PASS\n**Hidden checks:** #2 A2: FAIL"))
+        self.assertIn("FAIL (#2 A2)", check("\n- #2 A1: PASS\n\n- #2 A2: FAIL (exit 1)"))
+        self.assertIn("'**Hidden checks:**' block", check(""))
+        for text in ("#2 A1: PASS, #2 A2: PASS", "\n- #2 A1: PASS (FAIL on first run, fixed)\n\n* #3 A1: PASS",
+                     "#2 A1: PASS (#3 is unrelated)"):
             self.assertEqual(check(text), "", text)
-        self.assertIn("'**Hidden checks:**' line or list", check(""))
-        self.assertIn("'**Hidden checks:**' line or list", check("**Hidden checks:** all good\n"))
         for run in ({**on, "kind": "change"}, {"kind": "product"}):  # change runs and older methods: old rule
-            self.assertEqual(check("", run), "")
+            self.assertEqual(" ".join(record.check_done_run(run, "- PASS x\n**Logs:** y\n", project=".")), "")
 
     def test_hidden_checks_cover_every_listed_criterion_online(self):
-        record, done = record_module(), "- PASS booked\n**Logs:** clean\n"
-        url = "https://github.com/acme/app/issues/"
-        dod = "### Definition of done\n" + "".join(f"- **{cid}:** works\n" for cid in ("A1", "A2"))
-        tickets = {url + "2": {"body": dod}, url + "3": {"body": dod.replace("- **A2:** works\n", "")},
-                   url + "4": {"body": dod.replace("A2", "A9"), "stopped": True}}
-        run = {"kind": "feature", "hidden_checks": True, "ticket_checks": True, "tickets": list(tickets)}
-        read = lambda link: {"url": link, "stopped": False, "backlog": False, **tickets[link]}
-        check = lambda text, **kw: " ".join(record.check_done_run(run, done + "**Hidden checks:** " + text, project=".",
-                                                                  all_sections={}, **kw))
+        record = record_module()
+        text = SAMPLE.read_text(encoding="utf-8")
+        sections = record.sections(text)
+        dod = "### Definition of done\n- **A1 (R1):** works\n- **A2:** fails safely\n"
+        read = lambda url: {"url": url, "body": dod, "stopped": url.endswith("/9"), "backlog": False}
+        run = {"kind": "product", "hidden_checks": True, "ticket_checks": True,
+               "tickets": ["https://github.com/acme/studio-booking/issues/9"]}  # Blocked: needs no PASS
+        check = lambda body, **kw: " ".join(record.check_done_run(run, body, project=".", all_sections=sections, **kw))
+        done = sections["done-run"]
         with patch.object(record, "read_ticket", side_effect=read):
-            self.assertEqual(check("#2 A1 PASS, A2 PASS; #3 A1 PASS\n"), "")
-            self.assertEqual(check("A1 PASS, A2 PASS\n"), "")  # unscoped entries count for every ticket
-            self.assertIn("without a hidden-check PASS: #2 A2", check("#2 A1 PASS; #3 A1 PASS\n"))
-            self.assertIn("#2 A2", check("#2 A1 PASS, A2 skipped; #3 A1 PASS\n"))
-            self.assertNotIn("A9", check("#2 A1 PASS; #3 A1 PASS\n"))  # Blocked tickets need no PASS
-        self.assertEqual(check("#2 A1 PASS\n", offline="no network"), "")  # offline: >=1 entry, no FAIL
-        self.assertIn("FAIL (A2)", check("#2 A1 PASS, A2 FAIL\n", offline="no network"))
+            self.assertEqual(check(done), "")
+            no_epic = "\n".join(line for line in done.splitlines() if not line.startswith("- #1 "))
+            self.assertIn("without a hidden-check PASS: #1 A1, #1 A2", check(no_epic))
+            self.assertIn("#5 A2", check(done.replace(", #5 A2: PASS", "")))
+        self.assertEqual(check(done.replace(", #5 A2: PASS", ""), offline="no network"), "")  # offline: >=1 entry
 
     def test_hidden_checks_gate_the_sample_done_run(self):
         self.start("--no-ui")
         text = SAMPLE.read_text(encoding="utf-8")
         record_file = self.project / ".factory/fast/work-record.md"
-        self.assertIn("Hidden checks line or list", record_file.read_text(encoding="utf-8"))
-        line = next(line for line in text.splitlines() if line.startswith("**Hidden checks:**"))
-        record_file.write_text(text.replace(line, "**Hidden checks:**\n- #2 A1 PASS\n- #2 A2 failed"), encoding="utf-8")
+        self.assertIn("Hidden checks block", record_file.read_text(encoding="utf-8"))
+        record_file.write_text(text.replace("#4 A2: PASS", "#4 A2: FAIL"), encoding="utf-8")
         for step in ("research", "kickoff", "tickets", "analysis", "plan", "schema", "build"):
             self.gate("done", step, *(["--offline", "sample URLs"] if step in ONLINE else []))
-        self.assertIn("FAIL (A2): back to build", self.gate("done", "done-run", "--offline", "sample", ok=False))
+        self.assertIn("FAIL (#4 A2): back to build", self.gate("done", "done-run", "--offline", "sample", ok=False))
         record_file.write_text(text, encoding="utf-8")
         self.gate("done", "done-run", "--offline", "sample URLs")
 

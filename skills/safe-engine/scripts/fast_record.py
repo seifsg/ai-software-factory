@@ -21,11 +21,11 @@ REQUESTED = re.compile(r"\bR\d+\b")
 # "R2 waitlist (owner-deferred: https://...)": the mark sits on its own item, before any other R-id
 DEFERRED = re.compile(r"\b(R\d+)\b(?:(?!\bR\d+\b)[^()\n])*\((?i:owner-deferred):\s*"
                       r"(?:\[[^\]\n]*\]\(https?://[^\s)]+\)|https?://[^\s)]+)\)")  # bare URL or [text](URL)
-# every '**Hidden checks:**' block, up to a blank line or the next line-start label; lists and tables included
-HIDDEN = re.compile(r"\*\*Hidden checks:\*\*(.*?)(?=\n[ \t]*\n|\n[ \t]*\*\*[^*\n]+:\*\*|\Z)", re.I | re.S)
-# one entry: an ID, then on its line before any other ID the first verdict: 'A1 PASS', '- A2: failed', '| A3 | ✅ |'
-VERDICT = re.compile(r"\b([A-Z]{1,3}\d+)\b(?:\s*\([^)\n]*\))?(?:(?!\b[A-Z]{1,3}\d+\b)[^\n])*?"
-                     r"(\b(?i:pass|fail)(?i:ed|es|ing)?\b|✅|❌)")
+# every '**Hidden checks:**' block, blank lines included, up to the next line-start label or heading
+HIDDEN = re.compile(r"\*\*Hidden checks:\*\*(.*?)(?=^[ \t]*\*\*[^*\n]+:\*\*|^#{1,6}\s|\Z)", re.M | re.S)
+# one entry, nothing guessed: '#2 A1: PASS' or '#2 A1: FAIL', an optional '(note)' only after the verdict
+ENTRY = r"#(\d+)[ \t]+([A-Z]{1,3}\d+):[ \t]*(PASS|FAIL)(?:[ \t]+\([^()\n]*\))?"
+ENTRIES = re.compile(rf"(?:[-*+][ \t]+)?{ENTRY}(?:[ \t]*,[ \t]*{ENTRY})*[ \t]*")  # one line: entries, commas
 
 
 def sections(text):
@@ -382,33 +382,39 @@ def hidden(run):
 
 
 def verdicts(body):
-    """Hidden checks entries by scope: '#2 A1 PASS' scopes to issue 2, unscoped entries to '' (every ticket)."""
-    found = {}
-    for block in HIDDEN.findall(body):
-        parts = re.split(r"#(\d+)\b", block)
-        for scope, text in zip([""] + parts[1::2], parts[::2]):
-            found.setdefault(scope, []).extend((cid, mark[:4].lower() == "pass" or mark == "✅")
-                                               for cid, mark in VERDICT.findall(text))
-    return found
+    """Hidden checks entries (issue number, criterion ID, passed) and the lines that are not entries."""
+    entries, unreadable = [], []
+    for line in "\n".join(HIDDEN.findall(body)).splitlines():
+        if not line.strip():
+            continue
+        if not ENTRIES.fullmatch(line.strip()):
+            unreadable.append(line.strip())
+            continue
+        found = re.findall(ENTRY, line)
+        entries += [(number, cid, verdict == "PASS") for number, cid, verdict in found]
+    return entries, unreadable
 
 
 def hidden_checks(body, kwargs, run):
-    """Any FAIL entry refuses; online, every in-play listed ticket's criterion needs a PASS; offline, >=1 entry."""
-    found = verdicts(body)
-    entries = [entry for scoped in found.values() for entry in scoped]
-    failed = [cid for cid, passed in entries if not passed]
+    """Unreadable entries and any FAIL refuse; online, every in-play listed ticket's criterion, the epic's
+    included, needs its own '#<n> <ID>: PASS'; offline, >=1 entry."""
+    entries, unreadable = verdicts(body)
+    if unreadable:
+        return [f"unreadable hidden-check entry: {line}" for line in unreadable] + [
+            "write each as '#<n> <ID>: PASS' or '#<n> <ID>: FAIL', a note only after it in parentheses; "
+            "the block ends at the next '**Label:**'"]
+    failed = [f"#{number} {cid}" for number, cid, passed in entries if not passed]
     if failed:
         return [f"hidden checks FAIL ({', '.join(dict.fromkeys(failed))}): back to build, then the checker runs them again"]
     if not entries:
-        return ["needs a '**Hidden checks:**' line or list from the checker: every criterion ID with PASS or FAIL"]
-    gaps = []
+        return ["needs a '**Hidden checks:**' block from the checker: '#<n> <ID>: PASS' for every criterion"]
+    gaps, passed = [], {(number, cid) for number, cid, _ in entries}
 
     def read(ticket):
         if not (ticket["stopped"] or ticket["backlog"]):
             number = ISSUE.match(ticket["url"]).group(2)
-            passed = {cid for cid, _ in found.get(number, []) + found.get("", [])}
             criteria = dict.fromkeys(CRITERION.findall(under(ticket["body"], DEFINITION)))
-            gaps.extend(f"#{number} {cid}" for cid in criteria if cid not in passed)
+            gaps.extend(f"#{number} {cid}" for cid in criteria if (number, cid) not in passed)
     problems = online(run, kwargs, read)
     return problems or ([f"criteria without a hidden-check PASS: {', '.join(gaps)}"] if gaps else [])
 

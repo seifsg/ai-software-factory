@@ -220,7 +220,7 @@ def skeleton(run):
              "## Request", "", *quoted, ""]
     hints = {**HINTS, **COVERAGE_HINTS} if run.get("coverage") else dict(HINTS)
     if sibling("fast_record").hidden(run):
-        hints["done-run"] += "; a Hidden checks line or list: every criterion ID with PASS, no FAIL"
+        hints["done-run"] += "; a Hidden checks block: '#<n> <ID>: PASS' per criterion of every listed ticket"
     for step in steps_for(run):
         lines += [f"## {TITLES[step]}", "", f"<!-- gate: {hints[step]} -->", ""]
     return "\n".join(lines)
