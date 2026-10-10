@@ -160,7 +160,7 @@ class WorkflowTests(unittest.TestCase):
         before = self.flow.current(self.flow.load())
         secret.write_text("MODE=two\n")
         self.assertNotEqual(before, self.flow.current(self.flow.load()))
-        self.assertNotIn("MODE=one", (self.root / ".factory/state.json").read_text())
+        self.assertNotIn("MODE=one", (self.root / ".factory/state.json").read_text(encoding="utf-8"))
 
     def test_protected_check_changes_are_rejected(self):
         self.built()
@@ -215,7 +215,7 @@ class WorkflowTests(unittest.TestCase):
         result = subprocess.run([sys.executable, "-m", "safe_engine", "--project", str(root), "init",
                                  "--task", str(root / ".factory/task.json"),
                                  "--profile", str(root / ".factory/profile.json")],
-                                cwd=Path(__file__).resolve().parents[1], capture_output=True, env=env)
+                                cwd=Path(__file__).resolve().parents[1], capture_output=True, env=env, timeout=30)
         self.assertEqual(result.returncode, 0, result.stderr.decode("utf-8", "replace"))  # no encoding crash
         self.assertIn("\u2705", json.loads(result.stdout.decode("utf-8"))["project"])
 
@@ -226,7 +226,7 @@ class WorkflowTests(unittest.TestCase):
         result = subprocess.run([sys.executable, "-m", "safe_engine", "--project", str(self.root),
                                  "init", "--task", str(self.root / ".factory/task.json"),
                                  "--profile", str(self.root / ".factory/profile.json"), *extra],
-                                cwd=Path(__file__).resolve().parents[1], capture_output=True, text=True)
+                                cwd=Path(__file__).resolve().parents[1], capture_output=True, text=True, encoding="utf-8")
         self.assertEqual(result.returncode, 0, result.stderr)
         status = json.loads(result.stdout)
         self.assertEqual(status["repair_policy"], "continuous")

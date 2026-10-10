@@ -75,7 +75,8 @@ def main():
     draft.add_argument("--out", required=True)
     args = parser.parse_args()
     for stream in (sys.stdout, sys.stderr):  # piped Windows output defaults to cp1252; emoji must never crash a result
-        stream.reconfigure(encoding="utf-8")
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="backslashreplace")
     try:
         with snapshot():
             result = run(args)

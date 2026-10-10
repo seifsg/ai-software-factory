@@ -240,7 +240,7 @@ class FeatureBatchTests(unittest.TestCase):
     def test_cli_feature_feedback_exit_codes_and_no_version_acceptance(self):
         self.build()
         def cli(*args):return subprocess.run([sys.executable,'-m','safe_engine','--project',str(self.root),*args],
-            cwd=Path(__file__).resolve().parents[1],capture_output=True,text=True)
+            cwd=Path(__file__).resolve().parents[1],capture_output=True, text=True, encoding="utf-8")
         artifact=str(self.draft('feature'))
         good=cli('feature-check','--checks','a','--file',artifact)
         self.assertEqual(good.returncode,0,good.stderr)

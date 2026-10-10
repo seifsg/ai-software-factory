@@ -464,7 +464,7 @@ class HardeningTests(Base):
                     argv = [sys.executable, "-m", "safe_engine", "--project", str(f.root)]
                     argv += ["--ticket", ticket] if ticket else []
                     argv += [name, "--reason", "x"] if name == "cancel" else [name]
-                    result = subprocess.run(argv, cwd=BUNDLE, capture_output=True, text=True, timeout=30)
+                    result = subprocess.run(argv, cwd=BUNDLE, capture_output=True, text=True, encoding="utf-8", timeout=30)
                     self.assertEqual(result.returncode, 2, result.stdout)
                     self.assertIn("No saved run", result.stderr)
                     self.assertFalse((f.root / ".factory").exists())
@@ -478,7 +478,7 @@ class HardeningTests(Base):
         f.flow.initialize(f.task, f.profile)
         with locked(f.flow.directory):
             result = subprocess.run([sys.executable, "-m", "safe_engine", "--project", str(f.root), "status"],
-                                    cwd=BUNDLE, capture_output=True, text=True, timeout=30)
+                                    cwd=BUNDLE, capture_output=True, text=True, encoding="utf-8", timeout=30)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(json.loads(result.stdout)["phase"], "analyze")
 

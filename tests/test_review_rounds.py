@@ -63,8 +63,7 @@ class ReviewRoundCapTests(Base):
         for rounds in (1, 3):
             f.flow.extend_reviews(rounds, "boundary values are valid")
         result = subprocess.run([sys.executable, "-m", "safe_engine", "--project", str(f.root), "extend-reviews",
-                                 "--rounds", "9", "--reason", "too many"], cwd=BUNDLE, capture_output=True,
-                                text=True, timeout=30)
+                                 "--rounds", "9", "--reason", "too many"], cwd=BUNDLE, capture_output=True, text=True, encoding="utf-8", timeout=30)
         self.assertEqual(result.returncode, 2)
         f.flow.cancel("Synthetic cancellation")
         with self.assertRaisesRegex(EngineError, "Cancelled"):
