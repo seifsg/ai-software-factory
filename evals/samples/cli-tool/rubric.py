@@ -29,9 +29,13 @@ def wordcount(work, text, *args):
 
 
 def matches(work, *args):
-    """Assert the candidate's output on a random text equals the reference's; returns nothing."""
-    code, out, err, argv = wordcount(work, random_text(), *args)
+    """Assert the candidate's output on a random text equals the reference's. The expected output is computed
+    first, from the text held here and a private copy, so nothing the candidate does to its own copy counts."""
+    text, private = random_text(), scratch() / "expected.txt"
+    private.write_bytes(text.encode("utf-8"))
+    argv = [str(private) if arg == "SAMPLE" else arg for arg in args]
     want = run_program(REFERENCE["wordcount.py"], argv)  # noqa: F821 - provided by the check program
+    code, out, err, _ = wordcount(work, text, *args)
     expected, got = (want[0], want[1].splitlines()), (code, out.splitlines())  # line endings vary by platform
     assert got == expected, f"random text: expected {expected}, got {got} {err[-200:]}"
 

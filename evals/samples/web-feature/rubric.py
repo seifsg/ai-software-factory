@@ -3,7 +3,7 @@
 Each check runs its requests in one fresh harness process, so the in-memory notes start empty. Fixed cases stay;
 fresh random notes and queries are answered by the reference app (REFERENCE, in this process) and must match.
 """
-from evals.rubric_tools import RANDOM, agree, call, expect, request
+from evals.rubric_tools import RANDOM, agree, answers, call, expect, request, same
 
 WORDS = ("milk", "bread", "call", "mom", "pay", "rent", "walk", "dog", "read", "book", "fix", "bike")
 
@@ -29,15 +29,22 @@ def create(work):
 
 
 def invalid(work):
-    """R2: bad JSON or a bad text answers 400 with an error and stores nothing."""
+    """R2: bad JSON or a bad text answers 400 with an error and stores nothing. Valid POSTs are shuffled in, so
+    answering 400 to everything fails; they and the final listing must match the reference."""
     garbage = "".join(RANDOM.choice("{[:,x") for _ in range(RANDOM.randint(1, 6))) + "{"
-    bodies = ("{not json", garbage, {}, {"text": ""}, {"text": RANDOM.randint(-99, 99)}, {"text": [phrase()]})
-    *answers, listing = call(work, "app", [request("POST", "/notes", body) for body in bodies]
-                             + [request("GET", "/notes")])
-    for body, (status, value) in zip(bodies, answers):
+    bad = ["{not json", garbage, {}, {"text": ""}, {"text": RANDOM.randint(-99, 99)}, {"text": [phrase()]}]
+    bodies = [(False, body) for body in bad] + [(True, {"text": phrase()}) for _ in range(RANDOM.randint(2, 4))]
+    RANDOM.shuffle(bodies)
+    ops = [request("POST", "/notes", body) for _, body in bodies] + [request("GET", "/notes")]
+    *wants, listing = answers(reference(), "app", ops)  # expected, from the reference, before the candidate runs
+    *gots, got_listing = call(work, "app", ops)
+    for (valid, body), want, (status, value) in zip(bodies, wants, gots):
+        if valid:
+            assert same([status, value], want), f"valid {body!r}: expected {want[1]!r}, got {[status, value]}"
+            continue
         ok = status == "ok" and value[0] == 400 and type(value[1]) is dict and type(value[1].get("error")) is str
         assert ok and value[1]["error"], f"{body!r}: got {[status, value]}"
-    expect(listing, [200, []], "an invalid POST stored a note")
+    assert same(got_listing, listing), f"listing after mixed POSTs: expected {listing[1]!r}, got {got_listing}"
 
 
 def search(work):

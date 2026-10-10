@@ -5,6 +5,7 @@ solution (REFERENCE, in this process) and must match type-strictly; candidate co
 Random cases for one bug avoid the other bugs (no discount, no half cents, no empty invoice) so items stay apart.
 """
 import ast
+from fractions import Fraction
 
 from evals.rubric_tools import RANDOM, agree, call, expect, op, tests
 
@@ -46,9 +47,17 @@ def rounding(work):
                                          op("total", [{"qty": 1, "price": 1}], tax_percent=40)])
     expect(half, 5, "4.5 cents")
     expect(under, 1, "1.4 cents")
-    halves = [op("total", [{"qty": 1, "price": RANDOM.randrange(1, 9999, 2)}], tax_percent=50) for _ in range(3)]
-    others = [op("total", lines(RANDOM.randint(1, 3)), tax_percent=RANDOM.randint(1, 30)) for _ in range(3)]
-    agree(work, "invoice", reference(), halves + others, "random rounding")
+    agree(work, "invoice", reference(), [half_even_trap() for _ in range(4)], "random half cent")
+
+
+def half_even_trap():
+    """A random line and tax whose exact total is an even number of cents plus one half: half-up and half-even
+    (Python's round) disagree on every such case."""
+    while True:
+        qty, price, tax = RANDOM.randint(1, 9), RANDOM.randint(1, 5000), RANDOM.randint(1, 60)
+        exact = Fraction(qty * price * (100 + tax), 100)
+        if exact.denominator == 2 and exact.numerator // 2 % 2 == 0:
+            return op("total", [{"qty": qty, "price": price}], tax_percent=tax)
 
 
 def existing_tests(work):
