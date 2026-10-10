@@ -44,6 +44,7 @@ Manual install, flags and every agent's syntax: [install](docs/install.md) · [h
 ## 🏆 Why it works
 
 - 🔒 **Enforced, not suggested.** A gate and host hooks deny code edits until earlier steps pass, and push back when the agent tries to stop mid-run.
+- 📣 **Progress you can see.** A mini dashboard from the gate, once per change: the ticket in progress with its bar, what just finished, what is being built now and what you will be able to do once it is done, what comes next, and any question waiting on you. When nothing changed, a hook spends under 0.1 ms on it.
 - 🔎 **Research before code.** New products and big features start with competitors, a feature matrix, opportunities and stack options.
 - ❓ **Questions that fit the size.** A POC builds exactly what you asked and asks only what the request leaves open. An MVP researches launch gaps, suggests features you did not think of and ships analytics and in-app feedback. Answers are recorded and binding.
 - 🎫 **A living backlog.** Every run reads it, cleans up issues after merged or closed PRs, and opens an epic with outcome sub-issues; follow-ups update existing tickets instead. Each ticket carries a definition of done and a checklist; an item is ticked only after it works, and a ticket is finished only when every item is. Tickets move through To do, In progress, Dev done and Ready for QA; your merge makes them Done. Items outside the task stay untouched.

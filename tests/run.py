@@ -92,6 +92,7 @@ def main():
     parser.add_argument("--changed", nargs="?", const="origin/main", metavar="BASE")
     parser.add_argument("--jobs", type=int, default=max(1, min((os.cpu_count() or 2) - 2, 16)))
     args = parser.parse_args()
+    sys.stdout.reconfigure(errors="backslashreplace")  # a failure trace with symbols must never crash the report
     setup()
     modules = selected(args.changed) if args.changed else None
     if modules is not None and not modules:

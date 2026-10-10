@@ -5,7 +5,13 @@ written down, not that it was good. Spec: .agents/skills/safe-engine/references/
 """
 import json
 import re
+import sys
 from pathlib import Path
+
+HERE = str(Path(__file__).resolve().parent)
+if HERE not in sys.path:
+    sys.path.insert(0, HERE)  # loaded by file path (tests, older gates): find the sibling module
+from fast_progress import built_ids, sections, subsection, todo_ids, without_result  # noqa: E402,F401 - shared parsers
 
 URL = re.compile(r"https?://[^\s)>\]|]+")
 ISSUE = re.compile(r"https://github\.com/([\w.-]+/[\w.-]+)/issues/(\d+)")
@@ -21,25 +27,6 @@ REQUESTED = re.compile(r"\bR\d+\b")
 # "R2 waitlist (owner-deferred: https://...)": the mark sits on its own item, before any other R-id
 DEFERRED = re.compile(r"\b(R\d+)\b(?:(?!\bR\d+\b)[^()\n])*\((?i:owner-deferred):\s*"
                       r"(?:\[[^\]\n]*\]\(https?://[^\s)]+\)|https?://[^\s)]+)\)")  # bare URL or [text](URL)
-
-
-def sections(text):
-    """Level-2 sections by lowercase title; HTML comments (skeleton hints) never count."""
-    text = re.sub(r"<!--.*?-->", "", text, flags=re.S)
-    found, name = {}, None
-    for line in text.splitlines():
-        heading = re.match(r"^##\s+(.+?)\s*$", line)
-        if heading:
-            name = heading.group(1).lower()
-            found.setdefault(name, [])
-        elif name is not None:
-            found[name].append(line)
-    return {key: "\n".join(lines) for key, lines in found.items()}
-
-
-def subsection(body, title):
-    match = re.search(r"^###\s+[^\n]*" + re.escape(title) + r"[^\n]*\n(.*?)(?=^###\s|\Z)", body, re.M | re.S | re.I)
-    return match.group(1) if match else None
 
 
 def marker(body, label):
@@ -59,11 +46,6 @@ def fenced(body):
 
 def missing_markers(body, labels):
     return [f"needs a '**{label}:**' line" for label in labels if not marker(body, label)]
-
-
-def todo_ids(all_sections):
-    todos = subsection(all_sections.get("plan", ""), "Todos") or ""
-    return sorted(set(re.findall(r"\bT(\d+)\b", todos)), key=int)
 
 
 def check_research(run, body, **_):
@@ -310,6 +292,9 @@ def check_plan(run, body, **kwargs):
     problems = [f"needs a '### {title}' subsection" for title in titles if subsection(body, title) is None]
     if not todo_ids(kwargs["all_sections"]):
         problems.append("needs todo IDs (T1, T2, ...) under ### Todos")
+    if run.get("outcomes"):  # the owner's dashboard shows each todo's result
+        problems += [f"T{n} needs its own line with its result: 'T{n} <title> → <what the owner can do once it is "
+                     f"done> (#<ticket>, <criteria>)'" for n in without_result(kwargs["all_sections"])]
     labels = ["Success"] if light(run) else ["Logging", "Efficiency"]
     return problems + missing_markers(body, labels) or held(run, kwargs, covered(run, needs_checklist))
 
@@ -350,15 +335,10 @@ def check_schema(run, body, **_):
 
 
 def check_build(run, body, **kwargs):
-    """Each plan todo has one line with pre:, do: and post:; on coverage runs the line starts with its ID, so a
-    mention such as 'T23..T34' in another todo's line never counts."""
-    lines = [line.lower() for line in body.splitlines()]
-    lead = r"\s*(?:\|\s*)?(?:(?:[-*+]|\d+[.)])\s+)?(?:\[[ x]\]\s+)?[*`]*"  # bullet, number, [x], **, ` or a table cell
-    owns = (lambda n, line: re.match(rf"{lead}t{n}\b", line)) if run.get("coverage") else (
-        lambda n, line: re.search(rf"\bt{n}\b", line))
+    """Each plan todo has its own 'pre: do: post:' line (fast_progress.built_ids)."""
+    built = built_ids(body, strict=bool(run.get("coverage")))
     return [f"T{number} needs its own 'T{number} pre: ... do: ... post: ...' line"
-            for number in todo_ids(kwargs["all_sections"])
-            if not any(owns(number, line) and all(tag in line for tag in ("pre:", "do:", "post:")) for line in lines)]
+            for number in todo_ids(kwargs["all_sections"]) if number not in built]
 
 
 def check_done_run(run, body, project, **_):
