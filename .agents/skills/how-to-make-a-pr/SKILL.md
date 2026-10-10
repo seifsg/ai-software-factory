@@ -41,12 +41,26 @@ git switch -c <scope>/<short-name> origin/<base>
 
 ## 4. Plan the proof before editing
 
-- **UI change:** screenshot the affected screen before edits. Later, its finished counterpart from final manual QA. One focused pair: same viewport, state and safe sample data. Add views only to explain the change. New UI: show the prior entry or empty state and label what did not exist. Video never replaces screenshots.
-- **No useful screenshot:** equivalent before/after: the same API request with status and body, CLI output, a measurement. Docs only: a short text diff.
-- Baseline capture is capture only: minimum safe navigation, no feature exercise. If it needs a side effect, use existing evidence and say so. Never fabricate a before image or reset dirty work to recreate it.
-- **Feature proof:** final manual QA walks the real journey to its confirmed result (a sent email is verified in the test inbox, not a success toast). Offer a short recording once when motion or several steps help; honor the answer. A recording grants no sending permission.
-- Embed labeled Before and After in the PR with the observed result, base/head and ticket criterion. Use links the reviewer can open; verify access. No localhost or local-path links. No credentials or private data in captures.
-- Missing capture or upload access: say so. Never claim proof exists.
+Every PR reports to the owner what changed, outcome by outcome, with proof they can open: the Before & after section of `references/pr-layout.md`.
+
+1. **Name the outcomes:** each feature, fix, page, section, module, endpoint or command the change affects, by what it does for its user. Never a file or folder.
+2. **Capture each Before now**, before edits. Capture only: minimum safe navigation, no feature exercise. A side effect needed: use existing evidence and say so. Missed it: capture from the base commit in a separate checkout and say so. Never fabricate it or reset dirty work to recreate it.
+3. **Capture each After** from final manual QA, under the same conditions (viewport, state, safe sample data, request, workload). Final manual QA walks the real journey to its confirmed result (a sent email is verified in the test inbox, not a success toast).
+
+| Surface | Proof, Before and After |
+|---|---|
+| Screen, page, section | Screenshot pair. Add views only to explain the change |
+| Journey of several steps, or motion | A recording of the journey (GIF inline, or a linked video), plus the screenshot pair |
+| API | The same request: status and body as one `diff` block |
+| CLI, script, gate | The same command: output as one `diff` block |
+| Speed, size, cost | Measured numbers, same workload, in a fenced block |
+| Internal module | Proof through the screen, endpoint or command whose behavior it changes |
+| Method or prose | The behavior it changes (a fresh walkthrough's result), plus the key text as a `diff` |
+| Something new | Before: the prior entry or empty state, labeled "did not exist" |
+
+- Look at each capture before using it: it shows what its line claims, readable at its size. Record conditions you could not match.
+- Upload media first (`references/github.md`); once the PR is open, check each one shows. No localhost or local-path links. No credentials or private data in captures. A recording grants no sending permission.
+- No capture tool or upload access: name the gap in that outcome. Never claim proof exists.
 
 ## 5. Make the change
 
@@ -78,12 +92,12 @@ git switch -c <scope>/<short-name> origin/<base>
 
 Open one for every run, unasked. Before creating or updating it, offer once: **"Run a Safe check first? (optional)"** No answer: open the draft as is.
 
-Variations requested: one branch and draft PR per variation, each following these rules with its own screenshot.
+Variations requested: one branch and draft PR per variation, each following these rules with its own proof.
 
 - A Safe check = final manual QA, relevant tests, one independent review of the finished work.
 - Yes: run it, fix, then open the PR. No: open the draft as is.
 - Never repeat the offer for the same PR.
-- List missing tests, review and baseline as unverified. Attach the finished screenshot. Link the run's epic.
+- List missing tests, review and baseline as unverified. Fill Before & after for every outcome. Link the run's epic.
 
 ## Stops
 
