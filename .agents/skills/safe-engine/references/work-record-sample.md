@@ -62,7 +62,7 @@ Summary shown to the owner: all three leaders cover booking, waitlists, packs, c
 
 ## Tickets
 
-**Epic:** https://github.com/acme/studio-booking/issues/1
+**Epic:** https://github.com/acme/studio-booking/issues/1 Studio booking POC
 **Sub-issue:** https://github.com/acme/studio-booking/issues/2 (member books a class from the schedule)
 **Sub-issue:** https://github.com/acme/studio-booking/issues/3 (full class: waitlist and auto-promotion)
 **Sub-issue:** https://github.com/acme/studio-booking/issues/4 (member buys a class pack and spends credits)
@@ -96,9 +96,15 @@ Capacity, credits and waitlist promotion live in `lib/booking.ts` behind one tra
 
 ### Todos
 Written into the sub-issues' checklists; the epic's checklist lists #2 to #5 and the combined done-run. Waves by files and dependencies; tier per todo.
-- Wave 1: T1 schema and seed (#2, deep), T2 shared logger (#2, standard), T8 header, footer, logo (#2, standard)
-- Wave 2: T3 dev role switcher and environment badge (#2, standard), T4 schedule and booking with capacity check (#2, standard)
-- Wave 3: T5 waitlist and auto-promotion (#3, deep), T6 class packs with a labeled mock checkout (#4, standard), T7 staff schedule editor and check-in (#5, standard)
+Waves: 1 = T1, T2, T8; 2 = T3, T4; 3 = T5, T6, T7.
+- T1 (deep) Schema and seed → the app opens with 2 members, 1 staff and a week of classes (#2, A1)
+- T2 (standard) Shared logger → every request and error lands in one redacted log (#2, A1)
+- T3 (standard) Dev role switcher and environment badge → switch between member and staff in one click (#2, A2)
+- T4 (standard) Schedule and booking with a capacity check → book a spot; a full class refuses it (#2, A1)
+- T5 (deep) Waitlist and auto-promotion → join a full class's waitlist; a cancellation moves you in (#3, A1)
+- T6 (standard) Class packs with a labeled mock checkout → buy a pack and spend its credits (#4, A1)
+- T7 (standard) Staff schedule editor and check-in → staff publish classes and check members in (#5, A1)
+- T8 (standard) Header, footer, logo → every page shows the studio's name and navigation (#2, A3)
 
 ### Whole plan
 Next.js app, SQLite through Drizzle, booking rules in one module. Light theme with the design brief below.
@@ -143,6 +149,8 @@ indexes: classes(starts_at), bookings(class_id, status), waitlist(class_id, posi
 - T6 pre: credit rules | do: class packs with a checkout labeled "Test mode: no real charge" | post: checkout isolated in one function
 - T7 pre: staff routes | do: schedule editor and check-in list | post: staff actions checked on the server under the staff role
 - T8 pre: design brief | do: header, footer, logo, metadata | post: light theme, AA contrast checked
+
+**Now:** none, every todo built
 
 ## Done-run
 

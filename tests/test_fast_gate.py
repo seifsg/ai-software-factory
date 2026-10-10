@@ -22,7 +22,7 @@ LIGHT = """# copy-fix
 ## Plan
 **Success:** the footer reads "Contact us".
 ### Todos
-- T1 fix the footer word
+- T1 fix the footer word → the footer reads "Contact us"
 ## Build log
 - T1 pre: footer says "Contcat us" do: fixed the word post: footer reads "Contact us"
 ## Done-run
@@ -61,7 +61,7 @@ class FastGateTests(unittest.TestCase):
 
     def gate(self, *args, ok=True, project=None):
         result = subprocess.run([sys.executable, str(GATE), *args, "--project", str(project or self.project)],
-                                capture_output=True, text=True, errors="replace", env=self.env)
+                                capture_output=True, text=True, encoding="utf-8", errors="replace", env=self.env)
         self.assertEqual(result.returncode == 0, ok, result.stdout + result.stderr)
         return result.stdout + result.stderr
 
@@ -77,7 +77,7 @@ class FastGateTests(unittest.TestCase):
     def pre(self, tool, cwd=None, session="s1", **tool_input):
         out = self.hook({"hook_event_name": "PreToolUse", "tool_name": tool, "tool_input": tool_input,
                          "session_id": session, "cwd": str(cwd or self.project)})
-        return out["hookSpecificOutput"]["permissionDecision"] if out else "allow"
+        return (out or {}).get("hookSpecificOutput", {}).get("permissionDecision", "allow")  # may carry progress only
 
     def start(self, *flags, kind="product"):
         self.gate("start", "--key", "portal-poc", "--kind", kind, "--request", "Build a client portal", *flags)
@@ -225,7 +225,9 @@ class FastGateTests(unittest.TestCase):
         self.assertIsNone(self.hook({**elsewhere, "stop_hook_active": True}))
         self.assertIsNone(self.hook({**elsewhere, "session_id": "other"}))
         self.gate("pause", "--reason", "waiting on the owner")
-        self.assertIsNone(self.hook(elsewhere))
+        paused = self.hook(elsewhere)  # no block; the owner sees the ask first
+        self.assertNotIn("decision", paused)
+        self.assertTrue(paused["systemMessage"].startswith("⏸️ WAITING ON YOU: waiting on the owner"))
         context = self.hook({"hook_event_name": "UserPromptSubmit", "prompt": "go"})
         self.assertIn("paused: waiting on the owner", context["hookSpecificOutput"]["additionalContext"])
 
@@ -536,12 +538,13 @@ class FastGateTests(unittest.TestCase):
         gate = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(gate)
         layout, lane = Path(gate.LAYOUT), Path(gate.FAST_RUN)
-        for name, texts in (("new", ("### ✅ Definition of done\nEvery criterion has an item.", "## Light lane\n**Hidden checks:**")),
+        for name, texts in (("new", ("### ✅ Definition of done\nEvery criterion has an item.",
+                                     "## Light lane\nT1 <title> → <what the owner can do once it is done>\n**Hidden checks:**")),
                             ("old", ("### ✅ Done when", "## Hooks"))):
             for path, text in zip((layout, lane), texts):
                 (self.root / name / path).parent.mkdir(parents=True, exist_ok=True)
                 (self.root / name / path).write_text(text, encoding="utf-8")
-        on = {"ticket_checks": True, "coverage": True, "light": True, "hidden_checks": True}
+        on = {"ticket_checks": True, "coverage": True, "light": True, "outcomes": True, "hidden_checks": True}
         off = dict.fromkeys(on, False)
         self.assertEqual(gate.method_flags({"root": str(self.root / "new")}, self.project), on)
         self.assertEqual(gate.method_flags({"root": str(self.root / "old")}, self.project), off)
@@ -550,7 +553,7 @@ class FastGateTests(unittest.TestCase):
         self.assertEqual(gate.method_flags(None, SCRIPTS.parents[2]), on)  # this checkout's own methods define them
         (self.root / "new" / layout).write_bytes(b"\xff\xfe broken")
         self.assertEqual(gate.method_flags({"root": str(self.root / "new")}, self.project),
-                         {**off, "light": True, "hidden_checks": True})
+                         {**off, "light": True, "outcomes": True, "hidden_checks": True})  # fast-run.md still reads
         lucky = {"mode": "lucky", "kind": "change"}
         self.assertNotIn("done-run", gate.steps_for(lucky))
         self.assertIn("done-run", gate.steps_for({**lucky, "ticket_checks": True}))
