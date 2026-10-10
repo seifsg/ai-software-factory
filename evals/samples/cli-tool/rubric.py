@@ -6,6 +6,9 @@ The candidate program runs as its own process on a fixed text and on a fresh ran
 from evals.rubric_tools import RANDOM, run_program, run_python, scratch
 
 TEXT = "the cat\nThe dog the end\n"  # 2 lines, 6 words, 24 characters; "the" x3
+FIXED = {TEXT: "2 6 24", TEXT[:-1]: "2 6 23",  # a last line without a newline still counts
+         "caf\u00e9 na\u00efve\n": "1 2 11"}  # characters, not the 13 bytes
+ACCENTED = ("caf\u00e9", "na\u00efve", "\u00fcber", "se\u00f1or")  # every random text holds one
 WORDS = ("the", "cat", "dog", "end", "sun", "moon", "a", "tree", "sky")
 SPACES = (" ", "  ", "\t")
 
@@ -17,6 +20,8 @@ def random_text():
         words = [RANDOM.choice((str.lower, str.upper, str.title))(RANDOM.choice(WORDS))
                  for _ in range(RANDOM.randint(0, 7))]
         lines.append("".join(word + RANDOM.choice(SPACES) for word in words).rstrip())
+    at = RANDOM.randrange(len(lines))
+    lines[at] = f"{lines[at]} {RANDOM.choice(ACCENTED)}".strip()  # bytes and characters always differ
     return "\n".join(lines) + RANDOM.choice(("", "\n"))
 
 
@@ -42,9 +47,10 @@ def matches(work, *args):
 
 def counts(work):
     """R1: prints `lines words chars`."""
-    code, out, err, _ = wordcount(work, TEXT, "SAMPLE")
-    assert code == 0, f"exit {code}: {err.strip()[-200:]}"
-    assert out.splitlines()[:1] == ["2 6 24"], f"first line {out.splitlines()[:1]}"
+    for text, expected in FIXED.items():
+        code, out, err, _ = wordcount(work, text, "SAMPLE")
+        assert code == 0, f"exit {code}: {err.strip()[-200:]}"
+        assert out.splitlines()[:1] == [expected], f"{text!r}: first line {out.splitlines()[:1]}"
     matches(work, "SAMPLE")
 
 

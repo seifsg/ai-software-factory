@@ -32,7 +32,8 @@ def invalid(work):
     """R2: bad JSON or a bad text answers 400 with an error and stores nothing. Valid POSTs are shuffled in, so
     answering 400 to everything fails; they and the final listing must match the reference."""
     garbage = "".join(RANDOM.choice("{[:,x") for _ in range(RANDOM.randint(1, 6))) + "{"
-    bad = ["{not json", garbage, {}, {"text": ""}, {"text": RANDOM.randint(-99, 99)}, {"text": [phrase()]}]
+    bad = ["{not json", garbage, {}, {"text": ""}, {"text": RANDOM.randint(-99, 99)}, {"text": [phrase()]},
+           [RANDOM.randint(0, 9)], '"x"', RANDOM.randint(-99, 99)]  # the last three: JSON, not an object
     bodies = [(False, body) for body in bad] + [(True, {"text": phrase()}) for _ in range(RANDOM.randint(2, 4))]
     RANDOM.shuffle(bodies)
     ops = [request("POST", "/notes", body) for _, body in bodies] + [request("GET", "/notes")]
@@ -47,20 +48,35 @@ def invalid(work):
     assert same(got_listing, listing), f"listing after mixed POSTs: expected {listing[1]!r}, got {got_listing}"
 
 
+def mixed_case(word):
+    """`word` in random letter case with at least one capital, so a filter that lowercases only the notes fails."""
+    letters = [RANDOM.choice((str.lower, str.upper))(char) for char in word]
+    at = RANDOM.randrange(len(letters))
+    letters[at] = letters[at].upper()
+    return "".join(letters)
+
+
 def search(work):
     """R3: GET /notes?q= filters by substring, case-insensitively; no q lists all."""
-    *posts, found, every = call(work, "app", [request("POST", "/notes", {"text": text})
-                                              for text in ("Buy MILK", "call mom", "milkshake")]
-                                + [request("GET", "/notes", query="q=milk"), request("GET", "/notes")])
+    *posts, found, upper, every = call(work, "app", [request("POST", "/notes", {"text": text})
+                                                     for text in ("Buy MILK", "call mom", "milkshake")]
+                                       + [request("GET", "/notes", query="q=milk"),
+                                          request("GET", "/notes", query="q=MILK"), request("GET", "/notes")])
     assert all(status == "ok" and value[0] == 201 for status, value in posts), f"setup POSTs: {posts}"
-    texts = [note.get("text") for note in found[1][1]] if found[0] == "ok" and type(found[1][1]) is list else found
-    expect(["ok", texts], ["Buy MILK", "milkshake"], "q=milk")
+    for result, query in ((found, "q=milk"), (upper, "q=MILK")):
+        texts = ([note.get("text") for note in result[1][1]] if result[0] == "ok" and type(result[1][1]) is list
+                 else result)
+        expect(["ok", texts], ["Buy MILK", "milkshake"], query)
     assert every[0] == "ok" and type(every[1][1]) is list and len(every[1][1]) == 3, f"GET /notes: {every}"
-    word = RANDOM.choice(WORDS)
-    query = RANDOM.choice((str.lower, str.upper))(word[:RANDOM.randint(2, len(word))])
-    ops = [request("POST", "/notes", {"text": phrase()}) for _ in range(RANDOM.randint(3, 6))]
-    agree(work, "app", reference(), ops + [request("GET", "/notes", query=f"q={query}"), request("GET", "/notes")],
-          "random search")
+    notes = [phrase() for _ in range(RANDOM.randint(3, 6))]
+    queries = []
+    for _ in range(4):  # each query is part of a word some note holds, in mixed case
+        word = RANDOM.choice(RANDOM.choice(notes).split())
+        start = RANDOM.randrange(len(word) - 1)
+        queries.append(mixed_case(word[start:start + RANDOM.randint(2, len(word) - start)]))
+    ops = [request("POST", "/notes", {"text": note}) for note in notes]
+    ops += [request("GET", "/notes", query=f"q={query}") for query in queries] + [request("GET", "/notes")]
+    agree(work, "app", reference(), ops, "random search")
 
 
 CHECKS = {"R1": create, "R2": invalid, "R3": search}

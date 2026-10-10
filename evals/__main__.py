@@ -74,6 +74,9 @@ def parser():
 
 def main(argv=None):
     """Parse and dispatch; a bad input prints its reason and exits 2."""
+    for stream in (sys.stdout, sys.stderr):  # reasons quote candidate output: never crash on printing them
+        if hasattr(stream, "reconfigure"):  # a real text stream; captured streams take any text already
+            stream.reconfigure(errors="backslashreplace")
     args = parser().parse_args(argv)
     try:
         return args.handler(args)

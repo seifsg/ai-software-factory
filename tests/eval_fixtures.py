@@ -10,7 +10,7 @@ import unittest
 from unittest.mock import patch
 
 import fake_agent
-from evals import agent
+from evals import agent, catalog, isolation
 
 FAKE = Path(fake_agent.__file__).resolve()
 
@@ -62,3 +62,12 @@ class EvalCase(unittest.TestCase):
         temp = patch.object(tempfile, "tempdir", str(self.scratch))
         temp.start()
         self.addCleanup(temp.stop)
+
+    def scores(self, name, files):
+        """Failing items for sample `name` with `files` laid over its fixture."""
+        sample = catalog.load([name])[0]
+        root = Path(tempfile.mkdtemp(prefix=name, dir=self.tmp))
+        work = catalog.write_fixture(sample, root / "work")
+        for file, text in files.items():
+            (work / file).write_text(text, encoding="utf-8")
+        return catalog.score(sample, catalog.kit(), work, root, isolation.run_env(root))
