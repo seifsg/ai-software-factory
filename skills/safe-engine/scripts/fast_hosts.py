@@ -16,6 +16,7 @@ EDIT_TOOLS = {"Write", "Edit", "MultiEdit", "NotebookEdit", "Delete", "StrReplac
 SHELL_TOOLS = {"Bash", "PowerShell", "Shell", "run_shell_command", "shell", "bash"}
 PATH_KEYS = ("file_path", "notebook_path", "path", "target_file", "filePath", "absolute_path")
 SAME_AS_CLAUDE = ("claude", "codex")
+WAKERS = ("subagent", "workflow")  # Stop input background tasks that end on their own and report back (Claude Code)
 
 
 def read(host, event):
@@ -36,7 +37,14 @@ def read(host, event):
     found = shape(kind, event.get("session_id") or event.get("conversation_id") or event.get("sessionId"),
                   event.get("cwd"), tool, args, bool(event.get("stop_hook_active") or event.get("loop_count")), name)
     found["delegate"] = bool(event.get("agent_id"))  # Claude Code marks hook calls from inside a subagent
+    found["waiting"] = waits(event.get("background_tasks"))  # Claude Code lists in-flight background work at Stop
     return found
+
+
+def waits(tasks):
+    """Whether a background agent still runs: its result starts a new turn, whose stop the gate checks again."""
+    return isinstance(tasks, list) and any(isinstance(task, dict) and task.get("type") in WAKERS
+                                           and task.get("status") in ("running", "pending") for task in tasks)
 
 
 def shape(kind, session, cwd, tool, args, again, name):

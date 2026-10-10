@@ -556,12 +556,15 @@ def unseen_lines(project, run):
 
 
 def stop(event, runs, cwd, session):
-    """Reason to keep working when a run is unfinished; once per stop, never for paused runs."""
+    """Reason to keep working when a run is unfinished; once per stop, never for paused runs or background waits."""
     if event["again"]:
         return None  # one reminder per stop; never trap the session
     for _, _, run in mine(runs, cwd, session):
         if not run.get("paused"):
             step = next_step(run)
+            if event.get("waiting"):  # a background agent's result starts a new turn, whose stop is checked again
+                log("hook.wait_stop", key=run["key"], next=step)
+                return None
             log("hook.block_stop", key=run["key"], next=step)
             return (f"Factory {run['mode']} run '{run['key']}' is not finished. Next: "
                     f"{step or 'close'}. Continue it. Waiting on the owner? `fast_gate.py pause --reason \"...\"`. "

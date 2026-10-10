@@ -83,7 +83,7 @@ flowchart LR
 | | Instructions alone | AI Software Factory |
 |---|---|---|
 | Skipping steps | The agent can skip any step | Code edits are denied until ticket, analysis and plan pass the gate |
-| Stopping early | The agent can stop and say "done" | Stopping mid-run is blocked once, with the next step named |
+| Stopping early | The agent can stop and say "done" | Stopping mid-run is blocked once, with the next step named; waiting on background agents costs no extra turn where the host reports them |
 | Proof | The agent's word | Done-run results and logs; Safe adds QA, tests and independent review |
 | Review | The same agent grades itself | Safe: a different agent reviews from raw evidence |
 | Process size | One size for every task | Fast, Lucky or Safe |
