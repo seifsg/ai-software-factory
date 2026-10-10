@@ -361,9 +361,15 @@ def check_build(run, body, **kwargs):
             if not any(owns(number, line) and all(tag in line for tag in ("pre:", "do:", "post:")) for line in lines)]
 
 
-def check_done_run(run, body, project, **_):
+def scans(run, all_sections):
+    """Scan markers a flagged run sized MVP or production records in its done-run (product-bar.md#security)."""
+    sized = re.match(r"\W*(?:mvp|production)\b", marker(all_sections.get("kickoff", ""), "Size") or "", re.I)
+    return ["Secrets", "Dependencies", "Static"] if run.get("scans") and sized else []
+
+
+def check_done_run(run, body, project, all_sections=None, **_):
     problems = [] if re.search(r"\bPASS\b", body) else ["needs >=1 PASS result"]
-    problems += missing_markers(body, ["Logs"])
+    problems += missing_markers(body, ["Logs", *scans(run, all_sections or {})])
     if run.get("ui"):
         shots = [Path(shot) for shot in re.findall(r"[\w./\\:~-]+\.(?:png|jpe?g|webp|gif)\b", body, re.I)]
         if not any((shot if shot.is_absolute() else Path(project) / shot).is_file() for shot in shots):

@@ -82,13 +82,14 @@ class FastGateTests(unittest.TestCase):
     def start(self, *flags, kind="product"):
         self.gate("start", "--key", "portal-poc", "--kind", kind, "--request", "Build a client portal", *flags)
 
-    def finish_sample(self):
+    def finish_sample(self, text=None, until=None):
+        """Record the sample (or `text`) and pass the steps before `until`, or all of them."""
         record = self.project / ".factory/fast/work-record.md"
-        shutil.copyfile(SAMPLE, record)
+        record.write_text(text or SAMPLE.read_text(encoding="utf-8"), encoding="utf-8")
         shot = self.project / ".factory/fast/shots/schedule.png"
-        shot.parent.mkdir(parents=True)
+        shot.parent.mkdir(parents=True, exist_ok=True)
         shot.write_bytes(b"PNG")
-        for step in STEPS:
+        for step in STEPS[:STEPS.index(until) if until else None]:
             self.gate("done", step, *(["--offline", "sample URLs"] if step in ONLINE else []))
 
     def test_start_records_run_and_enforces_step_order(self):
@@ -130,6 +131,33 @@ class FastGateTests(unittest.TestCase):
         self.gate("close")
         self.assertEqual(list((self.root / "home/active").glob("*.json")), [])
         self.assertIsNone(self.hook({"hook_event_name": "Stop", "stop_hook_active": False}))
+
+    def test_mvp_done_run_needs_the_three_scans_through_the_cli(self):
+        self.start("--auth")
+        markers = ("**Secrets:**", "**Dependencies:**", "**Static:**")
+        full = SAMPLE.read_text(encoding="utf-8").replace("**Size:** POC", "**Size:** MVP")
+        bare = "".join(line for line in full.splitlines(True) if not line.startswith(markers))
+        self.finish_sample(bare, until="done-run")
+        refused = self.gate("done", "done-run", ok=False)
+        for label in markers:
+            self.assertIn(f"needs a '{label}' line", refused)
+        self.finish_sample(full, until="done-run")
+        self.gate("done", "done-run")
+
+    def test_done_run_scans_apply_to_flagged_mvp_and_production_runs_only(self):
+        record = record_module()
+        body, flagged = "- PASS x\n**Logs:** ok\n", {"scans": True}
+        recorded = body + "**Secrets:** s\n**Dependencies:** d\n**Static:** t\n"
+        gaps = [f"needs a '**{label}:**' line" for label in ("Secrets", "Dependencies", "Static")]
+        sized = lambda size: {"kickoff": f"**Size:** {size}\n"}
+        for size in ("MVP", "`MVP` (it can go live)", "Production slice"):
+            with self.subTest(size=size):
+                self.assertEqual(record.check_done_run(flagged, body, ".", all_sections=sized(size)), gaps)
+                self.assertEqual(record.check_done_run(flagged, recorded, ".", all_sections=sized(size)), [])
+        for size in ("POC (from the request)", "none (small feature)", "POC, MVP later"):  # not scanned
+            self.assertEqual(record.check_done_run(flagged, body, ".", all_sections=sized(size)), [])
+        self.assertEqual(record.check_done_run(flagged, body, "."), [])  # a change run has no kickoff
+        self.assertEqual(record.check_done_run({}, body, ".", all_sections=sized("MVP")), [])  # older methods unchanged
 
     def test_offline_needs_unreadable_tickets_and_features_record_a_size(self):
         record = record_module()
@@ -482,12 +510,12 @@ class FastGateTests(unittest.TestCase):
         gate = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(gate)
         layout, lane = Path(gate.LAYOUT), Path(gate.FAST_RUN)
-        for name, texts in (("new", ("### ✅ Definition of done\nEvery criterion has an item.", "## Light lane")),
+        for name, texts in (("new", ("### ✅ Definition of done\nEvery criterion has an item.", "## Light lane\n**Secrets:**")),
                             ("old", ("### ✅ Done when", "## Hooks"))):
             for path, text in zip((layout, lane), texts):
                 (self.root / name / path).parent.mkdir(parents=True, exist_ok=True)
                 (self.root / name / path).write_text(text, encoding="utf-8")
-        on = {"ticket_checks": True, "coverage": True, "light": True}
+        on = {"ticket_checks": True, "coverage": True, "light": True, "scans": True}
         off = dict.fromkeys(on, False)
         self.assertEqual(gate.method_flags({"root": str(self.root / "new")}, self.project), on)
         self.assertEqual(gate.method_flags({"root": str(self.root / "old")}, self.project), off)
@@ -496,7 +524,7 @@ class FastGateTests(unittest.TestCase):
         self.assertEqual(gate.method_flags(None, SCRIPTS.parents[2]), on)  # this checkout's own methods define them
         (self.root / "new" / layout).write_bytes(b"\xff\xfe broken")
         self.assertEqual(gate.method_flags({"root": str(self.root / "new")}, self.project),
-                         {**off, "light": True})
+                         {**off, "light": True, "scans": True})
         lucky = {"mode": "lucky", "kind": "change"}
         self.assertNotIn("done-run", gate.steps_for(lucky))
         self.assertIn("done-run", gate.steps_for({**lucky, "ticket_checks": True}))

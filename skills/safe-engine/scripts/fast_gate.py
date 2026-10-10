@@ -219,6 +219,8 @@ def skeleton(run):
              "<!-- Fill each section, then `fast_gate.py done <step>`. Markers: fast-run.md#work-record -->", "",
              "## Request", "", *quoted, ""]
     hints = {**HINTS, **COVERAGE_HINTS} if run.get("coverage") else HINTS
+    if run.get("scans"):
+        hints = {**hints, "done-run": hints["done-run"] + "; sized MVP or production: Secrets, Dependencies, Static lines"}
     for step in steps_for(run):
         lines += [f"## {TITLES[step]}", "", f"<!-- gate: {hints[step]} -->", ""]
     return "\n".join(lines)
@@ -228,7 +230,7 @@ LAYOUT = ".agents/skills/ticketing/references/ticket-layout.md"
 FAST_RUN = ".agents/skills/safe-engine/references/fast-run.md"
 # run flag -> (method file, phrase): a check applies only when the methods the run reads define it
 FLAGS = {"ticket_checks": (LAYOUT, "Definition of done"), "coverage": (LAYOUT, "Every criterion has"),
-         "light": (FAST_RUN, "Light lane")}
+         "light": (FAST_RUN, "Light lane"), "scans": (FAST_RUN, "**Secrets:**")}
 
 
 def method_flags(bundle, project):
