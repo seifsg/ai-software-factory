@@ -106,7 +106,8 @@ def inspect_bundle(root, expected=None, clean=False, entrypoint="improve-factory
     missing = [name for name in required if not (root / name).is_file() or (root / name).is_symlink()]
     if missing:  # launcher-known files this revision removed and no longer declares: a newer layout, not a broken bundle
         newer = (declared is not None and not set(missing) & declared and not edited(root, contract_name)
-                 and not git("ls-tree", "--name-only", "HEAD", "--", *missing, cwd=root))
+                 and not git("ls-tree", "--name-only", "HEAD", "--", *missing, cwd=root)
+                 and all(git("rev-list", "-1", "HEAD", "--", name, cwd=root) for name in missing))  # once existed
         raise RuntimeError(NEWER.format(", ".join(missing)) if newer else "Incomplete factory bundle: " + ", ".join(missing))
     if any(not (root / name).resolve().is_relative_to(root) for name in required):
         raise RuntimeError("Required factory file resolves outside the bundle")

@@ -191,6 +191,14 @@ class DistributionTests(unittest.TestCase):
         self.git(*commit, 'newer layout drops a launcher-known file', cwd=self.source)
         with self.assertRaisesRegex(RuntimeError, r'newer layout.*docs/hosts\.md.*install --host'):
             resolver.inspect_bundle(self.source)
+        older = self.root / 'older'  # an older bundle whose history never had docs/hosts.md
+        self.git('clone', '-q', str(self.source), str(older), cwd=self.root)
+        self.git('remote', 'set-url', 'origin', self.git('remote', 'get-url', 'origin', cwd=self.source), cwd=older)
+        self.git('checkout', '-q', '--orphan', 'old', cwd=older)
+        self.git('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'old',
+                 cwd=older)
+        with self.assertRaisesRegex(RuntimeError, 'Incomplete factory bundle'):  # never "update" in a loop
+            resolver.inspect_bundle(older)
         (self.source / 'docs/guidance.md').unlink()  # a file the bundle itself declares is really missing
         with self.assertRaisesRegex(RuntimeError, 'Incomplete factory bundle'):
             resolver.inspect_bundle(self.source)
