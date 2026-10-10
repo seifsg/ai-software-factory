@@ -61,6 +61,8 @@ class CardTests(unittest.TestCase):
 
     def test_parsers(self):
         self.assertEqual(progress.titles(self.sections), {"1": "fix footer (A1)", "2": "add link"})
+        tagged = progress.sections('## Plan\n### Todos\n- T1 (light) fix the typo in `greeting`: "Helo" to "Hello" now\n')
+        self.assertEqual(progress.titles(tagged), {"1": 'fix the typo in `greeting`: "Helo" to "Hello"…'})  # at a word
         line = "- T2 pre: a do: b post: see T5"
         self.assertEqual(progress.built_ids(line, strict=True), {"2"})
         self.assertEqual(progress.built_ids(line, strict=False), {"2", "5"})  # older runs: any mention counts

@@ -12,6 +12,7 @@ LEAD = r"\s*(?:\|\s*)?(?:(?:[-*+]|\d+[.)])\s+)?(?:\[[ x]\]\s+)?[*`]*"  # bullet,
 OWN = re.compile(LEAD + r"t(\d+)\b")  # a lowercased line that starts with its todo ID
 TITLE = re.compile(LEAD + r"t(\d+)\b[\s:.)*`|-]*(.*?)[\s|*]*$", re.I)
 MENTION = re.compile(r"\bt(\d+)\b")
+TAG = re.compile(r"^\([^)\n]*\)\s*")  # "(light) fix the typo": the tier or criterion tag before a title
 SHOWN_TICKS = 6  # tick lines per message; the rest are counted
 
 
@@ -60,12 +61,14 @@ def built_ids(build_log, strict):
 
 
 def titles(all_sections):
-    """Todo number -> short title, from the Todos lines that start with the ID."""
+    """Todo number -> short title, from the Todos lines that start with the ID; a leading tag such as the model
+    tier '(light)' is dropped and long titles end at a word."""
     found = {}
     for line in todos(all_sections).splitlines():
         match = TITLE.match(line)
         if match:
-            found.setdefault(match.group(1), match.group(2)[:48].strip())
+            title = TAG.sub("", match.group(2))
+            found.setdefault(match.group(1), title if len(title) <= 48 else title[:48].rsplit(" ", 1)[0] + "…")
     return found
 
 
