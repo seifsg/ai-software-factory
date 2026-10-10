@@ -501,9 +501,9 @@ def mine(runs, cwd, session):
 
 
 def stop(event, runs, cwd, session):
-    """Reason to keep working when a run is unfinished; once per stop, never for paused runs."""
-    if event["again"]:
-        return None  # one reminder per stop; never trap the session
+    """Reason to keep working when a run is unfinished; once per stop, never for paused runs or background waits."""
+    if event["again"] or event["waiting"]:
+        return None  # one reminder per stop, never a trap; a background agent's result starts a turn checked again
     for _, _, run in mine(runs, cwd, session):
         if not run.get("paused"):
             step = next_step(run)

@@ -16,10 +16,11 @@ EDIT_TOOLS = {"Write", "Edit", "MultiEdit", "NotebookEdit", "Delete", "StrReplac
 SHELL_TOOLS = {"Bash", "PowerShell", "Shell", "run_shell_command", "shell", "bash"}
 PATH_KEYS = ("file_path", "notebook_path", "path", "target_file", "filePath", "absolute_path")
 SAME_AS_CLAUDE = ("claude", "codex")
+WAKERS = ("subagent", "workflow")  # Stop input background tasks that end on their own and report back (Claude Code)
 
 
 def read(host, event):
-    """One shape for every host: kind, session, cwd, tool ('edit'/'shell'/None), paths, command, again, name."""
+    """One shape for every host: kind, session, cwd, tool (edit/shell/None), paths, command, again, waiting, name."""
     name = str(event.get("hook_event_name") or event.get("hookEventName") or "")
     if host == "cursor":
         roots = event.get("workspace_roots") or []
@@ -32,8 +33,16 @@ def read(host, event):
     tool = event.get("tool_name") or event.get("toolName") or ""
     args = event.get("tool_input") or event.get("toolArgs") or event.get("args") or {}
     kind = events.get(name) or ("pre_tool" if not name and tool and host not in SAME_AS_CLAUDE else None)
-    return shape(kind, event.get("session_id") or event.get("conversation_id") or event.get("sessionId"),
-                 event.get("cwd"), tool, args, bool(event.get("stop_hook_active") or event.get("loop_count")), name)
+    found = shape(kind, event.get("session_id") or event.get("conversation_id") or event.get("sessionId"),
+                  event.get("cwd"), tool, args, bool(event.get("stop_hook_active") or event.get("loop_count")), name)
+    found["waiting"] = waits(event.get("background_tasks"))
+    return found
+
+
+def waits(tasks):
+    """Whether a background agent still runs: its result starts a new turn, whose stop the gate checks again."""
+    return isinstance(tasks, list) and any(isinstance(task, dict) and task.get("type") in WAKERS
+                                           and task.get("status") in ("running", "pending") for task in tasks)
 
 
 def shape(kind, session, cwd, tool, args, again, name):
@@ -44,7 +53,7 @@ def shape(kind, session, cwd, tool, args, again, name):
             args = {"command": args}
     args = args if isinstance(args, dict) else {}
     found = {"kind": kind, "session": session, "cwd": cwd, "tool": None, "paths": [], "command": None,
-             "again": again, "name": name}
+             "again": again, "waiting": False, "name": name}
     if tool == "apply_patch":  # Codex: file edits arrive as patch text
         patch = args.get("command") or args.get("input") or ""
         patch = "\n".join(map(str, patch)) if isinstance(patch, list) else str(patch)

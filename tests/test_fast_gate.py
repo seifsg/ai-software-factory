@@ -229,6 +229,17 @@ class FastGateTests(unittest.TestCase):
         context = self.hook({"hook_event_name": "UserPromptSubmit", "prompt": "go"})
         self.assertIn("paused: waiting on the owner", context["hookSpecificOutput"]["additionalContext"])
 
+    def test_stop_passes_while_a_background_agent_runs(self):
+        self.start()
+        stop = {"hook_event_name": "Stop", "stop_hook_active": False, "session_crons": []}
+        agent = {"id": "a", "type": "subagent", "status": "running", "agent_type": "general-purpose"}
+        server = {"id": "b", "type": "shell", "status": "running", "command": "npm run dev"}
+        self.assertIsNone(self.hook({**stop, "background_tasks": [server, agent]}))  # its result starts a new turn
+        self.assertEqual(self.hook({**stop, "background_tasks": [server]})["decision"], "block")  # may never end
+        self.assertEqual(self.hook({**stop, "background_tasks": []})["decision"], "block")  # the work ends here
+        log = (self.root / "home/logs/gate.log").read_text(encoding="utf-8")
+        self.assertEqual(log.count('"hook.block_stop"'), 2)
+
     def test_reading_a_project_does_not_bind_a_session(self):
         self.start()
         self.assertEqual(self.pre("Bash", cwd=self.root, session="reader", command=f'ls "{self.project}"'), "allow")

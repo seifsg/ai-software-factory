@@ -73,7 +73,8 @@ python fast_gate.py install --host <host> [--project <abs>]
 `install --host claude|codex|cursor|other` wires the hooks for agents that need it; the factory's `docs/hosts.md` lists each agent's route.
 
 - Source edits, shell writes (`>`, `>>`, `&>`, `>|`, piped `tee`) and scaffold or install commands in the run's project are denied until every step before `build` passes. Quoted text, heredoc bodies and here-strings never count, so ticket bodies pass. `.factory/` stays writable, except `run.json`, which only the gate writes.
-- Stopping mid-run is blocked once with the next step, unless the run is paused or closed.
+- Stopping mid-run is blocked once with the next step; ending the turn again right after passes. A paused or closed run never blocks.
+- A stop while the host reports a background agent still running passes: its result starts a new turn, whose stop is checked. Other background work, such as a server, does not count. Waiting on background work is no reason to `pause`.
 - Each prompt and session start gets one status line: run, next step, pause reason.
 - No active run anywhere: hooks exit at once.
 
