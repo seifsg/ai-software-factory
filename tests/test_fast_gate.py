@@ -82,13 +82,14 @@ class FastGateTests(unittest.TestCase):
     def start(self, *flags, kind="product"):
         self.gate("start", "--key", "portal-poc", "--kind", kind, "--request", "Build a client portal", *flags)
 
-    def finish_sample(self):
+    def finish_sample(self, text=None, until=None):
+        """Record the sample (or `text`) and pass the steps before `until`, or all of them."""
         record = self.project / ".factory/fast/work-record.md"
-        shutil.copyfile(SAMPLE, record)
+        record.write_text(text or SAMPLE.read_text(encoding="utf-8"), encoding="utf-8")
         shot = self.project / ".factory/fast/shots/schedule.png"
-        shot.parent.mkdir(parents=True)
+        shot.parent.mkdir(parents=True, exist_ok=True)
         shot.write_bytes(b"PNG")
-        for step in STEPS:
+        for step in STEPS[:STEPS.index(until) if until else None]:
             self.gate("done", step, *(["--offline", "sample URLs"] if step in ONLINE else []))
 
     def test_start_records_run_and_enforces_step_order(self):
@@ -130,6 +131,105 @@ class FastGateTests(unittest.TestCase):
         self.gate("close")
         self.assertEqual(list((self.root / "home/active").glob("*.json")), [])
         self.assertIsNone(self.hook({"hook_event_name": "Stop", "stop_hook_active": False}))
+
+    def test_mvp_done_run_needs_the_three_scans_through_the_cli(self):
+        self.start("--auth")
+        scans = ("**Secrets:** `gitleaks dir .`: 0 findings\n**Dependencies:** `npm audit`: 0 vulnerabilities\n"
+                 "**Static:** `eslint .`: 0 findings\n")
+        bare = SAMPLE.read_text(encoding="utf-8").replace("**Size:** POC", "**Size:** MVP")
+        self.finish_sample(bare, until="done-run")
+        run = json.loads((self.project / ".factory/fast/run.json").read_text(encoding="utf-8"))
+        self.assertEqual((run["size"][:3], run["size_at"]), ("MVP", "kickoff"))  # frozen when the kickoff passed
+        for label in ("Secrets", "Dependencies", "Static"):
+            self.assertIn(f"needs a '**{label}:**' line (Size MVP, frozen at kickoff)", self.gate("done", "done-run", "--offline", "sample URLs", ok=False))
+        record = self.project / ".factory/fast/work-record.md"
+        record.write_text(bare.replace("**Size:** MVP", "**Size:** POC"), encoding="utf-8")  # edited after the kickoff
+        self.assertIn("'**Secrets:**' line (Size MVP, frozen at kickoff)", self.gate("done", "done-run", "--offline", "sample URLs", ok=False))
+        record.write_text(bare.replace("no errors\n", "no errors\n" + scans, 1), encoding="utf-8")
+        self.gate("done", "done-run", "--offline", "sample URLs")  # sample tickets are not readable
+
+    def test_done_run_scans_apply_to_flagged_mvp_and_production_runs_only(self):
+        record = record_module()
+        body, flagged = "- PASS x\n**Logs:** ok\n", {"scans": True}
+        recorded = body + "**Secrets:** s scan\n**Dependencies:** d audit\n**Static:** t lint\n"
+        needs = lambda cause: [f"needs a '**{label}:**' line ({cause})" for label in ("Secrets", "Dependencies", "Static")]
+        sized = lambda size: {"kickoff": f"**Size:** {size}\n"}
+        for size, word in (("MVP", "MVP"), ("`MVP` (it can go live)", "MVP"), ("Production slice", "PRODUCTION"),
+                           ("POC→MVP", "MVP"), ("POC -> MVP (upgrade)", "MVP"), ("POC, production later", "PRODUCTION")):
+            with self.subTest(size=size):  # a second size anywhere fails closed, and the refusal says why
+                self.assertEqual(record.check_done_run(flagged, body, ".", all_sections=sized(size)),
+                                 needs(f"Size {word}, in the record"))
+                self.assertEqual(record.check_done_run(flagged, recorded, ".", all_sections=sized(size)), [])
+        for size in ("POC (from the request)", "POC"):  # not scanned
+            self.assertEqual(record.check_done_run(flagged, body, ".", all_sections=sized(size)), [])
+        feature = {**flagged, "kind": "feature"}
+        self.assertEqual(record.check_done_run(feature, body, ".", all_sections=sized("none (small feature)")), [])
+        self.assertEqual(record.check_done_run(flagged, body, "."), [])  # a change run has no kickoff
+        self.assertEqual(record.check_done_run({}, body, ".", all_sections=sized("MVP")), [])  # older methods unchanged
+        lucky, in_tickets = {"scans": True, "mode": "lucky", "kind": "product"}, lambda size: {"tickets": f"**Size:** {size}\n"}
+        self.assertEqual(record.check_done_run(lucky, body, ".", all_sections=in_tickets("MVP")),
+                         needs("Size MVP, in the record"))  # no kickoff in Lucky
+        self.assertEqual(record.check_done_run(lucky, recorded, ".", all_sections=in_tickets("MVP")), [])
+        self.assertEqual(record.check_done_run(lucky, body, ".", all_sections=in_tickets("POC")), [])
+
+    def test_the_size_frozen_in_the_ledger_outlives_the_record_line(self):
+        record = record_module()
+        body = "- PASS x\n**Logs:** ok\n"
+        needs = lambda cause: [f"needs a '**{label}:**' line ({cause})" for label in ("Secrets", "Dependencies", "Static")]
+        for step in ("kickoff", "tickets", None):  # the refusal names where the size was frozen
+            frozen = {"scans": True, "size": "MVP", **({"size_at": step} if step else {})}
+            cause = f"Size MVP, frozen at {step}" if step else "Size MVP, frozen in the ledger"
+            for edited in ({}, {"kickoff": "**Size:** POC\n"}, {"tickets": "**Backlog:** x\n"}):  # deleted or edited later
+                self.assertEqual(record.check_done_run(frozen, body, ".", all_sections=edited), needs(cause))
+        self.assertEqual(record.check_done_run({"scans": True, "size": "POC"}, body, ".", all_sections={}), [])
+        self.assertEqual(record.check_done_run({"size": "MVP"}, body, ".", all_sections={}), [])  # older runs unchanged
+
+    def test_scan_markers_name_a_real_result(self):
+        record = record_module()
+        run, sections = {"scans": True}, {"kickoff": "**Size:** MVP\n"}
+        ok = "**Dependencies:** npm audit: 0 vulnerabilities\n**Static:** eslint .: 0 findings\n"
+        for value in ("skipped", "Skipped: no network", "n/a", "N/A", "na", "none", "todo", "TBD", "-", "**-**"):
+            with self.subTest(value=value):
+                problems = record.check_done_run(run, f"- PASS x\n**Logs:** ok\n**Secrets:** {value}\n{ok}", ".", all_sections=sections)
+                self.assertEqual(len(problems), 1)
+                self.assertIn("'**Secrets:**' needs the tool, the command and the result", problems[0])
+        real = "none found by gitleaks (`gitleaks dir .`)"  # a result that starts with a placeholder word is still a result
+        self.assertEqual(record.check_done_run(run, f"- PASS x\n**Logs:** ok\n**Secrets:** {real}\n{ok}", ".", all_sections=sections), [])
+
+    def test_flagged_runs_refuse_a_size_the_scans_cannot_read(self):
+        record = record_module()
+        flagged, older, body = {"scans": True, "kind": "product"}, {"kind": "product"}, "- PASS x\n**Logs:** ok\n"
+        kickoff = "**Features:** a\n**Approach:** b\n**Answered by:** o\n**Stack:** s\n**Size:** {}\n"
+        for size in ("An MVP (launch)", "small MVP", "Minimum viable product", "Prod slice", "production-ready POC",
+                     "none (small feature)"):  # none (<why>) is a feature size
+            with self.subTest(size=size):
+                refused = record.check_kickoff(flagged, kickoff.format(size))
+                self.assertIn("Size must start with POC, MVP, production, not", refused[0])
+                done = record.check_done_run(flagged, body, ".", all_sections={"kickoff": kickoff.format(size)})
+                self.assertTrue(any("Size must start with" in problem for problem in done))
+                self.assertEqual(record.check_kickoff(older, kickoff.format(size)), [])  # older methods unchanged
+        for size in ("POC", "MVP (launch)", "`Production` slice", "**MVP**"):
+            self.assertEqual(record.check_kickoff(flagged, kickoff.format(size)), [], size)
+        small = {"scans": True, "kind": "feature"}
+        self.assertEqual(record.check_kickoff(small, kickoff.format("none (small feature)")), [])
+        self.assertIn("or 'none (<why>)'", record.check_kickoff(small, kickoff.format("tiny"))[0])
+        prose = "The **Size:** question was open.\n" + kickoff.format("MVP")  # the first value is the one parsed
+        self.assertIn("Size must start with", record.check_kickoff(flagged, prose)[0])
+
+    def test_lucky_runs_record_their_size_in_tickets(self):
+        record = record_module()
+        tickets = ("**Epic:** https://github.com/acme/portal/issues/1\n**Backlog:** x\n"
+                   "**Sub-issue:** https://github.com/acme/portal/issues/2\n")
+        check = lambda run, extra="": record.check_tickets(run, tickets + extra, offline="no network")
+        lucky = {"scans": True, "mode": "lucky", "kind": "product"}
+        self.assertEqual(check(lucky), ["needs a '**Size:**' line"])
+        self.assertIn("Size must start with", check(lucky, "**Size:** small MVP\n")[0])
+        self.assertIn("Size must start with", check(lucky, "**Size:** none (small)\n")[0])  # a product needs a real size
+        for size in ("MVP", "POC (default)"):
+            self.assertEqual(check(lucky, f"**Size:** {size}\n"), [])
+        self.assertEqual(check({**lucky, "kind": "feature"}, "**Size:** none (small feature)\n"), [])
+        self.assertEqual(check({**lucky, "scans": False}), [])  # older methods unchanged
+        self.assertEqual(check({**lucky, "mode": "fast"}), [])  # Fast runs size at the kickoff
 
     def test_offline_needs_unreadable_tickets_and_features_record_a_size(self):
         record = record_module()
@@ -539,12 +639,12 @@ class FastGateTests(unittest.TestCase):
         spec.loader.exec_module(gate)
         layout, lane = Path(gate.LAYOUT), Path(gate.FAST_RUN)
         for name, texts in (("new", ("### ✅ Definition of done\nEvery criterion has an item.",
-                                     "## Light lane\nT1 <title> → <what the owner can do once it is done>\n**Hidden checks:**")),
+                                     "## Light lane\nT1 <title> → <what the owner can do once it is done>\n**Hidden checks:**\n**Secrets:**")),
                             ("old", ("### ✅ Done when", "## Hooks"))):
             for path, text in zip((layout, lane), texts):
                 (self.root / name / path).parent.mkdir(parents=True, exist_ok=True)
                 (self.root / name / path).write_text(text, encoding="utf-8")
-        on = {"ticket_checks": True, "coverage": True, "light": True, "outcomes": True, "hidden_checks": True}
+        on = {"ticket_checks": True, "coverage": True, "light": True, "outcomes": True, "hidden_checks": True, "scans": True}
         off = dict.fromkeys(on, False)
         self.assertEqual(gate.method_flags({"root": str(self.root / "new")}, self.project), on)
         self.assertEqual(gate.method_flags({"root": str(self.root / "old")}, self.project), off)
@@ -553,7 +653,7 @@ class FastGateTests(unittest.TestCase):
         self.assertEqual(gate.method_flags(None, SCRIPTS.parents[2]), on)  # this checkout's own methods define them
         (self.root / "new" / layout).write_bytes(b"\xff\xfe broken")
         self.assertEqual(gate.method_flags({"root": str(self.root / "new")}, self.project),
-                         {**off, "light": True, "outcomes": True, "hidden_checks": True})  # fast-run.md still reads
+                         {**off, "light": True, "outcomes": True, "hidden_checks": True, "scans": True})  # fast-run.md still reads
         lucky = {"mode": "lucky", "kind": "change"}
         self.assertNotIn("done-run", gate.steps_for(lucky))
         self.assertIn("done-run", gate.steps_for({**lucky, "ticket_checks": True}))

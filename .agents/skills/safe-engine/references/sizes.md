@@ -1,6 +1,6 @@
 # Sizes
 
-Size sets how far each requested item is built, never which requested items ship. It applies to new products and big features. Inside an existing product, every size keeps that product's protections and behavior, and new paths get the same protections. Ask it at kickoff when the request leaves it open. A Lucky product run without a size: POC. A Lucky MVP request gets the launch baseline with product-bar defaults and no suggestion rounds; the suggestions it would have asked go to the epic's follow-ups ticket.
+Size sets how far each requested item is built, never which requested items ship. It applies to new products and big features. Inside an existing product, every size keeps that product's protections and behavior, and new paths get the same protections. Ask it at kickoff when the request leaves it open. A Lucky product run without a size records `**Size:** POC`. A Lucky MVP request gets the launch baseline with product-bar defaults and no suggestion rounds; the suggestions it would have asked go to the epic's follow-ups ticket.
 
 ## Requested scope
 
@@ -27,6 +27,7 @@ The owner wants to see the requested features work. Build each one minimally: no
 
 - Minimal backend: the smallest real service and storage that run the requested behavior end to end (one local process, a file or an embedded database). It stays structured so the MVP can grow it.
 - No sign-in layer. Requested roles switch through a development-only role switcher. A requested role rule is built as asked, checked on the server; it does not pull in the rest of the security bar.
+- No done-run scans (secrets, dependencies, static analysis).
 - Local only. Any shared preview counts as exposure: the security bar applies in full before it.
 - An owner-approved simplification of a requested item (a mock checkout) follows the requested-scope rule above, follow-ups ticket entry included, and stays labeled in the interface.
 - List the skipped parts once in the epic's guardrails as "POC skips". An MVP run turns that list into tickets. No follow-up ticket per skip.
@@ -37,7 +38,7 @@ The owner wants to publish it and test it with real users. Fill every gap a laun
 
 - Launch baseline, part of the MVP size, built without asking:
   - real sign-in and enforced roles when anyone signs in or roles exist;
-  - the security bar in full;
+  - the security bar in full, with the three done-run scans (secrets, dependencies, static analysis);
   - landing page and SEO for public products;
   - privacy and terms pages when it collects personal data;
   - the legal and platform duties of what it does (for example consent and one-click unsubscribe for marketing email);

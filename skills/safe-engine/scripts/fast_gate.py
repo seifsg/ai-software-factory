@@ -249,6 +249,10 @@ def skeleton(run):
              "<!-- Fill each section, then `fast_gate.py done <step>`. Markers: fast-run.md#work-record -->", "",
              "## Request", "", *quoted, ""]
     hints = {**HINTS, **COVERAGE_HINTS} if run.get("coverage") else dict(HINTS)
+    if run.get("scans"):  # Size starts with POC, MVP, production or none (<why>); Lucky has no kickoff to hold it
+        if run["mode"] == "lucky" and run["kind"] != "change":
+            hints["tickets"] += "; Lucky product/feature runs: a Size line"
+        hints["done-run"] += "; sized MVP or production: Secrets, Dependencies, Static lines"
     if sibling("fast_record").hidden(run):
         hints["done-run"] += "; a Hidden checks block: '#<n> <ID>: PASS' per criterion of every listed ticket"
     for step in steps_for(run):
@@ -261,7 +265,8 @@ FAST_RUN = ".agents/skills/safe-engine/references/fast-run.md"
 # run flag -> (method file, phrase): a check applies only when the methods the run reads define it
 FLAGS = {"ticket_checks": (LAYOUT, "Definition of done"), "coverage": (LAYOUT, "Every criterion has"),
          "light": (FAST_RUN, "Light lane"), "outcomes": (FAST_RUN, "what the owner can do once it is done"),
-         "hidden_checks": (FAST_RUN, "**Hidden checks:**")}
+         "hidden_checks": (FAST_RUN, "**Hidden checks:**"),
+         "scans": (FAST_RUN, "**Secrets:**")}
 
 
 def method_flags(bundle, project):
@@ -388,6 +393,8 @@ def cmd_done(args):
         log("step.refused", key=run["key"], step=step, problems=problems)
         fail(f"'{step}' not recorded:\n- " + "\n- ".join(problems))
     run["done"][step] = {"at": now(), **({"unverified": args.offline} if args.offline else {})}
+    if step in ("kickoff", "tickets") and record.run_size(all_sections) and "size" not in run:
+        run.update(size=record.run_size(all_sections), size_at=step)  # frozen: editing the line later skips nothing
     if step == "tickets":  # later ticket checks keep reading these even if the record drops one
         epic, subs = record.ticket_urls(body)
         run["tickets"] = list(dict.fromkeys(run.get("tickets", []) + epic + subs))
