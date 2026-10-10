@@ -1,4 +1,5 @@
 """Fast gate: real CLI and hook calls against disposable projects (fast-run.md#the-gate)."""
+import base64
 import importlib.util
 import json
 import os
@@ -36,11 +37,12 @@ LIGHT = """# copy-fix
 """
 
 
-def record_module():
-    spec = importlib.util.spec_from_file_location("fast_record", SCRIPTS / "fast_record.py")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+def module(name):
+    """A gate script loaded in-process."""
+    spec = importlib.util.spec_from_file_location(name, SCRIPTS / f"{name}.py")
+    loaded = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(loaded)
+    return loaded
 
 
 class FastGateTests(unittest.TestCase):
@@ -132,7 +134,7 @@ class FastGateTests(unittest.TestCase):
         self.assertIsNone(self.hook({"hook_event_name": "Stop", "stop_hook_active": False}))
 
     def test_offline_needs_unreadable_tickets_and_features_record_a_size(self):
-        record = record_module()
+        record = module("fast_record")
         url = "https://github.com/acme/portal/issues/2"
         sections = {"tickets": f"**Ticket:** {url}\n**Backlog:** none\n"}
         on, older = {"coverage": True, "ticket_checks": True, "kind": "change"}, {"ticket_checks": True, "kind": "change"}
@@ -151,7 +153,7 @@ class FastGateTests(unittest.TestCase):
         self.assertEqual(record.check_kickoff({"kind": "feature"}, kickoff), [])  # older methods unchanged
 
     def test_empty_markers_and_borrowed_build_lines_are_refused(self):
-        record = record_module()
+        record = module("fast_record")
         self.assertIsNone(record.marker("**Backlog:**\n**Sub-issue:** https://x/2\n", "Backlog"))  # no borrowing
         self.assertEqual(record.marker("**Backlog:**\nsearched x: none\n", "Backlog"), "searched x: none")
         self.assertEqual(record.marker("**Backlog:** none\n**Sub-issue:** u\n", "Backlog"), "none")
@@ -217,36 +219,60 @@ class FastGateTests(unittest.TestCase):
             with self.subTest(command=command):
                 self.assertEqual(self.pre("Bash", command=command), decision)
 
-    def test_destructive_commands_go_to_the_owner_in_every_step(self):
-        cases = {
-            "rm -rf ~": "deny", "rm -rf /": "deny", "rm -r ..": "deny", f'rm -rf "{self.root}"': "deny",
-            "rm -rf $HOME/x": "deny", "Remove-Item -Recurse -Force ..\\other": "deny", "rd /s /q ..": "deny",
-            "rm -rf dist node_modules": "allow", "Remove-Item -Recurse dist": "allow", "rm -f ../x.txt": "allow",
-            "git push --force": "deny", "git push -f origin x": "deny", "git push origin +x": "deny",
-            "git push --force-with-lease origin main": "deny", "git push": "allow",
-            "git push --force-with-lease origin feature": "allow",
-            'psql -c "DROP TABLE users"': "deny", "mysql app -e 'truncate orders'": "deny",
-            "sqlite3 app.db <<'EOF'\ndrop table x;\nEOF": "deny", 'mongosh --eval "db.users.drop()"': "deny",
-            'grep "DROP TABLE" schema.sql': "allow", "echo truncate": "allow", 'gh issue create --body "psql DROP x"': "allow",
-            "RAILS_ENV=production rails db:migrate": "deny", "npx prisma migrate deploy --env production": "deny",
-            "RAILS_ENV=test rails db:migrate": "allow", "npm run migrate -- --env local": "allow",
-            'rm -rf "unclosed': "allow", "rm -rf ../a\x00b": "allow",  # unparsable: fails open
-        }
-        for command in ("rm -rf ~", "git push --force", 'psql -c "DROP TABLE users"'):  # no run: unchanged
-            self.assertEqual(self.pre("Bash", command=command), "allow")
+    def test_destructive_rules_decide_every_probe(self):
+        gate = module("fast_gate")
+        (self.project / "drop.sql").write_text("DROP TABLE users;", encoding="utf-8")
+        (self.project / "safe.sql").write_text("select 1;", encoding="utf-8")
+        encoded = base64.b64encode("Remove-Item -Recurse C:\\x".encode("utf-16-le")).decode()
+        deny = (
+            "rm -rf ~", "rm -rf /", "rm -r ..", f'rm -rf "{self.root}"', "rm -rf $HOME/x", "rd /s /q ..",
+            "Remove-Item -Recurse -Force ..\\other", "rm -rf .", "rm -rf *", "rm -rf ./*", "rm -rfvi ..",
+            "Remove-Item -Recurse:$true ..\\x", "find .. -delete", "find / -name x -exec rm {} +",
+            "cd .. && rm -rf proj2", "cd /; rm -rf Users", "pushd .. && rm -rf x", "sl ..; rm -r x",
+            "Set-Location ..; Remove-Item -Recurse x", "chdir .. && rm -rf x", "cd $UNSET_DIR_73 && rm -rf dist",
+            "popd; rm -rf dist", "cd - && rm -rf dist", 'bash -c "rm -rf ~"', "sh -c 'rm -rf /'", 'eval "rm -rf ~"',
+            "cmd /c rd /s /q C:\\Users", 'pwsh -Command "Remove-Item -Recurse -Force C:\\x"',
+            'powershell -c "Remove-Item -Recurse C:\\x"', f"pwsh -EncodedCommand {encoded}", "pwsh -enc !!x",
+            "timeout 10 rm -rf /", "time rm -rf /", "nice -n 5 rm -rf /", "doas rm -rf /", "sudo -u root rm -rf /",
+            "env -i rm -rf /", 'bash -c "git push -f"', "git push --force", "git push -f origin x",
+            "git push origin +x", "git push --force-with-lease origin main", "git push --force-with-lease",
+            "git push --force-with-lease origin HEAD", "git push --mirror", "git push origin :main",
+            "git push origin --delete main", 'psql -c "DROP TABLE users"', "mysql app -e 'truncate orders'",
+            "sqlite3 app.db <<'EOF'\ndrop table x;\nEOF", 'mongosh --eval "db.users.drop()"', 'echo "DROP TABLE x"|psql',
+            'psql<<<"DROP TABLE x"', "psql < drop.sql", "dropdb app", "rails db:drop", "npx prisma migrate reset",
+            "npx prisma migrate reset --force", "RAILS_ENV=production rails db:migrate", "MIX_ENV=prod mix ecto.migrate",
+            "npx prisma migrate deploy --env production", "flask db upgrade --env production",
+            "DATABASE_URL=$PROD_DATABASE_URL npx prisma migrate deploy", "rake db:schema:load RAILS_ENV=production",
+        )
+        allow = (
+            "rm -rf dist node_modules", "Remove-Item -Recurse dist", "rm -f ../x.txt", "rm -rf dist 2> /dev/null",
+            "rm -rf dist > /tmp/log.txt", "rm -rf $PWD/dist", "rm -rf ${PWD}/dist", "rm -rf src/*", "rm -r -Force dist",
+            "Remove-Item -Recurse:$false ..\\x", "find . -name '*.pyc' -delete", "cd src && rm -rf build",
+            f'cd .. && cd "{self.project.name}" && rm -rf dist', 'bash -c "rm -rf dist"', "pwsh -File build.ps1",
+            "git push", "git push origin feature", "git push --force-with-lease origin feature",
+            "git push --force-with-lease origin HEAD:feature", "git push origin --delete feature",
+            'grep "DROP TABLE" schema.sql', "echo truncate", 'gh issue create --body "psql DROP x"',
+            'psql -c "select 1"; echo "we will drop the cache later"', "psql < safe.sql", "psql < missing.sql",
+            "RAILS_ENV=test rails db:migrate", "npm run migrate -- --env local", "grep -rn migrate src/ | grep prod",
+            "MIX_ENV=test mix ecto.migrate", 'rm -rf "unclosed', "rm -rf ../a\x00b",  # unparsable: fails open
+        )
+        root = gate.norm(str(self.project))
+        for command in deny + allow:
+            with self.subTest(command=command):
+                self.assertEqual(bool(gate.destructive(command, root, root)), command in deny)
+        other = self.root / "proj2"  # the cwd's own run judges, not the session's bound run
+        runs = [(None, {"sessions": ["s1"]}, {"project": str(self.project)}), (None, {}, {"project": str(other)})]
+        self.assertIsNone(gate.guard("rm -rf dist", runs, gate.norm(str(other)), "s1"))
+
+    def test_destructive_denial_reaches_the_owner_in_every_step(self):
+        self.assertEqual(self.pre("Bash", command="rm -rf ~"), "allow")  # no run: unchanged
         self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "fix the footer copy")
         out = self.hook({"hook_event_name": "PreToolUse", "tool_name": "Bash", "tool_input": {"command": "rm -rf ~"}})
         reason = out["hookSpecificOutput"]["permissionDecisionReason"]  # gate closed: owner advice, not steps
-        self.assertIn("recursive delete outside the project (~)", reason)
-        self.assertIn("ask the owner to run it", reason)
-        (self.project / ".factory/fast/work-record.md").write_text(LIGHT, encoding="utf-8")
-        for step in ("tickets", "plan"):
-            self.gate("done", step)
-        for command, decision in cases.items():
-            with self.subTest(command=command):
-                self.assertEqual(self.pre("Bash", command=command), decision)
-        log = (self.root / "home/logs/gate.log").read_text(encoding="utf-8")
-        self.assertEqual(log.count('"hook.deny"'), 1 + list(cases.values()).count("deny"))
+        self.assertIn("recursive delete outside the project (~). Destructive commands are the owner's", reason)
+        self.assertNotIn("Record these steps", reason)
+        self.assertEqual(self.pre("Bash", command="git push"), "allow")
+        self.assertEqual((self.root / "home/logs/gate.log").read_text(encoding="utf-8").count('"hook.deny"'), 1)
 
     def test_stop_blocks_once_and_respects_pause(self):
         self.start()
@@ -332,7 +358,7 @@ class FastGateTests(unittest.TestCase):
         self.assertIn("Next: close", self.gate("status"))
 
     def test_ticket_links_are_checked_against_the_epic(self):
-        record = record_module()
+        record = module("fast_record")
         epic = "https://github.com/acme/portal/issues/1"
         linked = "https://github.com/acme/portal/issues/2\n"
         with patch.object(record, "gh", side_effect=["1", linked]):
@@ -342,7 +368,7 @@ class FastGateTests(unittest.TestCase):
         self.assertIn("--offline", record.verify_tickets("https://tracker.example/1", [])[0])
 
     def test_tickets_need_a_definition_checklist_and_ticks(self):
-        record = record_module()
+        record = module("fast_record")
         url = "https://github.com/acme/portal/issues/2"
 
         def issue(body, state="OPEN", labels=("status: in progress",), board=None, reason=None):
@@ -416,7 +442,7 @@ class FastGateTests(unittest.TestCase):
             self.assertIn("Definition of done", problems[0])
 
     def test_coverage_names_every_requested_item_and_criterion(self):
-        record = record_module()
+        record = module("fast_record")
         epic, url = "https://github.com/acme/portal/issues/1", "https://github.com/acme/portal/issues/2"
 
         def issue(body, labels=("status: in progress",)):

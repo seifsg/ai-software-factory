@@ -466,25 +466,63 @@ def deny_reason(run, what, advice=None):
     return f"Factory {run['mode']} run '{run['key']}' blocks {what}.{advice or steps}"
 
 
-def stray(target, cwd, root):
-    """True when a delete target is not strictly inside root; unresolved variables count as outside."""
-    path = os.path.expandvars(os.path.expanduser(re.sub(r"(?i)\$env:", "$", target)))
+def resolve(target, here):
+    """Comparable path of target seen from the tracked directory here; None when a variable or here is unknown."""
+    path = re.sub(r"(?i)\$env:", "$", target)
+    path = re.sub(r"\$(?:\{PWD\}|PWD\b)", lambda _: here or "$?", path)  # $PWD is the tracked directory
+    path = os.path.expandvars(os.path.expanduser(path))
+    if "$" in path or (here is None and not os.path.isabs(native(path))):
+        return None
+    return norm(path, here)
+
+
+def stray(target, here, root, strict):
+    """True when a delete target leaves root (strict: or is root, or root/*); unresolved targets count as outside."""
+    head, tail = os.path.split(target)
+    target = (head or ".") if strict and tail in ("*", ".*") else target
     try:
-        full = norm(path, cwd)
+        full = resolve(target, here)
     except (OSError, ValueError):
         return False  # unparsable path: fail open
-    return "$" in path or full == root or not inside(full, root)
+    return full is None or (strict and full == root) or not inside(full, root)
+
+
+def moved(target, here):
+    """Tracked directory after a cd to target ('' unknown); None once unknown."""
+    try:
+        return resolve(target, here) if target else None
+    except (OSError, ValueError):
+        return None
+
+
+def peek(name, here):
+    """Text of a `< file` input (first 1 MB); empty when unknown or unreadable."""
+    try:
+        with open(resolve(name, here), encoding="utf-8", errors="replace") as source:
+            return source.read(1_000_000)
+    except (OSError, TypeError, ValueError):
+        return ""
+
+
+def destructive(command, root, cwd):
+    """Destructive rule the command breaks for a run rooted at root, or None. Follows cd through the chain."""
+    shell, here = sibling("fast_shell"), cwd
+    for pipeline in shell.pipelines(command):
+        rule = shell.danger(pipeline, lambda name: peek(name, here))
+        for cmd in pipeline:
+            target = shell.cd_target(cmd.words)
+            here = here if target is None else moved(target, here)
+            rule = rule or next((f"recursive delete outside the project ({path})" for path, strict
+                                 in shell.deletes(cmd.words) if stray(path, here, root, strict)), None)
+        if rule:
+            return rule
+    return None
 
 
 def guard(command, runs, cwd, session):
-    """Deny reason for a destructive command in any step of this session's run, or None."""
-    item = (mine(runs, cwd, session) or [None])[0] or mentioned(runs, command)
-    if not item:
-        return None
-    shell = sibling("fast_shell")
-    root = norm(item[2]["project"])
-    rule = shell.danger(command) or next((f"recursive delete outside the project ({target})"
-                                          for target in shell.deletes(command) if stray(target, cwd, root)), None)
+    """Deny reason for a destructive command in any step of the run owning cwd, else this session's or the named one."""
+    item = owner(runs, cwd) or next(iter(mine(runs, cwd, session)), None) or mentioned(runs, command)
+    rule = item and destructive(command, norm(item[2]["project"]), cwd)
     return rule and deny_reason(item[2], rule, " Destructive commands are the owner's: ask the owner to run it, "
                                                "or to approve another approach.")
 
