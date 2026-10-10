@@ -368,7 +368,18 @@ def check_done_run(run, body, project, **_):
         shots = [Path(shot) for shot in re.findall(r"[\w./\\:~-]+\.(?:png|jpe?g|webp|gif)\b", body, re.I)]
         if not any((shot if shot.is_absolute() else Path(project) / shot).is_file() for shot in shots):
             problems.append("needs >=1 existing screenshot path")
-    return problems
+    return problems + hidden_checks(run, body)
+
+
+def hidden_checks(run, body):
+    """Product and feature runs on current methods: the checker's results decide each criterion."""
+    if not run.get("hidden_checks") or run.get("kind") == "change":
+        return []
+    line = marker(body, "Hidden checks") or ""
+    if re.search(r"\bFAIL\b", line):
+        return ["hidden checks FAIL: back to build, then the checker runs them again"]
+    return [] if re.search(r"\bPASS\b", line) else [
+        "needs one '**Hidden checks:**' line from the checker: every criterion ID with PASS or FAIL"]
 
 
 def check_handoff(run, body, **kwargs):

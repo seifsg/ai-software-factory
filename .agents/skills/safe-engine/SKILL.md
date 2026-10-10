@@ -42,7 +42,7 @@ No mode named: **Fast**.
 | Design, schema briefs | ✅ | ❌ product bar defaults | ✅ |
 | 0–4 loop | every checklist item, ticked after its check | same | same |
 | Enforcement | gate + hooks | gate + hooks | controller |
-| Checks | item checks, done-run | item checks, done-run | item checks, manual QA, tests, verify, independent review |
+| Checks | item checks, hidden checks, done-run | item checks, hidden checks, done-run | item checks, manual QA, tests, verify, independent review |
 
 Every mode meets the [product bar](references/product-bar.md) for its [size](references/sizes.md), keeps project rules and never puts secrets in code or Git.
 
@@ -62,6 +62,7 @@ Record every step in one work record and pass the gate: [fast-run](references/fa
 2. **Research** (product, feature): run `research-market` kickoff research.
 3. **Kickoff** (product, feature): the kickoff questions for its size. Pause the gate while waiting.
 4. **Tickets:** run `ticketing`: read the backlog, then epic(s) + 1 or many outcome sub-issues in To do, each with a definition of done; a `change` updates the ticket it follows up, opens a new one only for a new outcome, or keeps none when trivial (`**Ticket:** none (<why>)`).
+   - Product, feature: then start the checker, a fresh agent that will not build. From the tickets alone it writes runnable checks for every criterion ID under `.factory/fast/checks/`, while you analyze and plan. Build waits for them. The builder never opens them. Only the checker changes a check, and records why in the Done-run.
 5. **Analysis** (product, feature): run `analyze-start` in full. No code yet: analyze the requirements, platform and intended consumers, and say so.
 6. **Plan:** run `get-ready-to-code`: five outputs, todos `T1..Tn` written into each ticket's checklist, logging map, efficiency budget. This request authorizes continuing through its file-summary stop.
    - Light lane (`change`): a light plan, no analysis step ([fast-run](references/fast-run.md#light-lane)). The 0–4 loop, done-run and handoff stay.
@@ -69,6 +70,7 @@ Record every step in one work record and pass the gate: [fast-run](references/fa
 8. **Schema** (persistence): Only if needed, we run `database-schema`.
 9. **Build:** every checklist item through the 0–4 loop, an unproven capability first as a spike; tick each in its ticket after its check; one log line per todo: `T3 pre: … do: … post: …`. Automated tests come last: an MVP or production slice writes them as its last checklist items, once the other items work; a POC waits for `verify` or Safe.
 10. **Done-run:** prove each ticket's definition of done. Start it once, use every requested journey and the most likely failure through real controls (simulated input proves no requested integration), read the logs, fix blockers. Screenshots for UI. No browser: drive its HTTP or CLI interface and say so.
+    - Product, feature: a fresh checker runs the checks against the build. Record one `**Hidden checks:**` line: every criterion ID with PASS or FAIL. Any FAIL goes back to build, then the checks run again.
 11. **Handoff:** open the draft PR (`how-to-make-a-pr`), then report how to run, dev sign-in, each requested item (delivered, open in a later iteration, blocked with reason, or owner-deferred), verified, unverified, the follow-ups ticket, each owned ticket's final status (Ready for QA with its PR, Blocked, or Backlog when owner-deferred); `close`. Any requested item not delivered or owner-deferred: the overall outcome is unfinished.
 
 Lucky runs 1, 4, a short 5 and 6 (light lane for a `change`), 9, 10 and 11. It asks nothing, researches nothing and takes product bar defaults for design and schema without comparisons. Its checklist loop and checks match Fast.

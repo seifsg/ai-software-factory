@@ -151,6 +151,7 @@ indexes: classes(starts_at), bookings(class_id, status), waitlist(class_id, posi
 - PASS staff publishes a class and checks the booked member in
 - FAIL then fixed: booking button stayed active during the request; disabled while pending
 - Screenshot: .factory/fast/shots/schedule.png (DEV badge and "Sample data" tags visible)
+**Hidden checks:** #2 A1 PASS, A2 PASS; #3 A1 PASS, A2 PASS; #4 A1 PASS, A2 PASS; #5 A1 PASS, A2 PASS (checker's .factory/fast/checks/, written after tickets, run after build)
 **Logs:** logs/app.log shows request IDs for booking, waitlist promotion and check-in; no errors
 
 ## Handoff

@@ -278,6 +278,27 @@ class FastGateTests(unittest.TestCase):
         posix = "/" + str(self.project)[0].lower() + str(self.project)[2:].replace("\\", "/")
         self.assertIn("Next: research", self.gate("status", project=posix))
 
+    def test_hidden_checks_decide_product_and_feature_done_runs(self):
+        record, done = record_module(), "- PASS booked\n**Logs:** clean\n"
+        on = {"kind": "feature", "hidden_checks": True}
+        check = lambda run, text: " ".join(record.check_done_run(run, text, project=str(self.project)))
+        self.assertIn("'**Hidden checks:**' line", check(on, done))
+        self.assertIn("FAIL: back to build", check(on, done + "**Hidden checks:** A1 PASS, A2 FAIL\n"))
+        self.assertEqual(check(on, done + "**Hidden checks:**\nA1 PASS, A2 PASS\n"), "")
+        for run in ({**on, "kind": "change"}, {"kind": "product"}):  # change runs and older methods: old rule
+            self.assertEqual(check(run, done), "")
+        self.start("--no-ui")
+        text = SAMPLE.read_text(encoding="utf-8")
+        record_file = self.project / ".factory/fast/work-record.md"
+        self.assertIn("Hidden checks line", record_file.read_text(encoding="utf-8"))
+        line = next(line for line in text.splitlines() if line.startswith("**Hidden checks:**"))
+        record_file.write_text(text.replace(line, "**Hidden checks:** #2 A1 FAIL"), encoding="utf-8")
+        for step in ("research", "kickoff", "tickets", "analysis", "plan", "schema", "build"):
+            self.gate("done", step, *(["--offline", "sample URLs"] if step in ONLINE else []))
+        self.assertIn("FAIL: back to build", self.gate("done", "done-run", ok=False))
+        record_file.write_text(text, encoding="utf-8")
+        self.gate("done", "done-run")
+
     def test_lucky_runs_the_done_run(self):
         self.gate("start", "--key", "quick-try", "--mode", "lucky", "--kind", "change", "--request", "fix copy")
         self.assertIn("done-run", self.gate("status"))
@@ -482,12 +503,12 @@ class FastGateTests(unittest.TestCase):
         gate = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(gate)
         layout, lane = Path(gate.LAYOUT), Path(gate.FAST_RUN)
-        for name, texts in (("new", ("### ✅ Definition of done\nEvery criterion has an item.", "## Light lane")),
+        for name, texts in (("new", ("### ✅ Definition of done\nEvery criterion has an item.", "## Light lane\n**Hidden checks:**")),
                             ("old", ("### ✅ Done when", "## Hooks"))):
             for path, text in zip((layout, lane), texts):
                 (self.root / name / path).parent.mkdir(parents=True, exist_ok=True)
                 (self.root / name / path).write_text(text, encoding="utf-8")
-        on = {"ticket_checks": True, "coverage": True, "light": True}
+        on = {"ticket_checks": True, "coverage": True, "light": True, "hidden_checks": True}
         off = dict.fromkeys(on, False)
         self.assertEqual(gate.method_flags({"root": str(self.root / "new")}, self.project), on)
         self.assertEqual(gate.method_flags({"root": str(self.root / "old")}, self.project), off)
@@ -496,7 +517,7 @@ class FastGateTests(unittest.TestCase):
         self.assertEqual(gate.method_flags(None, SCRIPTS.parents[2]), on)  # this checkout's own methods define them
         (self.root / "new" / layout).write_bytes(b"\xff\xfe broken")
         self.assertEqual(gate.method_flags({"root": str(self.root / "new")}, self.project),
-                         {**off, "light": True})
+                         {**off, "light": True, "hidden_checks": True})
         lucky = {"mode": "lucky", "kind": "change"}
         self.assertNotIn("done-run", gate.steps_for(lucky))
         self.assertIn("done-run", gate.steps_for({**lucky, "ticket_checks": True}))
