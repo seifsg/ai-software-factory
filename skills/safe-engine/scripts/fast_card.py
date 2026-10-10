@@ -155,4 +155,6 @@ def news(run, steps, record, shown, ledger_ns, now):
     lines += [f"✅ +{len(fresh) - SHOWN_DONE} more done"] if len(fresh) > SHOWN_DONE else []
     if show_card:
         return lines + [card(run, steps, all_sections, now, v)]
-    return lines + now_lines(v) + [ticket_line(v)] if (fresh or show_now) and v.ids else lines
+    if (fresh or show_now) and v.ids:
+        return lines + now_lines(v, bool(run.get("paused"))) + [ticket_line(v)]
+    return lines

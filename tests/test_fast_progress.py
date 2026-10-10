@@ -168,6 +168,16 @@ class ProgressHookTests(unittest.TestCase):
             "🎫 #7 Footer copy   ▰▱ 1/2"])
         self.assertNotIn("systemMessage", self.hook(name="UserPromptSubmit", prompt="go"))
 
+    def test_work_finished_while_paused_shows_on_hold_never_now(self):
+        self.plan()
+        self.hook()
+        self.gate("pause", "--reason", "which contact page?")
+        self.hook()  # the paused card
+        self.record.write_text(RECORD + "- T1 pre: typo do: fixed post: reads right\n**Now:** T2\n", encoding="utf-8")
+        self.assertEqual(self.hook()["systemMessage"].splitlines()[:2], [
+            "✅ fix the footer word done → the footer reads Contact us",
+            "🔨 ON HOLD until you answer: link the footer to the contact page"])
+
     def test_a_plan_without_results_is_refused(self):
         self.record.write_text(RECORD.replace(" → the footer reads Contact us", ""), encoding="utf-8")
         self.gate("done", "tickets", "--offline", "test")
