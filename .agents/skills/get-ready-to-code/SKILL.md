@@ -53,6 +53,7 @@ To do steps:
 - Each to do step will have a pre-step, the step itself, and post-step. And that is so that we can apply the logic above.
 - The logic above is absolute for every and each step.
 - Each to do is a checklist item in its ticket. Automated test suites still come last.
+- Each to do reads as an outcome the owner understands: what it is → what they can do once it is done, then its ticket and criteria. Example: `T4 Download button → click it and the PDF saves (#12, A2)`. Not `T4 add store_true option`.
 - The plan groups independent to dos into waves by files and dependencies. Each wave runs at once, as many as capacity allows; each to do is ticked after its own check.
 - Each to do names its model tier: light (search, inventory, mechanical edits), standard (planned implementation, one-lens reviews, research, walkthroughs) or deep (architecture, schema, security, unclear bugs, synthesis, final review).
 - A ticket is finished when every item is ticked and its definition of done is proven. Until then the loop continues.
