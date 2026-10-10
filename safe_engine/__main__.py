@@ -74,6 +74,9 @@ def main():
     draft = commands.add_parser("ticket-proof-draft", help="Pre-fill ticket-proof JSON from recorded evidence")
     draft.add_argument("--out", required=True)
     args = parser.parse_args()
+    for stream in (sys.stdout, sys.stderr):  # piped Windows output defaults to cp1252; emoji must never crash a result
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="backslashreplace")
     try:
         with snapshot():
             result = run(args)

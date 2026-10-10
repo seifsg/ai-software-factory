@@ -160,7 +160,7 @@ class WorkflowTests(unittest.TestCase):
         before = self.flow.current(self.flow.load())
         secret.write_text("MODE=two\n")
         self.assertNotEqual(before, self.flow.current(self.flow.load()))
-        self.assertNotIn("MODE=one", (self.root / ".factory/state.json").read_text())
+        self.assertNotIn("MODE=one", (self.root / ".factory/state.json").read_text(encoding="utf-8"))
 
     def test_protected_check_changes_are_rejected(self):
         self.built()
@@ -204,6 +204,21 @@ class WorkflowTests(unittest.TestCase):
         self.assertTrue(self.flow.check()["checks_passed"])
         self.assertEqual(Workflow(self.root).status()["repairs_used"], 105)
 
+    def test_cli_prints_non_ascii_results_to_any_pipe(self):
+        root = self.root / "caf\u00e9 \u2705"  # the status result prints this path
+        subprocess.run(["git", "clone", "-q", str(self.root), str(root)], check=True, capture_output=True)
+        env = {k: v for k, v in os.environ.items() if k not in ("PYTHONUTF8", "PYTHONIOENCODING")}
+        env["PYTHONIOENCODING"] = "cp1252"  # what a Windows pipe gives by default
+        (root / ".factory").mkdir()
+        for filename, value in (("task.json", self.task), ("profile.json", self.profile)):
+            (root / ".factory" / filename).write_text(json.dumps(value), encoding="utf-8")
+        result = subprocess.run([sys.executable, "-m", "safe_engine", "--project", str(root), "init",
+                                 "--task", str(root / ".factory/task.json"),
+                                 "--profile", str(root / ".factory/profile.json")],
+                                cwd=Path(__file__).resolve().parents[1], capture_output=True, env=env, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stderr.decode("utf-8", "replace"))  # no encoding crash
+        self.assertIn("\u2705", json.loads(result.stdout.decode("utf-8"))["project"])
+
     def cli_init(self, *extra):
         for filename, value in (("task.json", self.task), ("profile.json", self.profile)):
             (self.root / ".factory").mkdir(exist_ok=True)
@@ -211,7 +226,7 @@ class WorkflowTests(unittest.TestCase):
         result = subprocess.run([sys.executable, "-m", "safe_engine", "--project", str(self.root),
                                  "init", "--task", str(self.root / ".factory/task.json"),
                                  "--profile", str(self.root / ".factory/profile.json"), *extra],
-                                cwd=Path(__file__).resolve().parents[1], capture_output=True, text=True)
+                                cwd=Path(__file__).resolve().parents[1], capture_output=True, text=True, encoding="utf-8")
         self.assertEqual(result.returncode, 0, result.stderr)
         status = json.loads(result.stdout)
         self.assertEqual(status["repair_policy"], "continuous")

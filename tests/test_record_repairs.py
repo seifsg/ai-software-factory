@@ -90,7 +90,7 @@ class RecordRepairTests(unittest.TestCase):
         for name, expected in raw.items():
             self.assertEqual(file_hash(Path(name)), expected)
         self.assertEqual((f.root / ".factory/check-count").read_text(), "1")
-        history = json.loads((f.flow.directory / "history" / f"{before['sequence']:04d}.json").read_text())
+        history = json.loads((f.flow.directory / "history" / f"{before['sequence']:04d}.json").read_text(encoding="utf-8"))
         self.assertEqual(history["review"], before["review"])
         with self.assertRaises(EngineError):
             f.flow.handoff()
@@ -267,11 +267,11 @@ class RecordRepairTests(unittest.TestCase):
         f = self.fixture()
         argv = [sys.executable, "-m", "safe_engine", "--project", str(f.root),
                 "repair", "--records-only", "--reason", "Private mapping correction"]
-        result = subprocess.run(argv, cwd=BUNDLE, capture_output=True, text=True, timeout=30)
+        result = subprocess.run(argv, cwd=BUNDLE, capture_output=True, text=True, encoding="utf-8", timeout=30)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(json.loads(result.stdout)["phase"], "review")
         self.assertEqual((f.root / ".factory/check-count").read_text(), "1")
-        again = subprocess.run(argv, cwd=BUNDLE, capture_output=True, text=True, timeout=30)
+        again = subprocess.run(argv, cwd=BUNDLE, capture_output=True, text=True, encoding="utf-8", timeout=30)
         self.assertNotEqual(again.returncode, 0)
         self.assertIn("intact review", again.stderr)
 
