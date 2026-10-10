@@ -33,8 +33,18 @@ LIGHT = """# copy-fix
 ## Handoff
 **Run:** npm run dev
 **Statuses:** no ticket (trivial)
+**PR:** https://github.com/acme/site/pull/2 (body: .factory/fast/pr-body.md)
 **Unverified:** none
 **Follow-ups:** none
+"""
+PR_BODY = """## 🎬 Before & after
+
+### 🦶 Footer: contact link reads "Contact us"
+
+**Before:** "Contcat us" (base)
+![before](https://github.com/acme/site/blob/0a1b2c3/footer-before.png?raw=true)
+**After:** "Contact us" (head)
+![after](https://github.com/acme/site/blob/0a1b2c3/footer-after.png?raw=true)
 """
 
 
@@ -108,6 +118,11 @@ class GateHarness:
     def start(self, *flags, kind="product"):
         self.gate("start", "--key", "portal-poc", "--kind", kind, "--request", "Build a client portal", *flags)
 
+    def pr_body(self):
+        """The draft PR's body file the handoff's PR line names (read offline)."""
+        (self.project / ".factory/fast").mkdir(parents=True, exist_ok=True)
+        (self.project / ".factory/fast/pr-body.md").write_text(PR_BODY, encoding="utf-8")
+
     def finish_sample(self, text=None, until=None):
         """Record the sample (or `text`) and pass the steps before `until`, or all of them."""
         record = self.project / ".factory/fast/work-record.md"
@@ -115,6 +130,7 @@ class GateHarness:
         shot = self.project / ".factory/fast/shots/schedule.png"
         shot.parent.mkdir(parents=True, exist_ok=True)
         shot.write_bytes(b"PNG")
+        self.pr_body()
         for step in STEPS[:STEPS.index(until) if until else None]:
             self.gate("done", step, *(["--offline", "sample URLs"] if step in ONLINE else []))
 
@@ -644,8 +660,9 @@ class FastGateTests(GateHarness, unittest.TestCase):
         self.gate("done", "tickets")
         self.assertIn("'**Success:**' line", self.gate("done", "plan", ok=False))
         record.write_text(LIGHT, encoding="utf-8")
+        self.pr_body()
         for step in ("plan", "build", "done-run", "handoff"):
-            self.gate("done", step)
+            self.gate("done", step, *(["--offline", "no network"] if step == "handoff" else []))
         self.assertIn("Next: close", self.gate("status"))
 
     def test_ticket_links_are_checked_against_the_epic(self):
@@ -831,14 +848,14 @@ class FastGateTests(GateHarness, unittest.TestCase):
         spec.loader.exec_module(gate)
         layout, lane, ux = Path(gate.LAYOUT), Path(gate.FAST_RUN), Path(gate.UX)
         for name, texts in (("new", ("### ✅ Definition of done\nEvery criterion has an item.",
-                                     "## Light lane\nT1 <title> → <what the owner can do once it is done>\n**Hidden checks:**\n**Secrets:**",
+                                     "## Light lane\nT1 <title> → <what the owner can do once it is done>\n**Hidden checks:**\n**Secrets:**\n`**PR:**`",
                                      "| U10 | Performance |")),
                             ("old", ("### ✅ Done when", "## Hooks", "| Performance |"))):
             for path, text in zip((layout, lane, ux), texts):
                 (self.root / name / path).parent.mkdir(parents=True, exist_ok=True)
                 (self.root / name / path).write_text(text, encoding="utf-8")
         on = {"ticket_checks": True, "coverage": True, "light": True, "outcomes": True, "hidden_checks": True, "scans": True,
-              "ux_rules": True}
+              "ux_rules": True, "pr_proof": True}
         off = dict.fromkeys(on, False)
         self.assertEqual(gate.method_flags({"root": str(self.root / "new")}, self.project), on)
         self.assertEqual(gate.method_flags({"root": str(self.root / "old")}, self.project), off)
@@ -848,7 +865,7 @@ class FastGateTests(GateHarness, unittest.TestCase):
         (self.root / "new" / layout).write_bytes(b"\xff\xfe broken")
         self.assertEqual(gate.method_flags({"root": str(self.root / "new")}, self.project),
                          {**off, "light": True, "outcomes": True, "hidden_checks": True, "scans": True,
-                          "ux_rules": True})  # fast-run.md and ux-quality still read
+                          "ux_rules": True, "pr_proof": True})  # fast-run.md and ux-quality still read
         lucky = {"mode": "lucky", "kind": "change"}
         self.assertNotIn("done-run", gate.steps_for(lucky))
         self.assertIn("done-run", gate.steps_for({**lucky, "ticket_checks": True}))

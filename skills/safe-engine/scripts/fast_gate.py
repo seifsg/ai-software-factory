@@ -234,6 +234,9 @@ def skeleton(run):
         if run["mode"] == "lucky" and run["kind"] != "change":
             hints["tickets"] += "; Lucky product/feature runs: a Size line"
         hints["done-run"] += "; sized MVP or production: Secrets, Dependencies, Static lines"
+    if run.get("pr_proof"):
+        hints["handoff"] += ("; a PR line naming the draft PR, whose Before & after section has one heading per outcome, "
+                             "each Before and After with an image, a recording or a fenced block")
     if sibling("fast_record").hidden(run):
         hints["done-run"] += "; a Hidden checks block: '#<n> <ID>: PASS' per criterion of every listed ticket"
     for step in steps_for(run):
@@ -248,7 +251,7 @@ UX = ".agents/skills/ux-quality/SKILL.md"
 FLAGS = {"ticket_checks": (LAYOUT, "Definition of done"), "coverage": (LAYOUT, "Every criterion has"),
          "light": (FAST_RUN, "Light lane"), "outcomes": (FAST_RUN, "what the owner can do once it is done"),
          "hidden_checks": (FAST_RUN, "**Hidden checks:**"),
-         "scans": (FAST_RUN, "**Secrets:**"), "ux_rules": (UX, "| U10 |")}
+         "scans": (FAST_RUN, "**Secrets:**"), "ux_rules": (UX, "| U10 |"), "pr_proof": (FAST_RUN, "`**PR:**`")}
 
 
 def method_flags(bundle, project):

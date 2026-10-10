@@ -16,7 +16,8 @@ Fill the project's PR template first, then use these blocks inside it. Skip what
 <header: requester, deciders, real author, original vs adaptation>
 ## 🎯 Purpose & goal      problem, who is affected, consequence, why needed; exact success
 ## 📍 Context             base/branch, ticket link, code and sources, prior work; facts and unknowns
-## 🔧 What & why          Before → After (behavior only); approach and reason
+## 🎬 Before & after      one ### per outcome: what it was, what it is, proof the reviewer can open
+## 🔧 What & why          approach and reason
 ## 🔀 Flow                states and branches, failure and recovery
 ## 🧩 Design / files      options and reason; NEW / M / D + path + purpose
 ## 🧱 Guards / scope      severity → problem → status; limits; follow-ups
@@ -27,6 +28,7 @@ Fill the project's PR template first, then use these blocks inside it. Skip what
 
 - **Header:** credit the requester, the deciders and the real human author. Separate original work from a port or adaptation. No invented authorship or tests. No AI or tool trailers.
 - **Context:** the ticket link is clickable and visible, not hidden in a comment. Discussion that triggered the PR is linked too.
+- **Before & after:** never skipped. The report to the owner, proof of work. One `### <outcome>` heading per feature, fix, page, section, module, endpoint or command, named by its effect (`### 🧾 Invoice totals include tax`, never `### invoice.ts`). Under it, `**Before:**` then `**After:**`, each followed by its proof: an image, a recording or a fenced block. Or one `**Before → After:**` followed by a `diff` block or a `| Before | After |` image table. One line per side: what was observed, base or head, criterion. Something new: Before says "did not exist". Prose alone is no proof.
 - **Cold start:** the PR states the original request and why, decisions with reasons, facts (IDs, paths, repos), current state, remaining steps and blockers. Links are an audit trail, not a substitute.
 - **Verification:** one row per confirmed criterion, plus the ticket's checklist state: every item ticked, or the gap. Ticketed work: include the ticket's confirmed revision and digest, dependencies and integration status. Proof is bound to the exact pushed candidate. Name what is **unverified**.
 - **Adjustment history:** when changes are requested, append WHAT, WHY, WHO and what was done. Keep it for the PR's whole life.
@@ -50,6 +52,21 @@ NEW <path>   <purpose>
 <check command>   <actual result>
 ```
 
+````text
+### <emoji> <outcome, named by its effect>
+**Before:** <what was observed> (base <sha>)
+![before](https://github.com/<owner>/<repo>/blob/<proof commit>/<outcome>-before.png?raw=true)
+**After:** <what is observed now> (head <sha>, A1)
+![after](https://github.com/<owner>/<repo>/blob/<proof commit>/<outcome>-after.png?raw=true)
+
+### <emoji> <endpoint or command>: <effect>
+**Before → After:** same request, base <sha> → head <sha> (A2)
+```diff
+- <old line of output>
++ <new line of output>
+```
+````
+
 | Criterion | Change | Proof | Gap |
 |---|---|---|---|
 | A1 | what changed | exact evidence | what is not shown |
@@ -67,7 +84,7 @@ NEW <path>   <purpose>
 - No invented facts, metrics, benefits, tests, visuals or consent. Label illustrative examples. Verify names, numbers, units, dates.
 - Charts need measured values. Screenshots show real, relevant proof.
 - Fold long machine data; keep purpose, outcome, proof, gaps and next action visible.
-- One finishing pass: can a cold reader say what, why, before, after and next? Does every requested detail have a home?
+- One finishing pass: can a cold reader say what, why, before, after and next? Does every outcome show proof they can open? Does every requested detail have a home?
 
 ## Example
 
@@ -85,11 +102,27 @@ Illustration only. Real PRs need real code, proof and sources.
 - Ticket: #12 (confirmed rev 1). Base `main`, branch `fix/theme-save`.
 - Settings screen calls the theme store, which had no save path.
 
-### 🔧 What & why
+### 🎬 Before & after
+
+#### 🎨 Settings: chosen theme survives a reload
+
+**Before → After:** dark theme chosen, page reloaded, 1280×800 (base `a1b2c3d` → head `d4e5f6a`, A1)
 
 | Before | After |
 |---|---|
-| Reload restores default | Reload restores saved choice |
+| ![before: light theme after reload](https://example.com/proof/theme-before.png) | ![after: dark theme after reload](https://example.com/proof/theme-after.png) |
+
+#### 🔌 GET /api/settings: returns the saved theme
+
+**Before → After:** same request after saving dark (A1)
+
+```diff
+  200 OK
+- {"theme": "light"}
++ {"theme": "dark"}
+```
+
+### 🔧 What & why
 
 - **Approach:** Reuse settings storage. One save path.
 

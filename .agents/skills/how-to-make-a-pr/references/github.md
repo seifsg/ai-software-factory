@@ -13,7 +13,21 @@ gh pr create --draft --base <base> --head <branch> --title "<type>(<scope>): <su
 - Always `--draft`. Never run `gh pr ready` or `gh pr merge`; humans decide.
 - Link every ticket in the body. `Closes #<n>` only on each sub-issue or change ticket this PR finishes; `Refs #<n>` for the rest. The epic always gets `Refs #<epic>`.
 - Closing keywords act only when the PR targets the default branch; on other bases they are ignored and create no link. Keep them for the record: the next intake closes those tickets after the merge. After a base change, check the PR's linked issues.
-- `gh` cannot upload images. Link media the reviewer can already open. Without an authorized upload route, name the gap in the PR.
+
+## Attach proof media
+
+`gh` cannot upload images. Put screenshots and recordings in a proof commit on their own branch instead. It never touches the working tree, the index or the PR's diff, and works in private repositories for everyone who can read them.
+
+```text
+printf '100644 blob %s\t%s\n' "$(git hash-object -w <before.png>)" <outcome>-before.png "$(git hash-object -w <after.png>)" <outcome>-after.png | git mktree
+git commit-tree <tree id> -m "proof: <branch>"
+git push origin <commit id>:refs/heads/proof/<branch>
+```
+
+- Later uploads to the same branch: `git fetch origin proof/<branch>`, then add `-p FETCH_HEAD` to `commit-tree`. Earlier links keep working. Required signing: add `-S`.
+- Link pinned to the commit: `![<outcome> before](https://github.com/{owner}/{repo}/blob/<commit id>/<name>?raw=true)`. GIFs play inline. A video over 10 MB: link it, with a GIF or screenshot beside it.
+- Check each file landed: `gh api "repos/{owner}/{repo}/contents/<name>?ref=<commit id>" --jq .size`. With a browser signed in, open the PR and check each image shows. A broken one is missing proof.
+- Keep proof branches after the merge: links to them stay in the PR.
 
 ## Fix the base or body
 

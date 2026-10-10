@@ -12,9 +12,11 @@ HERE = str(Path(__file__).resolve().parent)
 if HERE not in sys.path:
     sys.path.insert(0, HERE)  # loaded by file path (tests, older gates): find the sibling module
 from fast_progress import built_ids, sections, subsection, todo_ids, without_result  # noqa: E402,F401 - shared parsers
+import fast_proof  # noqa: E402 - the PR body's Before & after check
 
 URL = re.compile(r"https?://[^\s)>\]|]+")
 ISSUE = re.compile(r"https://github\.com/([\w.-]+/[\w.-]+)/issues/(\d+)")
+PULL = re.compile(r"https://github\.com/[\w.-]+/[\w.-]+/pull/\d+")
 TASK = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+\[([ xX])\].*(?:\n[ \t]+(?![-*+]\s|\d+[.)]\s)\S.*)*", re.M)  # marks; items
 NEEDS = re.compile(r"\bneeds #\d+ T\d+")  # names another ticket's item, not one of this ticket's
 CHECKLIST = re.compile(r"^(#{1,6})\s[^\n]*checklist[^\n]*$", re.I | re.M)
@@ -435,7 +437,7 @@ def placeholder_problems(body, labels):
 def check_done_run(run, body, project, **kwargs):
     sections = kwargs.get("all_sections") or {}
     own = HIDDEN.sub("", body) if hidden(run) else body  # the builder's own done-run, apart from the checker's
-    touched = [] if run.get("ui") or not run.get("ux_rules") else ui_files(run, project)
+    touched = touched_ui(run, project)
     audited = run.get("ux_rules") and (run.get("ui") or touched)  # this run owes the UX audit
     parsed = audit_lines(own) if audited else None
     used = parsed[2] if parsed else own  # rule and judge lines never stand in for using it
@@ -551,6 +553,11 @@ def ui_start(project):
                                       for names in ui_listings({"base": base}, project) for name in names}}
 
 
+def touched_ui(run, project):
+    """UI files a run not started as UI changed, when its methods count them; [] otherwise."""
+    return [] if run.get("ui") or not run.get("ux_rules") else ui_files(run, project)
+
+
 def ui_files(run, project):
     """UI files inside the project this run created, edited or deleted; none without Git."""
     seen = run.get("ui_seen") if isinstance(run.get("ui_seen"), dict) else {}
@@ -596,8 +603,42 @@ def digest(path):
 
 
 def check_handoff(run, body, **kwargs):
-    labels = ["Run", "Statuses", "Unverified", "Follow-ups"] + (["Dev sign-in"] if run.get("auth") else [])
-    return missing_markers(body, labels) or held(run, kwargs, covered(run, needs_ticks))
+    labels = ["Run", "Statuses", "Unverified", "Follow-ups"] + (["Dev sign-in"] if run.get("auth") else []) + (
+        ["PR"] if run.get("pr_proof") else [])
+    return missing_markers(body, labels) or held(run, kwargs, covered(run, needs_ticks)) + pr_proof(run, body, **kwargs)
+
+
+def pr_proof(run, body, project=None, offline=None, **_):
+    """Runs on current methods: the PR named on the '**PR:**' line shows Before & after per outcome (fast_proof.py)."""
+    import subprocess
+    if not run.get("pr_proof"):
+        return []
+    value = marker(body, "PR") or ""
+    try:
+        text = pr_body(value, project, offline)
+    except (OSError, RuntimeError, subprocess.TimeoutExpired, ValueError) as error:
+        return [str(error)]
+    ui = bool(run.get("ui") or touched_ui(run, project))
+    return [f"PR body: {problem}" for problem in fast_proof.problems(text, ui)]
+
+
+def pr_body(value, project, offline):
+    """The PR body: read through gh, or offline from the body file named on the PR line."""
+    if offline:
+        named = re.search(r"\(body:[ \t]*([^)]+?)[ \t]*\)", value, re.I)  # paths may hold spaces
+        try:
+            return Path(project, named.group(1).strip("`'\" ")).read_text(encoding="utf-8", errors="replace")
+        except (AttributeError, OSError) as error:  # no '(body: ...)', or the file is not readable
+            raise ValueError("offline: name the PR body file on the PR line: '**PR:** <url> (body: <file>)'") from error
+    url = PULL.search(value)
+    if not url:
+        raise ValueError("needs '**PR:** <GitHub PR URL>'; another host: pass --offline '<reason>' and name the "
+                         "PR body file on that line")
+    try:
+        return gh("pr", "view", url.group(0), "--json", "body", "--jq", ".body")
+    except RuntimeError as error:
+        raise RuntimeError(f"cannot read {url.group(0)} with gh ({error}); fix access or pass --offline '<reason>' "
+                           "and name the PR body file") from error
 
 
 CHECKS = {"research": check_research, "kickoff": check_kickoff, "tickets": check_tickets,
