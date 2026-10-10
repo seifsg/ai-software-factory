@@ -65,7 +65,7 @@ python fast_gate.py install --host <host> [--project <abs>]
 - `start` keeps `.factory/` out of Git only inside a Git repository: `git init` first.
 - Product runs default to UI and persistence; pass `--no-ui` or `--no-data` only when true. `--auth` marks sign-in: pass it when anyone signs in or roles exist. These are fixed at `start`; decide them from the request.
 - Steps run in order; `done` refuses a step while an earlier applicable one is open.
-- `done tickets`, `done plan` and `done handoff` read the listed GitHub tickets online: links, definition of done, checklist, ticks, coverage. Other trackers or no network: `--offline "<reason>"` records the step unverified; it is refused when the listed GitHub tickets are readable. Runs started on older methods keep the checks those methods define.
+- `done tickets`, `done plan`, `done handoff` and, on hidden-check runs, `done done-run` read the listed GitHub tickets online: links, definition of done, checklist, ticks, coverage. Other trackers or no network: `--offline "<reason>"` records the step unverified; it is refused when the listed GitHub tickets are readable. Runs started on older methods keep the checks those methods define.
 - `pause` before waiting on the owner; the next `done` or `resume` clears it. `close` needs `handoff`, or `--abandon` with the owner's reason.
 
 ## Hooks

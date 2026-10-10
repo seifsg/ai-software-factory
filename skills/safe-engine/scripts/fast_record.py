@@ -21,11 +21,12 @@ REQUESTED = re.compile(r"\bR\d+\b")
 # "R2 waitlist (owner-deferred: https://...)": the mark sits on its own item, before any other R-id
 DEFERRED = re.compile(r"\b(R\d+)\b(?:(?!\bR\d+\b)[^()\n])*\((?i:owner-deferred):\s*"
                       r"(?:\[[^\]\n]*\]\(https?://[^\s)]+\)|https?://[^\s)]+)\)")  # bare URL or [text](URL)
-# every '**Hidden checks:**' block, blank lines included, up to the next line-start label or heading
-HIDDEN = re.compile(r"\*\*Hidden checks:\*\*(.*?)(?=^[ \t]*\*\*[^*\n]+:\*\*|^#{1,6}\s|\Z)", re.M | re.S)
+BULLET = r"(?:(?:[-*+]|\d+[.)])[ \t]+(?:\[[ xX]\][ \t]+)?)?"  # '- ', '1. ', '- [x] ' or none
+# every '**Hidden checks:**' block, blank lines included, up to the next label (bulleted or not) or heading
+HIDDEN = re.compile(rf"\*\*Hidden checks:\*\*(.*?)(?=^[ \t]*{BULLET}\*\*[^*\n]+:\*\*|^#{{1,6}}\s|\Z)", re.M | re.S)
 # one entry, nothing guessed: '#2 A1: PASS' or '#2 A1: FAIL', an optional '(note)' only after the verdict
 ENTRY = r"#(\d+)[ \t]+([A-Z]{1,3}\d+):[ \t]*(PASS|FAIL)(?:[ \t]+\([^()\n]*\))?"
-ENTRIES = re.compile(rf"(?:[-*+][ \t]+)?{ENTRY}(?:[ \t]*,[ \t]*{ENTRY})*[ \t]*")  # one line: entries, commas
+ENTRIES = re.compile(rf"{BULLET}{ENTRY}(?:[ \t]*,[ \t]*{ENTRY})*[ \t]*")  # one line: entries, commas
 
 
 def sections(text):
@@ -367,7 +368,8 @@ def check_build(run, body, **kwargs):
 
 
 def check_done_run(run, body, project, **kwargs):
-    problems = [] if re.search(r"\bPASS\b", body) else ["needs >=1 PASS result"]
+    own = HIDDEN.sub("", body) if hidden(run) else body  # the builder's own done-run, apart from the checker's
+    problems = [] if re.search(r"\bPASS\b", own) else ["needs >=1 PASS result"]
     problems += missing_markers(body, ["Logs"])
     if run.get("ui"):
         shots = [Path(shot) for shot in re.findall(r"[\w./\\:~-]+\.(?:png|jpe?g|webp|gif)\b", body, re.I)]

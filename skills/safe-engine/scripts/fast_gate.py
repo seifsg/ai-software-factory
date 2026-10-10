@@ -586,7 +586,8 @@ def main():
     start.add_argument("--request-file")
     done = sub.add_parser("done", parents=[common], help="Check and record one step")
     done.add_argument("step", choices=list(TITLES))
-    done.add_argument("--offline", help="Record tickets, plan or handoff without reading tickets through gh, with the reason")
+    done.add_argument("--offline", help="Record tickets, plan, handoff or a hidden-check done-run without reading tickets "
+                                         "through gh, with the reason")
     sub.add_parser("status", parents=[common])
     pause = sub.add_parser("pause", parents=[common], help="Waiting on the owner; lets the session stop")
     pause.add_argument("--reason", required=True)

@@ -294,8 +294,12 @@ class FastGateTests(unittest.TestCase):
         self.assertIn("FAIL (#2 A2)", check("\n- #2 A1: PASS\n\n- #2 A2: FAIL (exit 1)"))
         self.assertIn("'**Hidden checks:**' block", check(""))
         for text in ("#2 A1: PASS, #2 A2: PASS", "\n- #2 A1: PASS (FAIL on first run, fixed)\n\n* #3 A1: PASS",
-                     "#2 A1: PASS (#3 is unrelated)"):
+                     "#2 A1: PASS (#3 is unrelated)", "\n- [x] #2 A1: PASS\n1. #2 A2: PASS (check changed: wrong path)",
+                     "#2 A1: PASS\n- **Notes:** a bulleted label ends the block"):
             self.assertEqual(check(text), "", text)
+        only_hidden = record.check_done_run(on, "**Hidden checks:** #2 A1: PASS\n**Logs:** y\n", project=".",
+                                            all_sections={})
+        self.assertEqual(only_hidden, ["needs >=1 PASS result"])  # the builder's own done-run stays required
         for run in ({**on, "kind": "change"}, {"kind": "product"}):  # change runs and older methods: old rule
             self.assertEqual(" ".join(record.check_done_run(run, "- PASS x\n**Logs:** y\n", project=".")), "")
 
