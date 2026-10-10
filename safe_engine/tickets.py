@@ -434,7 +434,12 @@ class TicketStore:
                     or not re.fullmatch(r"[0-9a-f]{40}", delivery.get("commit", ""))):
                 raise EngineError(f"Dependency {dependency} needs accepted scope and integrated commit, not closed status")
             text(delivery.get("evidence"), "dependency acceptance/cloud-review evidence")
-            git(self.project, "merge-base", "--is-ancestor", delivery["commit"], "HEAD")
+            try:
+                git(self.project, "merge-base", "--is-ancestor", delivery["commit"], "HEAD")
+            except EngineError as error:  # name the commit; "Git command failed" told the builder nothing
+                raise EngineError(f"Dependency {dependency}: delivered commit {delivery['commit']} is not in this "
+                                  "branch's history; branch from it or merge it (several dependencies: merge each), "
+                                  "then rerun") from error
 
     def claim(self, key, run_id, directory):
         """Durable lineage and one active writer per physical checkout; no time expiry."""

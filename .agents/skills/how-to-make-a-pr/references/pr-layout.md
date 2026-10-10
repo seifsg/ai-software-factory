@@ -1,5 +1,7 @@
 # PR layout
 
+Contents: sections · building blocks · writing rules · example
+
 Brief words. Full meaning. A human or fresh agent must understand the PR without the chat or the diff.
 
 Order of priority: complete first (every relevant behavior, decision, file, guard, proof and gap), visual second (tables and ASCII before prose), fewest words third (one line where a table or diagram does not fit).

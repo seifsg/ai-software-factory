@@ -318,6 +318,11 @@ class ProofDraftAndHandoffTests(Base):
         f.record_proof(proof)
         f.local_review()
         f.refresh()
+        with self.assertRaisesRegex(EngineError, "Write the ticket's checklist"):  # new runs need one
+            f.flow.handoff()
+        state = f.flow.load()
+        state.pop("checklist_required")  # a run started before the rule keeps working without one
+        atomic_json(f.flow.directory / "state.json", state)
         text = Path(f.flow.handoff()["handoff"]).read_text(encoding="utf-8")
         sha = proof["criteria"][0]["evidence"][0]["sha256"][:12]
         for expected in ("## Criterion → change → proof → gap", "| Criterion | Change | Proof | Gap |",

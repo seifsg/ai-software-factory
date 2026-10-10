@@ -129,6 +129,25 @@ class FastGateTests(unittest.TestCase):
         self.assertEqual(list((self.root / "home/active").glob("*.json")), [])
         self.assertIsNone(self.hook({"hook_event_name": "Stop", "stop_hook_active": False}))
 
+    def test_offline_needs_unreadable_tickets_and_features_record_a_size(self):
+        record = record_module()
+        url = "https://github.com/acme/portal/issues/2"
+        sections = {"tickets": f"**Ticket:** {url}\n**Backlog:** none\n"}
+        on, older = {"coverage": True, "ticket_checks": True, "kind": "change"}, {"ticket_checks": True, "kind": "change"}
+        readable = json.dumps({"body": "### Definition of done\n", "stateReason": None, "labels": [], "projectItems": []})
+        with patch.object(record, "gh", return_value=readable):
+            self.assertIn("drop --offline", record.online(on, {"offline": "no network", "all_sections": sections},
+                                                          record.needs_ticks)[0].replace("without --offline", "drop --offline"))
+        with patch.object(record, "gh", side_effect=RuntimeError("no network")):  # truly offline: allowed
+            self.assertEqual(record.online(on, {"offline": "no network", "all_sections": sections}, record.needs_ticks), [])
+        with patch.object(record, "gh", side_effect=AssertionError("older runs never read tickets offline")):
+            self.assertEqual(record.online(older, {"offline": "x", "all_sections": sections}, record.needs_ticks), [])
+        kickoff = "**Features:** a\n**Approach:** b\n**Answered by:** owner\n"
+        self.assertIn("'**Size:**' line", record.check_kickoff({"kind": "feature", "coverage": True}, kickoff)[0])
+        self.assertEqual(record.check_kickoff({"kind": "feature", "coverage": True},
+                                              kickoff + "**Size:** none (inside an existing product)\n"), [])
+        self.assertEqual(record.check_kickoff({"kind": "feature"}, kickoff), [])  # older methods unchanged
+
     def test_checks_refuse_missing_markers(self):
         self.start("--auth")
         self.finish_sample()

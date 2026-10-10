@@ -107,7 +107,7 @@ class Workflow(ContractMixin, CheckMixin, ReviewMixin):
             raise EngineError("Deprecated max-repairs metadata must be a nonnegative integer")
         if git(self.project, "status", "--porcelain", "--untracked-files=normal"):
             raise EngineError("Initialize from a clean, committed project; preserve existing work before starting")
-        state = {"schema_version": 1, "bundle_version": __version__, "run_id": str(uuid.uuid4()),
+        state = {"schema_version": 1, "bundle_version": __version__, "run_id": str(uuid.uuid4()), "checklist_required": True,
                  "project": str(self.project), "task": task, "profile": profile,
                  "contract_digest": self.contract_digest(task, profile, ticket),
                  "base_commit": git(self.project, "rev-parse", "HEAD"), "phase": "analyze",
@@ -363,6 +363,8 @@ class Workflow(ContractMixin, CheckMixin, ReviewMixin):
         self.require_ticket(state, fresh=True)
         if self.ticket_key:
             checklist = self.store.get(self.ticket_key)["contract"].get("checklist", [])
+            if state.get("checklist_required") and not checklist:  # runs started before this rule keep working
+                raise EngineError("Write the ticket's checklist (the plan's todos) before handoff")
             open_items = [item["id"] for item in checklist if not item["done"]]
             if open_items:
                 raise EngineError("Tick every checklist item in the ticket before handoff: " + ", ".join(open_items))

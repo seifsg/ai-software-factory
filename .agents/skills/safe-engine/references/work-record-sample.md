@@ -3,6 +3,8 @@
 <!-- Illustrative sample of a filled Fast work record (fast-run.md#work-record). It shows the gate markers for a
      product unrelated to any real run; never copy its content. A real run researches fresh. Ticket URLs and owner answers are examples, not real records. -->
 
+Contents: request · research · kickoff · tickets · analysis · plan · design · schema · build log · done-run · handoff
+
 ## Request
 
 > Build a proof of concept for a boutique yoga studio: members see the class schedule, book a spot, buy class packs and join a waitlist when a class is full; staff manage the schedule and check people in.
@@ -135,7 +137,7 @@ indexes: classes(starts_at), bookings(class_id, status), waitlist(class_id, posi
 
 - T1 pre: schema plan read | do: Drizzle schema and seed with 2 members, 1 staff, a week of classes | post: FKs and indexes match the access map; ticked in #2
 - T2 pre: product bar logging rules | do: `lib/log.ts` with redaction and rotation | post: wired before the first route
-- T3 pre: requested roles (member, staff) | do: dev-only role switcher in the header, DEV badge from runtime config | post: production build drops both
+- T3 pre: requested roles (member, staff) | do: dev-only role switcher in the header, DEV badge from runtime config | post: production build drops the switcher; only the production environment hides the badge
 - T4 pre: T1 queries | do: week schedule and booking in one transaction | post: double click books once
 - T5 pre: T4 transaction | do: waitlist join and promotion on cancellation | post: promotion and credit spend share the transaction
 - T6 pre: credit rules | do: class packs with a checkout labeled "Test mode: no real charge" | post: checkout isolated in one function

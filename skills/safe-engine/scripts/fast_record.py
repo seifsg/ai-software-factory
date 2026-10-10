@@ -81,7 +81,9 @@ def check_research(run, body, **_):
 
 
 def check_kickoff(run, body, **_):
-    labels = ["Features", "Approach", "Answered by"] + (["Size", "Stack"] if run["kind"] == "product" else [])
+    sized = run["kind"] == "feature" and run.get("coverage")  # a feature's size, or 'none (inside an existing product)'
+    labels = ["Features", "Approach", "Answered by"] + (["Size", "Stack"] if run["kind"] == "product" else []) + (
+        ["Size"] if sized else [])
     return missing_markers(body, labels)
 
 
@@ -117,8 +119,10 @@ def check_tickets(run, body, offline=None, **_):
         problems.append("needs >=1 '**Sub-issue:** <url>' line")
     if coverage and not change and not requested(body, deferred=True):
         problems.append("needs a '**Requested:**' line numbering every requested item: R1, R2, ...")
-    if problems or offline or trivial:
+    if problems or trivial:
         return problems
+    if offline:
+        return readable(run, epic + subs)
     if not run.get("ticket_checks"):
         return verify_tickets(epic[0], subs)
     named = []  # requested items each listed ticket's criterion labels name, kept from its one read
@@ -163,10 +167,25 @@ def verify_tickets(epic, subs):
 
 def online(run, kwargs, check):
     """Run one ticket check on every listed ticket, unless the run predates ticket checks or the step is offline."""
-    if kwargs.get("offline") or not run.get("ticket_checks"):
+    if not run.get("ticket_checks"):
         return []
     epic, subs = ticket_urls(kwargs["all_sections"].get("tickets", ""))
+    if kwargs.get("offline"):
+        return readable(run, run.get("tickets", []) + epic + subs)
     return ticket_problems(run.get("tickets", []) + epic + subs, check)  # tickets pinned at `done tickets` stay checked
+
+
+def readable(run, urls):
+    """On coverage runs, --offline is refused when gh can read the first listed GitHub ticket after all."""
+    import subprocess
+    url = next((url for url in urls if ISSUE.match(url)), None)
+    if not run.get("coverage") or not url:
+        return []
+    try:
+        read_ticket(url)
+    except (OSError, RuntimeError, subprocess.TimeoutExpired, ValueError, TypeError, AttributeError):
+        return []  # not readable here: offline is the honest record
+    return [f"{url} is readable through gh: record this step online, without --offline"]
 
 
 def ticket_problems(urls, check):

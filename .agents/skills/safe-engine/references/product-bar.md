@@ -151,7 +151,7 @@ Apps with accounts seed one user per role. Development builds show one-click but
 
 ## Environment and sample labels
 
-- Non-production builds show a small fixed environment badge (DEV, STAGING, PREVIEW; games: a corner tag) read from runtime config. Production builds never render it: drop it at build time, not with CSS.
+- A small fixed environment badge (DEV, STAGING, PREVIEW; games: a corner tag) follows the runtime environment from config, not the build mode: staging and preview show it even on a production build. Only the production environment hides it: render nothing, not CSS-hidden.
 - Sample data and mocked or sandbox integrations carry a visible label wherever they appear outside production: "Sample data", "Test mode: no real charge". Production never seeds sample data.
 - No screen (CLI, API, library, service): print the environment in the startup log and in version or health output.
 - Done-run screenshots show the badge; the handoff names the environment.

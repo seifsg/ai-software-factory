@@ -7,7 +7,7 @@ Read before touching any workspace while app work is active. The app coordinator
 ```text
 App coordinator ── checkpoint ─────────────────── revalidate → resume
                         └─ isolated repair ─ review ─┘
-                              one writer     fresh agent
+                        one writer per file  fresh agent
 ```
 
 - No command pauses, resumes, upgrades or migrates a run. Checkpoints are records you write.

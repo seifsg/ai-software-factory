@@ -25,6 +25,7 @@ Find the real repository, branches, release policy, PR template, signing rule, c
 
 - Work on your own branch. Never commit to the base.
 - Base = the project's integration branch, else the default branch. Say so in the PR when it differs.
+- **Dependent Safe ticket:** branch from the dependency's delivered commit and open the PR against the dependency's branch. After that branch merges, retarget the PR to the base (`references/github.md`).
 - Check the remote, not the local list. Shallow and single-branch clones hide branches.
 
 ```text
@@ -68,7 +69,7 @@ git switch -c <scope>/<short-name> origin/<base>
 
 ## 7. Review
 
-- Own draft: run `deep-review` on it, unless this exact head already passed an independent review. Pushing fixes to that PR's own branch (never force) and posting its comments are pre-authorized; open questions go in a PR comment instead of a stop. Someone else's PR keeps every checkpoint.
+- Own draft: run `deep-review` on it in Safe; in Fast and Lucky, the optional Safe check offer covers it. Skip it when this exact head already passed an independent review. Pushing fixes to that PR's own branch (never force) and posting its comments are pre-authorized; open questions go in a PR comment instead of a stop. Someone else's PR keeps every checkpoint.
 - When the project has a remote or cloud review, request a fresh one: a separate agent, fresh context, the exact pushed head. Record where it ran, the run ID, base/head and verdict. Local review is separate and never a substitute; missing remote access leaves the review open.
 - A reviewer that changes code needs a fresh independent assessment of the new head.
 - The PR stays draft. Review is not merge or release approval.
