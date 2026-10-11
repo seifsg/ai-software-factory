@@ -400,7 +400,7 @@ def cmd_hooks(args):
     scope = "user" if args.user else "project"
     log("hooks.configure", action=action, scope=scope, status="started")
     try:
-        sibling("fast_install").configure(args.host, args.project, remove=args.remove, user=args.user)
+        sibling("fast_install").configure(args.host, args.project, remove=args.remove, user=args.user, record=log)
     except SystemExit:
         log("hooks.failed", action=action, scope=scope, status="refused")
         raise
@@ -683,22 +683,21 @@ def context(event, runs, cwd, session, host="claude"):
     return "\n".join(lines) or None
 
 
-def cmd_hook(host="claude", scope=None):
-    """Answer one host hook event from stdin in that host's dialect. Fail open: never break the session."""
+def hook_answer(raw, host="claude", scope=None):
+    """Evaluate a decoded event against fresh state; shared by one-shot and reusable host adapters."""
     try:
         if scope is not None and not re.fullmatch(r"[0-9a-f]{16}", scope):
             raise ValueError("Invalid project hook scope")
         scoped = active_runs(scope) if scope else None
         if scope and not scoped:
-            return 0
+            return None, 0
         runs = active_runs()
         if scoped:
             project = norm(scoped[0][2]["project"])
             runs = [item for item in runs if inside(norm(item[2]["project"]), project)]
         if not runs:
-            return 0
+            return None, 0
         hosts = sibling("fast_hosts")
-        raw = json.loads(sys.stdin.buffer.read().decode("utf-8-sig") or "{}")  # hosts send UTF-8
         event = hosts.read(host, raw if isinstance(raw, dict) else {})
         cwd, session = norm(event["cwd"] or os.getcwd()), event["session"]
         out, code = None, 0
@@ -719,12 +718,23 @@ def cmd_hook(host="claude", scope=None):
             out = hosts.context(host, event["name"], text) if text else None
         if event["kind"] and hosts.notifies(host) and not event.get("delegate"):  # delegates' messages may not reach the owner
             out = hosts.with_message(out, news(runs, cwd, session, host))
+        return out, code
+    except Exception as error:  # noqa: BLE001 - any failure must leave the host session working
+        log("hook.error", host=host, error_class=type(error).__name__)
+    return None, 0
+
+
+def cmd_hook(host="claude", scope=None):
+    """Answer one stdin event in the existing host dialect; failures leave the session usable."""
+    try:
+        raw = json.loads(sys.stdin.buffer.read().decode("utf-8-sig") or "{}")
+        out, code = hook_answer(raw, host, scope)
         if out:
             print(out)
         return code
-    except Exception as error:  # noqa: BLE001 - any failure must leave the host session working
+    except Exception as error:
         log("hook.error", host=host, error_class=type(error).__name__)
-    return 0
+        return 0
 
 
 def main():

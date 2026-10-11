@@ -167,6 +167,22 @@ class DistributionTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, 'Incomplete.*guidance'):
             resolver.inspect_bundle(self.source)
 
+    def test_project_hook_dependencies_are_paired_without_invalidating_older_pins(self):
+        names = resolver.PROJECT_HOOK_INPUTS
+        self.add_contract(required=[names[0]])
+        first = self.source / names[0]; first.parent.mkdir(parents=True, exist_ok=True)
+        first.write_text('fixture\n')
+        with self.assertRaisesRegex(RuntimeError, 'Incomplete project hook input contract'):
+            resolver.inspect_bundle(self.source)
+        self.add_contract(required=list(names))
+        second = self.source / names[1]; second.write_text('fixture\n')
+        resolver.inspect_bundle(self.source)
+        second.unlink()
+        with self.assertRaisesRegex(RuntimeError, 'Incomplete.*fast_hook_server'):
+            resolver.inspect_bundle(self.source)
+        self.add_contract()  # previous pins do not declare the MCP adapter pair
+        first.unlink(); resolver.inspect_bundle(self.source)
+
     def test_v2_contract_preserves_historical_bundle_completeness(self):
         path = self.add_contract()
         contract = json.loads(path.read_text(encoding='utf-8'))

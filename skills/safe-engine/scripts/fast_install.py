@@ -14,11 +14,11 @@ from pathlib import Path
 import shutil
 
 
-def ledger():
-    """Load the existing state/path module beside the installer, including standalone module consumers."""
+def runtime_module(name):
+    """Load an adjacent runtime module, including standalone installer consumers."""
     import importlib.util
     import sys
-    spec = importlib.util.spec_from_file_location("fast_ledger", Path(__file__).with_name("fast_ledger.py"))
+    spec = importlib.util.spec_from_file_location(name, Path(__file__).with_name(name + ".py"))
     module = importlib.util.module_from_spec(spec)
     keep = sys.dont_write_bytecode
     try:
@@ -27,6 +27,10 @@ def ledger():
     finally:
         sys.dont_write_bytecode = keep
     return module
+
+
+def ledger():
+    return runtime_module("fast_ledger")
 
 MARKETPLACE = "ai-software-factory"
 REPOSITORY = "https://github.com/seifsg/ai-software-factory.git"
@@ -48,7 +52,7 @@ def install(host, project=None, home=None, log=print):
         gate = skills / "safe-engine" / "scripts"
         if host == "codex":
             if project:
-                written.append(merge_codex(base / ".codex" / "hooks.json", gate, project))
+                written.extend(configure("codex", base, home=home, gate=gate, log=log))
             elif factory_hooks(home / ".codex" / "hooks.json"):
                 log("retained existing user hook scope; migrate explicitly after closing unfinished runs")
             else:
@@ -134,7 +138,11 @@ def ours(command):
 
 def merge_codex(path, gate, project=None):
     """Claude-style hooks.json: replace the factory's matcher groups per event, keep everything else."""
-    posix, windows = scoped_commands(gate, project) if project else commands(gate, "codex")
+    if project:
+        if Path(path).resolve() != Path(project).resolve() / ".codex/hooks.json":
+            raise SystemExit("Project hook path must be its .codex/hooks.json")
+        return configure("codex", project, gate=gate)[0]
+    posix, windows = commands(gate, "codex")
     data = codex_data(path)
     events = data.setdefault("hooks", {})
     for event, matcher in CODEX_EVENTS.items():
@@ -167,9 +175,11 @@ def factory_hooks(path):
                for group in groups for hook in group.get("hooks", []))
 
 
-def codex_data(path):
+def codex_data(path, raw=...):
     """Validate the hook container before any setup/removal write, preserving unsupported or broken config."""
-    data = read_json(path)
+    data = read_json(path) if raw is ... else {} if raw is None else json.loads(raw.decode("utf-8-sig"))
+    if not isinstance(data, dict):
+        raise SystemExit(f"{path} is not a JSON object; fix it before installing")
     events = data.get("hooks", {})
     if not isinstance(events, dict):
         raise SystemExit("Hook configuration has a non-object hooks field; fix it before setup. The file was preserved")
@@ -206,7 +216,7 @@ def scoped_commands(gate, project):
     return posix, windows
 
 
-def configure(host, project=None, home=None, remove=False, user=False, log=print):
+def configure(host, project=None, home=None, remove=False, user=False, log=print, gate=None, record=None):
     """Configure/remove Codex hooks without copying skills or changing a project's pinned bundle."""
     store = ledger()
     if host != "codex" or (user and not remove) or (not user and not project):
@@ -222,6 +232,9 @@ def configure(host, project=None, home=None, remove=False, user=False, log=print
     runs = store.active_runs(gate_home / "active", lambda *_args, **_data: None, None if user else identity)
     if remove and runs:
         raise SystemExit("Unfinished runs still need these hooks. Close each run through fast_gate.py close (or an owner-authorized --abandon), then remove hooks")
+    if not user:
+        return runtime_module("fast_hook_config").configure(base, Path(gate or __file__).resolve().parent if gate is None else Path(gate).resolve(),
+            gate_home, identity, remove, codex_data, without_factory, log, record or runtime_module("fast_gate").log)
     path = base / ".codex" / "hooks.json"
     data = codex_data(path)
     receipts = gate_home / "installations"

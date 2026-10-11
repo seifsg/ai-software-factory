@@ -87,7 +87,7 @@ flowchart LR
 
 - 🔒 **Enforced, not suggested.** A gate and host hooks deny code edits until earlier steps pass, and push back when the agent tries to stop mid-run. The gate keeps its state outside your project, so nothing written there can switch it off.
 - 🛑 **Destructive commands refused.** During a run, hooks deny recursive deletes outside the project, force pushes, `git clean -x`, `DROP` or `TRUNCATE`, database wipes and production migrations. You run those yourself or pick another approach.
-- 📣 **Progress you can see.** The card above, once per change, plus any question waiting on you. Clean Codex installs keep hooks opt-in per project; idle scoped hooks avoid Python startup. Remaining shell cost and active-run cost depend on the host.
+- 📣 **Progress you can see.** The card above, once per change, plus any question waiting on you. Clean Codex installs keep hooks opt-in per project. Callbacks reuse one local Python process per MCP connection; chats can have separate connections, with startup, memory and callback costs.
 - 🔎 **Research before code.** New products and big features start with competitors, a feature matrix, opportunities and stack options.
 - ❓ **Questions that fit the size.** A POC builds exactly what you asked and asks only what the request leaves open. An MVP researches launch gaps, suggests features you did not think of and ships analytics and in-app feedback. Answers are recorded and binding.
 - 🎫 **A living backlog.** Every run reads it, cleans up issues after merged or closed PRs, and opens an epic with outcome sub-issues; follow-ups update existing tickets instead. Each ticket has a definition of done and a checklist; an item is ticked only after it works. Tickets move through To do, In progress, Dev done and Ready for QA; your merge makes them Done.
@@ -233,7 +233,7 @@ No. It proves each step was recorded, not that it was good. Quality comes from t
 GitHub Issues are checked online. Other trackers are recorded and marked unverified.
 
 **Will Codex hooks interfere with ordinary tasks?**
-A clean global install adds skills only. Opted-in projects invoke a native idle guard; active-project writes stay protected across all hooked chats. Workflow reminders require explicit run participation and the current project. Existing global hooks remain until migrated. See [scope, limits and trust](docs/hosts.md#codex).
+A clean global install adds skills only. Opted-in projects use a reusable local MCP hook tool; active-project writes stay protected across chats that loaded the hooks and have a connected server. Workflow reminders require explicit run participation and the current project. Existing global hooks remain until migrated. See [scope, lifecycle limits and trust](docs/hosts.md#codex).
 
 **Can hooks catch everything?**
 No. They see tool calls, not intent: a command run from inside a script passes. The work record and the done-run carry the rest.

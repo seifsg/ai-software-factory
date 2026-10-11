@@ -79,7 +79,7 @@ Install skills and configure hooks through the host's supported route; the facto
 - A stop while the host reports a background agent still running passes: its result starts a new turn, whose stop is checked. Other background work, such as a server, does not count. Waiting on background work is no reason to `pause`.
 - Each prompt and session start eligible for workflow messages gets one status line: run, next step, pause reason.
 - Progress the owner has not seen rides along with the hook's answer ([progress](#progress)).
-- No relevant authoritative registration or state: scoped hooks exit through their native guard. Either home file keeps dispatch active for protection and recovery; project mirrors never count. A failed closed-state retirement can require one recovery dispatch. Idle shell overhead remains where hooks are installed.
+- No relevant authoritative registration or state: scoped callbacks return through the host adapter's idle guard. Either home file keeps fresh policy active for protection and recovery; project mirrors never count. Failed closed-state retirement can require one recovery call. Connection, startup and idle costs depend on the host route.
 
 Without hooks the gate still records and checks steps; follow the order yourself. Hooks see tool calls, not intent: files written and destructive commands run from inside scripts, `xargs rm`, piped deletes (`Get-ChildItem | Remove-Item`) and commands piped into a shell from a file or program, and inline interpreter code (`python -c`, `node -e`) pass; the record and the done-run carry the rest.
 
@@ -103,7 +103,7 @@ Without hooks the gate still records and checks steps; follow the order yourself
   - `✅ <title> done → <result>` per newly built todo, then the new NOW and the ticket bar;
   - the new NOW when `**Now:**` changes.
 
-  No new progress: no work-record read or network; active-run protection still reads authoritative state. A scoped idle guard checks only its home-file pair and does not start the gate. Where your agent marks hook calls from a delegate (the factory's `docs/hosts.md`), those show nothing; the next main-thread call does. Claims live in `.factory/fast/shown/`, one folder per run; `start` and `close` clear them.
+  No new progress: no work-record read or network; active-run protection still reads authoritative state. A scoped idle guard checks only its home-file pair; a reusable adapter caches code imports, never state or policy. Where your agent marks hook calls from a delegate (the factory's `docs/hosts.md`), those show nothing; the next main-thread call does. Claims live in `.factory/fast/shown/`, one folder per run; `start` and `close` clear them.
 - A closed run leaves the hooks. The factory's `docs/hosts.md` lists the agents that show hook messages.
 
 ## Keep it fast

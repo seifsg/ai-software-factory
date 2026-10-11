@@ -19,6 +19,7 @@ SKILLS = ("improve-factory", "safe-engine", "analyze-start", "get-ready-to-code"
 REQUIRED = ["AGENTS.md", "README.md", "docs/install.md", "docs/hosts.md", "safe_engine/__main__.py",
             ".agents/skills/safe-engine/references/fast-run.md",
             ".agents/skills/improve-factory/references/live-session.md"]
+PROJECT_HOOK_INPUTS = ("skills/safe-engine/scripts/fast_hook_config.py", "skills/safe-engine/scripts/fast_hook_server.py")
 REQUIRED += [f".agents/skills/{name}/SKILL.md" for name in SKILLS]
 NEWER = ("This factory revision uses a newer layout than this launcher knows ({}). Update the installed factory from "
          "a current checkout (skills/safe-engine/scripts/fast_gate.py install --host <your agent>, or update the "
@@ -90,6 +91,10 @@ def inspect_bundle(root, expected=None, clean=False, entrypoint="improve-factory
             if folder.is_symlink() or not folder.is_dir() or not folder.resolve().is_relative_to(root):
                 raise RuntimeError("Incomplete factory source area: " + name)
         required += [contract_name, *contract["required_files"]]
+        # Historical pins precede MCP hooks. New layouts must declare both halves of that route.
+        if any(name in contract["required_files"] for name in PROJECT_HOOK_INPUTS) and not all(
+                name in contract["required_files"] for name in PROJECT_HOOK_INPUTS):
+            raise RuntimeError("Incomplete project hook input contract")
         declared = {contract_name, *contract["required_files"]}
         if version == 2:
             historical = contract["historical_files"]

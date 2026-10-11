@@ -48,6 +48,8 @@
     "skills/safe-engine/scripts/fast_gate.py",
     "skills/safe-engine/scripts/fast_guard.py",
     "skills/safe-engine/scripts/fast_hosts.py",
+    "skills/safe-engine/scripts/fast_hook_config.py",
+    "skills/safe-engine/scripts/fast_hook_server.py",
     "skills/safe-engine/scripts/fast_install.py",
     "skills/safe-engine/scripts/fast_ledger.py",
     "skills/safe-engine/scripts/fast_progress.py",

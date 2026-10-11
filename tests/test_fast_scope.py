@@ -13,6 +13,7 @@ from unittest.mock import patch
 
 import test_fast_gate as harness
 import test_fast_hosts as hosts
+from fixture_hook_parser import native_fixture
 
 
 class ScopedCodexTests(harness.GateHarness, unittest.TestCase):
@@ -99,7 +100,7 @@ class ScopedCodexTests(harness.GateHarness, unittest.TestCase):
         self.assertNotIn('unsafe private path', error.getvalue())
 
     def configure(self, **kw):
-        with patch.dict(os.environ, self.env):
+        with patch.dict(os.environ, self.env), native_fixture(hosts.installer, hosts.module('fast_hook_config')):
             return hosts.installer.configure('codex', self.project, self.home, log=lambda _: None, **kw)
 
     def test_hooks_only_preserve_canonical_skills_mixed_handlers_and_unknown_commands(self):
