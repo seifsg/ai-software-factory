@@ -122,7 +122,7 @@ class LauncherAndInstallerTests(unittest.TestCase):
         self.assertIn("Next:", out["followup_message"])
         self.assertEqual(self.launch("cursor", {**stop, "status": "aborted"})[:2], (0, None))  # the owner's stop stands
 
-    def test_installer_wires_codex_and_cursor_and_keeps_user_hooks(self):
+    def test_installer_keeps_codex_skills_global_and_cursor_hooks_and_user_hooks(self):
         codex = self.home / ".codex" / "hooks.json"
         codex.parent.mkdir(parents=True)
         codex.write_text(json.dumps({"hooks": {"PreToolUse": [{"matcher": "Bash", "hooks": [{"command": "echo mine"}]}]}}),
@@ -132,7 +132,7 @@ class LauncherAndInstallerTests(unittest.TestCase):
             installer.install("cursor", home=self.home, log=lambda line: None)
         groups = json.loads(codex.read_text(encoding="utf-8"))["hooks"]["PreToolUse"]
         self.assertEqual([group["hooks"][0]["command"] for group in groups][0], "echo mine")
-        self.assertEqual(len(groups), 2)
+        self.assertEqual(len(groups), 1)  # new Codex user installs do not register global hooks
         cursor = json.loads((self.home / ".cursor" / "hooks.json").read_text(encoding="utf-8"))
         self.assertEqual((cursor["version"], sorted(cursor["hooks"])), (1, ["preToolUse", "sessionStart", "stop"]))
         skills = self.home / ".agents" / "skills"

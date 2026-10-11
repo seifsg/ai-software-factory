@@ -296,6 +296,7 @@ def cmd_start(args):
            "ui": product if args.ui is None else args.ui, "data": product if args.data is None else args.data,
            "auth": args.auth, "request": request.strip(), "created": now(), "done": {}, "paused": None,
            "closed": False, "bundle": bundle, **method_flags(bundle, project)}
+    joined = add_participant(run, getattr(args, "session", None))
     if "analysis" not in steps_for(run):  # older hook copies still require it before build: mark it skipped
         run["done"]["analysis"] = {"at": now(), "skipped": "light lane"}
     if run.get("ux_rules") and not run["ui"]:  # only these runs later ask which UI files they changed
@@ -307,6 +308,8 @@ def cmd_start(args):
     if not record.exists():
         record.write_text(skeleton(run), encoding="utf-8")
     save(registry_path(project), {"project": str(project), "key": args.key, "sessions": [], "home": True})
+    if joined:
+        log("run.join", key=run["key"], host="codex", status="joined")
     log("run.start", key=args.key, project=str(project), mode=args.mode, kind=args.kind, bundle=run["bundle"], hooks=hooks)
     bundle = (f"{run['bundle']['root']} @ {run['bundle']['revision'][:12]}" if run["bundle"] else
               "no .factory/entry-bundle.json; run the entry's resolver first (skip only for factory maintenance)")
@@ -354,9 +357,59 @@ def cmd_status(args):
 def cmd_pause(args, reason):
     project, run = open_run(args.project)
     run["paused"] = {"reason": reason, "at": now()} if reason else None
+    joined = add_participant(run, getattr(args, "session", None)) if reason is None else False
     put(project, run)
+    if joined:
+        log("run.join", key=run["key"], host="codex", status="joined")
     log("run.pause" if reason else "run.resume", key=run["key"], reason=reason)
     print(status_text(run))
+
+
+def add_participant(run, session=None):
+    """Explicit engine command participation, distinct from legacy implicit project/session bindings."""
+    session = session or os.environ.get("CODEX_THREAD_ID")
+    if not session:
+        return False
+    if not isinstance(session, str) or not 1 <= len(session) <= 256 or re.search(r"[\x00-\x20]", session):
+        fail("Session identity must be 1-256 characters without whitespace or control characters")
+    existing = run.get("participants", [])
+    existing = [value for value in existing if isinstance(value, str) and 1 <= len(value) <= 256
+                and not re.search(r"[\x00-\x20]", value)] if isinstance(existing, list) else []
+    run["participants"] = list(dict.fromkeys([*existing, session]))[-20:]
+    return True
+
+
+def cmd_join(args):
+    project, run = open_run(args.project)
+    if run.get("closed"):
+        fail("This run is closed; start an authorized new run instead")
+    if not add_participant(run, args.session):
+        fail("No session identity available; use join --session <the host session id>")
+    try:
+        put(project, run)
+    except OSError as error:
+        log("run.join_failed", key=run["key"], error_class=type(error).__name__)
+        fail("Participation was not saved. Existing protection remains active. Fix gate-home file access, then repeat join; "
+             "pause or an owner-authorized close remains available.")
+    log("run.join", key=run["key"], host="codex", status="joined")
+    print(status_text(run))
+
+
+def cmd_hooks(args):
+    action = "remove" if args.remove else "configure"
+    scope = "user" if args.user else "project"
+    log("hooks.configure", action=action, scope=scope, status="started")
+    try:
+        sibling("fast_install").configure(args.host, args.project, remove=args.remove, user=args.user)
+    except SystemExit:
+        log("hooks.failed", action=action, scope=scope, status="refused")
+        raise
+    except (OSError, ValueError) as error:
+        log("hooks.failed", action=action, scope=scope, error_class=type(error).__name__)
+        fail("Hook configuration did not finish. Existing run state and pins are preserved. Fix file access/JSON, then "
+             "repeat the same hooks command. A prior configuration backup, when present, is in the gate home's "
+             "installations folder; inspect it before restoring unrelated settings.")
+    log("hooks.configured", action=action, scope=scope, status="removed" if args.remove else "configured-unverified")
 
 
 def cmd_close(args):
@@ -374,7 +427,7 @@ def cmd_close(args):
         store.closed_path(entry).parent.mkdir(parents=True, exist_ok=True)
         os.replace(store.state_path(entry), store.closed_path(entry))
     except OSError as error:
-        log("state.retire_failed", key=run["key"], error=repr(error))  # it stays closed in runs/: hooks skip it
+        log("state.retire_failed", key=run["key"], error_class=type(error).__name__)  # closed: next hook retries retirement
     forget_shown(project)
     log("run.close", key=run["key"], abandoned=args.abandon)
     print(status_text(run))
@@ -423,9 +476,9 @@ def forget_shown(project):
 
 # ---- hooks (every host; dialects in fast_hosts.py, wiring in fast_install.py) ----
 
-def active_runs():
+def active_runs(scope=None):
     """Open runs from the gate home (fast_ledger.py): lost ones included, gate closed."""
-    return store.active_runs(ACTIVE, log)
+    return store.active_runs(ACTIVE, log, scope)
 
 
 def sessions_of(registration):
@@ -442,12 +495,13 @@ def owner(runs, path):
 
 def mentioned(runs, command):
     flat = command.replace("\\", "/").lower()
+    matches = []
     for item in runs:
         project = item[2]["project"].replace("\\", "/").lower()
         drive = re.match(r"^([a-z]):(/.*)$", project)
         if project in flat or (drive and f"/{drive.group(1)}{drive.group(2)}" in flat):
-            return item
-    return None
+            matches.append(item)
+    return max(matches, key=lambda item: len(item[2]["project"]), default=None)
 
 
 def bind(item, session):
@@ -483,25 +537,26 @@ def deny_reason(run, what, advice=None):
         steps = (" Its run state in the gate home is missing or unreadable, so the gate stays closed: the owner "
                  f"runs `fast_gate.py close --project \"{run['project']}\" --abandon \"<reason>\"`.")
         advice = (advice or "") + steps
-    log("hook.deny", key=run["key"], what=what, blocked=blocked, lost=bool(run.get("lost")))
+    log("hook.deny", key=run["key"], category="lost-state" if run.get("lost") else "preparation" if blocked else "destructive-policy",
+        blocked=blocked, lost=bool(run.get("lost")))
     return f"Factory {run['mode']} run '{run['key']}' blocks {what}.{advice or steps}"
 
 
-def guard(command, runs, cwd, session, dialect=None):
+def guard(command, runs, cwd, session, dialect=None, host="claude"):
     """Deny reason for a destructive command in any step of the run owning cwd, else this session's or the named one.
     dialect: "bash" or "windows" when the host names its shell, else None (both readings must pass)."""
-    item = owner(runs, cwd) or next(iter(mine(runs, cwd, session)), None) or mentioned(runs, command)
+    item = owner(runs, cwd) or next(iter(mine(runs, cwd, session, host=host)), None) or mentioned(runs, command)
     rule = item and sibling("fast_guard").Judge(norm(item[2]["project"]), norm, inside, str(HOME)).rule(
         command, cwd, dialect)
     return rule and deny_reason(item[2], rule, " Destructive commands are the owner's: ask the owner to run it, "
                                                "or to approve another approach.")
 
 
-def pre_tool(event, runs, cwd, session):
+def pre_tool(event, runs, cwd, session, host="claude"):
     """Deny reason for a destructive command, or a project write before the gate opens, or None.
     Sessions bind only through real work."""
     if event["tool"] == "shell":
-        reason = guard(event["command"], runs, cwd, session, event.get("dialect"))
+        reason = guard(event["command"], runs, cwd, session, event.get("dialect"), host)
         if reason:
             return reason
     if event["tool"] == "edit":
@@ -514,27 +569,33 @@ def pre_tool(event, runs, cwd, session):
     vault = (norm(ACTIVE), norm(HOME / "runs")) if targets else ()
     for path in targets:
         if any(inside(path, folder) for folder in vault):  # the gate home's run files: only gate commands write them
-            item = owner(runs, cwd) or next(iter(mine(runs, cwd, session)), None) or runs[0]
+            item = owner(runs, cwd) or next(iter(mine(runs, cwd, session, host=host)), None) or runs[0]
             return deny_reason(item[2], f"writing {path}: the gate home's run files change only through fast_gate.py")
         item = owner(runs, path)
         if item:
-            bind(item, session)
+            if host != "codex":
+                bind(item, session)
             reason = refusal(item, path)
             if reason:
                 return deny_reason(item[2], reason)
     if event["tool"] == "shell":
         item = owner(runs, cwd)
-        if item:
+        if item and host != "codex":
             bind(item, session)
         item = item or mentioned(runs, event["command"])
         if item and open_before_build(item[2]) and shell.scaffolds(event["command"]):
-            bind(item, session)
+            if host != "codex":
+                bind(item, session)
             return deny_reason(item[2], "scaffold and install commands")
     return None
 
 
-def mine(runs, cwd, session, bind_cwd=True):
+def mine(runs, cwd, session, bind_cwd=True, host="claude"):
     """The runs this session works on: those it is bound to, else the one owning cwd (bound to it now)."""
+    if host == "codex":
+        item = owner(runs, cwd)
+        participants = item[2].get("participants") if item else None
+        return [item] if item and session and isinstance(participants, list) and session in participants else []
     bound = [item for item in runs if session and session in sessions_of(item[1])]
     if bound:
         return bound
@@ -560,15 +621,15 @@ def unseen(project, state):
     return stamp if stamp > times.get(SEEN, 0) else None
 
 
-def news(runs, cwd, session):
+def news(runs, cwd, session, host="claude"):
     """Progress the owner has not seen yet, or None. Never raises: a deny decision must still print."""
     lines = []
     try:
-        for entry, _, run in mine(runs, cwd, session, bind_cwd=False)[:3]:
+        for entry, _, run in mine(runs, cwd, session, bind_cwd=False, host=host)[:3]:
             if not run.get("lost"):  # a lost run has no card
                 lines += unseen_lines(run["project"], store.state_path(entry))
     except Exception as error:  # noqa: BLE001 - progress is a courtesy; the gate's decision comes first
-        log("hook.error", where="news", error=repr(error))
+        log("hook.error", where="news", error_class=type(error).__name__)
     return "\n".join(lines) or None
 
 
@@ -592,11 +653,11 @@ def unseen_lines(project, state):
     return lines
 
 
-def stop(event, runs, cwd, session):
+def stop(event, runs, cwd, session, host="claude"):
     """Reason to keep working when a run is unfinished; once per stop, never for paused runs or background waits."""
     if event["again"]:
         return None  # one reminder per stop; never trap the session
-    for _, _, run in mine(runs, cwd, session):
+    for _, _, run in mine(runs, cwd, session, host=host):
         if not run.get("paused"):
             step = next_step(run)
             if event.get("waiting"):  # a background agent's result starts a new turn, whose stop is checked again
@@ -609,9 +670,9 @@ def stop(event, runs, cwd, session):
     return None
 
 
-def context(event, runs, cwd, session):
+def context(event, runs, cwd, session, host="claude"):
     lines = []
-    for _, _, run in mine(runs, cwd, session)[:3]:
+    for _, _, run in mine(runs, cwd, session, host=host)[:3]:
         line = (f"Factory {run['mode']} run '{run['key']}' at {run['project']}: next step "
                 f"{next_step(run) or 'close'}; gate {'open' if not open_before_build(run) else 'closed (no source edits)'}")
         if run.get("paused"):
@@ -622,10 +683,18 @@ def context(event, runs, cwd, session):
     return "\n".join(lines) or None
 
 
-def cmd_hook(host="claude"):
+def cmd_hook(host="claude", scope=None):
     """Answer one host hook event from stdin in that host's dialect. Fail open: never break the session."""
     try:
+        if scope is not None and not re.fullmatch(r"[0-9a-f]{16}", scope):
+            raise ValueError("Invalid project hook scope")
+        scoped = active_runs(scope) if scope else None
+        if scope and not scoped:
+            return 0
         runs = active_runs()
+        if scoped:
+            project = norm(scoped[0][2]["project"])
+            runs = [item for item in runs if inside(norm(item[2]["project"]), project)]
         if not runs:
             return 0
         hosts = sibling("fast_hosts")
@@ -634,27 +703,27 @@ def cmd_hook(host="claude"):
         cwd, session = norm(event["cwd"] or os.getcwd()), event["session"]
         out, code = None, 0
         if event["kind"] == "pre_tool":
-            reason = pre_tool(event, runs, cwd, session)
+            reason = pre_tool(event, runs, cwd, session, host)
             if reason:
                 out, code = hosts.deny(host, reason)
                 if out is None:
                     print(reason, file=sys.stderr)
                 log("hook.answer", host=host, hook_event=event["name"], answer="deny", exit=code)
         elif event["kind"] == "stop":
-            reason = stop(event, runs, cwd, session)
+            reason = stop(event, runs, cwd, session, host)
             out = hosts.keep_going(host, reason) if reason else None
             if out:
                 log("hook.answer", host=host, hook_event=event["name"], answer="keep_going")
         elif event["kind"] in ("prompt", "session"):
-            text = context(event, runs, cwd, session)
+            text = context(event, runs, cwd, session, host)
             out = hosts.context(host, event["name"], text) if text else None
         if event["kind"] and hosts.notifies(host) and not event.get("delegate"):  # delegates' messages may not reach the owner
-            out = hosts.with_message(out, news(runs, cwd, session))
+            out = hosts.with_message(out, news(runs, cwd, session, host))
         if out:
             print(out)
         return code
     except Exception as error:  # noqa: BLE001 - any failure must leave the host session working
-        log("hook.error", host=host, error=repr(error))
+        log("hook.error", host=host, error_class=type(error).__name__)
     return 0
 
 
@@ -664,15 +733,17 @@ def main():
     for stream in (sys.stdout, sys.stderr):
         stream.reconfigure(encoding="utf-8", errors="backslashreplace")  # the card's symbols survive any pipe
     if sys.argv[1:2] == ["hook"] and not {"-h", "--help"} & set(sys.argv):  # hot path: skip argparse
-        flags = " ".join(sys.argv[2:]).replace("--host=", "--host ").split()
+        flags = " ".join(sys.argv[2:]).replace("--host=", "--host ").replace("--scope=", "--scope ").split()
         host = flags[flags.index("--host") + 1] if "--host" in flags[:-1] else "claude"
-        sys.exit(cmd_hook(host))
+        scope = flags[flags.index("--scope") + 1] if "--scope" in flags[:-1] else None
+        sys.exit(cmd_hook(host, scope))
     import argparse
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--project", help="Run project; default: nearest folder with .factory/fast/run.json")
     sub = parser.add_subparsers(dest="command", required=True)
     start = sub.add_parser("start", parents=[common], help="Begin a run and register it for hooks")
+    start.add_argument("--session", help="Explicit Codex session to join; default: CODEX_THREAD_ID when available")
     start.add_argument("--key", required=True)
     start.add_argument("--mode", choices=MODES, default="fast")
     start.add_argument("--kind", choices=KINDS, required=True)
@@ -689,19 +760,28 @@ def main():
     sub.add_parser("status", parents=[common])
     pause = sub.add_parser("pause", parents=[common], help="Waiting on the owner; lets the session stop")
     pause.add_argument("--reason", required=True)
-    sub.add_parser("resume", parents=[common])
+    resume = sub.add_parser("resume", parents=[common])
+    resume.add_argument("--session", help="Explicit Codex session to join; default: CODEX_THREAD_ID when available")
+    join = sub.add_parser("join", parents=[common], help="Join a run's Codex workflow notifications explicitly")
+    join.add_argument("--session", help="Explicit Codex session to join; default: CODEX_THREAD_ID when available")
     close = sub.add_parser("close", parents=[common])
     close.add_argument("--abandon", help="The owner stopped the run: their reason")
     install = sub.add_parser("install", help="Install the entry skills and gate hooks for one host")
     install.add_argument("--host", required=True, choices=("claude", "codex", "cursor", "other"),
                          help="other: entry skills only, for agents you wire by hand")
     install.add_argument("--project", help="Install into this project instead of your user folders")
+    hooks = sub.add_parser("hooks", help="Configure/remove project hooks without copying skills")
+    hooks.add_argument("--host", choices=("codex",), required=True)
+    hooks.add_argument("--project")
+    hooks.add_argument("--remove", action="store_true")
+    hooks.add_argument("--user", action="store_true", help="Remove legacy user hooks; only with --remove")
     hook = sub.add_parser("hook", help="Answer one host hook event from stdin")
     hook.add_argument("--host", default="claude", help="claude, codex, cursor, or any other hook-capable agent")
+    hook.add_argument("--scope", help="Installer-bound normalized project hash")
     args = parser.parse_args()
-    actions = {"start": cmd_start, "done": cmd_done, "status": cmd_status, "close": cmd_close, "hook": lambda a: sys.exit(cmd_hook(a.host)),
+    actions = {"start": cmd_start, "done": cmd_done, "status": cmd_status, "close": cmd_close, "hook": lambda a: sys.exit(cmd_hook(a.host, a.scope)),
                "install": lambda a: sibling("fast_install").install(a.host, a.project, log=lambda line: (print(line), log("install.write", line=line))),
-               "pause": lambda a: cmd_pause(a, a.reason), "resume": lambda a: cmd_pause(a, None)}
+               "pause": lambda a: cmd_pause(a, a.reason), "resume": lambda a: cmd_pause(a, None), "join": cmd_join, "hooks": cmd_hooks}
     actions[args.command](args)
 
 

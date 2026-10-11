@@ -59,7 +59,7 @@ Every mode meets the [product bar](references/product-bar.md) for its [size](ref
 
 Record every step in one work record and pass the gate: [fast-run](references/fast-run.md). Steps run in order; after each, `fast_gate.py done <step>`. Inside Fast, the review and test steps of phase skills wait for `verify` or Safe (MVP and production tests: step 9).
 
-1. **Start:** new project: create the folder, `git init`, make a first commit on the default branch and create a feature branch to build on, so the handoff can open a draft PR. Then `fast_gate.py start`. Once the owner has chosen a remote tracker for a new project, create the remote and push the default branch before building.
+1. **Start:** new project: create the folder, `git init`, make a first commit on the default branch and create a feature branch to build on, so the handoff can open a draft PR. Then use the host's supported hook setup where available, record loading/trust limits and run `fast_gate.py start` ([fast-run](references/fast-run.md#the-gate)). Once the owner has chosen a remote tracker for a new project, create the remote and push the default branch before building.
 2. **Research** (product, feature): run `research-market` kickoff research.
 3. **Kickoff** (product, feature): the kickoff questions for its size. Pause the gate while waiting.
 4. **Tickets:** run `ticketing`: read the backlog, then epic(s) + 1 or many outcome sub-issues in To do, each with a definition of done; a `change` updates the ticket it follows up, opens a new one only for a new outcome, or keeps none when trivial (`**Ticket:** none (<why>)`).
@@ -147,7 +147,7 @@ The owner sees where the run is without asking. One short line per event, never 
 
 - One work record per run: analysis, plan, 0–4 log, proof links.
 - Resume or delegation carries: verbatim request, authority and stops, ticket links and confirmed scope, decisions, plan, current step, evidence, unverified items, blockers, next step.
-- Resume: read status, the ticket and the record; continue the first unfinished step. Never restart a run or invent artifacts.
+- Resume: read status, the ticket and the record; continue the first unfinished step. Use `resume` for the actual session, or `join` to participate without resuming a paused run, where the host requires explicit participation. Never restart a run or invent identities or artifacts.
 
 ## Factory Fault
 

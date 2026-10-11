@@ -234,6 +234,7 @@ class ProgressHookTests(unittest.TestCase):
         answer = self.hook(tool_name="Write", tool_input={"file_path": str(self.project / "src/a.ts")})
         self.assertEqual(answer["hookSpecificOutput"]["permissionDecision"], "deny")
         self.assertIn("step 1/5", answer["systemMessage"])
+        self.gate("join", "--session", "s1")  # Codex progress requires explicit participation
         self.gate("pause", "--reason", "x")
         self.assertIn("WAITING ON YOU: x", self.hook(host="codex")["systemMessage"])
         self.gate("resume")

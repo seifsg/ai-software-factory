@@ -1,6 +1,6 @@
 # Hosts
 
-The methods live in `.agents/skills/` (the open Agent Skills folder) and `AGENTS.md`; every coding agent reads the same files. This page is the only place for agent-specific commands. Everything else says "your agent".
+The methods live in `.agents/skills/` (the open Agent Skills folder) and `AGENTS.md`; every coding agent reads the same files. Host-specific commands live here and in `docs/install.md`. Everything else says "your agent".
 
 First-class hosts get an installer route, gate hooks and a Safe reviewer preset. Other agents run the same methods and call the gate by hand.
 
@@ -10,17 +10,17 @@ First-class hosts get an installer route, gate hooks and a Safe reviewer preset.
 |---|---|---|---|
 | Skills | `safe-engine` plugin (skills + hooks) | `~/.agents/skills/` | `~/.agents/skills/` |
 | Rules file | `AGENTS.md` (read when no `CLAUDE.md` exists; otherwise import it with `@AGENTS.md`) | `AGENTS.md` | `AGENTS.md` |
-| Install | `fast_gate.py install --host claude` or [by hand](#claude-code) | `fast_gate.py install --host codex`, then trust it in `/hooks` | `fast_gate.py install --host cursor` |
+| Install | `fast_gate.py install --host claude` or [by hand](#claude-code) | `fast_gate.py install --host codex` (global skills); opt projects into hooks below | `fast_gate.py install --host cursor` |
 | Invoke | `/safe-engine Build ...` | `$safe-engine Build ...` | `use safe-engine to build ...` |
 | Question tool | `AskUserQuestion` (4 questions, 4 options each) | chat message | chat message |
 | Gate progress messages | hook `systemMessage`, shown to the user | hook `systemMessage`, shown as a warning | not shown: the agent relays the gate's card |
 | Delegate hook calls | marked (`agent_id`): they show no progress; the next main-thread call does | not marked: tool hooks carry no `agent_id` and use the parent session id, so a delegate's call may show it | not applicable |
 | Task list | `TaskCreate` / `TaskUpdate` when the session has them (on by default only for older models; `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` opts in) | the plan view, when the session has its plan tool | none documented: chat lines only |
-| Gate hooks | plugin: `PreToolUse`, `Stop`, `UserPromptSubmit`, `SessionStart` | `~/.codex/hooks.json`: same events and JSON as Claude Code | `~/.cursor/hooks.json`: `preToolUse`, `stop` (a follow-up only when `status` is `completed`), `sessionStart` |
+| Gate hooks | plugin: `PreToolUse`, `Stop`, `UserPromptSubmit`, `SessionStart` | `<project>/.codex/hooks.json`: same events and JSON as Claude Code; retained user hooks also run | `~/.cursor/hooks.json`: `preToolUse`, `stop` (a follow-up only when `status` is `completed`), `sessionStart` |
 | Safe reviewer | `review --agent claude`: `claude -p`, Read/Grep/Glob only, `--json-schema` | `review --agent codex`: `codex exec --sandbox read-only --output-schema` | `review --agent cursor`: `agent -p --mode ask` |
 | Model tiers (light / standard / deep) | `haiku` / `sonnet` / `opus` | host models | host models |
 
-Python runs as `python`, `python3` or `py -3` (Windows). Claude Code hooks need a POSIX `sh` (Git Bash on Windows): the plugin sources `run-gate.sh` in the shell Claude Code already starts for a hook, so a call with no factory run starts no other process. The Codex and Cursor Windows command checks for an active run in Python before loading the gate. Ticket checks use the GitHub CLI `gh` when the tracker is GitHub.
+Python runs as `python`, `python3` or `py -3` (Windows). Claude Code hooks need a POSIX `sh` (Git Bash on Windows): the plugin sources `run-gate.sh` in the shell Claude Code already starts for a hook, so a call with no factory run starts no other process. The scoped Codex Windows definition uses inline PowerShell/.NET existence checks for the project's registration and state in the gate home, then Python only if either exists; verify that your host supports that shell when reviewing the definition. Its POSIX command uses the same scoped predicate in `run-gate.sh`. Cursor and retained legacy Codex Windows commands still start Python to check for active runs. Ticket checks use the GitHub CLI `gh` when the tracker is GitHub.
 
 At a stop, Claude Code lists the session's background work (`background_tasks`). A running or pending `subagent` or `workflow` entry lets the stop pass: its result starts a new turn, whose stop the gate checks. Other entries (`shell`, `monitor`, `teammate` and the rest) and hosts without the list (Codex, Cursor) keep one block per stop. Limit: experimental observer agents (`CLAUDE_CODE_EXPERIMENTAL_OBSERVER_AGENTS`) are listed as `subagent` but may never report back, so with them on, the last stop can pass without the reminder. The gate log records each passed stop as `hook.wait_stop`.
 
@@ -42,6 +42,28 @@ The plugin brings `/safe-engine`, `/improve-factory` and the gate hooks. Its roo
 
 - **Terminal:** `claude plugin marketplace add https://github.com/seifsg/ai-software-factory.git`, then `claude plugin install safe-engine@ai-software-factory`. Use the HTTPS URL; the `owner/repo` shorthand tries SSH first.
 
+## Codex
+
+`install --host codex` installs global skills only on a clean setup. `install --host codex --project <dir>` retains the skills-plus-project-hooks route and refuses canonical skills it does not own. To add hooks without copying skills, including in a factory checkout, use:
+
+```text
+python fast_gate.py hooks --host codex --project <absolute-dir>
+```
+
+See [installation and migration](install.md#codex-project-hooks) for removal, backups and legacy global sources. The generated command binds a normalized project hash; its idle guard checks that project's `active/<hash>.json` and `runs/<hash>.json` in `SAFE_ENGINE_HOME` (default `~/.safe-engine`). Other projects' runs do not wake it. Either home file wakes Python so a deleted registration can recover from open state, and a missing or unreadable state stays protected. Project mirrors are never authority. A closed state file left by failed retirement can cause one dispatch to reconcile it; normal close leaves the idle guard quiet. Remaining native shell startup is still a cost in an opted-in idle project.
+
+Review project trust and exact-hook trust in `/hooks`; load a fresh session after configuration changes. A configuration file or receipt proves neither trust nor effective loading. Inspect every effective source: user JSON, project JSON, inline configuration, plugins and managed hooks can add together. This factory's migration command removes only recognized handlers in the selected JSON file. Installed runtimes and pinned methods do not reload or upgrade implicitly.
+
+### Protection and workflow participation
+
+- All chats that loaded the hooks share the active project's preparation and destructive-command protection. Participation never grants write authorization.
+- Workflow participation is explicit: `start`, `resume` or `join` records the session in the run's optional home-state `participants` list. Pass `--session <ID>` when the host identity is available; these commands otherwise use `CODEX_THREAD_ID` when present.
+- To join an existing run without resuming a paused one: `python fast_gate.py join --project <absolute-dir> --session <ID>`. Missing identity: obtain the actual host session ID; do not invent one. Legacy registration `sessions` are not participation.
+- Reading, editing, prompts and session starts do not opt a chat into workflow messages. Stop reminders, status and progress messages require both participation and current-directory ownership by that project. A participating chat that moves to another project receives no workflow reminders from its prior project.
+- A delegate using its participating parent's session ID can receive the parent's messages. A host that omits a matching session ID cannot deliver those messages; direct gate commands still show the run card.
+
+Project hooks only protect chats that actually load that project layer. A chat opened in an unrelated workspace without those hooks can write an absolute target in the active project without interception. Native scope does not expand host coverage; the gate's command-line checks and work record remain necessary.
+
 ## Other agents
 
 | Agent | Skills | Gate | Safe reviewer |
@@ -62,12 +84,12 @@ Their hooks show no gate progress messages: the agent relays the card from the g
 | Agent | `--agent` (plain arm, and factory arm unless overridden) | `--factory-agent` (factory arm) | Gate hooks in the factory arm |
 |---|---|---|---|
 | Claude Code | `claude -p --dangerously-skip-permissions` | `claude -p --dangerously-skip-permissions --plugin-dir {factory}/skills` | from the plugin directory |
-| Codex | `codex exec --sandbox workspace-write --ignore-user-config -` | not needed | only from the user's `~/.codex/hooks.json` |
+| Codex | `codex exec --sandbox workspace-write --ignore-user-config -` | not needed | from effective trusted hook sources; configure a scoped project layer explicitly |
 | Cursor | `agent -p --force "Read ../prompt.md and do what it says."` | not needed | only from the user's `~/.cursor/hooks.json` |
 
 Claude Code: start `python -m evals` with `CLAUDE_CONFIG_DIR` set to an empty folder and `ANTHROPIC_API_KEY` set, so neither arm loads the user's plugins, hooks or `CLAUDE.md`, and only the factory arm loads the factory plugin with its gate hooks. The templates avoid `--bare`: the CLI reference says it skips hooks and installed plugins and does not say whether a `--plugin-dir` plugin's hooks still run.
 
-Codex and Cursor read gate hooks only from the user's hooks file, which `fast_gate.py install --host codex|cursor` writes. Without that install, their factory arm follows the method and calls the gate by hand, with no hook enforcement. To measure enforcement, run the factory arm as a user or profile with the install and the plain arm as one without it. The plain arm must never see an installed factory (skills folder, plugin or hooks).
+Codex can load trusted project hooks as well as user and other additive sources; a clean `install --host codex` adds no hooks. Configure the factory arm's workspace with `hooks --host codex --project <workspace>`, complete host project/exact-hook trust and verify effective loading for that CLI invocation. The template's `--ignore-user-config` flag is not proof that project or other hook sources are absent. Without effective hooks, the arm follows the method and calls the gate by hand, with no hook enforcement. Cursor retains its user hook route from `install --host cursor`. To measure enforcement, isolate each arm's effective sources and verify them: the plain arm must never see an installed factory (skills folder, plugin or hooks).
 
 ## Sources
 

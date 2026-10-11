@@ -44,6 +44,8 @@ def hook_status(project):
                 text = (base / folder / "hooks.json").read_text(encoding="utf-8")
             except OSError:
                 continue
-            if name not in found and ("fast_gate" in text or "run-gate" in text):
-                found.append(name)
-    return ", ".join(found) or "none detected: the gate records steps but nothing blocks; follow the order yourself"
+            if "fast_gate" in text or "run-gate" in text:
+                scope = "user (legacy/global)" if base == home else "project"
+                found.append(f"{name} {scope}: configured, loading/trust unverified")
+    note = ", ".join(found) or "none detected: configure project hooks before relying on enforcement; the gate still records steps"
+    return note + "; inline/plugin/managed sources may also apply; file discovery does not prove effective host trust"

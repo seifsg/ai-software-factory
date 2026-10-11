@@ -7,16 +7,21 @@
 # stray 2 (Python exits 2 when it cannot open a script) must never block them. No subshells on the hot path.
 home="${SAFE_ENGINE_HOME:-$HOME/.safe-engine}"
 host="${1:-claude}"
-set -- "$home"/active/*.json
-[ -e "$1" ] || { set -- "$home"/runs/*.json; [ -e "$1" ]; } || exit 0  # a lone open state re-registers its run
+scope="${2:-}"
+if [ -n "$scope" ]; then
+  [ -e "$home/active/$scope.json" ] || [ -e "$home/runs/$scope.json" ] || exit 0
+else
+  set -- "$home"/active/*.json
+  [ -e "$1" ] || { set -- "$home"/runs/*.json; [ -e "$1" ]; } || exit 0  # a lone open state re-registers its run
+fi
 dir="${safe_engine_scripts:-${0%/*}}"
 [ -f "$dir/fast_gate.py" ] || exit 0  # half-installed or removed copy: never block the session
 case "$host" in claude|codex|cursor) native=1 ;; *) native=0 ;; esac
 # The gate from its bytecode cache in the gate home (same text as fast_install.BOOT; a test keeps them equal)
-boot="import os,sys;h=os.environ.get('SAFE_ENGINE_HOME') or os.path.join(os.path.expanduser('~'),'.safe-engine');import json,re,pathlib;d=sys.argv[1];sys.dont_write_bytecode=False;sys.pycache_prefix=os.path.join(h,'pycache');sys.path.insert(0,d);sys.argv=[os.path.join(d,'fast_gate.py'),'hook','--host',sys.argv[2]];import fast_gate;fast_gate.main()"
+boot="import os,sys;h=os.environ.get('SAFE_ENGINE_HOME') or os.path.join(os.path.expanduser('~'),'.safe-engine');import json,re,pathlib;d=sys.argv[1];sys.dont_write_bytecode=False;sys.pycache_prefix=os.path.join(h,'pycache');sys.path.insert(0,d);sys.argv=[os.path.join(d,'fast_gate.py'),'hook','--host',sys.argv[2]]+(['--scope',sys.argv[3]] if len(sys.argv)>3 and sys.argv[3] else []);import fast_gate;fast_gate.main()"
 cache="$home/hook-python"
 if [ -r "$cache" ] && read -r py < "$cache"; then
-  $py -c "$boot" "$dir" "$host"
+  $py -c "$boot" "$dir" "$host" "$scope"
   status=$?
   if [ "$status" -eq 2 ] && [ "$native" -eq 0 ]; then exit 2; fi
   if [ "$status" -ne 0 ] && [ "$status" -ne 2 ]; then rm -f "$cache"; fi  # stale interpreter: re-probe next time
@@ -25,7 +30,7 @@ fi
 input=$(cat)
 # Windows Store stubs and old Pythons fail and fall through to the next name.
 for py in python python3 "py -3"; do
-  out=$(printf '%s' "$input" | $py -c "$boot" "$dir" "$host" 2>"$home/hook-stderr")
+  out=$(printf '%s' "$input" | $py -c "$boot" "$dir" "$host" "$scope" 2>"$home/hook-stderr")
   status=$?
   if [ "$status" -eq 0 ] || [ "$status" -eq 2 ]; then
     printf '%s\n' "$py" > "$cache"

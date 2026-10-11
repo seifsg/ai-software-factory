@@ -37,7 +37,7 @@ The factory **enforces** the process. Hooks block source edits until the ticket,
    Clone it, follow docs/install.md and run its installer for this agent.
    ```
 
-2. **Check it.** Start a new session. Your agent should list or autocomplete `safe-engine`. Not there: [troubleshooting](#-troubleshooting).
+2. **Check it.** Start a new session. Your agent should list or autocomplete `safe-engine`. Codex: complete the [project hook setup](docs/install.md#codex-project-hooks) before relying on enforcement. Not there: [troubleshooting](#-troubleshooting).
 3. **Build.** Type this in your agent's chat, not in a terminal, as `/safe-engine ...` in Claude Code, `$safe-engine ...` in Codex, or "use safe-engine to build ..." in Cursor:
 
    ```text
@@ -87,7 +87,7 @@ flowchart LR
 
 - 🔒 **Enforced, not suggested.** A gate and host hooks deny code edits until earlier steps pass, and push back when the agent tries to stop mid-run. The gate keeps its state outside your project, so nothing written there can switch it off.
 - 🛑 **Destructive commands refused.** During a run, hooks deny recursive deletes outside the project, force pushes, `git clean -x`, `DROP` or `TRUNCATE`, database wipes and production migrations. You run those yourself or pick another approach.
-- 📣 **Progress you can see.** The card above, once per change, plus any question waiting on you. When nothing changed, a hook spends under 0.1 ms on it.
+- 📣 **Progress you can see.** The card above, once per change, plus any question waiting on you. Clean Codex installs keep hooks opt-in per project; idle scoped hooks avoid Python startup. Remaining shell cost and active-run cost depend on the host.
 - 🔎 **Research before code.** New products and big features start with competitors, a feature matrix, opportunities and stack options.
 - ❓ **Questions that fit the size.** A POC builds exactly what you asked and asks only what the request leaves open. An MVP researches launch gaps, suggests features you did not think of and ships analytics and in-app feedback. Answers are recorded and binding.
 - 🎫 **A living backlog.** Every run reads it, cleans up issues after merged or closed PRs, and opens an epic with outcome sub-issues; follow-ups update existing tickets instead. Each ticket has a definition of done and a checklist; an item is ticked only after it works. Tickets move through To do, In progress, Dev done and Ready for QA; your merge makes them Done.
@@ -149,9 +149,10 @@ python ai-software-factory/skills/safe-engine/scripts/fast_gate.py install --hos
 ```
 
 - `claude` enables the plugin (skills and gate hooks) with auto-update. Start a new session.
-- `codex` and `cursor` copy the `safe-engine` and `improve-factory` skills into `~/.agents/skills` and write the gate hooks. Codex asks you to trust them once in `/hooks`.
+- `codex` copies the `safe-engine` and `improve-factory` skills into `~/.agents/skills`. A clean user install adds no hooks; configure each project with `fast_gate.py hooks --host codex --project <absolute-dir>`, review project and exact-hook trust in `/hooks`, then start a fresh session. Existing global factory hooks are retained until [explicit migration](docs/install.md#migrate-existing-codex-user-hooks).
+- `cursor` copies those skills into `~/.agents/skills` and writes the gate hooks.
 - `other` copies those skills only; wire the hooks by hand ([hosts](docs/hosts.md#other-agents)).
-- `--project <dir>` installs into one project instead of your user folders.
+- `--project <dir>` installs skills and supported hooks into one project instead of your user folders. It refuses skills it did not install; use the Codex hooks-only command in a checkout with canonical methods.
 
 Claude Code without a clone. This route leaves auto-update off: turn it on in `/plugin` under Marketplaces, or [update by hand](#-update).
 
@@ -168,14 +169,16 @@ Details: [install](docs/install.md) · [hosts](docs/hosts.md).
 |---|---|
 | Claude Code, through the installer | On its own: during a session Claude Code fetches new versions; `/reload-plugins` or a new session loads them |
 | Claude Code, right now (any route) | `claude plugin marketplace update ai-software-factory`, then `claude plugin update safe-engine@ai-software-factory`, then a new session |
-| Codex, Cursor, other | `git pull` in your factory clone, then run the same `fast_gate.py install --host ...` again. It replaces only the factory's own files and hook entries |
+| Codex | `git pull` in your factory clone, then re-run `install --host codex`. Existing user hooks are retained; re-run `hooks --host codex --project <dir>` for each opted-in project and review trust. [Migration](docs/install.md#migrate-existing-codex-user-hooks) removes recognized legacy user handlers explicitly |
+| Cursor, other | `git pull` in your factory clone, then run the same `fast_gate.py install --host ...` again. It replaces only the factory's own files and supported hook entries |
 
 **Projects stay pinned.** On first use a project pins the factory's main branch to one commit, and every later run and resume there reads its methods from that commit, offline. New projects get the newest methods; updating the install brings new launchers and hooks. To switch a project to newer methods, ask `improve-factory Switch [absolute project directory] to the newest factory.` It checks the run is compatible first.
 
 ## 🧹 Uninstall
 
 - **Claude Code:** `claude plugin marketplace remove ai-software-factory` removes the marketplace from your settings and uninstalls its plugin. The installer kept your earlier settings as `~/.claude/settings.json.bak-before-safe-engine`.
-- **Codex, Cursor, other:** delete `safe-engine` and `improve-factory` from `~/.agents/skills` (or `<dir>/.agents/skills`), then remove the hook entries naming `run-gate` or `fast_gate` from `hooks.json` in `~/.codex` or `~/.cursor` (or `<dir>/.codex`, `<dir>/.cursor`). Delete your factory clone too.
+- **Codex:** close unfinished runs, then use `hooks --host codex --project <dir> --remove` for each configured project and `hooks --host codex --remove --user` for retained user JSON handlers. Review other effective hook sources separately. Remove installed `safe-engine` and `improve-factory` copies from `~/.agents/skills` (or `<dir>/.agents/skills`), then remove a factory clone only when no hook command still points to it. [Removal and recovery](docs/install.md#codex-project-hooks).
+- **Cursor, other:** delete the installed `safe-engine` and `improve-factory` copies from `~/.agents/skills` (or `<dir>/.agents/skills`), then remove their factory hook entries from `~/.cursor/hooks.json` (or `<dir>/.cursor/hooks.json`). Delete your factory clone too.
 - **Data:** `~/.safe-engine/` holds the pinned factory copies and the gate's run state; delete it once no project has an unfinished run. Each project keeps a `.factory/` folder with its work records, kept out of Git; delete it when you no longer need them.
 
 ## 🩺 Troubleshooting
@@ -185,7 +188,8 @@ Details: [install](docs/install.md) · [hosts](docs/hosts.md).
 | `safe-engine` does not show up | Start a new session. Still missing: ask the agent to read the installed `safe-engine/SKILL.md` by path (Codex, Cursor: `~/.agents/skills/safe-engine/SKILL.md`) |
 | Clone or install asks for a password or fails with "not found" | You need read access to this repository. Run `gh auth login` so Git uses your GitHub credentials over HTTPS |
 | Claude Code on Windows: hooks fail | Install Git for Windows (the hooks run in its `sh`, Git Bash), then start a new session |
-| Codex ignores the gate | Trust the factory's hooks once in `/hooks` |
+| Codex ignores the gate | Configure project hooks, review project and exact-hook trust in `/hooks`, start a fresh session there and verify loading ([hosts](docs/hosts.md#codex)) |
+| Codex hooks still run outside opted-in projects | An older user or other additive hook source may remain. Updating skills does not migrate it; use [explicit migration](docs/install.md#migrate-existing-codex-user-hooks) |
 | "Newer layout" or "Incomplete factory bundle" | Your install is older than the factory it fetched: [update](#-update) |
 | An edit or command is refused during a run | Source edits wait until the ticket and plan pass. Destructive commands are yours: run them yourself or ask for another approach |
 | The agent will not stop | A run blocks the first stop and names the next step; stopping again right after passes. To end a run early, ask the agent to close it with your reason |
@@ -227,6 +231,9 @@ No. It proves each step was recorded, not that it was good. Quality comes from t
 
 **Which tracker?**
 GitHub Issues are checked online. Other trackers are recorded and marked unverified.
+
+**Will Codex hooks interfere with ordinary tasks?**
+A clean global install adds skills only. Opted-in projects invoke a native idle guard; active-project writes stay protected across all hooked chats. Workflow reminders require explicit run participation and the current project. Existing global hooks remain until migrated. See [scope, limits and trust](docs/hosts.md#codex).
 
 **Can hooks catch everything?**
 No. They see tool calls, not intent: a command run from inside a script passes. The work record and the done-run carry the rest.

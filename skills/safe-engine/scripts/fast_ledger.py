@@ -159,11 +159,12 @@ def listing(folder):
         return []
 
 
-def registrations(active, log=None):
+def registrations(active, log=None, scope=None):
     """(entry, registration, project) for each run the gate home knows: every well-formed registration, and every open
     state whose registration is gone, re-registered here, so deleting one of the two files never switches a run off."""
-    names = set(listing(active))
-    for name in sorted(names.union(listing(active.parent / "runs"))):
+    names = {scope + ".json"} if scope and (active / (scope + ".json")).exists() else set() if scope else set(listing(active))
+    candidates = {scope + ".json"} if scope else names.union(listing(active.parent / "runs"))
+    for name in sorted(candidates):
         entry = active / name
         try:
             registration = load(entry) if name in names else reregister(entry, log)
@@ -176,7 +177,10 @@ def registrations(active, log=None):
 def reregister(entry, log):
     """The registration rebuilt from an open home state whose registration was deleted; None for a closed one."""
     run = current(load(state_path(entry)))
-    if not run or run.get("closed"):
+    if not run:
+        return None
+    if run.get("closed"):
+        retire(entry, log)
         return None
     registration = {"project": run["project"], "key": run["key"], "sessions": [], "home": True}
     try:
@@ -190,15 +194,33 @@ def reregister(entry, log):
     return registration
 
 
-def active_runs(active, log):
+def active_runs(active, log, scope=None):
     """Open runs from the registry and the home state. A missing or unreadable state makes a lost run, gate closed;
     one bad or unreachable entry never disables the others."""
     runs = []
-    for entry, registration, project in registrations(active, log):
+    for entry, registration, project in registrations(active, log, scope):
+        if scope and registry_path(active, project).stem != scope:
+            continue  # a fixed trusted scope never adopts an unrelated malformed registration
         run = state(entry, registration, log) if project.is_dir() else forget(entry, project)
         if run and not run.get("closed"):
             runs.append((entry, registration, run))
+        elif run and run.get("closed"):
+            retire(entry, log)
     return runs
+
+
+def retire(entry, log=None):
+    """Finish interrupted retirement of an authoritative closed run; never resurrect it or read its mirror."""
+    try:
+        entry.unlink(missing_ok=True)
+        target = closed_path(entry)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        os.replace(state_path(entry), target)
+        if log:
+            log("state.retired", scope=entry.stem, status="recovered")
+    except OSError as error:
+        if log:
+            log("state.retire_failed", scope=entry.stem, error_class=type(error).__name__)
 
 
 def lost(registration):

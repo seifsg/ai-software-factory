@@ -56,12 +56,12 @@ Before `start` on a product: select the factory bundle with the launcher's `reso
 ```text
 python fast_gate.py start --project <abs> --key <slug> --mode fast|lucky --kind product|feature|change [--no-ui] [--no-data] [--auth] --request-file <file>
 python fast_gate.py done <step> [--project <abs>] [--offline "<reason>"]
-python fast_gate.py status | pause --reason "<why>" | resume | close [--abandon "<reason>"]
+python fast_gate.py status | pause --reason "<why>" | resume | join | close [--abandon "<reason>"]
 python fast_gate.py install --host <host> [--project <abs>]
 ```
 
 - `start` registers the run and keeps its state in the gate home (`SAFE_ENGINE_HOME`, default `~/.safe-engine`), creates the record, keeps `.factory/` out of Git in the clone's `.git/info/exclude` (no project file changes; a reverted `.gitignore` and `git clean -fd` leave the records), and notes the bundle and hook status. `.factory/fast/run.json` is a mirror the gate rewrites on every change: read it, or `status`; the gate never reads it, so no change to it counts.
-- Always pass `--project`. Write the request verbatim to a file first (`.factory/request.md`).
+- Always pass `--project`. Write the request verbatim to a file first (`.factory/request.md`). Where the host requires explicit workflow participation, `start`, `resume` or `join` records the actual session identity; pass `--session <id>` when needed. Joining does not resume a paused run or grant permission to edit.
 - `start` keeps `.factory/` out of Git only inside a Git repository: `git init` first. `close` moves the run's state to `runs/closed/` until the next `start`.
 - Product runs default to UI and persistence; pass `--no-ui` or `--no-data` only when true. `--auth` marks sign-in: pass it when anyone signs in or roles exist. These are fixed at `start`; decide them from the request.
 - Steps run in order; `done` refuses a step while an earlier applicable one is open.
@@ -70,15 +70,16 @@ python fast_gate.py install --host <host> [--project <abs>]
 
 ## Hooks
 
-`install --host claude|codex|cursor|other` wires the hooks for agents that need it; the factory's `docs/hosts.md` lists each agent's route.
+Install skills and configure hooks through the host's supported route; the factory's `docs/install.md` and `docs/hosts.md` define scope, trust and migration. Configuration alone does not prove hooks loaded. Preserve pinned methods and run acceptance; setup never changes them.
 
 - Source edits, shell writes (`>`, `>>`, `&>`, `>|`, piped `tee`) and scaffold or install commands in the run's project are denied until every step before `build` passes. Quoted text, heredoc bodies and here-strings never count, so ticket bodies pass. `.factory/` stays writable, except `run.json`, which only the gate writes. A registered run whose state in the gate home is missing or unreadable keeps the gate closed and every destructive rule on until the owner closes the run; a run started by an older gate moves its open `run.json` home on first use. The registration (`active/`) and the state (`runs/`) guard each other: a deleted registration comes back from the open state, and a deleted state never falls back to `run.json`.
 - Destructive guard, every step of an active run: a rule fires when its words appear anywhere in the command, whatever the shell structure (substitutions, groups, `ssh` or container strings, piped `.sql` files); commit, PR and search text, and echo or heredoc text that only reaches a file or the terminal, never fire one; brace and PowerShell comma lists count item by item, and an unknown shell must pass both the Bash and the PowerShell reading. Fired rules are denied unless the parse proves them harmless: recursive deletes (`rm -r`, `Remove-Item -Recurse`, `find -delete`) outside the project, of all of it, of `.factory` or `.factory/fast`, any delete, move or wildcard that can reach `.factory/fast/run.json`, or anything in `.git` except `index.lock` (a `find` from the root passes only with `-name` patterns that cannot match `.git`, `.factory`, `fast` or `run.json`, or with `-not -path './.git/*' -not -path './.factory/*'`); `git clean -x`/`-X` and `git stash --all` (`git stash -u` passes); force, mirror, prune or `main`/`master`-delete pushes (`--force-with-lease` naming another branch, not `HEAD`, passes); `DROP` or `TRUNCATE` through a database client and database wipes (`dropdb`, `db:drop`, `migrate reset`, `migrate:fresh`, `ecto.reset`, `flush`); deletes, moves and redirect or edit-tool writes reaching the gate home's `active/` or `runs/` (its logs and bundles pass); migrations whose command or an earlier `export` names a production env value (`prod` inside a name such as `add_prod_flag` is none). The owner runs them or approves another approach.
-- Stopping mid-run is blocked once with the next step; ending the turn again right after passes. A paused or closed run never blocks.
+- Hooked chats share the active project's write and destructive protection, whether or not they receive workflow messages. Where participation is explicit, only a participating chat currently in that project receives reminders and progress; reading, editing or prompting never joins it, and old implicit session bindings are not consent. Follow the host route for session identity.
+- Stopping mid-run is blocked once with the next step for a chat receiving workflow reminders; ending the turn again right after passes. A paused or closed run never blocks.
 - A stop while the host reports a background agent still running passes: its result starts a new turn, whose stop is checked. Other background work, such as a server, does not count. Waiting on background work is no reason to `pause`.
-- Each prompt and session start gets one status line: run, next step, pause reason.
+- Each prompt and session start eligible for workflow messages gets one status line: run, next step, pause reason.
 - Progress the owner has not seen rides along with the hook's answer ([progress](#progress)).
-- No active run anywhere: hooks exit at once.
+- No relevant authoritative registration or state: scoped hooks exit through their native guard. Either home file keeps dispatch active for protection and recovery; project mirrors never count. A failed closed-state retirement can require one recovery dispatch. Idle shell overhead remains where hooks are installed.
 
 Without hooks the gate still records and checks steps; follow the order yourself. Hooks see tool calls, not intent: files written and destructive commands run from inside scripts, `xargs rm`, piped deletes (`Get-ChildItem | Remove-Item`) and commands piped into a shell from a file or program, and inline interpreter code (`python -c`, `node -e`) pass; the record and the done-run carry the rest.
 
@@ -102,7 +103,7 @@ Without hooks the gate still records and checks steps; follow the order yourself
   - `✅ <title> done → <result>` per newly built todo, then the new NOW and the ticket bar;
   - the new NOW when `**Now:**` changes.
 
-  Nothing changed: one directory scan, no reads, no network. Where your agent marks hook calls from a delegate (the factory's `docs/hosts.md`), those show nothing; the next main-thread call does. Claims live in `.factory/fast/shown/`, one folder per run; `start` and `close` clear them.
+  No new progress: no work-record read or network; active-run protection still reads authoritative state. A scoped idle guard checks only its home-file pair and does not start the gate. Where your agent marks hook calls from a delegate (the factory's `docs/hosts.md`), those show nothing; the next main-thread call does. Claims live in `.factory/fast/shown/`, one folder per run; `start` and `close` clear them.
 - A closed run leaves the hooks. The factory's `docs/hosts.md` lists the agents that show hook messages.
 
 ## Keep it fast
