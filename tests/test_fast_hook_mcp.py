@@ -211,6 +211,28 @@ class PersistentHookTests(harness.GateHarness, unittest.TestCase):
         self.assertEqual(len(result['content']), 1); self.assertEqual(result['content'][0]['type'], 'text')
         return json.loads(result['content'][0]['text'])
 
+    def test_supported_protocol_negotiates_same_version(self):
+        answer = self.rpc('initialize', {'protocolVersion': '2025-06-18'})['result']
+        self.assertEqual(answer['protocolVersion'], '2025-06-18')
+        self.assertEqual(answer['capabilities'], {'tools': {}})
+        self.assertEqual(self.event(), {})
+
+    def test_unknown_protocol_negotiates_supported_fallback(self):
+        answer = self.rpc('initialize', {'protocolVersion': '2099-01-01'})['result']
+        self.assertEqual(answer['protocolVersion'], '2025-06-18')
+        self.process.stdin.write(b'{"jsonrpc":"2.0","method":"notifications/initialized"}\n')
+        self.process.stdin.flush()
+        self.assertEqual([tool['name'] for tool in self.rpc('tools/list')['result']['tools']], ['factory_hook'])
+        self.assertEqual(self.event(), {})
+
+    def test_malformed_protocol_returns_actionable_error_and_can_retry(self):
+        for version in (None, True, 'x' * 33):
+            error = self.rpc('initialize', {'protocolVersion': version})['error']
+            self.assertEqual(error['code'], -32602)
+            self.assertIn('reconnect after repair', error['message'])
+        self.assertEqual(self.rpc('initialize', {'protocolVersion': '2025-06-18'})['result']['protocolVersion'], '2025-06-18')
+        self.assertEqual(self.rpc('ping')['result'], {})
+
     def test_same_connection_fresh_policy_participation_recovery_and_close(self):
         self.rpc('initialize', {'protocolVersion': '2024-11-05'})
         tools = self.rpc('tools/list')['result']['tools']

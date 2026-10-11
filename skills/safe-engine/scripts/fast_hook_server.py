@@ -10,6 +10,7 @@ import sys
 
 REQUEST_LIMIT = 262144
 RESPONSE_LIMIT = 65536
+PROTOCOL_VERSION = "2025-06-18"  # supported stdio tools/text schema; unknown versions negotiate this fallback
 TOOL = "factory_hook"
 CATALOG = [{"name": TOOL, "description": "Evaluate one scoped factory lifecycle event against fresh local state.",
             "inputSchema": {"type": "object", "properties": {"event": {"type": "object"}},
@@ -45,7 +46,7 @@ def serve(scope, reader=None, writer=None):
             if not isinstance(version, str) or len(version) > 32:
                 raise ValueError("Invalid protocol version")
             diagnostic("initialized")
-            return {"protocolVersion": version, "capabilities": {"tools": {}},
+            return {"protocolVersion": PROTOCOL_VERSION, "capabilities": {"tools": {}},
                     "serverInfo": {"name": "safe-engine-project-hooks", "version": "1"}}
         if method == "ping":
             return {}
