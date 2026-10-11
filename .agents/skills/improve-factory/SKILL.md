@@ -39,7 +39,7 @@ Keep any active app run safe. The repair never writes the app's source; pausing 
 - Never silently stash, reset, switch or upgrade a target, its bundle or global settings.
 - Factory repair grants no product scope change. Keep the app ticket and the maintenance ticket separate.
 - Run independent tickets in parallel, each in its own worktree: a checkout holds one open gate run.
-- Work for another session (a parallel ticket, a finding, a suggestion) launches the factory, never a bare task. Its prompt opens with your agent's invoke form (the factory's `docs/hosts.md`) and the launcher's absolute skill path: `improve-factory` on its maintenance ticket, or `safe-engine` on the product's ticket for a product bug. Then mode, project root, its own worktree and the report.
+- Work for another session (a parallel ticket, a finding, a suggestion) launches the factory, never a bare task. Record it first in its ticket (`ticketing`): a maintenance ticket, or the product's ticket for a product bug. Its prompt opens with your agent's invoke form (the factory's `docs/hosts.md`) and the launcher's absolute skill path: `improve-factory`, or `safe-engine` for a product bug. Then mode, kind, project root, a worktree the new session creates, the report and authority limited to that ticket. Active app run: hand a product bug to its coordinator instead (`references/live-session.md`).
 - Worktrees separate files only. Give delegates absolute paths. Isolate shared ports, databases, caches and services.
 
 ## 3. Analyze and plan
