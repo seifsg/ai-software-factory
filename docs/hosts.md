@@ -11,7 +11,7 @@ First-class hosts get an installer route, gate hooks and a Safe reviewer preset.
 | Skills | `safe-engine` plugin (skills + hooks) | `~/.agents/skills/` | `~/.agents/skills/` |
 | Rules file | `AGENTS.md` (read when no `CLAUDE.md` exists; otherwise import it with `@AGENTS.md`) | `AGENTS.md` | `AGENTS.md` |
 | Install | `fast_gate.py install --host claude` or [by hand](#claude-code) | `fast_gate.py install --host codex`, then trust it in `/hooks` | `fast_gate.py install --host cursor` |
-| Invoke (`improve-factory` alike) | `/safe-engine Build ...` | `$safe-engine Build ...` | `use safe-engine to build ...` |
+| Invoke (same form for `improve-factory`) | `/safe-engine Build ...` | `$safe-engine Build ...` | `use safe-engine to build ...` |
 | Question tool | `AskUserQuestion` (4 questions, 4 options each) | chat message | chat message |
 | Gate progress messages | hook `systemMessage`, shown to the user | hook `systemMessage`, shown as a warning | not shown: the agent relays the gate's card |
 | Delegate hook calls | marked (`agent_id`): they show no progress; the next main-thread call does | not marked: tool hooks carry no `agent_id` and use the parent session id, so a delegate's call may show it | not applicable |
