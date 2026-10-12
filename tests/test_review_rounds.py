@@ -13,7 +13,7 @@ from safe_engine.storage import atomic_json, read_json
 from safe_engine.workflow import EXTERNAL, REVIEW_ROUNDS
 from speed_fixtures import BUNDLE, DOUBLE, REVIEWER_BINARIES, Base, report, finding, codex, command
 
-PARTNER = "none (test owner is a developer)"  # the handoff's technical-partner decision
+PARTNER = "none (no stage reached)"  # the handoff's technical-partner decision
 
 
 class ReviewRoundCapTests(Base):

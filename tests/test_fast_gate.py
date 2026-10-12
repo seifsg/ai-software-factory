@@ -36,7 +36,7 @@ LIGHT = """# copy-fix
 **PR:** https://github.com/acme/site/pull/2 (body: .factory/fast/pr-body.md)
 **Unverified:** none
 **Follow-ups:** none
-**Partner:** none (owner is a developer)
+**Partner:** none (no stage reached)
 """
 PR_BODY = """## 🎬 Before & after
 

@@ -13,7 +13,7 @@ from safe_engine.project import EngineError, bundle_input_paths, validate_profil
 from safe_engine.storage import atomic_json
 from safe_engine.workflow import Workflow
 
-PARTNER = "none (test owner is a developer)"  # the handoff's technical-partner decision
+PARTNER = "none (no stage reached)"  # the handoff's technical-partner decision
 
 
 class FeatureBatchTests(unittest.TestCase):

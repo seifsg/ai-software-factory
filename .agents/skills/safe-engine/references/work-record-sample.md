@@ -188,7 +188,7 @@ indexes: classes(starts_at), bookings(class_id, status), waitlist(class_id, posi
 **Dev sign-in:** header role switcher (Member, Staff), development only; this POC has no sign-in
 **PR:** https://github.com/acme/studio-booking/pull/7 (body: .factory/fast/pr-body.md): Before & after per journey (schedule, booking, waitlist), screenshot pairs and a booking GIF
 **Unverified:** automated tests, independent review, Safari, payment provider
-**Partner:** none (owner is a developer)
+**Partner:** declined (not now)
 **Follow-ups:** real payments (#6, owner-approved mock in this POC, revisit at MVP kickoff). POC skips (real sign-in, security hardening, deployment, landing page) are listed in epic #1 for the MVP
 
 ## MVP done-run example

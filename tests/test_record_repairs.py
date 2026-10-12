@@ -18,7 +18,7 @@ import test_workflow as legacy
 from safe_engine.project import EngineError, file_hash, validate_profile
 from safe_engine.storage import atomic_json, save
 
-PARTNER = "none (test owner is a developer)"  # the handoff's technical-partner decision
+PARTNER = "none (no stage reached)"  # the handoff's technical-partner decision
 
 BUNDLE = Path(__file__).resolve().parents[1]
 DOUBLE = "Explicit synthetic record-review double; no actual independent acceptance"

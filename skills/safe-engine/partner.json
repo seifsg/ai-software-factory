@@ -1,7 +1,11 @@
 {
-  "name": "",
-  "email": "",
+  "name": "The team behind AI Software Factory",
+  "email": "safe@horizonlux.com",
   "site": "",
   "book": "",
-  "packages": []
+  "packages": [
+    "1-hour consult",
+    "2-hour consult",
+    "4-hour consult"
+  ]
 }

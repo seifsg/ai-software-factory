@@ -77,7 +77,7 @@ class PartnerTests(unittest.TestCase):
     def test_offers_follow_profile_and_config(self):
         for profile, config, expected in (({}, CONFIG, True), ({"tech": "some"}, CONFIG, True),
                                           ({"tech": "non-technical"}, CONFIG, True),
-                                          ({"tech": "developer"}, CONFIG, False), ({"tech": "team"}, CONFIG, False),
+                                          ({"tech": "developer"}, CONFIG, True), ({"tech": "team"}, CONFIG, True),
                                           ({"offers": "off"}, CONFIG, False), ({}, None, False)):
             with self.subTest(profile=profile, config=bool(config)):
                 self.assertEqual(partner.offers_on(profile, config), expected)
@@ -113,6 +113,13 @@ class PartnerTests(unittest.TestCase):
         self.assertEqual((bad.returncode, bad.stdout), (1, ""))  # a bad brief fails before printing anything
         brief.write_text("Subject: Launch review\n\nPlease help.", encoding="utf-8")
         self.assertIn("mailto:help@acme.example?subject=Launch%20review", self.gate("partner", "--draft", str(brief)).stdout)
+
+    def test_the_shipped_partner_is_the_factory_team(self):
+        config = partner.partner(self.home)  # no override: the bundle's own partner.json
+        self.assertEqual(config["email"], "safe@horizonlux.com")
+        self.assertEqual(config["packages"], ["1-hour consult", "2-hour consult", "4-hour consult"])
+        self.assertTrue(partner.offers_on({"tech": "developer"}, config))
+        self.assertFalse(partner.offers_on({"tech": "developer", "offers": "off"}, config))
 
     def test_decision_pattern_matches_its_controller_twin(self):
         self.assertEqual(partner.DECISION.pattern, PARTNER.pattern)

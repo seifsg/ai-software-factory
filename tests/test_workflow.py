@@ -14,7 +14,7 @@ from safe_engine.runner import run_command
 from safe_engine.storage import atomic_json, locked, read_json
 from safe_engine.workflow import Workflow
 
-PARTNER = "none (test owner is a developer)"  # the handoff's technical-partner decision
+PARTNER = "none (no stage reached)"  # the handoff's technical-partner decision
 
 
 class WorkflowTests(unittest.TestCase):

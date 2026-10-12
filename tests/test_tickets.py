@@ -23,7 +23,7 @@ from safe_engine.tickets import TicketStore, binding, parse_body, render_ticket,
 from safe_engine.workflow import DELEGATION, Workflow
 from ticket_fixtures import SYNTHETIC, base_contract, confirm, visual_contract
 
-PARTNER = "none (test owner is a developer)"  # the handoff's technical-partner decision
+PARTNER = "none (no stage reached)"  # the handoff's technical-partner decision
 
 
 BUNDLE = Path(__file__).resolve().parents[1]

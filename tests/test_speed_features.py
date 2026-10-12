@@ -23,7 +23,7 @@ from safe_engine.tickets import timestamp
 from safe_engine.workflow import Workflow
 from speed_fixtures import BUNDLE, RENDEZVOUS, PAUSE, Base, report, finding, deferral, script, command
 
-PARTNER = "none (test owner is a developer)"  # the handoff's technical-partner decision
+PARTNER = "none (no stage reached)"  # the handoff's technical-partner decision
 
 
 class ParallelChecksTests(Base):

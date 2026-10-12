@@ -11,7 +11,6 @@ from urllib.parse import quote
 
 PROFILE = {"tech": ("developer", "some", "non-technical", "team"),
            "role": ("founder", "agency", "employee", "hobby"), "offers": ("on", "off")}
-SILENT = {"developer", "team"}  # tech levels that never get offers
 FIELDS = ("name", "email", "site", "book", "packages")
 EMAIL = re.compile(r"[^@\s]+@[^@\s]+\.[^@\s]+")
 # The recorded decision. Its twin in safe_engine/workflow.py (PARTNER) must match: the controller cannot import this.
@@ -69,8 +68,8 @@ def partner(home, bundled=BUNDLED):
 
 
 def offers_on(profile, config):
-    """Whether this owner may get unprompted offers."""
-    return bool(config) and profile.get("offers") != "off" and profile.get("tech") not in SILENT
+    """Whether this owner may get unprompted suggestions: every owner, unless they said never."""
+    return bool(config) and profile.get("offers") != "off"
 
 
 def owner_line(home):
@@ -80,8 +79,7 @@ def owner_line(home):
     except (OSError, ValueError) as error:
         return f"👤 owner: unreadable profile or partner config ({error})"
     who = " ".join(filter(None, (profile.get("tech", "unknown"), profile.get("role"))))
-    state = ("offers on" + ("" if "tech" in profile else ", asked at the first offer")) if offers_on(profile, config) \
-        else "offers off" + ("" if config else " (no partner configured)")
+    state = "offers on" if offers_on(profile, config) else "offers off" + ("" if config else " (no partner configured)")
     return f"👤 owner: {who} · partner {state}"
 
 
