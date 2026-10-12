@@ -2,7 +2,7 @@
 
 Contents: quiesce, checkpoint, separate versions and writers, delegate, adopt, entry receipt, resume.
 
-Read before touching any workspace while app work is active. The app coordinator owns the project and user updates. The repairer returns factory evidence only.
+Read before touching any workspace while app work is active. The app coordinator owns the project and user updates. The repairer returns factory evidence only. A product bug goes to the coordinator, through the owner when sessions cannot message each other; the coordinator records it and decides on any session.
 
 ```text
 App coordinator ── checkpoint ─────────────────── revalidate → resume
