@@ -116,7 +116,7 @@ class PartnerTests(unittest.TestCase):
 
     def test_the_shipped_partner_is_the_factory_team(self):
         config = partner.partner(self.home)  # no override: the bundle's own partner.json
-        self.assertEqual(config["email"], "safe@horizonlux.com")
+        self.assertEqual(config["email"], "seif@horizonlux.com")
         self.assertEqual(config["packages"], ["1-hour consult", "2-hour consult", "4-hour consult"])
         self.assertTrue(partner.offers_on({"tech": "developer"}, config))
         self.assertFalse(partner.offers_on({"tech": "developer", "offers": "off"}, config))
