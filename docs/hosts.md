@@ -57,7 +57,7 @@ Their hooks show no gate progress messages: the agent relays the card from the g
 
 ## Technical partner mail
 
-The partner's contact lives in `skills/safe-engine/partner.json` (`name`, `email`, `site`, `book`, `packages`). An empty `email` turns suggestions off. To use another partner, put the same file in the gate home (`SAFE_ENGINE_HOME`, default `~/.safe-engine/partner.json`); it wins over the bundle's. A project's files never set the partner. `fast_gate.py partner` prints the one in effect.
+The partner's contact lives in `skills/safe-engine/partner.json` (`name`, `email`, `site`, `book`). An empty `email` turns suggestions off. To use another partner, put the same file in the gate home (`SAFE_ENGINE_HOME`, default `~/.safe-engine/partner.json`); it wins over the bundle's. A project's files never set the partner. `fast_gate.py partner` prints the one in effect.
 
 | Agent | Sending an approved brief |
 |---|---|

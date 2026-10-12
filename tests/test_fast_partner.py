@@ -14,8 +14,8 @@ import fast_partner as partner  # noqa: E402
 import fast_record  # noqa: E402
 from safe_engine.workflow import PARTNER  # noqa: E402
 
-CONFIG = {"name": "Acme Partners", "email": "help@acme.example", "site": "https://acme.example", "book": "",
-          "packages": ["Launch review"]}
+CONFIG = {"name": "Acme Partners", "email": "help@acme.example", "site": "https://acme.example",
+          "book": "https://cal.example/acme"}
 
 
 class PartnerTests(unittest.TestCase):
@@ -60,7 +60,7 @@ class PartnerTests(unittest.TestCase):
         self.home.mkdir()
         (self.home / "partner.json").write_text('{"name": "Other", "email": "a@b.example"}', encoding="utf-8")
         self.assertEqual(partner.partner(self.home, self.bundled),
-                         {"name": "Other", "email": "a@b.example", "site": "", "book": "", "packages": []})
+                         {"name": "Other", "email": "a@b.example", "site": "", "book": ""})
         (self.home / "partner.json").write_text('{"email": "nope"}', encoding="utf-8")
         with self.assertRaisesRegex(ValueError, "not an address"):
             partner.partner(self.home, self.bundled)
@@ -74,13 +74,14 @@ class PartnerTests(unittest.TestCase):
         self.assertIn("help@acme.example", result.stdout)
         self.assertNotIn("evil", result.stdout)
 
-    def test_offers_follow_profile_and_config(self):
-        for profile, config, expected in (({}, CONFIG, True), ({"tech": "some"}, CONFIG, True),
-                                          ({"tech": "non-technical"}, CONFIG, True),
-                                          ({"tech": "developer"}, CONFIG, True), ({"tech": "team"}, CONFIG, True),
-                                          ({"offers": "off"}, CONFIG, False), ({}, None, False)):
-            with self.subTest(profile=profile, config=bool(config)):
-                self.assertEqual(partner.offers_on(profile, config), expected)
+    def test_every_owner_gets_suggestions_once_a_partner_is_set(self):
+        self.home.mkdir()
+        for tech in ("developer", "team", "some", "non-technical"):
+            partner.set_owner(self.home, [f"tech={tech}"])
+            with self.subTest(tech=tech):
+                self.assertIn(f"{tech} · partner offers on", partner.owner_line(self.home))  # the bundle's partner
+        with self.assertRaisesRegex(ValueError, "Allowed"):
+            partner.set_owner(self.home, ["offers=off"])  # no opt-out answer exists
 
     def test_mail_link_uses_crlf_and_refuses_overlong_text(self):
         link = partner.mailto(CONFIG, "[Factory] go-live · MVP", "line one\nline two & more")
@@ -117,9 +118,9 @@ class PartnerTests(unittest.TestCase):
     def test_the_shipped_partner_is_the_factory_team(self):
         config = partner.partner(self.home)  # no override: the bundle's own partner.json
         self.assertEqual(config["email"], "seif@horizonlux.com")
-        self.assertEqual(config["packages"], ["1-hour consult", "2-hour consult", "4-hour consult"])
-        self.assertTrue(partner.offers_on({"tech": "developer"}, config))
-        self.assertFalse(partner.offers_on({"tech": "developer", "offers": "off"}, config))
+        self.assertEqual(config["name"], "Seif")
+        self.assertNotIn("packages", config)  # no consult lengths: the team quotes after triage
+        self.assertIn("offers on", partner.owner_line(self.home))
 
     def test_decision_pattern_matches_its_controller_twin(self):
         self.assertEqual(partner.DECISION.pattern, PARTNER.pattern)

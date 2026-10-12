@@ -318,7 +318,7 @@ def cmd_start(args):
 
 
 def cmd_owner(args):
-    """Show, set or forget the owner profile (partner.md#who-gets-offers)."""
+    """Show, set or forget the owner profile (partner.md#who)."""
     partner = sibling("fast_partner")
     try:
         if args.forget:
@@ -343,8 +343,6 @@ def cmd_partner(args):
         for key in ("site", "book"):
             if config[key]:
                 print(f"{key.title()}: {config[key]}")
-        if config["packages"]:
-            print("Packages: " + ", ".join(map(str, config["packages"])))
     except (OSError, ValueError) as error:
         fail(str(error))
     if not args.draft:
@@ -746,7 +744,7 @@ def main():
                          help="other: entry skills only, for agents you wire by hand")
     install.add_argument("--project", help="Install into this project instead of your user folders")
     owner = sub.add_parser("owner", help="Show, set or forget the owner profile")
-    owner.add_argument("--set", nargs="+", metavar="KEY=VALUE", help="tech, role or offers")
+    owner.add_argument("--set", nargs="+", metavar="KEY=VALUE", help="tech or role")
     owner.add_argument("--forget", action="store_true")
     partner = sub.add_parser("partner", help="Show the technical partner; build or open the mail for a brief")
     partner.add_argument("--draft", help="Brief file: first line 'Subject: ...', then the body")

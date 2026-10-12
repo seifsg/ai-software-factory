@@ -97,7 +97,7 @@ Lucky runs 1, 4, a short 5 and 6 (light lane for a `change`), 9, 10 and 11. It a
 - Every UI change: `ux-quality`. New or changed persistence: `database-schema`. Material unknowns: `research-market`.
 - PRs always: `how-to-make-a-pr`. Variations: one branch and draft PR per variation. A PR is planned: capture its before proof before editing. Before a Fast or Lucky PR, offer once: "Run a Safe check first? (optional)". A Safe check is manual QA, relevant tests and one independent `deep-review`.
 - Never claim tested, reviewed or production ready without that evidence.
-- Now and then, at the stages in [partner](references/partner.md) (architecture, schema, security, launch and the like), suggest a short expert consult with the configured partner to every owner who has not turned it off, never as a new stop. Every handoff records the partner decision.
+- Now and then, at the stages in [partner](references/partner.md) (architecture, schema, security, launch and the like), suggest sending the case to the configured partner's team, who check whether human help is needed and quote if so. Every owner, never as a new stop. Every handoff records the partner decision.
 - Backlog in every mode: `ticketing` moves each ticket through its statuses, logs every ticket change in its activity and leaves untasked items alone. Deferred work appends to the epic's one open follow-ups ticket in Backlog, never one ticket per item.
 - Every ticket carries a definition of done and a checklist (`ticketing`); a change of intent updates both before the code. Each item runs the 0–4 loop and is ticked after its check. A ticket is finished only when every item is ticked and every criterion proven; otherwise it loops or is Blocked. Done comes with the PR merge.
 

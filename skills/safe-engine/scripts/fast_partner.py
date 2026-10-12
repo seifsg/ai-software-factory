@@ -10,8 +10,8 @@ from pathlib import Path
 from urllib.parse import quote
 
 PROFILE = {"tech": ("developer", "some", "non-technical", "team"),
-           "role": ("founder", "agency", "employee", "hobby"), "offers": ("on", "off")}
-FIELDS = ("name", "email", "site", "book", "packages")
+           "role": ("founder", "agency", "employee", "hobby")}
+FIELDS = ("name", "email", "site", "book")
 EMAIL = re.compile(r"[^@\s]+@[^@\s]+\.[^@\s]+")
 # The recorded decision. Its twin in safe_engine/workflow.py (PARTNER) must match: the controller cannot import this.
 DECISION = re.compile(r"(?:offered|sent|declined|none) \([^()\n]*\S[^()\n]*\)", re.I)
@@ -64,22 +64,17 @@ def partner(home, bundled=BUNDLED):
         return None
     if not EMAIL.fullmatch(email):
         raise ValueError(f"Partner email '{email}' is not an address; fix partner.json")
-    return {key: data.get(key) or ([] if key == "packages" else "") for key in FIELDS} | {"email": email}
-
-
-def offers_on(profile, config):
-    """Whether this owner may get unprompted suggestions: every owner, unless they said never."""
-    return bool(config) and profile.get("offers") != "off"
+    return {key: str(data.get(key) or "").strip() for key in FIELDS} | {"email": email}
 
 
 def owner_line(home):
-    """One line for `start`: who the owner is and whether offers are on."""
+    """One line for `start`: who the owner is and whether suggestions are on (every owner, once a partner is set)."""
     try:
         profile, config = owner(home), partner(home)
     except (OSError, ValueError) as error:
         return f"👤 owner: unreadable profile or partner config ({error})"
     who = " ".join(filter(None, (profile.get("tech", "unknown"), profile.get("role"))))
-    state = "offers on" if offers_on(profile, config) else "offers off" + ("" if config else " (no partner configured)")
+    state = "offers on" if config else "offers off (no partner configured)"
     return f"👤 owner: {who} · partner {state}"
 
 
