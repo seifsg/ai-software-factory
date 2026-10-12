@@ -55,6 +55,15 @@ Their hooks show no gate progress messages: the agent relays the card from the g
 
 `fast_gate.py install --host other` copies the launchers into `~/.agents/skills` (or `--project <dir>`). Run hooks through `run-gate.sh`: it fails open when Python or the gate is missing. Unknown hosts get a generic reader: pre-tool events deny with exit code 2 and the reason on stderr; stop and prompt hooks need a first-class adapter.
 
+## Technical partner mail
+
+The partner's contact lives in `skills/safe-engine/partner.json` (`name`, `email`, `site`, `book`, `packages`). An empty `email` turns offers off. To use another partner, put the same file in the gate home (`SAFE_ENGINE_HOME`, default `~/.safe-engine/partner.json`); it wins over the bundle's. A project's files never set the partner. `fast_gate.py partner` prints the one in effect.
+
+| Agent | Sending an approved brief |
+|---|---|
+| Claude Code | A connected mail tool (a Gmail or Outlook connector) when the session has one: create the email to the address `partner` printed, then send or keep it as a draft, as the owner says. Otherwise `partner --draft <brief> --open`. |
+| Codex, Cursor, others | `fast_gate.py partner --draft <brief> --open`: opens the owner's mail app through the OS mail handler; they press send. No mail app or a brief too long for a mail link: the address and the text to copy. |
+
 ## Evals
 
 `python -m evals run` lives in the factory repository only (`evals/README.md`); installed copies leave `evals/` out. It takes each agent's non-interactive command as a template. The prompt arrives on stdin and also sits at `../prompt.md` from the workspace. In the factory arm, `{factory}` is a fresh export of the factory bundle. Real runs cost model tokens; check each flag against the installed version before one.

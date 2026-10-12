@@ -14,6 +14,8 @@ from safe_engine.runner import run_command
 from safe_engine.storage import atomic_json, locked, read_json
 from safe_engine.workflow import Workflow
 
+PARTNER = "none (test owner is a developer)"  # the handoff's technical-partner decision
+
 
 class WorkflowTests(unittest.TestCase):
     def setUp(self):
@@ -171,7 +173,7 @@ class WorkflowTests(unittest.TestCase):
     def test_missing_review_and_modified_logs_cannot_pass(self):
         self.reviewed_input()
         with self.assertRaises(EngineError):
-            self.flow.handoff()
+            self.flow.handoff(PARTNER)
         state = self.flow.load()
         Path(state["checks"]["results"][0]["log"]).write_text("changed output")
         with self.assertRaisesRegex(EngineError, "evidence"):
@@ -327,10 +329,10 @@ class WorkflowTests(unittest.TestCase):
             return {"passed": True, "exit_code": 0}
         with patch("safe_engine.workflow.shutil.which", return_value=sys.executable), patch("safe_engine.workflow.run_command", side_effect=review_double):
             self.assertEqual(self.flow.review(10)["phase"], "ready")
-        self.assertTrue(Path(self.flow.handoff()["handoff"]).is_file())
+        self.assertTrue(Path(self.flow.handoff(PARTNER)["handoff"]).is_file())
         (self.root / "app.py").write_text("value = 2\n")
         with self.assertRaises(EngineError):
-            self.flow.handoff()
+            self.flow.handoff(PARTNER)
 
     def test_concurrent_lock_refused_and_released(self):
         run = self.root / ".factory"

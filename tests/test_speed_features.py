@@ -23,6 +23,8 @@ from safe_engine.tickets import timestamp
 from safe_engine.workflow import Workflow
 from speed_fixtures import BUNDLE, RENDEZVOUS, PAUSE, Base, report, finding, deferral, script, command
 
+PARTNER = "none (test owner is a developer)"  # the handoff's technical-partner decision
+
 
 class ParallelChecksTests(Base):
     def manual_done(self):
@@ -319,11 +321,11 @@ class ProofDraftAndHandoffTests(Base):
         f.local_review()
         f.refresh()
         with self.assertRaisesRegex(EngineError, "Write the ticket's checklist"):  # new runs need one
-            f.flow.handoff()
+            f.flow.handoff(PARTNER)
         state = f.flow.load()
         state.pop("checklist_required")  # a run started before the rule keeps working without one
         atomic_json(f.flow.directory / "state.json", state)
-        text = Path(f.flow.handoff()["handoff"]).read_text(encoding="utf-8")
+        text = Path(f.flow.handoff(PARTNER)["handoff"]).read_text(encoding="utf-8")
         sha = proof["criteria"][0]["evidence"][0]["sha256"][:12]
         for expected in ("## Criterion → change → proof → gap", "| Criterion | Change | Proof | Gap |",
                          "| A1: Synthetic fixture sentence remains readable | README.md:1 synthetic fixture |",
@@ -335,7 +337,7 @@ class ProofDraftAndHandoffTests(Base):
         f = self.to_review()
         low = finding("LOW", "accepted-deferral", deferral())
         self.assertEqual(self.codex_review(f, report(findings=[low]))["phase"], "ready")
-        text = Path(f.flow.handoff()["handoff"]).read_text(encoding="utf-8")
+        text = Path(f.flow.handoff(PARTNER)["handoff"]).read_text(encoding="utf-8")
         self.assertIn("| A1: Criterion A1 holds | Recorded implementation: artifacts/", text)
         self.assertIn("manual-evidence.txt", text)
         self.assertIn("## Deferred findings", text)
@@ -344,7 +346,24 @@ class ProofDraftAndHandoffTests(Base):
     def test_clean_review_has_no_deferred_section(self):
         f = self.to_review()
         self.codex_review(f, report())
-        self.assertNotIn("## Deferred findings", Path(f.flow.handoff()["handoff"]).read_text(encoding="utf-8"))
+        self.assertNotIn("## Deferred findings", Path(f.flow.handoff(PARTNER)["handoff"]).read_text(encoding="utf-8"))
+
+    def test_handoff_records_the_technical_partner_decision(self):
+        f = self.to_review()
+        self.codex_review(f, report())
+        for value in (None, "", "maybe later", "none", "none ()", "offered (a (b))"):
+            with self.subTest(value=value), self.assertRaisesRegex(EngineError, "technical-partner decision"):
+                f.flow.handoff(value)
+        text = Path(f.flow.handoff("offered (go-live, upkeep)")["handoff"]).read_text(encoding="utf-8")
+        self.assertIn("Technical partner: offered (go-live, upkeep)", text)
+
+    def test_runs_started_before_the_partner_rule_hand_off_without_it(self):
+        f = self.to_review()
+        self.codex_review(f, report())
+        state = f.flow.load()
+        state.pop("partner_required")
+        atomic_json(f.flow.directory / "state.json", state)
+        self.assertNotIn("Technical partner", Path(f.flow.handoff()["handoff"]).read_text(encoding="utf-8"))
 
 
 class OwnerDelegationTests(Base):

@@ -188,12 +188,12 @@ indexes: classes(starts_at), bookings(class_id, status), waitlist(class_id, posi
 **Dev sign-in:** header role switcher (Member, Staff), development only; this POC has no sign-in
 **PR:** https://github.com/acme/studio-booking/pull/7 (body: .factory/fast/pr-body.md): Before & after per journey (schedule, booking, waitlist), screenshot pairs and a booking GIF
 **Unverified:** automated tests, independent review, Safari, payment provider
+**Partner:** none (owner is a developer)
 **Follow-ups:** real payments (#6, owner-approved mock in this POC, revisit at MVP kickoff). POC skips (real sign-in, security hardening, deployment, landing page) are listed in epic #1 for the MVP
 
 ## MVP done-run example
 
 A POC record has none of these lines. An MVP or production slice adds them to its Done-run section:
-
 **Secrets:** `gitleaks git .` and `gitleaks dir .`: 0 findings
 **Dependencies:** `pnpm audit --prod`: 1 high (pinned `qs`), fixed by bumping to the patched release; rerun 0
 **Static:** `pnpm exec eslint .` with the security rules: 0 high or critical; 2 low, fixed

@@ -13,6 +13,8 @@ from safe_engine.project import EngineError, bundle_input_paths, validate_profil
 from safe_engine.storage import atomic_json
 from safe_engine.workflow import Workflow
 
+PARTNER = "none (test owner is a developer)"  # the handoff's technical-partner decision
+
 
 class FeatureBatchTests(unittest.TestCase):
     def setUp(self):
@@ -81,7 +83,7 @@ class FeatureBatchTests(unittest.TestCase):
             self.assertEqual(result['missing_required_checks'], ['b' if name=='a' else 'a'])
             with self.assertRaises(EngineError): self.flow.require_checks(self.flow.load())
             with self.assertRaises(EngineError): self.flow.review(10)
-            with self.assertRaises(EngineError): self.flow.handoff()
+            with self.assertRaises(EngineError): self.flow.handoff(PARTNER)
         self.flow.record('batch',self.draft('batch'))
         self.assertTrue(self.flow.check()['checks_passed'])
         self.assertEqual(self.counts(),(2,2))

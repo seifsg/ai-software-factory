@@ -18,6 +18,8 @@ import test_workflow as legacy
 from safe_engine.project import EngineError, file_hash, validate_profile
 from safe_engine.storage import atomic_json, save
 
+PARTNER = "none (test owner is a developer)"  # the handoff's technical-partner decision
+
 BUNDLE = Path(__file__).resolve().parents[1]
 DOUBLE = "Explicit synthetic record-review double; no actual independent acceptance"
 
@@ -93,7 +95,7 @@ class RecordRepairTests(unittest.TestCase):
         history = json.loads((f.flow.directory / "history" / f"{before['sequence']:04d}.json").read_text(encoding="utf-8"))
         self.assertEqual(history["review"], before["review"])
         with self.assertRaises(EngineError):
-            f.flow.handoff()
+            f.flow.handoff(PARTNER)
         fresh = {**self.report(), "verdict": "PASS", "findings": []}
         def review_double(argv, cwd, timeout, log, stdin):
             self.assertIn("--ephemeral", argv)
@@ -108,7 +110,7 @@ class RecordRepairTests(unittest.TestCase):
             self.assertEqual(f.flow.review(10)["phase"], "ready")
         self.assertEqual(reviewer.call_count, 1)
         self.assertEqual((f.root / ".factory/check-count").read_text(), "1")
-        self.assertEqual(f.flow.handoff()["phase"], "ready")
+        self.assertEqual(f.flow.handoff(PARTNER)["phase"], "ready")
 
     def test_absent_false_and_legacy_profiles_keep_ordinary_repair_policy(self):
         for opt_in in (None, False):

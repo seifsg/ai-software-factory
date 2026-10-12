@@ -13,6 +13,8 @@ from safe_engine.storage import atomic_json, read_json
 from safe_engine.workflow import EXTERNAL, REVIEW_ROUNDS
 from speed_fixtures import BUNDLE, DOUBLE, REVIEWER_BINARIES, Base, report, finding, codex, command
 
+PARTNER = "none (test owner is a developer)"  # the handoff's technical-partner decision
+
 
 class ReviewRoundCapTests(Base):
     def test_capped_failed_reviews_then_refused_until_the_owner_extends(self):
@@ -104,7 +106,7 @@ class ExternalReviewerTests(Base):
         self.assertEqual(f.flow.status()["review_execution"], f"host/agent-1/model-x: {EXTERNAL}")
         self.assertIsNone(f.flow.status()["review_packet"])
         self.assertIn(nonce, read_json(f.flow.load()["review"]["report"])["summary"])
-        self.assertIn("independence not verified", Path(f.flow.handoff()["handoff"]).read_text(encoding="utf-8"))
+        self.assertIn("independence not verified", Path(f.flow.handoff(PARTNER)["handoff"]).read_text(encoding="utf-8"))
 
     def test_report_must_carry_this_packets_nonce(self):
         f = self.to_review()

@@ -59,7 +59,8 @@ def main():
     extend.add_argument("--rounds", required=True, type=int)
     extend.add_argument("--reason", required=True)
     commands.add_parser("status", help="Read saved progress and evidence freshness")
-    commands.add_parser("handoff", help="Validate current acceptance and write a local report")
+    handoff = commands.add_parser("handoff", help="Validate current acceptance and write a local report")
+    handoff.add_argument("--partner", help="Technical-partner decision: offered|sent|declined|none (<why>)")
     capture = commands.add_parser("ticket-capture", help="Import a complete actual MCP read; performs no remote action")
     capture.add_argument("--source", required=True)
     capture.add_argument("--unchanged", action="store_true",
@@ -169,6 +170,8 @@ def run(args):
                 result = workflow.extend_reviews(args.rounds, args.reason)
             elif args.command == "cancel":
                 result = workflow.cancel(args.reason)
+            elif args.command == "handoff":
+                result = workflow.handoff(args.partner)
             else:
                 result = getattr(workflow, args.command)()
     return result

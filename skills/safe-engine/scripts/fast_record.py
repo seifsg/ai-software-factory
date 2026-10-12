@@ -13,6 +13,7 @@ if HERE not in sys.path:
     sys.path.insert(0, HERE)  # loaded by file path (tests, older gates): find the sibling module
 from fast_progress import built_ids, sections, subsection, todo_ids, without_result  # noqa: E402,F401 - shared parsers
 import fast_proof  # noqa: E402 - the PR body's Before & after check
+import fast_partner  # noqa: E402 - the Partner decision pattern
 
 URL = re.compile(r"https?://[^\s)>\]|]+")
 ISSUE = re.compile(r"https://github\.com/([\w.-]+/[\w.-]+)/issues/(\d+)")
@@ -604,8 +605,17 @@ def digest(path):
 
 def check_handoff(run, body, **kwargs):
     labels = ["Run", "Statuses", "Unverified", "Follow-ups"] + (["Dev sign-in"] if run.get("auth") else []) + (
-        ["PR"] if run.get("pr_proof") else [])
-    return missing_markers(body, labels) or held(run, kwargs, covered(run, needs_ticks)) + pr_proof(run, body, **kwargs)
+        ["PR"] if run.get("pr_proof") else []) + (["Partner"] if run.get("partner") else [])
+    return missing_markers(body, labels) or partner_problems(run, body) or (
+        held(run, kwargs, covered(run, needs_ticks)) + pr_proof(run, body, **kwargs))
+
+
+def partner_problems(run, body):
+    """Runs on current methods: the Partner line names the decision (partner.md#record)."""
+    value = marker(body, "Partner") if run.get("partner") else None
+    if value is None or fast_partner.DECISION.fullmatch(value):
+        return []
+    return [f"Partner line must be offered, sent, declined or none with the reason in parentheses, not '{value[:60]}'"]
 
 
 def pr_proof(run, body, project=None, offline=None, **_):

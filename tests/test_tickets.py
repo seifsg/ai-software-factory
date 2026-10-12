@@ -23,6 +23,8 @@ from safe_engine.tickets import TicketStore, binding, parse_body, render_ticket,
 from safe_engine.workflow import DELEGATION, Workflow
 from ticket_fixtures import SYNTHETIC, base_contract, confirm, visual_contract
 
+PARTNER = "none (test owner is a developer)"  # the handoff's technical-partner decision
+
 
 BUNDLE = Path(__file__).resolve().parents[1]
 
@@ -496,15 +498,15 @@ class TicketTests(unittest.TestCase):
         self.record_proof(self.proof(evidence))
         self.assertEqual(self.local_review()["phase"], "ready")
         with self.assertRaisesRegex(EngineError, "new complete"):
-            self.flow.handoff()
+            self.flow.handoff(PARTNER)
         ticked = deepcopy(self.contract)
         ticked["checklist"] = [{"id": "T1", "text": "Synthetic sentence kept", "done": False}]
         self.refresh(ticked)
         with self.assertRaisesRegex(EngineError, "checklist item.*T1"):
-            self.flow.handoff()
+            self.flow.handoff(PARTNER)
         ticked["checklist"][0].update(done=True, proof="Synthetic read-back")
         self.refresh(ticked)
-        result = self.flow.handoff()
+        result = self.flow.handoff(PARTNER)
         handoff = Path(result["handoff"]).read_text(encoding="utf-8")
         self.assertIn("Revision: 1", handoff)
         self.assertIn("not remote review", handoff)

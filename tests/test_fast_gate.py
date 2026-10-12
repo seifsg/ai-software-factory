@@ -36,6 +36,7 @@ LIGHT = """# copy-fix
 **PR:** https://github.com/acme/site/pull/2 (body: .factory/fast/pr-body.md)
 **Unverified:** none
 **Follow-ups:** none
+**Partner:** none (owner is a developer)
 """
 PR_BODY = """## 🎬 Before & after
 
@@ -727,7 +728,7 @@ class FastGateTests(GateHarness, unittest.TestCase):
             self.assertEqual(record.online(older, {"offline": None, "all_sections": sections}, record.needs_ticks), [])
         with patch.object(record, "gh", return_value=issue(ticket)):
             self.assertIn("1 unticked", record.online(current, {"offline": None, "all_sections": sections}, record.needs_ticks)[0])
-            handoff = "**Run:** x\n**Statuses:** x\n**Unverified:** x\n**Follow-ups:** x\n"
+            handoff = "**Run:** x\n**Statuses:** x\n**Unverified:** x\n**Follow-ups:** x\n**Partner:** none (x)\n"
             self.assertIn("1 unticked", record.check_handoff(current, handoff, offline=None, all_sections=sections)[0])
             dropped = "https://github.com/acme/portal/issues/3"  # pinned at `done tickets`, later removed from the record
             self.assertEqual(len(record.online({**current, "tickets": [dropped]},
@@ -811,7 +812,7 @@ class FastGateTests(GateHarness, unittest.TestCase):
                              ["plan todos no listed ticket's checklist holds: T3"])
         with patch.object(record, "gh", return_value=issue(ticket + "- [ ] T3 refuse (A2)\n")):
             self.assertEqual(record.check_plan(light, plan, offline=None, all_sections=follow_up), [])
-        handoff = "**Run:** x\n**Statuses:** x\n**Unverified:** x\n**Follow-ups:** x\n"
+        handoff = "**Run:** x\n**Statuses:** x\n**Unverified:** x\n**Follow-ups:** x\n**Partner:** none (x)\n"
         with patch.object(record, "gh", return_value=issue(ticket + "- [x] T2 refuse (A2). Proof: refused\n")):
             self.assertEqual(record.check_handoff(light, handoff, offline=None, all_sections=follow_up),
                              ["plan todos no listed ticket's checklist holds: T3"])  # drift during build
@@ -848,14 +849,14 @@ class FastGateTests(GateHarness, unittest.TestCase):
         spec.loader.exec_module(gate)
         layout, lane, ux = Path(gate.LAYOUT), Path(gate.FAST_RUN), Path(gate.UX)
         for name, texts in (("new", ("### ✅ Definition of done\nEvery criterion has an item.",
-                                     "## Light lane\nT1 <title> → <what the owner can do once it is done>\n**Hidden checks:**\n**Secrets:**\n`**PR:**`",
+                                     "## Light lane\nT1 <title> → <what the owner can do once it is done>\n**Hidden checks:**\n**Secrets:**\n`**PR:**`\n`**Partner:**`",
                                      "| U10 | Performance |")),
                             ("old", ("### ✅ Done when", "## Hooks", "| Performance |"))):
             for path, text in zip((layout, lane, ux), texts):
                 (self.root / name / path).parent.mkdir(parents=True, exist_ok=True)
                 (self.root / name / path).write_text(text, encoding="utf-8")
         on = {"ticket_checks": True, "coverage": True, "light": True, "outcomes": True, "hidden_checks": True, "scans": True,
-              "ux_rules": True, "pr_proof": True}
+              "ux_rules": True, "pr_proof": True, "partner": True}
         off = dict.fromkeys(on, False)
         self.assertEqual(gate.method_flags({"root": str(self.root / "new")}, self.project), on)
         self.assertEqual(gate.method_flags({"root": str(self.root / "old")}, self.project), off)
@@ -865,7 +866,7 @@ class FastGateTests(GateHarness, unittest.TestCase):
         (self.root / "new" / layout).write_bytes(b"\xff\xfe broken")
         self.assertEqual(gate.method_flags({"root": str(self.root / "new")}, self.project),
                          {**off, "light": True, "outcomes": True, "hidden_checks": True, "scans": True,
-                          "ux_rules": True, "pr_proof": True})  # fast-run.md and ux-quality still read
+                          "ux_rules": True, "pr_proof": True, "partner": True})  # fast-run.md and ux-quality still read
         lucky = {"mode": "lucky", "kind": "change"}
         self.assertNotIn("done-run", gate.steps_for(lucky))
         self.assertIn("done-run", gate.steps_for({**lucky, "ticket_checks": True}))

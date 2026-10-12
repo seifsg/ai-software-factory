@@ -237,6 +237,8 @@ def skeleton(run):
     if run.get("pr_proof"):
         hints["handoff"] += ("; a PR line naming the draft PR, whose Before & after section has one heading per outcome, "
                              "each Before and After with an image, a recording or a fenced block")
+    if run.get("partner"):
+        hints["handoff"] += "; a Partner line: offered, sent, declined or none, with the reason in parentheses"
     if sibling("fast_record").hidden(run):
         hints["done-run"] += "; a Hidden checks block: '#<n> <ID>: PASS' per criterion of every listed ticket"
     for step in steps_for(run):
@@ -251,7 +253,8 @@ UX = ".agents/skills/ux-quality/SKILL.md"
 FLAGS = {"ticket_checks": (LAYOUT, "Definition of done"), "coverage": (LAYOUT, "Every criterion has"),
          "light": (FAST_RUN, "Light lane"), "outcomes": (FAST_RUN, "what the owner can do once it is done"),
          "hidden_checks": (FAST_RUN, "**Hidden checks:**"),
-         "scans": (FAST_RUN, "**Secrets:**"), "ux_rules": (UX, "| U10 |"), "pr_proof": (FAST_RUN, "`**PR:**`")}
+         "scans": (FAST_RUN, "**Secrets:**"), "ux_rules": (UX, "| U10 |"), "pr_proof": (FAST_RUN, "`**PR:**`"),
+         "partner": (FAST_RUN, "`**Partner:**`")}
 
 
 def method_flags(bundle, project):
@@ -308,9 +311,55 @@ def cmd_start(args):
         record.write_text(skeleton(run), encoding="utf-8")
     save(registry_path(project), {"project": str(project), "key": args.key, "sessions": [], "home": True})
     log("run.start", key=args.key, project=str(project), mode=args.mode, kind=args.kind, bundle=run["bundle"], hooks=hooks)
+    owner = f"\n{sibling('fast_partner').owner_line(HOME)}" if run.get("partner") else ""
     bundle = (f"{run['bundle']['root']} @ {run['bundle']['revision'][:12]}" if run["bundle"] else
               "no .factory/entry-bundle.json; run the entry's resolver first (skip only for factory maintenance)")
-    print(status_text(run) + f"\nRecord: {record}\nBundle: {bundle}\nGit: {git_note}\nHooks: {hooks}")
+    print(status_text(run) + f"\nRecord: {record}\nBundle: {bundle}\nGit: {git_note}\nHooks: {hooks}{owner}")
+
+
+def cmd_owner(args):
+    """Show, set or forget the owner profile (partner.md#who-gets-offers)."""
+    partner = sibling("fast_partner")
+    try:
+        if args.forget:
+            partner.forget_owner(HOME)
+        elif args.set:
+            partner.set_owner(HOME, args.set)
+            log("owner.set", keys=[pair.partition("=")[0] for pair in args.set])
+    except (OSError, ValueError) as error:
+        fail(str(error))
+    print(partner.owner_line(HOME))
+
+
+def cmd_partner(args):
+    """Print the configured partner; with --draft, the mail link for that brief, opened in the mail app with --open."""
+    partner = sibling("fast_partner")
+    try:
+        config = partner.partner(HOME)
+        if not config:
+            fail("No partner configured: no offers. A brief can still go to the owner's own developer.")
+        link = partner.mailto(config, *partner.brief(args.draft)) if args.draft else None
+        print(f"To: {config['name']} <{config['email']}>" if config["name"] else f"To: {config['email']}")
+        for key in ("site", "book"):
+            if config[key]:
+                print(f"{key.title()}: {config[key]}")
+        if config["packages"]:
+            print("Packages: " + ", ".join(map(str, config["packages"])))
+    except (OSError, ValueError) as error:
+        fail(str(error))
+    if not args.draft:
+        return
+    if not link:
+        fail(f"Too long for a mail link: give the owner the address above and the text of {args.draft} to copy")
+    if not args.open:
+        print(link)
+        return
+    import webbrowser
+    opened = webbrowser.open(link)
+    log("partner.open", opened=opened)
+    if not opened:
+        fail("No mail app opened: give the owner the address above and the brief's text to copy")
+    print("Opened in the owner's mail app; they press send.")
 
 
 def cmd_done(args):
@@ -696,12 +745,19 @@ def main():
     install.add_argument("--host", required=True, choices=("claude", "codex", "cursor", "other"),
                          help="other: entry skills only, for agents you wire by hand")
     install.add_argument("--project", help="Install into this project instead of your user folders")
+    owner = sub.add_parser("owner", help="Show, set or forget the owner profile")
+    owner.add_argument("--set", nargs="+", metavar="KEY=VALUE", help="tech, role or offers")
+    owner.add_argument("--forget", action="store_true")
+    partner = sub.add_parser("partner", help="Show the technical partner; build or open the mail for a brief")
+    partner.add_argument("--draft", help="Brief file: first line 'Subject: ...', then the body")
+    partner.add_argument("--open", action="store_true", help="Open the mail in the owner's mail app")
     hook = sub.add_parser("hook", help="Answer one host hook event from stdin")
     hook.add_argument("--host", default="claude", help="claude, codex, cursor, or any other hook-capable agent")
     args = parser.parse_args()
     actions = {"start": cmd_start, "done": cmd_done, "status": cmd_status, "close": cmd_close, "hook": lambda a: sys.exit(cmd_hook(a.host)),
                "install": lambda a: sibling("fast_install").install(a.host, a.project, log=lambda line: (print(line), log("install.write", line=line))),
-               "pause": lambda a: cmd_pause(a, a.reason), "resume": lambda a: cmd_pause(a, None)}
+               "pause": lambda a: cmd_pause(a, a.reason), "resume": lambda a: cmd_pause(a, None),
+               "owner": cmd_owner, "partner": cmd_partner}
     actions[args.command](args)
 
 

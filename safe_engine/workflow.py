@@ -1,6 +1,7 @@
 """Explicit delivery transitions around the analysis and execution methods."""
 
 from pathlib import Path
+import re
 import shutil  # noqa: F401 - patch seam: tests patch safe_engine.workflow.shutil.which
 import uuid
 
@@ -15,6 +16,10 @@ from .review import DELEGATION, EXTERNAL, RESERVED, REVIEW_ROUNDS, VOLATILE, Rev
 from .runner import run_command
 from .storage import atomic_json, now, read_json, save
 from .tickets import TicketStore, ticket_key
+
+# The handoff's technical-partner decision (partner.md#record). Twin of DECISION in fast_partner.py, which the
+# standalone Fast gate owns; keep both patterns identical.
+PARTNER = re.compile(r"(?:offered|sent|declined|none) \([^()\n]*\S[^()\n]*\)", re.I)
 
 
 PHASES = {"analyze", "plan", "build", "manual", "testing", "verify", "improve", "final-verify", "review", "ready", "cancelled"}
@@ -108,6 +113,7 @@ class Workflow(ContractMixin, CheckMixin, ReviewMixin):
         if git(self.project, "status", "--porcelain", "--untracked-files=normal"):
             raise EngineError("Initialize from a clean, committed project; preserve existing work before starting")
         state = {"schema_version": 1, "bundle_version": __version__, "run_id": str(uuid.uuid4()), "checklist_required": True,
+                 "partner_required": True,
                  "project": str(self.project), "task": task, "profile": profile,
                  "contract_digest": self.contract_digest(task, profile, ticket),
                  "base_commit": git(self.project, "rev-parse", "HEAD"), "phase": "analyze",
@@ -358,7 +364,7 @@ class Workflow(ContractMixin, CheckMixin, ReviewMixin):
         self.persist(state, f"Records-only correction; original raw evidence retained: {reason}")
         return self.status(state)
 
-    def handoff(self):
+    def handoff(self, partner=None):
         state = self.load()
         self.require_ticket(state, fresh=True)
         if self.ticket_key:
@@ -376,6 +382,8 @@ class Workflow(ContractMixin, CheckMixin, ReviewMixin):
             raise EngineError("Fresh independent review is required for the current candidate")
         if file_hash(Path(review["report"])) != review["sha256"]:
             raise EngineError("Independent review evidence changed")
+        if state.get("partner_required") and not PARTNER.fullmatch((partner or "").strip()):  # older runs keep working
+            raise EngineError("Record the technical-partner decision: handoff --partner \"offered|sent|declined|none (<why>)\"")
         lines = ["# Safe Engine checked handoff", "", state["task"]["request"], "",
                  f"Run: {state['run_id']}", f"Base: {state['base_commit']}",
                  f"Candidate inputs: {review['fingerprint']}", "", "## Executed checks", ""]
@@ -385,6 +393,8 @@ class Workflow(ContractMixin, CheckMixin, ReviewMixin):
         proof = read_json(self.directory / proof["path"]) if proof else None
         lines += ["", "## Criterion → change → proof → gap", "", *handoff_table(state, self.project, proof)]
         lines += deferred_findings(read_json(review["report"]))
+        if partner:
+            lines += ["", f"Technical partner: {partner.strip()}"]
         lines += ["", f"Independent review: {review['report']} ({self.review_kind(review)})", "", "Ready for the agreed human handoff. No push, merge, release, or deployment was performed by the controller.",
                   "", "PR delivery requires how-to-make-a-pr and a full deep-review PR review in a separate cloud/remote environment with fresh context. Local review is not PR approval; await the owner's cloud review before merge.",
                   "", "Evidence covers the declared checks and inputs. Local state is not a tamper-resistant receipt."]

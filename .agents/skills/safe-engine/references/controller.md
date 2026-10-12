@@ -57,7 +57,7 @@ Each `record` needs its matching phase. Artifacts are substantive Markdown; the 
 | `testing` | Write tests in `test_paths`. Seal reviewed acceptance, then record the batch (tests written, commands run, results). | `contract-proposal`, `seal`, `record batch --file <tests.md>` |
 | `verify` | One complete final gate. Read the logs. | `check` |
 | `review` | Map criteria to proof, then run the independent review. | `ticket-proof`, `review` |
-| `ready` | Every checklist item ticked. Write the handoff. | `handoff` |
+| `ready` | Every checklist item ticked. Write the handoff with the technical-partner decision ([partner](partner.md)). | `handoff --partner "<decision>"` |
 | `cancelled` | Stop. Records and checkout stay. | `cancel --reason "<why>"` |
 
 - `record analysis` and `record plan` are refused if source or declared inputs changed since `init`. Restore the starting candidate.
