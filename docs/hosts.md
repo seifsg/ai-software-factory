@@ -55,6 +55,10 @@ Their hooks show no gate progress messages: the agent relays the card from the g
 
 `fast_gate.py install --host other` copies the launchers into `~/.agents/skills` (or `--project <dir>`). Run hooks through `run-gate.sh`: it fails open when Python or the gate is missing. Unknown hosts get a generic reader: pre-tool events deny with exit code 2 and the reason on stderr; stop and prompt hooks need a first-class adapter.
 
+## Orchestrators
+
+An orchestrator starts agent sessions and hands each one a task. Paperclip: [paperclip.md](paperclip.md).
+
 ## Evals
 
 `python -m evals run` lives in the factory repository only (`evals/README.md`); installed copies leave `evals/` out. It takes each agent's non-interactive command as a template. The prompt arrives on stdin and also sits at `../prompt.md` from the workspace. In the factory arm, `{factory}` is a fresh export of the factory bundle. Real runs cost model tokens; check each flag against the installed version before one.
