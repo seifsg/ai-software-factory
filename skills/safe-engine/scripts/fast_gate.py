@@ -201,8 +201,22 @@ def find_project(given):
 
 
 def lost_text(project):
+    """Why the gate cannot read the run here, and the owner's way on: close a lost run, or bring one in from elsewhere."""
+    elsewhere = None if registry_path(project).is_file() else store.readable(project)
+    if well_formed(elsewhere):
+        return (f"No run state for {project} in this gate home ({HOME / 'runs'}); its run.json records a run from "
+                f"{elsewhere['project']}. Only on the owner's instruction, bring it in: fast_gate.py rehome --project "
+                f"\"{project}\" --from \"{elsewhere['project']}\"")
     return (f"No readable run state for {project} in {HOME / 'runs'}, so its gate stays closed. The owner closes "
             f"it: fast_gate.py close --project \"{project}\" --abandon \"<reason>\"")
+
+
+def well_formed(run):
+    """An open run of this version whose fields the gate reads have the right shapes: the only mirror it carries home."""
+    return bool(run and not run.get("closed") and KEY.fullmatch(str(run.get("key")))
+                and isinstance(run.get("project"), str) and run.get("mode") in MODES and run.get("kind") in KINDS
+                and isinstance(run.get("done"), dict) and isinstance(run.get("paused") or {}, dict)
+                and isinstance(run.get("moves") or [], list))
 
 
 def open_run(given):
@@ -315,7 +329,7 @@ def cmd_start(args):
     record = record_path(project)
     if not record.exists():
         record.write_text(skeleton(run), encoding="utf-8")
-    save(registry_path(project), {"project": str(project), "key": args.key, "sessions": [], "home": True})
+    save(registry_path(project), store.new_registration(project, args.key))
     log("run.start", key=args.key, project=str(project), mode=args.mode, kind=args.kind, bundle=run["bundle"], hooks=hooks)
     bundle = (f"{run['bundle']['root']} @ {run['bundle']['revision'][:12]}" if run["bundle"] else
               "no .factory/entry-bundle.json; run the entry's resolver first (skip only for factory maintenance)")
@@ -390,46 +404,83 @@ def cmd_close(args):
 
 
 def close_lost(project, reason):
-    """Close a run with no readable home state: drop its registration and the broken state."""
+    """Close a run with no readable home state: drop its registration and the broken state, and keep a closed record so
+    its mirror never comes back through rehome (the next start archives it)."""
     entry = registry_path(project)
     if not entry.is_file():
         fail(f"No registered run at {project}; nothing was closed")
+    try:
+        key = load(entry).get("key")
+    except (OSError, ValueError, AttributeError):
+        key = None
     entry.unlink()
     try:
         state_path(project).unlink(missing_ok=True)
     except OSError:
         pass  # the hooks stand down either way; the next start replaces it
+    try:
+        save(store.closed_path(entry), {"version": VERSION, "key": key if KEY.fullmatch(str(key)) else "run",
+                                        "project": str(project), "mode": "fast", "kind": "change", "done": {},
+                                        "paused": None, "closed": True, "closed_at": now(), "abandoned": reason})
+    except OSError as error:
+        log("state.retire_failed", key=key, error=repr(error))
     forget_shown(project)
     log("run.close", project=str(project), abandoned=reason, lost=True)
     print(f"Closed the run at {project} without a readable run state. Reason: {reason}")
 
 
-def cmd_move(args):
-    """The owner's move of an open run whose state sits in another gate home (another machine or folder): its
-    run.json comes home once, only where this gate home knows neither folder, so no run here can fall back to it."""
+HELD = {  # what the gate home holds for a folder: how a refusal names it, and the owner's way on
+    "open": ("an open run", "continue it there with status or resume"),
+    "lost": ("a lost run", "its gate stays closed until the owner closes it there with close --abandon"),
+    "closed": ("a closed run", "a closed run never comes back in: bring the run into another folder"),
+    "nested": ("a run", "runs never nest: bring the run into a folder of its own"),
+}
+
+
+def cmd_rehome(args):
+    """The owner brings in an open run whose state sits in another gate home (another machine or folder): its run.json
+    comes home once, only where this gate home holds nothing in, around or inside either folder, so no run gated
+    here can fall back to a project copy."""
     project = Path(native(args.project or os.getcwd())).resolve()
     run = store.readable(project)
-    if not (run and not run.get("closed") and KEY.fullmatch(str(run.get("key")))
-            and isinstance(run.get("project"), str)):
-        fail(f"No open run to move in {ledger_path(project)}")
+    if not well_formed(run):
+        fail(f"No open, well-formed run to bring in at {ledger_path(project)}; nothing was moved")
     if norm(run["project"]) != norm(args.source):
         fail(f"{ledger_path(project)} records its run at {run['project']}, not {args.source}; nothing was moved")
     for folder in (project, args.source):
-        if store.known(ACTIVE, folder):
-            fail(f"This gate home already holds a run for {folder}; nothing was moved. See it with fast_gate.py "
-                 f"status --project \"{folder}\"; the owner closes an open or lost one with close --abandon \"<reason>\"")
-    source, run["project"] = run["project"], str(project)
-    run["moves"] = [*run.get("moves", []), {"from": source, "at": now()}]
+        held = store.held(ACTIVE, folder)
+        if held:
+            what, advice = HELD[held[0]]
+            fail(f"This gate home holds {what} at {held[1]}; nothing was moved: {advice}")
+    source, receipt, local = run["project"], bundle_receipt(project), None
+    if receipt and not Path(native(str(receipt["root"]))).is_dir():
+        revision = str(receipt["revision"])
+        local = HOME / "bundles" / revision
+        if not (re.fullmatch(r"[0-9a-f]{40}", revision) and (local / ".agents/skills/safe-engine/SKILL.md").is_file()):
+            fail(f"The run's bundle {revision} is not on this machine; nothing was moved. Bring it first with the "
+                 f"launcher's resolve_bundle.py --ref {revision}")
+        run["bundle"] = {"root": str(local), "revision": revision}
+    run["project"] = str(project)
+    run["moves"] = [*(run.get("moves") or []), {"from": source, "at": now(),
+                                                 **({"bundle_from": str(receipt["root"])} if local else {})}]
     card = status_text(run)  # a run the gate cannot show is refused before anything is written
+    if local:  # the same revision, found here: only the receipt's path changes
+        path = Path(project, ".factory", "entry-bundle.json")
+        save(path, {**load(path), "bundle_root": str(local)})
     try:
-        save(state_path(project), run, new=True)  # first writer wins: a parallel move never replaces it
+        save(state_path(project), run, new=True)  # first writer wins: a parallel rehome never replaces it
     except FileExistsError:
-        fail(f"The run at {project} was moved here meanwhile: fast_gate.py status --project \"{project}\"")
-    save(registry_path(project), {"project": str(project), "key": run["key"], "sessions": [], "home": True})
+        fail(f"The run at {project} was brought in meanwhile: fast_gate.py status --project \"{project}\"")
+    log("run.rehome", key=run["key"], source=source, project=str(project), bundle=run.get("bundle"))
+    try:
+        save(registry_path(project), store.new_registration(project, run["key"]))
+    except OSError as error:  # the open state re-registers on the next hook or gate command
+        log("state.register_failed", key=run["key"], error=repr(error))
     mirror(project, run)
-    log("run.move", key=run["key"], source=source, project=str(project))
-    print(card + f"\nMoved from {source}. Continue the run on this machine only; the owner retires the old copy "
-          "there with close --abandon.")
+    git_note = sibling("fast_setup").ignore_factory(project)
+    print(card + f"\nBrought in from {source}." + (f"\nBundle: {local}" if local else "") + f"\nGit: {git_note}"
+          "\nContinue the run on this machine only: compare this card with status on the old machine, then the owner "
+          "retires the copy there with close --abandon.")
 
 
 def archive_run(project):
@@ -729,8 +780,9 @@ def main():
     sub.add_parser("resume", parents=[common])
     close = sub.add_parser("close", parents=[common])
     close.add_argument("--abandon", help="The owner stopped the run: their reason")
-    move = sub.add_parser("move", parents=[common], help="Owner only: bring an open run from another machine or folder")
-    move.add_argument("--from", dest="source", required=True, help="The folder the run's run.json records")
+    rehome = sub.add_parser("rehome", parents=[common],
+                            help="Owner only: bring in an open run from another machine or folder")
+    rehome.add_argument("--from", dest="source", required=True, help="The folder the run's run.json records")
     install = sub.add_parser("install", help="Install the entry skills and gate hooks for one host")
     install.add_argument("--host", required=True, choices=("claude", "codex", "cursor", "other"),
                          help="other: entry skills only, for agents you wire by hand")
@@ -738,7 +790,7 @@ def main():
     hook = sub.add_parser("hook", help="Answer one host hook event from stdin")
     hook.add_argument("--host", default="claude", help="claude, codex, cursor, or any other hook-capable agent")
     args = parser.parse_args()
-    actions = {"start": cmd_start, "done": cmd_done, "status": cmd_status, "close": cmd_close, "move": cmd_move,
+    actions = {"start": cmd_start, "done": cmd_done, "status": cmd_status, "close": cmd_close, "rehome": cmd_rehome,
                "hook": lambda a: sys.exit(cmd_hook(a.host)),
                "install": lambda a: sibling("fast_install").install(a.host, a.project, log=lambda line: (print(line), log("install.write", line=line))),
                "pause": lambda a: cmd_pause(a, a.reason), "resume": lambda a: cmd_pause(a, None)}
