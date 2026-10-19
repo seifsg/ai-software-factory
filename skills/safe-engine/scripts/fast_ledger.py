@@ -1,6 +1,7 @@
 """Run state and the run registry for fast_gate.py: comparable paths, where a run's files live, and which runs are
 active. The gate home holds the truth: active/<h>.json registers a run, runs/<h>.json holds its state. The project's
-run.json is a mirror for agents to read; nothing here trusts it, except once to move an older run home.
+run.json is a mirror for agents to read; nothing here trusts it, except once to move an older run home, and the
+gate's owner-run `move`, which takes it home only where this gate home knows neither folder (known()).
 """
 import json
 import os
@@ -101,6 +102,12 @@ def closed_run(entry):
         return current(load(closed_path(entry)))
     except (OSError, ValueError):
         return None
+
+
+def known(active, project):
+    """Whether this gate home holds any run for project: its registration, or an open, broken or closed state."""
+    entry = registry_path(active, project)
+    return any(path.exists() for path in (entry, state_path(entry), closed_path(entry)))
 
 
 def current(run):

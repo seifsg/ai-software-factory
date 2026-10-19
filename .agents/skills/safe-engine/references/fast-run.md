@@ -57,6 +57,7 @@ Before `start` on a product: select the factory bundle with the launcher's `reso
 python fast_gate.py start --project <abs> --key <slug> --mode fast|lucky --kind product|feature|change [--no-ui] [--no-data] [--auth] --request-file <file>
 python fast_gate.py done <step> [--project <abs>] [--offline "<reason>"]
 python fast_gate.py status | pause --reason "<why>" | resume | close [--abandon "<reason>"]
+python fast_gate.py move --project <abs> --from <the folder its run.json records>
 python fast_gate.py install --host <host> [--project <abs>]
 ```
 
@@ -67,6 +68,7 @@ python fast_gate.py install --host <host> [--project <abs>]
 - Steps run in order; `done` refuses a step while an earlier applicable one is open.
 - `done tickets`, `done plan`, `done handoff` and, on hidden-check runs, `done done-run` read the listed GitHub tickets online: links, definition of done, checklist, ticks, coverage. `done handoff` also reads the PR body. Other trackers or no network: `--offline "<reason>"` records the step unverified, and the handoff's PR line also names the body file: `**PR:** <url> (body: <file>)`; it is refused when the listed GitHub tickets are readable. Runs started on older methods keep the checks those methods define.
 - `pause` before waiting on the owner; the next `done` or `resume` clears it. `close` needs `handoff`, or `--abandon` with the owner's reason; `close --project <dir> --abandon` also works when the run state is missing or unreadable.
+- `move` is the owner's step, run only on their instruction: an open run from another machine or folder reads as lost in this gate home. First bring the project with its `.factory/` (out of Git by default) and the run's bundle (the launcher's `resolve_bundle.py --ref <revision from .factory/entry-bundle.json>`). `move` then takes the open `run.json` home once, with its steps and pause. It refuses, writing nothing, when the run is closed or records another folder, or when this gate home already holds a run for either folder; a lost or closed run on its own machine still only closes. One machine at a time: the owner retires the old copy there with `close --abandon`.
 
 ## Hooks
 
