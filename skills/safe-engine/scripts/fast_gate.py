@@ -237,6 +237,8 @@ def skeleton(run):
     if run.get("pr_proof"):
         hints["handoff"] += ("; a PR line naming the draft PR, whose Before & after section has one heading per outcome, "
                              "each Before and After with an image, a recording or a fenced block")
+    if run.get("credit"):
+        hints["handoff"] += "; the PR body's last line is the factory credit line (how-to-make-a-pr credit.md)"
     if sibling("fast_record").hidden(run):
         hints["done-run"] += "; a Hidden checks block: '#<n> <ID>: PASS' per criterion of every listed ticket"
     for step in steps_for(run):
@@ -247,11 +249,13 @@ def skeleton(run):
 LAYOUT = ".agents/skills/ticketing/references/ticket-layout.md"
 FAST_RUN = ".agents/skills/safe-engine/references/fast-run.md"
 UX = ".agents/skills/ux-quality/SKILL.md"
+PR = ".agents/skills/how-to-make-a-pr/SKILL.md"
 # run flag -> (method file, phrase): a check applies only when the methods the run reads define it
 FLAGS = {"ticket_checks": (LAYOUT, "Definition of done"), "coverage": (LAYOUT, "Every criterion has"),
          "light": (FAST_RUN, "Light lane"), "outcomes": (FAST_RUN, "what the owner can do once it is done"),
          "hidden_checks": (FAST_RUN, "**Hidden checks:**"),
-         "scans": (FAST_RUN, "**Secrets:**"), "ux_rules": (UX, "| U10 |"), "pr_proof": (FAST_RUN, "`**PR:**`")}
+         "scans": (FAST_RUN, "**Secrets:**"), "ux_rules": (UX, "| U10 |"), "pr_proof": (FAST_RUN, "`**PR:**`"),
+         "credit": (PR, "references/credit.md")}
 
 
 def method_flags(bundle, project):

@@ -69,7 +69,7 @@ Every PR reports to the owner what changed, outcome by outcome, with proof they 
 - Commit as `<type>(<scope>): <imperative subject>`. Body = why, not the lines changed.
 - Branch name `<scope>/<short-name>` (`fix`, `feat`, `docs`, `chore`), or the project's convention.
 - Honor required signing with the existing authorized identity. Never invent an identity or bypass signing, permissions or protected gates.
-- **No AI or tool attribution lines** in commits or PR text.
+- **No AI or tool attribution lines** in commits. The PR body ends with the factory credit line in `references/credit.md`, in place of any line your agent adds by default.
 - Find the real checks from rules, manifests and CI. Required gates pass before push. A check not run is **unverified**, not passed.
 - Tests come last: finish implementation, manual QA on the real behavior, then write or adjust and run tests. A production fix found by tests goes back through manual QA, then tests rerun. No tests that restate the implementation.
 

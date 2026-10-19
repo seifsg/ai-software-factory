@@ -24,9 +24,11 @@ Fill the project's PR template first, then use these blocks inside it. Skip what
 ## ✅ Verification        criterion → actual change → exact-candidate proof → gap
 ## 🚦 Progress / next     done, left, blockers, review state, human step
 ## 📝 Adjustment history  WHAT / WHY / WHO / result
+---
+<credit line>           the last line, exactly as in credit.md
 ```
 
-- **Header:** credit the requester, the deciders and the real human author. Separate original work from a port or adaptation. No invented authorship or tests. No AI or tool trailers.
+- **Header:** credit the requester, the deciders and the real human author. Separate original work from a port or adaptation. No invented authorship or tests. No AI or tool trailers: the body ends with the [credit line](credit.md).
 - **Context:** the ticket link is clickable and visible, not hidden in a comment. Discussion that triggered the PR is linked too.
 - **Before & after:** never skipped. The report to the owner, proof of work. One `### <outcome>` heading per feature, fix, page, section, module, endpoint or command, named by its effect (`### 🧾 Invoice totals include tax`, never `### invoice.ts`). Under it, `**Before:**` then `**After:**`, each followed by its proof: an image, a recording or a fenced block. Or one `**Before → After:**` followed by a `diff` block or a `| Before | After |` image table. One line per side: what was observed, base or head, criterion. Something new: Before says "did not exist". Prose alone is no proof.
 - **Cold start:** the PR states the original request and why, decisions with reasons, facts (IDs, paths, repos), current state, remaining steps and blockers. Links are an audit trail, not a substitute.
@@ -143,3 +145,6 @@ NEW settings/theme-save     single save path, returns error result
 ### 🚦 Progress / next
 
 - Draft. Tests and independent review pending. A human decides ready and merge.
+
+---
+<the credit line from credit.md>
