@@ -166,56 +166,123 @@ class RunStateTests(harness.GateHarness, unittest.TestCase):
         folder = self.root / home
         return sorted(str(path) for path in folder.rglob("*.json")) if folder.exists() else []
 
-    def other_machine(self):
-        """The run with a step done and a pause, then its project copied where a second gate home never saw it."""
+    def other_machine(self, git=None):
+        """The run with a step done and a pause, then its project copied where a second gate home never saw it.
+        git: None, "fresh" (a new clone: no exclude line) or "tracked" (the project commits its .factory/)."""
         self.begin()
         self.state.write_text(json.dumps({**json.loads(self.state.read_text(encoding="utf-8")),
                                           "done": {"tickets": {"at": "x"}}}), encoding="utf-8")
         self.gate("pause", "--reason", "owner away")  # rewrites the mirror from the home state
         moved = self.root / "new machine" / self.project.name
         shutil.copytree(self.project, moved)
+        if git:
+            self.git(moved, "init", "-q")
+            if git == "tracked":
+                self.git(moved, "add", ".factory")
+                self.git(moved, "commit", "-qm", "track the run records")
         self.env["SAFE_ENGINE_HOME"] = str(self.root / "home2")
         return moved
 
-    def test_the_owner_moves_an_open_run_to_another_machine(self):
-        moved = self.other_machine()
-        self.assertIn("No readable run state", self.gate("status", project=moved, ok=False))  # lost before the move
-        self.assertIn("Moved from", self.gate("move", "--from", str(self.project), project=moved))
+    def git(self, folder, *args):
+        subprocess.run(["git", "-C", str(folder), "-c", "user.name=t", "-c", "user.email=t@t", *args], check=True,
+                       capture_output=True)
+
+    def rehome(self, source, project, ok=False):
+        return self.gate("rehome", "--from", str(source), project=project, ok=ok)
+
+    def test_the_owner_brings_an_open_run_in_from_another_machine(self):
+        moved = self.other_machine(git="fresh")
+        lost = self.gate("status", project=moved, ok=False)
+        self.assertIn(f'rehome --project "{moved}" --from "{self.project}"', lost)  # the lost message names the way in
+        self.assertIn("Brought in from", self.rehome(self.project, moved, ok=True))
         status = self.gate("status", project=moved)
         for line in ("'copy-fix'", "[x] tickets", "Paused: owner away", "Next: plan"):
             self.assertIn(line, status)
         mirror = json.loads((moved / ".factory/fast/run.json").read_text(encoding="utf-8"))
         self.assertEqual((mirror["project"], mirror["moves"][0]["from"]), (str(moved), str(self.project)))
         self.assertEqual(len(self.home_files("home2")), 2)  # its registration and state
-        self.assertIn("run.move", (self.root / "home2/logs/gate.log").read_text(encoding="utf-8"))
+        self.assertIn("run.rehome", (self.root / "home2/logs/gate.log").read_text(encoding="utf-8"))
+        self.assertIn(".factory/", (moved / ".git/info/exclude").read_text(encoding="utf-8").splitlines())
         self.assertEqual(self.pre("Bash", cwd=moved, command=PUSH), "deny")  # the hooks gate it here
+        own = (f'python "{self.root / "home2"}/bundles/abc/skills/safe-engine/scripts/fast_gate.py" rehome '
+               f'--project "{moved}" --from "{self.project}"')
+        self.assertEqual(self.pre("Bash", cwd=moved, command=own), "allow")  # the gate's own command passes
         before = self.home_files("home2")
-        refused = self.gate("move", "--from", str(moved), project=moved, ok=False)  # a second move
-        self.assertIn("already holds a run", refused)
+        self.assertIn("holds an open run", self.rehome(moved, moved))  # a second rehome
         self.assertEqual(self.home_files("home2"), before)
 
-    def test_move_refuses_closed_runs_other_folders_and_runs_this_gate_home_knows(self):
+    def test_rehome_refuses_what_this_gate_home_holds_and_malformed_runs(self):
         moved = self.other_machine()
-        cases = {  # each refusal writes nothing to either gate home
-            "it records another folder": ("home2", "records its run at", str(self.root / "elsewhere")),
-            "the old folder is registered here": ("home", "already holds a run", str(self.project)),
+        run = json.loads((moved / ".factory/fast/run.json").read_text(encoding="utf-8"))
+        for folder in (self.project / "src", self.root):  # a forged run inside the gated one, and one around it
+            (folder / ".factory/fast").mkdir(parents=True, exist_ok=True)
+            (folder / ".factory/fast/run.json").write_text(json.dumps({**run, "project": str(folder)}), encoding="utf-8")
+        cases = {  # each refusal writes nothing to the gate home asked
+            "it records another folder": ("home2", moved, self.root / "elsewhere", "records its run at"),
+            "the old folder is open here": ("home", moved, self.project, "holds an open run"),
+            "a forged run inside a gated one": ("home", self.project / "src", self.project / "src", "never nest"),
+            "a folder around a gated run": ("home", self.root, self.root, "never nest"),
         }
-        for name, (home, words, source) in cases.items():
+        for name, (home, project, source, words) in cases.items():
             with self.subTest(name):
                 self.env["SAFE_ENGINE_HOME"] = str(self.root / home)
                 before = self.home_files(home)
-                self.assertIn(words, self.gate("move", "--from", source, project=moved, ok=False))
+                self.assertIn(words, self.rehome(source, project))
                 self.assertEqual(self.home_files(home), before)
-        self.env["SAFE_ENGINE_HOME"] = str(self.root / "home")
-        self.gate("close", "--abandon", "moved away")
-        mirror = self.project / ".factory/fast/run.json"  # reopened by hand: the closed state here still counts
-        mirror.write_text(json.dumps({**json.loads(mirror.read_text(encoding="utf-8")), "closed": False}), encoding="utf-8")
-        self.assertIn("already holds a run", self.gate("move", "--from", str(self.project), ok=False))
         self.env["SAFE_ENGINE_HOME"] = str(self.root / "home2")
-        run = json.loads((moved / ".factory/fast/run.json").read_text(encoding="utf-8"))
-        (moved / ".factory/fast/run.json").write_text(json.dumps({**run, "closed": True}), encoding="utf-8")
-        self.assertIn("No open run to move", self.gate("move", "--from", str(self.project), project=moved, ok=False))
+        mirror = moved / ".factory/fast/run.json"
+        for broken in ({"mode": "x"}, {"done": []}, {"paused": "x"}, {"moves": "x"}, {"closed": True}):
+            with self.subTest(broken=broken):
+                mirror.write_text(json.dumps({**run, **broken}), encoding="utf-8")
+                refused = self.rehome(self.project, moved)
+                self.assertIn("No open, well-formed run", refused)
+                self.assertNotIn("Traceback", refused)
         self.assertEqual(self.home_files("home2"), [])
+
+    def test_a_run_closed_here_never_comes_back_through_rehome(self):
+        mirror = self.project / ".factory/fast/run.json"
+        for lost in (False, True):  # closed with its state, and closed by the owner while lost
+            with self.subTest(lost=lost):
+                self.begin()
+                if lost:
+                    self.state.unlink()
+                self.gate("close", "--abandon", "dropped")
+                if not lost:  # close rewrote the mirror; reopened by hand
+                    mirror.write_text(json.dumps({**json.loads(mirror.read_text(encoding="utf-8")), "closed": False}),
+                                      encoding="utf-8")
+                self.assertIn("holds a closed run", self.rehome(self.project, self.project))
+                self.assertEqual(list((self.root / "home/active").glob("*.json")), [])
+
+    def test_rehome_points_the_receipt_at_this_machines_copy_of_the_bundle(self):
+        moved = self.other_machine()
+        receipt, revision = moved / ".factory/entry-bundle.json", "1" * 40
+        receipt.write_text(json.dumps({"version": 1, "bundle_root": str(self.root / "old machine bundle"),
+                                       "revision": revision}), encoding="utf-8")
+        self.assertIn("is not on this machine", self.rehome(self.project, moved))
+        self.assertEqual(self.home_files("home2"), [])
+        local = self.root / "home2/bundles" / revision
+        (local / ".agents/skills/safe-engine").mkdir(parents=True)
+        (local / ".agents/skills/safe-engine/SKILL.md").write_text("x", encoding="utf-8")
+        self.rehome(self.project, moved, ok=True)
+        self.assertEqual(json.loads(receipt.read_text(encoding="utf-8"))["bundle_root"], str(local))
+        state = json.loads(next((self.root / "home2/runs").glob("*.json")).read_text(encoding="utf-8"))
+        self.assertEqual((state["bundle"]["root"], state["moves"][0]["bundle_from"]),
+                         (str(local), str(self.root / "old machine bundle")))
+
+    def test_a_tracked_factory_folder_stays_in_git(self):
+        moved = self.other_machine(git="tracked")
+        self.assertIn("stays in Git", self.rehome(self.project, moved, ok=True))
+        fresh = self.root / "tracked app"
+        (fresh / ".factory").mkdir(parents=True)
+        (fresh / ".factory/notes.md").write_text("kept in Git on purpose", encoding="utf-8")
+        self.git(fresh, "init", "-q")
+        self.git(fresh, "add", ".factory")
+        self.git(fresh, "commit", "-qm", "track the records")
+        self.assertIn("stays in Git", self.gate("start", "--key", "tracked", "--kind", "change", "--request", "x",
+                                                project=fresh))
+        for folder in (moved, fresh):
+            exclude = folder / ".git/info/exclude"
+            self.assertNotIn(".factory/", exclude.read_text(encoding="utf-8").splitlines() if exclude.exists() else [])
 
 
 if __name__ == "__main__":

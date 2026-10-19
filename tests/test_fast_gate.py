@@ -95,9 +95,8 @@ class GateHarness:
             self.env.pop(name, None)  # gh logged out: it fails at once, never reaching the network
 
     def tearDown(self):
-        log = self.root / "home" / "logs" / "gate.log"
-        if log.exists():  # the fail-open guard must never have swallowed an exception
-            self.assertNotIn("hook.error", log.read_text(encoding="utf-8"))
+        for log in self.root.glob("*/logs/gate.log"):  # every gate home a test used: the fail-open guard must never
+            self.assertNotIn("hook.error", log.read_text(encoding="utf-8"))  # have swallowed an exception
 
     def gate(self, *args, ok=True, project=None):
         result = subprocess.run([sys.executable, str(GATE), *args, "--project", str(project or self.project)],

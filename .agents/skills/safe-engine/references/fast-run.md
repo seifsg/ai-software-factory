@@ -57,18 +57,22 @@ Before `start` on a product: select the factory bundle with the launcher's `reso
 python fast_gate.py start --project <abs> --key <slug> --mode fast|lucky --kind product|feature|change [--no-ui] [--no-data] [--auth] --request-file <file>
 python fast_gate.py done <step> [--project <abs>] [--offline "<reason>"]
 python fast_gate.py status | pause --reason "<why>" | resume | close [--abandon "<reason>"]
-python fast_gate.py move --project <abs> --from <the folder its run.json records>
+python fast_gate.py rehome --project <abs> --from <the folder its run.json records>
 python fast_gate.py install --host <host> [--project <abs>]
 ```
 
-- `start` registers the run and keeps its state in the gate home (`SAFE_ENGINE_HOME`, default `~/.safe-engine`), creates the record, keeps `.factory/` out of Git in the clone's `.git/info/exclude` (no project file changes; a reverted `.gitignore` and `git clean -fd` leave the records), and notes the bundle and hook status. `.factory/fast/run.json` is a mirror the gate rewrites on every change: read it, or `status`; the gate never reads it, so no change to it counts.
+- `start` registers the run and keeps its state in the gate home (`SAFE_ENGINE_HOME`, default `~/.safe-engine`), creates the record, keeps `.factory/` out of Git in the clone's `.git/info/exclude` unless the project already tracks files there (no project file changes; a reverted `.gitignore` and `git clean -fd` leave the records), and notes the bundle and hook status. `.factory/fast/run.json` is a mirror the gate rewrites on every change: read it, or `status`; the gate never reads it, so no change to it counts.
 - Always pass `--project`. Write the request verbatim to a file first (`.factory/request.md`).
 - `start` keeps `.factory/` out of Git only inside a Git repository: `git init` first. `close` moves the run's state to `runs/closed/` until the next `start`.
 - Product runs default to UI and persistence; pass `--no-ui` or `--no-data` only when true. `--auth` marks sign-in: pass it when anyone signs in or roles exist. These are fixed at `start`; decide them from the request.
 - Steps run in order; `done` refuses a step while an earlier applicable one is open.
 - `done tickets`, `done plan`, `done handoff` and, on hidden-check runs, `done done-run` read the listed GitHub tickets online: links, definition of done, checklist, ticks, coverage. `done handoff` also reads the PR body. Other trackers or no network: `--offline "<reason>"` records the step unverified, and the handoff's PR line also names the body file: `**PR:** <url> (body: <file>)`; it is refused when the listed GitHub tickets are readable. Runs started on older methods keep the checks those methods define.
 - `pause` before waiting on the owner; the next `done` or `resume` clears it. `close` needs `handoff`, or `--abandon` with the owner's reason; `close --project <dir> --abandon` also works when the run state is missing or unreadable.
-- `move` is the owner's step, run only on their instruction: an open run from another machine or folder reads as lost in this gate home. First bring the project with its `.factory/` (out of Git by default) and the run's bundle (the launcher's `resolve_bundle.py --ref <revision from .factory/entry-bundle.json>`). `move` then takes the open `run.json` home once, with its steps and pause. It refuses, writing nothing, when the run is closed or records another folder, or when this gate home already holds a run for either folder; a lost or closed run on its own machine still only closes. One machine at a time: the owner retires the old copy there with `close --abandon`.
+- `rehome` is the owner's step, run only on their instruction. It brings in an open run from another machine or folder, which reads as lost in this gate home; `status` then names the command.
+  - First bring the project with its `.factory/` and the run's bundle (the launcher's `resolve_bundle.py --ref <revision in .factory/entry-bundle.json>`). When the receipt's old bundle path is missing here, `rehome` points it at this gate home's copy of the same revision.
+  - It takes the open `run.json` home once, with its steps and pause, and keeps `.factory/` out of Git as `start` does.
+  - It refuses, writing nothing, when the run is closed, malformed or records another folder, or when this gate home holds a run for either folder or one around or inside it. A run this gate home holds as lost or closed never comes back through it.
+  - One machine at a time: check the card against `status` on the old machine, then the owner retires the copy there with `close --abandon`.
 
 ## Hooks
 
