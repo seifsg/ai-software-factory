@@ -191,6 +191,7 @@ Details: [install](docs/install.md) · [hosts](docs/hosts.md).
 | The agent will not stop | A run blocks the first stop and names the next step; stopping again right after passes. To end a run early, ask the agent to close it with your reason |
 | The agent's `gh` commands break in PowerShell | Have it run them in Git Bash: PowerShell 5.1 breaks `{owner}/{repo}` placeholders and nested quotes |
 | Missing on another machine or in a cloud session | Install there too; cloud sessions load the skills committed to their repository |
+| A run started on another machine reads as lost here | Bring the project with its `.factory/`, then ask the agent to move the run, naming the folder it lived in (`fast_gate.py move --project <here> --from <old folder>`). Retire the old copy there with `close --abandon` |
 | The factory itself misbehaved | `improve-factory The factory did [observed]; expected [result].`, or [open an issue](https://github.com/seifsg/ai-software-factory/issues) |
 
 ## 🧰 Skills

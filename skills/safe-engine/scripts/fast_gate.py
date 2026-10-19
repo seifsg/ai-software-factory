@@ -118,6 +118,11 @@ def fail(message):
 def put(project, run):
     """Write the run state to the gate home, then its mirror for agents to read; a failed mirror never fails."""
     save(state_path(project), run)
+    mirror(project, run)
+
+
+def mirror(project, run):
+    """Rewrite the project's run.json from the run state; a failure is logged, never raised."""
     try:
         save(ledger_path(project), run)
     except OSError as error:
@@ -397,6 +402,34 @@ def close_lost(project, reason):
     forget_shown(project)
     log("run.close", project=str(project), abandoned=reason, lost=True)
     print(f"Closed the run at {project} without a readable run state. Reason: {reason}")
+
+
+def cmd_move(args):
+    """The owner's move of an open run whose state sits in another gate home (another machine or folder): its
+    run.json comes home once, only where this gate home knows neither folder, so no run here can fall back to it."""
+    project = Path(native(args.project or os.getcwd())).resolve()
+    run = store.readable(project)
+    if not (run and not run.get("closed") and KEY.fullmatch(str(run.get("key")))
+            and isinstance(run.get("project"), str)):
+        fail(f"No open run to move in {ledger_path(project)}")
+    if norm(run["project"]) != norm(args.source):
+        fail(f"{ledger_path(project)} records its run at {run['project']}, not {args.source}; nothing was moved")
+    for folder in (project, args.source):
+        if store.known(ACTIVE, folder):
+            fail(f"This gate home already holds a run for {folder}; nothing was moved. See it with fast_gate.py "
+                 f"status --project \"{folder}\"; the owner closes an open or lost one with close --abandon \"<reason>\"")
+    source, run["project"] = run["project"], str(project)
+    run["moves"] = [*run.get("moves", []), {"from": source, "at": now()}]
+    card = status_text(run)  # a run the gate cannot show is refused before anything is written
+    try:
+        save(state_path(project), run, new=True)  # first writer wins: a parallel move never replaces it
+    except FileExistsError:
+        fail(f"The run at {project} was moved here meanwhile: fast_gate.py status --project \"{project}\"")
+    save(registry_path(project), {"project": str(project), "key": run["key"], "sessions": [], "home": True})
+    mirror(project, run)
+    log("run.move", key=run["key"], source=source, project=str(project))
+    print(card + f"\nMoved from {source}. Continue the run on this machine only; the owner retires the old copy "
+          "there with close --abandon.")
 
 
 def archive_run(project):
@@ -696,6 +729,8 @@ def main():
     sub.add_parser("resume", parents=[common])
     close = sub.add_parser("close", parents=[common])
     close.add_argument("--abandon", help="The owner stopped the run: their reason")
+    move = sub.add_parser("move", parents=[common], help="Owner only: bring an open run from another machine or folder")
+    move.add_argument("--from", dest="source", required=True, help="The folder the run's run.json records")
     install = sub.add_parser("install", help="Install the entry skills and gate hooks for one host")
     install.add_argument("--host", required=True, choices=("claude", "codex", "cursor", "other"),
                          help="other: entry skills only, for agents you wire by hand")
@@ -703,7 +738,8 @@ def main():
     hook = sub.add_parser("hook", help="Answer one host hook event from stdin")
     hook.add_argument("--host", default="claude", help="claude, codex, cursor, or any other hook-capable agent")
     args = parser.parse_args()
-    actions = {"start": cmd_start, "done": cmd_done, "status": cmd_status, "close": cmd_close, "hook": lambda a: sys.exit(cmd_hook(a.host)),
+    actions = {"start": cmd_start, "done": cmd_done, "status": cmd_status, "close": cmd_close, "move": cmd_move,
+               "hook": lambda a: sys.exit(cmd_hook(a.host)),
                "install": lambda a: sibling("fast_install").install(a.host, a.project, log=lambda line: (print(line), log("install.write", line=line))),
                "pause": lambda a: cmd_pause(a, a.reason), "resume": lambda a: cmd_pause(a, None)}
     actions[args.command](args)

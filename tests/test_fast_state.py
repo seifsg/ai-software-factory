@@ -162,6 +162,61 @@ class RunStateTests(harness.GateHarness, unittest.TestCase):
         self.assertFalse(closed.exists())
         self.assertEqual(len(list((self.project / ".factory/fast/archive").glob("copy-fix-*"))), 1)
 
+    def home_files(self, home="home"):
+        folder = self.root / home
+        return sorted(str(path) for path in folder.rglob("*.json")) if folder.exists() else []
+
+    def other_machine(self):
+        """The run with a step done and a pause, then its project copied where a second gate home never saw it."""
+        self.begin()
+        self.state.write_text(json.dumps({**json.loads(self.state.read_text(encoding="utf-8")),
+                                          "done": {"tickets": {"at": "x"}}}), encoding="utf-8")
+        self.gate("pause", "--reason", "owner away")  # rewrites the mirror from the home state
+        moved = self.root / "new machine" / self.project.name
+        shutil.copytree(self.project, moved)
+        self.env["SAFE_ENGINE_HOME"] = str(self.root / "home2")
+        return moved
+
+    def test_the_owner_moves_an_open_run_to_another_machine(self):
+        moved = self.other_machine()
+        self.assertIn("No readable run state", self.gate("status", project=moved, ok=False))  # lost before the move
+        self.assertIn("Moved from", self.gate("move", "--from", str(self.project), project=moved))
+        status = self.gate("status", project=moved)
+        for line in ("'copy-fix'", "[x] tickets", "Paused: owner away", "Next: plan"):
+            self.assertIn(line, status)
+        mirror = json.loads((moved / ".factory/fast/run.json").read_text(encoding="utf-8"))
+        self.assertEqual((mirror["project"], mirror["moves"][0]["from"]), (str(moved), str(self.project)))
+        self.assertEqual(len(self.home_files("home2")), 2)  # its registration and state
+        self.assertIn("run.move", (self.root / "home2/logs/gate.log").read_text(encoding="utf-8"))
+        self.assertEqual(self.pre("Bash", cwd=moved, command=PUSH), "deny")  # the hooks gate it here
+        before = self.home_files("home2")
+        refused = self.gate("move", "--from", str(moved), project=moved, ok=False)  # a second move
+        self.assertIn("already holds a run", refused)
+        self.assertEqual(self.home_files("home2"), before)
+
+    def test_move_refuses_closed_runs_other_folders_and_runs_this_gate_home_knows(self):
+        moved = self.other_machine()
+        cases = {  # each refusal writes nothing to either gate home
+            "it records another folder": ("home2", "records its run at", str(self.root / "elsewhere")),
+            "the old folder is registered here": ("home", "already holds a run", str(self.project)),
+        }
+        for name, (home, words, source) in cases.items():
+            with self.subTest(name):
+                self.env["SAFE_ENGINE_HOME"] = str(self.root / home)
+                before = self.home_files(home)
+                self.assertIn(words, self.gate("move", "--from", source, project=moved, ok=False))
+                self.assertEqual(self.home_files(home), before)
+        self.env["SAFE_ENGINE_HOME"] = str(self.root / "home")
+        self.gate("close", "--abandon", "moved away")
+        mirror = self.project / ".factory/fast/run.json"  # reopened by hand: the closed state here still counts
+        mirror.write_text(json.dumps({**json.loads(mirror.read_text(encoding="utf-8")), "closed": False}), encoding="utf-8")
+        self.assertIn("already holds a run", self.gate("move", "--from", str(self.project), ok=False))
+        self.env["SAFE_ENGINE_HOME"] = str(self.root / "home2")
+        run = json.loads((moved / ".factory/fast/run.json").read_text(encoding="utf-8"))
+        (moved / ".factory/fast/run.json").write_text(json.dumps({**run, "closed": True}), encoding="utf-8")
+        self.assertIn("No open run to move", self.gate("move", "--from", str(self.project), project=moved, ok=False))
+        self.assertEqual(self.home_files("home2"), [])
+
 
 if __name__ == "__main__":
     unittest.main()
