@@ -1,7 +1,7 @@
 """Run state and the run registry for fast_gate.py: comparable paths, where a run's files live, and which runs are
 active. The gate home holds the truth: active/<h>.json registers a run, runs/<h>.json holds its state. The project's
 run.json is a mirror for agents to read; nothing here trusts it, except once to move an older run home, and the
-gate's owner-run `move`, which takes it home only where this gate home knows neither folder (known()).
+gate's owner-run `rehome`, which takes it home only where held() finds nothing in, around or inside either folder.
 """
 import json
 import os
@@ -104,10 +104,33 @@ def closed_run(entry):
         return None
 
 
-def known(active, project):
-    """Whether this gate home holds any run for project: its registration, or an open, broken or closed state."""
+def held(active, project):
+    """What this gate home holds for project, reading only: ("open" | "lost" | "closed", project) for the folder itself,
+    ("nested", folder) for a registered or open run in a folder around or inside it, else None."""
     entry = registry_path(active, project)
-    return any(path.exists() for path in (entry, state_path(entry), closed_path(entry)))
+    if entry.exists() or state_path(entry).exists():
+        try:
+            run = current(load(state_path(entry)))
+        except (OSError, ValueError):
+            run = None
+        return ("closed" if run and run.get("closed") else "open" if run else "lost"), str(project)
+    if closed_path(entry).exists():
+        return "closed", str(project)
+    here = norm(project)
+    for folder in (active, active.parent / "runs"):
+        for name in listing(folder):
+            try:
+                there = load(folder / name)["project"]
+                if inside(here, norm(there)) or inside(norm(there), here):
+                    return "nested", str(there)
+            except (OSError, ValueError, KeyError, TypeError):
+                continue  # unreadable: the hooks skip it too
+    return None
+
+
+def new_registration(project, key):
+    """The registration a run started or brought in by this gate gets: its home mark keeps a deleted state lost."""
+    return {"project": str(project), "key": key, "sessions": [], "home": True}
 
 
 def current(run):
@@ -185,16 +208,16 @@ def reregister(entry, log):
     run = current(load(state_path(entry)))
     if not run or run.get("closed"):
         return None
-    registration = {"project": run["project"], "key": run["key"], "sessions": [], "home": True}
+    restored = new_registration(run["project"], run["key"])
     try:
-        save(entry, registration, new=True)
+        save(entry, restored, new=True)
         if log:
             log("run.reregistered", key=run["key"], project=run["project"])
     except FileExistsError:  # a parallel hook restored it first
         return load(entry)
     except OSError:
         pass  # gated from memory; the next hook tries again
-    return registration
+    return restored
 
 
 def active_runs(active, log):
