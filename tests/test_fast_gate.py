@@ -14,6 +14,8 @@ from unittest.mock import patch
 
 SCRIPTS = Path(__file__).resolve().parents[1] / "skills/safe-engine/scripts"
 GATE = SCRIPTS / "fast_gate.py"
+sys.path.insert(0, str(SCRIPTS))
+import fast_proof  # noqa: E402  (the credit line every sample PR body ends with)
 SAMPLE = Path(__file__).resolve().parents[1] / ".agents/skills/safe-engine/references/work-record-sample.md"
 STEPS = ["research", "kickoff", "tickets", "analysis", "plan", "design", "schema", "build", "done-run", "handoff"]
 ONLINE = ("tickets", "plan", "done-run", "handoff")  # steps that read the listed tickets through gh
@@ -45,7 +47,9 @@ PR_BODY = """## 🎬 Before & after
 ![before](https://github.com/acme/site/blob/0a1b2c3/footer-before.png?raw=true)
 **After:** "Contact us" (head)
 ![after](https://github.com/acme/site/blob/0a1b2c3/footer-after.png?raw=true)
-"""
+
+---
+""" + fast_proof.CREDIT + "\n"
 
 
 EVERYDAY = (  # commands an agent runs all day: never denied
@@ -846,16 +850,16 @@ class FastGateTests(GateHarness, unittest.TestCase):
         spec = importlib.util.spec_from_file_location("fast_gate_module", GATE)
         gate = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(gate)
-        layout, lane, ux = Path(gate.LAYOUT), Path(gate.FAST_RUN), Path(gate.UX)
+        layout, lane, ux, pr = Path(gate.LAYOUT), Path(gate.FAST_RUN), Path(gate.UX), Path(gate.PR)
         for name, texts in (("new", ("### ✅ Definition of done\nEvery criterion has an item.",
                                      "## Light lane\nT1 <title> → <what the owner can do once it is done>\n**Hidden checks:**\n**Secrets:**\n`**PR:**`",
-                                     "| U10 | Performance |")),
-                            ("old", ("### ✅ Done when", "## Hooks", "| Performance |"))):
-            for path, text in zip((layout, lane, ux), texts):
+                                     "| U10 | Performance |", "ends with the credit line in `references/credit.md`")),
+                            ("old", ("### ✅ Done when", "## Hooks", "| Performance |", "No AI or tool attribution"))):
+            for path, text in zip((layout, lane, ux, pr), texts):
                 (self.root / name / path).parent.mkdir(parents=True, exist_ok=True)
                 (self.root / name / path).write_text(text, encoding="utf-8")
         on = {"ticket_checks": True, "coverage": True, "light": True, "outcomes": True, "hidden_checks": True, "scans": True,
-              "ux_rules": True, "pr_proof": True}
+              "ux_rules": True, "pr_proof": True, "credit": True}
         off = dict.fromkeys(on, False)
         self.assertEqual(gate.method_flags({"root": str(self.root / "new")}, self.project), on)
         self.assertEqual(gate.method_flags({"root": str(self.root / "old")}, self.project), off)
@@ -865,7 +869,7 @@ class FastGateTests(GateHarness, unittest.TestCase):
         (self.root / "new" / layout).write_bytes(b"\xff\xfe broken")
         self.assertEqual(gate.method_flags({"root": str(self.root / "new")}, self.project),
                          {**off, "light": True, "outcomes": True, "hidden_checks": True, "scans": True,
-                          "ux_rules": True, "pr_proof": True})  # fast-run.md and ux-quality still read
+                          "ux_rules": True, "pr_proof": True, "credit": True})  # fast-run.md, ux-quality, PR still read
         lucky = {"mode": "lucky", "kind": "change"}
         self.assertNotIn("done-run", gate.steps_for(lucky))
         self.assertIn("done-run", gate.steps_for({**lucky, "ticket_checks": True}))

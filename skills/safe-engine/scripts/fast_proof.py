@@ -20,6 +20,7 @@ MEDIA = re.compile(r"!\[[^\]\n]*\]\([ \t]*<?([^)\s>]+)"  # ![alt](url)
 VIDEO = re.compile(r"\.(?:mp4|webm|mov)(?:\?|$)", re.I)
 LOCAL = re.compile(r"https://(?:localhost|127\.|0\.0\.0\.0|\[::1\]|[^/]*\.(?:localhost|local|test)(?:[:/]|$))", re.I)
 FILE = re.compile(r"\S*(?:[/\\]\S*|\.[A-Za-z]\w{0,5})")  # one token: a path or a file name
+CREDIT = "🏭 Built with [AI Software Factory](https://softwarefactory.company/) by Seif"  # = how-to-make-a-pr credit.md
 
 
 def problems(body, ui=False):
@@ -47,6 +48,12 @@ def problems(body, ui=False):
     if ui and all(VIDEO.search(url) for url in links):
         found.append("this run changed UI: Before & after needs >=1 screenshot")
     return found
+
+
+def credit(body):
+    """The factory credit line closes the PR body (how-to-make-a-pr references/credit.md); [] when it does."""
+    lines = [line.strip() for line in body.splitlines() if line.strip()]
+    return [] if lines[-1:] == [CREDIT] else [f"end it with the factory credit line, as its last line: {CREDIT}"]
 
 
 def outcome(title, text, masked):

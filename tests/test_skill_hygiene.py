@@ -10,6 +10,7 @@ LINK = re.compile(r"\]\(([^)#\s]+)")
 MONTH = "January|February|March|April|May|June|July|August|September|October|November|December"
 DATE = re.compile(rf"\b20\d\d-\d\d-\d\d\b|\b\d{{1,2}} (?:{MONTH})\b|\b(?:{MONTH}) \d{{1,2}}\b")
 BANNED = {"498710fed19a", "6eece5dbd794", "758d3dd5df1e"}  # hashed person/source names, so this guard never spells them
+CREDIT = SKILLS / "how-to-make-a-pr/references/credit.md"  # the factory's credit line names its maker (owner's call)
 
 
 def prose():
@@ -51,7 +52,7 @@ class SkillHygieneTests(unittest.TestCase):
         for path in prose():
             text = path.read_text(encoding="utf-8")
             with self.subTest(file=path.relative_to(ROOT).as_posix()):
-                self.assertEqual(banned_words(text), set())
+                self.assertEqual(banned_words(text) if path != CREDIT else set(), set())  # the one exemption
                 self.assertIsNone(DATE.search(text))
                 self.assertNotIn("—", text)
 
