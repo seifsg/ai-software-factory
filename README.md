@@ -59,7 +59,7 @@ safe-engine Build a habit tracker in /home/me/habits. Success means a signed-in 
 1. Researches three competitors and writes a feature matrix with opportunities.
 2. Asks you about size, features, approach and stack: one round for a POC, more for an MVP.
 3. Reads the backlog, then opens an epic and outcome sub-issues in To do, each with a definition of done.
-4. Analyzes requirements and consumers, then writes a plan whose todos become each ticket's checklist. A fresh agent writes the hidden checks.
+4. Analyzes requirements and consumers, then writes a plan whose todos become each ticket's checklist. Before each build wave, a fresh agent writes the hidden checks for the criteria that wave builds.
 5. Writes the design brief and the schema decision.
 6. Builds every checklist item through a check-change-check loop and ticks it once it works.
 7. Runs the app through every requested journey and its most likely failure; the hidden checks decide each criterion.
