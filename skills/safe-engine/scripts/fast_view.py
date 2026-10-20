@@ -100,7 +100,7 @@ def events_of(old, new, todos, now_ms):
             rows.append(("check_circle", f"{row['id']} {row['title']} done", "done"))
     if old and old.get("at") != new["at"] and not new["closed"]:
         step = new["steps"][new["at"]]["id"]
-        rows.append((ICON.get(step, "construction"), f"step {step} started", "step"))
+        rows.append((ICON.get(step, "construction"), f"{step.capitalize()} started", "step"))
     if new["paused"] and not old.get("paused"):
         rows.append(("front_hand", "waits on you", "wait"))
     if old.get("paused") and not new["paused"] and not new["closed"]:
@@ -323,6 +323,7 @@ def serve(folder, port=0, log=print):
     except OSError:  # the port is taken (another view, another app): any free one
         server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
     url = f"http://127.0.0.1:{server.server_address[1]}/"
+    (folder / "url").write_text(url, encoding="utf-8")  # the hooks' link reminder reads it
     log(url)
     try:
         server.serve_forever()
@@ -330,4 +331,16 @@ def serve(folder, port=0, log=print):
         pass
     finally:
         server.server_close()
+        (folder / "url").unlink(missing_ok=True)
     return url
+
+
+def live_url(folder):
+    """The running view's address, or None: no server, or the address of one that died (one 0.2 s connect)."""
+    import socket
+    try:
+        url = (Path(folder) / "url").read_text(encoding="utf-8").strip()
+        with socket.create_connection(("127.0.0.1", int(url.rstrip("/").rsplit(":", 1)[1])), timeout=0.2):
+            return url
+    except (OSError, ValueError, IndexError):
+        return None

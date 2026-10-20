@@ -142,6 +142,7 @@ def mirror(project, run):
 
 
 SHOWN, SEEN, VIEWED = "shown", "seen", "viewed"  # progress claims; newest change shown, and written to the view
+PROMPTS, VIEW_EVERY = "prompts", 6  # prompt counter; the live view's link shows on the first prompt and every sixth after
 
 
 def shown_path(project):
@@ -553,7 +554,7 @@ def forget_shown(project):
     """Drop the shown-progress claims and stamp: a closed or new run starts its owner messages fresh."""
     import shutil
     shutil.rmtree(shown_path(project), ignore_errors=True)
-    for stamp in (SEEN, VIEWED):
+    for stamp in (SEEN, VIEWED, PROMPTS):
         Path(project, *FAST, stamp).unlink(missing_ok=True)
 
 
@@ -738,6 +739,29 @@ def unseen_lines(project, state, show=True):
     return lines
 
 
+def reminder(runs, cwd, session):
+    """The live view's link on the first prompt and every sixth after, for this session's run; else None. Prompts only:
+    one small counter file per project, never a cost on tool calls. Never raises."""
+    try:
+        item = next((item for item in mine(runs, cwd, session, bind_cwd=False) if not item[2].get("lost")), None)
+        if not item:
+            return None
+        path = Path(item[2]["project"], *FAST, PROMPTS)
+        try:
+            count = int(path.read_text(encoding="utf-8").strip() or 0) + 1
+        except (OSError, ValueError):
+            count = 1
+        path.write_text(str(count), encoding="utf-8")
+        if count % VIEW_EVERY != 1:
+            return None
+        url = sibling("fast_view").live_url(HOME / "view")
+        return (f"🏭 Live view of every run: {url}" if url else
+                "🏭 Live view is off: ask your agent to start `fast_gate.py view`, then open http://127.0.0.1:8765/")
+    except Exception as error:  # noqa: BLE001 - a courtesy; the prompt's answer comes first
+        log("hook.error", where="reminder", error=repr(error))
+        return None
+
+
 def note_agents(runs, cwd, session, agents):
     """Keep the host's background agents in this session's run views when the list changed (Stop events only)."""
     try:
@@ -809,6 +833,8 @@ def cmd_hook(host="claude"):
         if event["kind"]:  # the view refreshes on every host; delegates' messages may not reach the owner
             show = hosts.notifies(host) and not event.get("delegate")
             lines = news(runs, cwd, session, show)
+            if show and event["kind"] == "prompt":
+                lines = "\n".join(line for line in (lines, reminder(runs, cwd, session)) if line) or None
             out = hosts.with_message(out, lines) if show else out
         if out:
             print(out)

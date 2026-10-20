@@ -122,6 +122,7 @@ Without hooks the gate still records and checks steps; follow the order yourself
 - It shows each run's steps, its todos (done, now, next, later, counted as the card counts), its agents and sessions, the owner's open question and Ready to try.
 - A ticked todo leaves something the owner can use: record it with `try`, a command, an `http(s)` link or a file inside the project (screenshots under `.factory/fast/shots/` show as thumbnails). `try` refuses an unknown todo or any other target and names the form; never write `**Try:**` lines by hand.
 - Agents: the todos in `**Now:**`, plus the background agents your agent reports at a stop (the factory's `docs/hosts.md`).
+- On the first prompt and every sixth after, the prompt hook's message to the owner carries the view's link, or says the view is off and how to start it.
 
 ## Keep it fast
 

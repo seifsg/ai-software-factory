@@ -178,6 +178,25 @@ class LiveViewTests(unittest.TestCase):
         self.assertEqual(json.loads(inline)["runs"][0]["key"], "cockpit")
         self.assertIn("<\\/script><script>alert(1)<\\/script>", inline)
 
+    def test_the_owner_gets_the_views_link_on_the_first_prompt_and_every_sixth(self):
+        def reminders():
+            answer = self.hook(name="UserPromptSubmit", prompt="go")
+            return [line for line in (answer or {}).get("systemMessage", "").splitlines() if "Live view" in line]
+        shown = [reminders() for _ in range(7)]
+        self.assertEqual([bool(lines) for lines in shown], [True, False, False, False, False, False, True])
+        self.assertIn("Live view is off", shown[0][0])  # no server yet: how to start it
+        delegate = self.hook(name="UserPromptSubmit", prompt="go", agent_id="agent-1")
+        self.assertNotIn("systemMessage", delegate)  # a delegate's prompt neither shows nor counts
+        server = subprocess.Popen([sys.executable, str(GATE), "view", "--port", "0"], stdout=subprocess.PIPE,
+                                  text=True, encoding="utf-8", env=self.env)
+        self.addCleanup(server.stdout.close)
+        self.addCleanup(server.wait)
+        self.addCleanup(server.kill)
+        url = server.stdout.readline().split()[2]
+        for _ in range(5):
+            reminders()
+        self.assertEqual(reminders(), [f"🏭 Live view of every run: {url}"])  # the 13th prompt: a clickable link
+
     def test_the_page_never_turns_record_text_into_markup_or_script(self):
         page = (SCRIPTS / "view" / "index.html").read_text(encoding="utf-8")
         self.assertNotIn("x-html", page)
