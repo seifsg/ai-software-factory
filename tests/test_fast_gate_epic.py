@@ -34,38 +34,35 @@ class EpicOwnershipTests(unittest.TestCase):
             self.assertIn("without a hidden-check PASS: #1 A1, #1 A2", check(no_epic))
         with patch.object(record, "read_ticket", side_effect=holding("🤝 **T8**")):  # the method's own example
             self.assertIn("without a hidden-check PASS: #1 A1, #1 A2", check(no_epic))
+        odd = lambda url: {**holding("T99")(url), "body": holding("T99")(url)["body"] + "- [ ] Soak sign-off for A2\n"}
+        with patch.object(record, "read_ticket", side_effect=odd):  # off the layout: owed whole, with the form
+            self.assertIn("off the ticket layout", check(no_epic))
+            self.assertIn("#1 A1, #1 A2", check(no_epic))
 
-    def test_integration_items_are_read_failing_closed(self):
+    def test_ownership_is_read_from_the_layout_only(self):
         record, epic = self.record, "https://github.com/acme/studio-booking/issues/1"
-        item = lambda text: {"url": epic, "body": DOD + "\n### Checklist\n" + text}
-        for text, handed in [("- [ ] T80 Checks synced (#4 A1 to A8, #5 A1)\n", False),  # other tickets' IDs
-                             ("- [ ] T7 Collector, needs #2 A1\n", False),
-                             ("- [ ] T63 Proof (A1; A2)\n", True), ("- [ ] T63 Proof (**A1**, A2)\n", True),
-                             ("- [ ] #2 Booking, then T63 (A1)\n", True),  # names T63 and A1: T63's
-                             ("- [ ] T63 Proof ( A1 )\n- [ ] T75 Audit (A2)\n", False)]:  # T75 is one too
+        read = lambda text: record.integration({"url": epic, "body": DOD + "\n### Checklist\n" + text})
+        for text, holders in [("- [ ] T63 Proof → it works (A1, A2)\n", {"T63"}),
+                              ("- [ ] T63 Proof (#1, A1)\n", {"T63"}), ("- [ ] T63 Proof (#1 A1, A2)\n", {"T63"}),
+                              ("- [ ] T63 Proof (A1; A2)\n", {"T63"}), ("- [ ] T63 Proof ( A1 )\n", {"T63"}),
+                              ("- [ ] **T63** Proof (A1)\n", {"T63"}), ("- [ ] [T63] Proof (A1)\n", {"T63"}),
+                              ("- [ ] 🤝 **T63** Proof (A1)\n", {"T63"}), ("- [ ] ✅ [T63] Proof (A1)\n", {"T63"}),
+                              ("- [ ]T63 Proof (A1)\n", {"T63"}), ("- [ ] T62 / T63 Proof (A1)\n", {"T62", "T63"}),
+                              ("- [ ] T61 to T63 Proof (A1)\n", {"T61", "T62", "T63"}),
+                              ("- [ ] T63 and T64 Proof (A1)\n", {"T63", "T64"}), ("- [ ] T63-T64 Proof (A1)\n", {"T63", "T64"}),
+                              ("- [ ] T63 Proof (A1). needs #2 T29, needs #3 T18\n", {"T63"}),  # needs markers: not read
+                              ("- [x] T63 Proof (A1). Proof: A2 passed on the fleet\n", {"T63"}),  # the proof tail: not read
+                              ("- [x] T80 Checks synced (#4 A1 to A8, #5 A1, A2)\n", set()),  # other tickets' criteria
+                              ("- [ ] T75 Docs, as T63 says (#2, A1)\n", set()),  # later IDs never claim
+                              ("- [ ] #2 Booking: every item ticked\n", set())]:
             with self.subTest(text=text):
-                self.assertEqual(record.handed(item(text), {"T75"}), handed)
-        audit = "- [ ] T75 Gap audit (A2)\n"
-        for t63 in ["- [ ] **T63** Proof (A1)\n", "- [ ] [T63] Proof (A1)\n", "- [ ] 🤝 T63 Proof (A1)\n",
-                    "- [ ] 🤝 **T63** Proof (A1)\n", "- [ ] ✅ [T63] Proof (A1)\n", "- [ ]T63 Proof (A1)\n",
-                    "- [ ] T63 Proof (#1 A1, A2)\n", "- [ ] T62 / T63 Proof (A1)\n", "- [ ] T61 to T63 Proof (A1)\n"]:
-            with self.subTest(t63=t63):  # every listed holder owes the epic; the others do not
-                self.assertFalse(record.handed(item(t63 + audit), {"T63"}))
-                self.assertTrue(record.handed(item(t63 + audit), {"T2"}))
-        self.assertFalse(record.handed(item("- [ ] Integration proof (A1)\n" + audit), {"T2"}))  # unread: owed whole
-        self.assertEqual(record.item_todos("- [x] 🤝 T76, T77 Docs"), {"T76", "T77"})
-        self.assertEqual(record.item_todos("- [ ] T63 Proof. needs #2 T29"), {"T63"})
-        for text in ["- [ ] 🤝 **T63**, **T64** Proof", "- [ ] T63 / T64 Proof", "- [ ] T63 and T64", "- [ ] T63 to T65",
-                     "- [ ] T63-T65"]:
-            self.assertIn("T64", record.item_todos(text), text)  # lists and ranges: every holder owes the epic
-        for ref in ["needs #2 T1, T5", "Needs #2 T29", "after #2 T29", "needs #2 T1 to T18", "(#3 T4 / T6)"]:
-            self.assertEqual(record.item_todos(f"- [ ] T63 Proof (A1). {ref}", "1"), {"T63"}, ref)  # other tickets'
-            self.assertTrue(record.handed(item(f"- [ ] Integration proof (A1). {ref}\n" + audit), {"T5"}) is False, ref)
-        self.assertEqual(record.item_todos("- [ ] Proof, as #1 T63 says", "1"), {"T63"})  # this epic's own reference
-        for ref in ["needs #2 T1 and T5", "needs #2 T1-T5", "needs #2 T1 – T5"]:
-            self.assertEqual(record.item_todos(f"- [ ] T63 Proof (A1). {ref}", "1"), {"T63"}, ref)
-        self.assertFalse(record.handed(item("- [ ] T63 Proof (needs #2 T29, A1)\n" + audit), {"T63"}))  # A1 is #1's
-        self.assertTrue(record.handed(item("- [ ] T63 Proof (needs #2 T29, A1)\n" + audit), {"T2"}))
+                self.assertEqual(read(text), (holders, None))
+        for text in ["- [ ] T63 Proof (**A1**, A2)\n", "- [ ] T63 Proof (needs #2 T29, A1)\n", "- [ ] Soak sign-off for A2\n",
+                     "- [ ] Integration proof (A1)\n", "- [ ] #2 Booking, then T63 (A1)\n", "- [ ] T7 Collector, needs #2 A1\n",
+                     "- [ ] T63 Proof, after #2 T29 (A1)\n- [ ] Owner soak (A2)\n"]:
+            with self.subTest(text=text):  # names the epic's criteria off the layout: owed whole, the item named
+                self.assertIsNotNone(read(text)[1])
+        self.assertEqual(record.lead_todos("- [x] 🤝 T76, T77 Docs. needs #1 T75"), {"T76", "T77"})
 
     def test_a_later_epic_owes_only_this_runs_items(self):
         record = self.record
@@ -75,9 +72,11 @@ class EpicOwnershipTests(unittest.TestCase):
         self.assertIn("1 unticked", record.needs_ticks(later({"T2"})))  # this run's own todo stays owed
         for own in ["- [ ] **T2** b", "- [ ] 🤝 **T2** b", "- [ ] T9 / T2 b"]:
             self.assertIn("1 unticked", record.needs_ticks(later({"T2"}, ticket.replace("- [ ] T2 b", own))), own)
-        self.assertIsNone(record.needs_ticks(later({"T29"}, ticket.replace("T2 b", "T2 b. needs #2 T29"))))
-        on_epic = {**later({"T2"}, ticket.replace("- [ ] T2 b", "- [ ] Docs b, as #1 T2 says")), "url": "https://github.com/acme/portal/issues/1"}
-        self.assertIn("1 unticked", record.needs_ticks(on_epic))  # the ticket's own number keeps its references
+        for other in ["T2 b. needs #2 T29", "T2 b, after #1 T29", "T2 b, as T29 says"]:  # only the leading IDs claim
+            self.assertIsNone(record.needs_ticks(later({"T29"}, ticket.replace("T2 b", other))), other)
+        whole = {"stopped": False, "backlog": False, "body": ticket, "layout": "- [ ] Soak sign-off for A1"}
+        self.assertIn("off the ticket layout", record.needs_ticks(whole))
+        self.assertIn("1 unticked", record.needs_ticks(whole))
 
     def test_a_planning_run_on_an_epic_owes_only_its_own_todos(self):
         record = self.record
