@@ -316,7 +316,7 @@ def needs_checklist(ticket):
 
 def needs_ticks(ticket):
     """Handoff: a listed ticket is finished (every item ticked) unless Blocked, cancelled or deferred to Backlog.
-    An epic other runs finish later (`later`) owes only the items naming this run's plan todos."""
+    An epic other runs finish later (`later`) owes only the items that are this run's todos ('- [ ] T75 ...')."""
     if ticket["stopped"] or ticket["backlog"]:
         return None
     marks = TASK.findall(checklist(ticket["body"]))
@@ -325,7 +325,7 @@ def needs_ticks(ticket):
     own = ticket.get("later")
     left = marks.count(" ") if own is None else sum(
         1 for item in TASK.finditer(checklist(ticket["body"]))
-        if item.group(1) == " " and own & set(ID.findall(NEEDS.sub("", item.group(0)))))
+        if item.group(1) == " " and (ITEM_TODO.match(item.group(0)) or [None, None])[1] in own)
     if not left:
         return None
     return (f"{left} unticked checklist item(s): finish them, mark the ticket Blocked with its reason, "

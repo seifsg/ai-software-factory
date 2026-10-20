@@ -796,6 +796,8 @@ class FastGateTests(GateHarness, unittest.TestCase):
                 return " ".join(record.check_handoff(run, handoff, offline=None, all_sections=sections))
         self.assertEqual(check(["T75"]), "")  # #109: a planning run owes only its own items on the epic
         self.assertIn("1 unticked", check(["T75", "T77"]))  # its own unticked todo stays owed
+        needs = {"stopped": False, "backlog": False, "later": {"T29"}, "body": body.replace("(A1)", "(A1). needs #2 T29")}
+        self.assertIsNone(record.needs_ticks(needs))  # T63 needs #2 T29: still not that run's item
         self.assertIn("3 unticked", check(["T63"]))  # the run holding the integration todo owes the epic whole
         self.assertIn("3 unticked", check(["T75"], body.replace(" (A1)", "")))  # no integration todo: owed whole
 
