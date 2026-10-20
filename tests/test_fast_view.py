@@ -22,7 +22,7 @@ RECORD = """# cockpit
 **Success:** the gauges move.
 ### Todos
 - T1 App shell → open /cockpit and see it
-- T2 Live gauges </script><script>alert(1)</script> → watch three gauges move
+- T2 Gauges </script><!--<script>alert(1)</script> → watch three gauges move
 ## Build log
 """
 
@@ -78,6 +78,9 @@ class LiveViewTests(unittest.TestCase):
     def run_view(self):
         return self.state()["runs"][0]
 
+    def todos_file(self):
+        return next(self.view.glob("cockpit-*.todos.json"))
+
     def plan(self, log=""):
         self.record.write_text(RECORD + log, encoding="utf-8")
         self.gate("done", "tickets", "--offline", "test")
@@ -91,7 +94,7 @@ class LiveViewTests(unittest.TestCase):
         self.assertEqual([t["id"] for t in run["now"]], ["T2"])
         self.assertEqual(run["last"]["id"], "T1")
         self.assertEqual(run["ticket"], "#11 Cockpit")
-        todos = json.loads((self.view / "cockpit.todos.json").read_text(encoding="utf-8"))
+        todos = json.loads(self.todos_file().read_text(encoding="utf-8"))
         self.assertEqual([(t["id"], t["state"]) for t in todos], [("T2", "now"), ("T1", "done")])
 
     def test_try_refuses_bad_targets_and_records_a_good_one(self):
@@ -109,8 +112,9 @@ class LiveViewTests(unittest.TestCase):
         self.gate("try", "t1", "--file", ".factory/fast/shots/shell.png")
         self.assertIn("**Try:** T1 file .factory/fast/shots/shell.png\n", self.record.read_text(encoding="utf-8"))
         ready = self.state()["ready"]
-        self.assertEqual([(t["id"], t["kind"], t.get("thumb")) for t in ready], [("T1", "file", "shots/cockpit-T1.png")])
-        self.assertTrue((self.view / "shots" / "cockpit-T1.png").is_file())  # the last Try line wins
+        self.assertEqual([(t["id"], t["kind"], t["run"]) for t in ready], [("T1", "file", "cockpit")])  # the last Try line wins
+        self.assertRegex(ready[0]["thumb"], r"^shots/cockpit-[0-9a-f]{6}-T1\.png$")
+        self.assertTrue((self.view / ready[0]["thumb"]).is_file())
 
     def test_hooks_refresh_the_view_from_delegates_without_using_up_the_owners_message(self):
         self.plan()
@@ -144,7 +148,7 @@ class LiveViewTests(unittest.TestCase):
         with view.Lock(self.view):
             view.save_state(self.view, self.state()["runs"], tomorrow)
         self.assertEqual(self.state()["runs"], [])
-        self.assertFalse((self.view / "cockpit.todos.json").exists())
+        self.assertEqual(list(self.view.glob("cockpit-*.todos.json")), [])
 
     def test_server_answers_unchanged_polls_with_304_and_refuses_other_hosts(self):
         self.plan()
@@ -158,7 +162,10 @@ class LiveViewTests(unittest.TestCase):
         with urllib.request.urlopen(url + "state.json") as response:
             tag, body = response.headers["ETag"], json.loads(response.read())
             self.assertIn("connect-src 'self'", response.headers["Content-Security-Policy"])
-        self.assertEqual(body["runs"][0]["key"], "cockpit")
+        self.assertEqual(body["runs"][0]["label"], "cockpit")
+        again = subprocess.run([sys.executable, str(GATE), "view", "--port", "0"], capture_output=True, text=True,
+                               encoding="utf-8", env=self.env, timeout=60)  # a second view never starts a second server
+        self.assertIn(f"Live view already running: {url}", again.stdout)
         with self.assertRaises(urllib.error.HTTPError) as unchanged:
             urllib.request.urlopen(urllib.request.Request(url + "state.json", headers={"If-None-Match": tag}))
         self.assertEqual(unchanged.exception.code, 304)
@@ -175,8 +182,29 @@ class LiveViewTests(unittest.TestCase):
                        env=self.env)
         html = out.read_text(encoding="utf-8")
         inline = html.split('<script id="snapshot" type="application/json">', 1)[1].split("</script>", 1)[0]
-        self.assertEqual(json.loads(inline)["runs"][0]["key"], "cockpit")
-        self.assertIn("<\\/script><script>alert(1)<\\/script>", inline)
+        self.assertNotIn("<", inline)  # neither </script> nor <!--<script in record text can end or nest the block
+        self.assertIn("<!--<script>", json.dumps(json.loads(inline)["runs"][0]["open"], ensure_ascii=False))
+        self.assertEqual(json.loads(inline)["runs"][0]["label"], "cockpit")
+
+    def test_same_key_runs_in_two_projects_keep_their_own_views(self):
+        other = self.root / "other app"
+        other.mkdir()
+        start = subprocess.run([sys.executable, str(GATE), "start", "--key", "cockpit", "--kind", "change", "--no-ui",
+                                "--no-data", "--request", "other", "--project", str(other)], capture_output=True, env=self.env)
+        self.assertEqual(start.returncode, 0, start.stderr)
+        self.plan("- T1 pre: a do: b post: c\n")
+        runs = self.state()["runs"]
+        self.assertEqual(sorted(r["label"] for r in runs), ["cockpit", "cockpit"])
+        self.assertEqual(len({r["key"] for r in runs}), 2)
+        self.assertEqual(sorted(r["done"] for r in runs), [0, 1])  # no run's progress shows as the other's
+
+    def test_a_fresh_gate_home_writes_an_empty_snapshot(self):
+        out, home = self.root / "empty.html", self.root / "fresh home"
+        result = subprocess.run([sys.executable, str(GATE), "view", "--snapshot", str(out)], capture_output=True,
+                                env=dict(self.env, SAFE_ENGINE_HOME=str(home)))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        inline = out.read_text(encoding="utf-8").split('<script id="snapshot" type="application/json">', 1)[1].split("</script>", 1)[0]
+        self.assertEqual({k: json.loads(inline)[k] for k in ("runs", "ready", "events")}, {"runs": [], "ready": [], "events": []})
 
     def test_the_owner_gets_the_views_link_on_the_first_prompt_and_every_sixth(self):
         def reminders():

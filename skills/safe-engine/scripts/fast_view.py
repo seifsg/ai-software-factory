@@ -107,20 +107,20 @@ def events_of(old, new, todos, now_ms):
         rows.append(("bolt", "resumed", "resume"))
     if new["closed"] and not old.get("closed"):
         rows.append(("inventory_2" if new["closed"] == "finished" else "block", f"run {new['closed']}", "finish"))
-    fresh = [{"id": now_ms * 100 + i, "t": now_ms, "run": new["key"], "icon": icon, "text": text, "kind": kind}
+    fresh = [{"id": now_ms * 100 + i, "t": now_ms, "run": new["label"], "icon": icon, "text": text, "kind": kind}
              for i, (icon, text, kind) in enumerate(rows)]
     return ((old.get("events") or []) + fresh)[-EVENTS:]
 
 
-def shot(folder, project, key, n, value):
-    """A screenshot inside the run's shots folder, copied into the view folder once; its page path, else None."""
+def shot(folder, project, vid, n, value):
+    """A screenshot inside the run's shots folder, copied into the view folder when new or changed; its page path."""
     source = Path(project, value).resolve()
     if not SHOT.search(value) or not str(source).startswith(str(Path(project, ".factory", "fast", "shots").resolve()) + os.sep):
         return None
-    name = f"{key}-T{n}{source.suffix.lower()}"
+    name = f"{vid}-T{n}{source.suffix.lower()}"
     try:
         target = folder / "shots" / name
-        if not target.exists() or target.stat().st_size != source.stat().st_size:
+        if not target.exists() or target.stat().st_mtime_ns < source.stat().st_mtime_ns:  # a retaken screenshot
             target.parent.mkdir(exist_ok=True)
             shutil.copyfile(source, target)
         return f"shots/{name}"
@@ -136,14 +136,20 @@ class Lock:
         self.path = folder / "state.lock"
 
     def __enter__(self):
+        self.path.parent.mkdir(parents=True, exist_ok=True)
         for _ in range(100):
             try:
                 os.close(os.open(self.path, os.O_CREAT | os.O_EXCL | os.O_WRONLY))
                 return self
             except FileExistsError:
                 try:
-                    if time.time() - self.path.stat().st_mtime > 2:
-                        self.path.unlink()
+                    if time.time() - self.path.stat().st_mtime > 2:  # a crashed writer's: one waiter wins the rename
+                        stale = self.path.with_name(f"state.lock.{os.getpid()}")
+                        os.replace(self.path, stale)
+                        if time.time() - stale.stat().st_mtime > 2:
+                            stale.unlink()
+                        else:  # another waiter took it over first: give its fresh lock back
+                            os.replace(stale, self.path)
                 except OSError:
                     pass
                 time.sleep(0.005)
@@ -153,12 +159,14 @@ class Lock:
         self.path.unlink(missing_ok=True)
 
 
-def write(folder, project, run, steps, sessions=0, agents=None, now_ms=None):
+def write(folder, project, run, steps, sessions=0, agents=None, now_ms=None, vid=None):
     """Update this run in state.json (one atomic replace per change) and write its todo list for the detail.
-    agents=None keeps the last snapshot."""
+    vid: the view's id, unique across projects (the gate passes key plus project hash). agents=None keeps the last
+    snapshot."""
     folder, now_ms = Path(folder), now_ms or int(time.time() * 1000)
     folder.mkdir(parents=True, exist_ok=True)
-    key, record = run["key"], Path(project, ".factory", "fast", "work-record.md")
+    label, record = run["key"], Path(project, ".factory", "fast", "work-record.md")
+    key = vid or label
     sections = facts.read(record)
     v = card.view(run, sections)
     todos = todo_rows(v, facts.try_items(sections))
@@ -169,7 +177,7 @@ def write(folder, project, run, steps, sessions=0, agents=None, now_ms=None):
     except OSError:
         edited = 0
     view = {
-        "key": key, "name": Path(project).name, "project": str(project), "kind": run.get("kind"), "mode": run.get("mode"),
+        "key": key, "label": label, "name": Path(project).name, "project": str(project), "kind": run.get("kind"), "mode": run.get("mode"),
         "ticket": f"#{v.focus} {v.tickets.get(v.focus, '')}".strip() if v.focus else "",
         "steps": rows, "at": at, "stepSince": since, "created": ms(run.get("created"), now_ms),
         "changed": max(edited, since, ms((paused or {}).get("at"), 0)),  # Quiet: no record edit, step or pause for 15 min
@@ -184,17 +192,20 @@ def write(folder, project, run, steps, sessions=0, agents=None, now_ms=None):
         "open": opened[:OPEN_TILES], "more": max(0, len(opened) - OPEN_TILES),
         "doneIds": [t["id"] for t in todos if t["state"] == "done"],
     }
+    tried = [t for t in todos if t["state"] == "done" and t.get("kind")]
+    thumbs = {t["id"]: shot(folder, project, key, t["id"][1:], t["value"]) for t in tried if t["kind"] == "file"}  # copies stay out of the lock
     with Lock(folder):
         state = read(folder / "state.json", {}) or {}
         runs = {r["key"]: r for r in state.get("runs") or [] if isinstance(r, dict) and "key" in r}
         old = runs.get(key) or {}
+        old = {} if old.get("closed") and not view["closed"] else old  # the same key started again: a fresh history
         first = {t["key"]: t["at"] for t in old.get("ready") or []}
         view["agents"] = (old.get("agents") or []) if agents is None else agents
-        view["ready"] = [{"key": f"{key}/{t['id']}", "run": key, "id": t["id"], "title": t["title"], "result": t["result"],
+        view["ready"] = [{"key": f"{key}/{t['id']}", "run": label, "id": t["id"], "title": t["title"], "result": t["result"],
                           "kind": t["kind"], "value": t["value"], "cwd": str(project),
                           "at": first.get(f"{key}/{t['id']}", now_ms),
-                          **({"thumb": shot(folder, project, key, t["id"][1:], t["value"])} if t["kind"] == "file" else {})}
-                         for t in todos if t["state"] == "done" and t.get("kind")]
+                          **({"thumb": thumbs[t["id"]]} if t["id"] in thumbs else {})}
+                         for t in tried]
         view["events"] = events_of(old, view, todos, now_ms)
         runs[key] = view
         save_state(folder, runs.values(), now_ms)
@@ -213,12 +224,26 @@ def save_state(folder, runs, now_ms=None):
     today = datetime.fromtimestamp(now_ms / 1000).date()
     kept = [r for r in runs if not r.get("closed") or datetime.fromtimestamp((r.get("closedAt") or 0) / 1000).date() >= today]
     for gone in {r["key"] for r in runs} - {r["key"] for r in kept}:
-        (folder / f"{gone}.todos.json").unlink(missing_ok=True)
+        for stale in [folder / f"{gone}.todos.json", *folder.glob(f"shots/{gone}-*")]:
+            stale.unlink(missing_ok=True)
     kept.sort(key=lambda r: (bool(r.get("closed")), not r.get("paused"), r.get("done") == r.get("total"), r["key"]))
     ready = sorted((t for r in kept for t in r.get("ready") or []), key=lambda t: -t["at"])
     events = sorted((e for r in kept for e in r.get("events") or []), key=lambda e: e["id"])[-EVENTS * 2:]
     dump(folder / "state.json", {"at": now_ms, "runs": kept, "ready": ready[:READY], "readyTotal": len(ready),
                                  "events": events})
+
+
+def prune(folder, keep):
+    """Drop open runs the gate no longer holds (a lost run closed elsewhere); closed runs stay until the next day."""
+    with Lock(folder):
+        state = read(folder / "state.json", {}) or {}
+        runs = [r for r in state.get("runs") or [] if isinstance(r, dict) and "key" in r]
+        kept = [r for r in runs if r.get("closed") or r["key"] in keep]
+        if len(kept) != len(runs):
+            for gone in {r["key"] for r in runs} - {r["key"] for r in kept}:
+                for stale in [folder / f"{gone}.todos.json", *folder.glob(f"shots/{gone}-*")]:
+                    stale.unlink(missing_ok=True)
+            save_state(folder, kept)
 
 
 def agents_of(folder, key):
@@ -259,6 +284,7 @@ def add_try(record, n, kind, value):
 
 def page(folder):
     """Copy the page into the view folder when it is missing or differs."""
+    folder.mkdir(parents=True, exist_ok=True)  # a gate home that never wrote a view
     target = folder / "index.html"
     if not target.exists() or target.stat().st_size != PAGE.stat().st_size or target.read_bytes() != PAGE.read_bytes():
         shutil.copyfile(PAGE, target)
@@ -266,10 +292,10 @@ def page(folder):
 
 def snapshot(folder, out):
     """One file: the page with the current state inside it, no live updates."""
-    state = (folder / "state.json").read_text(encoding="utf-8") if (folder / "state.json").exists() else '{"runs":[]}'
+    state = (folder / "state.json").read_text(encoding="utf-8") if (folder / "state.json").exists() else json.dumps({"at": int(time.time() * 1000), "runs": [], "ready": [], "readyTotal": 0, "events": []})
     html = PAGE.read_text(encoding="utf-8").replace('<script id="snapshot" type="application/json"></script>',
                                                     '<script id="snapshot" type="application/json">'
-                                                    + state.replace("</", "<\\/") + "</script>", 1)
+                                                    + state.replace("<", "\\u003c") + "</script>", 1)  # no record text can end or nest the block
     Path(out).write_text(html, encoding="utf-8")
     return Path(out).resolve()
 
@@ -282,6 +308,10 @@ CSP = ("default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' http
 def serve(folder, port=0, log=print):
     """Serve the view folder on 127.0.0.1 until stopped: ETags so an unchanged poll is one 304, other Hosts refused."""
     from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+
+    class Server(ThreadingHTTPServer):
+        allow_reuse_address = os.name != "nt"  # Windows would let a second server share a busy port
+
     folder.mkdir(parents=True, exist_ok=True)
     page(folder)
     if not (folder / "state.json").exists():
@@ -319,9 +349,9 @@ def serve(folder, port=0, log=print):
             pass  # one request every 2 s: no console noise
 
     try:
-        server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
-    except OSError:  # the port is taken (another view, another app): any free one
-        server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        server = Server(("127.0.0.1", port), Handler)
+    except OSError:  # the port is taken (another app): any free one
+        server = Server(("127.0.0.1", 0), Handler)
     url = f"http://127.0.0.1:{server.server_address[1]}/"
     (folder / "url").write_text(url, encoding="utf-8")  # the hooks' link reminder reads it
     log(url)
@@ -331,8 +361,17 @@ def serve(folder, port=0, log=print):
         pass
     finally:
         server.server_close()
-        (folder / "url").unlink(missing_ok=True)
+        if read_text(folder / "url") == url:  # another view may have started since
+            (folder / "url").unlink(missing_ok=True)
     return url
+
+
+def read_text(path):
+    """A small file's text, else ''."""
+    try:
+        return Path(path).read_text(encoding="utf-8").strip()
+    except OSError:
+        return ""
 
 
 def live_url(folder):

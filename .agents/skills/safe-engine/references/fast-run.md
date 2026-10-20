@@ -117,7 +117,7 @@ Without hooks the gate still records and checks steps; follow the order yourself
 
 ## Live view
 
-- `view` serves one page of every open run on this machine, and runs closed today, at `http://127.0.0.1:8765/` (a busy port gets another). It runs until stopped: start it in your agent's background shell and give the owner the link once per run. `view --snapshot <file>` writes the page with the current state, without live updates.
+- `view` serves one page of every open run on this machine, and runs closed today, at `http://127.0.0.1:8765/` (a busy port gets another). It runs until stopped: start it in your agent's background shell and give the owner the link once per run. One server shows every run: when one already answers, `view` prints its link and exits. `view --snapshot <file>` writes the page with the current state, without live updates.
 - The gate is the only writer of its data, `view/state.json` in the gate home: at each gate command, and at each hook whose file-time check saw the run state or record change, from delegates and on every host. Nothing changed: no extra work. The page polls every 2 s; an unchanged file costs one 304.
 - It shows each run's steps, its todos (done, now, next, later, counted as the card counts), its agents and sessions, the owner's open question and Ready to try.
 - A ticked todo leaves something the owner can use: record it with `try`, a command, an `http(s)` link or a file inside the project (screenshots under `.factory/fast/shots/` show as thumbnails). `try` refuses an unknown todo or any other target and names the form; never write `**Try:**` lines by hand.

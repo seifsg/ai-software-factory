@@ -119,18 +119,28 @@ def put(project, run):
     """Write the run state to the gate home, then its mirror for agents to read; a failed mirror never fails."""
     save(state_path(project), run)
     mirror(project, run)
-    view(project, run)
+    found = unseen(project, state_path(project))
+    if view(project, run) and found:
+        mark(project, VIEWED, found[0])  # the next hook need not write it again
+
+
+def view_id(project, key):
+    """The view's id: the run key plus its project's registry hash, so same-key runs in two projects never collide."""
+    return f"{key}-{registry_path(project).stem[:6]}"
 
 
 def view(project, run, agents=None):
-    """Rewrite the owner's live view of this run (fast_view.py); a failure is logged, never raised."""
+    """Rewrite the owner's live view of this run (fast_view.py); True when written. A failure is logged, never raised."""
     try:
         entry = registry_path(project)
         registration = load(entry) if entry.is_file() else {}
         sessions = len(sessions_of(registration)) if isinstance(registration, dict) else 0
-        sibling("fast_view").write(HOME / "view", project, run, steps_for(run), sessions, agents)
+        sibling("fast_view").write(HOME / "view", project, run, steps_for(run), sessions, agents,
+                                   vid=view_id(project, run["key"]))
+        return True
     except Exception as error:  # noqa: BLE001 - the view is a courtesy: the run's state is already saved
         log("view.write_failed", key=run.get("key"), error=repr(error))
+        return False
 
 
 def mirror(project, run):
@@ -410,7 +420,10 @@ def cmd_try(args):
     if problem:
         fail(f"Try target refused: {problem}. Form: fast_gate.py try T3 --cmd \"<command>\" | --url <http(s) link> | "
              "--file <path inside the project>")
-    line = views.add_try(record, n, kind, value)
+    try:
+        line = views.add_try(record, n, kind, value)
+    except (OSError, ValueError) as error:
+        fail(f"Cannot record the Try line: {error}")
     view(project, run)
     log("run.try", key=run["key"], todo=f"T{n}", kind=kind)
     print(f"Recorded in the Build log: {line}")
@@ -418,10 +431,16 @@ def cmd_try(args):
 
 def cmd_view(args):
     """Serve the owner's live view on 127.0.0.1 until stopped, or write it as one snapshot file."""
-    views = sibling("fast_view")
+    views, keep = sibling("fast_view"), set()
+    running = views.live_url(HOME / "view")
+    if running and not args.snapshot:
+        print(f"Live view already running: {running}")  # one server per machine shows every run
+        return
     for _, _, run in active_runs():  # every open run shows, even one started before the view existed
         if not run.get("lost"):
             view(run["project"], run)
+            keep.add(view_id(run["project"], run["key"]))
+    views.prune(HOME / "view", keep)  # runs closed while lost, or left by an older home
     if args.snapshot:
         views.page(HOME / "view")
         print(f"Snapshot: {views.snapshot(HOME / 'view', args.snapshot)}")
@@ -728,8 +747,7 @@ def unseen_lines(project, state, show=True):
         run, ledger_ns = load_stamped(state)
     except (OSError, ValueError):
         return []  # mid-replace on Windows: show nothing now, the next hook retries with the new state
-    if stamp > viewed:
-        view(project, run)
+    if stamp > viewed and view(project, run):
         mark(project, VIEWED, stamp)
     if run.get("closed") or not (show and stamp > seen):
         return []  # the final report carries the close card
@@ -756,7 +774,7 @@ def reminder(runs, cwd, session):
             return None
         url = sibling("fast_view").live_url(HOME / "view")
         return (f"🏭 Live view of every run: {url}" if url else
-                "🏭 Live view is off: ask your agent to start `fast_gate.py view`, then open http://127.0.0.1:8765/")
+                "🏭 Live view is off: ask your agent to start `fast_gate.py view`, then open the link it prints")
     except Exception as error:  # noqa: BLE001 - a courtesy; the prompt's answer comes first
         log("hook.error", where="reminder", error=repr(error))
         return None
@@ -766,7 +784,7 @@ def note_agents(runs, cwd, session, agents):
     """Keep the host's background agents in this session's run views when the list changed (Stop events only)."""
     try:
         for entry, _, run in mine(runs, cwd, session, bind_cwd=False)[:3]:
-            if not run.get("lost") and sibling("fast_view").agents_of(HOME / "view", run["key"]) != agents:
+            if not run.get("lost") and sibling("fast_view").agents_of(HOME / "view", view_id(run["project"], run["key"])) != agents:
                 view(run["project"], load(store.state_path(entry)), agents)
     except Exception as error:  # noqa: BLE001 - a courtesy for the owner; the stop decision comes first
         log("hook.error", where="agents", error=repr(error))

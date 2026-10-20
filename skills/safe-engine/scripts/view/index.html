@@ -165,7 +165,7 @@ code{flex:1;min-width:0;white-space:pre-wrap;word-break:break-all;background:var
 
 <div class="boot" id="boot">Loading the Factory floor… If this stays, the view's libraries did not load (offline or blocked). The text card still works: <code>fast_gate.py status</code>.</div>
 
-<div class="app" x-data="floor" x-cloak :class="lost && 'lost'" @keydown.escape.window="close()" x-effect="document.title = sel ? 'Run ' + sel.key + ' · Factory floor' : 'Factory floor · ' + plural(open.length, 'run')">
+<div class="app" x-data="floor" x-cloak :class="lost && 'lost'" @keydown.escape.window="close()" x-effect="document.title = sel ? 'Run ' + sel.label + ' · Factory floor' : 'Factory floor · ' + plural(open.length, 'run')">
   <header class="top row">
     <h1>Factory floor</h1>
     <span class="plate muted" x-text="plural(open.length, 'run') + ' open'"></span>
@@ -188,7 +188,7 @@ code{flex:1;min-width:0;white-space:pre-wrap;word-break:break-all;background:var
     <aside class="col rail" aria-label="Waiting on you, Ready to try, activity and run detail">
       <section id="waiting" class="col" x-show="waiting.length" aria-label="Waiting on you" x-effect="$el.hidden = modal">
         <template x-for="(r,i) in waiting" :key="r.key"><div class="andon">
-          <span class="caps"><span class="light"></span><span x-text="'Waiting on you · ' + r.key + ' · ' + age(r.paused.since)"></span></span>
+          <span class="caps"><span class="light"></span><span x-text="'Waiting on you · ' + r.label + ' · ' + age(r.paused.since)"></span></span>
           <p x-text="r.paused.reason"></p>
           <div class="cmd"><code x-text="r.project"></code><button class="btn" :class="r.key===waiting[0]?.key && !sel && 'primary'" @click="copy('s'+r.key, r.project, $el)"><span class="ms" aria-hidden="true">content_copy</span><span x-text="copyLabel('s'+r.key, 'Copy folder path')"></span></button></div>
         </div></template>
@@ -222,7 +222,7 @@ code{flex:1;min-width:0;white-space:pre-wrap;word-break:break-all;background:var
       </div>
       <template x-if="sel">
         <section class="detail" :aria-labelledby="'d-' + sel.key">
-          <div class="row"><h2 tabindex="-1" :id="'d-' + sel.key" x-text="'Run ' + sel.key"></h2><span class="sp"></span><button class="btn primary" @click="close()"><span class="ms" aria-hidden="true">close</span>Back to all runs</button></div>
+          <div class="row"><h2 tabindex="-1" :id="'d-' + sel.key" x-text="'Run ' + sel.label"></h2><span class="sp"></span><button class="btn primary" @click="close()"><span class="ms" aria-hidden="true">close</span>Back to all runs</button></div>
           <span class="plate muted" x-text="'in ' + sel.name + ' · ' + sel.kind + ' run · ' + fmt(sel.steps.reduce((a,s)=>a+s.secs,0)) + ' total' + (sel.closed ? ' · ' + sel.closed : '')"></span>
           <p class="err" x-show="sel.error" x-text="sel.error"></p>
           <div class="andon" x-show="narrow && sel.paused"><span class="caps"><span class="light"></span>Waiting on you</span><p x-text="sel.paused?.reason"></p>
@@ -244,14 +244,14 @@ code{flex:1;min-width:0;white-space:pre-wrap;word-break:break-all;background:var
     <main id="lines" class="col" :class="lost && 'stale'" aria-labelledby="lines-h" x-effect="$el.toggleAttribute('data-away', modal)">
       <div class="row">
         <h2 class="sec" id="lines-h"><span class="ms" aria-hidden="true">construction</span> Runs</h2><span class="sp"></span>
-        <template x-for="f in FILTERS" :key="f[0]"><button class="btn" x-show="open.length > 1 && (count(f[0]) || filter===f[0])" :aria-pressed="filter===f[0]" @click="setFilter(f[0])" x-text="f[1] + ' ' + count(f[0])"></button></template>
+        <template x-for="f in FILTERS" :key="f[0]"><button class="btn" x-show="(open.length > 1 || filter!=='all') && (count(f[0]) || filter===f[0] || f[0]==='all')" :aria-pressed="filter===f[0]" @click="setFilter(f[0])" x-text="f[1] + ' ' + count(f[0])"></button></template>
       </div>
       <div class="col">
         <template x-for="r in shown" :key="r.key">
           <article class="line" :class="{held:r.paused, quiet:quiet(r), open:selKey===r.key}" :aria-labelledby="'n-'+r.key">
             <div class="row lh">
               <div class="ring" role="img" :style="'--p:' + r.pct" :aria-label="r.done + ' of ' + r.total + ' todos done'"><span x-text="r.pct + '%'"></span></div>
-              <h3><button class="name" :id="'n-'+r.key" :aria-current="selKey===r.key ? 'true' : null" @click="show(r.key)" x-text="r.key"></button></h3>
+              <h3><button class="name" :id="'n-'+r.key" :aria-current="selKey===r.key ? 'true' : null" @click="show(r.key)" x-text="r.label"></button></h3>
               <span class="plate muted" x-text="'in ' + r.name + (r.ticket ? ' · ' + r.ticket : '')"></span>
               <span class="sp"></span>
               <span class="tag held-c" x-show="r.paused"><span class="light"></span>Waiting on you</span>
@@ -277,7 +277,7 @@ code{flex:1;min-width:0;white-space:pre-wrap;word-break:break-all;background:var
             </div>
             <ul class="row" style="gap:6px" aria-label="Agents and sessions">
               <template x-for="a in r.agents" :key="a.id"><li class="chip" :class="a.run ? 'run' : 'fin'"><span class="ms" aria-hidden="true" x-text="a.run ? 'smart_toy' : 'check_circle'"></span><span x-text="'Agent: ' + a.desc + (a.run ? ', running' : ', finished')"></span></li></template>
-              <li class="chip"><span class="ms" aria-hidden="true">terminal</span><span x-text="plural(r.sessions, 'session')"></span></li>
+              <li class="chip" x-show="r.sessions"><span class="ms" aria-hidden="true">terminal</span><span x-text="plural(r.sessions, 'session')"></span></li>
             </ul>
           </article>
         </template>
@@ -285,7 +285,7 @@ code{flex:1;min-width:0;white-space:pre-wrap;word-break:break-all;background:var
       <p class="muted" x-show="!open.length">No factory runs open on this machine. Start one in your agent with <code style="padding:0 4px">safe-engine</code>.</p>
       <p class="muted" x-show="open.length && !shown.length">No runs match this filter.</p>
       <details x-show="finished.length"><summary class="sec" x-text="'Closed today · ' + finished.length"></summary>
-        <ul class="col" style="gap:6px;padding-top:8px"><template x-for="r in finished" :key="r.key"><li class="row plate sm"><span class="ms" aria-hidden="true" x-text="r.closed==='stopped' ? 'block' : 'check_circle'"></span><button class="name" :id="'n-'+r.key" @click="show(r.key)" x-text="r.key"></button><span class="muted" x-text="r.closed + ' · ' + plural(r.total, 'todo') + ' · ' + fmt(r.steps.reduce((a,s)=>a+s.secs,0))"></span></li></template></ul>
+        <ul class="col" style="gap:6px;padding-top:8px"><template x-for="r in finished" :key="r.key"><li class="row plate sm"><span class="ms" aria-hidden="true" x-text="r.closed==='stopped' ? 'block' : 'check_circle'"></span><button class="name" :id="'n-'+r.key" @click="show(r.key)" x-text="r.label"></button><span class="muted" x-text="r.closed + ' · ' + plural(r.total, 'todo') + ' · ' + fmt(r.steps.reduce((a,s)=>a+s.secs,0))"></span></li></template></ul>
       </details>
     </main>
   </div>
@@ -351,10 +351,10 @@ Alpine.data("floor",()=>({
     setInterval(()=>this.now=Date.now(),1000);
     this.poll()},
   async poll(once){
-    clearTimeout(this.timer);
+    clearTimeout(this.timer);if(this.polling)return;this.polling=true; // one poll at a time, one timer chain
     try{const s=await source();if(s)this.apply(s);this.okAt=Date.now();this.lost=false}catch(_){this.lost=true}
-    if(!this.snap)this.timer=setTimeout(()=>this.poll(),this.hidden?15e3:2e3)},
-  apply(s){const fresh=this.loaded?s.events.filter(e=>e.id>this.seen):[];
+    this.polling=false;clearTimeout(this.timer);if(!this.snap)this.timer=setTimeout(()=>this.poll(),this.hidden?15e3:2e3)},
+  apply(s){s={runs:[],ready:[],readyTotal:0,events:[],at:Date.now(),...s};const fresh=this.loaded?s.events.filter(e=>e.id>this.seen):[]; // any missing field gets its empty value
     for(const k of ["runs","ready","readyTotal","events","at"])this[k]=merge(this[k],s[k]);this.seen=s.events.at(-1)?.id||0;this.route(true);this.loadDetail();
     this.$nextTick(()=>this.loaded=true);this.announce(fresh)},
   announce(es){if(!es.length)return;
