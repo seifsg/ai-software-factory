@@ -361,6 +361,8 @@ def cmd_done(args):
     run["done"][step] = {"at": now(), **({"unverified": args.offline} if args.offline else {})}
     if step in ("kickoff", "tickets") and record.run_size(all_sections) and "size" not in run:
         run.update(size=record.run_size(all_sections), size_at=step)  # frozen: editing the line later skips nothing
+    if step == "plan":  # who owes the epic's integration todos is read from the plan as recorded here
+        run["todos"] = list(dict.fromkeys(run.get("todos", []) + [f"T{n}" for n in record.todo_ids(all_sections)]))
     if step == "tickets":  # later ticket checks keep reading these even if the record drops one
         epic, subs = record.ticket_urls(body)
         run["tickets"] = list(dict.fromkeys(run.get("tickets", []) + epic + subs))
