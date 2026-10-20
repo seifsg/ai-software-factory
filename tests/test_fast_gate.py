@@ -651,7 +651,7 @@ class FastGateTests(GateHarness, unittest.TestCase):
         for text, owed in [("- [ ] T80 Checks synced (#4 A1 to A8, #5 A1)\n", False),  # other tickets' IDs
                            ("- [ ] T7 Collector, needs #2 A1\n", False),
                            ("- [ ] T63 Proof (A1; A2)\n", True), ("- [ ] T63 Proof (**A1**, A2)\n", True),
-                           ("- [ ] #2 Booking, then T63 (A1)\n", False),  # not a T item: the item is #2's line
+                           ("- [ ] #2 Booking, then T63 (A1)\n", True),  # names T63 and A1: T63's
                            ("- [ ] T63 Proof ( A1 )\n- [ ] T75 Audit (A2)\n", False)]:  # T75 is one too
             with self.subTest(text=text):
                 self.assertEqual(record.handed(item(text), {"T75"}), owed)
@@ -664,6 +664,12 @@ class FastGateTests(GateHarness, unittest.TestCase):
                 self.assertTrue(record.handed({"url": epic, **item(t63 + audit)}, {"T2"}))
         self.assertFalse(record.handed(item("- [ ] Integration proof (A1)\n" + audit), {"T2"}))  # unread: owed whole
         self.assertEqual(record.item_todos("- [x] 🤝 T76, T77 Docs"), {"T76", "T77"})
+        for text in ["- [ ] 🤝 **T63**, **T64** Proof", "- [ ] T63 / T64 Proof", "- [ ] T63 and T64", "- [ ] T63 to T65",
+                     "- [ ] T63-T65"]:
+            self.assertIn("T64", record.item_todos(text), text)  # every listed holder owes the epic
+        self.assertEqual(record.item_todos("- [ ] T63 Proof. needs #2 T29"), {"T63"})
+        for t64 in ["- [ ] T63 / T64 Proof (A1)\n", "- [ ] T63 to T65 Proof (A1)\n"]:
+            self.assertFalse(record.handed({"url": epic, **item(t64 + audit)}, {"T64"}), t64)
         self.assertEqual(check(done.replace(", #5 A2: PASS", ""), offline="no network"), "")  # offline: >=1 entry
 
     def test_hidden_checks_gate_the_sample_done_run(self):
@@ -806,6 +812,8 @@ class FastGateTests(GateHarness, unittest.TestCase):
         self.assertIn("1 unticked", check(["T75", "T77"]))  # its own unticked todo stays owed
         bold = {"stopped": False, "backlog": False, "later": {"T77"}, "body": body.replace("- [ ] T77", "- [ ] **T77**")}
         self.assertIn("1 unticked", record.needs_ticks(bold))  # an own decorated item is still owed
+        bold["body"] = body.replace("- [ ] T77", "- [ ] 🤝 **T76** / T77")
+        self.assertIn("1 unticked", record.needs_ticks(bold))
         needs = {"stopped": False, "backlog": False, "later": {"T29"}, "body": body.replace("(A1)", "(A1). needs #2 T29")}
         self.assertIsNone(record.needs_ticks(needs))  # T63 needs #2 T29: still not that run's item
         self.assertIn("3 unticked", check(["T63"]))  # the run holding the integration todo owes the epic whole

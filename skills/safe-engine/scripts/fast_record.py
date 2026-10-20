@@ -22,8 +22,7 @@ NEEDS = re.compile(r"\bneeds #\d+ T\d+")  # names another ticket's item, not one
 CHECKLIST = re.compile(r"^(#{1,6})\s[^\n]*checklist[^\n]*$", re.I | re.M)
 FENCE = re.compile(r"^\s*(```|~~~).*?^\s*\1", re.M | re.S)
 DEFINITION = re.compile(r"^(#{2,4})[^\n]*(?:definition of done|done when)", re.I | re.M)  # older tickets: "Done when"
-# The todos an item is, decoration allowed: "- [ ] T63 ...", "- [x] **T63**", "- [ ] 🤝 T76, T77 ..."
-ITEM_TODO = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+\[[ xX]\]\s*[^\w\s#]*\s*(T\d+(?:\s*,\s*T\d+)*)\b")
+TODO_RANGE = re.compile(r"\bT(\d+)\s*(?:to|-|–)\s*T(\d+)\b")  # "T63 to T65", "T63-T65"
 OTHERS = re.compile(r"#(\d+)\s+[A-Z]{1,3}\d+(?:\s+to\s+[A-Z]{1,3}\d+)?")  # a ticket's IDs: "#4 A1 to A8"
 CRITERION = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+\*\*([A-Z]{1,3}\d+)\b", re.M)  # "- **A1:**", "1. **D3:**"
 LABEL_ITEMS = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+\*\*[A-Z]{1,3}\d+\s*\(([^)\n]*)\)", re.M)  # "**A1 (R2):**" -> R2
@@ -189,8 +188,9 @@ def verify_tickets(epic, subs):
 
 def online(run, kwargs, check, finish=False):
     """Run one ticket check on every listed ticket, unless the run predates ticket checks or the step is offline.
-    `finish` (done-run, handoff): an epic (a change: its ticket) whose integration todos are all another run's is marked `later` with this run's todo IDs (pinned at `done plan`, plus the current plan),
-    the only items of it this run owes."""
+    `finish` (done-run, handoff): an epic (a change: its ticket) whose integration todos are all another run's is
+    marked `later` with this run's todo IDs (pinned at `done plan`, plus the current plan), the only items of it
+    this run owes."""
     if not run.get("ticket_checks"):
         return []
     epic, subs = ticket_urls(kwargs["all_sections"].get("tickets", ""))
@@ -205,15 +205,17 @@ def online(run, kwargs, check, finish=False):
 
 
 def item_todos(item):
-    """The todo IDs a checklist item starts with; empty when it starts with none."""
-    found = ITEM_TODO.match(item)
-    return set(re.findall(r"T\d+", found.group(1))) if found else set()
+    """Every todo ID a checklist item names outside `needs` references, ranges expanded; reading more never owes
+    less, so decoration and lists ('🤝 **T63**', 'T63 / T64', 'T63 to T65') fail closed."""
+    text = NEEDS.sub("", item)
+    spans = {f"T{n}" for a, b in TODO_RANGE.findall(text) for n in range(int(a), min(int(b), int(a) + 50) + 1)}
+    return set(re.findall(r"\bT\d+\b", text)) | spans
 
 
 def handed(ticket, own):
     """True when the ticket's checklist holds integration todos (items naming any of its criterion IDs; `needs`
     and '#4 A1' references to other tickets do not count) and none is one of this run's todos `own`. Fails closed:
-    an item naming its criteria without starting with a todo ID keeps the ticket owed whole."""
+    an item naming its criteria without naming a todo ID keeps the ticket owed whole."""
     criteria = set(CRITERION.findall(under(ticket["body"], DEFINITION)))
     number = (ISSUE.match(ticket.get("url", "")) or [None, None, None])[2]
     todos = set()
