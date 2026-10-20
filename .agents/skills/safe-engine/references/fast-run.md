@@ -1,6 +1,6 @@
 # Fast run: record and gate
 
-Contents: kickoff questions · light lane · work record · the gate · hooks · progress · keep it fast
+Contents: kickoff questions · light lane · work record · the gate · hooks · progress · live view · keep it fast
 
 Every Fast or Lucky run records each step in one work record and passes the gate. Step ids: `research`, `kickoff`, `tickets`, `analysis`, `plan`, `design`, `schema`, `build`, `done-run`, `handoff`; the gate skips those a run's kind does not need. The gate proves a step was recorded, not that it was good. Quality stays with each method and the done-run.
 
@@ -41,7 +41,7 @@ A `change` (bug fix, small change, follow-up) records tickets, plan, build, done
 | Plan | `### Files`, `### Critique`, `### Phases`, `### Todos` (one line per todo: `T1 <title> → <what the owner can do once it is done> (#<ticket>, A1)`), `### Whole plan`, `**Logging:**`, `**Efficiency:**` (light lane: `**Success:**` and `### Todos`); online, each listed ticket not Blocked or not planned has task items under its Checklist heading, one naming each criterion, every plan todo is an item there, and criteria still name every R-id not marked owner-deferred |
 | Design | ≥4 `#RRGGBB` hex colors, `**UI kit:**`, `**Font:**`, `**Logo:**`, `**Icons:**`, `**Layout:**`, `**Theme:**` naming light mode, `**Journeys:**` with counts and a minimum, `**Map:**`, `**Hierarchy:**` naming primary actions, `**Labels:**` |
 | Schema | a 3-option table, `**Chosen:**`, a fenced ERD or DDL |
-| Build log | one line per plan todo, starting with its ID: `- T1 pre: … do: … post: …`; `**Now:** T2 T3` names the todos in progress |
+| Build log | one line per plan todo, starting with its ID: `- T1 pre: … do: … post: …`; `**Now:** T2 T3` names the todos in progress; `**Try:** T1 cmd|url|file <target>` lines come only from `try` ([live view](#live-view)) |
 | Done-run | ≥1 `PASS` line from using it (on UI runs, lines naming a rule and the judge line do not count), `**Logs:**`; UI runs, and runs that create, edit or delete UI files in their project, also ≥1 existing screenshot path under `.factory/fast/shots/`, one verdict line per rule `U1` to `U10` (`- U3 PASS <screens checked>: <evidence>`; N/A and UNKNOWN with the reason; no FAIL, FAILS or FAILED left in a verdict, the lines under it or any line naming the rule, except in a contested UNKNOWN) and `**UX judge:**` naming the fresh agent that wrote them; a run sized MVP or production also `**Secrets:**`, `**Dependencies:**`, `**Static:**` (tool, command, result; [product bar](product-bar.md#security)); product and feature runs a `**Hidden checks:**` block up to the next label, only entries `#2 A1: PASS` or `#2 A1: FAIL` (a note only after it in parentheses), one per line or comma-separated; refused with any other line or any FAIL; online, every criterion of each listed ticket not Blocked, Backlog or not planned needs its PASS (an epic another run owes: none, see below); offline, ≥1 entry |
 | Handoff | `**Run:**`, `**Statuses:**` (each owned ticket's final status), `**Unverified:**`, `**Follow-ups:**`; sign-in runs `**Dev sign-in:**`; online, each listed ticket not Blocked, Backlog or not planned (label or board status) is fully ticked (an epic another run owes: see below), an item naming each criterion, every plan todo an item, every R-id not marked owner-deferred named by a criterion; `**PR:**` with the draft PR's URL, whose body ends with the factory credit line (`how-to-make-a-pr`) and has a heading naming Before and after, under it one heading per outcome that is not a file or path, each with `**Before:**` then `**After:**`, each followed by an image, a recording or a fenced block (Before may say "did not exist"), or one `**Before → After:**` (or a `\| Before \| After \|` table) with a `diff` block (`-` or `+` lines beside other lines) or two images; every image or video link `https` and not localhost; UI runs, and runs that change UI files, ≥1 image |
 
@@ -51,7 +51,7 @@ A run's `**Size:**` (kickoff; a Lucky product or feature run records it under Ti
 
 ## The gate
 
-`fast_gate.py` (run state and the run registry in `fast_ledger.py`, checks in `fast_record.py`, shell analysis in `fast_shell.py`, the destructive guard in `fast_rules.py` and `fast_guard.py`, record facts in `fast_progress.py`, the owner's dashboard in `fast_card.py`) sits in `scripts/` beside the installed launcher and in `skills/safe-engine/scripts/` of the factory bundle. Python 3.9+, standard library only.
+`fast_gate.py` (run state and the run registry in `fast_ledger.py`, checks in `fast_record.py`, shell analysis in `fast_shell.py`, the destructive guard in `fast_rules.py` and `fast_guard.py`, record facts in `fast_progress.py`, the owner's dashboard in `fast_card.py`, the live view in `fast_view.py` and `view/index.html`) sits in `scripts/` beside the installed launcher and in `skills/safe-engine/scripts/` of the factory bundle. Python 3.9+, standard library only.
 
 Before `start` on a product: select the factory bundle with the launcher's `resolve_bundle.py --project <abs>`; it writes `.factory/entry-bundle.json`. Skip when the run maintains the factory itself.
 
@@ -61,6 +61,8 @@ python fast_gate.py done <step> [--project <abs>] [--offline "<reason>"]
 python fast_gate.py status | pause --reason "<why>" | resume | close [--abandon "<reason>"]
 python fast_gate.py rehome --project <abs> --from <the folder its run.json records>
 python fast_gate.py install --host <host> [--project <abs>]
+python fast_gate.py try T3 --cmd "<command>" | --url <http(s) link> | --file <path in the project> [--project <abs>]
+python fast_gate.py view [--port 8765] [--snapshot <file>]
 ```
 
 - `start` registers the run and keeps its state in the gate home (`SAFE_ENGINE_HOME`, default `~/.safe-engine`), creates the record, keeps `.factory/` out of Git in the clone's `.git/info/exclude` unless the project already tracks files there (no project file changes; a reverted `.gitignore` and `git clean -fd` leave the records), and notes the bundle and hook status. `.factory/fast/run.json` is a mirror the gate rewrites on every change: read it, or `status`; the gate never reads it, so no change to it counts.
@@ -85,7 +87,7 @@ python fast_gate.py install --host <host> [--project <abs>]
 - Stopping mid-run is blocked once with the next step; ending the turn again right after passes. A paused or closed run never blocks.
 - A stop while the host reports a background agent still running passes: its result starts a new turn, whose stop is checked. Other background work, such as a server, does not count. Waiting on background work is no reason to `pause`.
 - Each prompt and session start gets one status line: run, next step, pause reason.
-- Progress the owner has not seen rides along with the hook's answer ([progress](#progress)).
+- Progress the owner has not seen rides along with the hook's answer ([progress](#progress)); the same check refreshes the [live view](#live-view).
 - No active run anywhere: hooks exit at once.
 
 Without hooks the gate still records and checks steps; follow the order yourself. Hooks see tool calls, not intent: files written and destructive commands run from inside scripts, `xargs rm`, piped deletes (`Get-ChildItem | Remove-Item`) and commands piped into a shell from a file or program, and inline interpreter code (`python -c`, `node -e`) pass; the record and the done-run carry the rest.
@@ -112,6 +114,14 @@ Without hooks the gate still records and checks steps; follow the order yourself
 
   Nothing changed: one directory scan, no reads, no network. Where your agent marks hook calls from a delegate (the factory's `docs/hosts.md`), those show nothing; the next main-thread call does. Claims live in `.factory/fast/shown/`, one folder per run; `start` and `close` clear them.
 - A closed run leaves the hooks. The factory's `docs/hosts.md` lists the agents that show hook messages.
+
+## Live view
+
+- `view` serves one page of every open run on this machine, and runs closed today, at `http://127.0.0.1:8765/` (a busy port gets another). It runs until stopped: start it in your agent's background shell and give the owner the link once per run. `view --snapshot <file>` writes the page with the current state, without live updates.
+- The gate is the only writer of its data, `view/state.json` in the gate home: at each gate command, and at each hook whose file-time check saw the run state or record change, from delegates and on every host. Nothing changed: no extra work. The page polls every 2 s; an unchanged file costs one 304.
+- It shows each run's steps, its todos (done, now, next, later, counted as the card counts), its agents and sessions, the owner's open question and Ready to try.
+- A ticked todo leaves something the owner can use: record it with `try`, a command, an `http(s)` link or a file inside the project (screenshots under `.factory/fast/shots/` show as thumbnails). `try` refuses an unknown todo or any other target and names the form; never write `**Try:**` lines by hand.
+- Agents: the todos in `**Now:**`, plus the background agents your agent reports at a stop (the factory's `docs/hosts.md`).
 
 ## Keep it fast
 

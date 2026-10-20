@@ -16,6 +16,7 @@ TICKET_NUMBER = re.compile(r"#(\d+)")
 ARROW_MARK = re.compile(r"→|->")
 NEXT_H3 = re.compile(r"^###\s", re.M)
 NOW = re.compile(r"\*\*Now:\*\*([^\n]*)", re.I)
+TRY = re.compile(r"\*\*Try:\*\*[ \t]*T(\d+)[ \t]+(cmd|url|file)[ \t]+(\S[^\n]*?)[ \t]*$", re.I | re.M)
 TICKET_LINE = re.compile(r"\*\*(?:Epic|Ticket|Sub-issue):\*\*[ \t]*(\S+)[ \t]*([^\n]*)", re.I)
 
 
@@ -119,6 +120,11 @@ def now_ids(all_sections):
     """The todo IDs the Build log's last '**Now:**' line names: the todos in progress."""
     marks = NOW.findall(all_sections.get("build log", ""))
     return re.findall(r"\bT(\d+)\b", marks[-1]) if marks else []
+
+
+def try_items(all_sections):
+    """Todo number -> (kind, target) from the Build log's '**Try:** T3 url http://...' lines; the last line wins."""
+    return {n: (kind.lower(), value) for n, kind, value in TRY.findall(all_sections.get("build log", ""))}
 
 
 def read(record):
