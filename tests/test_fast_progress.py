@@ -150,6 +150,8 @@ class ProgressHookTests(unittest.TestCase):
         self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "fix the footer")
         self.record = self.project / ".factory/fast/work-record.md"
         self.shown = self.project / ".factory/fast/shown"
+        (self.project / ".factory/fast/prompts").write_text("1", encoding="utf-8")  # the live view's link reminder
+        # (first and every sixth prompt, test_fast_view.py) stays out of these exact message checks
 
     def tearDown(self):
         log = self.root / "home" / "logs" / "gate.log"

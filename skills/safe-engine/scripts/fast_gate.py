@@ -119,6 +119,28 @@ def put(project, run):
     """Write the run state to the gate home, then its mirror for agents to read; a failed mirror never fails."""
     save(state_path(project), run)
     mirror(project, run)
+    found = unseen(project, state_path(project))
+    if view(project, run) and found:
+        mark(project, VIEWED, found[0])  # the next hook need not write it again
+
+
+def view_id(project, key):
+    """The view's id: the run key plus its project's registry hash, so same-key runs in two projects never collide."""
+    return f"{key}-{registry_path(project).stem[:6]}"
+
+
+def view(project, run, agents=None):
+    """Rewrite the owner's live view of this run (fast_view.py); True when written. A failure is logged, never raised."""
+    try:
+        entry = registry_path(project)
+        registration = load(entry) if entry.is_file() else {}
+        sessions = len(sessions_of(registration)) if isinstance(registration, dict) else 0
+        sibling("fast_view").write(HOME / "view", project, run, steps_for(run), sessions, agents,
+                                   vid=view_id(project, run["key"]))
+        return True
+    except Exception as error:  # noqa: BLE001 - the view is a courtesy: the run's state is already saved
+        log("view.write_failed", key=run.get("key"), error=repr(error))
+        return False
 
 
 def mirror(project, run):
@@ -129,7 +151,8 @@ def mirror(project, run):
         log("state.mirror_failed", key=run["key"], error=repr(error))
 
 
-SHOWN, SEEN = "shown", "seen"  # progress claims, and the newest change already shown (its mtime)
+SHOWN, SEEN, VIEWED = "shown", "seen", "viewed"  # progress claims; newest change shown, and written to the view
+PROMPTS, VIEW_EVERY = "prompts", 6  # prompt counter; the live view's link shows on the first prompt and every sixth after
 
 
 def shown_path(project):
@@ -384,6 +407,48 @@ def cmd_pause(args, reason):
     print(status_text(run))
 
 
+def cmd_try(args):
+    """Record how the owner tries a finished todo's result: one checked line in the Build log, then the live view."""
+    project, run = open_run(args.project)
+    if run.get("closed"):
+        fail("This run is closed")
+    if not re.fullmatch(r"[Tt]?\d+", args.todo):
+        fail("Name the todo by its ID, such as T3")
+    kind, value = next((kind, getattr(args, kind)) for kind in ("cmd", "url", "file") if getattr(args, kind))
+    n, views, record = str(int(args.todo.lstrip("Tt"))), sibling("fast_view"), record_path(project)
+    problem = views.try_problem(project, sibling("fast_progress").read(record), n, kind, value)
+    if problem:
+        fail(f"Try target refused: {problem}. Form: fast_gate.py try T3 --cmd \"<command>\" | --url <http(s) link> | "
+             "--file <path inside the project>")
+    try:
+        line = views.add_try(record, n, kind, value)
+    except (OSError, ValueError) as error:
+        fail(f"Cannot record the Try line: {error}")
+    view(project, run)
+    log("run.try", key=run["key"], todo=f"T{n}", kind=kind)
+    print(f"Recorded in the Build log: {line}")
+
+
+def cmd_view(args):
+    """Serve the owner's live view on 127.0.0.1 until stopped, or write it as one snapshot file."""
+    views, keep = sibling("fast_view"), set()
+    running = views.live_url(HOME / "view")
+    if running and not args.snapshot:
+        print(f"Live view already running: {running}")  # one server per machine shows every run
+        return
+    for _, _, run in active_runs():  # every open run shows, even one started before the view existed
+        if not run.get("lost"):
+            view(run["project"], run)
+            keep.add(view_id(run["project"], run["key"]))
+    views.prune(HOME / "view", keep)  # runs closed while lost, or left by an older home
+    if args.snapshot:
+        views.page(HOME / "view")
+        print(f"Snapshot: {views.snapshot(HOME / 'view', args.snapshot)}")
+        return
+    log("view.serve", port=args.port)
+    views.serve(HOME / "view", args.port, log=lambda url: print(f"Live view: {url}  (Ctrl+C stops it)", flush=True))
+
+
 def cmd_close(args):
     project = Path(store.registered(ACTIVE, native(args.project or os.getcwd())) or find_project(args.project))
     run = home_run(project)
@@ -508,7 +573,8 @@ def forget_shown(project):
     """Drop the shown-progress claims and stamp: a closed or new run starts its owner messages fresh."""
     import shutil
     shutil.rmtree(shown_path(project), ignore_errors=True)
-    Path(project, *FAST, SEEN).unlink(missing_ok=True)
+    for stamp in (SEEN, VIEWED, PROMPTS):
+        Path(project, *FAST, stamp).unlink(missing_ok=True)
 
 
 # ---- hooks (every host; dialects in fast_hosts.py, wiring in fast_install.py) ----
@@ -635,51 +701,93 @@ def mine(runs, cwd, session, bind_cwd=True):
 
 
 def unseen(project, state):
-    """The newest run state or record change the owner has not seen progress for, else None. One stat, one
-    directory scan and no reads, since this runs on every hooked tool call."""
+    """(newest run state or record change, when progress was last shown, when the view was last written), or None
+    when both are current. One stat, one directory scan and no reads, since this runs on every hooked tool call."""
     times = {}
     try:
         changed = os.stat(state).st_mtime_ns
         with os.scandir(os.path.join(project, *FAST)) as entries:
             for entry in entries:
-                if entry.name in (RECORD, SEEN):
+                if entry.name in (RECORD, SEEN, VIEWED):
                     times[entry.name] = entry.stat().st_mtime_ns
     except OSError:
         return None
-    stamp = max(changed, times.get(RECORD, 0))
-    return stamp if stamp > times.get(SEEN, 0) else None
+    stamp, seen, viewed = max(changed, times.get(RECORD, 0)), times.get(SEEN, 0), times.get(VIEWED, 0)
+    return (stamp, seen, viewed) if stamp > min(seen, viewed) else None
 
 
-def news(runs, cwd, session):
-    """Progress the owner has not seen yet, or None. Never raises: a deny decision must still print."""
+def news(runs, cwd, session, show=True):
+    """Progress the owner has not seen yet, or None; the live view is refreshed either way. show=False (a delegate,
+    or a host without hook messages) refreshes only the view. Never raises: a deny decision must still print."""
     lines = []
     try:
         for entry, _, run in mine(runs, cwd, session, bind_cwd=False)[:3]:
             if not run.get("lost"):  # a lost run has no card
-                lines += unseen_lines(run["project"], store.state_path(entry))
+                lines += unseen_lines(run["project"], store.state_path(entry), show)
     except Exception as error:  # noqa: BLE001 - progress is a courtesy; the gate's decision comes first
         log("hook.error", where="news", error=repr(error))
     return "\n".join(lines) or None
 
 
-def unseen_lines(project, state):
-    """One run's unseen progress. The home state is re-read with its own mtime: a gate command landing during this
-    hook is shown from its own state, now or by the next hook, never as a stale card."""
-    stamp = unseen(project, state)
-    if not stamp:
+def mark(project, name, stamp):
+    """Record that the change at stamp was handled: SEEN (shown) or VIEWED (written to the view)."""
+    path = Path(project, *FAST, name)
+    path.touch()
+    os.utime(path, ns=(stamp, stamp))
+
+
+def unseen_lines(project, state, show=True):
+    """One run's unseen progress, after refreshing its live view. The home state is re-read with its own mtime: a gate
+    command landing during this hook is shown from its own state, now or by the next hook, never as a stale card."""
+    found = unseen(project, state)
+    if not found or not (found[0] > found[2] or show and found[0] > found[1]):
         return []
+    stamp, seen, viewed = found
     try:
         run, ledger_ns = load_stamped(state)
     except (OSError, ValueError):
         return []  # mid-replace on Windows: show nothing now, the next hook retries with the new state
-    if run.get("closed"):
+    if stamp > viewed and view(project, run):
+        mark(project, VIEWED, stamp)
+    if run.get("closed") or not (show and stamp > seen):
         return []  # the final report carries the close card
     at = now()  # loads datetime from the standard library before the card module's cached import
     lines = sibling("fast_card").news(run, steps_for(run), record_path(project), claims_path(project, run), ledger_ns, at)
-    seen = Path(project, *FAST, SEEN)
-    seen.touch()
-    os.utime(seen, ns=(stamp, stamp))
+    mark(project, SEEN, stamp)
     return lines
+
+
+def reminder(runs, cwd, session):
+    """The live view's link on the first prompt and every sixth after, for this session's run; else None. Prompts only:
+    one small counter file per project, never a cost on tool calls. Never raises."""
+    try:
+        item = next((item for item in mine(runs, cwd, session, bind_cwd=False) if not item[2].get("lost")), None)
+        if not item:
+            return None
+        path = Path(item[2]["project"], *FAST, PROMPTS)
+        try:
+            count = int(path.read_text(encoding="utf-8").strip() or 0) + 1
+        except (OSError, ValueError):
+            count = 1
+        path.write_text(str(count), encoding="utf-8")
+        if count % VIEW_EVERY != 1:
+            return None
+        url = sibling("fast_view").live_url(HOME / "view")
+        return (f"🏭 Live view of every run: {url}" if url else
+                "🏭 Live view is off: ask your agent to start `fast_gate.py view`, then open the link it prints")
+    except Exception as error:  # noqa: BLE001 - a courtesy; the prompt's answer comes first
+        log("hook.error", where="reminder", error=repr(error))
+        return None
+
+
+def note_agents(runs, cwd, session, agents):
+    """Keep the host's background agents in this session's run views when the list changed (Stop events only)."""
+    try:
+        for entry, _, run in mine(runs, cwd, session, bind_cwd=False)[:3]:
+            if not run.get("lost") and sibling("fast_view").agents_of(HOME / "view", view_id(run["project"], run["key"])) != agents:
+                view(run["project"], load(store.state_path(entry)), agents)
+    except Exception as error:  # noqa: BLE001 - a courtesy for the owner; the stop decision comes first
+        log("hook.error", where="agents", error=repr(error))
 
 
 def stop(event, runs, cwd, session):
@@ -731,6 +839,8 @@ def cmd_hook(host="claude"):
                     print(reason, file=sys.stderr)
                 log("hook.answer", host=host, hook_event=event["name"], answer="deny", exit=code)
         elif event["kind"] == "stop":
+            if event.get("agents") is not None:
+                note_agents(runs, cwd, session, event["agents"])
             reason = stop(event, runs, cwd, session)
             out = hosts.keep_going(host, reason) if reason else None
             if out:
@@ -738,8 +848,12 @@ def cmd_hook(host="claude"):
         elif event["kind"] in ("prompt", "session"):
             text = context(event, runs, cwd, session)
             out = hosts.context(host, event["name"], text) if text else None
-        if event["kind"] and hosts.notifies(host) and not event.get("delegate"):  # delegates' messages may not reach the owner
-            out = hosts.with_message(out, news(runs, cwd, session))
+        if event["kind"]:  # the view refreshes on every host; delegates' messages may not reach the owner
+            show = hosts.notifies(host) and not event.get("delegate")
+            lines = news(runs, cwd, session, show)
+            if show and event["kind"] == "prompt":
+                lines = "\n".join(line for line in (lines, reminder(runs, cwd, session)) if line) or None
+            out = hosts.with_message(out, lines) if show else out
         if out:
             print(out)
         return code
@@ -780,6 +894,14 @@ def main():
     pause = sub.add_parser("pause", parents=[common], help="Waiting on the owner; lets the session stop")
     pause.add_argument("--reason", required=True)
     sub.add_parser("resume", parents=[common])
+    tried = sub.add_parser("try", parents=[common], help="How the owner tries a finished todo: a command, link or file")
+    tried.add_argument("todo", help="The todo's ID, such as T3")
+    target = tried.add_mutually_exclusive_group(required=True)
+    for flag, what in (("cmd", "a command to run"), ("url", "an http(s) link"), ("file", "a path inside the project")):
+        target.add_argument(f"--{flag}", help=what)
+    shown = sub.add_parser("view", help="Serve the owner's live view of every open run on 127.0.0.1")
+    shown.add_argument("--port", type=int, default=8765, help="Default 8765; a busy port falls back to a free one")
+    shown.add_argument("--snapshot", help="Write one HTML file with the current state instead of serving")
     close = sub.add_parser("close", parents=[common])
     close.add_argument("--abandon", help="The owner stopped the run: their reason")
     rehome = sub.add_parser("rehome", parents=[common],
@@ -793,6 +915,7 @@ def main():
     hook.add_argument("--host", default="claude", help="claude, codex, cursor, or any other hook-capable agent")
     args = parser.parse_args()
     actions = {"start": cmd_start, "done": cmd_done, "status": cmd_status, "close": cmd_close, "rehome": cmd_rehome,
+               "try": cmd_try, "view": cmd_view,
                "hook": lambda a: sys.exit(cmd_hook(a.host)),
                "install": lambda a: sibling("fast_install").install(a.host, a.project, log=lambda line: (print(line), log("install.write", line=line))),
                "pause": lambda a: cmd_pause(a, a.reason), "resume": lambda a: cmd_pause(a, None)}

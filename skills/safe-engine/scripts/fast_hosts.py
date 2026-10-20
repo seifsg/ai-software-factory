@@ -40,7 +40,17 @@ def read(host, event):
                   event.get("cwd"), tool, args, bool(event.get("stop_hook_active") or event.get("loop_count")), name)
     found["delegate"] = bool(event.get("agent_id"))  # Claude Code marks hook calls from inside a subagent
     found["waiting"] = waits(event.get("background_tasks"))  # Claude Code lists in-flight background work at Stop
+    found["agents"] = agents(event.get("background_tasks"))
     return found
+
+
+def agents(tasks):
+    """The host's background agents for the owner's view, or None when the host sends no list: id, what, running."""
+    if not isinstance(tasks, list):
+        return None
+    return [{"id": str(task.get("id") or i), "desc": str(task.get("description") or task.get("name") or task.get("type"))[:60],
+             "run": task.get("status") in ("running", "pending")}
+            for i, task in enumerate(tasks) if isinstance(task, dict) and task.get("type") in WAKERS][:8]
 
 
 def waits(tasks):
