@@ -23,8 +23,8 @@ CHECKLIST = re.compile(r"^(#{1,6})\s[^\n]*checklist[^\n]*$", re.I | re.M)
 FENCE = re.compile(r"^\s*(```|~~~).*?^\s*\1", re.M | re.S)
 DEFINITION = re.compile(r"^(#{2,4})[^\n]*(?:definition of done|done when)", re.I | re.M)  # older tickets: "Done when"
 TODO_RANGE = re.compile(r"\bT(\d+)\s*(?:to|-|–)\s*T(\d+)\b")  # "T63 to T65", "T63-T65"
-# A ticket's ID list: "#4 A1 to A8", "#2 T1, T5", "#11 A1 to A4, A6"
-OTHERS = re.compile(r"#(\d+)\s+[A-Z]{1,3}\d+(?:\s*(?:,|/|and|to|-|–)\s*[A-Z]{1,3}\d+)*")
+# A ticket's ID list, one letter kind: "#4 A1 to A8", "#2 T1, T5"; "(needs #2 T29, A1)" leaves A1 to the item
+OTHERS = re.compile(r"#(\d+)\s+([A-Z]{1,3})\d+(?:\s*(?:,|/|and|to|-|–)\s*(?:\2|T)\d+)*")
 CRITERION = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+\*\*([A-Z]{1,3}\d+)\b", re.M)  # "- **A1:**", "1. **D3:**"
 LABEL_ITEMS = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+\*\*[A-Z]{1,3}\d+\s*\(([^)\n]*)\)", re.M)  # "**A1 (R2):**" -> R2
 ID = re.compile(r"\b[A-Z]{1,3}\d+\b")  # criterion, todo or requested item ID

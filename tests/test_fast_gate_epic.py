@@ -62,6 +62,10 @@ class EpicOwnershipTests(unittest.TestCase):
             self.assertEqual(record.item_todos(f"- [ ] T63 Proof (A1). {ref}", "1"), {"T63"}, ref)  # other tickets'
             self.assertTrue(record.handed(item(f"- [ ] Integration proof (A1). {ref}\n" + audit), {"T5"}) is False, ref)
         self.assertEqual(record.item_todos("- [ ] Proof, as #1 T63 says", "1"), {"T63"})  # this epic's own reference
+        for ref in ["needs #2 T1 and T5", "needs #2 T1-T5", "needs #2 T1 – T5"]:
+            self.assertEqual(record.item_todos(f"- [ ] T63 Proof (A1). {ref}", "1"), {"T63"}, ref)
+        self.assertFalse(record.handed(item("- [ ] T63 Proof (needs #2 T29, A1)\n" + audit), {"T63"}))  # A1 is #1's
+        self.assertTrue(record.handed(item("- [ ] T63 Proof (needs #2 T29, A1)\n" + audit), {"T2"}))
 
     def test_a_later_epic_owes_only_this_runs_items(self):
         record = self.record
@@ -72,6 +76,8 @@ class EpicOwnershipTests(unittest.TestCase):
         for own in ["- [ ] **T2** b", "- [ ] 🤝 **T2** b", "- [ ] T9 / T2 b"]:
             self.assertIn("1 unticked", record.needs_ticks(later({"T2"}, ticket.replace("- [ ] T2 b", own))), own)
         self.assertIsNone(record.needs_ticks(later({"T29"}, ticket.replace("T2 b", "T2 b. needs #2 T29"))))
+        on_epic = {**later({"T2"}, ticket.replace("- [ ] T2 b", "- [ ] Docs b, as #1 T2 says")), "url": "https://github.com/acme/portal/issues/1"}
+        self.assertIn("1 unticked", record.needs_ticks(on_epic))  # the ticket's own number keeps its references
 
     def test_a_planning_run_on_an_epic_owes_only_its_own_todos(self):
         record = self.record
