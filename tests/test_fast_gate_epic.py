@@ -55,6 +55,13 @@ class EpicOwnershipTests(unittest.TestCase):
         self.assertFalse(record.handed(item("- [ ] Integration proof (A1)\n" + audit), {"T2"}))  # unread: owed whole
         self.assertEqual(record.item_todos("- [x] 🤝 T76, T77 Docs"), {"T76", "T77"})
         self.assertEqual(record.item_todos("- [ ] T63 Proof. needs #2 T29"), {"T63"})
+        for text in ["- [ ] 🤝 **T63**, **T64** Proof", "- [ ] T63 / T64 Proof", "- [ ] T63 and T64", "- [ ] T63 to T65",
+                     "- [ ] T63-T65"]:
+            self.assertIn("T64", record.item_todos(text), text)  # lists and ranges: every holder owes the epic
+        for ref in ["needs #2 T1, T5", "Needs #2 T29", "after #2 T29", "needs #2 T1 to T18", "(#3 T4 / T6)"]:
+            self.assertEqual(record.item_todos(f"- [ ] T63 Proof (A1). {ref}", "1"), {"T63"}, ref)  # other tickets'
+            self.assertTrue(record.handed(item(f"- [ ] Integration proof (A1). {ref}\n" + audit), {"T5"}) is False, ref)
+        self.assertEqual(record.item_todos("- [ ] Proof, as #1 T63 says", "1"), {"T63"})  # this epic's own reference
 
     def test_a_later_epic_owes_only_this_runs_items(self):
         record = self.record
