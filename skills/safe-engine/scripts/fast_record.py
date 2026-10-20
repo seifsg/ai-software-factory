@@ -189,15 +189,14 @@ def verify_tickets(epic, subs):
 
 def online(run, kwargs, check, finish=False):
     """Run one ticket check on every listed ticket, unless the run predates ticket checks or the step is offline.
-    `finish` (done-run, handoff): outside product runs, an epic (a change: its ticket) whose integration todos are
-    all another run's is marked `later` with this run's todo IDs (pinned at `done plan`, plus the current plan),
+    `finish` (done-run, handoff): an epic (a change: its ticket) whose integration todos are all another run's is marked `later` with this run's todo IDs (pinned at `done plan`, plus the current plan),
     the only items of it this run owes."""
     if not run.get("ticket_checks"):
         return []
     epic, subs = ticket_urls(kwargs["all_sections"].get("tickets", ""))
     if kwargs.get("offline"):
         return readable(run, run.get("tickets", []) + epic + subs)
-    if finish and epic and run.get("kind") != "product":  # a product run builds its whole epic
+    if finish and epic:
         own = set(run.get("todos", [])) | {f"T{n}" for n in todo_ids(kwargs["all_sections"])}
         whole = check
         check = lambda ticket: whole({**ticket, "later": own} if ticket["url"] == epic[0] and handed(ticket, own)

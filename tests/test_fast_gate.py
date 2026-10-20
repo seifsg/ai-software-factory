@@ -640,7 +640,7 @@ class FastGateTests(GateHarness, unittest.TestCase):
         feature = {**run, "kind": "feature"}
         sub = lambda body, r=feature: " ".join(record.check_done_run(r, body, project=".", all_sections=sections))
         with patch.object(record, "read_ticket", side_effect=holding("T99")):  # another run holds it
-            self.assertIn("#1 A1", check(no_epic))  # a product run builds its whole epic: owed whole
+            self.assertEqual(check(no_epic), "")  # a product run too: exempt when another run owns (owner, 2026-10-20)
             self.assertEqual(sub(no_epic), "")  # a feature run: the epic's criteria wait for that run
             self.assertIn("#5 A2", sub(no_epic.replace(", #5 A2: PASS", "")))  # owned tickets still need every PASS
             self.assertIn("FAIL", sub(done.replace("#1 A1: PASS", "#1 A1: FAIL")))  # any FAIL still refuses
