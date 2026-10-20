@@ -22,6 +22,11 @@ NEEDS = re.compile(r"\bneeds #\d+ T\d+")  # names another ticket's item, not one
 CHECKLIST = re.compile(r"^(#{1,6})\s[^\n]*checklist[^\n]*$", re.I | re.M)
 FENCE = re.compile(r"^\s*(```|~~~).*?^\s*\1", re.M | re.S)
 DEFINITION = re.compile(r"^(#{2,4})[^\n]*(?:definition of done|done when)", re.I | re.M)  # older tickets: "Done when"
+# The todo IDs an item starts with, decoration allowed: "- [ ] T63", "- [x] 🤝 **T63** / T64", "- [ ] T63 to T65"
+OWN_TODOS = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+\[[ xX]\][^\w#\n]*(T\d+(?:[^\w\n#]*(?:,|/|and|to|-|–)[^\w\n#]*T\d+)*)")
+SPAN = re.compile(r"\b([A-Z]{1,3})(\d+)\s*(?:to|-|–)\s*\1(\d+)\b")  # "T63 to T65", "A1-A3"
+PART = re.compile(r"\s*(?:#(\d+)\b)?\s*([A-Z]{1,3}\d+(?:\s*(?:to|-|–)\s*[A-Z]{1,3}\d+)?)?\s*")  # "#4 A1 to A8", "A2"
+LAYOUT = "'- [ ] T<n> <title> → <result> (A1, A2)', with other tickets' IDs as '(#<n>, A1)' or 'needs #<n> T<n>'"
 CRITERION = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+\*\*([A-Z]{1,3}\d+)\b", re.M)  # "- **A1:**", "1. **D3:**"
 LABEL_ITEMS = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+\*\*[A-Z]{1,3}\d+\s*\(([^)\n]*)\)", re.M)  # "**A1 (R2):**" -> R2
 ID = re.compile(r"\b[A-Z]{1,3}\d+\b")  # criterion, todo or requested item ID
@@ -184,14 +189,73 @@ def verify_tickets(epic, subs):
     return []
 
 
-def online(run, kwargs, check):
-    """Run one ticket check on every listed ticket, unless the run predates ticket checks or the step is offline."""
+def online(run, kwargs, check, finish=False):
+    """Run one ticket check on every listed ticket, unless the run predates ticket checks or the step is offline.
+    `finish` (done-run, handoff): an epic (a change: its ticket) whose integration todos are all another run's is
+    marked `later` with this run's todo IDs (pinned at `done plan`, plus the current plan), the only items of it
+    this run owes; one that names its criteria off the layout is marked `layout` and owed whole."""
     if not run.get("ticket_checks"):
         return []
     epic, subs = ticket_urls(kwargs["all_sections"].get("tickets", ""))
     if kwargs.get("offline"):
         return readable(run, run.get("tickets", []) + epic + subs)
+    if finish and epic:
+        own, whole = set(run.get("todos", [])) | {f"T{n}" for n in todo_ids(kwargs["all_sections"])}, check
+
+        def check(ticket):
+            if ticket["url"] != epic[0]:
+                return whole(ticket)
+            holders, odd = integration(ticket)
+            if odd:  # off the layout: owed whole, and the gate says how to write it
+                return whole({**ticket, "layout": odd})
+            return whole({**ticket, "later": own} if holders and not holders & own else ticket)
     return ticket_problems(run.get("tickets", []) + epic + subs, check)  # tickets pinned at `done tickets` stay checked
+
+
+def ids(text):
+    """IDs in `text` with spans expanded: 'T63 to T65' -> T63, T64, T65."""
+    spans = {f"{p}{n}" for p, a, b in SPAN.findall(text) for n in range(int(a), min(int(b), int(a) + 50) + 1)}
+    return set(ID.findall(text)) | spans
+
+
+def lead_todos(item):
+    """The todo IDs a checklist item starts with (its own); IDs later in the item never claim it."""
+    found = OWN_TODOS.match(item)
+    return ids(found.group(1)) if found else set()
+
+
+def layout_criteria(item, criteria, number):
+    """The criteria of ticket `number` an item names in the ticket layout: groups like '(A1, A2)', '(#1, A1)' or
+    '(#4 A1 to A8, #5 A1)', where an ID belongs to the last ticket named before it; the 'Proof:' tail is not read.
+    None when any of the criteria appears anywhere else (off the layout)."""
+    text, named = re.split(r"\bProof:", item, maxsplit=1)[0], set()
+
+    def group(found):
+        owner, mine = number, set()
+        for part in re.split(r"[,;]", found.group(1)):
+            parsed = PART.fullmatch(part)
+            if not parsed or not (parsed.group(1) or parsed.group(2)):
+                return found.group(0)  # not a criteria group: left for the off-layout check
+            owner = parsed.group(1) or owner
+            mine |= ids(parsed.group(2) or "") if owner == number else set()
+        named.update(mine & criteria)
+        return ""
+    rest = re.sub(r"\(([^()\n]*)\)", group, text)
+    return None if ids(rest) & criteria else named
+
+
+def integration(ticket):
+    """The todos holding the ticket's integration work (items naming its criteria), and the first item that names
+    them off the layout, which keeps the ticket owed whole."""
+    criteria = set(CRITERION.findall(under(ticket["body"], DEFINITION)))
+    number = (ISSUE.match(ticket.get("url", "")) or [None, None, None])[2]
+    holders = set()
+    for item in TASK.finditer(checklist(ticket["body"])):
+        named, todos = layout_criteria(item.group(0), criteria, number), lead_todos(item.group(0))
+        if named is None or (named and not todos):
+            return holders, item.group(0).strip().splitlines()[0][:100]
+        holders |= todos if named else set()
+    return holders, None
 
 
 def readable(run, urls):
@@ -292,17 +356,27 @@ def needs_checklist(ticket):
         "needs a Checklist section with task items ('- [ ] T1 <todo>') from the plan")
 
 
+def off_layout(ticket):
+    """The gate's note when an epic is owed whole because an item names its criteria off the layout."""
+    return f"item '{ticket['layout']}' names the epic's criteria off the ticket layout, so this run owes the whole " \
+        f"epic; write it as {LAYOUT}. " if ticket.get("layout") else ""
+
+
 def needs_ticks(ticket):
-    """Handoff: a listed ticket is finished (every item ticked) unless Blocked, cancelled or deferred to Backlog."""
+    """Handoff: a listed ticket is finished (every item ticked) unless Blocked, cancelled or deferred to Backlog.
+    An epic other runs finish later (`later`) owes only the items that are this run's todos ('- [ ] T75 ...')."""
     if ticket["stopped"] or ticket["backlog"]:
         return None
     marks = TASK.findall(checklist(ticket["body"]))
     if not marks:
         return needs_checklist(ticket)
-    left = marks.count(" ")
+    own = ticket.get("later")
+    left = marks.count(" ") if own is None else sum(
+        1 for item in TASK.finditer(checklist(ticket["body"]))
+        if item.group(1) == " " and lead_todos(item.group(0)) & own)
     if not left:
         return None
-    return (f"{left} unticked checklist item(s): finish them, mark the ticket Blocked with its reason, "
+    return (off_layout(ticket) + f"{left} unticked checklist item(s): finish them, mark the ticket Blocked with its reason, "
             "or Backlog only when the owner deferred it")
 
 
@@ -335,7 +409,7 @@ def check_plan(run, body, **kwargs):
     return problems + missing_markers(body, labels) or held(run, kwargs, covered(run, needs_checklist))
 
 
-def held(run, kwargs, check):
+def held(run, kwargs, check, finish=False):
     """`check` on every listed ticket; on coverage runs also: each plan todo is an item there and each
     requested item is still named by a criterion (no drift after the tickets step)."""
     lists, named = [], []  # each listed ticket's items and labelled requested items, kept from its one read
@@ -344,7 +418,7 @@ def held(run, kwargs, check):
         lists.append(items(ticket["body"]))
         named.extend(labelled(ticket["body"]))
         return check(ticket)
-    problems = online(run, kwargs, read)
+    problems = online(run, kwargs, read, finish)
     if problems or not run.get("coverage") or not lists:
         return problems
     ids = set(ID.findall("\n".join(lists)))
@@ -477,7 +551,7 @@ def verdicts(body):
 
 def hidden_checks(body, kwargs, run):
     """Unreadable entries and any FAIL refuse; online, every in-play listed ticket's criterion, the epic's
-    included, needs its own '#<n> <ID>: PASS'; offline, >=1 entry."""
+    included unless another run owes it (`integration`), needs its own '#<n> <ID>: PASS'; offline, >=1 entry."""
     entries, unreadable = verdicts(body)
     if unreadable:
         return [f"unreadable hidden-check entry: {line}" for line in unreadable] + [
@@ -488,15 +562,17 @@ def hidden_checks(body, kwargs, run):
         return [f"hidden checks FAIL ({', '.join(dict.fromkeys(failed))}): back to build, then the checker runs them again"]
     if not entries:
         return ["needs a '**Hidden checks:**' block from the checker: '#<n> <ID>: PASS' for every criterion"]
-    gaps, passed = [], {(number, cid) for number, cid, _ in entries}
+    gaps, notes, passed = [], [], {(number, cid) for number, cid, _ in entries}
 
     def read(ticket):
-        if not (ticket["stopped"] or ticket["backlog"]):
+        if not (ticket["stopped"] or ticket["backlog"] or "later" in ticket):
             number = ISSUE.match(ticket["url"]).group(2)
             criteria = dict.fromkeys(CRITERION.findall(under(ticket["body"], DEFINITION)))
-            gaps.extend(f"#{number} {cid}" for cid in criteria if (number, cid) not in passed)
-    problems = online(run, kwargs, read)
-    return problems or ([f"criteria without a hidden-check PASS: {', '.join(gaps)}"] if gaps else [])
+            missing = [f"#{number} {cid}" for cid in criteria if (number, cid) not in passed]
+            gaps.extend(missing)
+            notes.append(off_layout(ticket) if missing else "")
+    problems = online(run, kwargs, read, finish=True)
+    return problems or ([f"{''.join(notes)}criteria without a hidden-check PASS: {', '.join(gaps)}"] if gaps else [])
 
 
 def audit_lines(body):
@@ -605,7 +681,7 @@ def digest(path):
 def check_handoff(run, body, **kwargs):
     labels = ["Run", "Statuses", "Unverified", "Follow-ups"] + (["Dev sign-in"] if run.get("auth") else []) + (
         ["PR"] if run.get("pr_proof") else [])
-    return missing_markers(body, labels) or held(run, kwargs, covered(run, needs_ticks)) + pr_proof(run, body, **kwargs)
+    return missing_markers(body, labels) or held(run, kwargs, covered(run, needs_ticks), finish=True) + pr_proof(run, body, **kwargs)
 
 
 def pr_proof(run, body, project=None, offline=None, **_):
