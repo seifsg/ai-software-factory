@@ -142,7 +142,8 @@ class Judge:
                 rules.CLEAN.search(cmd.text) or rules.STASH.search(cmd.text)):
             if not literal or rules.loses_ignored(cmd.words):
                 return rules.TEXT["ignored"]
-        if "move" in fired and rules.MOVE.search(cmd.text):
+        if "move" in fired and rules.MOVE.search(cmd.text) and not rules.INTERPRETER.fullmatch(
+                shell.program(cmd.words[0])):
             return self.carries(cmd, here, literal)
         return None
 

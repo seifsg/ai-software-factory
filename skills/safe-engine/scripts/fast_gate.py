@@ -653,6 +653,14 @@ def guard(command, runs, cwd, session, dialect=None):
                                                "or to approve another approach.")
 
 
+def where(cds, cwd):
+    """The folder a shell write runs in after its cd targets; an unknown one ('', a variable) keeps the folder."""
+    for target in cds:
+        path = os.path.expandvars(os.path.expanduser(target))
+        cwd = cwd if not path or "$" in path else norm(path, cwd)
+    return cwd
+
+
 def pre_tool(event, runs, cwd, session):
     """Deny reason for a destructive command, or a project write before the gate opens, or None.
     Sessions bind only through real work."""
@@ -664,7 +672,7 @@ def pre_tool(event, runs, cwd, session):
         targets = [norm(path, cwd) for path in event["paths"]]
     elif event["tool"] == "shell":
         shell = sibling("fast_shell")
-        targets = [norm(name, cwd) for name in shell.writes(event["command"])]
+        targets = [norm(name, where(cds, cwd)) for cds, name in shell.writes(event["command"])]
     else:
         return None
     vault = (norm(ACTIVE), norm(HOME / "runs")) if targets else ()
