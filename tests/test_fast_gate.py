@@ -626,11 +626,22 @@ class FastGateTests(GateHarness, unittest.TestCase):
                "tickets": ["https://github.com/acme/studio-booking/issues/9"]}  # Blocked: needs no PASS
         check = lambda body, **kw: " ".join(record.check_done_run(run, body, project=".", all_sections=sections, **kw))
         done = sections["done-run"]
-        with patch.object(record, "read_ticket", side_effect=read):
+        no_epic = "\n".join(line for line in done.splitlines() if not line.startswith("- #1 "))
+        with patch.object(record, "read_ticket", side_effect=read), patch.object(record, "open_siblings", return_value=[]):
             self.assertEqual(check(done), "")
-            no_epic = "\n".join(line for line in done.splitlines() if not line.startswith("- #1 "))
-            self.assertIn("without a hidden-check PASS: #1 A1, #1 A2", check(no_epic))
+            self.assertIn("without a hidden-check PASS: #1 A1, #1 A2", check(no_epic))  # this run finishes the epic
             self.assertIn("#5 A2", check(done.replace(", #5 A2: PASS", "")))
+        later = ["https://github.com/acme/studio-booking/issues/8"]  # an open sub-issue another run builds
+        with patch.object(record, "read_ticket", side_effect=read), patch.object(record, "open_siblings", return_value=later):
+            self.assertEqual(check(no_epic), "")  # the epic's integration criteria wait for the run that finishes it
+            self.assertIn("#5 A2", check(no_epic.replace(", #5 A2: PASS", "")))  # its own tickets still need every PASS
+        with patch.object(record, "read_ticket", side_effect=read), patch.object(record, "open_siblings", return_value="no gh"):
+            self.assertEqual(check(no_epic), "no gh")
+        epic, subs = record.ticket_urls(sections["tickets"])
+        with patch.object(record, "gh", return_value="\n".join(subs + later) + "\n"):
+            self.assertEqual(record.open_siblings(epic[0], subs), later)
+        with patch.object(record, "gh", side_effect=RuntimeError("no network")):
+            self.assertIn("--offline", record.open_siblings(epic[0], subs))
         self.assertEqual(check(done.replace(", #5 A2: PASS", ""), offline="no network"), "")  # offline: >=1 entry
 
     def test_hidden_checks_gate_the_sample_done_run(self):
@@ -728,6 +739,7 @@ class FastGateTests(GateHarness, unittest.TestCase):
         with patch.object(record, "gh", side_effect=AssertionError("offline steps and older runs never call gh")):
             self.assertEqual(record.online(current, {"offline": "no network", "all_sections": sections}, record.needs_ticks), [])
             self.assertEqual(record.online(older, {"offline": None, "all_sections": sections}, record.needs_ticks), [])
+        self.assertIsNone(record.needs_ticks({"stopped": False, "backlog": False, "later": True, "body": ticket}))
         with patch.object(record, "gh", return_value=issue(ticket)):
             self.assertIn("1 unticked", record.online(current, {"offline": None, "all_sections": sections}, record.needs_ticks)[0])
             handoff = "**Run:** x\n**Statuses:** x\n**Unverified:** x\n**Follow-ups:** x\n"

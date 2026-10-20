@@ -184,14 +184,37 @@ def verify_tickets(epic, subs):
     return []
 
 
-def online(run, kwargs, check):
-    """Run one ticket check on every listed ticket, unless the run predates ticket checks or the step is offline."""
+def online(run, kwargs, check, finish=False):
+    """Run one ticket check on every listed ticket, unless the run predates ticket checks or the step is offline.
+    `finish` (done-run, handoff): the epic is marked `later` while a sub-issue this run does not list is open."""
     if not run.get("ticket_checks"):
         return []
     epic, subs = ticket_urls(kwargs["all_sections"].get("tickets", ""))
     if kwargs.get("offline"):
         return readable(run, run.get("tickets", []) + epic + subs)
+    if finish and epic and subs:
+        others = open_siblings(epic[0], subs)
+        if isinstance(others, str):
+            return [others]
+        if others:
+            whole = check
+            check = lambda ticket: whole({**ticket, "later": ticket["url"] == epic[0]})
     return ticket_problems(run.get("tickets", []) + epic + subs, check)  # tickets pinned at `done tickets` stay checked
+
+
+def open_siblings(epic, subs):
+    """Open sub-issues of the epic this run does not list; a problem string when gh cannot tell."""
+    import subprocess
+    match = ISSUE.match(epic)
+    if not match:
+        return []  # a non-GitHub epic: ticket_problems reports it
+    repo, number = match.groups()
+    try:
+        found = gh("api", f"repos/{repo}/issues/{number}/sub_issues", "--paginate",
+                   "--jq", '.[] | select(.state == "open") | .html_url').split()
+    except (OSError, RuntimeError, subprocess.TimeoutExpired) as error:
+        return f"cannot list the epic's sub-issues with gh ({error}); fix access or pass --offline '<reason>'"
+    return [url for url in found if url not in set(subs)]
 
 
 def readable(run, urls):
@@ -293,8 +316,9 @@ def needs_checklist(ticket):
 
 
 def needs_ticks(ticket):
-    """Handoff: a listed ticket is finished (every item ticked) unless Blocked, cancelled or deferred to Backlog."""
-    if ticket["stopped"] or ticket["backlog"]:
+    """Handoff: a listed ticket is finished (every item ticked) unless Blocked, cancelled or deferred to Backlog,
+    or an epic whose other open sub-issues finish it later."""
+    if ticket["stopped"] or ticket["backlog"] or ticket.get("later"):
         return None
     marks = TASK.findall(checklist(ticket["body"]))
     if not marks:
@@ -335,7 +359,7 @@ def check_plan(run, body, **kwargs):
     return problems + missing_markers(body, labels) or held(run, kwargs, covered(run, needs_checklist))
 
 
-def held(run, kwargs, check):
+def held(run, kwargs, check, finish=False):
     """`check` on every listed ticket; on coverage runs also: each plan todo is an item there and each
     requested item is still named by a criterion (no drift after the tickets step)."""
     lists, named = [], []  # each listed ticket's items and labelled requested items, kept from its one read
@@ -344,7 +368,7 @@ def held(run, kwargs, check):
         lists.append(items(ticket["body"]))
         named.extend(labelled(ticket["body"]))
         return check(ticket)
-    problems = online(run, kwargs, read)
+    problems = online(run, kwargs, read, finish)
     if problems or not run.get("coverage") or not lists:
         return problems
     ids = set(ID.findall("\n".join(lists)))
@@ -477,7 +501,7 @@ def verdicts(body):
 
 def hidden_checks(body, kwargs, run):
     """Unreadable entries and any FAIL refuse; online, every in-play listed ticket's criterion, the epic's
-    included, needs its own '#<n> <ID>: PASS'; offline, >=1 entry."""
+    included once no open sub-issue outside this run is left, needs its own '#<n> <ID>: PASS'; offline, >=1 entry."""
     entries, unreadable = verdicts(body)
     if unreadable:
         return [f"unreadable hidden-check entry: {line}" for line in unreadable] + [
@@ -491,11 +515,11 @@ def hidden_checks(body, kwargs, run):
     gaps, passed = [], {(number, cid) for number, cid, _ in entries}
 
     def read(ticket):
-        if not (ticket["stopped"] or ticket["backlog"]):
+        if not (ticket["stopped"] or ticket["backlog"] or ticket.get("later")):
             number = ISSUE.match(ticket["url"]).group(2)
             criteria = dict.fromkeys(CRITERION.findall(under(ticket["body"], DEFINITION)))
             gaps.extend(f"#{number} {cid}" for cid in criteria if (number, cid) not in passed)
-    problems = online(run, kwargs, read)
+    problems = online(run, kwargs, read, finish=True)
     return problems or ([f"criteria without a hidden-check PASS: {', '.join(gaps)}"] if gaps else [])
 
 
@@ -605,7 +629,7 @@ def digest(path):
 def check_handoff(run, body, **kwargs):
     labels = ["Run", "Statuses", "Unverified", "Follow-ups"] + (["Dev sign-in"] if run.get("auth") else []) + (
         ["PR"] if run.get("pr_proof") else [])
-    return missing_markers(body, labels) or held(run, kwargs, covered(run, needs_ticks)) + pr_proof(run, body, **kwargs)
+    return missing_markers(body, labels) or held(run, kwargs, covered(run, needs_ticks), finish=True) + pr_proof(run, body, **kwargs)
 
 
 def pr_proof(run, body, project=None, offline=None, **_):
