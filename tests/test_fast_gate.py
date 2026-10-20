@@ -176,6 +176,7 @@ class FastGateTests(GateHarness, unittest.TestCase):
         self.assertIn("Next: close", self.gate("status"))
         run = json.loads((self.project / ".factory/fast/run.json").read_text(encoding="utf-8"))
         self.assertEqual(len(run["tickets"]), 5)  # the epic and four sub-issues, pinned at `done tickets`
+        self.assertEqual(run["todos"], [f"T{n}" for n in range(1, 9)])  # plan todos, pinned at `done plan`
         self.gate("close")
         self.assertEqual(list((self.root / "home/active").glob("*.json")), [])
         self.assertIsNone(self.hook({"hook_event_name": "Stop", "stop_hook_active": False}))
@@ -636,14 +637,25 @@ class FastGateTests(GateHarness, unittest.TestCase):
         def holding(todo):  # the epic's checklist gives its integration todo to `todo`
             items = f"\n### Checklist\n- [ ] #2 Booking: every item ticked\n- [ ] {todo} Integration proof (A1, A2)\n"
             return lambda url: {**read(url), "body": dod + (items if url == epic else "")}
+        feature = {**run, "kind": "feature"}
+        sub = lambda body, r=feature: " ".join(record.check_done_run(r, body, project=".", all_sections=sections))
         with patch.object(record, "read_ticket", side_effect=holding("T99")):  # another run holds it
-            self.assertEqual(check(no_epic), "")  # the epic's criteria wait for that run
-            self.assertIn("#5 A2", check(no_epic.replace(", #5 A2: PASS", "")))  # owned tickets still need every PASS
-            self.assertIn("FAIL", check(done.replace("#1 A1: PASS", "#1 A1: FAIL")))  # any FAIL still refuses
+            self.assertIn("#1 A1", check(no_epic))  # a product run builds its whole epic: owed whole
+            self.assertEqual(sub(no_epic), "")  # a feature run: the epic's criteria wait for that run
+            self.assertIn("#5 A2", sub(no_epic.replace(", #5 A2: PASS", "")))  # owned tickets still need every PASS
+            self.assertIn("FAIL", sub(done.replace("#1 A1: PASS", "#1 A1: FAIL")))  # any FAIL still refuses
+            self.assertIn("#1 A1", sub(no_epic, {**feature, "todos": ["T99"]}))  # pinned at `done plan`: still owed
         with patch.object(record, "read_ticket", side_effect=holding("T8")):  # this run holds it: owed whole
-            self.assertIn("without a hidden-check PASS: #1 A1, #1 A2", check(no_epic))
-        other = {"body": dod + "\n### Checklist\n- [x] T80 Checks synced (#4 A1 to A8, #5 A1)\n"}
-        self.assertFalse(record.handed(other, set()))  # other tickets' criteria name no integration todo
+            self.assertIn("without a hidden-check PASS: #1 A1, #1 A2", sub(no_epic))
+        item = lambda text: {"body": dod + "\n### Checklist\n" + text}
+        for text, owed in [("- [ ] T80 Checks synced (#4 A1 to A8, #5 A1)\n", False),  # other tickets' IDs
+                           ("- [ ] T7 Collector, needs #2 A1\n", False),
+                           ("- [ ] T63 Proof (A1; A2)\n", True), ("- [ ] T63 Proof (**A1**, A2)\n", True),
+                           ("- [ ] #2 Booking, then T63 (A1)\n", False),  # not a T item: the item is #2's line
+                           ("- [ ] T63 Proof ( A1 )\n- [ ] T75 Audit (A2)\n", False)]:  # T75 is one too
+            with self.subTest(text=text):
+                self.assertEqual(record.handed(item(text), {"T75"}), owed)
+        self.assertFalse(record.handed(item("- [ ] T63 Proof ( A1 )\n- [ ] T75 Audit (A2)\n"), {"T63"}))  # holder owes
         self.assertEqual(check(done.replace(", #5 A2: PASS", ""), offline="no network"), "")  # offline: >=1 entry
 
     def test_hidden_checks_gate_the_sample_done_run(self):

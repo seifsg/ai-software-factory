@@ -22,7 +22,8 @@ NEEDS = re.compile(r"\bneeds #\d+ T\d+")  # names another ticket's item, not one
 CHECKLIST = re.compile(r"^(#{1,6})\s[^\n]*checklist[^\n]*$", re.I | re.M)
 FENCE = re.compile(r"^\s*(```|~~~).*?^\s*\1", re.M | re.S)
 DEFINITION = re.compile(r"^(#{2,4})[^\n]*(?:definition of done|done when)", re.I | re.M)  # older tickets: "Done when"
-CRITERIA = re.compile(r"\(([A-Z]{1,3}\d+(?:,\s*[A-Z]{1,3}\d+)*)\)")  # an item's criteria: "T63 ... (A1, A2)"
+ITEM_TODO = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+\[[ xX]\]\s+(T\d+)\b")  # the todo an item is: "- [ ] T63 ..."
+OTHERS = re.compile(r"#\d+\s+[A-Z]{1,3}\d+(?:\s+to\s+[A-Z]{1,3}\d+)?")  # another ticket's IDs: "#4 A1 to A8"
 CRITERION = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+\*\*([A-Z]{1,3}\d+)\b", re.M)  # "- **A1:**", "1. **D3:**"
 LABEL_ITEMS = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+\*\*[A-Z]{1,3}\d+\s*\(([^)\n]*)\)", re.M)  # "**A1 (R2):**" -> R2
 ID = re.compile(r"\b[A-Z]{1,3}\d+\b")  # criterion, todo or requested item ID
@@ -187,30 +188,31 @@ def verify_tickets(epic, subs):
 
 def online(run, kwargs, check, finish=False):
     """Run one ticket check on every listed ticket, unless the run predates ticket checks or the step is offline.
-    `finish` (done-run, handoff): an epic (a change: its ticket) whose integration todos are all another run's is
-    marked `later` with this run's plan todo IDs, the only items of it this run owes."""
+    `finish` (done-run, handoff): outside product runs, an epic (a change: its ticket) whose integration todos are
+    all another run's is marked `later` with this run's todo IDs (pinned at `done plan`, plus the current plan),
+    the only items of it this run owes."""
     if not run.get("ticket_checks"):
         return []
     epic, subs = ticket_urls(kwargs["all_sections"].get("tickets", ""))
     if kwargs.get("offline"):
         return readable(run, run.get("tickets", []) + epic + subs)
-    if finish and epic:
-        own, whole = {f"T{n}" for n in todo_ids(kwargs["all_sections"])}, check
+    if finish and epic and run.get("kind") != "product":  # a product run builds its whole epic
+        own = set(run.get("todos", [])) | {f"T{n}" for n in todo_ids(kwargs["all_sections"])}
+        whole = check
         check = lambda ticket: whole({**ticket, "later": own} if ticket["url"] == epic[0] and handed(ticket, own)
                                      else ticket)
     return ticket_problems(run.get("tickets", []) + epic + subs, check)  # tickets pinned at `done tickets` stay checked
 
 
 def handed(ticket, own):
-    """True when the ticket's checklist holds integration todos (T items naming its criteria as '(A1, A2)') and
-    none is one of this run's todos `own`: the run holding them owes the ticket's criteria and every item."""
+    """True when the ticket's checklist holds integration todos (T items naming any of its criterion IDs; `needs`
+    and '#4 A1' references to other tickets do not count) and none is one of this run's todos `own`."""
     criteria = set(CRITERION.findall(under(ticket["body"], DEFINITION)))
     todos = set()
     for item in TASK.finditer(checklist(ticket["body"])):
-        text = NEEDS.sub("", item.group(0))
-        todo = re.search(r"\bT\d+\b", text)
-        if todo and any(criteria & set(re.split(r",\s*", group)) for group in CRITERIA.findall(text)):
-            todos.add(todo.group(0))
+        todo = ITEM_TODO.match(item.group(0))
+        if todo and criteria & set(ID.findall(OTHERS.sub("", NEEDS.sub("", item.group(0))))):
+            todos.add(todo.group(1))
     return bool(todos) and not todos & own
 
 
@@ -501,7 +503,7 @@ def verdicts(body):
 
 def hidden_checks(body, kwargs, run):
     """Unreadable entries and any FAIL refuse; online, every in-play listed ticket's criterion, the epic's
-    included once no open sub-issue outside this run is left, needs its own '#<n> <ID>: PASS'; offline, >=1 entry."""
+    included unless another run owes it (`handed`), needs its own '#<n> <ID>: PASS'; offline, >=1 entry."""
     entries, unreadable = verdicts(body)
     if unreadable:
         return [f"unreadable hidden-check entry: {line}" for line in unreadable] + [
