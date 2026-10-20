@@ -22,8 +22,9 @@ NEEDS = re.compile(r"\bneeds #\d+ T\d+")  # names another ticket's item, not one
 CHECKLIST = re.compile(r"^(#{1,6})\s[^\n]*checklist[^\n]*$", re.I | re.M)
 FENCE = re.compile(r"^\s*(```|~~~).*?^\s*\1", re.M | re.S)
 DEFINITION = re.compile(r"^(#{2,4})[^\n]*(?:definition of done|done when)", re.I | re.M)  # older tickets: "Done when"
-ITEM_TODO = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+\[[ xX]\]\s+(T\d+)\b")  # the todo an item is: "- [ ] T63 ..."
-OTHERS = re.compile(r"#\d+\s+[A-Z]{1,3}\d+(?:\s+to\s+[A-Z]{1,3}\d+)?")  # another ticket's IDs: "#4 A1 to A8"
+# The todos an item is, decoration allowed: "- [ ] T63 ...", "- [x] **T63**", "- [ ] 🤝 T76, T77 ..."
+ITEM_TODO = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+\[[ xX]\]\s*[^\w\s#]*\s*(T\d+(?:\s*,\s*T\d+)*)\b")
+OTHERS = re.compile(r"#(\d+)\s+[A-Z]{1,3}\d+(?:\s+to\s+[A-Z]{1,3}\d+)?")  # a ticket's IDs: "#4 A1 to A8"
 CRITERION = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+\*\*([A-Z]{1,3}\d+)\b", re.M)  # "- **A1:**", "1. **D3:**"
 LABEL_ITEMS = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+\*\*[A-Z]{1,3}\d+\s*\(([^)\n]*)\)", re.M)  # "**A1 (R2):**" -> R2
 ID = re.compile(r"\b[A-Z]{1,3}\d+\b")  # criterion, todo or requested item ID
@@ -204,15 +205,26 @@ def online(run, kwargs, check, finish=False):
     return ticket_problems(run.get("tickets", []) + epic + subs, check)  # tickets pinned at `done tickets` stay checked
 
 
+def item_todos(item):
+    """The todo IDs a checklist item starts with; empty when it starts with none."""
+    found = ITEM_TODO.match(item)
+    return set(re.findall(r"T\d+", found.group(1))) if found else set()
+
+
 def handed(ticket, own):
-    """True when the ticket's checklist holds integration todos (T items naming any of its criterion IDs; `needs`
-    and '#4 A1' references to other tickets do not count) and none is one of this run's todos `own`."""
+    """True when the ticket's checklist holds integration todos (items naming any of its criterion IDs; `needs`
+    and '#4 A1' references to other tickets do not count) and none is one of this run's todos `own`. Fails closed:
+    an item naming its criteria without starting with a todo ID keeps the ticket owed whole."""
     criteria = set(CRITERION.findall(under(ticket["body"], DEFINITION)))
+    number = (ISSUE.match(ticket.get("url", "")) or [None, None, None])[2]
     todos = set()
     for item in TASK.finditer(checklist(ticket["body"])):
-        todo = ITEM_TODO.match(item.group(0))
-        if todo and criteria & set(ID.findall(OTHERS.sub("", NEEDS.sub("", item.group(0))))):
-            todos.add(todo.group(1))
+        text = OTHERS.sub(lambda ref: ref.group(0) if ref.group(1) == number else "", NEEDS.sub("", item.group(0)))
+        if criteria & set(ID.findall(text)):
+            ids = item_todos(item.group(0))
+            if not ids:
+                return False
+            todos |= ids
     return bool(todos) and not todos & own
 
 
@@ -325,7 +337,7 @@ def needs_ticks(ticket):
     own = ticket.get("later")
     left = marks.count(" ") if own is None else sum(
         1 for item in TASK.finditer(checklist(ticket["body"]))
-        if item.group(1) == " " and (ITEM_TODO.match(item.group(0)) or [None, None])[1] in own)
+        if item.group(1) == " " and item_todos(item.group(0)) & own)
     if not left:
         return None
     return (f"{left} unticked checklist item(s): finish them, mark the ticket Blocked with its reason, "

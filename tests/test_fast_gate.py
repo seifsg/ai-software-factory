@@ -656,6 +656,14 @@ class FastGateTests(GateHarness, unittest.TestCase):
             with self.subTest(text=text):
                 self.assertEqual(record.handed(item(text), {"T75"}), owed)
         self.assertFalse(record.handed(item("- [ ] T63 Proof ( A1 )\n- [ ] T75 Audit (A2)\n"), {"T63"}))  # holder owes
+        audit = "- [ ] T75 Gap audit (A2)\n"
+        for t63 in ["- [ ] **T63** Proof (A1)\n", "- [ ] [T63] Proof (A1)\n", "- [ ] 🤝 T63 Proof (A1)\n",
+                    "- [ ]T63 Proof (A1)\n", "- [ ] T63 Proof (#1 A1, A2)\n"]:
+            with self.subTest(t63=t63):  # a decorated integration todo is still the holder's
+                self.assertFalse(record.handed({"url": epic, **item(t63 + audit)}, {"T63"}))
+                self.assertTrue(record.handed({"url": epic, **item(t63 + audit)}, {"T2"}))
+        self.assertFalse(record.handed(item("- [ ] Integration proof (A1)\n" + audit), {"T2"}))  # unread: owed whole
+        self.assertEqual(record.item_todos("- [x] 🤝 T76, T77 Docs"), {"T76", "T77"})
         self.assertEqual(check(done.replace(", #5 A2: PASS", ""), offline="no network"), "")  # offline: >=1 entry
 
     def test_hidden_checks_gate_the_sample_done_run(self):
@@ -796,6 +804,8 @@ class FastGateTests(GateHarness, unittest.TestCase):
                 return " ".join(record.check_handoff(run, handoff, offline=None, all_sections=sections))
         self.assertEqual(check(["T75"]), "")  # #109: a planning run owes only its own items on the epic
         self.assertIn("1 unticked", check(["T75", "T77"]))  # its own unticked todo stays owed
+        bold = {"stopped": False, "backlog": False, "later": {"T77"}, "body": body.replace("- [ ] T77", "- [ ] **T77**")}
+        self.assertIn("1 unticked", record.needs_ticks(bold))  # an own decorated item is still owed
         needs = {"stopped": False, "backlog": False, "later": {"T29"}, "body": body.replace("(A1)", "(A1). needs #2 T29")}
         self.assertIsNone(record.needs_ticks(needs))  # T63 needs #2 T29: still not that run's item
         self.assertIn("3 unticked", check(["T63"]))  # the run holding the integration todo owes the epic whole
