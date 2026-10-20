@@ -22,6 +22,7 @@ NEEDS = re.compile(r"\bneeds #\d+ T\d+")  # names another ticket's item, not one
 CHECKLIST = re.compile(r"^(#{1,6})\s[^\n]*checklist[^\n]*$", re.I | re.M)
 FENCE = re.compile(r"^\s*(```|~~~).*?^\s*\1", re.M | re.S)
 DEFINITION = re.compile(r"^(#{2,4})[^\n]*(?:definition of done|done when)", re.I | re.M)  # older tickets: "Done when"
+CRITERIA = re.compile(r"\(([A-Z]{1,3}\d+(?:,\s*[A-Z]{1,3}\d+)*)\)")  # an item's criteria: "T63 ... (A1, A2)"
 CRITERION = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+\*\*([A-Z]{1,3}\d+)\b", re.M)  # "- **A1:**", "1. **D3:**"
 LABEL_ITEMS = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+\*\*[A-Z]{1,3}\d+\s*\(([^)\n]*)\)", re.M)  # "**A1 (R2):**" -> R2
 ID = re.compile(r"\b[A-Z]{1,3}\d+\b")  # criterion, todo or requested item ID
@@ -186,36 +187,31 @@ def verify_tickets(epic, subs):
 
 def online(run, kwargs, check, finish=False):
     """Run one ticket check on every listed ticket, unless the run predates ticket checks or the step is offline.
-    `finish` (done-run, handoff): while the epic (a change: its ticket) has an open sub-issue this run does not
-    list, it is marked `later` with this run's plan todo IDs, the only items of it this run owes."""
+    `finish` (done-run, handoff): an epic (a change: its ticket) whose integration todos are all another run's is
+    marked `later` with this run's plan todo IDs, the only items of it this run owes."""
     if not run.get("ticket_checks"):
         return []
     epic, subs = ticket_urls(kwargs["all_sections"].get("tickets", ""))
     if kwargs.get("offline"):
         return readable(run, run.get("tickets", []) + epic + subs)
     if finish and epic:
-        others = open_siblings(epic[0], subs)
-        if isinstance(others, str):
-            return [others]
-        if others:
-            own, whole = {f"T{n}" for n in todo_ids(kwargs["all_sections"])}, check
-            check = lambda ticket: whole({**ticket, "later": own} if ticket["url"] == epic[0] else ticket)
+        own, whole = {f"T{n}" for n in todo_ids(kwargs["all_sections"])}, check
+        check = lambda ticket: whole({**ticket, "later": own} if ticket["url"] == epic[0] and handed(ticket, own)
+                                     else ticket)
     return ticket_problems(run.get("tickets", []) + epic + subs, check)  # tickets pinned at `done tickets` stay checked
 
 
-def open_siblings(epic, subs):
-    """Open sub-issues of the epic this run does not list; a problem string when gh cannot tell."""
-    import subprocess
-    match = ISSUE.match(epic)
-    if not match:
-        return []  # a non-GitHub epic: ticket_problems reports it
-    repo, number = match.groups()
-    try:
-        found = gh("api", f"repos/{repo}/issues/{number}/sub_issues", "--paginate",
-                   "--jq", '.[] | select(.state == "open") | .html_url').split()
-    except (OSError, RuntimeError, subprocess.TimeoutExpired) as error:
-        return f"cannot list the epic's sub-issues with gh ({error}); fix access or pass --offline '<reason>'"
-    return [url for url in found if ISSUE.match(url) and url not in set(subs)]
+def handed(ticket, own):
+    """True when the ticket's checklist holds integration todos (T items naming its criteria as '(A1, A2)') and
+    none is one of this run's todos `own`: the run holding them owes the ticket's criteria and every item."""
+    criteria = set(CRITERION.findall(under(ticket["body"], DEFINITION)))
+    todos = set()
+    for item in TASK.finditer(checklist(ticket["body"])):
+        text = NEEDS.sub("", item.group(0))
+        todo = re.search(r"\bT\d+\b", text)
+        if todo and any(criteria & set(re.split(r",\s*", group)) for group in CRITERIA.findall(text)):
+            todos.add(todo.group(0))
+    return bool(todos) and not todos & own
 
 
 def readable(run, urls):

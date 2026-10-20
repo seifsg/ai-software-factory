@@ -627,21 +627,23 @@ class FastGateTests(GateHarness, unittest.TestCase):
         check = lambda body, **kw: " ".join(record.check_done_run(run, body, project=".", all_sections=sections, **kw))
         done = sections["done-run"]
         no_epic = "\n".join(line for line in done.splitlines() if not line.startswith("- #1 "))
-        with patch.object(record, "read_ticket", side_effect=read), patch.object(record, "open_siblings", return_value=[]):
+        with patch.object(record, "read_ticket", side_effect=read):  # the epic names no integration todo: owed whole
             self.assertEqual(check(done), "")
-            self.assertIn("without a hidden-check PASS: #1 A1, #1 A2", check(no_epic))  # this run finishes the epic
+            self.assertIn("without a hidden-check PASS: #1 A1, #1 A2", check(no_epic))
             self.assertIn("#5 A2", check(done.replace(", #5 A2: PASS", "")))
-        later = ["https://github.com/acme/studio-booking/issues/8"]  # an open sub-issue another run builds
-        with patch.object(record, "read_ticket", side_effect=read), patch.object(record, "open_siblings", return_value=later):
-            self.assertEqual(check(no_epic), "")  # the epic's integration criteria wait for the run that finishes it
-            self.assertIn("#5 A2", check(no_epic.replace(", #5 A2: PASS", "")))  # its own tickets still need every PASS
-        with patch.object(record, "read_ticket", side_effect=read), patch.object(record, "open_siblings", return_value="no gh"):
-            self.assertEqual(check(no_epic), "no gh")
-        epic, subs = record.ticket_urls(sections["tickets"])
-        with patch.object(record, "gh", return_value="\n".join(subs + later) + "\n"):
-            self.assertEqual(record.open_siblings(epic[0], subs), later)
-        with patch.object(record, "gh", side_effect=RuntimeError("no network")):
-            self.assertIn("--offline", record.open_siblings(epic[0], subs))
+        epic = record.ticket_urls(sections["tickets"])[0][0]
+
+        def holding(todo):  # the epic's checklist gives its integration todo to `todo`
+            items = f"\n### Checklist\n- [ ] #2 Booking: every item ticked\n- [ ] {todo} Integration proof (A1, A2)\n"
+            return lambda url: {**read(url), "body": dod + (items if url == epic else "")}
+        with patch.object(record, "read_ticket", side_effect=holding("T99")):  # another run holds it
+            self.assertEqual(check(no_epic), "")  # the epic's criteria wait for that run
+            self.assertIn("#5 A2", check(no_epic.replace(", #5 A2: PASS", "")))  # owned tickets still need every PASS
+            self.assertIn("FAIL", check(done.replace("#1 A1: PASS", "#1 A1: FAIL")))  # any FAIL still refuses
+        with patch.object(record, "read_ticket", side_effect=holding("T8")):  # this run holds it: owed whole
+            self.assertIn("without a hidden-check PASS: #1 A1, #1 A2", check(no_epic))
+        other = {"body": dod + "\n### Checklist\n- [x] T80 Checks synced (#4 A1 to A8, #5 A1)\n"}
+        self.assertFalse(record.handed(other, set()))  # other tickets' criteria name no integration todo
         self.assertEqual(check(done.replace(", #5 A2: PASS", ""), offline="no network"), "")  # offline: >=1 entry
 
     def test_hidden_checks_gate_the_sample_done_run(self):
@@ -768,26 +770,22 @@ class FastGateTests(GateHarness, unittest.TestCase):
 
     def test_an_epic_other_runs_finish_owes_only_this_runs_todos(self):
         record = module("fast_record")
-        epic, sibling = "https://github.com/acme/portal/issues/1", "https://github.com/acme/portal/issues/2"
+        epic = "https://github.com/acme/portal/issues/1"
         body = ("### ✅ Definition of done\n- **A1:** x\n\n### ☑️ Checklist\n- [ ] #2 Collector: every item ticked\n"
-                "- [ ] T63 Integration proof (A1)\n- [x] T75 Gap audit\n- [x] T76 Docs fixed\n")
-        issue = json.dumps({"body": body, "state": "OPEN", "labels": [{"name": "status: in progress"}]})
+                "- [ ] T63 Integration proof (A1)\n- [x] T75 Gap audit\n- [ ] T77 Tickets tightened\n")
+        issue = lambda text: json.dumps({"body": text, "state": "OPEN", "labels": [{"name": "status: in progress"}]})
         run = {"kind": "change", "ticket_checks": True, "coverage": True, "light": True}
-        sections = {"tickets": f"**Ticket:** {epic}\n**Backlog:** owned #1\n",
-                    "plan": "**Success:** x\n\n### Todos\n\n- T75 Gap audit → x (#1)\n- T76 Docs fixed → x (#1)\n"}
         handoff = "**Run:** x\n**Statuses:** x\n**Unverified:** x\n**Follow-ups:** x\n"
 
-        def tracker(open_subs):
-            return lambda *args: (open_subs if args[0] == "api" else issue)
-        check = lambda subs, plan=sections["plan"]: record.check_handoff(
-            run, handoff, offline=None, all_sections={**sections, "plan": plan})
-        with patch.object(record, "gh", side_effect=tracker(sibling + "\n")):  # #109: a planning run on the epic
-            self.assertEqual(check(sibling), [])
-            plan = sections["plan"] + "- T63 Integration proof → x (#1)\n"  # its own unticked todo stays owed
-            self.assertIn("1 unticked", record.check_handoff(run, handoff, offline=None,
-                                                             all_sections={**sections, "plan": plan})[0])
-        with patch.object(record, "gh", side_effect=tracker("")):  # no open sub-issue left: the epic is owed whole
-            self.assertIn("2 unticked", check("")[0])
+        def check(todos, text=body):
+            plan = "**Success:** x\n\n### Todos\n\n" + "".join(f"- {t} → x (#1)\n" for t in todos)
+            sections = {"tickets": f"**Ticket:** {epic}\n**Backlog:** owned #1\n", "plan": plan}
+            with patch.object(record, "gh", return_value=issue(text)):
+                return " ".join(record.check_handoff(run, handoff, offline=None, all_sections=sections))
+        self.assertEqual(check(["T75"]), "")  # #109: a planning run owes only its own items on the epic
+        self.assertIn("1 unticked", check(["T75", "T77"]))  # its own unticked todo stays owed
+        self.assertIn("3 unticked", check(["T63"]))  # the run holding the integration todo owes the epic whole
+        self.assertIn("3 unticked", check(["T75"], body.replace(" (A1)", "")))  # no integration todo: owed whole
 
     def test_coverage_names_every_requested_item_and_criterion(self):
         record = module("fast_record")
