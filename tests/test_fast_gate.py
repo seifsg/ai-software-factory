@@ -739,7 +739,9 @@ class FastGateTests(GateHarness, unittest.TestCase):
         with patch.object(record, "gh", side_effect=AssertionError("offline steps and older runs never call gh")):
             self.assertEqual(record.online(current, {"offline": "no network", "all_sections": sections}, record.needs_ticks), [])
             self.assertEqual(record.online(older, {"offline": None, "all_sections": sections}, record.needs_ticks), [])
-        self.assertIsNone(record.needs_ticks({"stopped": False, "backlog": False, "later": True, "body": ticket}))
+        later = lambda own: {"stopped": False, "backlog": False, "later": own, "body": ticket}
+        self.assertIsNone(record.needs_ticks(later({"T1", "T3"})))  # T2 belongs to another run
+        self.assertIn("1 unticked", record.needs_ticks(later({"T2"})))  # this run's own todo stays owed
         with patch.object(record, "gh", return_value=issue(ticket)):
             self.assertIn("1 unticked", record.online(current, {"offline": None, "all_sections": sections}, record.needs_ticks)[0])
             handoff = "**Run:** x\n**Statuses:** x\n**Unverified:** x\n**Follow-ups:** x\n"
@@ -763,6 +765,29 @@ class FastGateTests(GateHarness, unittest.TestCase):
             self.assertEqual(len(problems), 1)
             self.assertIn(url, problems[0])
             self.assertIn("Definition of done", problems[0])
+
+    def test_an_epic_other_runs_finish_owes_only_this_runs_todos(self):
+        record = module("fast_record")
+        epic, sibling = "https://github.com/acme/portal/issues/1", "https://github.com/acme/portal/issues/2"
+        body = ("### ✅ Definition of done\n- **A1:** x\n\n### ☑️ Checklist\n- [ ] #2 Collector: every item ticked\n"
+                "- [ ] T63 Integration proof (A1)\n- [x] T75 Gap audit\n- [x] T76 Docs fixed\n")
+        issue = json.dumps({"body": body, "state": "OPEN", "labels": [{"name": "status: in progress"}]})
+        run = {"kind": "change", "ticket_checks": True, "coverage": True, "light": True}
+        sections = {"tickets": f"**Ticket:** {epic}\n**Backlog:** owned #1\n",
+                    "plan": "**Success:** x\n\n### Todos\n\n- T75 Gap audit → x (#1)\n- T76 Docs fixed → x (#1)\n"}
+        handoff = "**Run:** x\n**Statuses:** x\n**Unverified:** x\n**Follow-ups:** x\n"
+
+        def tracker(open_subs):
+            return lambda *args: (open_subs if args[0] == "api" else issue)
+        check = lambda subs, plan=sections["plan"]: record.check_handoff(
+            run, handoff, offline=None, all_sections={**sections, "plan": plan})
+        with patch.object(record, "gh", side_effect=tracker(sibling + "\n")):  # #109: a planning run on the epic
+            self.assertEqual(check(sibling), [])
+            plan = sections["plan"] + "- T63 Integration proof → x (#1)\n"  # its own unticked todo stays owed
+            self.assertIn("1 unticked", record.check_handoff(run, handoff, offline=None,
+                                                             all_sections={**sections, "plan": plan})[0])
+        with patch.object(record, "gh", side_effect=tracker("")):  # no open sub-issue left: the epic is owed whole
+            self.assertIn("2 unticked", check("")[0])
 
     def test_coverage_names_every_requested_item_and_criterion(self):
         record = module("fast_record")

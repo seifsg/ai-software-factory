@@ -186,19 +186,20 @@ def verify_tickets(epic, subs):
 
 def online(run, kwargs, check, finish=False):
     """Run one ticket check on every listed ticket, unless the run predates ticket checks or the step is offline.
-    `finish` (done-run, handoff): the epic is marked `later` while a sub-issue this run does not list is open."""
+    `finish` (done-run, handoff): while the epic (a change: its ticket) has an open sub-issue this run does not
+    list, it is marked `later` with this run's plan todo IDs, the only items of it this run owes."""
     if not run.get("ticket_checks"):
         return []
     epic, subs = ticket_urls(kwargs["all_sections"].get("tickets", ""))
     if kwargs.get("offline"):
         return readable(run, run.get("tickets", []) + epic + subs)
-    if finish and epic and subs:
+    if finish and epic:
         others = open_siblings(epic[0], subs)
         if isinstance(others, str):
             return [others]
         if others:
-            whole = check
-            check = lambda ticket: whole({**ticket, "later": ticket["url"] == epic[0]})
+            own, whole = {f"T{n}" for n in todo_ids(kwargs["all_sections"])}, check
+            check = lambda ticket: whole({**ticket, "later": own} if ticket["url"] == epic[0] else ticket)
     return ticket_problems(run.get("tickets", []) + epic + subs, check)  # tickets pinned at `done tickets` stay checked
 
 
@@ -214,7 +215,7 @@ def open_siblings(epic, subs):
                    "--jq", '.[] | select(.state == "open") | .html_url').split()
     except (OSError, RuntimeError, subprocess.TimeoutExpired) as error:
         return f"cannot list the epic's sub-issues with gh ({error}); fix access or pass --offline '<reason>'"
-    return [url for url in found if url not in set(subs)]
+    return [url for url in found if ISSUE.match(url) and url not in set(subs)]
 
 
 def readable(run, urls):
@@ -316,14 +317,17 @@ def needs_checklist(ticket):
 
 
 def needs_ticks(ticket):
-    """Handoff: a listed ticket is finished (every item ticked) unless Blocked, cancelled or deferred to Backlog,
-    or an epic whose other open sub-issues finish it later."""
-    if ticket["stopped"] or ticket["backlog"] or ticket.get("later"):
+    """Handoff: a listed ticket is finished (every item ticked) unless Blocked, cancelled or deferred to Backlog.
+    An epic other runs finish later (`later`) owes only the items naming this run's plan todos."""
+    if ticket["stopped"] or ticket["backlog"]:
         return None
     marks = TASK.findall(checklist(ticket["body"]))
     if not marks:
         return needs_checklist(ticket)
-    left = marks.count(" ")
+    own = ticket.get("later")
+    left = marks.count(" ") if own is None else sum(
+        1 for item in TASK.finditer(checklist(ticket["body"]))
+        if item.group(1) == " " and own & set(ID.findall(NEEDS.sub("", item.group(0)))))
     if not left:
         return None
     return (f"{left} unticked checklist item(s): finish them, mark the ticket Blocked with its reason, "
@@ -515,7 +519,7 @@ def hidden_checks(body, kwargs, run):
     gaps, passed = [], {(number, cid) for number, cid, _ in entries}
 
     def read(ticket):
-        if not (ticket["stopped"] or ticket["backlog"] or ticket.get("later")):
+        if not (ticket["stopped"] or ticket["backlog"] or "later" in ticket):
             number = ISSUE.match(ticket["url"]).group(2)
             criteria = dict.fromkeys(CRITERION.findall(under(ticket["body"], DEFINITION)))
             gaps.extend(f"#{number} {cid}" for cid in criteria if (number, cid) not in passed)
