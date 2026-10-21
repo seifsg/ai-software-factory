@@ -557,7 +557,14 @@ class FastGateTests(GateHarness, unittest.TestCase):
                               (f'rm -r "{scratch}"/*/', "Bash"), (f'rm -r "{scratch}"/*/data', "Bash"),  # via a link
                               (f'find "{scratch}" -type l -exec rm -rf "{{}}/" ";"', "Bash"),
                               (f'rm -r "{scratch / "a"}" && ln -s "{beside}" "{scratch / "a"}" && rm -r "{scratch / "a" / "b"}"', "Bash"),
-                              (f'rd /s /q "{scratch}" & mklink /J "{scratch}" "{beside}" & rd /s /q "{scratch / "b"}"', "PowerShell")):
+                              (f'rd /s /q "{scratch}" & mklink /J "{scratch}" "{beside}" & rd /s /q "{scratch / "b"}"', "PowerShell"),
+                              (f'ln --sym "{beside}" "{scratch / "a"}" && rm -rf "{scratch / "a" / "b"}"', "Bash"),
+                              (f'New-Item -Type SymbolicLink -Path "{scratch / "a"}" -Target "{beside}"; rd /s /q "{scratch / "a" / "b"}"', "PowerShell"),
+                              (f'New-Item -ItemType:HardLink -Path "{scratch / "a"}" -Target "{beside}"; rd /s /q "{scratch / "a" / "b"}"', "PowerShell"),
+                              (f'mount -o bind "{beside}" "{scratch / "a"}" && rm -rf "{scratch / "a" / "b"}"', "Bash"),
+                              (f'find "{scratch}" -name x -exec rm -rf {{}} "{beside}" ";"', "Bash"),  # a path beside {}
+                              (f'rm -rf "$HOME/{scratch.name}"', "Bash"),
+                              (f'find . -name x -exec rm -rf {{}} "{beside}" \\;', "Bash")):  # inside the project too
             with self.subTest(deny=command):
                 self.assertEqual(self.shell(command, tool), "deny")
         out = self.gate("close", "--abandon", "owner stopped it")

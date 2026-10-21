@@ -157,7 +157,7 @@ def deletes(words):
         fenced = bool(named(words)) and not {"-o", "-or"} & set(words) and excludes(words, ".git") and excludes(
             words, ".factory")
         mode = "below" if spared(words) or fenced else "sweep"
-        return [(start, mode) for start in starts or ["."]]
+        return [(start, mode) for start in starts or ["."]] + [(extra, "tree") for extra in handed(words)]
     if name == "rimraf":
         targets, mode = [w for w in words[1:] if not w.startswith("-")], "tree"
     elif name in DELETERS:
@@ -185,24 +185,40 @@ def linksafe(words, dialect):
 
 def plain(target):
     """True when a delete target names its path as written: no trailing separator (rm -r link/ walks into the link)
-    and no wildcard except a whole last part * or .* (a wildcard mid-path can expand through a link at run time)."""
+    no wildcard except a whole last part * or .* (a wildcard mid-path can expand through a link at run time), and no
+    variable or ~ (the hook expands them from its own environment, not the agent's)."""
     parts = re.split(r"[\\/]", target)
-    return not target.endswith(("/", "\\")) and not any(WILDCARD.search(p) for p in parts[:-1]) and (
-        not WILDCARD.search(parts[-1]) or parts[-1] in ("*", ".*"))
+    return not target.endswith(("/", "\\")) and not re.search(r"[$`%]|^~", target) and not any(
+        WILDCARD.search(p) for p in parts[:-1]) and (not WILDCARD.search(parts[-1]) or parts[-1] in ("*", ".*"))
 
 
-LINKERS = re.compile(r"(?i)\bmklink\b|\bjunction(?:\.exe)?\b|\bsubst\b|\bmount\b.*--bind|"
-                     r"(?:\bnew-item\b|\bni\b).*-i\w*\s+\W?(?:symboliclink|junction|hardlink)")
+LINKERS = re.compile(r"(?i)\b(?:mklink|junction|subst|symboliclink|hardlink)(?:\.exe)?\b|\bfsutil\b.*\breparsepoint\b|"
+                     r"\bmount\b.*(?:\br?bind\b|\s-B\b)")
 
 
 def makes_link(words, text):
     """True when a command makes a link, junction, drive mapping or bind mount: a delete in the same command may then
     reach through a path the hook resolved before the link existed."""
     name = program(words[0])
-    if name in ("ln", "cp") and any(w in ("--symbolic", "--symbolic-link") or re.fullmatch(r"-[a-zA-Z]*s[a-zA-Z]*", w)
+    if name in ("ln", "cp") and any(w.startswith("--sym") or re.fullmatch(r"-[a-zA-Z]*s[a-zA-Z]*", w)
                                     for w in words[1:]):
         return True
     return bool(LINKERS.search(text))
+
+
+def handed(words):
+    """Literal paths a find's deleting -exec or -ok names beside {}: the deleter removes them too, once per match."""
+    found, i = [], 0
+    while i < len(words):
+        if words[i] in ("-exec", "-execdir", "-ok", "-okdir") and i + 1 < len(words) and program(
+                words[i + 1]) in DELETERS | {"rimraf"}:
+            i += 2
+            while i < len(words) and words[i] not in (";", "\\;", "+"):
+                if not words[i].startswith("-") and "{}" not in words[i]:
+                    found.append(words[i])
+                i += 1
+        i += 1
+    return found
 
 
 def deleter(words):
