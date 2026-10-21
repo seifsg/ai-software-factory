@@ -348,7 +348,8 @@ def cmd_start(args):
         run.update(sibling("fast_record").ui_start(project))
     setup = sibling("fast_setup")
     git_note, hooks = setup.ignore_factory(project), setup.hook_status(project)
-    run["scratch"] = str(setup.scratch_dir(HOME, args.key, run["created"]))
+    scratch = setup.scratch_path(HOME, run)
+    scratch.mkdir(parents=True, exist_ok=True)
     put(project, run)
     record = record_path(project)
     if not record.exists():
@@ -358,7 +359,7 @@ def cmd_start(args):
     bundle = (f"{run['bundle']['root']} @ {run['bundle']['revision'][:12]}" if run["bundle"] else
               "no .factory/entry-bundle.json; run the entry's resolver first (skip only for factory maintenance)")
     print(status_text(run) + f"\nRecord: {record}\nBundle: {bundle}\nGit: {git_note}\nHooks: {hooks}\n"
-          + SCRATCH.format(run["scratch"]))
+          + setup.TEXT.format(scratch))
 
 
 def cmd_done(args):
@@ -397,18 +398,13 @@ def cmd_done(args):
     print(status_text(run, all_sections))
 
 
-SCRATCH = ("Scratch: {} (the run's throwaway data: point TMPDIR, TEMP and TMP at it for tools; deletes inside it pass "
-           "the guard; close removes it)")
-
-
 def cmd_scratch(args):
-    """Print the open run's scratch folder, making it again if it went (a run started before scratch folders: now)."""
-    project, run = open_run(args.project)
-    if not run.get("scratch"):
-        run["scratch"] = str(sibling("fast_setup").scratch_dir(HOME, run["key"], run.get("created") or now()))
-        put(project, run)
-    Path(run["scratch"]).mkdir(parents=True, exist_ok=True)
-    print(run["scratch"])
+    """Print the open run's scratch folder, making it again if it went (or for a run started before scratch folders)."""
+    scratch = sibling("fast_setup").scratch_path(HOME, open_run(args.project)[1])
+    if scratch is None:
+        fail("This run's key or start time is malformed, so it has no scratch folder")
+    scratch.mkdir(parents=True, exist_ok=True)
+    print(scratch)
 
 
 def cmd_status(args):
@@ -483,17 +479,17 @@ def cmd_close(args):
         log("state.retire_failed", key=run["key"], error=repr(error))  # it stays closed in runs/: hooks skip it
     forget_shown(project)
     log("run.close", key=run["key"], abandoned=args.abandon)
-    print(status_text(run) + drop_scratch(run))
+    print(status_text(run) + drop_scratch(run["key"], sibling("fast_setup").scratch_path(HOME, run)))
 
 
-def drop_scratch(run):
-    """Remove a closed run's scratch folder; the line that says what stayed, else ''."""
-    if not run.get("scratch"):
-        return ""
-    left = sibling("fast_setup").drop_scratch(run["scratch"])
-    log("run.scratch_left" if left else "run.scratch_removed", key=run["key"], path=run["scratch"], count=len(left),
-        first=left[:1])
-    return f"\nScratch: {len(left)} item(s) left in {run['scratch']}, first: {left[0]}" if left else ""
+def drop_scratch(key, *folders):
+    """Remove a closed run's scratch folders without following links; the line that says what stayed, else ''."""
+    left = []
+    for folder in filter(None, folders):
+        sibling("fast_setup").remove(folder, left)
+        log("run.scratch_left" if left else "run.scratch_removed", key=key, path=str(folder), count=len(left),
+            first=left[:1])
+    return f"\nScratch: {len(left)} item(s) left, first: {left[0]}" if left else ""
 
 
 def close_lost(project, reason):
@@ -519,7 +515,8 @@ def close_lost(project, reason):
         log("state.retire_failed", key=key, error=repr(error))
     forget_shown(project)
     log("run.close", project=str(project), abandoned=reason, lost=True)
-    print(f"Closed the run at {project} without a readable run state. Reason: {reason}")
+    left = drop_scratch(key, *sibling("fast_setup").lost_scratch(HOME, key, project))
+    print(f"Closed the run at {project} without a readable run state. Reason: {reason}{left}")
 
 
 HELD = {  # what the gate home holds for a folder: how a refusal names it, and the owner's way on
@@ -674,7 +671,8 @@ def guard(command, runs, cwd, session, dialect=None):
     dialect: "bash" or "windows" when the host names its shell, else None (both readings must pass)."""
     item = owner(runs, cwd) or next(iter(mine(runs, cwd, session)), None) or mentioned(runs, command)
     rule = item and sibling("fast_guard").Judge(norm(item[2]["project"]), norm, inside, str(HOME),
-                                                item[2].get("scratch")).rule(command, cwd, dialect)
+                                                lambda: sibling("fast_setup").scratch_path(HOME, item[2])).rule(
+        command, cwd, dialect)
     return rule and deny_reason(item[2], rule, " Destructive commands are the owner's: ask the owner to run it, "
                                                "or to approve another approach.")
 

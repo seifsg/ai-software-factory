@@ -4,7 +4,6 @@ import json
 import os
 import re
 import stat
-import sys
 from pathlib import Path
 
 LINE = ".factory/"  # the exclude line that keeps run records out of Git
@@ -67,28 +66,66 @@ def hook_status(project):
     return ", ".join(found) or "none detected: the gate records steps but nothing blocks; follow the order yourself"
 
 
-def scratch_dir(home, key, created):
-    """The run's own folder for throwaway data (test homes, browser profiles, spare servers), outside every project in
-    the gate home. Its agents may delete inside it (fast_guard.py); close removes it. Named by key and start time, so
-    a new start never reuses an old run's folder."""
-    stamp = re.sub(r"\D", "", str(created))[:14]
-    path = Path(home, "scratch", f"{key}-{stamp}")
-    path.mkdir(parents=True, exist_ok=True)
-    return path
+KEY = re.compile(r"[a-z][a-z0-9-]{0,63}")  # fast_gate.py's run key rule, checked again: a state may come from a mirror
+TEXT = ("Scratch: {} (the run's throwaway data: point TMPDIR, TEMP and TMP at it for tools and name it by this literal "
+        "path in deletes; rm -r, rd /s, rimraf or a find without -L pass inside it; close removes it)")
 
 
-def drop_scratch(path):
-    """Remove a run's scratch folder; returns what stayed, as "path: error" lines. Read-only files get one retry."""
-    left = []
+def scratch_path(home, run):
+    """The run's own folder for throwaway data (test homes, browser profiles, spare servers), outside every project:
+    <home>/scratch/<key>-<project tag>-<start stamp>. Derived, never stored, so no state can point it elsewhere; the
+    tag keeps two projects' runs apart and the stamp keeps a new start from reusing an old folder. None when the key,
+    start time or project does not hold."""
+    key, stamp = str(run.get("key")), re.sub(r"\D", "", str(run.get("created")))[:14]
+    if not KEY.fullmatch(key) or len(stamp) < 14 or not run.get("project"):
+        return None
+    return Path(home, "scratch", f"{key}-{tag(run['project'])}-{stamp}")
 
-    def retry(func, name, error):
-        try:
-            os.chmod(name, stat.S_IWRITE)
-            func(name)
-        except OSError as again:
-            left.append(f"{name}: {again}")
 
-    if Path(path).exists():
-        import shutil
-        shutil.rmtree(path, **({"onexc": retry} if sys.version_info >= (3, 12) else {"onerror": retry}))
-    return left
+def tag(project):
+    """Short hash of the project folder, as the gate home names its registration."""
+    import hashlib
+    from fast_ledger import norm
+    return hashlib.sha1(norm(project).encode("utf-8")).hexdigest()[:8]
+
+
+def lost_scratch(home, key, project):
+    """Scratch folders of a project's run under key: for closing a run whose state, and so its start time, is gone."""
+    return sorted(Path(home, "scratch").glob(f"{key}-{tag(project)}-*")) if KEY.fullmatch(str(key)) else []
+
+
+def remove(path, left):
+    """Delete path without following links: a symlink or junction goes as the link itself, a folder after its
+    contents. What stays is appended to left as "path: error"."""
+    try:
+        info = os.lstat(path)
+    except FileNotFoundError:
+        return
+    except OSError as error:
+        left.append(f"{path}: {error}")
+        return
+    link = stat.S_ISLNK(info.st_mode) or bool(getattr(info, "st_file_attributes", 0) & stat.FILE_ATTRIBUTE_REPARSE_POINT)
+    folder = stat.S_ISDIR(info.st_mode) and not link
+    try:
+        if folder:
+            for entry in [entry.path for entry in os.scandir(path)]:
+                remove(entry, left)
+        unlinked(path, folder, link)
+    except OSError as error:
+        left.append(f"{path}: {error}")
+
+
+def unlinked(path, folder, link):
+    """Remove one emptied folder, file or link. A Windows directory link goes with rmdir; a read-only file or folder
+    (never a link: chmod would follow it) is made writable and tried once more."""
+    gone = os.rmdir if folder else os.unlink
+    try:
+        gone(path)
+    except FileNotFoundError:
+        pass
+    except OSError:
+        if link:
+            os.rmdir(path)
+        else:
+            os.chmod(path, stat.S_IWRITE)
+            gone(path)

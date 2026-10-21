@@ -171,6 +171,18 @@ def deletes(words):
     return [(part, mode) for target in targets for part in target.split(",") if part]
 
 
+def linksafe(words, dialect):
+    """True when the delete never follows a link or junction into its target: rm or rmdir in a Bash reading, cmd's
+    rd or rmdir with /s flags, rimraf, or a find without -L or -follow. PowerShell's Remove-Item (and its rm, rd, del
+    aliases) can walk into junctions, so a Windows reading never trusts those."""
+    name = program(words[0])
+    if name == "find":
+        return not {"-L", "-follow"} & set(words)
+    if name in ("rmdir", "rd") and any(re.fullmatch(r"(?:/\w)+", w) for w in words[1:]):
+        return True
+    return name == "rimraf" or (dialect == "bash" and name in ("rm", "rmdir"))
+
+
 def deleter(words):
     """True when deletes() can read this command (the rm family, rimraf, find, git rm)."""
     name = program(words[0])

@@ -82,6 +82,15 @@ def module(name):
     return loaded
 
 
+def link(at, target):
+    """A directory link the way agents make them: a junction on Windows, a symlink elsewhere."""
+    if os.name == "nt":
+        import _winapi
+        _winapi.CreateJunction(str(target), str(at))
+    else:
+        os.symlink(target, at)
+
+
 class GateHarness:
     """A disposable project and gate home, with the real CLI and hook."""
     def setUp(self):
@@ -511,33 +520,84 @@ class FastGateTests(GateHarness, unittest.TestCase):
         runs = [(None, {"sessions": ["s1"]}, {"project": str(self.project)}), (None, {}, {"project": str(other)})]
         self.assertIsNone(gate.guard("rm -rf dist", runs, gate.norm(str(other)), "s1"))
 
+    def scratch(self, out):
+        """The scratch folder a start or scratch command printed (its path may hold spaces)."""
+        line = next(line for line in out.splitlines() if line.startswith("Scratch: "))
+        return Path(line[len("Scratch: "):line.index(" (the run's")])
+
+    def shell(self, command, tool="Bash"):
+        out = self.hook({"hook_event_name": "PreToolUse", "tool_name": tool, "tool_input": {"command": command}})
+        return (out or {}).get("hookSpecificOutput", {}).get("permissionDecision", "allow")
+
     def test_run_scratch_folder_takes_throwaway_deletes_and_goes_at_close(self):
         out = self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "fix the footer copy")
-        line = next(line for line in out.splitlines() if line.startswith("Scratch: "))
-        scratch = Path(line[len("Scratch: "):line.index(" (the run's")])  # the path may hold spaces
+        scratch = self.scratch(out)
         self.assertTrue(scratch.is_dir())
         self.assertEqual(scratch.parent, self.root / "home" / "scratch")  # in the gate home, outside every project
         self.assertEqual(self.gate("scratch").strip(), str(scratch))
         (scratch / "profile" / "deep").mkdir(parents=True)
         (scratch / "profile" / "deep" / "lock").write_text("x", encoding="utf-8")
         os.chmod(scratch / "profile" / "deep" / "lock", 0o444)  # read-only, as browser and Git files often are
-        other, beside = self.root / "home" / "scratch" / "other-20990101000000", self.root / "op-temp"
+        other, beside = self.root / "home" / "scratch" / "other-0-20990101000000", self.root / "op-temp"
         for folder in (other, beside):
             folder.mkdir(parents=True)
-        for command in (f'rm -rf "{scratch / "profile"}"', f'rm -rf "{scratch}"/*', f'rm -rf "{scratch}"',
-                        f'Remove-Item -Recurse -Force "{scratch / "profile"}"', f'find "{scratch}" -name "*.db" -delete'):
+        for command, tool in ((f'rm -rf "{scratch / "profile"}"', "Bash"), (f'rm -rf "{scratch}"/*', "Bash"),
+                              (f'rm -rf "{scratch}"', "Bash"), (f'find "{scratch}" -name "*.db" -delete', "Bash"),
+                              (f'rd /s /q "{scratch / "profile"}"', "PowerShell"),
+                              (f'rimraf "{scratch / "profile"}"', "PowerShell")):
             with self.subTest(allow=command):
-                self.assertEqual(self.pre("Bash", command=command), "allow")
-        for command in (f'rm -rf "{other}"', f'rm -rf "{scratch}/../other-20990101000000"', f'rm -rf "{beside}"',
-                        f'rm -rf "{self.root / "home" / "scratch"}"', f'rm -rf "{scratch}" "{beside}"'):
+                self.assertEqual(self.shell(command, tool), "allow")
+        for command, tool in ((f'rm -rf "{other}"', "Bash"), (f'rm -rf "{scratch}/../{other.name}"', "Bash"),
+                              (f'rm -rf "{beside}"', "Bash"), (f'rm -rf "{self.root / "home" / "scratch"}"', "Bash"),
+                              (f'rm -rf "{scratch}" "{beside}"', "Bash"),
+                              (f'find -L "{scratch}" -name "*.db" -delete', "Bash"),  # follows links out
+                              (f'Remove-Item -Recurse -Force "{scratch / "profile"}"', "PowerShell"),  # walks junctions
+                              (f'rm -r -fo "{scratch / "profile"}"', "PowerShell"), (f'del /s /q "{scratch}"', "PowerShell")):
             with self.subTest(deny=command):
-                self.assertEqual(self.pre("Bash", command=command), "deny")
+                self.assertEqual(self.shell(command, tool), "deny")
         out = self.gate("close", "--abandon", "owner stopped it")
         self.assertFalse(scratch.exists())
         self.assertTrue(other.is_dir())  # another run's folder stays
-        self.assertNotIn("left in", out)
-        out = self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "again")
-        self.assertNotIn(f"Scratch: {scratch} ", out)  # a new start never reuses an old run's folder
+        self.assertNotIn("left", out)
+        self.assertNotEqual(self.scratch(self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "again")),
+                            scratch)  # a new start never reuses an old run's folder
+
+    def test_scratch_never_trusts_a_link_or_a_stored_path(self):
+        victim = self.root / "victim"
+        (victim / "keep").mkdir(parents=True)
+        (victim / "keep" / "data.txt").write_text("x", encoding="utf-8")
+        scratch = self.scratch(self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "fix it"))
+        state = next((self.root / "home" / "runs").glob("*.json"))
+        data = json.loads(state.read_text(encoding="utf-8"))
+        state.write_text(json.dumps({**data, "scratch": str(victim)}), encoding="utf-8")  # a mirror's stored path
+        self.assertEqual(self.shell(f'rm -rf "{victim}"'), "deny")
+        scratch.rmdir()
+        link(scratch, victim)  # the folder swapped for a link: the allowance must not follow it
+        self.assertEqual(self.shell(f'rm -rf "{victim / "keep"}"'), "deny")
+        self.assertEqual(self.shell(f'rm -rf "{scratch / "keep"}"'), "deny")
+        self.gate("close", "--abandon", "owner stopped it")
+        self.assertTrue((victim / "keep" / "data.txt").exists())  # close removed the link, not its target
+        self.assertFalse(os.path.lexists(scratch))
+        scratch = self.scratch(self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "again"))
+        link(scratch / "inner", victim)  # a link inside goes as a link
+        self.gate("close", "--abandon", "owner stopped it")
+        self.assertTrue((victim / "keep" / "data.txt").exists())
+        self.assertFalse(scratch.exists())
+
+    def test_closing_a_lost_run_removes_its_scratch_folder(self):
+        scratch = self.scratch(self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "fix it"))
+        (scratch / "profile").mkdir()
+        other = self.root / "proj2"
+        other.mkdir()
+        elsewhere = self.scratch(self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "same key",
+                                           project=other))
+        self.assertNotEqual(elsewhere.parent / elsewhere.name.rsplit("-", 1)[0], scratch.parent / scratch.name.rsplit("-", 1)[0])
+        for state in (self.root / "home" / "runs").glob("*.json"):
+            if str(self.project) in state.read_text(encoding="utf-8"):
+                state.unlink()  # the run's state is lost
+        self.gate("close", "--abandon", "state lost")
+        self.assertFalse(scratch.exists())
+        self.assertTrue(elsewhere.is_dir())  # the other project's run under the same key keeps its folder
 
     def test_destructive_denial_reaches_the_owner_in_every_step(self):
         self.assertEqual(self.pre("Bash", command="rm -rf ~"), "allow")  # no run: unchanged

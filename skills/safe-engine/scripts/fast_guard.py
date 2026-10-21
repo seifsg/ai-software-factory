@@ -21,7 +21,7 @@ SWEEP = ("a find under the whole project: name only files that cannot be .git, .
 
 class Judge:
     """Judges commands for the run rooted at root. norm(path, base) and inside(child, parent) come from the gate;
-    scratch is the run's own throwaway folder (fast_setup.scratch_dir), where deletes pass."""
+    scratch() gives the run's own throwaway folder (fast_setup.scratch_path), where link-safe deletes pass."""
 
     def __init__(self, root, norm, inside, home=None, scratch=None):
         self.root, self.norm, self.inside, self.seen, self.budget = root, norm, inside, {}, BUDGET
@@ -51,11 +51,12 @@ class Judge:
             return None
         return self.norm(path, here)
 
-    def stray(self, target, here, mode):
+    def stray(self, target, here, mode, linksafe=False):
         """Why deleting target is refused, or None. mode "tree": the target and all below go, so the project root,
         root/* and the protected paths (.factory, .factory/fast, its run.json, .git) count; "below"/"below-git":
         only find matches below an inside start go, and from the root only when .git is excluded; "file": only the
-        protected paths count. Nothing inside .git may go."""
+        protected paths count. Nothing inside .git may go. linksafe: the deleter never follows links, so it may work
+        inside the run's scratch folder."""
         head, tail = os.path.split(target)
         path = (head or ".") if mode in TREE and tail in ("*", ".*") else target
         try:
@@ -71,8 +72,9 @@ class Judge:
             return None
         if mode in TREE and full == self.root:
             return f"{SWEEP if mode == 'sweep' else 'recursive delete of the whole project'} ({target})"
-        if self.own and self.inside(full, self.own):
-            return None  # the run's scratch folder: its agents clean up their own throwaway data
+        if self.own and self.inside(full, self.own):  # the run's scratch folder: its agents clean up there
+            return None if linksafe else (f"recursive delete outside the project ({target}); in the run's scratch "
+                                          "folder use rm -r, rd /s, rimraf or a find without -L")
         if not self.inside(full, self.root):
             return f"recursive delete outside the project ({target})"
         return None
@@ -93,8 +95,13 @@ class Judge:
 
     @functools.cached_property
     def own(self):
-        """The run's scratch folder, resolved on first use: most commands delete nothing outside the project."""
-        return self.norm(self.scratch) if self.scratch else None
+        """The run's scratch folder, resolved on first use (most commands delete nothing outside the project), and
+        trusted only as a real folder: a link or junction put in its place would stretch the allowance to its target."""
+        path = self.scratch() if self.scratch else None
+        if path is None:
+            return None
+        full = self.norm(str(path))
+        return full if full == os.path.join(self.norm(str(path.parent)), os.path.normcase(path.name)) else None
 
     @functools.cached_property
     def vault(self):
@@ -128,7 +135,7 @@ class Judge:
             except (OSError, ValueError):
                 continue
 
-    def proves(self, cmd, here, fired):
+    def proves(self, cmd, here, fired, dialect=None):
         """Why cmd is not proven harmless for the fired rules, or None."""
         literal = all(shell.literal(w) for w in cmd.words)
         if "delete" in fired and rules.DELETE.search(cmd.text):
@@ -137,7 +144,7 @@ class Judge:
                 return f"recursive delete the hook cannot prove stays inside the project ({cmd.words[0]})"
             for path, mode in targets or []:
                 self.budget -= 1
-                reason = self.stray(path, here, mode) if self.budget >= 0 else (
+                reason = self.stray(path, here, mode, rules.linksafe(cmd.words, dialect)) if self.budget >= 0 else (
                     f"recursive delete of more than {BUDGET} targets in one command")
                 if reason:
                     return reason
@@ -205,7 +212,7 @@ class Judge:
             target = shell.cd_target(item.words)
             changes += target is not None
             here = here if target is None else self.moved(target, here) if changes <= MOVES else None
-            reason = None if item.outer else self.proves(item, here, fired)
+            reason = None if item.outer else self.proves(item, here, fired, dialect)
             if reason:
                 return reason
         return None
