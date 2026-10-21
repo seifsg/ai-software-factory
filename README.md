@@ -168,7 +168,10 @@ Details: [install](docs/install.md) · [hosts](docs/hosts.md).
 |---|---|
 | Claude Code, through the installer | On its own: during a session Claude Code fetches new versions; `/reload-plugins` or a new session loads them |
 | Claude Code, right now (any route) | `claude plugin marketplace update ai-software-factory`, then `claude plugin update safe-engine@ai-software-factory`, then a new session |
-| Codex, Cursor, other | `git pull` in your factory clone, then run the same `fast_gate.py install --host ...` again. It replaces only the factory's own files and hook entries |
+| Codex, Cursor, other, installed from a clone | On its own: at most once a day, the first session start fast-forwards your clone when it is clean and on `main`, then reruns your install. A clone with local changes, on another branch or offline is left alone and the gate log says why ([hosts](docs/hosts.md#updates)) |
+| Codex, Cursor, other, right now or opted out | `git pull` in your factory clone, then run the same `fast_gate.py install --host ...` again. It replaces only the factory's own files and hook entries |
+
+Turn the daily update off with `SAFE_ENGINE_NO_UPDATE=1` in your environment, or install with `--no-auto-update`.
 
 **Projects stay pinned.** On first use a project pins the factory's main branch to one commit, and every later run and resume there reads its methods from that commit, offline. New projects get the newest methods; updating the install brings new launchers and hooks. To switch a project to newer methods, ask `improve-factory Switch [absolute project directory] to the newest factory.` It checks the run is compatible first.
 

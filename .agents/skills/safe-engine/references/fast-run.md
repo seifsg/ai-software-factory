@@ -60,7 +60,7 @@ python fast_gate.py start --project <abs> --key <slug> --mode fast|lucky --kind 
 python fast_gate.py done <step> [--project <abs>] [--offline "<reason>"]
 python fast_gate.py status | pause --reason "<why>" | resume | close [--abandon "<reason>"]
 python fast_gate.py rehome --project <abs> --from <the folder its run.json records>
-python fast_gate.py install --host <host> [--project <abs>]
+python fast_gate.py install --host <host> [--project <abs>] [--no-auto-update]
 python fast_gate.py try T3 --cmd "<command>" | --url <http(s) link> | --file <path in the project> [--project <abs>]
 python fast_gate.py view [--port 8765] [--snapshot <file>]
 ```
