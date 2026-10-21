@@ -176,13 +176,15 @@ def deletes(words):
 
 
 def linksafe(words, dialect):
-    """True when the delete removes a link as a link, never its target: rm or rmdir in a Bash reading, cmd's rd or
-    rmdir with /s flags and no dash option (with one, PowerShell reads it as Remove-Item, which can walk into
-    junctions), or rimraf. A find is never trusted here: its -exec composes paths at run time."""
+    """True when the delete removes a link as a link and its targets are exactly the words the hook read: rm or rmdir
+    in a Bash reading, or cmd's rd or rmdir with /s flags, no dash option (with one, PowerShell reads it as
+    Remove-Item, which can walk into junctions) and no quote or space in a target (cmd splits single quotes). Never
+    a find (its -exec composes paths at run time) or rimraf (its glob mode expands patterns at run time)."""
     name, args = program(words[0]), words[1:]
     if name in ("rmdir", "rd"):
-        return any(re.fullmatch(r"(?:/\w)+", w) for w in args) and not any(w.startswith("-") for w in args)
-    return name == "rimraf" or (dialect == "bash" and name in ("rm", "rmdir"))
+        return any(re.fullmatch(r"(?:/\w)+", w) for w in args) and not any(
+            w.startswith("-") or re.search(r"[\s'\"]", w) for w in args)
+    return dialect == "bash" and name in ("rm", "rmdir")
 
 
 def plain(target):

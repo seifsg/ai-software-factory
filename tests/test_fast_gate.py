@@ -543,8 +543,7 @@ class FastGateTests(GateHarness, unittest.TestCase):
             folder.mkdir(parents=True)
         for command, tool in ((f'rm -rf "{scratch / "profile"}"', "Bash"), (f'rm -rf "{scratch}"/*', "Bash"),
                               (f'rm -rf "{scratch}"', "Bash"),
-                              (f'rd /s /q "{scratch / "profile"}"', "PowerShell"),
-                              (f'rimraf "{scratch / "profile"}"', "PowerShell")):
+                              ):  # rd /s: the harness path holds a space, so see test_rd_in_scratch_needs_a_plain_path
             with self.subTest(allow=command):
                 self.assertEqual(self.shell(command, tool), "allow")
         for command, tool in ((f'rm -rf "{other}"', "Bash"), (f'rm -rf "{scratch}/../{other.name}"', "Bash"),
@@ -555,6 +554,10 @@ class FastGateTests(GateHarness, unittest.TestCase):
                               (f'find "{scratch}" -exec rm -rf {{}} \\| "{beside}" \\;', "Bash"),
                               (f'find "{scratch}" -exec rm -rf {{}} + "{beside}"', "Bash"),
                               (f'cp -a "{beside}" "{scratch / "a"}"; rm -rf "{scratch / "a" / "b"}"', "Bash"),  # not alone
+                              (f'rimraf "{scratch / "profile"}"', "PowerShell"),  # its glob mode expands at run time
+                              (f"rimraf --glob '{scratch}/{{lnk,zz}}/z'", "Bash"), (f"rimraf '{scratch}/@(lnk)/z'", "Bash"),
+                              (f"rd /s /q '{scratch / 'sub'} {beside} '", "PowerShell"),  # cmd splits single quotes
+                              (f'rd /s /q "{scratch / "a b"}"', "PowerShell"),
                               (f'Remove-Item -Recurse -Force "{scratch / "profile"}"', "PowerShell"),  # walks junctions
                               (f'rm -r -fo "{scratch / "profile"}"', "PowerShell"), (f'del /s /q "{scratch}"', "PowerShell"),
                               (f'rd "{scratch / "x"}" -Recurse -Exclude /s', "PowerShell"),  # Remove-Item in disguise
@@ -593,6 +596,21 @@ class FastGateTests(GateHarness, unittest.TestCase):
         for command in ("find . -name __pycache__ -type d -exec rm -rf {} +", "find . -name '*.pyc' -exec rm {} \\;"):
             with self.subTest(allow=command):  # routine cleanups still pass
                 self.assertEqual(self.shell(command), "allow")
+
+    def test_rd_in_scratch_needs_a_plain_path(self):
+        gate, root = module("fast_gate"), Path(tempfile.mkdtemp(prefix="scratchrd"))  # no space, as cmd's rd needs
+        self.addCleanup(shutil.rmtree, root, True)
+        project, scratch = root / "proj", root / "home" / "scratch" / "k-0-20990101000000"
+        for folder in (project, scratch):
+            folder.mkdir(parents=True)
+        judge = gate.sibling("fast_guard").Judge(gate.norm(str(project)), gate.norm, gate.inside, str(root / "home"),
+                                                 lambda: scratch)
+        self.assertIsNone(judge.rule(f'rd /s /q "{scratch / "profile"}"', str(project), "windows"))
+        self.assertIsNone(judge.rule(f'cmd /c rd /s /q {scratch / "profile"}', str(project), "windows"))
+        for command in (f'rd /s /q "{scratch / "a b"}"', f"rd /s /q '{scratch / 'x'} {root} '",
+                        f'rd "{scratch / "x"}" -Recurse -Exclude /s', f'rimraf "{scratch / "x"}"'):
+            with self.subTest(deny=command):
+                self.assertTrue(judge.rule(command, str(project), "windows"))
 
     def test_scratch_never_trusts_a_link_or_a_stored_path(self):
         victim = self.root / "victim"

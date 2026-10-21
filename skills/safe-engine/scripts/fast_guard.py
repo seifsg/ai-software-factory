@@ -76,8 +76,9 @@ class Judge:
             return None
         if self.own and self.inside(full, self.own):  # the run's scratch folder: its agents clean up there
             return None if linksafe and rules.plain(target) else (
-                f"recursive delete outside the project ({target}); in the run's scratch folder use rm -r, rd /s or "
-                "rimraf with a plain literal path (no trailing slash, no wildcard mid-path), alone in its command")
+                f"recursive delete outside the project ({target}); in the run's scratch folder use rm -r (Bash) or "
+                "rd /s with a plain literal path (no trailing slash, no wildcard mid-path, for rd no quote or space), "
+                "alone in its command")
         return f"recursive delete outside the project ({target})"
 
     def reaches(self, full, mode):

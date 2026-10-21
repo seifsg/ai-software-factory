@@ -68,7 +68,7 @@ def hook_status(project):
 
 KEY = re.compile(r"[a-z][a-z0-9-]{0,63}")  # fast_gate.py's run key rule, checked again: a state may come from a mirror
 TEXT = ("Scratch: {} (the run's throwaway data: point TMPDIR, TEMP and TMP at it for tools and name it by this literal "
-        "path in deletes; rm -r (Bash), rd /s or rimraf alone in its command pass inside it; close removes it)")
+        "path in deletes; rm -r (Bash) or rd /s alone in its command pass inside it; close removes it)")
 
 
 def scratch_path(home, run):
