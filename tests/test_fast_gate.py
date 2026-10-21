@@ -360,10 +360,16 @@ class FastGateTests(GateHarness, unittest.TestCase):
             "cat > .factory/fast/work-record.md <<'EOF'\npip install -e .\nEOF": "allow",
             'python -c "\nprint(len([1]) > 3)\n"': "allow", "if (( $# > 2 )); then echo ok; fi": "allow",
             "grep -rn tee src/": "allow", "ls > /dev/null 2>&1": "allow", "echo {} > .factory/fast/run.json": "deny",
+            # redirects resolve where they run: after a cd, with ( ) restoring the folder
+            f'cd "{self.root}" && echo x > out.txt': "allow", f'(cd "{self.root}"; echo x > out.txt)': "allow",
+            f'(cd "{self.root}"); echo x > src/a.ts': "deny", "cd src && echo x > a.ts": "deny",
+            f'cd "{self.root}" > src/log.txt': "deny", "cd - && echo x > a.ts": "deny",
         }
         for command, decision in cases.items():
             with self.subTest(command=command):
                 self.assertEqual(self.pre("Bash", command=command), decision)
+        into = f'cd "{self.project}" && echo x > src/a.ts'  # from outside the project, into it
+        self.assertEqual(self.pre("Bash", cwd=self.root, command=into), "deny")
 
     def test_destructive_rules_decide_every_probe(self):
         gate = module("fast_gate")
@@ -487,6 +493,9 @@ class FastGateTests(GateHarness, unittest.TestCase):
             "Move-Item src\\a.ts src\\b.ts", "git stash", "git stash -u", "git stash list", "rm -rf .git/index.lock",
             "git commit --file - <<'EOF'\nrm -rf ~\nEOF", "git commit --file=- <<'EOF'\nDROP TABLE x\nEOF",
             "git push --prune origin",
+            # interpreter code is never a shell move: its "move" or 'mv' text is data
+            "py -3 - <<'EOF'\n# move the line\nprint(open('.factory/fast/work-record.md').read())\nEOF",
+            "python -c \"print(open('.factory/x').read().replace('mv', 'cp'))\"", 'node -e "// rename .git refs"',
         ) + EVERYDAY
         root = gate.norm(str(self.project))
         judge = gate.sibling("fast_guard").Judge(root, gate.norm, gate.inside)

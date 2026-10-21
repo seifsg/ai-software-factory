@@ -92,14 +92,25 @@ def mask(command, dialect="bash"):
 
 
 def writes(command):
-    """Target paths the command writes through redirects (> >> &> 1> >|) or a piped tee."""
+    """(cds, path) per file the command writes through redirects (> >> &> 1> >|) or a piped tee. cds: the cd
+    targets before it in its scope, so the caller resolves path where it runs; ( ) restores the folder."""
     code, quotes = mask(command)
-    names = []
-    for first, second in REDIRECT.findall(code):
-        name = unquote(first or second, quotes)
-        if name and name[0] not in "&$" and name.lower() not in DISCARD:
-            names.append(name)
-    return names
+    found, cds, scopes = [], [], []
+    for part in PIPELINES.split(code):
+        if part == "(":
+            scopes.append(len(cds))
+        elif part == ")":
+            del cds[scopes.pop() if scopes else len(cds):]
+        elif part:
+            for first, second in REDIRECT.findall(part):
+                name = unquote(first or second, quotes)
+                if name and name[0] not in "&$" and name.lower() not in DISCARD:
+                    found.append((tuple(cds), name))
+            cmd = parse(part.split("|")[0], quotes)
+            target = cd_target(cmd.words) if cmd else None
+            if target is not None:
+                cds.append(target)
+    return found
 
 
 def unquote(word, quotes):
