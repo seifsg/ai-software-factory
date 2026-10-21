@@ -68,7 +68,7 @@ def hook_status(project):
 
 KEY = re.compile(r"[a-z][a-z0-9-]{0,63}")  # fast_gate.py's run key rule, checked again: a state may come from a mirror
 TEXT = ("Scratch: {} (the run's throwaway data: point TMPDIR, TEMP and TMP at it for tools and name it by this literal "
-        "path in deletes; rm -r, rd /s, rimraf or a find without -L pass inside it; close removes it)")
+        "path in deletes; rm -r (Bash), rd /s, rimraf or a find without -L pass inside it; close removes it)")
 
 
 def scratch_path(home, run):
@@ -107,12 +107,14 @@ def remove(path, left):
     link = stat.S_ISLNK(info.st_mode) or bool(getattr(info, "st_file_attributes", 0) & stat.FILE_ATTRIBUTE_REPARSE_POINT)
     folder = stat.S_ISDIR(info.st_mode) and not link
     try:
+        if folder and os.name != "nt" and info.st_mode & stat.S_IRWXU != stat.S_IRWXU:
+            os.chmod(path, info.st_mode | stat.S_IRWXU)  # a read-only folder (a module cache): its entries can go
         if folder:
             for entry in [entry.path for entry in os.scandir(path)]:
                 remove(entry, left)
         unlinked(path, folder, link)
-    except OSError as error:
-        left.append(f"{path}: {error}")
+    except (OSError, RecursionError) as error:  # deeper than Python's stack: named, never half-silent
+        left.append(f"{path}: {error!r}" if isinstance(error, RecursionError) else f"{path}: {error}")
 
 
 def unlinked(path, folder, link):

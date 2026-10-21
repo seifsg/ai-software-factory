@@ -552,7 +552,12 @@ class FastGateTests(GateHarness, unittest.TestCase):
                               (f'rm -rf "{scratch}" "{beside}"', "Bash"),
                               (f'find -L "{scratch}" -name "*.db" -delete', "Bash"),  # follows links out
                               (f'Remove-Item -Recurse -Force "{scratch / "profile"}"', "PowerShell"),  # walks junctions
-                              (f'rm -r -fo "{scratch / "profile"}"', "PowerShell"), (f'del /s /q "{scratch}"', "PowerShell")):
+                              (f'rm -r -fo "{scratch / "profile"}"', "PowerShell"), (f'del /s /q "{scratch}"', "PowerShell"),
+                              (f'rd "{scratch / "x"}" -Recurse -Exclude /s', "PowerShell"),  # Remove-Item in disguise
+                              (f'rm -r "{scratch}"/*/', "Bash"), (f'rm -r "{scratch}"/*/data', "Bash"),  # via a link
+                              (f'find "{scratch}" -type l -exec rm -rf "{{}}/" ";"', "Bash"),
+                              (f'rm -r "{scratch / "a"}" && ln -s "{beside}" "{scratch / "a"}" && rm -r "{scratch / "a" / "b"}"', "Bash"),
+                              (f'rd /s /q "{scratch}" & mklink /J "{scratch}" "{beside}" & rd /s /q "{scratch / "b"}"', "PowerShell")):
             with self.subTest(deny=command):
                 self.assertEqual(self.shell(command, tool), "deny")
         out = self.gate("close", "--abandon", "owner stopped it")
@@ -593,9 +598,9 @@ class FastGateTests(GateHarness, unittest.TestCase):
                                            project=other))
         self.assertNotEqual(elsewhere.parent / elsewhere.name.rsplit("-", 1)[0], scratch.parent / scratch.name.rsplit("-", 1)[0])
         for state in (self.root / "home" / "runs").glob("*.json"):
-            if str(self.project) in state.read_text(encoding="utf-8"):
+            if json.loads(state.read_text(encoding="utf-8"))["project"] == str(self.project):
                 state.unlink()  # the run's state is lost
-        self.gate("close", "--abandon", "state lost")
+        self.assertIn("without a readable run state", self.gate("close", "--abandon", "state lost"))
         self.assertFalse(scratch.exists())
         self.assertTrue(elsewhere.is_dir())  # the other project's run under the same key keeps its folder
 

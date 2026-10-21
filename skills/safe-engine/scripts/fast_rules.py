@@ -173,14 +173,36 @@ def deletes(words):
 
 def linksafe(words, dialect):
     """True when the delete never follows a link or junction into its target: rm or rmdir in a Bash reading, cmd's
-    rd or rmdir with /s flags, rimraf, or a find without -L or -follow. PowerShell's Remove-Item (and its rm, rd, del
-    aliases) can walk into junctions, so a Windows reading never trusts those."""
-    name = program(words[0])
+    rd or rmdir with /s flags and no dash option (with one, PowerShell reads it as Remove-Item), rimraf, or a find
+    without -L or -follow whose -exec gets {} whole. Remove-Item and its aliases can walk into junctions."""
+    name, args = program(words[0]), words[1:]
     if name == "find":
-        return not {"-L", "-follow"} & set(words)
-    if name in ("rmdir", "rd") and any(re.fullmatch(r"(?:/\w)+", w) for w in words[1:]):
-        return True
+        return not {"-L", "-follow"} & set(words) and all(w == "{}" for w in args if "{}" in w)
+    if name in ("rmdir", "rd"):
+        return any(re.fullmatch(r"(?:/\w)+", w) for w in args) and not any(w.startswith("-") for w in args)
     return name == "rimraf" or (dialect == "bash" and name in ("rm", "rmdir"))
+
+
+def plain(target):
+    """True when a delete target names its path as written: no trailing separator (rm -r link/ walks into the link)
+    and no wildcard except a whole last part * or .* (a wildcard mid-path can expand through a link at run time)."""
+    parts = re.split(r"[\\/]", target)
+    return not target.endswith(("/", "\\")) and not any(WILDCARD.search(p) for p in parts[:-1]) and (
+        not WILDCARD.search(parts[-1]) or parts[-1] in ("*", ".*"))
+
+
+LINKERS = re.compile(r"(?i)\bmklink\b|\bjunction(?:\.exe)?\b|\bsubst\b|\bmount\b.*--bind|"
+                     r"(?:\bnew-item\b|\bni\b).*-i\w*\s+\W?(?:symboliclink|junction|hardlink)")
+
+
+def makes_link(words, text):
+    """True when a command makes a link, junction, drive mapping or bind mount: a delete in the same command may then
+    reach through a path the hook resolved before the link existed."""
+    name = program(words[0])
+    if name in ("ln", "cp") and any(w in ("--symbolic", "--symbolic-link") or re.fullmatch(r"-[a-zA-Z]*s[a-zA-Z]*", w)
+                                    for w in words[1:]):
+        return True
+    return bool(LINKERS.search(text))
 
 
 def deleter(words):

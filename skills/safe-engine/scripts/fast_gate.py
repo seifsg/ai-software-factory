@@ -349,8 +349,8 @@ def cmd_start(args):
     setup = sibling("fast_setup")
     git_note, hooks = setup.ignore_factory(project), setup.hook_status(project)
     scratch = setup.scratch_path(HOME, run)
-    scratch.mkdir(parents=True, exist_ok=True)
     put(project, run)
+    scratch.mkdir(parents=True, exist_ok=True)  # after the state: a failed start leaves no folder behind
     record = record_path(project)
     if not record.exists():
         record.write_text(skeleton(run), encoding="utf-8")
@@ -486,9 +486,11 @@ def drop_scratch(key, *folders):
     """Remove a closed run's scratch folders without following links; the line that says what stayed, else ''."""
     left = []
     for folder in filter(None, folders):
-        sibling("fast_setup").remove(folder, left)
-        log("run.scratch_left" if left else "run.scratch_removed", key=key, path=str(folder), count=len(left),
-            first=left[:1])
+        mine = []
+        sibling("fast_setup").remove(folder, mine)
+        log("run.scratch_left" if mine else "run.scratch_removed", key=key, path=str(folder), count=len(mine),
+            first=mine[:1])
+        left += mine
     return f"\nScratch: {len(left)} item(s) left, first: {left[0]}" if left else ""
 
 
@@ -543,6 +545,8 @@ def cmd_rehome(args):
             what, advice = HELD[held[0]]
             fail(f"This gate home holds {what} at {held[1]}; nothing was moved: {advice}")
     source, receipt, local = run["project"], bundle_receipt(project), None
+    setup = sibling("fast_setup")
+    scratch = setup.scratch_path(HOME, run)  # named by the old folder's tag: it follows the run below
     if receipt and not Path(native(str(receipt["root"]))).is_dir():
         revision = str(receipt["revision"])
         local = HOME / "bundles" / revision
@@ -567,7 +571,10 @@ def cmd_rehome(args):
     except OSError as error:  # the open state re-registers on the next hook or gate command
         log("state.register_failed", key=run["key"], error=repr(error))
     mirror(project, run)
-    git_note = sibling("fast_setup").ignore_factory(project)
+    moved = setup.scratch_path(HOME, run)
+    if scratch and moved and scratch.is_dir() and not os.path.lexists(moved):
+        os.replace(scratch, moved)
+    git_note = setup.ignore_factory(project)
     print(card + f"\nBrought in from {source}." + (f"\nBundle: {local}" if local else "") + f"\nGit: {git_note}"
           "\nContinue the run on this machine only: compare this card with status on the old machine, then the owner "
           "retires the copy there with close --abandon.")
