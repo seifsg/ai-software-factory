@@ -149,15 +149,19 @@ def deletes(words):
             return None  # only the index changes
         words, name = words[words.index("rm"):], "rm"
     if name == "find":
-        execs = [words[i + 1] for i, w in enumerate(words[:-1]) if w in ("-exec", "-execdir", "-ok", "-okdir")]
-        if "-delete" not in words and not any(program(w) in DELETERS | {"rimraf"} for w in execs):
+        execs = segments(words)
+        if any(DELETE.search(" ".join(seg)) and program(seg[0]) not in DELETERS | {"rimraf"} for seg in execs):
+            return []  # a delete behind a wrapper (sh -c, env, sudo, xargs, another find): unprovable
+        deleting = [seg for seg in execs if program(seg[0]) in DELETERS | {"rimraf"}]
+        if "-delete" not in words and not deleting:
             return None
         args = [w for w in words[1:] if w not in ("-H", "-L", "-P")]
         starts = list(takewhile(lambda w: not w.startswith(("-", "(", "!")), args))
         fenced = bool(named(words)) and not {"-o", "-or"} & set(words) and excludes(words, ".git") and excludes(
             words, ".factory")
         mode = "below" if spared(words) or fenced else "sweep"
-        return [(start, mode) for start in starts or ["."]] + [(extra, "tree") for extra in handed(words)]
+        return [(start, mode) for start in starts or ["."]] + [  # paths an -exec deleter names beside {}
+            (w, "tree") for seg in deleting for w in seg[1:] if not w.startswith("-") and "{}" not in w]
     if name == "rimraf":
         targets, mode = [w for w in words[1:] if not w.startswith("-")], "tree"
     elif name in DELETERS:
@@ -192,8 +196,9 @@ def plain(target):
         WILDCARD.search(p) for p in parts[:-1]) and (not WILDCARD.search(parts[-1]) or parts[-1] in ("*", ".*"))
 
 
-LINKERS = re.compile(r"(?i)\b(?:mklink|junction|subst|symboliclink|hardlink)(?:\.exe)?\b|\bfsutil\b.*\breparsepoint\b|"
-                     r"\bmount\b.*(?:\br?bind\b|\s-B\b)")
+LINKERS = re.compile(r"(?i)\b(?:mklink|junction|subst|symboliclink|hardlink|bindfs)(?:\.exe)?\b|"
+                     r"\bfsutil\b.*\breparsepoint\b|\bmount\b.*(?:\br?bind\b|\s-B\b)|"
+                     r"\b(?:new-item|ni)\b.*\s-(?:i|t)\w*[\s:]+\W?[sjh]\w*\b")  # New-Item -it j and other prefixes
 
 
 def makes_link(words, text):
@@ -206,17 +211,18 @@ def makes_link(words, text):
     return bool(LINKERS.search(text))
 
 
-def handed(words):
-    """Literal paths a find's deleting -exec or -ok names beside {}: the deleter removes them too, once per match."""
+def segments(words):
+    """The command each -exec, -execdir, -ok or -okdir of a find runs, as its words. One ends at ; or \\; (the parse
+    splits there, leaving a lone \\), or at a + right after {}; a + elsewhere is an argument."""
     found, i = [], 0
     while i < len(words):
-        if words[i] in ("-exec", "-execdir", "-ok", "-okdir") and i + 1 < len(words) and program(
-                words[i + 1]) in DELETERS | {"rimraf"}:
-            i += 2
-            while i < len(words) and words[i] not in (";", "\\;", "+"):
-                if not words[i].startswith("-") and "{}" not in words[i]:
-                    found.append(words[i])
-                i += 1
+        if words[i] in ("-exec", "-execdir", "-ok", "-okdir"):
+            j = i + 1
+            while j < len(words) and words[j] not in (";", "\\;", "\\") and not (words[j] == "+" and words[j - 1] == "{}"):
+                j += 1
+            if j > i + 1:
+                found.append(words[i + 1:j])
+            i = j
         i += 1
     return found
 

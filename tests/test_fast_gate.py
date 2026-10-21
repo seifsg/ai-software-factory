@@ -564,7 +564,9 @@ class FastGateTests(GateHarness, unittest.TestCase):
                               (f'mount -o bind "{beside}" "{scratch / "a"}" && rm -rf "{scratch / "a" / "b"}"', "Bash"),
                               (f'find "{scratch}" -name x -exec rm -rf {{}} "{beside}" ";"', "Bash"),  # a path beside {}
                               (f'rm -rf "$HOME/{scratch.name}"', "Bash"),
-                              (f'find . -name x -exec rm -rf {{}} "{beside}" \\;', "Bash")):  # inside the project too
+                              (f'find . -name x -exec rm -rf {{}} "{beside}" \\;', "Bash"),  # inside the project too
+                              (f'New-Item -it j -Path "{scratch / "a"}" -Target "{beside}"; rd /s /q "{scratch / "a" / "b"}"', "PowerShell"),
+                              (f'find "{scratch}" -exec rm -rf + "{beside}" ";"', "Bash")):  # + after no {} is an argument
             with self.subTest(deny=command):
                 self.assertEqual(self.shell(command, tool), "deny")
         out = self.gate("close", "--abandon", "owner stopped it")
@@ -573,6 +575,20 @@ class FastGateTests(GateHarness, unittest.TestCase):
         self.assertNotIn("left", out)
         self.assertNotEqual(self.scratch(self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "again")),
                             scratch)  # a new start never reuses an old run's folder
+
+    def test_no_command_hides_behind_an_escaped_semicolon_or_a_find_wrapper(self):
+        self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "fix the footer copy")
+        for command, tool in (("echo x\\; rm -rf ~", "Bash"), ("printf x\\\\;rm -rf ~", "Bash"),
+                              ("echo \\\\; git push --force origin main", "Bash"),
+                              ("Write-Output x\\; Remove-Item -Recurse -Force C:\\victim", "PowerShell"),
+                              ("find . -maxdepth 0 -exec sh -c 'rm -rf ~' \\;", "Bash"),
+                              ("find . -exec env rm -rf ~ \\;", "Bash"), ("find . -exec sudo rm -rf {} /victim \\;", "Bash"),
+                              ("find . -exec find /victim -delete \\;", "Bash")):
+            with self.subTest(deny=command):
+                self.assertEqual(self.shell(command, tool), "deny")
+        for command in ("find . -name __pycache__ -type d -exec rm -rf {} +", "find . -name '*.pyc' -exec rm {} \\;"):
+            with self.subTest(allow=command):  # routine cleanups still pass
+                self.assertEqual(self.shell(command), "allow")
 
     def test_scratch_never_trusts_a_link_or_a_stored_path(self):
         victim = self.root / "victim"

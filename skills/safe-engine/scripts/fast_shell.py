@@ -22,9 +22,9 @@ SCAFFOLD = re.compile(
 DISCARD = ("/dev/null", "nul", "$null")
 SUBSTITUTE = ((re.compile(r"\$\{(\w+)\}"), r"$\1"), (re.compile(r"\$\(\s*pwd\s*\)"), "$PWD"),
               (re.compile(r"\$\(\s*git\s+rev-parse\s+--show-toplevel\s*\)"), "$GIT_TOPLEVEL"))
-# ( ) kept. A lone {} is find's placeholder and \; its escaped terminator: neither splits a command, so the words
-# after them stay with the find that runs them.
-PIPELINES = re.compile(r"([()])|\|\||&&|(?<!\\);|\n|(?<![^\s;&|(){}])(?:\{(?!\})|(?<!\{)\})(?![^\s;&|(){}])|"
+# ( ) kept. A lone {} is find's placeholder, never a brace group: the words after it stay with the find that runs
+# them. Every ; splits: an escaped \; still ends the statement in PowerShell, and \\; does in Bash.
+PIPELINES = re.compile(r"([()])|\|\||&&|[;\n]|(?<![^\s;&|(){}])(?:\{(?!\})|(?<!\{)\})(?![^\s;&|(){}])|"
                        r"(?<![<>|])&(?!>)")
 OPERATOR = r"\d*(?:<<<|<<|<|&?>>?)(?:&[\d-]|\|)?"  # a redirect operator
 TOKEN = {"bash": re.compile(OPERATOR + r"|(?:\\\s|[^\s<>])+"),  # Bash: backslash-space is an escaped space
