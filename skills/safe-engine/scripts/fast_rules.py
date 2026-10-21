@@ -187,11 +187,14 @@ def linksafe(words, dialect):
     return dialect == "bash" and name in ("rm", "rmdir")
 
 
-def plain(target):
+def plain(target, dialect):
     """True when a delete target names its path as written: no trailing separator (rm -r link/ walks into the link),
-    no wildcard except a whole last part * or .* (a wildcard mid-path can expand through a link at run time), and no
-    variable or ~ (the hook expands them from its own environment, not the agent's)."""
+    no wildcard except a whole last part * or .* (a wildcard mid-path can expand through a link at run time), no
+    variable or ~ (the hook expands them from its own environment, not the agent's), and in a Bash reading no
+    backslash or quote (Bash rewrites them before the deleter sees the path; the hook reads paths by other rules)."""
     parts = re.split(r"[\\/]", target)
+    if dialect == "bash" and re.search(r"[\\'\"]", target):
+        return False
     return not target.endswith(("/", "\\")) and not re.search(r"[$`%]|^~", target) and not any(
         WILDCARD.search(p) for p in parts[:-1]) and (not WILDCARD.search(parts[-1]) or parts[-1] in ("*", ".*"))
 

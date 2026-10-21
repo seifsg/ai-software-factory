@@ -75,10 +75,10 @@ class Judge:
         if self.inside(full, self.root):
             return None
         if self.own and self.inside(full, self.own):  # the run's scratch folder: its agents clean up there
-            return None if linksafe and rules.plain(target) else (
-                f"recursive delete outside the project ({target}); in the run's scratch folder use rm -r (Bash) or "
-                "rd /s with a plain literal path (no trailing slash, no wildcard mid-path, for rd no quote or space), "
-                "alone in its command")
+            return None if linksafe else (
+                f"recursive delete outside the project ({target}); in the run's scratch folder use rm -r (Bash, "
+                "the path with / separators and no backslash or quote) or rd /s (no quote or space), with a plain "
+                "literal path (no trailing slash, no wildcard mid-path), alone in its command")
         return f"recursive delete outside the project ({target})"
 
     def reaches(self, full, mode):
@@ -146,7 +146,7 @@ class Judge:
                 return f"recursive delete the hook cannot prove stays inside the project ({cmd.words[0]})"
             for path, mode in targets or []:
                 self.budget -= 1
-                safe = self.alone and rules.linksafe(cmd.words, dialect)
+                safe = self.alone and rules.linksafe(cmd.words, dialect) and rules.plain(path, dialect)
                 reason = self.stray(path, here, mode, safe) if self.budget >= 0 else (
                     f"recursive delete of more than {BUDGET} targets in one command")
                 if reason:

@@ -541,8 +541,9 @@ class FastGateTests(GateHarness, unittest.TestCase):
         other, beside = self.root / "home" / "scratch" / "other-0-20990101000000", self.root / "op-temp"
         for folder in (other, beside):
             folder.mkdir(parents=True)
-        for command, tool in ((f'rm -rf "{scratch / "profile"}"', "Bash"), (f'rm -rf "{scratch}"/*', "Bash"),
-                              (f'rm -rf "{scratch}"', "Bash"),
+        posix = scratch.as_posix()  # Bash deletes there name the path with / separators
+        for command, tool in ((f'rm -rf "{posix}/profile"', "Bash"), (f'rm -rf "{posix}"/*', "Bash"),
+                              (f'rm -rf "{posix}"', "Bash"),
                               ):  # rd /s: the harness path holds a space, so see test_rd_in_scratch_needs_a_plain_path
             with self.subTest(allow=command):
                 self.assertEqual(self.shell(command, tool), "allow")
@@ -558,6 +559,8 @@ class FastGateTests(GateHarness, unittest.TestCase):
                               (f"rimraf --glob '{scratch}/{{lnk,zz}}/z'", "Bash"), (f"rimraf '{scratch}/@(lnk)/z'", "Bash"),
                               (f"rd /s /q '{scratch / 'sub'} {beside} '", "PowerShell"),  # cmd splits single quotes
                               (f'rd /s /q "{scratch / "a b"}"', "PowerShell"),
+                              (f'rm -rf "{scratch / "profile"}"', "Bash"),  # backslashes: Bash rewrites them first
+                              (f"rm -rf '{posix}/pro\\file'", "Bash"),
                               (f'Remove-Item -Recurse -Force "{scratch / "profile"}"', "PowerShell"),  # walks junctions
                               (f'rm -r -fo "{scratch / "profile"}"', "PowerShell"), (f'del /s /q "{scratch}"', "PowerShell"),
                               (f'rd "{scratch / "x"}" -Recurse -Exclude /s', "PowerShell"),  # Remove-Item in disguise
