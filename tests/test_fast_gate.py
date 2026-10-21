@@ -542,7 +542,7 @@ class FastGateTests(GateHarness, unittest.TestCase):
         for folder in (other, beside):
             folder.mkdir(parents=True)
         for command, tool in ((f'rm -rf "{scratch / "profile"}"', "Bash"), (f'rm -rf "{scratch}"/*', "Bash"),
-                              (f'rm -rf "{scratch}"', "Bash"), (f'find "{scratch}" -name "*.db" -delete', "Bash"),
+                              (f'rm -rf "{scratch}"', "Bash"),
                               (f'rd /s /q "{scratch / "profile"}"', "PowerShell"),
                               (f'rimraf "{scratch / "profile"}"', "PowerShell")):
             with self.subTest(allow=command):
@@ -551,6 +551,10 @@ class FastGateTests(GateHarness, unittest.TestCase):
                               (f'rm -rf "{beside}"', "Bash"), (f'rm -rf "{self.root / "home" / "scratch"}"', "Bash"),
                               (f'rm -rf "{scratch}" "{beside}"', "Bash"),
                               (f'find -L "{scratch}" -name "*.db" -delete', "Bash"),  # follows links out
+                              (f'find "{scratch}" -name "*.db" -delete', "Bash"),  # a find composes paths at run time
+                              (f'find "{scratch}" -exec rm -rf {{}} \\| "{beside}" \\;', "Bash"),
+                              (f'find "{scratch}" -exec rm -rf {{}} + "{beside}"', "Bash"),
+                              (f'cp -a "{beside}" "{scratch / "a"}"; rm -rf "{scratch / "a" / "b"}"', "Bash"),  # not alone
                               (f'Remove-Item -Recurse -Force "{scratch / "profile"}"', "PowerShell"),  # walks junctions
                               (f'rm -r -fo "{scratch / "profile"}"', "PowerShell"), (f'del /s /q "{scratch}"', "PowerShell"),
                               (f'rd "{scratch / "x"}" -Recurse -Exclude /s', "PowerShell"),  # Remove-Item in disguise

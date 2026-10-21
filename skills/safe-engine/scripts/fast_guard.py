@@ -25,7 +25,7 @@ class Judge:
 
     def __init__(self, root, norm, inside, home=None, scratch=None):
         self.root, self.norm, self.inside, self.seen, self.budget = root, norm, inside, {}, BUDGET
-        self.home, self.hint, self.scratch, self.linking = home, None, scratch, False
+        self.home, self.hint, self.scratch, self.alone = home, None, scratch, False
         if home:  # commands naming the gate home: its run files are guarded like .git
             names = {".safe-engine", "safe_engine_home", home, home.replace("\\", "/")}
             self.hint = re.compile("|".join(map(re.escape, names)), re.I)
@@ -55,8 +55,8 @@ class Judge:
         """Why deleting target is refused, or None. mode "tree": the target and all below go, so the project root,
         root/* and the protected paths (.factory, .factory/fast, its run.json, .git) count; "below"/"below-git":
         only find matches below an inside start go, and from the root only when .git is excluded; "file": only the
-        protected paths count. Nothing inside .git may go. linksafe: the deleter cannot follow a link, the target
-        is plain and the command makes no link, so it may work inside the run's scratch folder."""
+        protected paths count. Nothing inside .git may go. linksafe: the delete is the command's only part and its
+        deleter cannot follow a link, so with a plain target it may work inside the run's scratch folder."""
         head, tail = os.path.split(target)
         path = (head or ".") if mode in TREE and tail in ("*", ".*") else target
         try:
@@ -76,9 +76,8 @@ class Judge:
             return None
         if self.own and self.inside(full, self.own):  # the run's scratch folder: its agents clean up there
             return None if linksafe and rules.plain(target) else (
-                f"recursive delete outside the project ({target}); in the run's scratch folder name a plain path "
-                "(no trailing slash, no wildcard mid-path) and use rm -r, rd /s, rimraf or a find without -L, in a "
-                "command that makes no link")
+                f"recursive delete outside the project ({target}); in the run's scratch folder use rm -r, rd /s or "
+                "rimraf with a plain literal path (no trailing slash, no wildcard mid-path), alone in its command")
         return f"recursive delete outside the project ({target})"
 
     def reaches(self, full, mode):
@@ -146,7 +145,7 @@ class Judge:
                 return f"recursive delete the hook cannot prove stays inside the project ({cmd.words[0]})"
             for path, mode in targets or []:
                 self.budget -= 1
-                safe = not self.linking and rules.linksafe(cmd.words, dialect)
+                safe = self.alone and rules.linksafe(cmd.words, dialect)
                 reason = self.stray(path, here, mode, safe) if self.budget >= 0 else (
                     f"recursive delete of more than {BUDGET} targets in one command")
                 if reason:
@@ -193,7 +192,7 @@ class Judge:
         commands = [item for item in items if not isinstance(item, str)]
         text = "\n".join(cmd.text for cmd in commands)
         fired = rules.fired(text, lambda: self.sql(commands, cwd))
-        self.linking = any(rules.makes_link(cmd.words, cmd.text) for cmd in commands)
+        self.alone = sum(not cmd.outer for cmd in commands) == 1  # no other part can make a link it runs through
         if self.hint and self.hint.search(text):  # deletes and moves naming the gate home must prove they miss it
             fired |= {"delete", "move"}
         if not fired:
