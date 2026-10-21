@@ -11,13 +11,14 @@ Needs Git and Python 3.9+ (an agent following these steps installs missing ones 
 2. Install for your agent:
 
    ```text
-   python <factory>/skills/safe-engine/scripts/fast_gate.py install --host claude|codex|cursor|other [--project <dir>]
+   python <factory>/skills/safe-engine/scripts/fast_gate.py install --host claude|codex|cursor|other [--project <dir>] [--no-auto-update]
    ```
 
    - `claude`: enables the plugin (both launchers and the gate hooks) with auto-update in your user settings. Start a new session.
    - `codex`, `cursor`: copies both launchers into `~/.agents/skills` and writes the gate hooks. Codex asks you to trust them once.
    - `other`: copies the launchers only; wire hooks by hand per [hosts](hosts.md#other-agents).
    - `--project <dir>` installs into one project instead of your user folders. Re-running replaces only the factory's own entries.
+   - From a clone, `codex`, `cursor` and `other` update themselves once a day at session start; `--no-auto-update` turns that off ([hosts](hosts.md#updates)).
 
 3. Ask your agent for the skill, in its own syntax ([hosts](hosts.md)):
 
