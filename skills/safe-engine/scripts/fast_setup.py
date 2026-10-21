@@ -1,5 +1,10 @@
-"""Run setup for fast_gate.py: keep run records out of Git, report which hosts call the gate."""
+"""Run setup for fast_gate.py: keep run records out of Git, report which hosts call the gate, and keep the run's
+scratch folder for throwaway data."""
 import json
+import os
+import re
+import stat
+import sys
 from pathlib import Path
 
 LINE = ".factory/"  # the exclude line that keeps run records out of Git
@@ -60,3 +65,30 @@ def hook_status(project):
             if name not in found and ("fast_gate" in text or "run-gate" in text):
                 found.append(name)
     return ", ".join(found) or "none detected: the gate records steps but nothing blocks; follow the order yourself"
+
+
+def scratch_dir(home, key, created):
+    """The run's own folder for throwaway data (test homes, browser profiles, spare servers), outside every project in
+    the gate home. Its agents may delete inside it (fast_guard.py); close removes it. Named by key and start time, so
+    a new start never reuses an old run's folder."""
+    stamp = re.sub(r"\D", "", str(created))[:14]
+    path = Path(home, "scratch", f"{key}-{stamp}")
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def drop_scratch(path):
+    """Remove a run's scratch folder; returns what stayed, as "path: error" lines. Read-only files get one retry."""
+    left = []
+
+    def retry(func, name, error):
+        try:
+            os.chmod(name, stat.S_IWRITE)
+            func(name)
+        except OSError as again:
+            left.append(f"{name}: {again}")
+
+    if Path(path).exists():
+        import shutil
+        shutil.rmtree(path, **({"onexc": retry} if sys.version_info >= (3, 12) else {"onerror": retry}))
+    return left

@@ -20,11 +20,12 @@ SWEEP = ("a find under the whole project: name only files that cannot be .git, .
 
 
 class Judge:
-    """Judges commands for the run rooted at root. norm(path, base) and inside(child, parent) come from the gate."""
+    """Judges commands for the run rooted at root. norm(path, base) and inside(child, parent) come from the gate;
+    scratch is the run's own throwaway folder (fast_setup.scratch_dir), where deletes pass."""
 
-    def __init__(self, root, norm, inside, home=None):
+    def __init__(self, root, norm, inside, home=None, scratch=None):
         self.root, self.norm, self.inside, self.seen, self.budget = root, norm, inside, {}, BUDGET
-        self.home, self.hint = home, None
+        self.home, self.hint, self.scratch = home, None, scratch
         if home:  # commands naming the gate home: its run files are guarded like .git
             names = {".safe-engine", "safe_engine_home", home, home.replace("\\", "/")}
             self.hint = re.compile("|".join(map(re.escape, names)), re.I)
@@ -70,6 +71,8 @@ class Judge:
             return None
         if mode in TREE and full == self.root:
             return f"{SWEEP if mode == 'sweep' else 'recursive delete of the whole project'} ({target})"
+        if self.own and self.inside(full, self.own):
+            return None  # the run's scratch folder: its agents clean up their own throwaway data
         if not self.inside(full, self.root):
             return f"recursive delete outside the project ({target})"
         return None
@@ -87,6 +90,11 @@ class Judge:
         return fnmatch.fnmatch(self.root, full) or any(
             fnmatch.fnmatch(guarded, full if mode == "file" else os.sep.join(parts[:guarded.count(os.sep) + 1]))
             for guarded in self.protected)
+
+    @functools.cached_property
+    def own(self):
+        """The run's scratch folder, resolved on first use: most commands delete nothing outside the project."""
+        return self.norm(self.scratch) if self.scratch else None
 
     @functools.cached_property
     def vault(self):

@@ -511,6 +511,34 @@ class FastGateTests(GateHarness, unittest.TestCase):
         runs = [(None, {"sessions": ["s1"]}, {"project": str(self.project)}), (None, {}, {"project": str(other)})]
         self.assertIsNone(gate.guard("rm -rf dist", runs, gate.norm(str(other)), "s1"))
 
+    def test_run_scratch_folder_takes_throwaway_deletes_and_goes_at_close(self):
+        out = self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "fix the footer copy")
+        line = next(line for line in out.splitlines() if line.startswith("Scratch: "))
+        scratch = Path(line[len("Scratch: "):line.index(" (the run's")])  # the path may hold spaces
+        self.assertTrue(scratch.is_dir())
+        self.assertEqual(scratch.parent, self.root / "home" / "scratch")  # in the gate home, outside every project
+        self.assertEqual(self.gate("scratch").strip(), str(scratch))
+        (scratch / "profile" / "deep").mkdir(parents=True)
+        (scratch / "profile" / "deep" / "lock").write_text("x", encoding="utf-8")
+        os.chmod(scratch / "profile" / "deep" / "lock", 0o444)  # read-only, as browser and Git files often are
+        other, beside = self.root / "home" / "scratch" / "other-20990101000000", self.root / "op-temp"
+        for folder in (other, beside):
+            folder.mkdir(parents=True)
+        for command in (f'rm -rf "{scratch / "profile"}"', f'rm -rf "{scratch}"/*', f'rm -rf "{scratch}"',
+                        f'Remove-Item -Recurse -Force "{scratch / "profile"}"', f'find "{scratch}" -name "*.db" -delete'):
+            with self.subTest(allow=command):
+                self.assertEqual(self.pre("Bash", command=command), "allow")
+        for command in (f'rm -rf "{other}"', f'rm -rf "{scratch}/../other-20990101000000"', f'rm -rf "{beside}"',
+                        f'rm -rf "{self.root / "home" / "scratch"}"', f'rm -rf "{scratch}" "{beside}"'):
+            with self.subTest(deny=command):
+                self.assertEqual(self.pre("Bash", command=command), "deny")
+        out = self.gate("close", "--abandon", "owner stopped it")
+        self.assertFalse(scratch.exists())
+        self.assertTrue(other.is_dir())  # another run's folder stays
+        self.assertNotIn("left in", out)
+        out = self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "again")
+        self.assertNotIn(f"Scratch: {scratch} ", out)  # a new start never reuses an old run's folder
+
     def test_destructive_denial_reaches_the_owner_in_every_step(self):
         self.assertEqual(self.pre("Bash", command="rm -rf ~"), "allow")  # no run: unchanged
         self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "fix the footer copy")
