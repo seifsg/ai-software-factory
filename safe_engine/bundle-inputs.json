@@ -56,6 +56,7 @@
     "skills/safe-engine/scripts/fast_record.py",
     "skills/safe-engine/scripts/fast_rules.py",
     "skills/safe-engine/scripts/fast_setup.py",
+    "skills/safe-engine/scripts/fast_cleanup.py",
     "skills/safe-engine/scripts/fast_shell.py",
     "skills/safe-engine/scripts/fast_update.py",
     "skills/safe-engine/scripts/resolve_bundle.py",
