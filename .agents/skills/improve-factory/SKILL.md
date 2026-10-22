@@ -95,7 +95,7 @@ Do not code before the plan is recorded.
 
 1. Refresh the maintenance ticket. Compare its confirmed criteria with the change, preserved behavior, proof and limits. Drift or a failed refresh blocks acceptance.
 2. PRs always, as drafts, through `how-to-make-a-pr`. Missing PR bindings block the PR, not local repair or checks.
-3. Humans mark ready, merge and release. Installed copies and active runs never auto-upgrade. A launcher, gate or hook fix reaches agents only after publishing and a plugin update or a fresh `fast_gate.py install`.
+3. Humans mark ready, merge and release. Active runs never auto-upgrade: they keep their pinned bundle. A launcher, gate or hook fix reaches agents only after publishing, then the install's own update or a fresh `fast_gate.py install`.
 4. Active app run: adopt and resume per `references/live-session.md`.
 5. Report separately: structure, manual use, tests, review, adoption, PR. Brief before/after. Name what is unverified.
 

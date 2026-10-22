@@ -118,13 +118,41 @@ def fail(message):
 def put(project, run):
     """Write the run state to the gate home, then its mirror for agents to read; a failed mirror never fails."""
     save(state_path(project), run)
+    mirror(project, run)
+    found = unseen(project, state_path(project))
+    if view(project, run) and found:
+        mark(project, VIEWED, found[0])  # the next hook need not write it again
+
+
+def view_id(project, key):
+    """The view's id: the run key plus its project's registry hash, so same-key runs in two projects never collide."""
+    return f"{key}-{registry_path(project).stem[:6]}"
+
+
+def view(project, run, agents=None):
+    """Rewrite the owner's live view of this run (fast_view.py); True when written. A failure is logged, never raised."""
+    try:
+        entry = registry_path(project)
+        registration = load(entry) if entry.is_file() else {}
+        sessions = len(sessions_of(registration)) if isinstance(registration, dict) else 0
+        sibling("fast_view").write(HOME / "view", project, run, steps_for(run), sessions, agents,
+                                   vid=view_id(project, run["key"]))
+        return True
+    except Exception as error:  # noqa: BLE001 - the view is a courtesy: the run's state is already saved
+        log("view.write_failed", key=run.get("key"), error=repr(error))
+        return False
+
+
+def mirror(project, run):
+    """Rewrite the project's run.json from the run state; a failure is logged, never raised."""
     try:
         save(ledger_path(project), run)
     except OSError as error:
         log("state.mirror_failed", key=run["key"], error=repr(error))
 
 
-SHOWN, SEEN = "shown", "seen"  # progress claims, and the newest change already shown (its mtime)
+SHOWN, SEEN, VIEWED = "shown", "seen", "viewed"  # progress claims; newest change shown, and written to the view
+PROMPTS, VIEW_EVERY = "prompts", 6  # prompt counter; the live view's link shows on the first prompt and every sixth after
 
 
 def shown_path(project):
@@ -196,8 +224,22 @@ def find_project(given):
 
 
 def lost_text(project):
+    """Why the gate cannot read the run here, and the owner's way on: close a lost run, or bring one in from elsewhere."""
+    elsewhere = None if registry_path(project).is_file() else store.readable(project)
+    if well_formed(elsewhere):
+        return (f"No run state for {project} in this gate home ({HOME / 'runs'}); its run.json records a run from "
+                f"{elsewhere['project']}. Only on the owner's instruction, bring it in: fast_gate.py rehome --project "
+                f"\"{project}\" --from \"{elsewhere['project']}\"")
     return (f"No readable run state for {project} in {HOME / 'runs'}, so its gate stays closed. The owner closes "
             f"it: fast_gate.py close --project \"{project}\" --abandon \"<reason>\"")
+
+
+def well_formed(run):
+    """An open run of this version whose fields the gate reads have the right shapes: the only mirror it carries home."""
+    return bool(run and not run.get("closed") and KEY.fullmatch(str(run.get("key")))
+                and isinstance(run.get("project"), str) and run.get("mode") in MODES and run.get("kind") in KINDS
+                and isinstance(run.get("done"), dict) and isinstance(run.get("paused") or {}, dict)
+                and isinstance(run.get("moves") or [], list))
 
 
 def open_run(given):
@@ -237,6 +279,8 @@ def skeleton(run):
     if run.get("pr_proof"):
         hints["handoff"] += ("; a PR line naming the draft PR, whose Before & after section has one heading per outcome, "
                              "each Before and After with an image, a recording or a fenced block")
+    if run.get("credit"):
+        hints["handoff"] += "; the PR body's last line is the factory credit line (how-to-make-a-pr credit.md)"
     if sibling("fast_record").hidden(run):
         hints["done-run"] += "; a Hidden checks block: '#<n> <ID>: PASS' per criterion of every listed ticket"
     for step in steps_for(run):
@@ -247,11 +291,13 @@ def skeleton(run):
 LAYOUT = ".agents/skills/ticketing/references/ticket-layout.md"
 FAST_RUN = ".agents/skills/safe-engine/references/fast-run.md"
 UX = ".agents/skills/ux-quality/SKILL.md"
+PR = ".agents/skills/how-to-make-a-pr/SKILL.md"
 # run flag -> (method file, phrase): a check applies only when the methods the run reads define it
 FLAGS = {"ticket_checks": (LAYOUT, "Definition of done"), "coverage": (LAYOUT, "Every criterion has"),
          "light": (FAST_RUN, "Light lane"), "outcomes": (FAST_RUN, "what the owner can do once it is done"),
          "hidden_checks": (FAST_RUN, "**Hidden checks:**"),
-         "scans": (FAST_RUN, "**Secrets:**"), "ux_rules": (UX, "| U10 |"), "pr_proof": (FAST_RUN, "`**PR:**`")}
+         "scans": (FAST_RUN, "**Secrets:**"), "ux_rules": (UX, "| U10 |"), "pr_proof": (FAST_RUN, "`**PR:**`"),
+         "credit": (PR, "references/credit.md")}
 
 
 def method_flags(bundle, project):
@@ -302,15 +348,18 @@ def cmd_start(args):
         run.update(sibling("fast_record").ui_start(project))
     setup = sibling("fast_setup")
     git_note, hooks = setup.ignore_factory(project), setup.hook_status(project)
+    scratch = setup.scratch_path(HOME, run)
     put(project, run)
+    scratch.mkdir(parents=True, exist_ok=True)  # after the state: a failed start leaves no folder behind
     record = record_path(project)
     if not record.exists():
         record.write_text(skeleton(run), encoding="utf-8")
-    save(registry_path(project), {"project": str(project), "key": args.key, "sessions": [], "home": True})
+    save(registry_path(project), store.new_registration(project, args.key))
     log("run.start", key=args.key, project=str(project), mode=args.mode, kind=args.kind, bundle=run["bundle"], hooks=hooks)
     bundle = (f"{run['bundle']['root']} @ {run['bundle']['revision'][:12]}" if run["bundle"] else
               "no .factory/entry-bundle.json; run the entry's resolver first (skip only for factory maintenance)")
-    print(status_text(run) + f"\nRecord: {record}\nBundle: {bundle}\nGit: {git_note}\nHooks: {hooks}")
+    print(status_text(run) + f"\nRecord: {record}\nBundle: {bundle}\nGit: {git_note}\nHooks: {hooks}\n"
+          + setup.TEXT.format(scratch))
 
 
 def cmd_done(args):
@@ -338,6 +387,8 @@ def cmd_done(args):
     run["done"][step] = {"at": now(), **({"unverified": args.offline} if args.offline else {})}
     if step in ("kickoff", "tickets") and record.run_size(all_sections) and "size" not in run:
         run.update(size=record.run_size(all_sections), size_at=step)  # frozen: editing the line later skips nothing
+    if step == "plan":  # who owes the epic's integration todos is read from the plan as recorded here
+        run["todos"] = list(dict.fromkeys(run.get("todos", []) + [f"T{n}" for n in record.todo_ids(all_sections)]))
     if step == "tickets":  # later ticket checks keep reading these even if the record drops one
         epic, subs = record.ticket_urls(body)
         run["tickets"] = list(dict.fromkeys(run.get("tickets", []) + epic + subs))
@@ -345,6 +396,15 @@ def cmd_done(args):
     put(project, run)
     log("step.done", key=run["key"], step=step, unverified=args.offline)
     print(status_text(run, all_sections))
+
+
+def cmd_scratch(args):
+    """Print the open run's scratch folder, making it again if it went (or for a run started before scratch folders)."""
+    scratch = sibling("fast_setup").scratch_path(HOME, open_run(args.project)[1])
+    if scratch is None:
+        fail("This run's key or start time is malformed, so it has no scratch folder")
+    scratch.mkdir(parents=True, exist_ok=True)
+    print(scratch)
 
 
 def cmd_status(args):
@@ -357,6 +417,48 @@ def cmd_pause(args, reason):
     put(project, run)
     log("run.pause" if reason else "run.resume", key=run["key"], reason=reason)
     print(status_text(run))
+
+
+def cmd_try(args):
+    """Record how the owner tries a finished todo's result: one checked line in the Build log, then the live view."""
+    project, run = open_run(args.project)
+    if run.get("closed"):
+        fail("This run is closed")
+    if not re.fullmatch(r"[Tt]?\d+", args.todo):
+        fail("Name the todo by its ID, such as T3")
+    kind, value = next((kind, getattr(args, kind)) for kind in ("cmd", "url", "file") if getattr(args, kind))
+    n, views, record = str(int(args.todo.lstrip("Tt"))), sibling("fast_view"), record_path(project)
+    problem = views.try_problem(project, sibling("fast_progress").read(record), n, kind, value)
+    if problem:
+        fail(f"Try target refused: {problem}. Form: fast_gate.py try T3 --cmd \"<command>\" | --url <http(s) link> | "
+             "--file <path inside the project>")
+    try:
+        line = views.add_try(record, n, kind, value)
+    except (OSError, ValueError) as error:
+        fail(f"Cannot record the Try line: {error}")
+    view(project, run)
+    log("run.try", key=run["key"], todo=f"T{n}", kind=kind)
+    print(f"Recorded in the Build log: {line}")
+
+
+def cmd_view(args):
+    """Serve the owner's live view on 127.0.0.1 until stopped, or write it as one snapshot file."""
+    views, keep = sibling("fast_view"), set()
+    running = views.live_url(HOME / "view")
+    if running and not args.snapshot:
+        print(f"Live view already running: {running}")  # one server per machine shows every run
+        return
+    for _, _, run in active_runs():  # every open run shows, even one started before the view existed
+        if not run.get("lost"):
+            view(run["project"], run)
+            keep.add(view_id(run["project"], run["key"]))
+    views.prune(HOME / "view", keep)  # runs closed while lost, or left by an older home
+    if args.snapshot:
+        views.page(HOME / "view")
+        print(f"Snapshot: {views.snapshot(HOME / 'view', args.snapshot)}")
+        return
+    log("view.serve", port=args.port)
+    views.serve(HOME / "view", args.port, log=lambda url: print(f"Live view: {url}  (Ctrl+C stops it)", flush=True))
 
 
 def cmd_close(args):
@@ -377,22 +479,105 @@ def cmd_close(args):
         log("state.retire_failed", key=run["key"], error=repr(error))  # it stays closed in runs/: hooks skip it
     forget_shown(project)
     log("run.close", key=run["key"], abandoned=args.abandon)
-    print(status_text(run))
+    print(status_text(run) + drop_scratch(run["key"], sibling("fast_setup").scratch_path(HOME, run)))
+
+
+def drop_scratch(key, *folders):
+    """Remove a closed run's scratch folders without following links; the line that says what stayed, else ''."""
+    left = []
+    for folder in filter(None, folders):
+        mine = []
+        sibling("fast_setup").remove(folder, mine)
+        log("run.scratch_left" if mine else "run.scratch_removed", key=key, path=str(folder), count=len(mine),
+            first=mine[:1])
+        left += mine
+    return f"\nScratch: {len(left)} item(s) left, first: {left[0]}" if left else ""
 
 
 def close_lost(project, reason):
-    """Close a run with no readable home state: drop its registration and the broken state."""
+    """Close a run with no readable home state: drop its registration and the broken state, and keep a closed record so
+    its mirror never comes back through rehome (the next start archives it)."""
     entry = registry_path(project)
     if not entry.is_file():
         fail(f"No registered run at {project}; nothing was closed")
+    try:
+        key = load(entry).get("key")
+    except (OSError, ValueError, AttributeError):
+        key = None
     entry.unlink()
     try:
         state_path(project).unlink(missing_ok=True)
     except OSError:
         pass  # the hooks stand down either way; the next start replaces it
+    try:
+        save(store.closed_path(entry), {"version": VERSION, "key": key if KEY.fullmatch(str(key)) else "run",
+                                        "project": str(project), "mode": "fast", "kind": "change", "done": {},
+                                        "paused": None, "closed": True, "closed_at": now(), "abandoned": reason})
+    except OSError as error:
+        log("state.retire_failed", key=key, error=repr(error))
     forget_shown(project)
     log("run.close", project=str(project), abandoned=reason, lost=True)
-    print(f"Closed the run at {project} without a readable run state. Reason: {reason}")
+    left = drop_scratch(key, *sibling("fast_setup").lost_scratch(HOME, key, project))
+    print(f"Closed the run at {project} without a readable run state. Reason: {reason}{left}")
+
+
+HELD = {  # what the gate home holds for a folder: how a refusal names it, and the owner's way on
+    "open": ("an open run", "continue it there with status or resume"),
+    "lost": ("a lost run", "its gate stays closed until the owner closes it there with close --abandon"),
+    "closed": ("a closed run", "a closed run never comes back in: bring the run into another folder"),
+    "nested": ("a run", "runs never nest: bring the run into a folder of its own"),
+}
+
+
+def cmd_rehome(args):
+    """The owner brings in an open run whose state sits in another gate home (another machine or folder): its run.json
+    comes home once, only where this gate home holds nothing in, around or inside either folder, so no run gated
+    here can fall back to a project copy."""
+    project = Path(native(args.project or os.getcwd())).resolve()
+    run = store.readable(project)
+    if not well_formed(run):
+        fail(f"No open, well-formed run to bring in at {ledger_path(project)}; nothing was moved")
+    if norm(run["project"]) != norm(args.source):
+        fail(f"{ledger_path(project)} records its run at {run['project']}, not {args.source}; nothing was moved")
+    for folder in (project, args.source):
+        held = store.held(ACTIVE, folder)
+        if held:
+            what, advice = HELD[held[0]]
+            fail(f"This gate home holds {what} at {held[1]}; nothing was moved: {advice}")
+    source, receipt, local = run["project"], bundle_receipt(project), None
+    setup = sibling("fast_setup")
+    scratch = setup.scratch_path(HOME, run)  # named by the old folder's tag: it follows the run below
+    if receipt and not Path(native(str(receipt["root"]))).is_dir():
+        revision = str(receipt["revision"])
+        local = HOME / "bundles" / revision
+        if not (re.fullmatch(r"[0-9a-f]{40}", revision) and (local / ".agents/skills/safe-engine/SKILL.md").is_file()):
+            fail(f"The run's bundle {revision} is not on this machine; nothing was moved. Bring it first with the "
+                 f"launcher's resolve_bundle.py --ref {revision}")
+        run["bundle"] = {"root": str(local), "revision": revision}
+    run["project"] = str(project)
+    run["moves"] = [*(run.get("moves") or []), {"from": source, "at": now(),
+                                                 **({"bundle_from": str(receipt["root"])} if local else {})}]
+    card = status_text(run)  # a run the gate cannot show is refused before anything is written
+    if local:  # the same revision, found here: only the receipt's path changes
+        path = Path(project, ".factory", "entry-bundle.json")
+        save(path, {**load(path), "bundle_root": str(local)})
+    try:
+        save(state_path(project), run, new=True)  # first writer wins: a parallel rehome never replaces it
+    except FileExistsError:
+        fail(f"The run at {project} was brought in meanwhile: fast_gate.py status --project \"{project}\"")
+    log("run.rehome", key=run["key"], source=source, project=str(project), bundle=run.get("bundle"))
+    try:
+        save(registry_path(project), store.new_registration(project, run["key"]))
+    except OSError as error:  # the open state re-registers on the next hook or gate command
+        log("state.register_failed", key=run["key"], error=repr(error))
+    mirror(project, run)
+    moved = setup.scratch_path(HOME, run)
+    if scratch and moved and scratch.is_dir() and not os.path.lexists(moved):
+        os.replace(scratch, moved)
+    git_note = setup.ignore_factory(project)
+    print(card + f"\nBrought in from {source}." + (f"\nBundle: {local}" if local else "") + f"\nGit: {git_note}"
+          "\nContinue the run on this machine only: compare this card with status on the old machine, then the owner "
+          "retires the copy there with close --abandon.")
 
 
 def archive_run(project):
@@ -418,7 +603,8 @@ def forget_shown(project):
     """Drop the shown-progress claims and stamp: a closed or new run starts its owner messages fresh."""
     import shutil
     shutil.rmtree(shown_path(project), ignore_errors=True)
-    Path(project, *FAST, SEEN).unlink(missing_ok=True)
+    for stamp in (SEEN, VIEWED, PROMPTS):
+        Path(project, *FAST, stamp).unlink(missing_ok=True)
 
 
 # ---- hooks (every host; dialects in fast_hosts.py, wiring in fast_install.py) ----
@@ -491,10 +677,19 @@ def guard(command, runs, cwd, session, dialect=None):
     """Deny reason for a destructive command in any step of the run owning cwd, else this session's or the named one.
     dialect: "bash" or "windows" when the host names its shell, else None (both readings must pass)."""
     item = owner(runs, cwd) or next(iter(mine(runs, cwd, session)), None) or mentioned(runs, command)
-    rule = item and sibling("fast_guard").Judge(norm(item[2]["project"]), norm, inside, str(HOME)).rule(
+    rule = item and sibling("fast_guard").Judge(norm(item[2]["project"]), norm, inside, str(HOME),
+                                                lambda: sibling("fast_setup").scratch_path(HOME, item[2])).rule(
         command, cwd, dialect)
     return rule and deny_reason(item[2], rule, " Destructive commands are the owner's: ask the owner to run it, "
                                                "or to approve another approach.")
+
+
+def where(cds, cwd):
+    """The folder a shell write runs in after its cd targets; an unknown one ('', a variable) keeps the folder."""
+    for target in cds:
+        path = os.path.expandvars(os.path.expanduser(target))
+        cwd = cwd if not path or "$" in path else norm(path, cwd)
+    return cwd
 
 
 def pre_tool(event, runs, cwd, session):
@@ -508,7 +703,7 @@ def pre_tool(event, runs, cwd, session):
         targets = [norm(path, cwd) for path in event["paths"]]
     elif event["tool"] == "shell":
         shell = sibling("fast_shell")
-        targets = [norm(name, cwd) for name in shell.writes(event["command"])]
+        targets = [norm(name, where(cds, cwd)) for cds, name in shell.writes(event["command"])]
     else:
         return None
     vault = (norm(ACTIVE), norm(HOME / "runs")) if targets else ()
@@ -545,51 +740,93 @@ def mine(runs, cwd, session, bind_cwd=True):
 
 
 def unseen(project, state):
-    """The newest run state or record change the owner has not seen progress for, else None. One stat, one
-    directory scan and no reads, since this runs on every hooked tool call."""
+    """(newest run state or record change, when progress was last shown, when the view was last written), or None
+    when both are current. One stat, one directory scan and no reads, since this runs on every hooked tool call."""
     times = {}
     try:
         changed = os.stat(state).st_mtime_ns
         with os.scandir(os.path.join(project, *FAST)) as entries:
             for entry in entries:
-                if entry.name in (RECORD, SEEN):
+                if entry.name in (RECORD, SEEN, VIEWED):
                     times[entry.name] = entry.stat().st_mtime_ns
     except OSError:
         return None
-    stamp = max(changed, times.get(RECORD, 0))
-    return stamp if stamp > times.get(SEEN, 0) else None
+    stamp, seen, viewed = max(changed, times.get(RECORD, 0)), times.get(SEEN, 0), times.get(VIEWED, 0)
+    return (stamp, seen, viewed) if stamp > min(seen, viewed) else None
 
 
-def news(runs, cwd, session):
-    """Progress the owner has not seen yet, or None. Never raises: a deny decision must still print."""
+def news(runs, cwd, session, show=True):
+    """Progress the owner has not seen yet, or None; the live view is refreshed either way. show=False (a delegate,
+    or a host without hook messages) refreshes only the view. Never raises: a deny decision must still print."""
     lines = []
     try:
         for entry, _, run in mine(runs, cwd, session, bind_cwd=False)[:3]:
             if not run.get("lost"):  # a lost run has no card
-                lines += unseen_lines(run["project"], store.state_path(entry))
+                lines += unseen_lines(run["project"], store.state_path(entry), show)
     except Exception as error:  # noqa: BLE001 - progress is a courtesy; the gate's decision comes first
         log("hook.error", where="news", error=repr(error))
     return "\n".join(lines) or None
 
 
-def unseen_lines(project, state):
-    """One run's unseen progress. The home state is re-read with its own mtime: a gate command landing during this
-    hook is shown from its own state, now or by the next hook, never as a stale card."""
-    stamp = unseen(project, state)
-    if not stamp:
+def mark(project, name, stamp):
+    """Record that the change at stamp was handled: SEEN (shown) or VIEWED (written to the view)."""
+    path = Path(project, *FAST, name)
+    path.touch()
+    os.utime(path, ns=(stamp, stamp))
+
+
+def unseen_lines(project, state, show=True):
+    """One run's unseen progress, after refreshing its live view. The home state is re-read with its own mtime: a gate
+    command landing during this hook is shown from its own state, now or by the next hook, never as a stale card."""
+    found = unseen(project, state)
+    if not found or not (found[0] > found[2] or show and found[0] > found[1]):
         return []
+    stamp, seen, viewed = found
     try:
         run, ledger_ns = load_stamped(state)
     except (OSError, ValueError):
         return []  # mid-replace on Windows: show nothing now, the next hook retries with the new state
-    if run.get("closed"):
+    if stamp > viewed and view(project, run):
+        mark(project, VIEWED, stamp)
+    if run.get("closed") or not (show and stamp > seen):
         return []  # the final report carries the close card
     at = now()  # loads datetime from the standard library before the card module's cached import
     lines = sibling("fast_card").news(run, steps_for(run), record_path(project), claims_path(project, run), ledger_ns, at)
-    seen = Path(project, *FAST, SEEN)
-    seen.touch()
-    os.utime(seen, ns=(stamp, stamp))
+    mark(project, SEEN, stamp)
     return lines
+
+
+def reminder(runs, cwd, session):
+    """The live view's link on the first prompt and every sixth after, for this session's run; else None. Prompts only:
+    one small counter file per project, never a cost on tool calls. Never raises."""
+    try:
+        item = next((item for item in mine(runs, cwd, session, bind_cwd=False) if not item[2].get("lost")), None)
+        if not item:
+            return None
+        path = Path(item[2]["project"], *FAST, PROMPTS)
+        try:
+            count = int(path.read_text(encoding="utf-8").strip() or 0) + 1
+        except (OSError, ValueError):
+            count = 1
+        path.write_text(str(count), encoding="utf-8")
+        if count % VIEW_EVERY != 1:
+            return None
+        url = sibling("fast_view").live_url(HOME / "view")
+        return (f"🏭 Live view of every run: {url}" if url else
+                "🏭 Live view is off: ask your agent to start `fast_gate.py view`, then open the link it prints")
+    except Exception as error:  # noqa: BLE001 - a courtesy; the prompt's answer comes first
+        log("hook.error", where="reminder", error=repr(error))
+        return None
+
+
+def note_agents(runs, cwd, session, agents):
+    """Keep the host's background agents in this session's run views when the list changed (Stop events only)."""
+    try:
+        for entry, _, run in mine(runs, cwd, session, bind_cwd=False)[:3]:
+            if not run.get("lost") and sibling("fast_view").agents_of(HOME / "view", view_id(run["project"], run["key"])) != agents:
+                view(run["project"], load(store.state_path(entry)), agents)
+    except Exception as error:  # noqa: BLE001 - a courtesy for the owner; the stop decision comes first
+        log("hook.error", where="agents", error=repr(error))
 
 
 def stop(event, runs, cwd, session):
@@ -641,6 +878,8 @@ def cmd_hook(host="claude"):
                     print(reason, file=sys.stderr)
                 log("hook.answer", host=host, hook_event=event["name"], answer="deny", exit=code)
         elif event["kind"] == "stop":
+            if event.get("agents") is not None:
+                note_agents(runs, cwd, session, event["agents"])
             reason = stop(event, runs, cwd, session)
             out = hosts.keep_going(host, reason) if reason else None
             if out:
@@ -648,8 +887,12 @@ def cmd_hook(host="claude"):
         elif event["kind"] in ("prompt", "session"):
             text = context(event, runs, cwd, session)
             out = hosts.context(host, event["name"], text) if text else None
-        if event["kind"] and hosts.notifies(host) and not event.get("delegate"):  # delegates' messages may not reach the owner
-            out = hosts.with_message(out, news(runs, cwd, session))
+        if event["kind"]:  # the view refreshes on every host; delegates' messages may not reach the owner
+            show = hosts.notifies(host) and not event.get("delegate")
+            lines = news(runs, cwd, session, show)
+            if show and event["kind"] == "prompt":
+                lines = "\n".join(line for line in (lines, reminder(runs, cwd, session)) if line) or None
+            out = hosts.with_message(out, lines) if show else out
         if out:
             print(out)
         return code
@@ -687,23 +930,39 @@ def main():
     done.add_argument("--offline", help="Record tickets, plan, handoff or a hidden-check done-run without reading tickets "
                                          "through gh, with the reason")
     sub.add_parser("status", parents=[common])
+    sub.add_parser("scratch", parents=[common], help="Print the open run's scratch folder for throwaway data")
     pause = sub.add_parser("pause", parents=[common], help="Waiting on the owner; lets the session stop")
     pause.add_argument("--reason", required=True)
     sub.add_parser("resume", parents=[common])
+    tried = sub.add_parser("try", parents=[common], help="How the owner tries a finished todo: a command, link or file")
+    tried.add_argument("todo", help="The todo's ID, such as T3")
+    target = tried.add_mutually_exclusive_group(required=True)
+    for flag, what in (("cmd", "a command to run"), ("url", "an http(s) link"), ("file", "a path inside the project")):
+        target.add_argument(f"--{flag}", help=what)
+    shown = sub.add_parser("view", help="Serve the owner's live view of every open run on 127.0.0.1")
+    shown.add_argument("--port", type=int, default=8765, help="Default 8765; a busy port falls back to a free one")
+    shown.add_argument("--snapshot", help="Write one HTML file with the current state instead of serving")
     close = sub.add_parser("close", parents=[common])
     close.add_argument("--abandon", help="The owner stopped the run: their reason")
+    rehome = sub.add_parser("rehome", parents=[common],
+                            help="Owner only: bring in an open run from another machine or folder")
+    rehome.add_argument("--from", dest="source", required=True, help="The folder the run's run.json records")
     install = sub.add_parser("install", help="Install the entry skills and gate hooks for one host")
     install.add_argument("--host", required=True, choices=("claude", "codex", "cursor", "other"),
                          help="other: entry skills only, for agents you wire by hand")
     install.add_argument("--project", help="Install into this project instead of your user folders")
+    install.add_argument("--no-auto-update", dest="auto", action="store_false",
+                         help="No daily self-update at session start (also SAFE_ENGINE_NO_UPDATE=1)")
     install.add_argument("--codex-home", help="Codex: write the gate hooks into this CODEX_HOME")
     orchestrate = sub.add_parser("orchestrate", help="Set up an orchestrator to start factory sessions")
     sibling("fast_orchestrate").arguments(orchestrate)
     hook = sub.add_parser("hook", help="Answer one host hook event from stdin")
     hook.add_argument("--host", default="claude", help="claude, codex, cursor, or any other hook-capable agent")
     args = parser.parse_args()
-    actions = {"start": cmd_start, "done": cmd_done, "status": cmd_status, "close": cmd_close, "hook": lambda a: sys.exit(cmd_hook(a.host)),
-               "install": lambda a: sibling("fast_install").install(a.host, a.project, codex_home=a.codex_home,
+    actions = {"start": cmd_start, "done": cmd_done, "status": cmd_status, "close": cmd_close, "rehome": cmd_rehome,
+               "try": cmd_try, "view": cmd_view, "scratch": cmd_scratch,
+               "hook": lambda a: sys.exit(cmd_hook(a.host)),
+               "install": lambda a: sibling("fast_install").install(a.host, a.project, auto=a.auto, codex_home=a.codex_home,
                                                                     log=lambda line: (print(line), log("install.write", line=line))),
                "orchestrate": lambda a: sibling("fast_orchestrate").run(a),
                "pause": lambda a: cmd_pause(a, a.reason), "resume": lambda a: cmd_pause(a, None)}

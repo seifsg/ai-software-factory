@@ -59,7 +59,7 @@ safe-engine Build a habit tracker in /home/me/habits. Success means a signed-in 
 1. Researches three competitors and writes a feature matrix with opportunities.
 2. Asks you about size, features, approach and stack: one round for a POC, more for an MVP.
 3. Reads the backlog, then opens an epic and outcome sub-issues in To do, each with a definition of done.
-4. Analyzes requirements and consumers, then writes a plan whose todos become each ticket's checklist. A fresh agent writes the hidden checks.
+4. Analyzes requirements and consumers, then writes a plan whose todos become each ticket's checklist. Before each build wave, a fresh agent writes the hidden checks for the criteria that wave builds.
 5. Writes the design brief and the schema decision.
 6. Builds every checklist item through a check-change-check loop and ticks it once it works.
 7. Runs the app through every requested journey and its most likely failure; the hidden checks decide each criterion.
@@ -168,7 +168,10 @@ Details: [install](docs/install.md) · [hosts](docs/hosts.md).
 |---|---|
 | Claude Code, through the installer | On its own: during a session Claude Code fetches new versions; `/reload-plugins` or a new session loads them |
 | Claude Code, right now (any route) | `claude plugin marketplace update ai-software-factory`, then `claude plugin update safe-engine@ai-software-factory`, then a new session |
-| Codex, Cursor, other | `git pull` in your factory clone, then run the same `fast_gate.py install --host ...` again. It replaces only the factory's own files and hook entries |
+| Codex, Cursor, other, installed from a clone | On its own: at most once a day, the first session start fast-forwards your clone when it is clean and on `main`, then reruns your install. A clone with local changes, on another branch or offline is left alone and the gate log says why ([hosts](docs/hosts.md#updates)) |
+| Codex, Cursor, other, right now or opted out | `git pull` in your factory clone, then run the same `fast_gate.py install --host ...` again. It replaces only the factory's own files and hook entries |
+
+Turn the daily update off with `SAFE_ENGINE_NO_UPDATE=1` in your environment, or install with `--no-auto-update`.
 
 **Projects stay pinned.** On first use a project pins the factory's main branch to one commit, and every later run and resume there reads its methods from that commit, offline. New projects get the newest methods; updating the install brings new launchers and hooks. To switch a project to newer methods, ask `improve-factory Switch [absolute project directory] to the newest factory.` It checks the run is compatible first.
 
@@ -191,6 +194,7 @@ Details: [install](docs/install.md) · [hosts](docs/hosts.md).
 | The agent will not stop | A run blocks the first stop and names the next step; stopping again right after passes. To end a run early, ask the agent to close it with your reason |
 | The agent's `gh` commands break in PowerShell | Have it run them in Git Bash: PowerShell 5.1 breaks `{owner}/{repo}` placeholders and nested quotes |
 | Missing on another machine or in a cloud session | Install there too; cloud sessions load the skills committed to their repository |
+| A run started on another machine reads as lost here | Bring the project with its `.factory/` and the run's bundle, then ask the agent to bring the run in, naming the folder it lived in (`fast_gate.py rehome --project <here> --from <old folder>`). Check the card against `status` on the old machine, then retire the copy there with `close --abandon` |
 | The factory itself misbehaved | `improve-factory The factory did [observed]; expected [result].`, or [open an issue](https://github.com/seifsg/ai-software-factory/issues) |
 
 ## 🧰 Skills

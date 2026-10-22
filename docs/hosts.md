@@ -11,10 +11,13 @@ First-class hosts get an installer route, gate hooks and a Safe reviewer preset.
 | Skills | `safe-engine` plugin (skills + hooks) | `~/.agents/skills/` | `~/.agents/skills/` |
 | Rules file | `AGENTS.md` (read when no `CLAUDE.md` exists; otherwise import it with `@AGENTS.md`) | `AGENTS.md` | `AGENTS.md` |
 | Install | `fast_gate.py install --host claude` or [by hand](#claude-code) | `fast_gate.py install --host codex`, then trust it in `/hooks` | `fast_gate.py install --host cursor` |
+| Updates | marketplace `autoUpdate` | session-start hook, once a day ([updates](#updates)) | same |
 | Invoke (same form for `improve-factory`) | `/safe-engine Build ...` | `$safe-engine Build ...` | `use safe-engine to build ...` |
 | Question tool | `AskUserQuestion` (4 questions, 4 options each) | chat message | chat message |
 | Gate progress messages | hook `systemMessage`, shown to the user | hook `systemMessage`, shown as a warning | not shown: the agent relays the gate's card |
 | Delegate hook calls | marked (`agent_id`): they show no progress; the next main-thread call does | not marked: tool hooks carry no `agent_id` and use the parent session id, so a delegate's call may show it | not applicable |
+| Live view agents | background agents from each stop's `background_tasks` (type, description, status; fields read defensively, unverified) | none listed: the `**Now:**` todos | none listed: the `**Now:**` todos |
+| Live view link reminder | in the prompt hook's `systemMessage`, first prompt and every sixth | same | no prompt hook: the agent gives the link |
 | Task list | `TaskCreate` / `TaskUpdate` when the session has them (on by default only for older models; `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` opts in) | the plan view, when the session has its plan tool | none documented: chat lines only |
 | Gate hooks | plugin: `PreToolUse`, `Stop`, `UserPromptSubmit`, `SessionStart` | `~/.codex/hooks.json`: same events and JSON as Claude Code | `~/.cursor/hooks.json`: `preToolUse`, `stop` (a follow-up only when `status` is `completed`), `sessionStart` |
 | Safe reviewer | `review --agent claude`: `claude -p`, Read/Grep/Glob only, `--json-schema` | `review --agent codex`: `codex exec --sandbox read-only --output-schema` | `review --agent cursor`: `agent -p --mode ask` |
@@ -46,14 +49,26 @@ The plugin brings `/safe-engine`, `/improve-factory` and the gate hooks. Its roo
 
 | Agent | Skills | Gate | Safe reviewer |
 |---|---|---|---|
-| GitHub Copilot | reads `.agents/skills`, `~/.agents/skills` | `.github/hooks/*.json`, PascalCase `PreToolUse` → `sh <launchers>/safe-engine/scripts/run-gate.sh copilot` (exit 2 denies) | review packet |
-| Gemini CLI | reads `.agents/skills` | `BeforeTool` hook → `sh <launchers>/safe-engine/scripts/run-gate.sh gemini` (exit 2 denies) | review packet |
+| GitHub Copilot | reads `.agents/skills`, `~/.agents/skills` | `.github/hooks/*.json`, PascalCase `PreToolUse` → `sh <launchers>/safe-engine/scripts/run-gate.sh copilot` (exit 2 denies); `SessionStart` → `... run-gate.sh copilot update` | review packet |
+| Gemini CLI | reads `.agents/skills` | `BeforeTool` hook → `sh <launchers>/safe-engine/scripts/run-gate.sh gemini` (exit 2 denies); `SessionStart` → `... run-gate.sh gemini update` | review packet |
 | OpenCode | reads `.agents/skills` | no declarative hooks: run `fast_gate.py` yourself | review packet |
 | Anything else | point it at `.agents/skills/safe-engine/SKILL.md` | `fast_gate.py` by hand | review packet |
 
 Their hooks show no gate progress messages: the agent relays the card from the gate's command output.
 
 `fast_gate.py install --host other` copies the launchers into `~/.agents/skills` (or `--project <dir>`). Run hooks through `run-gate.sh`: it fails open when Python or the gate is missing. Unknown hosts get a generic reader: pre-tool events deny with exit code 2 and the reason on stderr; stop and prompt hooks need a first-class adapter.
+
+## Updates
+
+Claude Code updates through its marketplace. Every other install made from a Git clone records the clone, its revision and each `--host`/`--project` pair in `~/.safe-engine/install.json`. A copy that is no Git clone, or a pinned project bundle under `~/.safe-engine/bundles/`, records nothing and never updates.
+
+The session-start hook entry carries an `update` argument (`run-gate.sh <host> update`; the Windows command likewise). Before the gate loads, it runs `fast_update.py`, which at most once a day:
+
+1. leaves the clone alone unless it is on `main` with no local changes;
+2. fetches, then fast-forwards to its upstream (`git merge --ff-only`);
+3. when the revision moved, reruns that clone's `fast_gate.py install` for each recorded install, which rewrites the launchers, hook entries and record.
+
+Offline, a diverged `main`, a missing Git or any other error changes nothing; the session goes on and `~/.safe-engine/logs/gate.log` gets an `update` line with the result. Projects keep their pinned bundle. Off: `SAFE_ENGINE_NO_UPDATE=1`, or `install --no-auto-update` (the last install decides); either way no extra process starts. Other hook entries are unchanged; a recorded install's session start starts one more Python (about 0.2 s on Windows). Agents with no session-start hook update by hand ([README](../README.md#-update)).
 
 ## Orchestrators
 

@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Factory floor</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=bedtime,block,bolt,check_circle,close,cloud_off,confirmation_number,construction,content_copy,dark_mode,database,error,forum,front_hand,image,inventory_2,light_mode,link,map,notifications,open_in_new,palette,psychology,refresh,rocket_launch,schedule,science,search,smart_toy,terminal&display=block">
+<style>
+/* Layout: summary strip; then a sticky rail (andon, Ready to try, activity, or a run's detail) beside the production lines. DOM order = phone order. */
+:root{
+  --floor:light-dark(#ECEEEA,#121416);--sheet:light-dark(#FFFFFF,#1B1E21);--ink:light-dark(#17191A,#ECEFEA);--steel:light-dark(#55606A,#A3ABB3);--rule:light-dark(#C9CEC8,#30353A);
+  --hazard:#FFC400;--andon:light-dark(#B42318,#FF7A6E);--go:light-dark(#1B6E37,#5BD68A);--try:light-dark(#1E4FC9,#8FB2FF);
+  --t-andon:light-dark(#FBE9E7,#3A1D1A);--t-go:light-dark(#E6F2EA,#16301F);--t-try:light-dark(#E8EEFB,#1A2440);--on-try:light-dark(#FFFFFF,#0B1020);
+  --display:"Archivo",system-ui,"Segoe UI",sans-serif;--plate:"IBM Plex Mono",ui-monospace,"Cascadia Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark}}
+:root[data-theme="dark"]{color-scheme:dark}
+:root[data-theme="light"]{color-scheme:light}
+@property --p{syntax:"<number>";inherits:false;initial-value:0}
+*{box-sizing:border-box}
+[x-cloak],[hidden],[data-away]>*{display:none!important}
+.icons .ms{visibility:visible}
+.contents{display:contents}
+body{background:var(--floor);color:var(--ink);font:15px/1.45 var(--display);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 40px}
+h1,h2,h3,p{margin:0;text-wrap:balance}
+button,a,select{font:inherit;color:inherit}
+button{cursor:pointer}
+ul{margin:0;padding:0;list-style:none}
+:focus-visible{outline:3px solid var(--try);outline-offset:2px}
+.ms{visibility:hidden;font-family:"Material Symbols Rounded";font-size:20px;line-height:1;display:inline-block;vertical-align:-4px;user-select:none;text-transform:none;letter-spacing:normal}
+.plate{font-family:var(--plate);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.caps{font:600 11px/1.2 var(--plate);letter-spacing:.08em;text-transform:uppercase}
+.muted{color:var(--steel)}
+.sm{font-size:12px}
+.sp{flex:1}
+.row{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center}
+.app{max-width:1440px;margin:0 auto;display:grid;gap:14px}
+.boot{padding:24px;border:1.5px dashed var(--rule);font-family:var(--plate)}
+/* header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--floor);padding-block:6px;gap:8px 16px}
+h1{font:800 22px/1 var(--display);font-stretch:75%;letter-spacing:.02em;text-transform:uppercase}
+.dot{flex:none;width:10px;height:10px;border-radius:50%;background:var(--go)}
+.lost .dot{background:var(--andon)}
+.btn{border:1.5px solid var(--rule);background:var(--sheet);color:var(--ink);padding:6px 11px;border-radius:3px;font-size:13px;font-weight:600;display:inline-flex;gap:6px;align-items:center;justify-self:start;text-decoration:none;white-space:nowrap}
+.btn .ms{font-size:18px;vertical-align:0}
+.btn.primary{background:var(--ink);border-color:var(--ink);color:var(--floor)}
+.btn.try{border-color:var(--try);color:var(--try)}
+.btn.try.primary{background:var(--try);color:var(--on-try)}
+.btn[aria-pressed="true"]{border:2px solid var(--ink);background:var(--t-try);box-shadow:inset 0 -3px 0 var(--ink)}
+.link{border:0;background:none;color:var(--try);padding:0;text-decoration:underline;font-size:13px}
+.strip{border:2px solid var(--andon);background:var(--t-andon);padding:8px 12px;border-radius:3px}
+.strip .ms{color:var(--andon)}
+/* summary */
+.sum{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.tile-s{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;align-items:center;text-decoration:none;background:var(--sheet);border:1px solid var(--rule);border-radius:3px;padding:10px 12px}
+.tile-s .ms{grid-row:span 2;font-size:28px}
+.tile-s b{font:800 26px/1 var(--display);font-stretch:80%}
+.tile-s.w{border-color:var(--andon);background:var(--t-andon)}.tile-s.w .ms{color:var(--andon)}
+.tile-s.r .ms{color:var(--try)}.tile-s.d .ms{color:var(--go)}
+/* floor */
+.floor{display:grid;grid-template-columns:380px minmax(0,1fr);grid-template-areas:"rail lines";gap:16px;align-items:start}
+.col{display:grid;gap:14px;min-width:0}
+.rail{grid-area:rail;position:sticky;top:calc(env(safe-area-inset-top,0px) + 52px);max-height:calc(100vh - 64px);overflow:auto;padding:2px}
+main{grid-area:lines}
+.sec{font:700 12px/1 var(--plate);letter-spacing:.1em;text-transform:uppercase;display:flex;gap:8px;align-items:center}
+/* line */
+.line{background:var(--sheet);border:1px solid var(--rule);border-radius:3px;padding:14px;display:grid;gap:12px;min-width:0;transition:opacity .3s;content-visibility:auto;contain-intrinsic-size:auto 330px} /* off-screen lines skip rendering and their animations */
+.line.held{border-color:var(--andon)}
+.line.open{box-shadow:0 0 0 2px var(--ink)}
+.stale .line{border-style:dashed}
+.stale .stations,.stale .track,.stale .ring{filter:grayscale(1) opacity(.6)}
+.lh h3{font:700 19px/1.1 var(--display);font-stretch:85%}
+.name{border:0;background:none;padding:0;text-align:left;text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:1.5px}
+.ring{--p:0;width:46px;height:46px;border-radius:50%;background:conic-gradient(var(--go) calc(var(--p)*1%),var(--rule) 0);display:grid;place-items:center;transition:--p .8s ease-out;flex:0 0 auto}
+.ring span{width:36px;height:36px;border-radius:50%;background:var(--sheet);display:grid;place-items:center;font:600 11px var(--plate)}
+.tag{font:600 11px/1 var(--plate);letter-spacing:.05em;text-transform:uppercase;padding:4px 6px;border:1px solid currentColor;border-radius:3px;display:inline-flex;gap:4px;align-items:center}
+.tag .ms{font-size:14px;vertical-align:0}
+.held-c{color:var(--andon)}
+.light{width:12px;height:12px;border-radius:50%;background:var(--andon);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:.25}}
+.stations{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));position:relative;row-gap:6px}
+.stations::before,.stations .fill{content:"";position:absolute;left:calc(50%/var(--n));right:calc(50%/var(--n));top:17px;height:4px;background:var(--rule);border-radius:2px}
+.stations .fill{background:var(--ink);transform-origin:left;transition:transform .6s ease-out}
+.st{display:grid;justify-items:center;gap:4px;text-align:center;min-width:0}
+.st i{width:38px;height:38px;display:grid;place-items:center;border:2px solid var(--rule);background:var(--sheet);border-radius:50%;z-index:1;font-style:normal;position:relative;transition:background .4s,border-color .4s}
+.st.done i{border-color:var(--ink);background:var(--ink);color:var(--sheet)}
+.st.now i{border-color:var(--ink);background:var(--hazard);color:#17191A}
+.st.now i::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:2px solid var(--ink);animation:ping 1.6s ease-out infinite}
+.held .st.now i::after{animation:none;opacity:.4}
+@keyframes ping{from{transform:scale(.85);opacity:1}to{transform:scale(1.25);opacity:0}}
+.st small{font:600 11px/1.2 var(--plate);letter-spacing:.04em;text-transform:uppercase;color:var(--steel);overflow-wrap:anywhere}
+.st.now small{color:var(--ink)}
+.workers{grid-row:2;display:flex;justify-content:center;gap:2px}
+.workers .ms{font-size:18px;color:var(--try);animation:bob 1.2s ease-in-out infinite}
+.workers .ms:nth-child(2){animation-delay:.2s}.workers .ms:nth-child(3){animation-delay:.4s}
+@keyframes bob{50%{transform:translateY(-4px)}}
+.track{position:relative;overflow:hidden;padding-bottom:12px}
+.track::after{content:"";position:absolute;left:-14px;right:-14px;bottom:2px;height:6px;background:repeating-linear-gradient(90deg,var(--ink) 0 2px,transparent 2px 14px);opacity:.35;animation:roll 1s linear infinite;pointer-events:none}
+.quiet .track::after{animation-duration:6s;opacity:.2}
+.held .track::after,.stale .track::after{animation:none}
+@keyframes roll{from{transform:translateX(-14px)}to{transform:none}}
+.belt{display:flex;gap:6px;overflow:auto hidden;padding:4px 12px 10px 2px}
+.tile{flex:0 0 auto;width:156px;border:1.5px solid var(--rule);border-radius:3px;padding:6px 8px;display:grid;gap:2px;align-content:start;font-size:12px;background:var(--sheet)}
+.tile b{font:600 12px var(--plate);display:flex;justify-content:space-between;gap:6px}
+.tile .t{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tile.done{border-color:var(--go);background:var(--t-go)}
+.tile.done .ms{color:var(--go);font-size:16px;vertical-align:-3px}
+.pile{margin-right:10px;box-shadow:3px 3px 0 var(--sheet),4px 4px 0 var(--go),7px 7px 0 var(--sheet),8px 8px 0 var(--go)}
+.tile.now{border:2px solid var(--ink);background:repeating-linear-gradient(-45deg,var(--hazard) 0 8px,#17191A 8px 16px) top/100% 6px no-repeat,var(--sheet);padding-top:11px}
+.tile.next{border-color:var(--ink)}
+.tile.later,.tile.more{border-style:dashed}
+.tile.more{place-content:center;text-align:center;color:var(--steel)}
+.chip{font:12px var(--plate);border:1px solid var(--rule);padding:3px 7px;border-radius:3px;display:inline-flex;gap:4px;align-items:center}
+.chip .ms{font-size:15px;vertical-align:0}
+.chip.run .ms{color:var(--try)}.chip.fin{color:var(--steel)}
+.err{color:var(--andon);font-size:13px}
+/* rail */
+.andon{border:2px solid var(--andon);background:var(--t-andon);padding:12px 14px;border-radius:3px;display:grid;gap:8px}
+.andon .caps{color:var(--andon);display:flex;gap:6px;align-items:center}
+.andon p{font-weight:600}
+.card{background:var(--sheet);border:1px solid var(--rule);border-left:4px solid var(--try);padding:10px 12px;display:grid;gap:6px;border-radius:3px}
+.card.glow{animation:glow 4s ease-out}
+.enter{animation:enter .3s ease-out}
+@keyframes enter{from{opacity:0;transform:translateY(-6px)}}
+@keyframes glow{from{background:var(--t-try);box-shadow:0 0 0 3px var(--try)}to{background:var(--sheet)}}
+.card h3{font:600 14px/1.3 var(--display);display:flex;gap:6px}
+.card h3 .ms{color:var(--try)}
+.cmd{display:flex;gap:8px;align-items:center;min-width:0}
+code{flex:1;min-width:0;white-space:pre-wrap;word-break:break-all;background:var(--floor);padding:6px 8px;border-radius:3px;font:12px var(--plate)}
+.thumb{width:100%;max-width:min(100%,260px);aspect-ratio:16/9;object-fit:cover;border:1px solid var(--rule);border-radius:3px}
+#feed summary{cursor:pointer;list-style:none;display:flex;gap:8px;align-items:baseline}#feed summary::after{content:"Hide";font:12px var(--plate);color:var(--try);text-decoration:underline}#feed:not([open]) summary::after{content:"Show"}#feed summary::-webkit-details-marker{display:none}
+.feed{margin-top:8px;display:grid;gap:6px;font-size:13px}
+.feed li{display:grid;grid-template-columns:44px 20px 1fr;gap:6px;align-items:start}
+.feed .ms{font-size:17px}
+/* detail */
+.detail{background:var(--sheet);border:1.5px solid var(--ink);border-radius:3px;padding:14px;display:grid;gap:14px}
+.detail h2{font:700 19px/1.1 var(--display);font-stretch:85%}
+.detail h2:focus{outline:none}
+.gantt{display:grid;gap:4px}
+.gantt div{display:grid;grid-template-columns:86px 1fr 60px;gap:8px;align-items:center;font:12px var(--plate)}
+.gantt i{height:10px;border-radius:2px;background:var(--ink);display:block}
+.gantt .now i{background:repeating-linear-gradient(-45deg,var(--hazard) 0 6px,#17191A 6px 12px)}
+.gantt .left i{background:var(--rule)}
+.bar{height:6px;background:var(--rule);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--go);transform-origin:left;transition:transform .6s}
+.todo{border-top:1px solid var(--rule);padding-top:6px;font-size:13px}
+.todo summary{cursor:pointer;display:flex;gap:8px;align-items:baseline}
+.todo summary b{font:600 12px var(--plate)}
+.todo p{white-space:pre-line;font:12px/1.5 var(--plate);color:var(--steel);padding:4px 0 2px 26px}
+/* toasts */
+.toasts{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));display:grid;gap:8px;z-index:9;width:min(360px,calc(100vw - 32px))}
+.toast{background:var(--ink);color:var(--floor);padding:10px 12px;border-radius:3px;display:flex;gap:8px;align-items:center;font-size:13px;box-shadow:0 6px 20px #0004}
+.toast .ms{color:var(--hazard)}
+.foot{font-size:12px;color:var(--steel);border-top:1px solid var(--rule);padding-top:10px}
+@media (max-width:1099px){.floor{grid-template-columns:minmax(0,1fr);grid-template-areas:"rail" "lines"}.rail{position:static;max-height:none;overflow:visible}.rail>.col{grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));align-items:start}}
+@media (max-width:640px){.top{position:static}.sum{grid-template-columns:repeat(2,minmax(0,1fr))}.tile-s{padding:8px}.tile-s b{font-size:22px}
+  .stations{grid-template-columns:repeat(var(--n),68px);overflow-x:auto;padding-bottom:4px}.stations,.belt{-webkit-mask-image:linear-gradient(90deg,transparent,#000 18px,#000 calc(100% - 18px),transparent);mask-image:linear-gradient(90deg,transparent,#000 18px,#000 calc(100% - 18px),transparent)} /* fades say: scroll for more */.st i{width:30px;height:30px}.st .ms{font-size:16px}.stations::before,.stations .fill{top:13px;left:34px;right:auto;width:calc(68px * (var(--n) - 1))}
+  .detail{border-radius:0}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="boot" id="boot">Loading the Factory floor… If this stays, the view's libraries did not load (offline or blocked). The text card still works: <code>fast_gate.py status</code>.</div>
+
+<div class="app" x-data="floor" x-cloak :class="lost && 'lost'" @keydown.escape.window="close()" x-effect="document.title = sel ? 'Run ' + sel.label + ' · Factory floor' : 'Factory floor · ' + plural(open.length, 'run')">
+  <header class="top row">
+    <h1>Factory floor</h1>
+    <span class="plate muted" x-text="plural(open.length, 'run') + ' open'"></span>
+    <span class="sp"></span>
+    <span class="row" style="gap:6px;font-size:13px"><span class="dot" x-effect="beat($el, at)"></span><span x-text="liveText"></span></span>
+    <button class="btn" x-show="!snap" @click="toggleNotify()" :aria-pressed="!!notify"><span class="ms" aria-hidden="true">notifications</span><span x-text="notify===null ? 'Notifications blocked here' : notify ? 'Notifying' : 'Notify me'"></span></button>
+    <button class="btn" @click="switchTheme()"><span class="ms" aria-hidden="true" x-text="dark ? 'light_mode' : 'dark_mode'"></span><span x-text="'Use ' + (dark ? 'light' : 'dark') + ' theme'"></span></button>
+  </header>
+
+  <div class="strip row" x-show="lost" x-effect="$el.hidden = modal"><span class="ms" aria-hidden="true">cloud_off</span><span role="alert"><b>Lost the live feed.</b> <span x-text="okAt ? 'Showing the state from ' + clock(okAt) + '.' : 'No state yet. Is fast_gate.py view running?'"></span></span><span class="muted" aria-hidden="true" x-text="'Retrying every ' + (hidden ? 15 : 2) + ' s'"></span><button class="btn" @click="poll(true)"><span class="ms" aria-hidden="true">refresh</span>Retry now</button></div>
+
+  <section class="sum" aria-label="Summary" x-effect="$el.hidden = modal"><nav class="contents" aria-label="Jump to a section">
+    <a class="tile-s" href="#lines"><span class="ms" aria-hidden="true">construction</span><b x-text="open.length"></b><span class="caps">Runs open</span></a>
+    <a class="tile-s w" href="#waiting" x-show="waiting.length"><span class="ms" aria-hidden="true">front_hand</span><b x-text="waiting.length"></b><span class="caps">Waiting on you</span></a>
+    <a class="tile-s r" href="#ready"><span class="ms" aria-hidden="true">rocket_launch</span><b x-text="readyTotal"></b><span class="caps">Ready to try</span></a></nav>
+    <div class="tile-s d"><span class="ms" aria-hidden="true">check_circle</span><b x-text="open.reduce((a,r)=>a+r.done,0)"></b><span class="caps">Todos done</span></div>
+  </section>
+
+  <div class="floor">
+    <aside class="col rail" aria-label="Waiting on you, Ready to try, activity and run detail">
+      <section id="waiting" class="col" x-show="waiting.length" aria-label="Waiting on you" x-effect="$el.hidden = modal">
+        <template x-for="(r,i) in waiting" :key="r.key"><div class="andon">
+          <span class="caps"><span class="light"></span><span x-text="'Waiting on you · ' + r.label + ' · ' + age(r.paused.since)"></span></span>
+          <p x-text="r.paused.reason"></p>
+          <div class="cmd"><code x-text="r.project"></code><button class="btn" :class="r.key===waiting[0]?.key && !sel && 'primary'" @click="copy('s'+r.key, r.project, $el)"><span class="ms" aria-hidden="true">content_copy</span><span x-text="copyLabel('s'+r.key, 'Copy folder path')"></span></button></div>
+        </div></template>
+      </section>
+      <div class="col" x-show="!sel">
+        <section id="ready" class="col" aria-labelledby="ready-h" style="gap:8px">
+          <div class="row"><h2 class="sec" id="ready-h"><span class="ms" aria-hidden="true">rocket_launch</span> Ready to try</h2><span class="sp"></span><button class="link" x-show="ready.length>3" @click="all=!all" x-text="all ? 'Show fewer' : ready.length < readyTotal ? 'Show ' + ready.length + ' newest' : 'Show all ' + ready.length"></button></div>
+          <div class="col" style="gap:8px">
+            <template x-for="(t,i) in (all ? ready : ready.slice(0,3))" :key="t.key">
+              <div class="card" x-init="loaded && $el.classList.add('glow')">
+                <h3><span class="ms" aria-hidden="true" x-text="KIND[t.kind]"></span><span x-text="t.result"></span></h3>
+                <span class="plate muted sm" x-text="t.run + ' · ' + t.id + ' ' + t.title + ' · ' + age(t.at) + ' ago'"></span>
+                <template x-if="safeSrc(t.thumb)"><img class="thumb" @error="$el.remove()" :src="t.thumb" :alt="'Screenshot: ' + t.result"></template>
+                <div class="cmd"><code x-text="t.value"></code>
+                  <template x-if="t.kind==='url' && safeUrl(t.value)"><a class="btn try" :class="t.key===ready[0]?.key && !waiting.length && 'primary'" :href="t.value" target="_blank" rel="noopener noreferrer"><span class="ms" aria-hidden="true">open_in_new</span>Open link</a></template>
+                  <template x-if="!(t.kind==='url' && safeUrl(t.value))"><button class="btn try" :class="t.key===ready[0]?.key && !waiting.length && 'primary'" @click="copy(t.run+'/'+t.id, t.value, $el)"><span class="ms" aria-hidden="true">content_copy</span><span x-text="copyLabel(t.run+'/'+t.id, t.kind==='cmd' ? 'Copy command' : t.kind==='url' ? 'Copy link' : 'Copy path')"></span></button></template>
+                </div>
+                <span class="plate muted sm" x-show="t.kind==='cmd'" :title="t.cwd" x-text="'in the ' + t.cwd.split(/[\\/]/).pop() + ' folder'"></span>
+              </div>
+            </template>
+          </div>
+          <p class="muted" x-show="!ready.length">Nothing to try yet. Finished todos with a command, link or file show here.</p>
+        </section>
+        <details id="feed" class="col" style="gap:8px" :open="!narrow">
+          <summary class="sec"><h2 class="sec" id="feed-h"><span class="ms" aria-hidden="true">schedule</span> Recent activity</h2></summary>
+          <ul class="feed">
+            <template x-for="e in events.slice(-7).reverse()" :key="e.id"><li x-init="loaded && $el.classList.add('enter')"><span class="plate muted" x-text="clock(e.t)"></span><span class="ms" aria-hidden="true" x-text="e.icon"></span><span><b x-text="e.run"></b> <span x-text="e.text"></span></span></li></template>
+          </ul>
+          <p class="muted" x-show="!events.length">No activity yet.</p>
+        </details>
+      </div>
+      <template x-if="sel">
+        <section class="detail" :aria-labelledby="'d-' + sel.key">
+          <div class="row"><h2 tabindex="-1" :id="'d-' + sel.key" x-text="'Run ' + sel.label"></h2><span class="sp"></span><button class="btn primary" @click="close()"><span class="ms" aria-hidden="true">close</span>Back to all runs</button></div>
+          <span class="plate muted" x-text="'in ' + sel.name + ' · ' + sel.kind + ' run · ' + fmt(sel.steps.reduce((a,s)=>a+s.secs,0)) + ' total' + (sel.closed ? ' · ' + sel.closed : '')"></span>
+          <p class="err" x-show="sel.error" x-text="sel.error"></p>
+          <div class="andon" x-show="narrow && sel.paused"><span class="caps"><span class="light"></span>Waiting on you</span><p x-text="sel.paused?.reason"></p>
+            <div class="cmd"><code x-text="sel.project"></code><button class="btn" @click="copy('s'+sel.key, sel.project, $el)"><span class="ms" aria-hidden="true">content_copy</span><span x-text="copyLabel('s'+sel.key, 'Copy folder path')"></span></button></div></div>
+          <h3 class="sec">Time per step</h3>
+          <div class="gantt">
+            <template x-for="s in sel.steps" :key="s.id"><div :class="s.s"><span x-text="name(s.id)"></span><i :style="'width:' + Math.max(2, s.secs / (Math.max(...sel.steps.map(x=>x.secs)) || 1) * 100) + '%'"></i><span class="muted" x-text="s.s==='left' ? 'not yet' : fmt(s.secs)"></span></div></template>
+          </div>
+          <h3 class="sec row"><span x-text="sel.ticket"></span><span class="sp"></span><span x-text="sel.done + ' of ' + sel.total + ' done'"></span></h3>
+          <div class="bar"><i :style="'transform:scaleX(' + sel.pct/100 + ')'"></i></div>
+          <div>
+            <template x-for="t in detail" :key="t.id"><details class="todo"><summary><b x-text="t.id"></b><span x-text="t.title"></span><span class="sp"></span><span class="caps" x-text="t.state"></span></summary><p x-text="'→ ' + t.result + (t.value ? '\nTry: ' + t.value : '')"></p></details></template>
+          </div>
+          <span class="plate muted sm" x-text="'Record: ' + sel.record"></span>
+        </section>
+      </template>
+    </aside>
+
+    <main id="lines" class="col" :class="lost && 'stale'" aria-labelledby="lines-h" x-effect="$el.toggleAttribute('data-away', modal)">
+      <div class="row">
+        <h2 class="sec" id="lines-h"><span class="ms" aria-hidden="true">construction</span> Runs</h2><span class="sp"></span>
+        <template x-for="f in FILTERS" :key="f[0]"><button class="btn" x-show="(open.length > 1 || filter!=='all') && (count(f[0]) || filter===f[0] || f[0]==='all')" :aria-pressed="filter===f[0]" @click="setFilter(f[0])" x-text="f[1] + ' ' + count(f[0])"></button></template>
+      </div>
+      <div class="col">
+        <template x-for="r in shown" :key="r.key">
+          <article class="line" :class="{held:r.paused, quiet:quiet(r), open:selKey===r.key}" :aria-labelledby="'n-'+r.key">
+            <div class="row lh">
+              <div class="ring" role="img" :style="'--p:' + r.pct" :aria-label="r.done + ' of ' + r.total + ' todos done'"><span x-text="r.pct + '%'"></span></div>
+              <h3><button class="name" :id="'n-'+r.key" :aria-current="selKey===r.key ? 'true' : null" @click="show(r.key)" x-text="r.label"></button></h3>
+              <span class="plate muted" x-text="'in ' + r.name + (r.ticket ? ' · ' + r.ticket : '')"></span>
+              <span class="sp"></span>
+              <span class="tag held-c" x-show="r.paused"><span class="light"></span>Waiting on you</span>
+              <span class="tag muted" x-show="quiet(r)"><span class="ms" aria-hidden="true">bedtime</span><span x-text="'Quiet ' + age(r.changed)"></span></span>
+              <span class="plate muted" x-show="r.steps.length" x-text="name(r.steps[r.at]?.id) + ' · step ' + (r.at+1) + ' of ' + r.steps.length + ' · ' + age(r.stepSince) + ' in step'"></span>
+            </div>
+            <p class="err" x-show="r.error" x-text="r.error"></p>
+            <div class="stations" tabindex="0" role="img" x-show="r.steps.length" x-effect="r.at; narrow && $nextTick(()=>$el.scrollLeft=($el.querySelector('.now')?.offsetLeft||0)-$el.clientWidth/2+34)" :style="'--n:' + r.steps.length" :aria-label="'Steps: ' + r.steps.map(s=>name(s.id) + (s.s==='left' ? '' : ' ' + s.s)).join(', ')">
+              <div class="fill" :style="'transform:scaleX(' + r.at/Math.max(1, r.steps.length-1) + ')'"></div>
+              <template x-for="s in r.steps" :key="s.id">
+                <div class="st" :class="s.s"><i><span class="ms" aria-hidden="true" x-text="s.s==='done' ? 'check_circle' : ICON[s.id]"></span></i><small x-text="name(s.id)"></small></div>
+              </template>
+              <div class="workers" :style="'grid-column:' + (r.at+1)" x-show="r.agents.some(a=>a.run)"><template x-for="a in r.agents.filter(a=>a.run).slice(0,3)" :key="a.id"><span class="ms" aria-hidden="true">smart_toy</span></template></div>
+            </div>
+            <div class="track">
+              <div class="belt" tabindex="0" role="list" :aria-label="'Todos: ' + r.done + ' of ' + r.total + ' done' + (r.now.length>1 ? ', ' + r.now.length + ' in parallel' : '')">
+                <div role="listitem" class="tile done pile" x-show="r.done" x-effect="stamp($el, r.done)"><b><span><span class="ms" aria-hidden="true">check_circle</span> <span x-text="r.done + ' done'"></span></span></b><span class="t" x-text="r.last ? 'Last: ' + r.last.id + ' ' + r.last.title : ''"></span></div>
+                <template x-for="t in r.open" :key="t.id">
+                  <div role="listitem" class="tile" :class="t.state" x-init="loaded && $el.classList.add('enter')"><b><span x-text="t.id"></span><span class="caps" x-text="t.state"></span></b><span class="t" x-text="t.title"></span></div>
+                </template>
+                <div role="listitem" class="tile more" x-show="r.more" x-text="'+' + r.more + ' later'"></div>
+              </div>
+            </div>
+            <ul class="row" style="gap:6px" aria-label="Agents and sessions">
+              <template x-for="a in r.agents" :key="a.id"><li class="chip" :class="a.run ? 'run' : 'fin'"><span class="ms" aria-hidden="true" x-text="a.run ? 'smart_toy' : 'check_circle'"></span><span x-text="'Agent: ' + a.desc + (a.run ? ', running' : ', finished')"></span></li></template>
+              <li class="chip" x-show="r.sessions"><span class="ms" aria-hidden="true">terminal</span><span x-text="plural(r.sessions, 'session')"></span></li>
+            </ul>
+          </article>
+        </template>
+      </div>
+      <p class="muted" x-show="!open.length">No factory runs open on this machine. Start one in your agent with <code style="padding:0 4px">safe-engine</code>.</p>
+      <p class="muted" x-show="open.length && !shown.length">No runs match this filter.</p>
+      <details x-show="finished.length"><summary class="sec" x-text="'Closed today · ' + finished.length"></summary>
+        <ul class="col" style="gap:6px;padding-top:8px"><template x-for="r in finished" :key="r.key"><li class="row plate sm"><span class="ms" aria-hidden="true" x-text="r.closed==='stopped' ? 'block' : 'check_circle'"></span><button class="name" :id="'n-'+r.key" @click="show(r.key)" x-text="r.label"></button><span class="muted" x-text="r.closed + ' · ' + plural(r.total, 'todo') + ' · ' + fmt(r.steps.reduce((a,s)=>a+s.secs,0))"></span></li></template></ul>
+      </details>
+    </main>
+  </div>
+
+  <footer class="foot plate" x-effect="$el.hidden = modal" x-text="snap ? 'Snapshot file: no live updates. Run fast_gate.py view for the live view.' : 'Written by the factory gate when a run changes · served on 127.0.0.1 · ' + plural(runs.length, 'run')"></footer>
+
+  <div class="toasts" aria-live="polite">
+    <template x-for="m in toasts" :key="m.id"><div class="toast enter"><span class="ms" aria-hidden="true" x-text="m.icon"></span><span x-text="m.text"></span></div></template>
+  </div>
+</div>
+
+<script id="snapshot" type="application/json"></script>
+</body>
+</html>
+<script type="module">
+import Alpine from "https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/+esm";
+
+// The gate writes state.json (all runs) and <key>.todos.json (one run's todos) when a run changes: fast_view.py.
+let etag = "";
+async function source(){ // null when nothing changed since the last poll (the server answers 304 by ETag)
+  const inline = document.getElementById("snapshot").textContent.trim();
+  if (inline) { page.snap = true; return JSON.parse(inline); }
+  const res = await fetch("state.json", {cache: "no-cache"});
+  if (!res.ok) throw new Error("state.json " + res.status);
+  const tag = res.headers.get("ETag");
+  if (tag && tag === etag) return null;
+  etag = tag;
+  return res.json();
+}
+async function details(key){ // a run's full todo list, only while its detail is open
+  if (page.snap) return [];
+  const res = await fetch(encodeURIComponent(key) + ".todos.json", {cache: "no-cache"});
+  return res.ok ? res.json() : [];
+}
+const ICON={research:"search",kickoff:"forum",tickets:"confirmation_number",analysis:"psychology",plan:"map",design:"palette",schema:"database",build:"construction","done-run":"science",handoff:"inventory_2"};
+const KIND={cmd:"terminal",url:"link",file:"image"};
+const FILTERS=[["all","All"],["waiting","Waiting on you"],["running","Running"],["quiet","Quiet"]];
+const store={get(k){try{return localStorage.getItem(k)}catch(_){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(_){}}};
+const calm=()=>matchMedia("(prefers-reduced-motion: reduce)").matches,narrowQ=matchMedia("(max-width:640px)"),darkQ=matchMedia("(prefers-color-scheme: dark)");
+let page;
+const ID=x=>x&&typeof x==="object"&&("key" in x?"key":"id" in x?"id":null);
+function merge(a,b){ // poll result into live state, keeping identity: only bindings whose values changed re-run
+  if(Array.isArray(b)){const k=ID(b[0]);if(!Array.isArray(a)||!k)return JSON.stringify(a)===JSON.stringify(b)?a:b;
+    const old=new Map(a.map(x=>[x[k],x])),out=b.map(x=>old.has(x[k])?merge(old.get(x[k]),x):x);
+    return out.length===a.length&&out.every((x,i)=>x===a[i])?a:out}
+  if(b&&typeof b==="object"&&a&&typeof a==="object"&&!Array.isArray(a)){for(const k in b){const v=merge(a[k],b[k]);if(a[k]!==v)a[k]=v}for(const k in a)if(!(k in b))delete a[k];return a}
+  return b}
+Alpine.data("floor",()=>({
+  ICON,KIND,FILTERS,runs:[],ready:[],readyTotal:0,events:[],at:0,detail:[],          // state.json
+  now:Date.now(),okAt:0,lost:false,hidden:document.hidden,loaded:false,seen:0,
+  selKey:"",filter:new URLSearchParams(location.search).get("runs")||"all",all:false,copied:"",mode:store.get("theme")||"system",notify:false,toasts:[],narrow:narrowQ.matches,sysDark:darkQ.matches,snap:false,
+  get open(){return this.runs.filter(r=>!r.closed)}, get finished(){return this.runs.filter(r=>r.closed)},
+  get waiting(){return this.open.filter(r=>r.paused)}, get sel(){return this.runs.find(r=>r.key===this.selKey)},
+  get shown(){return this.filter==="all"?this.open:this.open.filter(r=>this.kind(r)===this.filter)},
+  get dark(){return this.mode==="dark"||this.mode==="system"&&this.sysDark}, // the theme on screen
+  get modal(){return !!(this.sel&&this.narrow)},
+  get liveText(){return this.snap?"Snapshot · "+this.clock(this.at):this.lost?(this.okAt?"Last update "+this.clock(this.okAt):"Not connected"):!this.okAt?"Connecting…":"Live · updated "+Math.max(0,Math.round((this.now-this.okAt)/1000))+" s ago"},
+  init(){page=this;document.getElementById("boot").remove();document.fonts?.load('20px "Material Symbols Rounded"').then(f=>f.length&&document.documentElement.classList.add("icons")).catch(()=>{});document.documentElement.lang="en";this.applyTheme();
+    this.notify=store.get("notify")==="1"&&window.Notification?.permission==="granted";
+    narrowQ.addEventListener("change",e=>this.narrow=e.matches);darkQ.addEventListener("change",e=>this.sysDark=e.matches);
+    addEventListener("popstate",()=>this.route());addEventListener("hashchange",()=>this.route());
+    document.addEventListener("visibilitychange",()=>{this.hidden=document.hidden;if(!this.hidden)this.poll(true)});
+    setInterval(()=>this.now=Date.now(),1000);
+    this.poll()},
+  async poll(once){
+    clearTimeout(this.timer);if(this.polling)return;this.polling=true; // one poll at a time, one timer chain
+    try{const s=await source();if(s)this.apply(s);this.okAt=Date.now();this.lost=false}catch(_){this.lost=true}
+    this.polling=false;clearTimeout(this.timer);if(!this.snap)this.timer=setTimeout(()=>this.poll(),this.hidden?15e3:2e3)},
+  apply(s){s={runs:[],ready:[],readyTotal:0,events:[],at:Date.now(),...s};const fresh=this.loaded?s.events.filter(e=>e.id>this.seen):[]; // any missing field gets its empty value
+    for(const k of ["runs","ready","readyTotal","events","at"])this[k]=merge(this[k],s[k]);this.seen=s.events.at(-1)?.id||0;this.route(true);this.loadDetail();
+    this.$nextTick(()=>this.loaded=true);this.announce(fresh)},
+  announce(es){if(!es.length)return;
+    this.say(es.at(-1).icon,es.length===1?es[0].run+": "+es[0].text:es.length+" updates · latest "+es.at(-1).run+": "+es.at(-1).text);
+    if(es.some(e=>e.kind==="finish")&&!calm())import("https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/+esm").then(m=>m.default({particleCount:120,spread:80,origin:{y:.3},disableForReducedMotion:true})).catch(()=>{})},
+  say(icon,text){const id=Date.now()+Math.random();this.toasts=[...this.toasts.slice(-2),{id,icon,text}];setTimeout(()=>this.toasts=this.toasts.filter(m=>m.id!==id),5000);
+    if(this.notify&&this.hidden)try{new Notification("Factory floor",{body:text})}catch(_){}},
+  setFilter(f){this.filter=f;const u=new URL(location);f==="all"?u.searchParams.delete("runs"):u.searchParams.set("runs",f);history.replaceState(null,"",u)},
+  quiet(r){return !r.paused&&!r.closed&&this.now-r.changed>9e5}, // no record edit, step or pause for 15 min
+  kind(r){return r.paused?"waiting":this.quiet(r)?"quiet":"running"},
+  count(f){return f==="all"?this.open.length:this.open.filter(r=>this.kind(r)===f).length},
+  plural:(n,w)=>n+" "+w+(n===1?"":"s"),
+  name:s=>s?s[0].toUpperCase()+s.slice(1):"",
+  fmt(s){const m=Math.round((s||0)/60),h=m/60|0;return m<60?m+"m":h<24?h+"h"+String(m%60).padStart(2,"0"):(h/24|0)+"d"+h%24+"h"}, // as the chat card: 14m, 1h02, 2d3h
+  age(t){return this.fmt((this.now-t)/1000)}, // reads `now`, so every age ticks
+  clock:t=>new Date(t).toTimeString().slice(0,5),
+  safeUrl:v=>/^https?:\/\//i.test(v||""), safeSrc:v=>/^shots\/[\w.-]+$/.test(v||""), // record text never becomes script
+  show(k){history.pushState(null,"","#run-"+k);this.route();if(this.narrow)this.$nextTick(()=>scrollTo(0,0))},
+  close(){if(this.selKey){history.pushState(null,"",location.pathname+location.search);this.route()}},
+  route(keep){const k=/^#run-/.test(location.hash)?decodeURIComponent(location.hash.slice(5)):"",was=this.selKey;
+    this.selKey=this.runs.some(r=>r.key===k)?k:"";if(keep||was===this.selKey)return;this.detail=[];this.loadDetail();
+    this.$nextTick(()=>document.getElementById(this.selKey?"d-"+this.selKey:"n-"+was)?.focus())},
+  async loadDetail(){if(this.selKey)try{this.detail=merge(this.detail,await details(this.selKey))}catch(_){}},
+  copyLabel(k,label){return this.copied===k?"Copied":this.copied==="!"+k?"Press Ctrl+C":label},
+  copy(k,v,el){const done=ok=>{this.copied=(ok?"":"!")+k;setTimeout(()=>this.copied.endsWith(k)&&(this.copied=""),2500);
+      if(!ok)getSelection().selectAllChildren(el.parentElement.querySelector("code"))};
+    try{navigator.clipboard.writeText(v).then(()=>done(true),()=>done(false))}catch(_){done(false)}},
+  applyTheme(){const d=document.documentElement;this.mode==="system"?d.removeAttribute("data-theme"):d.dataset.theme=this.mode},
+  switchTheme(){this.mode=this.dark?"light":"dark";this.applyTheme();store.set("theme",this.mode)},
+  async toggleNotify(){if(this.notify){this.notify=false;store.set("notify","0");return}
+    try{this.notify=(await Notification.requestPermission())==="granted"||null}catch(_){this.notify=null}store.set("notify",this.notify?"1":"0")},
+  stamp(el,v){if(el._v!==undefined&&el._v!==v&&!calm())el.animate([{transform:"scale(1.15) rotate(-2deg)"},{transform:"none"}],350);el._v=v},
+  beat(el,v){if(el._v!==undefined&&!calm())el.animate([{transform:"scale(1.4)"},{transform:"none"}],600);el._v=v},
+}));
+Alpine.start();
+</script>
+</body>
+</html>

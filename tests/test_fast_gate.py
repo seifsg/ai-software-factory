@@ -14,6 +14,8 @@ from unittest.mock import patch
 
 SCRIPTS = Path(__file__).resolve().parents[1] / "skills/safe-engine/scripts"
 GATE = SCRIPTS / "fast_gate.py"
+sys.path.insert(0, str(SCRIPTS))
+import fast_proof  # noqa: E402  (the credit line every sample PR body ends with)
 SAMPLE = Path(__file__).resolve().parents[1] / ".agents/skills/safe-engine/references/work-record-sample.md"
 STEPS = ["research", "kickoff", "tickets", "analysis", "plan", "design", "schema", "build", "done-run", "handoff"]
 ONLINE = ("tickets", "plan", "done-run", "handoff")  # steps that read the listed tickets through gh
@@ -45,7 +47,9 @@ PR_BODY = """## 🎬 Before & after
 ![before](https://github.com/acme/site/blob/0a1b2c3/footer-before.png?raw=true)
 **After:** "Contact us" (head)
 ![after](https://github.com/acme/site/blob/0a1b2c3/footer-after.png?raw=true)
-"""
+
+---
+""" + fast_proof.CREDIT + "\n"
 
 
 EVERYDAY = (  # commands an agent runs all day: never denied
@@ -78,6 +82,15 @@ def module(name):
     return loaded
 
 
+def link(at, target):
+    """A directory link the way agents make them: a junction on Windows, a symlink elsewhere."""
+    if os.name == "nt":
+        import _winapi
+        _winapi.CreateJunction(str(target), str(at))
+    else:
+        os.symlink(target, at)
+
+
 class GateHarness:
     """A disposable project and gate home, with the real CLI and hook."""
     def setUp(self):
@@ -91,9 +104,8 @@ class GateHarness:
             self.env.pop(name, None)  # gh logged out: it fails at once, never reaching the network
 
     def tearDown(self):
-        log = self.root / "home" / "logs" / "gate.log"
-        if log.exists():  # the fail-open guard must never have swallowed an exception
-            self.assertNotIn("hook.error", log.read_text(encoding="utf-8"))
+        for log in self.root.glob("*/logs/gate.log"):  # every gate home a test used: the fail-open guard must never
+            self.assertNotIn("hook.error", log.read_text(encoding="utf-8"))  # have swallowed an exception
 
     def gate(self, *args, ok=True, project=None):
         result = subprocess.run([sys.executable, str(GATE), *args, "--project", str(project or self.project)],
@@ -357,10 +369,16 @@ class FastGateTests(GateHarness, unittest.TestCase):
             "cat > .factory/fast/work-record.md <<'EOF'\npip install -e .\nEOF": "allow",
             'python -c "\nprint(len([1]) > 3)\n"': "allow", "if (( $# > 2 )); then echo ok; fi": "allow",
             "grep -rn tee src/": "allow", "ls > /dev/null 2>&1": "allow", "echo {} > .factory/fast/run.json": "deny",
+            # redirects resolve where they run: after a cd, with ( ) restoring the folder
+            f'cd "{self.root}" && echo x > out.txt': "allow", f'(cd "{self.root}"; echo x > out.txt)': "allow",
+            f'(cd "{self.root}"); echo x > src/a.ts': "deny", "cd src && echo x > a.ts": "deny",
+            f'cd "{self.root}" > src/log.txt': "deny", "cd - && echo x > a.ts": "deny",
         }
         for command, decision in cases.items():
             with self.subTest(command=command):
                 self.assertEqual(self.pre("Bash", command=command), decision)
+        into = f'cd "{self.project}" && echo x > src/a.ts'  # from outside the project, into it
+        self.assertEqual(self.pre("Bash", cwd=self.root, command=into), "deny")
 
     def test_destructive_rules_decide_every_probe(self):
         gate = module("fast_gate")
@@ -484,6 +502,9 @@ class FastGateTests(GateHarness, unittest.TestCase):
             "Move-Item src\\a.ts src\\b.ts", "git stash", "git stash -u", "git stash list", "rm -rf .git/index.lock",
             "git commit --file - <<'EOF'\nrm -rf ~\nEOF", "git commit --file=- <<'EOF'\nDROP TABLE x\nEOF",
             "git push --prune origin",
+            # interpreter code is never a shell move: its "move" or 'mv' text is data
+            "py -3 - <<'EOF'\n# move the line\nprint(open('.factory/fast/work-record.md').read())\nEOF",
+            "python -c \"print(open('.factory/x').read().replace('mv', 'cp'))\"", 'node -e "// rename .git refs"',
         ) + EVERYDAY
         root = gate.norm(str(self.project))
         judge = gate.sibling("fast_guard").Judge(root, gate.norm, gate.inside)
@@ -498,6 +519,138 @@ class FastGateTests(GateHarness, unittest.TestCase):
         other = self.root / "proj2"  # the cwd's own run judges, not the session's bound run
         runs = [(None, {"sessions": ["s1"]}, {"project": str(self.project)}), (None, {}, {"project": str(other)})]
         self.assertIsNone(gate.guard("rm -rf dist", runs, gate.norm(str(other)), "s1"))
+
+    def scratch(self, out):
+        """The scratch folder a start or scratch command printed (its path may hold spaces)."""
+        line = next(line for line in out.splitlines() if line.startswith("Scratch: "))
+        return Path(line[len("Scratch: "):line.index(" (the run's")])
+
+    def shell(self, command, tool="Bash"):
+        out = self.hook({"hook_event_name": "PreToolUse", "tool_name": tool, "tool_input": {"command": command}})
+        return (out or {}).get("hookSpecificOutput", {}).get("permissionDecision", "allow")
+
+    def test_run_scratch_folder_takes_throwaway_deletes_and_goes_at_close(self):
+        out = self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "fix the footer copy")
+        scratch = self.scratch(out)
+        self.assertTrue(scratch.is_dir())
+        self.assertEqual(scratch.parent, self.root / "home" / "scratch")  # in the gate home, outside every project
+        self.assertEqual(self.gate("scratch").strip(), str(scratch))
+        (scratch / "profile" / "deep").mkdir(parents=True)
+        (scratch / "profile" / "deep" / "lock").write_text("x", encoding="utf-8")
+        os.chmod(scratch / "profile" / "deep" / "lock", 0o444)  # read-only, as browser and Git files often are
+        other, beside = self.root / "home" / "scratch" / "other-0-20990101000000", self.root / "op-temp"
+        for folder in (other, beside):
+            folder.mkdir(parents=True)
+        posix = scratch.as_posix()  # Bash deletes there name the path with / separators
+        for command, tool in ((f'rm -rf "{posix}/profile"', "Bash"), (f'rm -rf "{posix}"/*', "Bash"),
+                              (f'rm -rf "{posix}"', "Bash"),
+                              ):  # rd /s: the harness path holds a space, so see test_rd_in_scratch_needs_a_plain_path
+            with self.subTest(allow=command):
+                self.assertEqual(self.shell(command, tool), "allow")
+        for command, tool in ((f'rm -rf "{other}"', "Bash"), (f'rm -rf "{scratch}/../{other.name}"', "Bash"),
+                              (f'rm -rf "{beside}"', "Bash"), (f'rm -rf "{self.root / "home" / "scratch"}"', "Bash"),
+                              (f'rm -rf "{scratch}" "{beside}"', "Bash"),
+                              (f'find -L "{scratch}" -name "*.db" -delete', "Bash"),  # follows links out
+                              (f'find "{scratch}" -name "*.db" -delete', "Bash"),  # a find composes paths at run time
+                              (f'find "{scratch}" -exec rm -rf {{}} \\| "{beside}" \\;', "Bash"),
+                              (f'find "{scratch}" -exec rm -rf {{}} + "{beside}"', "Bash"),
+                              (f'cp -a "{beside}" "{scratch / "a"}"; rm -rf "{scratch / "a" / "b"}"', "Bash"),  # not alone
+                              (f'rimraf "{scratch / "profile"}"', "PowerShell"),  # its glob mode expands at run time
+                              (f"rimraf --glob '{scratch}/{{lnk,zz}}/z'", "Bash"), (f"rimraf '{scratch}/@(lnk)/z'", "Bash"),
+                              (f"rd /s /q '{scratch / 'sub'} {beside} '", "PowerShell"),  # cmd splits single quotes
+                              (f'rd /s /q "{scratch / "a b"}"', "PowerShell"),
+                              (f'rm -rf "{scratch / "profile"}"', "Bash"),  # backslashes: Bash rewrites them first
+                              (f"rm -rf '{posix}/pro\\file'", "Bash"),
+                              (f'Remove-Item -Recurse -Force "{scratch / "profile"}"', "PowerShell"),  # walks junctions
+                              (f'rm -r -fo "{scratch / "profile"}"', "PowerShell"), (f'del /s /q "{scratch}"', "PowerShell"),
+                              (f'rd "{scratch / "x"}" -Recurse -Exclude /s', "PowerShell"),  # Remove-Item in disguise
+                              (f'rm -r "{scratch}"/*/', "Bash"), (f'rm -r "{scratch}"/*/data', "Bash"),  # via a link
+                              (f'find "{scratch}" -type l -exec rm -rf "{{}}/" ";"', "Bash"),
+                              (f'rm -r "{scratch / "a"}" && ln -s "{beside}" "{scratch / "a"}" && rm -r "{scratch / "a" / "b"}"', "Bash"),
+                              (f'rd /s /q "{scratch}" & mklink /J "{scratch}" "{beside}" & rd /s /q "{scratch / "b"}"', "PowerShell"),
+                              (f'ln --sym "{beside}" "{scratch / "a"}" && rm -rf "{scratch / "a" / "b"}"', "Bash"),
+                              (f'New-Item -Type SymbolicLink -Path "{scratch / "a"}" -Target "{beside}"; rd /s /q "{scratch / "a" / "b"}"', "PowerShell"),
+                              (f'New-Item -ItemType:HardLink -Path "{scratch / "a"}" -Target "{beside}"; rd /s /q "{scratch / "a" / "b"}"', "PowerShell"),
+                              (f'mount -o bind "{beside}" "{scratch / "a"}" && rm -rf "{scratch / "a" / "b"}"', "Bash"),
+                              (f'find "{scratch}" -name x -exec rm -rf {{}} "{beside}" ";"', "Bash"),  # a path beside {}
+                              (f'rm -rf "$HOME/{scratch.name}"', "Bash"),
+                              (f'find . -name x -exec rm -rf {{}} "{beside}" \\;', "Bash"),  # inside the project too
+                              (f'New-Item -it j -Path "{scratch / "a"}" -Target "{beside}"; rd /s /q "{scratch / "a" / "b"}"', "PowerShell"),
+                              (f'find "{scratch}" -exec rm -rf + "{beside}" ";"', "Bash")):  # + after no {} is an argument
+            with self.subTest(deny=command):
+                self.assertEqual(self.shell(command, tool), "deny")
+        out = self.gate("close", "--abandon", "owner stopped it")
+        self.assertFalse(scratch.exists())
+        self.assertTrue(other.is_dir())  # another run's folder stays
+        self.assertNotIn("left", out)
+        self.assertNotEqual(self.scratch(self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "again")),
+                            scratch)  # a new start never reuses an old run's folder
+
+    def test_no_command_hides_behind_an_escaped_semicolon_or_a_find_wrapper(self):
+        self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "fix the footer copy")
+        for command, tool in (("echo x\\; rm -rf ~", "Bash"), ("printf x\\\\;rm -rf ~", "Bash"),
+                              ("echo \\\\; git push --force origin main", "Bash"),
+                              ("Write-Output x\\; Remove-Item -Recurse -Force C:\\victim", "PowerShell"),
+                              ("find . -maxdepth 0 -exec sh -c 'rm -rf ~' \\;", "Bash"),
+                              ("find . -exec env rm -rf ~ \\;", "Bash"), ("find . -exec sudo rm -rf {} /victim \\;", "Bash"),
+                              ("find . -exec find /victim -delete \\;", "Bash")):
+            with self.subTest(deny=command):
+                self.assertEqual(self.shell(command, tool), "deny")
+        for command in ("find . -name __pycache__ -type d -exec rm -rf {} +", "find . -name '*.pyc' -exec rm {} \\;"):
+            with self.subTest(allow=command):  # routine cleanups still pass
+                self.assertEqual(self.shell(command), "allow")
+
+    def test_rd_in_scratch_needs_a_plain_path(self):
+        gate, root = module("fast_gate"), Path(tempfile.mkdtemp(prefix="scratchrd"))  # no space, as cmd's rd needs
+        self.addCleanup(shutil.rmtree, root, True)
+        project, scratch = root / "proj", root / "home" / "scratch" / "k-0-20990101000000"
+        for folder in (project, scratch):
+            folder.mkdir(parents=True)
+        judge = gate.sibling("fast_guard").Judge(gate.norm(str(project)), gate.norm, gate.inside, str(root / "home"),
+                                                 lambda: scratch)
+        self.assertIsNone(judge.rule(f'rd /s /q "{scratch / "profile"}"', str(project), "windows"))
+        self.assertIsNone(judge.rule(f'cmd /c rd /s /q {scratch / "profile"}', str(project), "windows"))
+        for command in (f'rd /s /q "{scratch / "a b"}"', f"rd /s /q '{scratch / 'x'} {root} '",
+                        f'rd "{scratch / "x"}" -Recurse -Exclude /s', f'rimraf "{scratch / "x"}"'):
+            with self.subTest(deny=command):
+                self.assertTrue(judge.rule(command, str(project), "windows"))
+
+    def test_scratch_never_trusts_a_link_or_a_stored_path(self):
+        victim = self.root / "victim"
+        (victim / "keep").mkdir(parents=True)
+        (victim / "keep" / "data.txt").write_text("x", encoding="utf-8")
+        scratch = self.scratch(self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "fix it"))
+        state = next((self.root / "home" / "runs").glob("*.json"))
+        data = json.loads(state.read_text(encoding="utf-8"))
+        state.write_text(json.dumps({**data, "scratch": str(victim)}), encoding="utf-8")  # a mirror's stored path
+        self.assertEqual(self.shell(f'rm -rf "{victim}"'), "deny")
+        scratch.rmdir()
+        link(scratch, victim)  # the folder swapped for a link: the allowance must not follow it
+        self.assertEqual(self.shell(f'rm -rf "{victim / "keep"}"'), "deny")
+        self.assertEqual(self.shell(f'rm -rf "{scratch / "keep"}"'), "deny")
+        self.gate("close", "--abandon", "owner stopped it")
+        self.assertTrue((victim / "keep" / "data.txt").exists())  # close removed the link, not its target
+        self.assertFalse(os.path.lexists(scratch))
+        scratch = self.scratch(self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "again"))
+        link(scratch / "inner", victim)  # a link inside goes as a link
+        self.gate("close", "--abandon", "owner stopped it")
+        self.assertTrue((victim / "keep" / "data.txt").exists())
+        self.assertFalse(scratch.exists())
+
+    def test_closing_a_lost_run_removes_its_scratch_folder(self):
+        scratch = self.scratch(self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "fix it"))
+        (scratch / "profile").mkdir()
+        other = self.root / "proj2"
+        other.mkdir()
+        elsewhere = self.scratch(self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "same key",
+                                           project=other))
+        self.assertNotEqual(elsewhere.parent / elsewhere.name.rsplit("-", 1)[0], scratch.parent / scratch.name.rsplit("-", 1)[0])
+        for state in (self.root / "home" / "runs").glob("*.json"):
+            if json.loads(state.read_text(encoding="utf-8"))["project"] == str(self.project):
+                state.unlink()  # the run's state is lost
+        self.assertIn("without a readable run state", self.gate("close", "--abandon", "state lost"))
+        self.assertFalse(scratch.exists())
+        self.assertTrue(elsewhere.is_dir())  # the other project's run under the same key keeps its folder
 
     def test_destructive_denial_reaches_the_owner_in_every_step(self):
         self.assertEqual(self.pre("Bash", command="rm -rf ~"), "allow")  # no run: unchanged
@@ -846,16 +999,16 @@ class FastGateTests(GateHarness, unittest.TestCase):
         spec = importlib.util.spec_from_file_location("fast_gate_module", GATE)
         gate = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(gate)
-        layout, lane, ux = Path(gate.LAYOUT), Path(gate.FAST_RUN), Path(gate.UX)
+        layout, lane, ux, pr = Path(gate.LAYOUT), Path(gate.FAST_RUN), Path(gate.UX), Path(gate.PR)
         for name, texts in (("new", ("### ✅ Definition of done\nEvery criterion has an item.",
                                      "## Light lane\nT1 <title> → <what the owner can do once it is done>\n**Hidden checks:**\n**Secrets:**\n`**PR:**`",
-                                     "| U10 | Performance |")),
-                            ("old", ("### ✅ Done when", "## Hooks", "| Performance |"))):
-            for path, text in zip((layout, lane, ux), texts):
+                                     "| U10 | Performance |", "ends with the credit line in `references/credit.md`")),
+                            ("old", ("### ✅ Done when", "## Hooks", "| Performance |", "No AI or tool attribution"))):
+            for path, text in zip((layout, lane, ux, pr), texts):
                 (self.root / name / path).parent.mkdir(parents=True, exist_ok=True)
                 (self.root / name / path).write_text(text, encoding="utf-8")
         on = {"ticket_checks": True, "coverage": True, "light": True, "outcomes": True, "hidden_checks": True, "scans": True,
-              "ux_rules": True, "pr_proof": True}
+              "ux_rules": True, "pr_proof": True, "credit": True}
         off = dict.fromkeys(on, False)
         self.assertEqual(gate.method_flags({"root": str(self.root / "new")}, self.project), on)
         self.assertEqual(gate.method_flags({"root": str(self.root / "old")}, self.project), off)
@@ -865,7 +1018,7 @@ class FastGateTests(GateHarness, unittest.TestCase):
         (self.root / "new" / layout).write_bytes(b"\xff\xfe broken")
         self.assertEqual(gate.method_flags({"root": str(self.root / "new")}, self.project),
                          {**off, "light": True, "outcomes": True, "hidden_checks": True, "scans": True,
-                          "ux_rules": True, "pr_proof": True})  # fast-run.md and ux-quality still read
+                          "ux_rules": True, "pr_proof": True, "credit": True})  # fast-run.md, ux-quality, PR still read
         lucky = {"mode": "lucky", "kind": "change"}
         self.assertNotIn("done-run", gate.steps_for(lucky))
         self.assertIn("done-run", gate.steps_for({**lucky, "ticket_checks": True}))

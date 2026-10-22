@@ -22,7 +22,10 @@ SCAFFOLD = re.compile(
 DISCARD = ("/dev/null", "nul", "$null")
 SUBSTITUTE = ((re.compile(r"\$\{(\w+)\}"), r"$\1"), (re.compile(r"\$\(\s*pwd\s*\)"), "$PWD"),
               (re.compile(r"\$\(\s*git\s+rev-parse\s+--show-toplevel\s*\)"), "$GIT_TOPLEVEL"))
-PIPELINES = re.compile(r"([()])|\|\||&&|[;\n]|(?<![^\s;&|(){}])[{}](?![^\s;&|(){}])|(?<![<>|])&(?!>)")  # ( ) kept
+# ( ) kept. A lone {} is find's placeholder, never a brace group: the words after it stay with the find that runs
+# them. Every ; splits: an escaped \; still ends the statement in PowerShell, and \\; does in Bash.
+PIPELINES = re.compile(r"([()])|\|\||&&|[;\n]|(?<![^\s;&|(){}])(?:\{(?!\})|(?<!\{)\})(?![^\s;&|(){}])|"
+                       r"(?<![<>|])&(?!>)")
 OPERATOR = r"\d*(?:<<<|<<|<|&?>>?)(?:&[\d-]|\|)?"  # a redirect operator
 TOKEN = {"bash": re.compile(OPERATOR + r"|(?:\\\s|[^\s<>])+"),  # Bash: backslash-space is an escaped space
          "windows": re.compile(OPERATOR + r"|[^\s<>]+")}  # PowerShell and cmd: a backslash is a path separator
@@ -92,14 +95,25 @@ def mask(command, dialect="bash"):
 
 
 def writes(command):
-    """Target paths the command writes through redirects (> >> &> 1> >|) or a piped tee."""
+    """(cds, path) per file the command writes through redirects (> >> &> 1> >|) or a piped tee. cds: the cd
+    targets before it in its scope, so the caller resolves path where it runs; ( ) restores the folder."""
     code, quotes = mask(command)
-    names = []
-    for first, second in REDIRECT.findall(code):
-        name = unquote(first or second, quotes)
-        if name and name[0] not in "&$" and name.lower() not in DISCARD:
-            names.append(name)
-    return names
+    found, cds, scopes = [], [], []
+    for part in PIPELINES.split(code):
+        if part == "(":
+            scopes.append(len(cds))
+        elif part == ")":
+            del cds[scopes.pop() if scopes else len(cds):]
+        elif part:
+            for first, second in REDIRECT.findall(part):
+                name = unquote(first or second, quotes)
+                if name and name[0] not in "&$" and name.lower() not in DISCARD:
+                    found.append((tuple(cds), name))
+            cmd = parse(part.split("|")[0], quotes)
+            target = cd_target(cmd.words) if cmd else None
+            if target is not None:
+                cds.append(target)
+    return found
 
 
 def unquote(word, quotes):
@@ -129,7 +143,7 @@ def literal(word):
 
 def expand(token):
     """The words a token stands for: a simple {a,b} list expanded; UNCLEAR for any other brace inside a word."""
-    if "{" not in token and "}" not in token:
+    if token == "{}" or ("{" not in token and "}" not in token):  # a lone {} stays literal: find's placeholder
         return [token]
     found = BRACES.fullmatch(token)
     return [found.group(1) + item + found.group(3) for item in found.group(2).split(",")] if found else [UNCLEAR]

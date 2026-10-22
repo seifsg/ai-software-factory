@@ -28,4 +28,4 @@ The `## Work rules` section of `.agents/skills/safe-engine/SKILL.md` applies to 
 
 ## PRs
 
-Draft PRs, through `how-to-make-a-pr`, linked to their ticket, unless the owner says push direct. Humans decide ready, merge and release. No AI attribution lines in commits or PR text.
+Draft PRs, through `how-to-make-a-pr`, linked to their ticket, unless the owner says push direct. Humans decide ready, merge and release. No AI attribution lines in commits. PR bodies end with the factory credit line (`how-to-make-a-pr`).

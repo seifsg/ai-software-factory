@@ -16,12 +16,15 @@ TICKET_NUMBER = re.compile(r"#(\d+)")
 ARROW_MARK = re.compile(r"→|->")
 NEXT_H3 = re.compile(r"^###\s", re.M)
 NOW = re.compile(r"\*\*Now:\*\*([^\n]*)", re.I)
+TRY = re.compile(r"\*\*Try:\*\*[ \t]*T(\d+)[ \t]+(cmd|url|file)[ \t]+(\S[^\n]*?)[ \t]*$", re.I | re.M)
+HINT = re.compile(r"^[ \t]*<!--(?:(?!\n##\s).)*?-->", re.S | re.M)
 TICKET_LINE = re.compile(r"\*\*(?:Epic|Ticket|Sub-issue):\*\*[ \t]*(\S+)[ \t]*([^\n]*)", re.I)
 
 
 def sections(text):
-    """Level-2 sections by lowercase title; HTML comments (skeleton hints) never count."""
-    text = re.sub(r"<!--.*?-->", "", text, flags=re.S)
+    """Level-2 sections by lowercase title; HTML comments starting a line (skeleton hints) never count. A `<!--`
+    quoted later in a line is text, and no comment spans a level-2 heading."""
+    text = HINT.sub("", text)
     found, name = {}, None
     for line in text.splitlines():
         heading = re.match(r"^##\s+(.+?)\s*$", line)
@@ -119,6 +122,11 @@ def now_ids(all_sections):
     """The todo IDs the Build log's last '**Now:**' line names: the todos in progress."""
     marks = NOW.findall(all_sections.get("build log", ""))
     return re.findall(r"\bT(\d+)\b", marks[-1]) if marks else []
+
+
+def try_items(all_sections):
+    """Todo number -> (kind, target) from the Build log's '**Try:** T3 url http://...' lines; the last line wins."""
+    return {n: (kind.lower(), value) for n, kind, value in TRY.findall(all_sections.get("build log", ""))}
 
 
 def read(record):

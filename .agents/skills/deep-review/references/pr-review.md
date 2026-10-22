@@ -103,7 +103,7 @@ A fresh independent reviewer then assesses the fixes, under the review-round cap
 Show the user the fix-set, before/after and gate result. Get a go-ahead unless pre-authorized.
 
 - Stage only files you changed. Message: `fix(<area>): <what was hardened on PR #<n>>`.
-- No AI or tool attribution in commits or PR content.
+- No AI or tool attribution in commits or comments.
 - Never force-push, rewrite or delete the author's commits. Additive commits only.
 - Push rejected (fork without maintainer edits, protected branch): skip to the comment and include the full patch.
 

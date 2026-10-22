@@ -103,8 +103,15 @@ class DashboardTests(unittest.TestCase):
         self.assertEqual(facts.without_result(layouts), [])  # the line with a result wins over the earlier mention
         older = facts.sections("## Plan\n### Todos\n- T1 Schema (#2)\nT1 and T2 share one migration.\n")
         self.assertEqual(facts.todo_items(older)["1"], ("Schema", "", "2"))  # without results, the first line wins
+        quoted = facts.sections("## Request\n\n> fix text quoting <!-- (#9)\n\n## Tickets\n\n<!-- gate: hint -->\n"
+                                "**Ticket:** none (x)\n  <!-- two\nlines -->\n## Build log\n- T1 pre: `<!--<script` x\n"
+                                "<!-- unclosed\n## Done-run\n<!-- gate: hint -->\n")
+        self.assertEqual({k: v.strip() for k, v in quoted.items()}, {
+            "request": "> fix text quoting <!-- (#9)", "tickets": "**Ticket:** none (x)",
+            "build log": "- T1 pre: `<!--<script` x\n<!-- unclosed", "done-run": ""})  # line-start hints only
         started = time.perf_counter()
         facts.todo_items(facts.sections("## Plan\n### Todos\n#" + " " * 20000 + "x\n"))
+        facts.sections("<!--" + "\n" * 20000 + "## x")  # an unclosed hint scans once per line
         self.assertLess(time.perf_counter() - started, 0.5)  # no quadratic backtracking on odd input
 
     def test_a_long_now_list_never_breaks_the_hook(self):
@@ -150,6 +157,8 @@ class ProgressHookTests(unittest.TestCase):
         self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "fix the footer")
         self.record = self.project / ".factory/fast/work-record.md"
         self.shown = self.project / ".factory/fast/shown"
+        (self.project / ".factory/fast/prompts").write_text("1", encoding="utf-8")  # the live view's link reminder
+        # (first and every sixth prompt, test_fast_view.py) stays out of these exact message checks
 
     def tearDown(self):
         log = self.root / "home" / "logs" / "gate.log"

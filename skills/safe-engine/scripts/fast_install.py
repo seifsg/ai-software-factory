@@ -1,6 +1,6 @@
 """Per-host installer: put the factory's entry skills where the host finds them and wire the Fast gate hooks.
 
-fast_gate.py install --host claude|codex|cursor|other [--project DIR] [--codex-home DIR]
+fast_gate.py install --host claude|codex|cursor|other [--project DIR] [--codex-home DIR] [--no-auto-update]
 - claude: declares this repository's marketplace and enables the safe-engine plugin in ~/.claude/settings.json;
   the plugin carries the skills and hooks.
 - codex, cursor: copies skills/safe-engine and skills/improve-factory into ~/.agents/skills (the Agent Skills
@@ -8,11 +8,14 @@ fast_gate.py install --host claude|codex|cursor|other [--project DIR] [--codex-h
   ~/.cursor/hooks.json (<DIR>/.codex, <DIR>/.cursor). --codex-home writes the Codex hooks into that CODEX_HOME
   instead (an orchestrator's per-agent home). Re-running replaces only the factory's own hook entries.
 - other: the skills only, for agents wired by hand (docs/hosts.md).
+Installed from a Git clone, codex, cursor and other also record the clone in the gate home: their session-start hook
+then updates them once a day (fast_update.py).
 """
 import json
 import os
 from pathlib import Path
 import shutil
+import sys
 
 MARKETPLACE = "ai-software-factory"
 REPOSITORY = "https://github.com/seifsg/ai-software-factory.git"
@@ -22,8 +25,8 @@ CODEX_EVENTS = {"PreToolUse": "Bash|apply_patch", "Stop": None, "UserPromptSubmi
 CURSOR_EVENTS = {"preToolUse": "Shell|Write|Delete|Edit|StrReplace|MultiEdit", "stop": None, "sessionStart": None}
 
 
-def install(host, project=None, home=None, log=print, codex_home=None):
-    """Install for one host; returns the files written."""
+def install(host, project=None, home=None, log=print, auto=True, codex_home=None):
+    """Install for one host; returns the files written. auto=False turns the daily self-update off."""
     home = Path(home or Path.home())
     if host == "claude":
         written = [enable_plugin(home / ".claude" / "settings.json")]
@@ -34,12 +37,13 @@ def install(host, project=None, home=None, log=print, codex_home=None):
         gate = skills / "safe-engine" / "scripts"
         if host == "codex":
             hooks = Path(codex_home).resolve() if codex_home else base / ".codex"
-            written.append(merge_codex(hooks / "hooks.json", gate))
+            written.append(merge_codex(hooks / "hooks.json", gate, auto))
         elif host == "cursor":
-            written.append(merge_cursor(base / ".cursor" / "hooks.json", gate))
+            written.append(merge_cursor(base / ".cursor" / "hooks.json", gate, auto))
+        written.append(remember(host, project, home, auto, codex_home))
     else:
         raise SystemExit(f"Unknown host '{host}': claude, codex, cursor or other (docs/hosts.md)")
-    for path in written:
+    for path in filter(None, written):
         log(f"wrote {path}")
     return written
 
@@ -74,6 +78,28 @@ def copy_entries(target):
     return target
 
 
+def remember(host, project, home, auto, codex_home=None):
+    """Record this install's clone, revision and targets for the session-start self-update; None when this copy is
+    no Git clone or is a pinned project bundle, which never update."""
+    root = Path(__file__).resolve().parents[3]
+    gate_home = Path(os.environ.get("SAFE_ENGINE_HOME") or home / ".safe-engine")
+    if not (root / ".git").exists() or (gate_home / "bundles").resolve() in root.parents:
+        return None
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from fast_update import git
+    try:
+        revision = git(root, "rev-parse", "HEAD")
+    except Exception:  # noqa: BLE001 - no git here: the first daily check reinstalls
+        revision = None
+    path = gate_home / "install.json"
+    record = read_json(path)
+    item = {"host": host, "project": str(Path(project).resolve()) if project else None,
+            **({"codex_home": str(Path(codex_home).resolve())} if codex_home else {})}
+    installs = [old for old in record.get("installs", []) if old != item] + [item]
+    write_json(path, {"clone": str(root), "revision": revision, "auto": auto, "installs": installs})
+    return path
+
+
 # Python run as `python -c BOOT <gate folder> <host>`: imports the gate from its bytecode cache in the gate home.
 # The stdlib it needs loads first, so only the gate's own cache lives there. run-gate.sh holds the same text.
 HOME_PY = "import os,sys;h=os.environ.get('SAFE_ENGINE_HOME') or os.path.join(os.path.expanduser('~'),'.safe-engine');"
@@ -81,29 +107,35 @@ RUN_PY = ("import json,re,pathlib;d=sys.argv[1];sys.dont_write_bytecode=False;"
           "sys.pycache_prefix=os.path.join(h,'pycache');sys.path.insert(0,d);"
           "sys.argv=[os.path.join(d,'fast_gate.py'),'hook','--host',sys.argv[2]];import fast_gate;fast_gate.main()")
 BOOT = HOME_PY + RUN_PY
+# Session start only (an `update` argument): the daily self-update runs first, so the gate loads the new copy
+UPDATE_PY = ("sys.argv[3:]==['update'] and not os.environ.get('SAFE_ENGINE_NO_UPDATE') and "
+             "os.path.isfile(os.path.join(h,'install.json')) and __import__('subprocess').call("
+             "[sys.executable,os.path.join(sys.argv[1],'fast_update.py')],stdin=-3,stdout=-3,stderr=-3);")  # -3: DEVNULL
 # Windows hosts run no POSIX shell: Python itself leaves at once without a registered or open run, or a gate
 GUARD_PY = ("d=sys.argv[1];any(n.endswith('.json') for s in ('active','runs') for n in (os.listdir(os.path.join(h,s)) "
             "if os.path.isdir(os.path.join(h,s)) else ())) and os.path.isfile(os.path.join(d,'fast_gate.py')) "
             "or sys.exit(0);")
 
 
-def commands(gate, host):
-    """(POSIX command, Windows command). Windows calls Python directly, guarded: no active run or no gate exits 0."""
-    posix = f'sh "{(gate / "run-gate.sh").as_posix()}" {host}'
+def commands(gate, host, update=False):
+    """(POSIX command, Windows command). Windows calls Python directly, guarded: no active run or no gate exits 0.
+    update: the session-start entry, which first runs the daily self-update."""
+    tail = f"{host} update" if update else host
+    posix = f'sh "{(gate / "run-gate.sh").as_posix()}" {tail}'
     python = "py -3" if shutil.which("py") else "python"
-    return posix, f'{python} -c "{HOME_PY}{GUARD_PY}{RUN_PY}" "{gate.as_posix()}" {host}'
+    return posix, f'{python} -c "{HOME_PY}{UPDATE_PY if update else ""}{GUARD_PY}{RUN_PY}" "{gate.as_posix()}" {tail}'
 
 
 def ours(command):
     return "fast_gate" in command or "run-gate" in command
 
 
-def merge_codex(path, gate):
+def merge_codex(path, gate, auto=True):
     """Claude-style hooks.json: replace the factory's matcher groups per event, keep everything else."""
-    posix, windows = commands(gate, "codex")
     data = read_json(path)
     events = data.setdefault("hooks", {})
     for event, matcher in CODEX_EVENTS.items():
+        posix, windows = commands(gate, "codex", auto and event == "SessionStart")
         groups = [group for group in events.get(event, [])
                   if not any(ours(str(hook.get("command", ""))) for hook in group.get("hooks", []))]
         hook = {"type": "command", "command": posix, "commandWindows": windows, "timeout": 30}
@@ -113,14 +145,13 @@ def merge_codex(path, gate):
     return path
 
 
-def merge_cursor(path, gate):
+def merge_cursor(path, gate, auto=True):
     """Cursor hooks.json (version 1): replace the factory's entries per event, keep everything else."""
-    posix, windows = commands(gate, "cursor")
-    command = windows if os.name == "nt" else posix
     data = read_json(path)
     data.setdefault("version", 1)
     events = data.setdefault("hooks", {})
     for event, matcher in CURSOR_EVENTS.items():
+        command = commands(gate, "cursor", auto and event == "sessionStart")[os.name == "nt"]
         entries = [entry for entry in events.get(event, []) if not ours(str(entry.get("command", "")))]
         entries.append({"command": command, **({"matcher": matcher} if matcher else {})})
         events[event] = entries

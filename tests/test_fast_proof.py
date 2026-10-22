@@ -59,6 +59,14 @@ class ProofTests(unittest.TestCase):
         self.assertIn("needs >=1 screenshot", fast_proof.problems(HEAD + video, ui=True)[0])
         self.assertEqual(fast_proof.problems(HEAD + PAIR + DIFF, ui=True), [])
 
+    def test_credit_line_closes_the_body(self):
+        self.assertEqual(fast_proof.credit(HEAD + PAIR + "\n---\n" + fast_proof.CREDIT + "\n\n"), [])
+        for name, body in (("missing", HEAD + PAIR), ("not last", HEAD + PAIR + fast_proof.CREDIT + "\nthanks\n"),
+                           ("agent trailer", HEAD + PAIR + "\n---\nGenerated with an agent\n"), ("empty", "")):
+            self.assertIn("factory credit line", " ".join(fast_proof.credit(body)), name)
+        credit_md = SCRIPTS.parents[2] / ".agents/skills/how-to-make-a-pr/references/credit.md"
+        self.assertIn(f"\n{fast_proof.CREDIT}\n", credit_md.read_text(encoding="utf-8"))  # one line, two homes, held equal
+
     def test_handoff_reads_the_pr_named_on_its_line(self):
         rec, run = record(), {"kind": "change", "pr_proof": True}
         url = "https://github.com/acme/site/pull/7"
@@ -84,6 +92,11 @@ class ProofTests(unittest.TestCase):
             self.assertEqual(check(HANDOFF.format(f"{url} (body: pr body.md)"), **offline), [])  # not a UI run
             run["ui"] = True
             self.assertIn("needs >=1 screenshot", check(HANDOFF.format(f"{url} (body: pr body.md)"), **offline)[0])
+        run = {"kind": "change", "pr_proof": True, "credit": True}  # runs on current methods also need the credit line
+        with patch.object(rec, "gh", return_value=HEAD + PAIR):
+            self.assertIn("factory credit line", check(HANDOFF.format(url))[0])
+        with patch.object(rec, "gh", return_value=HEAD + PAIR + "\n---\n" + fast_proof.CREDIT):
+            self.assertEqual(check(HANDOFF.format(url)), [])
 
 
 if __name__ == "__main__":

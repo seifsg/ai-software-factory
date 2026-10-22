@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 SCRIPTS = Path(__file__).resolve().parents[1] / "skills/safe-engine/scripts"
 
@@ -88,6 +89,9 @@ class LauncherAndInstallerTests(unittest.TestCase):
         self.home = self.root / "home"
         self.env = dict(os.environ, SAFE_ENGINE_HOME=str(self.root / "gate"), HOME=str(self.home),
                         USERPROFILE=str(self.home))
+        gate_home = mock.patch.dict(os.environ, {"SAFE_ENGINE_HOME": str(self.root / "gate")})  # install records here
+        gate_home.start()
+        self.addCleanup(gate_home.stop)
         subprocess.run([sys.executable, str(SCRIPTS / "fast_gate.py"), "start", "--project", str(self.project),
                         "--key", "hosts", "--kind", "change", "--request", "x"], check=True, capture_output=True,
                        env=self.env)
