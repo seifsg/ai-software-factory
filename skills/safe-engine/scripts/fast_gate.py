@@ -263,6 +263,7 @@ def status_text(run, all_sections=None):
     if run.get("paused"):
         lines.append("Paused: " + run["paused"]["reason"])
     lines.append("Next: " + ("closed" if run.get("closed") else next_step(run) or "close"))
+    lines += list(filter(None, [sibling("fast_pr_policy").notice(HOME, run)]))
     return "\n".join(lines)
 
 
@@ -279,6 +280,8 @@ def skeleton(run):
     if run.get("pr_proof"):
         hints["handoff"] += ("; a PR line naming the draft PR, whose Before & after section has one heading per outcome, "
                              "each Before and After with an image, a recording or a fenced block")
+        if run.get("pr_demo"):
+            hints["handoff"] += "; every outcome declares Visual and Journey; visual: screenshot pair, journey: Video; only scoped owner Media waiver"
     if run.get("credit"):
         hints["handoff"] += "; the PR body's last line is the factory credit line (how-to-make-a-pr credit.md)"
     if sibling("fast_record").hidden(run):
@@ -297,7 +300,7 @@ FLAGS = {"ticket_checks": (LAYOUT, "Definition of done"), "coverage": (LAYOUT, "
          "light": (FAST_RUN, "Light lane"), "outcomes": (FAST_RUN, "what the owner can do once it is done"),
          "hidden_checks": (FAST_RUN, "**Hidden checks:**"),
          "scans": (FAST_RUN, "**Secrets:**"), "ux_rules": (UX, "| U10 |"), "pr_proof": (FAST_RUN, "`**PR:**`"),
-         "credit": (PR, "references/credit.md")}
+         "credit": (PR, "references/credit.md"), "pr_demo": (PR, "**Visual:**")}
 
 
 def method_flags(bundle, project):
@@ -341,7 +344,8 @@ def cmd_start(args):
     run = {"version": VERSION, "key": args.key, "project": str(project), "mode": args.mode, "kind": args.kind,
            "ui": product if args.ui is None else args.ui, "data": product if args.data is None else args.data,
            "auth": args.auth, "request": request.strip(), "created": now(), "done": {}, "paused": None,
-           "closed": False, "bundle": bundle, **method_flags(bundle, project)}
+           "closed": False, "bundle": bundle, "pr_instance": os.urandom(16).hex(), **method_flags(bundle, project)}
+    run.update(sibling("fast_pr_policy").start(HOME))
     if "analysis" not in steps_for(run):  # older hook copies still require it before build: mark it skipped
         run["done"]["analysis"] = {"at": now(), "skipped": "light lane"}
     if run.get("ux_rules") and not run["ui"]:  # only these runs later ask which UI files they changed
@@ -379,12 +383,15 @@ def cmd_done(args):
     except OSError as error:
         fail(f"Cannot read the work record: {error}")
     body = all_sections.get(TITLES[step].lower(), "")
-    problems = (CHECKS[step](run, body, project=project, offline=args.offline, all_sections=all_sections)
+    checked = sibling("fast_pr_policy").effective(HOME, run) if step == "handoff" else run
+    problems = (CHECKS[step](checked, body, project=project, offline=args.offline, all_sections=all_sections)
                 if body.strip() else [f"section '## {TITLES[step]}' is missing or empty"])
     if problems:
         log("step.refused", key=run["key"], step=step, problems=problems)
         fail(f"'{step}' not recorded:\n- " + "\n- ".join(problems))
     run["done"][step] = {"at": now(), **({"unverified": args.offline} if args.offline else {})}
+    if step == "handoff" and checked.get("pr_policy"):
+        run["done"][step]["pr_policy"] = checked["pr_policy"]["digest"]
     if step in ("kickoff", "tickets") and record.run_size(all_sections) and "size" not in run:
         run.update(size=record.run_size(all_sections), size_at=step)  # frozen: editing the line later skips nothing
     if step == "plan":  # who owes the epic's integration todos is read from the plan as recorded here
@@ -408,7 +415,9 @@ def cmd_scratch(args):
 
 
 def cmd_status(args):
-    print(status_text(open_run(args.project)[1]))
+    run = open_run(args.project)[1]
+    sibling("fast_pr_policy").notice(HOME, run, strict=True)
+    print(status_text(run))
 
 
 def cmd_pause(args, reason):
@@ -468,6 +477,8 @@ def cmd_close(args):
         return close_lost(project, args.abandon) if args.abandon else fail(lost_text(project))
     if "handoff" not in run["done"] and not args.abandon:
         fail("Record the handoff first, or close --abandon \"<the owner's reason>\"")
+    if not args.abandon:
+        sibling("fast_pr_policy").close(HOME, run)
     run.update(closed=True, closed_at=now(), abandoned=args.abandon, paused=None)
     put(project, run)
     entry = registry_path(project)
@@ -706,7 +717,7 @@ def pre_tool(event, runs, cwd, session):
         targets = [norm(name, where(cds, cwd)) for cds, name in shell.writes(event["command"])]
     else:
         return None
-    vault = (norm(ACTIVE), norm(HOME / "runs")) if targets else ()
+    vault = (norm(ACTIVE), norm(HOME / "runs"), norm(HOME / "pr-proof")) if targets else ()
     for path in targets:
         if any(inside(path, folder) for folder in vault):  # the gate home's run files: only gate commands write them
             item = owner(runs, cwd) or next(iter(mine(runs, cwd, session)), None) or runs[0]
@@ -856,6 +867,7 @@ def context(event, runs, cwd, session):
         if run.get("lost"):
             line += "; its run state in the gate home is missing: the owner closes it with --abandon"
         lines.append(line + ". Method: .agents/skills/safe-engine/references/fast-run.md.")
+        lines += list(filter(None, [sibling("fast_pr_policy").notice(HOME, run)]))
     return "\n".join(lines) or None
 
 
@@ -925,6 +937,13 @@ def main():
     start.add_argument("--auth", action="store_true", help="The product has sign-in")
     start.add_argument("--request")
     start.add_argument("--request-file")
+    sub.add_parser("pr-proof-method", help="Read the owner-selected PR method for any mode")
+    adopt = sub.add_parser("adopt-pr-proof", help="Owner-authorized PR-only policy; preserves existing run state")
+    target = adopt.add_mutually_exclusive_group(required=True)
+    target.add_argument("--project")
+    target.add_argument("--new-runs", action="store_true")
+    adopt.add_argument("--method", required=True, help="Absolute canonical PR SKILL.md; preserve its whole folder")
+    adopt.add_argument("--reason", required=True, help="Owner instruction and source authorizing adoption")
     done = sub.add_parser("done", parents=[common], help="Check and record one step")
     done.add_argument("step", choices=list(TITLES))
     done.add_argument("--offline", help="Record tickets, plan, handoff or a hidden-check done-run without reading tickets "
@@ -958,6 +977,8 @@ def main():
     args = parser.parse_args()
     actions = {"start": cmd_start, "done": cmd_done, "status": cmd_status, "close": cmd_close, "rehome": cmd_rehome,
                "try": cmd_try, "view": cmd_view, "scratch": cmd_scratch,
+               "adopt-pr-proof": lambda a: sibling("fast_pr_policy").adopt(a, sys.modules[__name__]),
+               "pr-proof-method": lambda a: sibling("fast_pr_policy").method(HOME),
                "hook": lambda a: sys.exit(cmd_hook(a.host)),
                "install": lambda a: sibling("fast_install").install(a.host, a.project, auto=a.auto, log=lambda line: (print(line), log("install.write", line=line))),
                "pause": lambda a: cmd_pause(a, a.reason), "resume": lambda a: cmd_pause(a, None)}

@@ -26,6 +26,77 @@ def record():
 
 
 class ProofTests(unittest.TestCase):
+    def test_demo_requires_scoped_screenshots_and_every_journey_video(self):
+        flags = "**Visual:** yes\n**Journey:** yes\n"
+        video = "**Video:** [Pay](https://example.com/pay.webm) 00:03-00:12\n"
+        body = HEAD + PAIR.replace("**Before:**", flags + "**Before:**") + video
+        self.assertEqual(fast_proof.problems(body, ui=True, demo=True), [])
+        for name, changed in {
+            "missing before": body.replace(f"![b]({IMG.format('b')})", "did not exist"),
+            "same image": body.replace(IMG.format('a'), IMG.format('b')),
+            "same image fragment": body.replace(IMG.format('a'), IMG.format('b') + "#after"),
+            "missing video": body.replace(video, ""),
+            "image as video": body.replace("pay.webm", "pay.png"),
+            "video as image": body.replace("b.png", "b.mp4"),
+            "commented video": body.replace(video, "<!--" + video + "-->"),
+            "inline video": body.replace(video, "`" + video.rstrip() + "`\n"),
+            "fenced declarations": body.replace(flags, F + "md\n" + flags + F + "\n"),
+            "duplicate declaration": body + "**Visual:** no (backend)\n",
+            "reasonless no": body.replace("**Journey:** yes", "**Journey:** no"),
+            "invalid host": body.replace(IMG.format('a'), "https:///after.png"),
+            "local host": body.replace(IMG.format('a'), "https://127.0.0.1/a.png"),
+            "invalid port": body.replace(IMG.format('a'), "https://example.com:bad/a.png"),
+            "credentials": body.replace(IMG.format('a'), "https://user:pass@example.com/a.png"),
+            "second journey": body + PAIR.replace("**Before:**", flags + "**Before:**"),
+        }.items():
+            with self.subTest(name=name):
+                self.assertTrue(fast_proof.problems(changed, ui=True, demo=True))
+
+    def test_demo_accepts_explicit_embeds_tables_and_nonvisual_command_proof(self):
+        flags = "**Visual:** yes\n**Journey:** yes\n"
+        table = ("### Checkout completes\n" + flags + "| Before | After |\n|---|---|\n"
+                 f"| ![b]({IMG.format('b')}) | ![a]({IMG.format('a')}) |\n")
+        for video in ('<video src="https://github.com/user-attachments/assets/abc-123"></video>',
+                      '<video controls><source src="https://example.com/movie"></video>',
+                      '[pay](https://example.com/clip.mp4#t=3,12)'):
+            self.assertEqual(fast_proof.problems(HEAD + table + "**Video:** " + video, ui=True, demo=True), [])
+        cli = HEAD + DIFF.replace("**Before", "**Visual:** no (CLI only)\n**Journey:** no (internal parser)\n**Before")
+        self.assertEqual(fast_proof.problems(cli, demo=True), [])
+        self.assertIn("declare >=1 Visual", " ".join(fast_proof.problems(cli, ui=True, demo=True)))
+        self.assertTrue(fast_proof.problems(HEAD + "<!--" + table + "-->", demo=True))
+
+    def test_demo_waivers_are_local_explicit_and_media_specific(self):
+        base = HEAD + "### Checkout completes\n**Visual:** yes\n**Journey:** yes\n**Before:** old\n**After:** new\n"
+        waiver = "**Media waiver:** all | Skip checkout media | owner message in this chat\n"
+        self.assertEqual(fast_proof.problems(base + waiver, ui=True, demo=True), [])
+        self.assertTrue(fast_proof.problems(base.replace("**After:** new", "**After:**") + waiver, demo=True))
+        for changed in (waiver.replace("all |", "screenshots |"), waiver.replace("all |", "video |"),
+                        waiver.replace("all |", "none |"), waiver.replace("Skip checkout media", ""),
+                        waiver.replace("owner message in this chat", ""), waiver.replace("Skip checkout media", "<owner exact request>"),
+                        "<!--" + waiver + "-->", waiver + waiver):
+            self.assertTrue(fast_proof.problems(base + changed, demo=True), changed)
+        self.assertTrue(fast_proof.problems(base + waiver + base.replace(HEAD, ""), demo=True))
+
+    def test_shared_demo_video_needs_each_outcomes_segment(self):
+        flags = "**Visual:** yes\n**Journey:** yes\n"
+        proof = PAIR.replace("**Before:**", flags + "**Before:**")
+        video = "**Video:** [Pay](https://example.com/pay.webm)\n"
+        body = HEAD + proof + video + proof.replace("Invoice totals include tax", "Refund includes tax") + video
+        self.assertIn("start/end timestamps", " ".join(fast_proof.problems(body, demo=True)))
+        self.assertEqual(fast_proof.problems(body.replace("[Pay]", "[Pay 00:01-00:05]"), demo=True), [])
+
+    def test_demo_is_versioned_and_handoff_checks_online_and_offline_bodies(self):
+        rec, run = record(), {"kind": "change", "pr_proof": True}
+        handoff = HANDOFF.format("https://github.com/acme/site/pull/7 (body: proof.md)")
+        with patch.object(rec, "gh", return_value=HEAD + PAIR):
+            self.assertEqual(rec.pr_proof(run, handoff), [])
+            self.assertTrue(rec.pr_proof({**run, "pr_demo": True}, handoff))
+            self.assertEqual(rec.pr_proof({"pr_demo": True}, handoff), [])
+        body = HEAD + DIFF.replace("**Before", "**Visual:** no (CLI)\n**Journey:** no (internal)\n**Before")
+        with tempfile.TemporaryDirectory() as project:
+            Path(project, "proof.md").write_text(body, encoding="utf-8")
+            self.assertEqual(rec.pr_proof({**run, "pr_demo": True}, handoff, project=project, offline="fixture"), [])
+
     def test_each_outcome_shows_openable_before_and_after_proof(self):
         passing = {
             "screenshot pair": HEAD + PAIR,

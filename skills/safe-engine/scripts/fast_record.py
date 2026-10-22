@@ -695,7 +695,7 @@ def pr_proof(run, body, project=None, offline=None, **_):
     except (OSError, RuntimeError, subprocess.TimeoutExpired, ValueError) as error:
         return [str(error)]
     ui = bool(run.get("ui") or touched_ui(run, project))
-    found = fast_proof.problems(text, ui) + (fast_proof.credit(text) if run.get("credit") else [])
+    found = fast_proof.problems(text, ui, demo=bool(run.get("pr_demo"))) + (fast_proof.credit(text) if run.get("credit") else [])
     return [f"PR body: {problem}" for problem in found]
 
 
