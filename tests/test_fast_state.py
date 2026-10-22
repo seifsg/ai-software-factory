@@ -192,9 +192,14 @@ class RunStateTests(harness.GateHarness, unittest.TestCase):
 
     def test_the_owner_brings_an_open_run_in_from_another_machine(self):
         moved = self.other_machine(git="fresh")
+        setup, run = harness.module("fast_setup"), json.loads((moved / ".factory/fast/run.json").read_text(encoding="utf-8"))
+        old_scratch = setup.scratch_path(self.root / "home2", run)  # a scratch folder under the old folder's tag
+        (old_scratch / "profile").mkdir(parents=True)
         lost = self.gate("status", project=moved, ok=False)
         self.assertIn(f'rehome --project "{moved}" --from "{self.project}"', lost)  # the lost message names the way in
         self.assertIn("Brought in from", self.rehome(self.project, moved, ok=True))
+        follows = setup.scratch_path(self.root / "home2", {**run, "project": str(moved)})
+        self.assertEqual((old_scratch.exists(), (follows / "profile").is_dir()), (False, True))  # it follows the run
         status = self.gate("status", project=moved)
         for line in ("'copy-fix'", "[x] tickets", "Paused: owner away", "Next: plan"):
             self.assertIn(line, status)

@@ -149,15 +149,19 @@ def deletes(words):
             return None  # only the index changes
         words, name = words[words.index("rm"):], "rm"
     if name == "find":
-        execs = [words[i + 1] for i, w in enumerate(words[:-1]) if w in ("-exec", "-execdir", "-ok", "-okdir")]
-        if "-delete" not in words and not any(program(w) in DELETERS | {"rimraf"} for w in execs):
+        execs = segments(words)
+        if any(DELETE.search(" ".join(seg)) and program(seg[0]) not in DELETERS | {"rimraf"} for seg in execs):
+            return []  # a delete behind a wrapper (sh -c, env, sudo, xargs, another find): unprovable
+        deleting = [seg for seg in execs if program(seg[0]) in DELETERS | {"rimraf"}]
+        if "-delete" not in words and not deleting:
             return None
         args = [w for w in words[1:] if w not in ("-H", "-L", "-P")]
         starts = list(takewhile(lambda w: not w.startswith(("-", "(", "!")), args))
         fenced = bool(named(words)) and not {"-o", "-or"} & set(words) and excludes(words, ".git") and excludes(
             words, ".factory")
         mode = "below" if spared(words) or fenced else "sweep"
-        return [(start, mode) for start in starts or ["."]]
+        return [(start, mode) for start in starts or ["."]] + [  # paths an -exec deleter names beside {}
+            (w, "tree") for seg in deleting for w in seg[1:] if not w.startswith("-") and "{}" not in w]
     if name == "rimraf":
         targets, mode = [w for w in words[1:] if not w.startswith("-")], "tree"
     elif name in DELETERS:
@@ -169,6 +173,46 @@ def deletes(words):
     else:
         return None
     return [(part, mode) for target in targets for part in target.split(",") if part]
+
+
+def linksafe(words, dialect):
+    """True when the delete removes a link as a link and its targets are exactly the words the hook read: rm or rmdir
+    in a Bash reading, or cmd's rd or rmdir with /s flags, no dash option (with one, PowerShell reads it as
+    Remove-Item, which can walk into junctions) and no quote or space in a target (cmd splits single quotes). Never
+    a find (its -exec composes paths at run time) or rimraf (its glob mode expands patterns at run time)."""
+    name, args = program(words[0]), words[1:]
+    if name in ("rmdir", "rd"):
+        return any(re.fullmatch(r"(?:/\w)+", w) for w in args) and not any(
+            w.startswith("-") or re.search(r"[\s'\"]", w) for w in args)
+    return dialect == "bash" and name in ("rm", "rmdir")
+
+
+def plain(target, dialect):
+    """True when a delete target names its path as written: no trailing separator (rm -r link/ walks into the link),
+    no wildcard except a whole last part * or .* (a wildcard mid-path can expand through a link at run time), no
+    variable or ~ (the hook expands them from its own environment, not the agent's), and in a Bash reading no
+    backslash or quote (Bash rewrites them before the deleter sees the path; the hook reads paths by other rules)."""
+    parts = re.split(r"[\\/]", target)
+    if dialect == "bash" and re.search(r"[\\'\"]", target):
+        return False
+    return not target.endswith(("/", "\\")) and not re.search(r"[$`%]|^~", target) and not any(
+        WILDCARD.search(p) for p in parts[:-1]) and (not WILDCARD.search(parts[-1]) or parts[-1] in ("*", ".*"))
+
+
+def segments(words):
+    """The command each -exec, -execdir, -ok or -okdir of a find runs, as its words. One ends at ; or \\; (the parse
+    splits there, leaving a lone \\), or at a + right after {}; a + elsewhere is an argument."""
+    found, i = [], 0
+    while i < len(words):
+        if words[i] in ("-exec", "-execdir", "-ok", "-okdir"):
+            j = i + 1
+            while j < len(words) and words[j] not in (";", "\\;", "\\") and not (words[j] == "+" and words[j - 1] == "{}"):
+                j += 1
+            if j > i + 1:
+                found.append(words[i + 1:j])
+            i = j
+        i += 1
+    return found
 
 
 def deleter(words):

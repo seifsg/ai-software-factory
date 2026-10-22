@@ -348,7 +348,9 @@ def cmd_start(args):
         run.update(sibling("fast_record").ui_start(project))
     setup = sibling("fast_setup")
     git_note, hooks = setup.ignore_factory(project), setup.hook_status(project)
+    scratch = setup.scratch_path(HOME, run)
     put(project, run)
+    scratch.mkdir(parents=True, exist_ok=True)  # after the state: a failed start leaves no folder behind
     record = record_path(project)
     if not record.exists():
         record.write_text(skeleton(run), encoding="utf-8")
@@ -356,7 +358,8 @@ def cmd_start(args):
     log("run.start", key=args.key, project=str(project), mode=args.mode, kind=args.kind, bundle=run["bundle"], hooks=hooks)
     bundle = (f"{run['bundle']['root']} @ {run['bundle']['revision'][:12]}" if run["bundle"] else
               "no .factory/entry-bundle.json; run the entry's resolver first (skip only for factory maintenance)")
-    print(status_text(run) + f"\nRecord: {record}\nBundle: {bundle}\nGit: {git_note}\nHooks: {hooks}")
+    print(status_text(run) + f"\nRecord: {record}\nBundle: {bundle}\nGit: {git_note}\nHooks: {hooks}\n"
+          + setup.TEXT.format(scratch))
 
 
 def cmd_done(args):
@@ -393,6 +396,15 @@ def cmd_done(args):
     put(project, run)
     log("step.done", key=run["key"], step=step, unverified=args.offline)
     print(status_text(run, all_sections))
+
+
+def cmd_scratch(args):
+    """Print the open run's scratch folder, making it again if it went (or for a run started before scratch folders)."""
+    scratch = sibling("fast_setup").scratch_path(HOME, open_run(args.project)[1])
+    if scratch is None:
+        fail("This run's key or start time is malformed, so it has no scratch folder")
+    scratch.mkdir(parents=True, exist_ok=True)
+    print(scratch)
 
 
 def cmd_status(args):
@@ -467,7 +479,19 @@ def cmd_close(args):
         log("state.retire_failed", key=run["key"], error=repr(error))  # it stays closed in runs/: hooks skip it
     forget_shown(project)
     log("run.close", key=run["key"], abandoned=args.abandon)
-    print(status_text(run))
+    print(status_text(run) + drop_scratch(run["key"], sibling("fast_setup").scratch_path(HOME, run)))
+
+
+def drop_scratch(key, *folders):
+    """Remove a closed run's scratch folders without following links; the line that says what stayed, else ''."""
+    left = []
+    for folder in filter(None, folders):
+        mine = []
+        sibling("fast_setup").remove(folder, mine)
+        log("run.scratch_left" if mine else "run.scratch_removed", key=key, path=str(folder), count=len(mine),
+            first=mine[:1])
+        left += mine
+    return f"\nScratch: {len(left)} item(s) left, first: {left[0]}" if left else ""
 
 
 def close_lost(project, reason):
@@ -493,7 +517,8 @@ def close_lost(project, reason):
         log("state.retire_failed", key=key, error=repr(error))
     forget_shown(project)
     log("run.close", project=str(project), abandoned=reason, lost=True)
-    print(f"Closed the run at {project} without a readable run state. Reason: {reason}")
+    left = drop_scratch(key, *sibling("fast_setup").lost_scratch(HOME, key, project))
+    print(f"Closed the run at {project} without a readable run state. Reason: {reason}{left}")
 
 
 HELD = {  # what the gate home holds for a folder: how a refusal names it, and the owner's way on
@@ -520,6 +545,8 @@ def cmd_rehome(args):
             what, advice = HELD[held[0]]
             fail(f"This gate home holds {what} at {held[1]}; nothing was moved: {advice}")
     source, receipt, local = run["project"], bundle_receipt(project), None
+    setup = sibling("fast_setup")
+    scratch = setup.scratch_path(HOME, run)  # named by the old folder's tag: it follows the run below
     if receipt and not Path(native(str(receipt["root"]))).is_dir():
         revision = str(receipt["revision"])
         local = HOME / "bundles" / revision
@@ -544,7 +571,10 @@ def cmd_rehome(args):
     except OSError as error:  # the open state re-registers on the next hook or gate command
         log("state.register_failed", key=run["key"], error=repr(error))
     mirror(project, run)
-    git_note = sibling("fast_setup").ignore_factory(project)
+    moved = setup.scratch_path(HOME, run)
+    if scratch and moved and scratch.is_dir() and not os.path.lexists(moved):
+        os.replace(scratch, moved)
+    git_note = setup.ignore_factory(project)
     print(card + f"\nBrought in from {source}." + (f"\nBundle: {local}" if local else "") + f"\nGit: {git_note}"
           "\nContinue the run on this machine only: compare this card with status on the old machine, then the owner "
           "retires the copy there with close --abandon.")
@@ -647,7 +677,8 @@ def guard(command, runs, cwd, session, dialect=None):
     """Deny reason for a destructive command in any step of the run owning cwd, else this session's or the named one.
     dialect: "bash" or "windows" when the host names its shell, else None (both readings must pass)."""
     item = owner(runs, cwd) or next(iter(mine(runs, cwd, session)), None) or mentioned(runs, command)
-    rule = item and sibling("fast_guard").Judge(norm(item[2]["project"]), norm, inside, str(HOME)).rule(
+    rule = item and sibling("fast_guard").Judge(norm(item[2]["project"]), norm, inside, str(HOME),
+                                                lambda: sibling("fast_setup").scratch_path(HOME, item[2])).rule(
         command, cwd, dialect)
     return rule and deny_reason(item[2], rule, " Destructive commands are the owner's: ask the owner to run it, "
                                                "or to approve another approach.")
@@ -899,6 +930,7 @@ def main():
     done.add_argument("--offline", help="Record tickets, plan, handoff or a hidden-check done-run without reading tickets "
                                          "through gh, with the reason")
     sub.add_parser("status", parents=[common])
+    sub.add_parser("scratch", parents=[common], help="Print the open run's scratch folder for throwaway data")
     pause = sub.add_parser("pause", parents=[common], help="Waiting on the owner; lets the session stop")
     pause.add_argument("--reason", required=True)
     sub.add_parser("resume", parents=[common])
@@ -925,7 +957,7 @@ def main():
     hook.add_argument("--host", default="claude", help="claude, codex, cursor, or any other hook-capable agent")
     args = parser.parse_args()
     actions = {"start": cmd_start, "done": cmd_done, "status": cmd_status, "close": cmd_close, "rehome": cmd_rehome,
-               "try": cmd_try, "view": cmd_view,
+               "try": cmd_try, "view": cmd_view, "scratch": cmd_scratch,
                "hook": lambda a: sys.exit(cmd_hook(a.host)),
                "install": lambda a: sibling("fast_install").install(a.host, a.project, auto=a.auto, log=lambda line: (print(line), log("install.write", line=line))),
                "pause": lambda a: cmd_pause(a, a.reason), "resume": lambda a: cmd_pause(a, None)}
