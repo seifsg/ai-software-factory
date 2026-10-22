@@ -405,7 +405,7 @@ class LiveViewTests(unittest.TestCase):
         page = (SCRIPTS / "view" / "index.html").read_text(encoding="utf-8")
         self.assertNotIn("x-html", page)
         self.assertNotIn("innerHTML", page)
-        self.assertIn('x-if="t.kind===\'url\' && safeUrl(t.value)"', page)  # only http(s) links become links
+        self.assertIn('x-if="t.kind===\'url\' && safeUrl(t.value) && !currentPreview(t.value)"', page)  # only safe, distinct targets become links
         self.assertIn("safeSrc:v=>/^shots\\/[\\w.-]+$/", page)  # images only from the view folder
 
 
