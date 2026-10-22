@@ -142,9 +142,18 @@ code{font:12px/1.4 var(--mono);background:var(--floor);padding:7px 9px;border-ra
 .section-head p{margin-top:3px}
 .count{display:inline-grid;place-items:center;min-width:23px;min-height:23px;border-radius:6px;background:var(--track);font-size:12px;color:var(--steel);margin-left:6px;vertical-align:middle}
 .session-grid{display:grid;gap:9px;align-items:start}
-.session{display:grid;gap:7px;align-content:start}
+.session{display:grid;gap:7px;align-content:start;position:relative;--signal:var(--steel)}
+/* State rails reinforce the text without consuming card space. */
+.session:before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:3px;background:var(--signal);pointer-events:none}
+.session[data-state="working"]{--signal:var(--accent)}
+.session[data-state="waiting"]{--signal:var(--warn)}
+.session[data-state="waiting"]:before{background:repeating-linear-gradient(0deg,var(--signal) 0 5px,transparent 5px 7px)}
+.session[data-state="quiet"]:before{background:repeating-linear-gradient(0deg,var(--signal) 0 2px,transparent 2px 5px)}
+.test-ready{background:var(--good);color:var(--go);padding-inline:7px;border-radius:5px}
 .session.focused{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
 .session-title{display:flex;gap:10px;align-items:center}
+.card-signals{display:flex;align-items:center;gap:5px;flex-shrink:0}
+.card-signals .badge{white-space:nowrap}
 .session-title>div:first-child{min-width:0;flex:1}
 .session-title h3 .link-button{font-size:14px;padding:0;min-height:24px;line-height:1.35;color:var(--ink)}
 .session-title p{margin-top:3px}
@@ -176,7 +185,9 @@ to{transform:translateX(0)}
 .tile{flex:1 1 180px;min-width:0;border:1px solid var(--rule);border-radius:8px;padding:7px 9px;background:var(--floor);font-size:12px;display:grid;gap:6px}
 .tile b{font:500 11px var(--mono);display:flex;justify-content:space-between;gap:6px;color:var(--steel)}
 .tile.done{border-color:color-mix(in srgb,var(--go) 28%,var(--rule));background:var(--good)}
-.tile.now{border-color:#C5AC57;background:repeating-linear-gradient(-45deg,var(--hazard) 0 7px,#51472D 7px 14px) top/100% 3px no-repeat,var(--sheet);padding-top:9px}
+.tile.now{border-color:color-mix(in srgb,var(--accent) 45%,var(--rule));background:linear-gradient(var(--accent),var(--accent)) top/100% 3px no-repeat,var(--soft);padding-top:9px}
+.session[data-state="waiting"] .tile.now{border-color:#C5AC57;background:repeating-linear-gradient(-45deg,var(--hazard) 0 7px,#51472D 7px 14px) top/100% 3px no-repeat,var(--warn-bg)}
+.session[data-state="quiet"] .tile.now,.stale .tile.now{border-color:var(--rule);background:var(--floor)}
 .tile.next,.tile.later{border-style:dashed}
 .tile-title{line-height:1.4}
 .tile.more{flex-basis:90px;place-content:center}
@@ -335,13 +346,13 @@ to{transform:translateX(0)}
       <section id="sessions" class="floor-section" aria-labelledby="sessions-title">
         <div class="section-head"><h2 id="sessions-title">Sessions</h2><div class="overview-tools"><label for="session-filter" x-show="open.length>1 || filter!=='all'">Show</label><select id="session-filter" aria-label="Show sessions" x-show="open.length>1 || filter!=='all'" @change="setFilter($event.target.value)"><template x-for="f in FILTERS" :key="f[0]"><option :value="f[0]" :selected="filter===f[0]" x-text="f[1]+' ('+count(f[0])+')'"></option></template></select><button class="btn motion-toggle" @click="motion=!motion;storeMotion()" :aria-pressed="!motion" x-text="motion?'Pause animation':'Resume animation'"></button></div><div class="search" x-show="open.length>4 || query"><label for="session-search">Find a session or task</label><input id="session-search" type="search" x-model="query" @input="updateQuery()" placeholder="Session, task or ticket"></div></div>
 
-        <div class="session-grid" :class="{pair:shown.length===2,many:shown.length>2}"><template x-for="r in shown" :key="r.key"><article class="panel session" x-data="{childFilter:null}" :class="{focused:focus?.key===r.key,moving:isMoving(r)}" :aria-labelledby="'n-'+r.key">
-          <div class="session-title"><div><h3><button class="link-button" :id="'n-'+r.key" @click="show(r.key)" x-text="r.label"></button></h3><p class="small muted" x-show="r.goal?.title && focus?.key!==r.key" x-text="r.goal?.title"></p><span class="badge finished" x-show="focus?.key!==r.key && targets(r).length" x-text="targets(r).length+' ready to try'"></span></div><span class="badge" :class="statusClass(r)" x-text="status(r)"></span></div>
+        <div class="session-grid" :class="{pair:shown.length===2,many:shown.length>2}"><template x-for="r in shown" :key="r.key"><article class="panel session" x-data="{childFilter:null}" :class="{focused:focus?.key===r.key,moving:isMoving(r)}" :data-state="lost&&!r.paused?'quiet':kind(r)" :aria-labelledby="'n-'+r.key">
+          <div class="session-title"><div><h3><button class="link-button" :id="'n-'+r.key" @click="show(r.key)" x-text="r.label"></button></h3><p class="small muted" x-show="r.goal?.title && focus?.key!==r.key" x-text="r.goal?.title"></p></div><div class="card-signals"><span class="badge" :class="statusClass(r)" x-text="r.paused?'Paused':status(r)"></span><button class="link-button small test-ready" x-show="targets(r).length" :aria-label="'Test · '+targets(r).length+' — '+r.label" @click="choose(r.key);go('ready')"><span aria-hidden="true">▶ </span><span x-text="'Test · '+targets(r).length"></span></button></div></div>
           <p class="errors" x-show="r.paused"><span x-text="r.paused?.reason"></span> <span class="small">Reply in this session to continue.</span></p>
 
-          <div class="track" x-show="beltTasks(r).length || r.more || !r.total"><div class="belt" tabindex="0" role="list" :aria-label="'Session tasks: '+r.done+' of '+r.total+' complete.'"><template x-for="t in beltTasks(r)" :key="t.id"><div class="tile" :class="t.state || 'now'" role="listitem"><b><span x-text="t.id"></span><span x-text="t.state==='now'?'Now':taskStatus(t.state || 'now')"></span></b><span class="tile-title" :title="t.title" x-text="t.title"></span></div></template><div role="listitem" x-show="r.more"><button class="tile more link-button" @click="show(r.key)" >View all tasks</button></div><div role="listitem" class="small muted" x-show="!r.total">No tasks recorded.</div></div></div>
+          <div class="track" x-show="beltTasks(r).length || r.more || !r.total"><div class="belt" tabindex="0" role="list" :aria-label="'Session tasks: '+r.done+' of '+r.total+' complete.'"><template x-for="t in beltTasks(r)" :key="t.id"><div class="tile" :class="t.state || 'now'" role="listitem"><b><span x-text="t.id"></span><span x-text="beltStatus(r,t)"></span></b><span class="tile-title" :title="t.title" x-text="t.title"></span></div></template><div role="listitem" x-show="r.more"><button class="tile more link-button" @click="show(r.key)" >View all tasks</button></div><div role="listitem" class="small muted" x-show="!r.total">No tasks recorded.</div></div></div>
           <details class="compact-details subsession-block" x-show="r.subsessions.length" :open="r.subsessions.some(a=>a.status!=='finished')"><summary x-text="r.subsessions.every(a=>a.status==='finished')?r.subsessions.length+' finished subsessions':'Subsessions · '+r.subsessions.length"></summary><div class="stack" style="gap:6px"><div class="subsession-head"><div class="filters" x-show="r.subsessions.length>6" :aria-label="'Filter subsessions in '+r.label"><template x-for="f in CHILD_FILTERS" :key="f[0]"><button class="btn small" :aria-pressed="childMode(r,childFilter)===f[0]" @click="childFilter=f[0]" x-text="f[1]+' '+(f[0]==='all'?r.subsessions.length:r.subsessions.filter(a=>a.status===f[0]).length)"></button></template></div></div><ul class="children"><template x-for="a in children(r,childFilter)" :key="a.id"><li class="child"><div class="row spread"><b x-text="a.title || a.id"></b><span class="badge" :class="a.status" x-text="childStatus(a)"></span></div><p><span x-text="a.task || 'Current task not reported'"></span> <span class="child-meta" x-text="' · '+(a.parent?'Parent: '+childParent(r,a)+' · ':'')+(a.updated?age(a.updated)+' ago':'Update time unknown')"></span></p></li></template></ul><p class="small muted" x-show="!r.subsessions.length">No subsessions reported.</p><p class="small muted" x-show="r.subsessions.length && !children(r,childFilter).length">No subsessions match this filter. <button class="link-button" @click="childFilter='all'">Show all subsessions</button></p></div></details>
-          <div class="session-bottom"><div class="task-progress small muted"><div class="bar" aria-hidden="true"><i :style="'transform:scaleX('+percent(r.pct)/100+')'"></i></div><span x-text="r.done+'/'+r.total+' tasks · '+stage(r)"></span><span x-text="'Updated '+age(r.changed)+' ago'"></span></div><button class="link-button small" @click="choose(r.key);document.getElementById('goal')?.scrollIntoView({block:'start'})" x-text="'Goal & test'"></button><details class="compact-details"><summary>Stages &amp; completed work</summary><div class="stations" tabindex="0" role="img" x-show="r.steps.length" :style="'--n:'+r.steps.length" :aria-label="'Factory stages: '+r.steps.map(s=>stepName(s.id)+(s.s==='now'?' current':s.s==='done'?' complete':'')).join(', ')"><template x-for="(s,i) in r.steps" :key="s.id"><div class="station" :class="s.s"><i aria-hidden="true" x-text="s.s==='done'?'✓':i+1"></i><small x-text="stepName(s.id)"></small></div></template></div><p class="small muted" x-show="r.last" x-text="'Last completed: '+(r.last?.title || '')"></p></details></div>
+          <div class="session-bottom"><div class="task-progress small muted"><div class="bar" aria-hidden="true"><i :style="'transform:scaleX('+percent(r.pct)/100+')'"></i></div><span x-text="r.done+'/'+r.total+' tasks · '+stage(r)"></span><span x-text="'Updated '+age(r.changed)+' ago'"></span></div><button class="link-button small" x-show="!targets(r).length" @click="choose(r.key);go('goal')">Goal &amp; test</button><details class="compact-details"><summary>Stages &amp; completed work</summary><div class="stations" tabindex="0" role="img" x-show="r.steps.length" :style="'--n:'+r.steps.length" :aria-label="'Factory stages: '+r.steps.map(s=>stepName(s.id)+(s.s==='now'?' current':s.s==='done'?' complete':'')).join(', ')"><template x-for="(s,i) in r.steps" :key="s.id"><div class="station" :class="s.s"><i aria-hidden="true" x-text="s.s==='done'?'✓':i+1"></i><small x-text="stepName(s.id)"></small></div></template></div><p class="small muted" x-show="r.last" x-text="'Last completed: '+(r.last?.title || '')"></p></details></div>
 
         </article></template></div>
         <p class="muted" x-show="open.length && !shown.length">No sessions match. <button class="link-button" @click="query='';setFilter('all')">Clear filters</button></p><p class="muted" x-show="!open.length">No active sessions. Start a session with <code>safe-engine</code> to continue this project.</p>
@@ -439,13 +450,15 @@ Alpine.data("floor",()=>({
   isMoving(r){return this.motion&&!this.hidden&&!this.lost&&!this.snap&&!r.closed&&!r.paused&&Number.isFinite(r.changed)&&this.now-r.changed<=900000&&r.now.length>0},
   quiet(r){return !r.paused&&!r.closed&&this.now-r.changed>900000},
   kind(r){return r.paused?"waiting":this.quiet(r)?"quiet":"working"},
-  status(r){return r.closed?"Closed":r.paused?"Waiting on you":this.quiet(r)?"No recent update":"Active"},
-  statusClass(r){return r.closed?"finished":r.paused?"blocked":this.quiet(r)?"":"working"},
+  status(r){return r.closed?"Closed":r.paused?"Waiting on you":this.lost?"Last reported":this.quiet(r)?"No recent update":r.now.length?"Working":"Active"},
+  statusClass(r){return r.closed?"finished":r.paused?"blocked":this.lost||this.quiet(r)?"":"working"},
   childStatus(a){return a.status==="working"&&!a.updated?"Working report undated":a.status==="working"&&this.now-a.updated>900000?"Working report is stale":({working:"Reported working",finished:"Finished",blocked:"Blocked",unknown:"Status unknown"}[a.status]||"Status unknown")},
   // Filters belong to each keyed session card; large groups start with current work.
   childMode:(r,chosen)=>r.subsessions.length<=6?'all':chosen||(r.subsessions.some(a=>a.status==='working')?'working':'all'),
   children(r,chosen){const mode=this.childMode(r,chosen);return mode==='all'?r.subsessions:r.subsessions.filter(a=>a.status===mode)},
   childParent:(r,a)=>r.subsessions.find(x=>x.id===a.parent)?.title||a.parent,
+  // Distinguish current execution from paused or last-received task reports.
+  beltStatus(r,t){return t.state!=="now"?this.taskStatus(t.state):r.paused?"Paused":this.lost||this.quiet(r)?"Last reported":"Working"},
   taskStatus:s=>({now:"In progress",done:"Complete",next:"Next",later:"Planned"}[s]||"Unknown"),
   ticketWork:t=>t.current.length?t.current.map(n=>n.id+" "+n.title).join(" · "):"Current linked task not reported",
   ticketLabel:t=>(t.number?"#"+t.number+" ":"")+(t.title||"Untitled ticket"),
