@@ -62,7 +62,8 @@ python fast_gate.py status | scratch | pause --reason "<why>" | resume | close [
 python fast_gate.py rehome --project <abs> --from <the folder its run.json records>
 python fast_gate.py install --host <host> [--project <abs>] [--no-auto-update]
 python fast_gate.py try T3 --cmd "<command>" | --url <http(s) link> | --file <path in the project> [--project <abs>]
-python fast_gate.py view [--port 8765] [--snapshot <file>]
+python fast_gate.py view --project <abs> [--port 8765] [--snapshot <file>]
+python fast_gate.py view --all-projects [--port 8765] [--snapshot <file>]
 ```
 
 - `start` registers the run and keeps its state in the gate home (`SAFE_ENGINE_HOME`, default `~/.safe-engine`), creates the record, keeps `.factory/` out of Git in the clone's `.git/info/exclude` unless the project already tracks files there (no project file changes; a reverted `.gitignore` and `git clean -fd` leave the records), and notes the bundle and hook status. `.factory/fast/run.json` is a mirror the gate rewrites on every change: read it, or `status`; the gate never reads it, so no change to it counts.
@@ -118,12 +119,13 @@ Without hooks the gate still records and checks steps; follow the order yourself
 
 ## Live view
 
-- `view` serves one page of every open run on this machine, and runs closed today, at `http://127.0.0.1:8765/` (a busy port gets another). It runs until stopped: start it in your agent's background shell and give the owner the link once per run. One server shows every run: when one already answers, `view` prints its link and exits. `view --snapshot <file>` writes the page with the current state, without live updates.
+- `view --project <abs>` opens only that project's runs and runs closed today. In Git, worktrees sharing its local repository belong to the same project; separate clones and submodules stay separate. Outside Git, the exact canonical folder is the project. Omitting `--project` uses the current repository, registered project or current folder; it never falls back to all projects. `--all-projects` explicitly opens the machine-wide view.
+- Start it in your agent's background shell and give the owner the printed project link once per run. It binds to `127.0.0.1:8765` (a busy port gets another) until stopped. One server handles scoped URLs: reusing it prints the requested project's link. Keep that URL through filters, details and reload. `view --project <abs> --snapshot <file>` embeds only the selected project's state, marked static.
 - The gate is the only writer of its data, `view/state.json` in the gate home: at each gate command, and at each hook whose file-time check saw the run state or record change, from delegates and on every host. Nothing changed: no extra work. The page polls every 2 s; an unchanged file costs one 304.
-- It shows each run's steps, its todos (done, now, next, later, counted as the card counts), its agents and sessions, the owner's open question and Ready to try.
+- The page names its project and folder above the counts. Its steps, todos (done, now, next, later, counted as the card counts), agents, sessions, questions, Ready to try, activity and closed runs share that scope. The server restricts details and thumbnails too; an empty project offers starting a run there.
 - A ticked todo leaves something the owner can use: record it with `try`, a command, an `http(s)` link or a file inside the project (screenshots under `.factory/fast/shots/` show as thumbnails). `try` refuses an unknown todo or any other target and names the form; never write `**Try:**` lines by hand.
 - Agents: the todos in `**Now:**`, plus the background agents your agent reports at a stop (the factory's `docs/hosts.md`).
-- On the first prompt and every sixth after, the prompt hook's message to the owner carries the view's link, or says the view is off and how to start it.
+- On prompts 1, 7, 13 and so on, the prompt hook's message to the owner carries this run's project link, or says the view is off and how to start it for that project.
 
 ## Keep it fast
 

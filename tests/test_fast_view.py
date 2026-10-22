@@ -1,6 +1,7 @@
 """The owner's live view: gate-written state, the try command, hook refreshes, the server and the snapshot
 (fast-run.md#live-view)."""
 import importlib.util
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -9,6 +10,7 @@ import sys
 import tempfile
 import time
 import unittest
+from unittest.mock import patch
 import urllib.error
 import urllib.request
 
@@ -152,7 +154,7 @@ class LiveViewTests(unittest.TestCase):
 
     def test_server_answers_unchanged_polls_with_304_and_refuses_other_hosts(self):
         self.plan()
-        server = subprocess.Popen([sys.executable, str(GATE), "view", "--port", "0"], stdout=subprocess.PIPE,
+        server = subprocess.Popen([sys.executable, str(GATE), "view", "--project", str(self.project), "--port", "0"], stdout=subprocess.PIPE,
                                   text=True, encoding="utf-8", env=self.env)
         self.addCleanup(server.stdout.close)
         self.addCleanup(server.wait)
@@ -163,12 +165,12 @@ class LiveViewTests(unittest.TestCase):
             tag, body = response.headers["ETag"], json.loads(response.read())
             self.assertIn("connect-src 'self'", response.headers["Content-Security-Policy"])
         self.assertEqual(body["runs"][0]["label"], "cockpit")
-        again = subprocess.run([sys.executable, str(GATE), "view", "--port", "0"], capture_output=True, text=True,
-                               encoding="utf-8", env=self.env, timeout=60)  # a second view never starts a second server
-        self.assertIn(f"Live view already running: {url}", again.stdout)
         with self.assertRaises(urllib.error.HTTPError) as unchanged:
             urllib.request.urlopen(urllib.request.Request(url + "state.json", headers={"If-None-Match": tag}))
         self.assertEqual(unchanged.exception.code, 304)
+        again = subprocess.run([sys.executable, str(GATE), "view", "--project", str(self.project), "--port", "0"], capture_output=True, text=True,
+                               encoding="utf-8", env=self.env, timeout=60)  # a second view never starts a second server
+        self.assertIn(f"Live view already running: {url}", again.stdout)
         with self.assertRaises(urllib.error.HTTPError) as rebound:
             urllib.request.urlopen(urllib.request.Request(url + "state.json", headers={"Host": "evil.example"}))
         self.assertEqual(rebound.exception.code, 403)
@@ -178,7 +180,7 @@ class LiveViewTests(unittest.TestCase):
     def test_snapshot_holds_the_state_and_record_text_cannot_end_its_script(self):
         self.plan()
         out = self.root / "floor.html"
-        subprocess.run([sys.executable, str(GATE), "view", "--snapshot", str(out)], check=True, capture_output=True,
+        subprocess.run([sys.executable, str(GATE), "view", "--project", str(self.project), "--snapshot", str(out)], check=True, capture_output=True,
                        env=self.env)
         html = out.read_text(encoding="utf-8")
         inline = html.split('<script id="snapshot" type="application/json">', 1)[1].split("</script>", 1)[0]
@@ -200,7 +202,7 @@ class LiveViewTests(unittest.TestCase):
 
     def test_a_fresh_gate_home_writes_an_empty_snapshot(self):
         out, home = self.root / "empty.html", self.root / "fresh home"
-        result = subprocess.run([sys.executable, str(GATE), "view", "--snapshot", str(out)], capture_output=True,
+        result = subprocess.run([sys.executable, str(GATE), "view", "--project", str(self.project), "--snapshot", str(out)], capture_output=True,
                                 env=dict(self.env, SAFE_ENGINE_HOME=str(home)))
         self.assertEqual(result.returncode, 0, result.stderr)
         inline = out.read_text(encoding="utf-8").split('<script id="snapshot" type="application/json">', 1)[1].split("</script>", 1)[0]
@@ -215,7 +217,7 @@ class LiveViewTests(unittest.TestCase):
         self.assertIn("Live view is off", shown[0][0])  # no server yet: how to start it
         delegate = self.hook(name="UserPromptSubmit", prompt="go", agent_id="agent-1")
         self.assertNotIn("systemMessage", delegate)  # a delegate's prompt neither shows nor counts
-        server = subprocess.Popen([sys.executable, str(GATE), "view", "--port", "0"], stdout=subprocess.PIPE,
+        server = subprocess.Popen([sys.executable, str(GATE), "view", "--project", str(self.project), "--port", "0"], stdout=subprocess.PIPE,
                                   text=True, encoding="utf-8", env=self.env)
         self.addCleanup(server.stdout.close)
         self.addCleanup(server.wait)
@@ -223,7 +225,173 @@ class LiveViewTests(unittest.TestCase):
         url = server.stdout.readline().split()[2]
         for _ in range(5):
             reminders()
-        self.assertEqual(reminders(), [f"🏭 Live view of every run: {url}"])  # the 13th prompt: a clickable link
+        self.assertEqual(reminders(), [f"🏭 Live view for this project: {url}"])  # the 13th prompt stays in this project
+
+    def other_project(self):
+        """A second same-key run makes accidental cross-project aggregation visible."""
+        other = self.root / "other app"
+        other.mkdir()
+        subprocess.run([sys.executable, str(GATE), "start", "--project", str(other), "--key", "cockpit",
+                        "--kind", "change", "--no-ui", "--no-data", "--request", "other"],
+                       capture_output=True, check=True, env=self.env)
+        return other
+
+    def server(self):
+        """An owned server, shared by both project URLs during each integration check."""
+        process = subprocess.Popen([sys.executable, str(GATE), "view", "--project", str(self.project), "--port", "0"],
+                                   stdout=subprocess.PIPE, text=True, encoding="utf-8", env=self.env)
+        self.addCleanup(process.stdout.close)
+        self.addCleanup(process.wait)
+        self.addCleanup(process.kill)
+        return process.stdout.readline().split()[2]
+
+    def test_scoped_server_reuse_and_foreign_resources_are_isolated(self):
+        self.plan("- T1 pre: a do: b post: c\n")
+        local_shot = self.project / ".factory/fast/shots/local.png"
+        local_shot.write_bytes(b"sample png")
+        self.gate("try", "T1", "--file", str(local_shot))
+        other = self.other_project()
+        (self.view / "url").write_text("http://127.0.0.1:8765/", encoding="utf-8")
+        (self.view / "index.html").write_text("legacy preview", encoding="utf-8")
+        url = self.server()
+        with urllib.request.urlopen(url + "state.json") as response:
+            state = json.loads(response.read())
+        self.assertEqual([r["project"] for r in state["runs"]], [str(self.project)])
+        foreign = next(r for r in self.state()["runs"] if r["project"] == str(other))
+        with urllib.request.urlopen(url + state["runs"][0]["key"] + ".todos.json") as response:
+            self.assertEqual(len(json.loads(response.read())), 2)
+        with urllib.request.urlopen(url + state["ready"][0]["thumb"]) as response:
+            self.assertEqual(response.read(), b"sample png")
+        base = url.split("/projects/")[0] + "/"
+        for denied in (url + foreign["key"] + ".todos.json", base, base + "state.json", url + "shots/", url + "../state.json"):
+            with self.assertRaises(urllib.error.HTTPError) as blocked:
+                urllib.request.urlopen(denied)
+            self.assertEqual(blocked.exception.code, 404, denied)
+        reused = subprocess.run([sys.executable, str(GATE), "view", "--project", str(other)],
+                                capture_output=True, text=True, encoding="utf-8", env=self.env, check=True)
+        other_url = reused.stdout.split()[-1]
+        self.assertTrue(other_url.startswith(base + "projects/"))
+        self.assertNotEqual(url, other_url)
+        with urllib.request.urlopen(other_url + "state.json") as response:
+            self.assertEqual([r["project"] for r in json.loads(response.read())["runs"]], [str(other)])
+        self.assertEqual((self.view / "url").read_text(encoding="utf-8"), "http://127.0.0.1:8765/")
+        self.assertEqual((self.view / "index.html").read_text(encoding="utf-8"), "legacy preview")
+
+    def test_snapshot_and_sections_filter_before_global_limits(self):
+        self.plan("- T1 pre: a do: b post: c\n")
+        self.gate("try", "T1", "--cmd", "local-only")
+        other = self.other_project()
+        views = module("fast_view")
+        state = self.state()
+        foreign = next(r for r in state["runs"] if r["project"] == str(other))
+        foreign["ready"] = [{"key": f"foreign/{n}", "at": 9_999_999_999_999 + n} for n in range(30)]
+        views.dump(self.view / "state.json", state)
+        selected = views.scoped_state(self.view, views.scope_for(self.project))
+        self.assertEqual(selected["readyTotal"], 1)
+        self.assertEqual(selected["ready"][0]["value"], "local-only")
+        out = self.root / "scoped.html"
+        views.snapshot(self.view, out, views.scope_for(self.project))
+        inline = out.read_text(encoding="utf-8").split('<script id="snapshot" type="application/json">')[1].split("</script>")[0]
+        self.assertNotIn("<", inline)
+        self.assertNotIn(str(other), json.dumps(json.loads(inline)))
+        self.assertNotIn("foreign/", inline)
+
+    def test_unchanged_and_unrelated_updates_keep_scoped_etag(self):
+        other = self.other_project()
+        url = self.server()
+        with urllib.request.urlopen(url + "state.json") as response:
+            tag = response.headers["ETag"]
+        state = self.state()
+        next(r for r in state["runs"] if r["project"] == str(other))["ticket"] = "foreign change"
+        state["at"] += 1
+        module("fast_view").dump(self.view / "state.json", state)
+        with self.assertRaises(urllib.error.HTTPError) as unchanged:
+            urllib.request.urlopen(urllib.request.Request(url + "state.json", headers={"If-None-Match": tag}))
+        self.assertEqual(unchanged.exception.code, 304)
+
+    def test_repo_worktrees_share_identity_but_clones_and_folders_do_not(self):
+        views = module("fast_view")
+        def git(*args):
+            return subprocess.run(["git", "-C", str(self.project), *args], capture_output=True, check=True)
+        git("init")
+        git("-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "--allow-empty", "-m", "fixture")
+        linked = self.root / "linked tree"
+        git("worktree", "add", "-b", "linked", str(linked))
+        nested = linked / "nested"
+        nested.mkdir()
+        self.assertEqual(views.scope_for(self.project), views.scope_for(nested))
+        other = self.other_project()
+        subprocess.run(["git", "init", str(other)], capture_output=True, check=True)
+        self.assertNotEqual(views.scope_for(self.project)["id"], views.scope_for(other)["id"])
+        plain = self.root / "plain"
+        plain.mkdir()
+        child = plain / "nested"
+        child.mkdir()
+        self.assertNotEqual(views.scope_for(plain)["id"], views.scope_for(child)["id"])
+
+    def test_empty_project_snapshot_and_invalid_project_have_actionable_scope(self):
+        empty = self.root / "empty"
+        empty.mkdir()
+        out = self.root / "empty-scoped.html"
+        subprocess.run([sys.executable, str(GATE), "view", "--project", str(empty), "--snapshot", str(out)],
+                       capture_output=True, check=True, env=self.env)
+        inline = out.read_text(encoding="utf-8").split('<script id="snapshot" type="application/json">')[1].split("</script>")[0]
+        state = json.loads(inline)
+        self.assertEqual(state["scope"]["project"], str(empty))
+        self.assertEqual(state["runs"], [])
+        self.assertGreater(state["at"], 0)
+        bad = subprocess.run([sys.executable, str(GATE), "view", "--project", str(empty / "missing"), "--snapshot", str(out)],
+                             capture_output=True, text=True, env=self.env)
+        self.assertNotEqual(bad.returncode, 0)
+        self.assertIn("view --project <existing-folder>", bad.stderr)
+
+    def test_default_cwd_prefers_nested_repository_over_registered_parent(self):
+        child = self.project / "child repository"
+        child.mkdir()
+        subprocess.run(["git", "init", str(child)], capture_output=True, check=True)
+        out = self.root / "nested.html"
+        subprocess.run([sys.executable, str(GATE), "view", "--snapshot", str(out)], cwd=child,
+                       capture_output=True, check=True, env=self.env)
+        inline = out.read_text(encoding="utf-8").split('<script id="snapshot" type="application/json">')[1].split("</script>")[0]
+        state = json.loads(inline)
+        self.assertEqual(state["scope"]["project"], str(child))
+        self.assertEqual(state["runs"], [])
+        plain = self.project / "ordinary child"
+        plain.mkdir()
+        subprocess.run([sys.executable, str(GATE), "view", "--snapshot", str(out)], cwd=plain,
+                       capture_output=True, check=True, env=self.env)
+        inline = out.read_text(encoding="utf-8").split('<script id="snapshot" type="application/json">')[1].split("</script>")[0]
+        self.assertEqual(json.loads(inline)["scope"]["project"], str(self.project))
+
+    def test_identity_cache_avoids_git_until_repository_metadata_changes(self):
+        views = module("fast_view")
+        first = views.scope_id(self.view, self.project)
+        with patch.object(views, "scope_for", wraps=views.scope_for) as discover:
+            self.assertEqual(views.scope_id(self.view, self.project), first)
+            discover.assert_not_called()
+            subprocess.run(["git", "init", str(self.project)], capture_output=True, check=True)
+            self.assertNotEqual(views.scope_id(self.view, self.project), first)
+            self.assertEqual(discover.call_count, 1)
+
+    def test_git_environment_and_legacy_cached_ids_cannot_mix_projects(self):
+        views = module("fast_view")
+        other = self.other_project()
+        for folder in (self.project, other):
+            subprocess.run(["git", "init", str(folder)], capture_output=True, check=True)
+        selected, foreign = views.scope_for(self.project), views.scope_for(other)
+        inherited = {"GIT_DIR": str(other / ".git"), "GIT_WORK_TREE": str(other), "GIT_COMMON_DIR": str(other / ".git")}
+        with patch.dict(os.environ, inherited):
+            self.assertEqual(views.scope_for(self.project), selected)
+            marker = self.project / ".git"
+            info = marker.stat()
+            markers = [str(marker), info.st_dev, info.st_ino, info.st_mtime_ns, info.st_size]
+            old = repr((markers, sorted((k, v) for k, v in os.environ.items() if k.startswith("GIT_"))))
+            key, _ = views.identity_stamp(self.project)
+            views.dump(self.view / "identities" / f"{key}.json", {"stamp": hashlib.sha256(old.encode()).hexdigest(), "id": foreign["id"]})
+            self.assertEqual(views.scope_id(self.view, self.project), selected["id"])
+            old_run = {**self.run_view(), "project": str(self.project), "scopeId": foreign["id"]}
+            old_run.pop("scopeVersion", None)
+            self.assertEqual(views.project_state({"runs": [old_run]}, foreign)["runs"], [])
 
     def test_the_page_never_turns_record_text_into_markup_or_script(self):
         page = (SCRIPTS / "view" / "index.html").read_text(encoding="utf-8")

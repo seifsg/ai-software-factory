@@ -40,6 +40,7 @@ ul{margin:0;padding:0;list-style:none}
 .boot{padding:24px;border:1.5px dashed var(--rule);font-family:var(--plate)}
 /* header */
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--floor);padding-block:6px;gap:8px 16px}
+.context{display:grid;gap:4px;min-width:0}.context h1{font-size:20px;overflow-wrap:anywhere}.context p{font-size:12px;text-wrap:wrap;overflow-wrap:anywhere}
 h1{font:800 22px/1 var(--display);font-stretch:75%;letter-spacing:.02em;text-transform:uppercase}
 .dot{flex:none;width:10px;height:10px;border-radius:50%;background:var(--go)}
 .lost .dot{background:var(--andon)}
@@ -165,15 +166,20 @@ code{flex:1;min-width:0;white-space:pre-wrap;word-break:break-all;background:var
 
 <div class="boot" id="boot">Loading the Factory floor… If this stays, the view's libraries did not load (offline or blocked). The text card still works: <code>fast_gate.py status</code>.</div>
 
-<div class="app" x-data="floor" x-cloak :class="lost && 'lost'" @keydown.escape.window="close()" x-effect="document.title = sel ? 'Run ' + sel.label + ' · Factory floor' : 'Factory floor · ' + plural(open.length, 'run')">
+<div class="app" x-data="floor" x-cloak :class="lost && 'lost'" @keydown.escape.window="close()" x-effect="document.title = (sel ? 'Run ' + sel.label + ' · ' : '') + (scope?.name || 'Connecting') + ' · Factory floor'">
   <header class="top row">
-    <h1>Factory floor</h1>
+    <span class="caps">Factory floor</span>
     <span class="plate muted" x-text="plural(open.length, 'run') + ' open'"></span>
     <span class="sp"></span>
     <span class="row" style="gap:6px;font-size:13px"><span class="dot" x-effect="beat($el, at)"></span><span x-text="liveText"></span></span>
     <button class="btn" x-show="!snap" @click="toggleNotify()" :aria-pressed="!!notify"><span class="ms" aria-hidden="true">notifications</span><span x-text="notify===null ? 'Notifications blocked here' : notify ? 'Notifying' : 'Notify me'"></span></button>
     <button class="btn" @click="switchTheme()"><span class="ms" aria-hidden="true" x-text="dark ? 'light_mode' : 'dark_mode'"></span><span x-text="'Use ' + (dark ? 'light' : 'dark') + ' theme'"></span></button>
   </header>
+
+  <section class="context" aria-label="Project context">
+    <h1 x-text="scope?.name || 'Connecting to project…'"></h1>
+    <p class="plate muted" x-text="scope ? (scope.kind==='all' ? 'All projects on this machine' : (scope.kind==='repository' ? 'Repository and worktrees' : 'Project folder') + ' · ' + scope.project) : 'Waiting for project data'"></p>
+  </section>
 
   <div class="strip row" x-show="lost" x-effect="$el.hidden = modal"><span class="ms" aria-hidden="true">cloud_off</span><span role="alert"><b>Lost the live feed.</b> <span x-text="okAt ? 'Showing the state from ' + clock(okAt) + '.' : 'No state yet. Is fast_gate.py view running?'"></span></span><span class="muted" aria-hidden="true" x-text="'Retrying every ' + (hidden ? 15 : 2) + ' s'"></span><button class="btn" @click="poll(true)"><span class="ms" aria-hidden="true">refresh</span>Retry now</button></div>
 
@@ -188,8 +194,8 @@ code{flex:1;min-width:0;white-space:pre-wrap;word-break:break-all;background:var
     <aside class="col rail" aria-label="Waiting on you, Ready to try, activity and run detail">
       <section id="waiting" class="col" x-show="waiting.length" aria-label="Waiting on you" x-effect="$el.hidden = modal">
         <template x-for="(r,i) in waiting" :key="r.key"><div class="andon">
-          <span class="caps"><span class="light"></span><span x-text="'Waiting on you · ' + r.label + ' · ' + age(r.paused.since)"></span></span>
-          <p x-text="r.paused.reason"></p>
+          <span class="caps"><span class="light"></span><span x-text="'Waiting on you · ' + r.label + ' · ' + age(r.paused?.since)"></span></span>
+          <p x-text="r.paused?.reason"></p>
           <div class="cmd"><code x-text="r.project"></code><button class="btn" :class="r.key===waiting[0]?.key && !sel && 'primary'" @click="copy('s'+r.key, r.project, $el)"><span class="ms" aria-hidden="true">content_copy</span><span x-text="copyLabel('s'+r.key, 'Copy folder path')"></span></button></div>
         </div></template>
       </section>
@@ -221,22 +227,22 @@ code{flex:1;min-width:0;white-space:pre-wrap;word-break:break-all;background:var
         </details>
       </div>
       <template x-if="sel">
-        <section class="detail" :aria-labelledby="'d-' + sel.key">
-          <div class="row"><h2 tabindex="-1" :id="'d-' + sel.key" x-text="'Run ' + sel.label"></h2><span class="sp"></span><button class="btn primary" @click="close()"><span class="ms" aria-hidden="true">close</span>Back to all runs</button></div>
-          <span class="plate muted" x-text="'in ' + sel.name + ' · ' + sel.kind + ' run · ' + fmt(sel.steps.reduce((a,s)=>a+s.secs,0)) + ' total' + (sel.closed ? ' · ' + sel.closed : '')"></span>
-          <p class="err" x-show="sel.error" x-text="sel.error"></p>
-          <div class="andon" x-show="narrow && sel.paused"><span class="caps"><span class="light"></span>Waiting on you</span><p x-text="sel.paused?.reason"></p>
-            <div class="cmd"><code x-text="sel.project"></code><button class="btn" @click="copy('s'+sel.key, sel.project, $el)"><span class="ms" aria-hidden="true">content_copy</span><span x-text="copyLabel('s'+sel.key, 'Copy folder path')"></span></button></div></div>
+        <section class="detail" x-data="{current:sel}" x-effect="if(sel) current=sel" :aria-labelledby="'d-' + current.key">
+          <div class="row"><h2 tabindex="-1" :id="'d-' + current.key" x-text="'Run ' + current.label"></h2><span class="sp"></span><button class="btn primary" @click="close()"><span class="ms" aria-hidden="true">close</span><span x-text="scope?.kind==='all' ? 'Back to all runs' : 'Back to project runs'"></span></button></div>
+          <span class="plate muted" x-text="'in ' + current.name + ' · ' + current.kind + ' run · ' + fmt(current.steps.reduce((a,s)=>a+s.secs,0)) + ' total' + (current.closed ? ' · ' + current.closed : '')"></span>
+          <p class="err" x-show="current.error" x-text="current.error"></p>
+          <div class="andon" x-show="narrow && current.paused"><span class="caps"><span class="light"></span>Waiting on you</span><p x-text="current.paused?.reason"></p>
+            <div class="cmd"><code x-text="current.project"></code><button class="btn" @click="copy('s'+current.key, current.project, $el)"><span class="ms" aria-hidden="true">content_copy</span><span x-text="copyLabel('s'+current.key, 'Copy folder path')"></span></button></div></div>
           <h3 class="sec">Time per step</h3>
           <div class="gantt">
-            <template x-for="s in sel.steps" :key="s.id"><div :class="s.s"><span x-text="name(s.id)"></span><i :style="'width:' + Math.max(2, s.secs / (Math.max(...sel.steps.map(x=>x.secs)) || 1) * 100) + '%'"></i><span class="muted" x-text="s.s==='left' ? 'not yet' : fmt(s.secs)"></span></div></template>
+            <template x-for="s in current.steps" :key="s.id"><div :class="s.s"><span x-text="name(s.id)"></span><i :style="'width:' + Math.max(2, s.secs / (Math.max(...current.steps.map(x=>x.secs)) || 1) * 100) + '%'"></i><span class="muted" x-text="s.s==='left' ? 'not yet' : fmt(s.secs)"></span></div></template>
           </div>
-          <h3 class="sec row"><span x-text="sel.ticket"></span><span class="sp"></span><span x-text="sel.done + ' of ' + sel.total + ' done'"></span></h3>
-          <div class="bar"><i :style="'transform:scaleX(' + sel.pct/100 + ')'"></i></div>
+          <h3 class="sec row"><span x-text="current.ticket"></span><span class="sp"></span><span x-text="current.done + ' of ' + current.total + ' done'"></span></h3>
+          <div class="bar"><i :style="'transform:scaleX(' + current.pct/100 + ')'"></i></div>
           <div>
             <template x-for="t in detail" :key="t.id"><details class="todo"><summary><b x-text="t.id"></b><span x-text="t.title"></span><span class="sp"></span><span class="caps" x-text="t.state"></span></summary><p x-text="'→ ' + t.result + (t.value ? '\nTry: ' + t.value : '')"></p></details></template>
           </div>
-          <span class="plate muted sm" x-text="'Record: ' + sel.record"></span>
+          <span class="plate muted sm" x-text="'Record: ' + current.record"></span>
         </section>
       </template>
     </aside>
@@ -282,7 +288,7 @@ code{flex:1;min-width:0;white-space:pre-wrap;word-break:break-all;background:var
           </article>
         </template>
       </div>
-      <p class="muted" x-show="!open.length">No factory runs open on this machine. Start one in your agent with <code style="padding:0 4px">safe-engine</code>.</p>
+      <p class="muted" x-show="!open.length"><span x-text="!scope ? 'Waiting for project data.' : scope.kind==='all' ? 'No factory runs open on this machine.' : 'No factory runs open for this project.'"></span> <span x-show="scope">Start one in <span x-text="scope?.kind==='all' ? 'your project' : 'this project'"></span> with <code style="padding:0 4px">safe-engine</code>.</span></p>
       <p class="muted" x-show="open.length && !shown.length">No runs match this filter.</p>
       <details x-show="finished.length"><summary class="sec" x-text="'Closed today · ' + finished.length"></summary>
         <ul class="col" style="gap:6px;padding-top:8px"><template x-for="r in finished" :key="r.key"><li class="row plate sm"><span class="ms" aria-hidden="true" x-text="r.closed==='stopped' ? 'block' : 'check_circle'"></span><button class="name" :id="'n-'+r.key" @click="show(r.key)" x-text="r.label"></button><span class="muted" x-text="r.closed + ' · ' + plural(r.total, 'todo') + ' · ' + fmt(r.steps.reduce((a,s)=>a+s.secs,0))"></span></li></template></ul>
@@ -290,7 +296,7 @@ code{flex:1;min-width:0;white-space:pre-wrap;word-break:break-all;background:var
     </main>
   </div>
 
-  <footer class="foot plate" x-effect="$el.hidden = modal" x-text="snap ? 'Snapshot file: no live updates. Run fast_gate.py view for the live view.' : 'Written by the factory gate when a run changes · served on 127.0.0.1 · ' + plural(runs.length, 'run')"></footer>
+  <footer class="foot plate" x-effect="$el.hidden = modal" x-text="snap ? 'Snapshot: no live updates. Start fast_gate.py view from this project for live progress.' : 'Written by the factory gate when a run changes · served on 127.0.0.1 · ' + plural(runs.length, 'run') + (scope?.kind==='all' ? ' across all projects' : ' in this project')"></footer>
 
   <div class="toasts" aria-live="polite">
     <template x-for="m in toasts" :key="m.id"><div class="toast enter"><span class="ms" aria-hidden="true" x-text="m.icon"></span><span x-text="m.text"></span></div></template>
@@ -303,7 +309,7 @@ code{flex:1;min-width:0;white-space:pre-wrap;word-break:break-all;background:var
 <script type="module">
 import Alpine from "https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/+esm";
 
-// The gate writes state.json (all runs) and <key>.todos.json (one run's todos) when a run changes: fast_view.py.
+// Relative URLs keep every request inside the server-selected project.
 let etag = "";
 async function source(){ // null when nothing changed since the last poll (the server answers 304 by ETag)
   const inline = document.getElementById("snapshot").textContent.trim();
@@ -334,7 +340,7 @@ function merge(a,b){ // poll result into live state, keeping identity: only bind
   if(b&&typeof b==="object"&&a&&typeof a==="object"&&!Array.isArray(a)){for(const k in b){const v=merge(a[k],b[k]);if(a[k]!==v)a[k]=v}for(const k in a)if(!(k in b))delete a[k];return a}
   return b}
 Alpine.data("floor",()=>({
-  ICON,KIND,FILTERS,runs:[],ready:[],readyTotal:0,events:[],at:0,detail:[],          // state.json
+  ICON,KIND,FILTERS,runs:[],ready:[],readyTotal:0,events:[],at:0,scope:null,detail:[], // state.json
   now:Date.now(),okAt:0,lost:false,hidden:document.hidden,loaded:false,seen:0,
   selKey:"",filter:new URLSearchParams(location.search).get("runs")||"all",all:false,copied:"",mode:store.get("theme")||"system",notify:false,toasts:[],narrow:narrowQ.matches,sysDark:darkQ.matches,snap:false,
   get open(){return this.runs.filter(r=>!r.closed)}, get finished(){return this.runs.filter(r=>r.closed)},
@@ -355,7 +361,7 @@ Alpine.data("floor",()=>({
     try{const s=await source();if(s)this.apply(s);this.okAt=Date.now();this.lost=false}catch(_){this.lost=true}
     this.polling=false;clearTimeout(this.timer);if(!this.snap)this.timer=setTimeout(()=>this.poll(),this.hidden?15e3:2e3)},
   apply(s){s={runs:[],ready:[],readyTotal:0,events:[],at:Date.now(),...s};const fresh=this.loaded?s.events.filter(e=>e.id>this.seen):[]; // any missing field gets its empty value
-    for(const k of ["runs","ready","readyTotal","events","at"])this[k]=merge(this[k],s[k]);this.seen=s.events.at(-1)?.id||0;this.route(true);this.loadDetail();
+    for(const k of ["runs","ready","readyTotal","events","at","scope"])this[k]=merge(this[k],s[k]);this.seen=s.events.at(-1)?.id||0;this.route(true);this.loadDetail();
     this.$nextTick(()=>this.loaded=true);this.announce(fresh)},
   announce(es){if(!es.length)return;
     this.say(es.at(-1).icon,es.length===1?es[0].run+": "+es[0].text:es.length+" updates · latest "+es.at(-1).run+": "+es.at(-1).text);

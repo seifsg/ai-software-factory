@@ -105,7 +105,7 @@ Lucky runs 1, 4, a short 5 and 6 (light lane for a `change`), 9, 10 and 11. It a
 The owner sees where the run is without asking. One short line per event, never a play-by-play of tool calls.
 
 - Fast and Lucky: the gate shows its dashboard after each step, pause and resume, and a line per finished todo and per new `**Now:**` ([fast-run](references/fast-run.md#progress)). Never repeat a gate message your agent already showed. Where it shows none, relay the card from the command output.
-- Fast and Lucky: once per run, give the owner the live view's link (`fast_gate.py view` in the background, [fast-run](references/fast-run.md#live-view)). When a ticked todo leaves something the owner can use, record it with `fast_gate.py try`.
+- Fast and Lucky: once per run, give the owner the project's live view link (`fast_gate.py view --project <abs>` in the background, [fast-run](references/fast-run.md#live-view)). When a ticked todo leaves something the owner can use, record it with `fast_gate.py try`.
 - Before a wave or slow work (subagents, research, test suites, builds): one line, who does what. One result line when it returns.
 - Waiting on the owner: the question first, then the options.
 - Asked for status: show the card from `fast_gate.py status`. Safe: the same card, built from the controller's `status`.
