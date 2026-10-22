@@ -133,12 +133,20 @@ class LiveViewTests(unittest.TestCase):
         tasks = [{"id": "a1", "type": "subagent", "status": "running", "description": "T2 gauges"},
                  {"id": "b1", "type": "shell", "status": "running"}]
         self.hook(name="Stop", background_tasks=tasks)
-        self.assertEqual(self.run_view()["agents"], [{"id": "a1", "desc": "T2 gauges", "run": True}])
+        first = self.run_view()
+        self.assertEqual(first["agents"], [{"id": "a1", "desc": "T2 gauges", "run": True, "status": "working"}])
+        self.hook(name="Stop", background_tasks=tasks)  # the same work was observed again
+        observed = self.run_view()["agentsObservedAt"]
+        self.assertGreater(observed, first["agentsObservedAt"])
+        self.assertEqual(self.run_view()["subsessions"][0]["updated"], observed)
         self.gate("pause", "--reason", "Which colour?")  # a later write keeps the snapshot
         run = self.run_view()
         self.assertEqual(run["agents"][0]["id"], "a1")
+        self.assertEqual(run["agentsObservedAt"], observed)
+        self.assertEqual(run["subsessions"][0]["updated"], observed)
         self.assertEqual(run["paused"]["reason"], "Which colour?")
         self.gate("resume")
+        self.assertEqual(self.run_view()["agentsObservedAt"], observed)
         self.assertEqual([e["text"] for e in self.state()["events"]][-2:], ["waits on you", "resumed"])
 
     def test_closed_runs_stay_until_the_next_day(self):
@@ -175,7 +183,7 @@ class LiveViewTests(unittest.TestCase):
             urllib.request.urlopen(urllib.request.Request(url + "state.json", headers={"Host": "evil.example"}))
         self.assertEqual(rebound.exception.code, 403)
         with urllib.request.urlopen(url) as page:
-            self.assertIn(b"<title>Factory floor</title>", page.read())
+            self.assertIn(b"<title>Factory progress</title>", page.read())
 
     def test_snapshot_holds_the_state_and_record_text_cannot_end_its_script(self):
         self.plan()

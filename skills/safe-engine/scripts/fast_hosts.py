@@ -48,9 +48,12 @@ def agents(tasks):
     """The host's background agents for the owner's view, or None when the host sends no list: id, what, running."""
     if not isinstance(tasks, list):
         return None
+    statuses = {"running": "working", "pending": "working", "completed": "finished", "finished": "finished",
+                "blocked": "blocked", "failed": "blocked", "cancelled": "blocked"}
     return [{"id": str(task.get("id") or i), "desc": str(task.get("description") or task.get("name") or task.get("type"))[:60],
-             "run": task.get("status") in ("running", "pending")}
-            for i, task in enumerate(tasks) if isinstance(task, dict) and task.get("type") in WAKERS][:8]
+             "run": task.get("status") in ("running", "pending"),
+             "status": statuses.get(str(task.get("status")), "unknown")}
+            for i, task in enumerate(tasks) if isinstance(task, dict) and task.get("type") in WAKERS]
 
 
 def waits(tasks):

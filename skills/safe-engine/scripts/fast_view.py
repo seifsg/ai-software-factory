@@ -18,6 +18,7 @@ if str(HERE) not in sys.path:
     sys.path.insert(0, str(HERE))  # loaded by file path (tests): find the sibling modules
 import fast_card as card  # noqa: E402 - the chat card's facts, so chat and view always agree
 import fast_progress as facts  # noqa: E402
+import fast_view_model as model  # noqa: E402
 from fast_view_scope import scope_for, project_state, route, identity_stamp, VERSION as SCOPE_VERSION  # noqa: E402
 
 PAGE = HERE / "view" / "index.html"
@@ -206,6 +207,7 @@ def write(folder, project, run, steps, sessions=0, agents=None, now_ms=None, vid
         "last": next(({"id": t["id"], "title": t["title"]} for t in todos if t["state"] == "done"), None),
         "open": opened[:OPEN_TILES], "more": max(0, len(opened) - OPEN_TILES),
         "doneIds": [t["id"] for t in todos if t["state"] == "done"],
+        "tasks": todos, "tickets": model.tickets(sections, v), **model.metadata(sections),
     }
     tried = [t for t in todos if t["state"] == "done" and t.get("kind")]
     thumbs = {t["id"]: shot(folder, project, key, t["id"][1:], t["value"]) for t in tried if t["kind"] == "file"}  # copies stay out of the lock
@@ -216,6 +218,8 @@ def write(folder, project, run, steps, sessions=0, agents=None, now_ms=None, vid
         old = {} if old.get("closed") and not view["closed"] else old  # the same key started again: a fresh history
         first = {t["key"]: t["at"] for t in old.get("ready") or []}
         view["agents"] = (old.get("agents") or []) if agents is None else agents
+        view["agentsObservedAt"] = old.get("agentsObservedAt") if agents is None else now_ms
+        view["subsessions"] = model.subsessions(view["subsessions"], view["agents"], view["agentsObservedAt"])
         view["ready"] = [{"key": f"{key}/{t['id']}", "run": label, "id": t["id"], "title": t["title"], "result": t["result"],
                           "kind": t["kind"], "value": t["value"], "cwd": str(project),
                           "at": first.get(f"{key}/{t['id']}", now_ms),

@@ -830,10 +830,10 @@ def reminder(runs, cwd, session):
 
 
 def note_agents(runs, cwd, session, agents):
-    """Keep the host's background agents in this session's run views when the list changed (Stop events only)."""
+    """Record each explicit Stop observation, including unchanged work, so freshness stays truthful."""
     try:
         for entry, _, run in mine(runs, cwd, session, bind_cwd=False)[:3]:
-            if not run.get("lost") and sibling("fast_view").agents_of(HOME / "view", view_id(run["project"], run["key"])) != agents:
+            if not run.get("lost"):
                 view(run["project"], load(store.state_path(entry)), agents)
     except Exception as error:  # noqa: BLE001 - a courtesy for the owner; the stop decision comes first
         log("hook.error", where="agents", error=repr(error))
