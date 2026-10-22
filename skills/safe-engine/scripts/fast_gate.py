@@ -927,6 +927,7 @@ def main():
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--project", help="Run project; default: nearest folder with .factory/fast/run.json")
     sub = parser.add_subparsers(dest="command", required=True)
+    sibling("fast_cleanup").parser(sub, common)
     start = sub.add_parser("start", parents=[common], help="Begin a run and register it for hooks")
     start.add_argument("--key", required=True)
     start.add_argument("--mode", choices=MODES, default="fast")
@@ -977,6 +978,7 @@ def main():
     args = parser.parse_args()
     actions = {"start": cmd_start, "done": cmd_done, "status": cmd_status, "close": cmd_close, "rehome": cmd_rehome,
                "try": cmd_try, "view": cmd_view, "scratch": cmd_scratch,
+               "cleanup-temp": lambda a: sibling("fast_cleanup").run(a, sys.modules[__name__]),
                "adopt-pr-proof": lambda a: sibling("fast_pr_policy").adopt(a, sys.modules[__name__]),
                "pr-proof-method": lambda a: sibling("fast_pr_policy").method(HOME),
                "hook": lambda a: sys.exit(cmd_hook(a.host)),
