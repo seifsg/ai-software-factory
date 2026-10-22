@@ -273,14 +273,14 @@ to{transform:translateX(0)}
 
 /* Only the overview gains columns here; detail navigation keeps its phone layout. */
 @media(min-width:640px) and (max-width:760px){
-.app{gap:10px}
+.app{padding-top:10px;gap:8px}
 .summary{grid-template-columns:repeat(4,minmax(0,1fr))}
-.summary-card{padding:7px 10px;min-height:58px}
+.summary-card{padding:6px 10px;min-height:54px}
 .goal-strip{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}
-.goal-panel,.try-panel{padding:8px 10px}
+.goal-panel,.try-panel{padding:6px 10px;gap:2px}
 .goal-panel{border-right:1px solid var(--rule);border-bottom:0}
-.session{padding:10px}
-.workspace{gap:10px}
+.session{padding:10px;gap:5px}
+.workspace{gap:8px}
 }
 
 @media(prefers-reduced-motion:reduce){.motion-toggle{display:none}
