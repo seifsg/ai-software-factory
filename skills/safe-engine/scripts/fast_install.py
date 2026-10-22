@@ -1,11 +1,12 @@
 """Per-host installer: put the factory's entry skills where the host finds them and wire the Fast gate hooks.
 
-fast_gate.py install --host claude|codex|cursor|other [--project DIR]
+fast_gate.py install --host claude|codex|cursor|other [--project DIR] [--codex-home DIR]
 - claude: declares this repository's marketplace and enables the safe-engine plugin in ~/.claude/settings.json;
   the plugin carries the skills and hooks.
 - codex, cursor: copies skills/safe-engine and skills/improve-factory into ~/.agents/skills (the Agent Skills
   folder both read; <DIR>/.agents/skills with --project), then merges the gate hooks into ~/.codex/hooks.json or
-  ~/.cursor/hooks.json (<DIR>/.codex, <DIR>/.cursor). Re-running replaces only the factory's own hook entries.
+  ~/.cursor/hooks.json (<DIR>/.codex, <DIR>/.cursor). --codex-home writes the Codex hooks into that CODEX_HOME
+  instead (an orchestrator's per-agent home). Re-running replaces only the factory's own hook entries.
 - other: the skills only, for agents wired by hand (docs/hosts.md).
 """
 import json
@@ -21,7 +22,7 @@ CODEX_EVENTS = {"PreToolUse": "Bash|apply_patch", "Stop": None, "UserPromptSubmi
 CURSOR_EVENTS = {"preToolUse": "Shell|Write|Delete|Edit|StrReplace|MultiEdit", "stop": None, "sessionStart": None}
 
 
-def install(host, project=None, home=None, log=print):
+def install(host, project=None, home=None, log=print, codex_home=None):
     """Install for one host; returns the files written."""
     home = Path(home or Path.home())
     if host == "claude":
@@ -32,7 +33,8 @@ def install(host, project=None, home=None, log=print):
         written = [skills / name for name in ENTRIES]
         gate = skills / "safe-engine" / "scripts"
         if host == "codex":
-            written.append(merge_codex(base / ".codex" / "hooks.json", gate))
+            hooks = Path(codex_home).resolve() if codex_home else base / ".codex"
+            written.append(merge_codex(hooks / "hooks.json", gate))
         elif host == "cursor":
             written.append(merge_cursor(base / ".cursor" / "hooks.json", gate))
     else:

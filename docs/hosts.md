@@ -57,7 +57,7 @@ Their hooks show no gate progress messages: the agent relays the card from the g
 
 ## Orchestrators
 
-An orchestrator starts agent sessions and hands each one a task. Paperclip: [paperclip.md](paperclip.md).
+An orchestrator starts agent sessions and hands each one a task: [orchestrators.md](orchestrators.md).
 
 ## Evals
 

@@ -696,11 +696,16 @@ def main():
     install.add_argument("--host", required=True, choices=("claude", "codex", "cursor", "other"),
                          help="other: entry skills only, for agents you wire by hand")
     install.add_argument("--project", help="Install into this project instead of your user folders")
+    install.add_argument("--codex-home", help="Codex: write the gate hooks into this CODEX_HOME")
+    orchestrate = sub.add_parser("orchestrate", help="Set up an orchestrator to start factory sessions")
+    sibling("fast_orchestrate").arguments(orchestrate)
     hook = sub.add_parser("hook", help="Answer one host hook event from stdin")
     hook.add_argument("--host", default="claude", help="claude, codex, cursor, or any other hook-capable agent")
     args = parser.parse_args()
     actions = {"start": cmd_start, "done": cmd_done, "status": cmd_status, "close": cmd_close, "hook": lambda a: sys.exit(cmd_hook(a.host)),
-               "install": lambda a: sibling("fast_install").install(a.host, a.project, log=lambda line: (print(line), log("install.write", line=line))),
+               "install": lambda a: sibling("fast_install").install(a.host, a.project, codex_home=a.codex_home,
+                                                                    log=lambda line: (print(line), log("install.write", line=line))),
+               "orchestrate": lambda a: sibling("fast_orchestrate").run(a),
                "pause": lambda a: cmd_pause(a, a.reason), "resume": lambda a: cmd_pause(a, None)}
     actions[args.command](args)
 

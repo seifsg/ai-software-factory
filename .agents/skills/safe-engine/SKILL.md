@@ -104,6 +104,8 @@ Lucky runs 1, 4, a short 5 and 6 (light lane for a `change`), 9, 10 and 11. It a
 
 The owner sees where the run is without asking. One short line per event, never a play-by-play of tool calls.
 
+An orchestrator started this session (its instructions say so): no one watches the chat. Follow the [orchestrated run](references/orchestrated-run.md) and its binding; its verbs replace chat questions, updates and session prompts.
+
 - Fast and Lucky: the gate shows its dashboard after each step, pause and resume, and a line per finished todo and per new `**Now:**` ([fast-run](references/fast-run.md#progress)). Never repeat a gate message your agent already showed. Where it shows none, relay the card from the command output.
 - Before a wave or slow work (subagents, research, test suites, builds): one line, who does what. One result line when it returns.
 - Waiting on the owner: the question first, then the options.
