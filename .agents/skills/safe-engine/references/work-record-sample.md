@@ -159,7 +159,7 @@ indexes: classes(starts_at), bookings(class_id, status), waitlist(class_id, posi
 - PASS member (dev role switcher) buys a 5-class pack in test mode, books Tuesday 7:00 Flow
 - PASS full class puts the second member on the waitlist; a cancellation promotes them and spends their credit
 - PASS staff publishes a class and checks the booked member in
-- FAIL then fixed: booking button stayed active during the request; disabled while pending
+- FAIL then fixed: booking button stayed active during the request; disabled while pending. After the booking and promotion fixes were checked and pushed, isolated seeded fixtures reset and the full demonstration restarted; Before captures retained, After captures replaced on that candidate.
 - Use log: book a class 2 actions, 1 load; cancel 2 actions with the confirm; loading, empty week, full class and a failed booking with retry seen; a double click books once; booking by keyboard alone; back from a class returns to the same week
 - Shots: .factory/fast/shots/schedule.png, then roster.png and packs.png, each at 375 and 1280 (DEV badge and "Sample data" tags visible)
 - U1 PASS schedule, bookings, packs, editor, roster: every screen reached from its role's header, none a dead end
@@ -186,7 +186,7 @@ indexes: classes(starts_at), bookings(class_id, status), waitlist(class_id, posi
 **Run:** `pnpm install && pnpm db:seed && pnpm dev`, then http://localhost:3000
 **Statuses:** every requested item delivered, real payments owner-deferred to #6 (mock checkout in this POC); #2, #3, #4, #5 checklists ticked, done-run PASS: Ready for QA with PR #7, Done on merge; epic #1 Ready for QA; #6 Backlog
 **Dev sign-in:** header role switcher (Member, Staff), development only; this POC has no sign-in
-**PR:** https://github.com/acme/studio-booking/pull/7 (body: .factory/fast/pr-body.md): Before & after per journey (schedule, booking, waitlist), screenshot pairs and a booking GIF
+**PR:** https://github.com/acme/studio-booking/pull/7 (body: .factory/fast/pr-body.md): Visual/Journey declarations and screenshot pairs for every changed view/state; videos cover role navigation, schedule, pack purchase/credit spend, booking/cancellation, waitlist/promotion, staff publishing and check-in, plus changed failure/retry paths. Shared clips identify each journey's timestamps.
 **Unverified:** automated tests, independent review, Safari, payment provider
 **Follow-ups:** real payments (#6, owner-approved mock in this POC, revisit at MVP kickoff). POC skips (real sign-in, security hardening, deployment, landing page) are listed in epic #1 for the MVP
 

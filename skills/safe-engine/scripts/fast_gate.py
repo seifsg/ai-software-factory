@@ -279,6 +279,8 @@ def skeleton(run):
     if run.get("pr_proof"):
         hints["handoff"] += ("; a PR line naming the draft PR, whose Before & after section has one heading per outcome, "
                              "each Before and After with an image, a recording or a fenced block")
+        if run.get("pr_demo"):
+            hints["handoff"] += "; every outcome declares Visual and Journey; visual: screenshot pair, journey: Video; only scoped owner Media waiver"
     if run.get("credit"):
         hints["handoff"] += "; the PR body's last line is the factory credit line (how-to-make-a-pr credit.md)"
     if sibling("fast_record").hidden(run):
@@ -297,7 +299,7 @@ FLAGS = {"ticket_checks": (LAYOUT, "Definition of done"), "coverage": (LAYOUT, "
          "light": (FAST_RUN, "Light lane"), "outcomes": (FAST_RUN, "what the owner can do once it is done"),
          "hidden_checks": (FAST_RUN, "**Hidden checks:**"),
          "scans": (FAST_RUN, "**Secrets:**"), "ux_rules": (UX, "| U10 |"), "pr_proof": (FAST_RUN, "`**PR:**`"),
-         "credit": (PR, "references/credit.md")}
+         "credit": (PR, "references/credit.md"), "pr_demo": (PR, "**Visual:**")}
 
 
 def method_flags(bundle, project):

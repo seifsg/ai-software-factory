@@ -41,26 +41,29 @@ git switch -c <scope>/<short-name> origin/<base>
 
 ## 4. Plan the proof before editing
 
-Every PR reports to the owner what changed, outcome by outcome, with proof they can open: the Before & after section of `references/pr-layout.md`.
+Every PR is a demonstration to its stakeholders. Put Before & after immediately after a short purpose and ticket link, ahead of implementation detail (`references/pr-layout.md`). This proof is required in every mode unless the owner explicitly asks to omit the named media.
 
-1. **Name the outcomes:** each feature, fix, page, section, module, endpoint or command the change affects, by what it does for its user. Never a file or folder.
-2. **Capture each Before now**, before edits. Capture only: minimum safe navigation, no feature exercise. A side effect needed: use existing evidence and say so. Missed it: capture from the base commit in a separate checkout and say so. Never fabricate it or reset dirty work to recreate it.
-3. **Capture each After** from final manual QA, under the same conditions (viewport, state, safe sample data, request, workload). Final manual QA walks the real journey to its confirmed result (a sent email is verified in the test inbox, not a success toast).
+1. **Inventory the proof before editing:** map the ticket and diff to every changed or new view, distinct visual state and touched user journey. Name outcomes by their effect, never a file or folder. Include affected entry points and results, even when only shared logic changed. One outcome per journey; shared views may link the same screenshot pair. Reconcile the inventory again against the final diff.
+2. **Capture each Before now**, before edits, with minimum safe navigation. If exercise or side effects are needed, use an isolated fixture or existing evidence and state its conditions. Missed it: capture from the base commit in a separate checkout and say so. Never fabricate it or reset dirty work to recreate it. New UI still needs the prior entry or empty-state screenshot, labeled "did not exist".
+3. **Prepare the demonstration:** use a fresh isolated slot, profile or test workspace by default. When the journey needs data, seed only deterministic, non-sensitive fixtures and record their reset recipe. Preserve the owner's workspace and data. Match before/after viewport, state, sample data and workload; explain unavoidable differences.
+4. **Capture each After during final manual QA:** screenshots cover every changed view/state; video shows every touched journey, including single-step flows, through real controls to its confirmed result. Record relevant changed validation, failure, edge and recovery paths too. A success toast alone does not prove an external result. Use authorized test destinations; recording grants no sending permission.
 
 | Surface | Proof, Before and After |
 |---|---|
-| Screen, page, section | Screenshot pair. Add views only to explain the change |
-| Journey of several steps, or motion | A recording of the journey (GIF inline, or a linked video), plus the screenshot pair |
+| Screen, page, section | Before/after screenshot pair for every changed view and distinct visual state; no single hero image standing in for the rest |
+| Any touched user journey, or motion | Final-candidate video from entry through actions to result for each journey, plus screenshot pairs for its changed visuals. A Before video is optional; GIFs are previews, never the required video |
 | API | The same request: status and body as one `diff` block |
 | CLI, script, gate | The same command: output as one `diff` block |
 | Speed, size, cost | Measured numbers, same workload, in a fenced block |
 | Internal module | Proof through the screen, endpoint or command whose behavior it changes |
 | Method or prose | The behavior it changes (a fresh walkthrough's result), plus the key text as a `diff` |
-| Something new | Before: the prior entry or empty state, labeled "did not exist" |
+| Something new | Before: the prior entry or empty state, labeled "did not exist"; visual work still needs both screenshots |
 
-- Look at each capture before using it: it shows what its line claims, readable at its size. Record conditions you could not match.
-- Upload media first (`references/github.md`); once the PR is open, check each one shows. No localhost or local-path links. No credentials or private data in captures. A recording grants no sending permission.
-- No capture tool or upload access: name the gap in that outcome. Never claim proof exists.
+- **Bug during capture:** stop the demonstration, preserve a short sanitized failure note, fix the bug in scope, run affected checks, commit and push the checked fix when authorized, reset the fixture, then restart the entire planned demonstration from its beginning on that candidate. Replace failed or stale After media, never edit a failure out to imply success. A fix needing new authority blocks the demo with its cause and next action; no silent deferral or clean-pass claim.
+- **Keep it fast:** plan shots and routes once, reuse one running build and fixture setup, capture screenshots while recording QA, share clips across outcomes with exact timestamps, batch uploads and body updates. Cover every distinct change without duplicate angles or repeated footage. Record setup/capture/upload durations and the slow stage; improve actual repeated work. Aim for the shortest complete demonstration, not a fixed time limit that drops coverage. Restart after a bug; retain valid base captures.
+- Look at every screenshot and play every clip before using it: readable, correct result, no unexplained errors, no credentials or private data. Bind the inventory and After media to the demonstrated candidate; later code changes invalidate its After demonstration. Keep the base evidence and record any conditions you could not match. Passing a demo never proves the absence of all bugs.
+- Upload media first (`references/github.md`); once the PR is open, verify each image renders and each video plays for reviewers. No localhost or local-path links. Broken or inaccessible media is missing proof.
+- Under every outcome declare **Visual:** and **Journey:** using `references/pr-layout.md`; its **Video:** links its journey. A **Media waiver:** applies only to that outcome and named media, quoting the owner's explicit request with its source. Missing tools, upload access or time never implies consent. Keep the gap and recovery action visible and block evidence completion until supplied or explicitly waived. An incomplete draft may preserve progress but is not a completed handoff.
 
 ## 5. Make the change
 
