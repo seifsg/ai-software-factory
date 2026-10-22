@@ -52,6 +52,7 @@
     "skills/safe-engine/scripts/fast_ledger.py",
     "skills/safe-engine/scripts/fast_progress.py",
     "skills/safe-engine/scripts/fast_proof.py",
+    "skills/safe-engine/scripts/fast_pr_policy.py",
     "skills/safe-engine/scripts/fast_record.py",
     "skills/safe-engine/scripts/fast_rules.py",
     "skills/safe-engine/scripts/fast_setup.py",

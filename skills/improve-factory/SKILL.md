@@ -26,6 +26,8 @@ python scripts/resolve_bundle.py --entrypoint improve-factory
 
 ## Run
 
+For a new maintenance run in any mode, use the installed `safe-engine` entry's `scripts/fast_gate.py pr-proof-method` to verify the owner's optional PR-policy default. Record its method path and digest in the plan; read and use that method when selected, preserving every other bundle method. No override: use the bundle's PR method. A failed lookup blocks dependent proof work. Resumed runs retain their recorded PR method; active Fast/Lucky adoption is named by gate status.
+
 Read the returned `entrypoint` (`.agents/skills/improve-factory/SKILL.md`) fully and follow it. Analysis or planning requests keep their phase.
 
 ## Invoke

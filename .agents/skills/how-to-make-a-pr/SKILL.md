@@ -43,6 +43,8 @@ git switch -c <scope>/<short-name> origin/<base>
 
 Every PR is a demonstration to its stakeholders. Put Before & after immediately after a short purpose and ticket link, ahead of implementation detail (`references/pr-layout.md`). This proof is required in every mode unless the owner explicitly asks to omit the named media.
 
+Make the value assessable to a skeptical owner: what failed or was missing, what now works, and the observed benefit. Every PR needs truthful before/after proof. Server-only, infrastructure and internal changes may have no visible UI or interactive user journey: show matched inputs and outputs, JSON/status diffs, command results or measured behavior instead of screenshots/video. A short schema, flow diagram, table or labeled emoji can explain that evidence; illustrative diagrams never replace observed results. Shared backend changes that affect a UI journey still demonstrate that journey.
+
 1. **Inventory the proof before editing:** map the ticket and diff to every changed or new view, distinct visual state and touched user journey. Name outcomes by their effect, never a file or folder. Include affected entry points and results, even when only shared logic changed. One outcome per journey; shared views may link the same screenshot pair. Reconcile the inventory again against the final diff.
 2. **Capture each Before now**, before edits, with minimum safe navigation. If exercise or side effects are needed, use an isolated fixture or existing evidence and state its conditions. Missed it: capture from the base commit in a separate checkout and say so. Never fabricate it or reset dirty work to recreate it. New UI still needs the prior entry or empty-state screenshot, labeled "did not exist".
 3. **Prepare the demonstration:** use a fresh isolated slot, profile or test workspace by default. When the journey needs data, seed only deterministic, non-sensitive fixtures and record their reset recipe. Preserve the owner's workspace and data. Match before/after viewport, state, sample data and workload; explain unavoidable differences.
@@ -51,7 +53,7 @@ Every PR is a demonstration to its stakeholders. Put Before & after immediately 
 | Surface | Proof, Before and After |
 |---|---|
 | Screen, page, section | Before/after screenshot pair for every changed view and distinct visual state; no single hero image standing in for the rest |
-| Any touched user journey, or motion | Final-candidate video from entry through actions to result for each journey, plus screenshot pairs for its changed visuals. A Before video is optional; GIFs are previews, never the required video |
+| Any touched interactive user journey, or motion | Final-candidate video from entry through actions to result for each journey, plus screenshot pairs for its changed visuals. A Before video is optional; GIFs are previews, never the required video |
 | API | The same request: status and body as one `diff` block |
 | CLI, script, gate | The same command: output as one `diff` block |
 | Speed, size, cost | Measured numbers, same workload, in a fenced block |

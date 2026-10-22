@@ -25,6 +25,8 @@ python scripts/resolve_bundle.py --entrypoint safe-engine --project <absolute-ta
 
 ## Run
 
+Before starting a new run in any mode, run `python scripts/fast_gate.py pr-proof-method` beside this entry. It verifies the owner's optional PR-policy default and prints its method path and digest. When selected, record them in the run plan, read that method now and use it for PR proof instead of the bundle's older PR method; all other methods stay pinned. No override: use the selected bundle's method. A failed lookup blocks dependent proof work; diagnose it. Resumed runs keep their recorded PR method; active Fast/Lucky adoption is named by gate status, not a later default.
+
 1. Read the returned `entrypoint` (`.agents/skills/safe-engine/SKILL.md`) fully and follow it from the bundle against the target.
 2. Fast and Lucky: the gate is `scripts/fast_gate.py` beside this file. Start it after the resolver, before research.
 3. Read each method the entrypoint names when its step starts.
