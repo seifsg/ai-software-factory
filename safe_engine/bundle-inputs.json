@@ -45,6 +45,7 @@
     "scripts/package_skill_entries.py",
     "skills/improve-factory/scripts/resolve_bundle.py",
     "skills/safe-engine/scripts/fast_card.py",
+    "skills/safe-engine/scripts/fast_baseline.py",
     "skills/safe-engine/scripts/fast_gate.py",
     "skills/safe-engine/scripts/fast_guard.py",
     "skills/safe-engine/scripts/fast_hosts.py",
