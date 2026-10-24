@@ -300,6 +300,8 @@ def record_hints(run):
                                   "each listed ticket has a Definition of done") + named
     hints["plan"] += online + ("checklist items name every criterion and hold every plan todo" if coverage else
                                "each listed ticket has checklist items") + named
+    if coverage and run["kind"] == "feature":  # a feature's size, or 'none (<why>)' when small
+        hints["kickoff"] += "; feature runs a Size line"
     if run.get("ux_rules"):
         hints["design"] += "; Map, Hierarchy (naming the primary action) and Labels lines"
     hints["done-run"] += ui_hint(run)

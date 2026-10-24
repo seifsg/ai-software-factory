@@ -21,13 +21,13 @@ BASE = (
     S + "ticketing/references/github.md", S + "get-ready-to-code/SKILL.md",
     S + "how-to-make-a-pr/SKILL.md", S + "how-to-make-a-pr/references/pr-layout.md",
     S + "how-to-make-a-pr/references/github.md", S + "how-to-make-a-pr/references/credit.md",
+    REF + "delegate.md",  # routes, briefs and accepts every delegated job; every todo names its tier from it
 )
-DELEGATE = REF + "delegate.md"  # every delegated job is routed, briefed and accepted by it
-NEW = (S + "research-market/SKILL.md", S + "analyze-start/SKILL.md", DELEGATE)  # product, feature: these too; they always delegate
+NEW = (S + "research-market/SKILL.md", S + "analyze-start/SKILL.md")
 KINDS = {
     "product, feature": BASE + NEW,
     "change": BASE,
-    "+ui": (S + "ux-quality/", DELEGATE),  # its audit is a fresh agent's
+    "+ui": (S + "ux-quality/",),
     "+data": (S + "database-schema/",),
     "+safe-check": (S + "deep-review/",),
     "+on demand": (  # detail behind pointers that name its situation: read only when it occurs
