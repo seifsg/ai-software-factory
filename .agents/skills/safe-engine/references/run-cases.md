@@ -2,6 +2,13 @@
 
 Run rules that apply only in the case each section names.
 
+## Lucky, verify, promote
+
+Lucky runs the Fast steps 1, 4, a short 5 and 6, 9, 10 and 11. It asks and researches nothing and takes product bar defaults for design and schema without comparisons. UI work keeps its UX verdicts (`ux-quality` step 4).
+
+- `verify`: manual QA of the main and failure journeys, then write and run relevant tests; no controller or independent review.
+- `promote`: commit the current code as the baseline, then optionally Safe on the existing epic.
+
 ## Review loops
 
 One round = review, fixes, fresh review.

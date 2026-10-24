@@ -32,12 +32,12 @@ KINDS = {
     "+on demand": (  # detail behind pointers that name its situation: read only when it occurs
         REF + "gate-details.md", REF + "cases.md", REF + "run-cases.md", S + "ticketing/references/safe-contract.md",
         S + "ticketing/references/unmerged-pr.md", S + "ticketing/references/epic-cases.md",
-        S + "how-to-make-a-pr/references/branch-cases.md", S + "research-market/references/deep-research.md"),
+        S + "how-to-make-a-pr/references/pr-cases.md", S + "research-market/references/deep-research.md"),
     "all methods": (S, "skills/"),  # moved text still counts here: a move is not a cut
 }
 TOTAL_ONLY = {"all methods"}
 # A kind skips a file only where its method says so at the measured revision (phrases, as the gate reads them).
-SKIPS = {"change": {REF + "work-record-sample.md": (REF + "fast-run.md", "A `change` writes only the light-lane markers")}}
+SKIPS = {"change": {REF + "work-record-sample.md": (REF + "fast-run.md", "Product and feature runs: the [sample]")}}
 
 
 def git(*args, stdin=None):

@@ -99,7 +99,7 @@ Budget in the first plan: fast first load, instant common actions, no N+1, pagin
 - Storage: write amplification, asset size, atomic writes, migrations, full disk.
 - Interaction: input latency, startup, battery, polling. Prefer events; pause hidden work. CLI/API: responsive output, backpressure, usable errors.
 
-A cache present, added or changed, cached work's inputs or access scope, duplicate-work coalescing or generated-media reuse: [caching](cases.md#caching).
+Adding, changing or reviewing a cache, what cached work depends on (inputs, access scope), duplicate-work coalescing or generated-media reuse: [caching](cases.md#caching).
 
 Evidence: source proves repetition; speed and memory claims need runtime measurement stating workload, environment and cold/warm conditions. Faster wrong or stale results fail. Fakes prove mechanics, not speed. Percentages need a comparable baseline. Log safe counts and timings. Report unmet targets.
 
@@ -118,7 +118,7 @@ Size the risk: environment, reachable surfaces, roles, valuable data, trust boun
 - Output: context-aware encoding, safe framework sinks, maintained sanitizer for rich HTML, fitting CSP. CSRF protection on cookie-authenticated mutations; no state change on GET. CORS is neither authorization nor CSRF protection.
 - Uploads: authorize; limit size and count; check extension and detected content, distrust MIME and name. Generated names, traversal and archive-bomb protection, non-executable isolated storage, authorized downloads. Never serve active uploads from the app origin.
 - Abuse/CORS: rate, size, concurrency and cost limits per surface, login, reset, search, uploads and expensive work first. Trusted proxy handling; keep legitimate retries working. CORS only for needed origins; no reflected origin or wildcard with credentials.
-- Webhooks: verify the signature over the original bytes before any effect ([external effects](cases.md#external-effects)).
+- Webhooks: verify the signature over the original bytes before any effect ([external effects](#external-effects)).
 - Dependencies: lockfiles. Review actual advisories; update vulnerable versions compatibly. No blind major upgrades or invented CVEs.
 
 Before exposure: HTTPS, valid certificates, production config, fitting security headers, least-privilege network and storage; no debug consoles, stack traces, default credentials or test bypasses. Exercise denial paths with harmless accounts (anonymous, other user or tenant, tampered or expired token, forged webhook), then run the `deep-review` security lens. Fix demonstrated compromise risks or disable the path.
@@ -152,7 +152,14 @@ Record unsupported cases. One desktop browser proves nothing about mobile, audio
 
 ## External effects
 
-Payments, messages, webhooks, remote jobs or any other state-changing call to another system: [external effects](cases.md#external-effects).
+Payments, messages, webhooks, remote jobs and any other state-changing call to another system:
+
+- Record `operation identity → durable state → effect → completion/reconciliation owner`.
+- Cover pending, success, failure and unknown outcomes; commit/effect order; ambiguous timeouts; duplicate or out-of-order delivery; bounded retry with backoff; cancellation; safe replay.
+- A database commit, sent request or signed webhook does not prove the business effect happened.
+- Choose once the smallest adequate mechanism: provider idempotency and reconciliation, a durable pending record, a transactional outbox or a workflow engine. No universal queue.
+- Webhooks: after the signature check ([security](#security)), freshness and replay checks; dedupe; idempotent retries. Never trust unsigned payloads or IP allowlists alone.
+- Final manual QA uses safe disposable operations, including interruption and retry. Read correlated logs and preserve unresolved effects before retrying.
 
 ## Release
 

@@ -25,7 +25,7 @@ Find the real repository, branches, release policy, PR template, signing rule, c
 
 - Work on your own branch; never commit to the base. Protect dirty and foreign work: new branch or isolated checkout.
 - Base = the project's integration branch, else the default branch. Say so in the PR when it differs.
-- Dependent Safe ticket, wrong base or hotfix: `references/branch-cases.md`.
+- Dependent Safe ticket, wrong base or hotfix: `references/pr-cases.md`.
 - Check the remote, not the local list: shallow and single-branch clones hide branches.
 
 ```text
@@ -83,7 +83,7 @@ Every PR shows a skeptical owner truthful before/after proof: what failed or was
 ## 7. Review
 
 - Own draft: `deep-review` it in Safe; in Fast and Lucky, the optional Safe check covers it. Skip when this exact head already passed an independent review. Pushing fixes to that PR's own branch and posting its comments are pre-authorized; open questions go in a PR comment, not a stop. Someone else's PR keeps every checkpoint.
-- Project has a remote or cloud review: request a fresh one (separate agent, fresh context, the exact pushed head); record where it ran, run ID, base/head and verdict. Local review never substitutes; missing remote access leaves the review open.
+- Project has a remote or cloud review: `references/pr-cases.md`.
 - A reviewer that changes code needs a fresh independent assessment of the new head.
 - The PR stays draft. Review is not merge or release approval.
 

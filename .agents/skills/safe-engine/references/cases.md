@@ -4,7 +4,7 @@ Product bar rules that apply only in the case each section names.
 
 ## Caching
 
-For a cache present, added or changed, the inputs or access scope of cached work, coalescing of duplicate work or generated-media reuse.
+For adding, changing or reviewing a cache, what cached work depends on (inputs, access scope), coalescing of duplicate work or generated-media reuse.
 
 Cache only when savings outweigh validity, memory and complexity cost. Never replay side effects, suppress intentional repeats or treat cached tool or model output as authority. Generated media: key all content inputs, separate generation reuse from playback, verify disposal.
 
@@ -20,23 +20,12 @@ Test cold/warm, changed inputs, eviction, failures, cancellation and cache disab
 
 ## Games
 
-For building or changing a game or GPU-heavy rendering.
+For a game or GPU-heavy rendering, built, changed or reviewed.
 
 - Keep the intended challenge, mastery, discovery, pacing and reward. Remove accidental friction; difficulty is not a defect; add no hints or automation that defeat the approved design.
 - The plan sets the intended experience and supported inputs and devices; playtest at the final stage.
 - Log scene/entity, input and state transitions, asset loading, simulation failures, frame/resource anomalies.
 - Speed: CPU vs GPU frame time, pacing, spikes, draw calls, overdraw, shaders, streaming, GPU memory on representative hardware. Averages hide stalls.
-
-## External effects
-
-For payments, messages, webhooks, remote jobs and any other state-changing call to another system.
-
-- Record `operation identity → durable state → effect → completion/reconciliation owner`.
-- Cover pending, success, failure and unknown outcomes; commit/effect order; ambiguous timeouts; duplicate or out-of-order delivery; bounded retry with backoff; cancellation; safe replay.
-- A database commit, sent request or signed webhook does not prove the business effect happened.
-- Choose once the smallest adequate mechanism: provider idempotency and reconciliation, a durable pending record, a transactional outbox or a workflow engine. No universal queue.
-- Webhooks: after the signature check ([security](product-bar.md#security)), freshness and replay checks; dedupe; idempotent retries. Never trust unsigned payloads or IP allowlists alone.
-- Final manual QA uses safe disposable operations, including interruption and retry. Read correlated logs and preserve unresolved effects before retrying.
 
 ## Live release
 

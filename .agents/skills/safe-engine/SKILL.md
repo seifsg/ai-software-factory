@@ -74,17 +74,14 @@ Record every step in one work record and pass the gate: [fast-run](references/fa
 
 Hidden checks (product, feature):
 
-- Before each build wave (optionally during the previous one), start the checker, a fresh agent that will not build, for the criteria the wave's todos name that this run owes and that lack checks: every listed ticket's; the epic's with the last wave, unless another run owes it ([owed epic](references/gate-details.md#owed-epic)).
+- Before each build wave (optionally during the previous one), start the checker, a fresh agent that will not build, for the criteria the wave's todos name that this run owes and that lack checks: every listed ticket's; the epic's with the last wave, unless another run owes it (every integration todo another run's: [owed epic](references/gate-details.md#owed-epic)).
 - From the tickets and plan only, never the build, it writes one runnable check per such criterion ID in `.factory/fast/checks/<key>/<ticket number>/`, bound to the plan's commands, routes and files; one it cannot automate gets a written manual check. It returns only "ready" and the paths.
 - The builder never opens the checks; only that wave waits for "ready". A plan change adding owed criteria restarts the checker for those.
 - At the done-run, never earlier, a fresh checker runs every check, manual ones included, against a working build: one entry per criterion, `#<n> <ID>: PASS` or `#<n> <ID>: FAIL`, a note only after it in parentheses.
 - A FAIL is a FAIL. Only a checker that has not seen the build code may call a check wrong and change it, the reason in the note: `#2 A1: PASS (check changed: <reason>)`.
 - The coordinator copies the entries under `**Hidden checks:**`, never relabeling one. Any FAIL: back to build, then rerun the checks.
 
-Lucky runs 1, 4, a short 5 and 6, 9, 10 and 11. It asks and researches nothing and takes product bar defaults for design and schema without comparisons. UI work keeps its UX verdicts (`ux-quality` step 4).
-
-- `verify`: manual QA of the main and failure journeys, then write and run relevant tests; no controller or independent review.
-- `promote`: commit the current code as the baseline, then optionally Safe on the existing epic.
+The owner names `lucky`, `verify` or `promote`: [run cases](references/run-cases.md#lucky-verify-promote).
 
 ## Safe
 
@@ -105,7 +102,7 @@ Lucky runs 1, 4, a short 5 and 6, 9, 10 and 11. It asks and researches nothing a
 
 The owner sees where the run is without asking: one short line per event, never a play-by-play of tool calls.
 
-- Fast and Lucky: [progress](references/fast-run.md#progress) and the [live view](references/fast-run.md#live-view) link, once per run; `fast_gate.py try` for each usable result.
+- Fast and Lucky: the gate shows [progress](references/fast-run.md#progress); give the [live view](references/fast-run.md#live-view) link once per run; `fast_gate.py try` for each usable result.
 - Before a wave or slow work (subagents, research, test suites, builds): one line, who does what; one result line when it returns.
 - Waiting on the owner: the question first, then the options.
 - Asked for status: the `fast_gate.py status` card; in Safe, the same card from the controller's `status`.
