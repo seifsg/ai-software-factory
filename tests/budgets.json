@@ -44,14 +44,18 @@
     "skills/safe-engine/SKILL.md": 2900
   },
   "gate": {
-    "start": 775,
-    "record hints": 1275,
-    "hook context": 150,
-    "deny edit": 200,
-    "deny destructive": 250,
-    "stop": 225,
-    "done": 250,
-    "status": 250,
-    "product hints": 2200
+    "start": 747,
+    "record hints": 1248,
+    "hook context": 142,
+    "deny edit": 191,
+    "deny destructive": 235,
+    "stop": 197,
+    "done": 242,
+    "status": 242,
+    "product hints": 2192
+  },
+  "loads": {
+    "product, feature": 121150,
+    "change": 114793
   }
 }

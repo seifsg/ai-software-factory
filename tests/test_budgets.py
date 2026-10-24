@@ -24,6 +24,13 @@ class BudgetTests(unittest.TestCase):
             with self.subTest(file=path):
                 self.assertLessEqual(size, BUDGETS["methods"][path])
 
+    def test_product_and_change_loads_stay_within_their_caps(self):
+        self.assertLessEqual(set(BUDGETS["loads"]), set(token_report.KINDS))  # a renamed kind never skips its cap
+        for kind, _, total in token_report.report():  # caps: 80% of the f9990e1 load, the #137 target
+            if kind in BUDGETS["loads"]:
+                with self.subTest(kind=kind):
+                    self.assertLessEqual(total, BUDGETS["loads"][kind])
+
     def test_every_gate_message_stays_within_its_byte_budget(self):
         found = gate_output.measure(ROOT)
         self.assertEqual(sorted(found), sorted(BUDGETS["gate"]))

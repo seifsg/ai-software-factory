@@ -74,7 +74,7 @@ Record every step in one work record and pass the gate: [fast-run](references/fa
 
 Hidden checks (product, feature):
 
-- Before each build wave (optionally during the previous one), start the checker, a fresh agent that will not build, for the criteria the wave's todos name that this run owes and that lack checks: every listed ticket's; the epic's with the last wave, unless another run owes it (every integration todo another run's: [owed epic](references/gate-details.md#owed-epic)).
+- Before each build wave (optionally during the previous one), start the checker, a fresh agent that will not build, for the criteria the wave's todos name that this run owes and that lack checks: every listed ticket's; the epic's with the last wave, unless another run owes it (its integration todos all another run's: [owed epic](references/gate-details.md#owed-epic)).
 - From the tickets and plan only, never the build, it writes one runnable check per such criterion ID in `.factory/fast/checks/<key>/<ticket number>/`, bound to the plan's commands, routes and files; one it cannot automate gets a written manual check. It returns only "ready" and the paths.
 - The builder never opens the checks; only that wave waits for "ready". A plan change adding owed criteria restarts the checker for those.
 - At the done-run, never earlier, a fresh checker runs every check, manual ones included, against a working build: one entry per criterion, `#<n> <ID>: PASS` or `#<n> <ID>: FAIL`, a note only after it in parentheses.
