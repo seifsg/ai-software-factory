@@ -58,7 +58,9 @@ class VersionTests(unittest.TestCase):
             self.assertTrue(release.factory_origin(url), url)
         for url in ("https://github.com/someone/ai-software-factory.git", "https://evil.example/github.com/seifsg/"
                     "ai-software-factory", "https://github.com.evil.example/seifsg/ai-software-factory",
-                    "https://github.com/seifsg/ai-software-factory-fork", "C:/fixtures/remote.git"):
+                    "https://github.com/seifsg/ai-software-factory-fork", "C:/fixtures/remote.git",
+                    "http://github.com/seifsg/ai-software-factory.git", "git://github.com/seifsg/ai-software-factory",
+                    "file://github.com/seifsg/ai-software-factory", "github.com/seifsg/ai-software-factory"):
             self.assertFalse(release.factory_origin(url), url)
 
     def test_saved_safe_runs_resume_on_the_same_major_only(self):
@@ -242,6 +244,10 @@ class ReleaseScriptTests(FixtureRepository):
         manifest = json.loads((out / "release-manifest.json").read_text(encoding="utf-8"))
         self.assertEqual(hashlib.sha256(sums).hexdigest(), manifest["tree"])
         self.assertIn("- A fixture fix.", (out / "notes.md").read_text(encoding="utf-8"))
+        default = run(self.script, "check", f"v{new}", cwd=self.repo)  # again, with no --out: still verifies
+        self.assertEqual(default.returncode, 0, default.stderr)
+        self.assertNotIn(str(self.repo), default.stdout.rsplit("release files in ", 1)[1])
+        self.assertEqual(git(self.repo, "status", "--porcelain"), "")
         self.assertIn("is published; never re-publish", run(self.script, "cut", new, cwd=self.repo).stderr)
         for tag, reason in ((f"v{VERSION}", "version differs"), ("1.0", "no release tag")):
             self.assertIn(reason, run(self.script, "check", tag, "--out", out, cwd=self.repo).stderr)
@@ -273,6 +279,9 @@ class GateTests(unittest.TestCase):
         copied = run(plugin / "safe-engine/scripts/fast_gate.py", "version", env=self.env).stdout.splitlines()
         self.assertEqual(copied[3], f"Route: Claude Code plugin {plugin}")
         self.assertEqual(copied[1], f"Commit: the commit of tag v{VERSION} (no Git here)")
+        shutil.rmtree(plugin / ".claude-plugin")  # a plain copy names no tag it cannot prove
+        plain = run(plugin / "safe-engine/scripts/fast_gate.py", "version", env=self.env).stdout.splitlines()
+        self.assertEqual((plain[1], plain[3]), ("Commit: unknown (no Git here)", f"Route: copy {plugin}"))
 
     def test_verify_exits_nonzero_and_names_each_difference(self):
         plugin = self.root / "plugin"

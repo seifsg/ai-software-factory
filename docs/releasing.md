@@ -19,13 +19,13 @@ Humans release. Never move or delete a published tag and never re-publish a vers
 
    ```text
    git fetch origin && git switch --detach <merge commit>
-   python scripts/release.py check vX.Y.Z --out dist
+   python scripts/release.py check vX.Y.Z
    python tests/run.py
    git tag -a vX.Y.Z -m vX.Y.Z <merge commit>
    git push origin vX.Y.Z
    ```
 
-   `check` needs no tag yet. Push the tag right after the merge: until it exists, a new Claude Code install fails (existing ones keep their copy).
+   `check` needs no tag yet and writes the release files to a new temporary folder, never into the checkout. Push the tag right after the merge: until it exists, a new Claude Code install fails (existing ones keep their copy).
 6. The `release` workflow (`.github/workflows/release.yml`) runs the same check and the tests again and publishes the GitHub release with the changelog notes, `release-manifest.json` and `SHA256SUMS`. If it fails, the tag is already out: fix forward with a new version.
 
 ## What follows a release

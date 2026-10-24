@@ -73,11 +73,14 @@ def update(record):
     if git(clone, "status", "--porcelain"):
         return "skipped: clone has local changes"
     git(clone, "fetch", "--tags", "origin", timeout=20)  # a moved tag fails here (git names it): tags never move
-    old = {"ref": ref, "revision": head, "version": release.read_version(clone)}
+    start = {"ref": ref, "revision": head, "version": release.read_version(clone)}
+    # The way back is the last completed install; after an interrupted one, its commit, never a rewritten branch.
+    old = start if record.get("revision") in (None, head) else {
+        "ref": "HEAD", "revision": record["revision"], "version": record.get("version")}
     try:
         note = advance(clone, release.channel(record), release)
     except Exception:
-        restore(clone, old)
+        restore(clone, start)
         raise
     new = {"revision": git(clone, "rev-parse", "HEAD"), "version": release.read_version(clone)}
     if new["revision"] == record.get("revision"):  # the last completed install, so an interrupted one heals
@@ -104,7 +107,8 @@ def read_by_a_run(clone):
     counts, so a run is never changed under its feet."""
     for path in (HOME / "runs").glob("*.json"):
         try:
-            bundle = json.loads(path.read_text(encoding="utf-8")).get("bundle")
+            run = json.loads(path.read_text(encoding="utf-8"))
+            bundle = None if run.get("closed") else run.get("bundle")
             if bundle and Path(bundle["root"]).resolve() == clone:
                 return True
         except (OSError, ValueError, AttributeError, KeyError, TypeError):

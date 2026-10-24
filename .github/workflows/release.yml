@@ -27,7 +27,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Check the tag (equals the version, on main, changelog section, files match the manifest)
-        run: python scripts/release.py check "$GITHUB_REF_NAME" --out dist
+        run: python scripts/release.py check "$GITHUB_REF_NAME" --out "$RUNNER_TEMP/release"  # keeps the checkout clean
       - name: Tests
         run: python tests/run.py
       - name: Publish the release
@@ -35,4 +35,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: >-
           gh release create "$GITHUB_REF_NAME" --verify-tag --title "$GITHUB_REF_NAME"
-          --notes-file dist/notes.md dist/release-manifest.json dist/SHA256SUMS
+          --notes-file "$RUNNER_TEMP/release/notes.md" "$RUNNER_TEMP/release/release-manifest.json"
+          "$RUNNER_TEMP/release/SHA256SUMS"

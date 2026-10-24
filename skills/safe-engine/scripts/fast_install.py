@@ -116,7 +116,9 @@ def remember(host, project, home, auto, channel=None):
             revision = None
         item = {"host": host, "project": str(Path(project).resolve()) if project else None}
         installs = [old for old in record.get("installs", []) if old != item] + [item]
-        record.update(clone=str(root), revision=revision, auto=auto, installs=installs)
+        version = root / "skills" / "safe-engine" / "VERSION"  # resolve_bundle.VERSION_FILE: the self-update's way back
+        record.update(clone=str(root), revision=revision, auto=auto, installs=installs,
+                      version=version.read_text(encoding="utf-8").strip() if version.is_file() else None)
     write_json(path, record)
     return path
 

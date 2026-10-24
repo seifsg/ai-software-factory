@@ -2,8 +2,8 @@
 
 python scripts/release.py cut X.Y.Z               bump every version copy, fold Unreleased into the version's
                                                   changelog section, require its upgrade notes, write the manifest
-python scripts/release.py check vX.Y.Z --out DIR  the tag workflow's gate: the release check plus a dated changelog
-                                                  section; writes notes.md, SHA256SUMS and the manifest to DIR
+python scripts/release.py check vX.Y.Z [--out DIR]  the tag workflow's gate: the release check plus a dated changelog
+                                                    section; writes notes.md, SHA256SUMS and the manifest to DIR
 """
 import argparse
 from datetime import date
@@ -12,6 +12,7 @@ from pathlib import Path
 import re
 import shutil
 import sys
+import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -130,7 +131,8 @@ def check(tag, out):
     _, body, end = parts[tag[1:]]
     (out / "notes.md").write_text(text[body:end].strip() + f"\n\nUpgrade steps: [UPGRADING.md]({LINKS}blob/{tag}/"
                                   f"UPGRADING.md). Tree digest: sha256:{manifest['tree']}.\n", encoding="utf-8")
-    print(f"{tag} verified: on main, version {tag[1:]}, {len(manifest['files'])} files match the manifest")
+    print(f"{tag} verified: on main, version {tag[1:]}, {len(manifest['files'])} files match the manifest; "
+          f"release files in {out}")
 
 
 def main():
@@ -139,10 +141,14 @@ def main():
     sub.add_parser("cut", help="Prepare a release in a clean checkout").add_argument("version", help="X.Y.Z")
     checked = sub.add_parser("check", help="Verify a release tag and write its release files")
     checked.add_argument("tag", help="vX.Y.Z")
-    checked.add_argument("--out", type=Path, default=ROOT / "dist")
+    checked.add_argument("--out", type=Path, help="Folder for the release files; default: a new temporary folder "
+                                                  "(never inside the checkout, which must stay clean)")
     args = parser.parse_args()
     try:
-        cut(args.version) if args.command == "cut" else check(args.tag, args.out)
+        if args.command == "cut":
+            cut(args.version)
+        else:
+            check(args.tag, args.out or Path(tempfile.mkdtemp(prefix=f"factory-{args.tag}-")))
     except RuntimeError as error:
         sys.exit(f"Release refused: {error}")
 

@@ -66,7 +66,7 @@ def inspect_bundle(root, expected=None, clean=False, entrypoint="improve-factory
     if root != actual_root:
         raise RuntimeError("Bundle path must be the Git checkout root, not a subdirectory")
     remote = git("remote", "get-url", "origin", cwd=root)
-    if remote not in ORIGINS:
+    if not factory_origin(remote):
         raise RuntimeError("Bundle origin is not the factory repository")
     revision = git("rev-parse", "HEAD", cwd=root)
     if expected and revision != expected:
@@ -146,9 +146,9 @@ def read_version(root):
 
 
 def factory_origin(url):
-    """Whether a remote URL names the factory repository: ORIGINS, or its GitHub path spelled another way (scheme,
-    credentials, scp form, case, a trailing slash or `.git`)."""
-    path = re.sub(r"^(?:[a-z][a-z0-9+.-]*://)?(?:[^@/]+@)?github\.com[:/]", "", url, flags=re.I)
+    """Whether a remote URL names the factory repository over an encrypted transport: ORIGINS, or its GitHub path
+    over https, ssh or the scp form, whatever the credentials, case, trailing slash or `.git`."""
+    path = re.sub(r"^(?:(?:https|ssh)://(?:[^@/]+@)?github\.com/|[^@/:]+@github\.com:)", "", url, flags=re.I)
     slug = REPOSITORY.removeprefix("https://github.com/").removesuffix(".git")
     return url in ORIGINS or (path != url and path.rstrip("/").removesuffix(".git").lower() == slug)
 

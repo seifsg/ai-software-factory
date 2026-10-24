@@ -170,9 +170,13 @@ class SelfUpdateTests(UpdateCase):
 
     def test_an_interrupted_install_is_redone_and_an_unknown_channel_refused(self):
         git(self.clone, "merge", "-q", "--ff-only", "origin/main")  # the clone moved, its install never finished
+        (self.gate / "runs").mkdir()  # a closed run that kept its state here blocks nothing
+        (self.gate / "runs" / "old.json").write_text(json.dumps({"closed": True, "bundle": {"root": str(self.clone)}}))
         note = " (no release yet: following main)"
         self.assertEqual(self.updater.update(self.record), f"updated to {self.newest}{note}")
         self.assertEqual(len(self.calls()), 2)
+        saved = json.loads((self.gate / "install.json").read_text(encoding="utf-8"))
+        self.assertEqual(saved["previous"], {"ref": "HEAD", "revision": self.installed, "version": None})
         with self.assertRaisesRegex(RuntimeError, "Unknown update channel 'beta'"):
             self.updater.update({**self.record, "channel": "beta", "revision": self.installed})
         self.assertEqual(self.head(), self.newest)
@@ -306,6 +310,18 @@ class ReleaseUpdateTests(UpdateCase):
                                         "install --host cursor --project /p"])  # failed new, then the old again
         self.assertIn("failed and was rolled back to 1.0.0",
                       (self.gate / "update-notice.txt").read_text(encoding="utf-8"))
+
+    def test_after_an_interrupted_install_a_failure_returns_to_the_last_completed_one(self):
+        v110 = commit(self.dev, "B", "1.1.0")
+        broken = commit(self.dev, "C", "1.2.0", files={"skills/safe-engine/scripts/fail.flag": "x"})
+        self.publish("--tags")
+        self.install(self.remote, v110, revision=self.v100, version="1.0.0")  # 1.1.0's install was cut off
+        result = self.updater.update(self.record)
+        self.assertTrue(result.startswith(f"rolled back to {self.v100}: install of {broken} failed"), result)
+        self.assertEqual(self.head(), self.v100)
+        saved = json.loads((self.gate / "install.json").read_text(encoding="utf-8"))
+        self.assertEqual(saved["previous"], {"ref": "HEAD", "revision": self.v100, "version": "1.0.0"})
+        self.assertIn("rolled back to 1.0.0", (self.gate / "update-notice.txt").read_text(encoding="utf-8"))
 
     def test_edge_follows_main(self):
         tip = commit(self.dev, "B", "1.1.0", tamper=True)

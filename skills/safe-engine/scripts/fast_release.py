@@ -61,8 +61,10 @@ def version(home):
             commit = "unknown (not a Git checkout)"
     elif (ROOT / "safe-engine" / release.MARKER).exists() and saved.get("revision"):
         commit = f"{saved['revision']} (installed from {saved.get('clone')})"
-    else:  # a plugin cache holds no Git: the release tag names the commit
-        commit = f"the commit of tag v{version} (no Git here)" if version else "unknown (no Git here)"
+    elif version and (ROOT / ".claude-plugin").is_dir():  # Claude Code fetched exactly this tag (marketplace ref)
+        commit = f"the commit of tag v{version} (no Git here)"
+    else:
+        commit = "unknown (no Git here)"
     lines = [f"Factory {version or 'unversioned'}", f"Commit: {commit}",
              f"Channel: {channel}" + ("" if saved.get("auto", True) else " (auto-update off)"),
              f"Route: {route(ROOT)}", f"Digest: {digest(ROOT)}"]
