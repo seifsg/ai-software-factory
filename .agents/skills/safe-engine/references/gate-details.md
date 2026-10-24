@@ -6,7 +6,7 @@ Read only the section your situation needs. The rest of the gate is in [fast-run
 
 ## Modules
 
-`fast_gate.py` keeps run state and the run registry in `fast_ledger.py`, checks in `fast_record.py`, shell analysis in `fast_shell.py`, the destructive guard in `fast_rules.py` and `fast_guard.py`, record facts in `fast_progress.py`, the owner's dashboard in `fast_card.py`, the live view in `fast_view.py` and `view/index.html`.
+`fast_gate.py` keeps run state and the run registry in `fast_ledger.py`, checks in `fast_record.py`, the record skeleton's hints in `fast_hints.py`, shell analysis in `fast_shell.py`, the destructive guard in `fast_rules.py` and `fast_guard.py`, record facts in `fast_progress.py`, the owner's dashboard in `fast_card.py`, the live view in `fast_view.py` and `view/index.html`.
 
 ## Run state
 

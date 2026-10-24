@@ -21,7 +21,7 @@ BASE = (
     S + "ticketing/references/github.md", S + "get-ready-to-code/SKILL.md",
     S + "how-to-make-a-pr/SKILL.md", S + "how-to-make-a-pr/references/pr-layout.md",
     S + "how-to-make-a-pr/references/github.md", S + "how-to-make-a-pr/references/credit.md",
-    REF + "delegate.md",  # routes, briefs and accepts every delegated job; every todo names its tier from it
+    REF + "delegate.md",  # every todo names a tier (get-ready-to-code); this maps it to a role, brief and gates
 )
 NEW = (S + "research-market/SKILL.md", S + "analyze-start/SKILL.md")
 KINDS = {
