@@ -11,7 +11,7 @@
     ".agents/skills/deep-review/references/pr-review.md": 10200,
     ".agents/skills/deep-review/references/security.md": 6500,
     ".agents/skills/get-ready-to-code/SKILL.md": 4400,
-    ".agents/skills/how-to-make-a-pr/SKILL.md": 9400,
+    ".agents/skills/how-to-make-a-pr/SKILL.md": 9500,
     ".agents/skills/how-to-make-a-pr/references/branch-cases.md": 1000,
     ".agents/skills/how-to-make-a-pr/references/credit.md": 300,
     ".agents/skills/how-to-make-a-pr/references/github.md": 2800,
@@ -20,12 +20,12 @@
     ".agents/skills/improve-factory/references/live-session.md": 9200,
     ".agents/skills/research-market/SKILL.md": 4400,
     ".agents/skills/research-market/references/deep-research.md": 2400,
-    ".agents/skills/safe-engine/SKILL.md": 15700,
+    ".agents/skills/safe-engine/SKILL.md": 15800,
     ".agents/skills/safe-engine/references/cases.md": 3800,
     ".agents/skills/safe-engine/references/controller.md": 17200,
-    ".agents/skills/safe-engine/references/fast-run.md": 13500,
-    ".agents/skills/safe-engine/references/gate-details.md": 11000,
-    ".agents/skills/safe-engine/references/product-bar.md": 17400,
+    ".agents/skills/safe-engine/references/fast-run.md": 14100,
+    ".agents/skills/safe-engine/references/gate-details.md": 10500,
+    ".agents/skills/safe-engine/references/product-bar.md": 17600,
     ".agents/skills/safe-engine/references/run-cases.md": 1200,
     ".agents/skills/safe-engine/references/sizes.md": 5300,
     ".agents/skills/safe-engine/references/work-record-sample.md": 10900,
@@ -33,7 +33,7 @@
     ".agents/skills/ticketing/references/epic-cases.md": 400,
     ".agents/skills/ticketing/references/github.md": 4900,
     ".agents/skills/ticketing/references/safe-contract.md": 1500,
-    ".agents/skills/ticketing/references/ticket-layout.md": 4100,
+    ".agents/skills/ticketing/references/ticket-layout.md": 4200,
     ".agents/skills/ticketing/references/unmerged-pr.md": 700,
     ".agents/skills/ux-quality/SKILL.md": 8800,
     ".agents/skills/ux-quality/references/assets.md": 2400,
@@ -51,6 +51,7 @@
     "deny destructive": 250,
     "stop": 225,
     "done": 250,
-    "status": 250
+    "status": 250,
+    "product hints": 2200
   }
 }

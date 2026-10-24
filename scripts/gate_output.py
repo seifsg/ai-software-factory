@@ -43,7 +43,8 @@ def shorten(text, path, tag):
 
 
 def messages(gate, tmp):
-    """{message: text} from one fixture change run in a private gate home: start, hints, hooks, done, status."""
+    """{message: text} from one fixture change run in a private gate home (start, hints, hooks, done, status),
+    plus a product run's record hints."""
     project = tmp / "p"
     project.mkdir()
     subprocess.run(("git", "init", "-q", str(project)), check=True)
@@ -72,6 +73,12 @@ def messages(gate, tmp):
     record.write_text(text.replace("## Tickets\n", "## Tickets\n\n" + TICKETS, 1), encoding="utf-8")
     out["done"] = run("done", "tickets", "--project", str(project))
     out["status"] = run("status", "--project", str(project))
+    product = tmp / "q"  # the largest hints: a product run with sign-in, every check its methods define
+    product.mkdir()
+    subprocess.run(("git", "init", "-q", str(product)), check=True)
+    run("start", "--project", str(product), "--key", "fixture-product", "--kind", "product", "--auth", "--request", "A shop")
+    hints = (product / ".factory" / "fast" / "work-record.md").read_text(encoding="utf-8").splitlines()
+    out["product hints"] = "\n".join(line for line in hints if line.startswith("<!--"))
     return {name: shorten(shorten(value, project, "<p>"), tmp, "<t>") for name, value in out.items()}
 
 

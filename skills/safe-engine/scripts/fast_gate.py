@@ -36,7 +36,7 @@ STEPS = (
 TITLES = {"research": "Research", "kickoff": "Kickoff", "tickets": "Tickets", "analysis": "Analysis",
           "plan": "Plan", "design": "Design", "schema": "Schema", "build": "Build log",
           "done-run": "Done-run", "handoff": "Handoff"}
-HINTS = {  # record markers per step (fast-run.md#work-record); skeleton() adds what this run's kind and flags need
+HINTS = {  # record markers per step (fast-run.md#work-record); record_hints() adds what this run's kind and flags need
     "research": ">=3 '### <competitor>' each citing a source URL, a feature matrix table, an Opportunities line; "
                 "product runs also '### Stack options' with a 3-row table",
     "kickoff": "Features, Approach, Answered by lines; product runs also Size and Stack",
@@ -233,12 +233,14 @@ def open_run(given):
 
 
 def status_text(run, all_sections=None):
-    """The owner's run card (steps, pause reason), then the run, gate and next step. Steps finish in order, so the
-    card's current step and count say which are done."""
+    """The owner's run card (pause reason first), the steps line when the card shows todos instead, then the run,
+    gate and next step."""
     if all_sections is None:
         all_sections = sibling("fast_progress").read(record_path(run["project"]))
-    blocked = open_before_build(run)
-    lines = [sibling("fast_card").card(run, steps_for(run), all_sections, now()),
+    blocked, cards, steps, done = open_before_build(run), sibling("fast_card"), steps_for(run), run.get("done") or {}
+    shown = cards.card(run, steps, all_sections, now())
+    path = cards.steps_line(steps, done, next((step for step in steps if step not in done), None), run.get("created"))
+    lines = [shown, *([path] if path not in shown else []),  # mid-build the card shows todos, not the steps left
              f"{run['mode']} {run['kind']} run '{run['key']}' at {run['project']}"
              f" (ui={run.get('ui')}, data={run.get('data')}, auth={run.get('auth')})",
              "Gate: " + ("open, source edits allowed" if not blocked else "closed until " + ", ".join(blocked)),
@@ -258,19 +260,44 @@ def skeleton(run):
     return "\n".join(lines)
 
 
+def ui_hint(run):
+    """The done-run's UI markers: screenshots on UI runs; current methods add file-changing runs and the verdicts."""
+    if not (run.get("ui") or run.get("ux_rules")):
+        return ""
+    if not run.get("ux_rules"):
+        return "; UI runs >=1 existing screenshot path"
+    return ("; UI runs, and runs that change UI files, >=1 existing screenshot path, a verdict line per U1..U10 "
+            "(no open FAIL), a UX judge line")
+
+
+def pr_hint(run):
+    """The handoff's PR markers this run's methods turn on."""
+    parts = []
+    if run.get("pr_proof"):
+        parts.append("a PR line naming the draft PR: its Before & after section has one heading per outcome, each "
+                     "Before and After with an image, a recording or a fenced block")
+        if run.get("pr_demo"):
+            parts.append("each outcome declares Visual and Journey (visual: screenshot pair, journey: Video; only a "
+                         "scoped owner Media waiver)")
+    if run.get("credit"):
+        parts.append("the PR body's last line is the factory credit line (how-to-make-a-pr credit.md)")
+    return "".join("; " + part for part in parts)
+
+
 def record_hints(run):
     """Each step's record markers for this run only: its kind, lane and the checks its methods turn on."""
     record, hints = sibling("fast_record"), dict(HINTS)
-    product, lane, coverage = run["kind"] != "change", record.light(run), run.get("coverage")
-    online, named = "; online: ", "; criteria name every requested item not owner-deferred" if product and coverage else ""
+    delivers, lane, coverage = run["kind"] != "change", record.light(run), run.get("coverage")  # delivers: product, feature
+    online = "; online: "
+    named = "; criteria name every requested item not owner-deferred" if delivers and coverage else ""
     if lane:
         hints["tickets"] = "a Ticket line (its URL, or 'none (why)'), a Backlog line"
         hints["plan"] = "a Success line, ### Todos ('T1 <title> → <result> (#ticket, A1)')"
-    elif product:
+    elif delivers:
         hints["tickets"] += ", >=1 Sub-issue URL line" + (", a Requested line (R1, R2, ...)" if coverage else "")
     if coverage and not lane:
         hints["plan"] = hints["plan"].replace("(T1..)", "('T1 <title> → <result> (#ticket, A1)')")
-    if run.get("scans") and run["mode"] == "lucky" and product:  # Lucky has no kickoff to hold the Size line
+    if run.get("scans") and run["mode"] == "lucky" and delivers:  # Lucky has no kickoff to hold the Size line
         hints["tickets"] += ", a Size line"
     hints["tickets"] += online + ("each listed ticket is open with a Definition of done" if coverage else
                                   "each listed ticket has a Definition of done") + named
@@ -278,22 +305,14 @@ def record_hints(run):
                                "each listed ticket has checklist items") + named
     if run.get("ux_rules"):
         hints["design"] += "; Map, Hierarchy (naming the primary action) and Labels lines"
-    if run.get("ui") or run.get("ux_rules"):
-        hints["done-run"] += "; UI runs" + (", and runs that change UI files," if run.get("ux_rules") else "") + (
-            " >=1 existing screenshot path") + (", a verdict line per U1..U10 (no open FAIL), a UX judge line"
-                                                if run.get("ux_rules") else "")
+    hints["done-run"] += ui_hint(run)
     if run.get("scans"):  # Size starts with POC, MVP, production or none (<why>)
         hints["done-run"] += "; sized MVP or production: Secrets, Dependencies, Static lines"
     if record.hidden(run):
         hints["done-run"] += "; a Hidden checks block: '#<n> <ID>: PASS' per criterion of every listed ticket"
-    pr = ("; a PR line naming the draft PR: its Before & after section has one heading per outcome, each Before and "
-          "After with an image, a recording or a fenced block" if run.get("pr_proof") else "") + (
-        "; each outcome declares Visual and Journey (visual: screenshot pair, journey: Video; only a scoped owner Media "
-        "waiver)" if run.get("pr_proof") and run.get("pr_demo") else "") + (
-        "; the PR body's last line is the factory credit line (how-to-make-a-pr credit.md)" if run.get("credit") else "")
-    hints["handoff"] += (", a Dev sign-in line" if run.get("auth") else "") + pr + online + (
-        "each listed ticket fully ticked, or Blocked, Backlog or not planned") + (
-        "; items name every criterion and hold every plan todo" if coverage else "") + named
+    ticked = "each listed ticket fully ticked, or Blocked, Backlog or not planned" + (
+        "; items name every criterion and hold every plan todo" if coverage else "")
+    hints["handoff"] += (", a Dev sign-in line" if run.get("auth") else "") + pr_hint(run) + online + ticked + named
     return hints
 
 

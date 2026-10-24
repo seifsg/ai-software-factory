@@ -41,17 +41,14 @@ A link or junction put in the folder's place is never trusted. `close` (also `--
 
 ## Destructive guard
 
-Every step of an active run. A rule fires when its words appear anywhere in the command, whatever the shell structure (substitutions, groups, `ssh` or container strings, piped `.sql` files). Commit, PR and search text, and echo or heredoc text that only reaches a file or the terminal, never fire one. Brace and PowerShell comma lists count item by item; an unknown shell must pass both the Bash and the PowerShell reading. Fired rules are denied unless the parse proves them harmless:
+The rules are listed in [fast-run](fast-run.md#hooks). A rule fires when its words appear anywhere in the command, whatever the shell structure (substitutions, groups, `ssh` or container strings, piped `.sql` files). Commit, PR and search text, and echo or heredoc text that only reaches a file or the terminal, never fire one. Brace and PowerShell comma lists count item by item; an unknown shell must pass both the Bash and the PowerShell reading. A fired rule is denied unless the parse proves it harmless:
 
-- recursive deletes (`rm -r`, `Remove-Item -Recurse`, `find -delete`) outside the project (the run's scratch folder excepted, with the [deleters](#scratch-deletes)), of all of the project, of `.factory` or `.factory/fast`;
-- any delete, move or wildcard that can reach `.factory/fast/run.json`, or anything in `.git` except `index.lock` (a `find` from the root passes only with `-name` patterns that cannot match `.git`, `.factory`, `fast` or `run.json`, or with `-not -path './.git/*' -not -path './.factory/*'`);
-- `git clean -x`/`-X` and `git stash --all` (`git stash -u` passes);
-- force, mirror, prune or `main`/`master`-delete pushes (`--force-with-lease` naming another branch, not `HEAD`, passes);
-- `DROP` or `TRUNCATE` through a database client, and database wipes (`dropdb`, `db:drop`, `migrate reset`, `migrate:fresh`, `ecto.reset`, `flush`);
-- deletes, moves and redirect or edit-tool writes reaching the gate home's `active/` or `runs/` (its logs and bundles pass);
-- migrations whose command or an earlier `export` names a production env value (`prod` inside a name such as `add_prod_flag` is none).
-
-The owner runs them or approves another approach.
+- Recursive deletes inside the run's scratch folder pass with the [deleters](#scratch-deletes).
+- A `find` from the root passes only with `-name` patterns that cannot match `.git`, `.factory`, `fast` or `run.json`, or with `-not -path './.git/*' -not -path './.factory/*'`.
+- `git stash -u` passes; `--force-with-lease` naming another branch, not `HEAD`, passes.
+- Database wipes include `dropdb`, `db:drop`, `migrate reset`, `migrate:fresh`, `ecto.reset`, `flush`.
+- Writes to the gate home cover redirects and edit tools; its logs and bundles pass.
+- A production env value counts in the command or an earlier `export`; `prod` inside a name such as `add_prod_flag` is none.
 
 Hooks see tool calls, not intent: files written and destructive commands run from inside scripts, `xargs rm`, piped deletes (`Get-ChildItem | Remove-Item`), commands piped into a shell from a file or program, and inline interpreter code (`python -c`, `node -e`) pass; the record and the done-run carry the rest.
 

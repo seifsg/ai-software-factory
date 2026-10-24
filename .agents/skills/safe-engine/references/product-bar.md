@@ -1,6 +1,6 @@
 # Product bar
 
-Contents: Stack, Visual system, States and forms, Public pages, Data, Logging, Speed, Security, Dev sign-in, Environment and sample labels, Games and browser lifecycle, Release.
+Contents: Stack, Visual system, States and forms, Public pages, Data, Logging, Speed, Security, Dev sign-in, Environment and sample labels, Games and browser lifecycle, External effects, Release.
 
 Quality floor for every app, game, service, tool and library, in every mode; the [size](sizes.md) sets which parts apply. A POC or MVP is never thrown away: record its stack, design brief and budgets in the plan.
 
@@ -99,7 +99,7 @@ Budget in the first plan: fast first load, instant common actions, no N+1, pagin
 - Storage: write amplification, asset size, atomic writes, migrations, full disk.
 - Interaction: input latency, startup, battery, polling. Prefer events; pause hidden work. CLI/API: responsive output, backpressure, usable errors.
 
-Adding or changing a cache, cached work's inputs or access scope, duplicate-work coalescing or generated-media reuse: [caching](cases.md#caching).
+A cache present, added or changed, cached work's inputs or access scope, duplicate-work coalescing or generated-media reuse: [caching](cases.md#caching).
 
 Evidence: source proves repetition; speed and memory claims need runtime measurement stating workload, environment and cold/warm conditions. Faster wrong or stale results fail. Fakes prove mechanics, not speed. Percentages need a comparable baseline. Log safe counts and timings. Report unmet targets.
 
@@ -118,7 +118,7 @@ Size the risk: environment, reachable surfaces, roles, valuable data, trust boun
 - Output: context-aware encoding, safe framework sinks, maintained sanitizer for rich HTML, fitting CSP. CSRF protection on cookie-authenticated mutations; no state change on GET. CORS is neither authorization nor CSRF protection.
 - Uploads: authorize; limit size and count; check extension and detected content, distrust MIME and name. Generated names, traversal and archive-bomb protection, non-executable isolated storage, authorized downloads. Never serve active uploads from the app origin.
 - Abuse/CORS: rate, size, concurrency and cost limits per surface, login, reset, search, uploads and expensive work first. Trusted proxy handling; keep legitimate retries working. CORS only for needed origins; no reflected origin or wildcard with credentials.
-- Webhooks, payments, messages, remote jobs or other state-changing calls: [external effects](cases.md#external-effects).
+- Webhooks: verify the signature over the original bytes before any effect ([external effects](cases.md#external-effects)).
 - Dependencies: lockfiles. Review actual advisories; update vulnerable versions compatibly. No blind major upgrades or invented CVEs.
 
 Before exposure: HTTPS, valid certificates, production config, fitting security headers, least-privilege network and storage; no debug consoles, stack traces, default credentials or test bypasses. Exercise denial paths with harmless accounts (anonymous, other user or tenant, tampered or expired token, forged webhook), then run the `deep-review` security lens. Fix demonstrated compromise risks or disable the path.
@@ -138,7 +138,7 @@ Apps with accounts seed one user per role. Development builds show one-click but
 
 ## Games and browser lifecycle
 
-Building or changing a game or GPU-heavy rendering: [games](cases.md#games).
+A game or GPU-heavy rendering, built, changed or reviewed: [games](cases.md#games).
 
 Final manual QA of web apps and games: relevant cases, not every permutation.
 
@@ -149,6 +149,10 @@ Final manual QA of web apps and games: relevant cases, not every permutation.
 - Compatibility: supported browsers and devices, viewport, orientation, reduced motion, low-end performance, stale cached assets and client/server versions.
 
 Record unsupported cases. One desktop browser proves nothing about mobile, audio or assistive behavior.
+
+## External effects
+
+Payments, messages, webhooks, remote jobs or any other state-changing call: [external effects](cases.md#external-effects).
 
 ## Release
 

@@ -47,7 +47,7 @@ Summary shown to the owner: all three match on features; gaps: price transparenc
 **Sub-issue:** https://github.com/acme/studio-booking/issues/3 Waitlist
 **Sub-issue:** https://github.com/acme/studio-booking/issues/4 Class packs
 **Sub-issue:** https://github.com/acme/studio-booking/issues/5 Staff tools
-**Requested:** R1 schedule (#2), R2 book (#2), R3 packs (#4, mock checkout owner-approved), R4 waitlist (#3), R5 staff schedule (#5), R6 check-in (#5). Criteria name their item: `**A1 (R2):**`.
+**Requested:** R1 schedule (#2), R2 book (#2), R3 packs (#4, mock checkout owner-approved), R4 waitlist (#3), R5 staff schedule (#5), R6 check-in (#5). Each delivering criterion names its item: `**A1 (R2):**`.
 **Backlog:** searched "booking", "waitlist", "pack": empty, new repo. Owned: #1 to #5 (To do, P1, Definition of done each). Follow-ups #6 (real payments, owner-deferred; later deferrals append to it): Backlog, P2. POC skips in #1. Affected, untouched: none.
 
 ## Analysis

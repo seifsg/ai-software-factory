@@ -22,7 +22,7 @@ Build systems that outlast their creator. Breakage is not acceptable.
 - Production ready: no placeholders, stubs or TODOs. Human-readable code; short comments: what a function does and why it exists. Never a circular dependency.
 - When done, one more pass: less code, less complexity, faster? Question every solution, yours and the code you read.
 - Stay on the task: touch only what the change, its root fix and the product bar need; ticket unrelated issues.
-- Output: lead with the answer or result, in specific words; no preamble, filler, restated question or closing recap, no em dashes or invented claims. Keep code, commands, paths, errors, numbers and quotes verbatim; never drop not, never, no, only or except. Status during long work: one short line. Handbacks and reports: what changed, proof, what is unverified. Full plain sentences instead for security warnings, irreversible or destructive actions, order-sensitive steps and questions to the owner. Persisted artifacts (tickets, PRs, work records, docs) keep their own layouts and writing rules; no em dashes or invented claims there either.
+- Output: lead with the answer or result, in specific words; no preamble, filler, restated question or closing recap, no em dashes or invented claims. Keep code, commands, paths, errors, numbers and quotes verbatim; never drop not, never, no, only or except. Status during long work: one short line. Short handbacks and reports: what changed, proof, what is unverified. Full plain sentences instead for security warnings, irreversible or destructive actions, order-sensitive steps and questions to the owner. Persisted artifacts (tickets, PRs, work records, docs) keep their own layouts and writing rules; no em dashes or invented claims there either.
 
 ## Pick the mode
 
@@ -63,7 +63,7 @@ Record every step in one work record and pass the gate: [fast-run](references/fa
 8. **Schema** (persistence): `database-schema`, only if needed.
 9. **Build:** each checklist item through the 0–4 loop, an unproven capability first as a spike; tick it in its ticket after its check.
    - On each tick, write that todo's one log line, `T3 pre: … do: … post: …`, and in the same edit set `**Now:**` to the todos in progress.
-   - An MVP or production slice writes automated tests as its last checklist items, once the rest works.
+   - An MVP or production slice writes automated tests as its last checklist items, once the rest works; a POC waits for `verify` or Safe.
 10. **Done-run:** prove each ticket's definition of done.
     - Start it once. Use every requested journey and the most likely failure through real controls (simulated input proves no requested integration). Read the logs; fix blockers.
     - Meanwhile capture the PR's complete view and journey inventory (`how-to-make-a-pr`). A demo bug restarts its capture cycle after the checked fix.
@@ -75,7 +75,7 @@ Record every step in one work record and pass the gate: [fast-run](references/fa
 Hidden checks (product, feature):
 
 - Before each build wave (optionally during the previous one), start the checker, a fresh agent that will not build, for the criteria the wave's todos name that this run owes and that lack checks: every listed ticket's; the epic's with the last wave, unless another run owes it ([owed epic](references/gate-details.md#owed-epic)).
-- From the tickets and plan only, never the build, it writes one runnable check per criterion ID in `.factory/fast/checks/<key>/<ticket number>/`, bound to the plan's commands, routes and files; one it cannot automate gets a written manual check. It returns only "ready" and the paths.
+- From the tickets and plan only, never the build, it writes one runnable check per such criterion ID in `.factory/fast/checks/<key>/<ticket number>/`, bound to the plan's commands, routes and files; one it cannot automate gets a written manual check. It returns only "ready" and the paths.
 - The builder never opens the checks; only that wave waits for "ready". A plan change adding owed criteria restarts the checker for those.
 - At the done-run, never earlier, a fresh checker runs every check, manual ones included, against a working build: one entry per criterion, `#<n> <ID>: PASS` or `#<n> <ID>: FAIL`, a note only after it in parentheses.
 - A FAIL is a FAIL. Only a checker that has not seen the build code may call a check wrong and change it, the reason in the note: `#2 A1: PASS (check changed: <reason>)`.

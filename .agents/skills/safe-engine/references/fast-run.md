@@ -47,7 +47,7 @@ Delegates return their log lines; the coordinator writes the record. During buil
 
 ## The gate
 
-`fast_gate.py` and its [modules](gate-details.md#modules) sit in `scripts/` beside the installed launcher and in `skills/safe-engine/scripts/` of the factory bundle. Python 3.9+, standard library only.
+`fast_gate.py` (debugging the gate: [modules](gate-details.md#modules)) sits in `scripts/` beside the installed launcher and in `skills/safe-engine/scripts/` of the factory bundle. Python 3.9+, standard library only.
 
 Before `start` on a product, select the factory bundle with the launcher's `resolve_bundle.py --project <abs>` (it writes `.factory/entry-bundle.json`); skip it when the run maintains the factory itself.
 
@@ -60,7 +60,7 @@ python fast_gate.py view [--port 8765] [--snapshot <file>]
 ```
 
 - Always pass `--project`. Write the request verbatim to a file first (`.factory/request.md`).
-- `start` keeps the run's state in the gate home (`SAFE_ENGINE_HOME`, default `~/.safe-engine`), creates the record and keeps `.factory/` out of Git unless the project already tracks files there: in a Git repository only, so `git init` first. A run whose state is missing, unreadable or lost: [run state](gate-details.md#run-state).
+- `start` keeps the run's state in the gate home (`SAFE_ENGINE_HOME`, default `~/.safe-engine`), creates the record and keeps `.factory/` out of Git unless the project already tracks files there: in a Git repository only, so `git init` first. Run state missing or unreadable here: [run state](gate-details.md#run-state); a run from another machine or folder: [rehome](gate-details.md#rehome).
 - `.factory/fast/run.json` is a read-only mirror (or use `status`); the gate never reads it, so no change to it counts.
 - Product runs default to UI and persistence; pass `--no-ui` or `--no-data` only when true, `--auth` when anyone signs in or roles exist. Fixed at `start`: decide them from the request.
 - `start` makes the run's scratch folder in the gate home and prints it; `scratch` prints it again. Throwaway data the run makes outside the project goes there: test homes, browser profiles, spare servers, temp databases, downloads. Point `TMPDIR`, `TEMP` and `TMP` at it on each command whose tool makes its own temp folders; give browsers a profile folder there. To delete in it, stop the processes holding its files, then use a [form the guard passes](gate-details.md#scratch-deletes).
@@ -68,24 +68,24 @@ python fast_gate.py view [--port 8765] [--snapshot <file>]
 - `done tickets`, `done plan`, `done handoff` and, on hidden-check runs, `done done-run` read the listed GitHub tickets online; `done handoff` also reads the PR body. Other trackers or no network: `--offline "<reason>"` records the step unverified, and the handoff's PR line names the body file, `**PR:** <url> (body: <file>)`; refused when the listed GitHub tickets are readable.
 - Runs started on older methods keep their recorded checks unless the owner explicitly adopts the PR-proof policy.
 - `pause` before waiting on the owner; the next `done` or `resume` clears it. `close` needs `handoff`, or `--abandon` with the owner's reason; `close --project <dir> --abandon` also works when the run state is missing or unreadable.
-- Only on the owner's instruction, see [gate details](gate-details.md): `rehome` (move a run between machines or folders), `adopt-pr-proof`, `cleanup-temp` (obsolete temp fixtures). Hook wiring: `install`, same file.
+- Only on the owner's explicit instruction: [`rehome`](gate-details.md#rehome) (move a run between machines or folders), [`adopt-pr-proof`](gate-details.md#adopt-pr-proof), [`cleanup-temp`](gate-details.md#cleanup-temp) (obsolete temp fixtures). Hook wiring: [`install`](gate-details.md#install).
 
 ## Hooks
 
 - Until every step before `build` passes, source edits, shell writes (`>`, `>>`, `&>`, `>|`, piped `tee`) and scaffold or install commands in the run's project are denied. Quoted text, heredoc bodies and here-strings never count, so ticket bodies pass. `.factory/` stays writable, except `run.json`.
-- Destructive commands (wide recursive deletes, deletes reaching `.factory/fast` or `.git`, force pushes, database wipes, production migrations and more) are denied in every step of an active run; the owner runs them or approves another approach. Before a delete, move, push, stash, clean, database or migration command, or after a deny: [full rules, what passes, what hooks miss](gate-details.md#destructive-guard).
+- Destructive commands are denied in every step of an active run; the owner runs them or approves another approach: recursive deletes outside the project (the run's scratch folder excepted), of the whole project, of `.factory` or `.factory/fast`; any delete, move or wildcard that can reach `.factory/fast/run.json`, or anything in `.git` except `index.lock`; `git clean -x`/`-X`, `git stash --all`; force, mirror, prune or `main`/`master`-delete pushes; `DROP` or `TRUNCATE` through a database client, and database wipes; deletes, moves and writes reaching the gate home's `active/` or `runs/`; migrations naming a production env value. A command you need matches one, or a deny came: [what passes, what hooks miss](gate-details.md#destructive-guard).
 - Stopping mid-run is blocked once with the next step; stopping again right after passes. A paused or closed run never blocks, nor does a stop while the host reports a background agent running (its result starts a new turn, whose stop is checked); other background work, such as a server, does not count. Waiting on background work is no reason to `pause`.
 - Each prompt and session start gets one status line: run, next step, pause reason.
 - No active run anywhere: hooks exit at once. Without hooks the gate still records and checks steps; follow the order yourself.
 
 ## Progress
 
-- `start`, `done`, `status`, `pause`, `resume` and `close` print the run card first, a mini dashboard. Hooks show the owner each unseen card, built todo and new NOW once ([details](gate-details.md#progress-internals)); a delegate's hook calls show nothing, the next main-thread call does.
+- `start`, `done`, `status`, `pause`, `resume` and `close` print the run card first, a mini dashboard. Hooks show the owner each unseen card, built todo and new NOW once (debugging it: [progress internals](gate-details.md#progress-internals)); a delegate's hook calls show nothing, the next main-thread call does.
 - Never repeat a gate message your agent already showed. Where it shows no hook messages (the factory's `docs/hosts.md`), relay the card from the command output.
 
 ## Live view
 
-- `view` serves every open run on this machine, and runs closed today, at `http://127.0.0.1:8765/` (a busy port gets another); when a server already answers, it prints that link and exits. Start it in your agent's background shell; give the owner the link once per run. [Details](gate-details.md#live-view-internals).
+- `view` serves every open run on this machine, and runs closed today, at `http://127.0.0.1:8765/` (a busy port gets another); when a server already answers, it prints that link and exits. Start it in your agent's background shell; give the owner the link once per run. Only the gate writes `view/state.json`. Debugging the view: [view internals](gate-details.md#live-view-internals).
 - When a ticked todo leaves something the owner can use, record it with `try`; it refuses an unknown todo or any other target and names the form.
 
 ## Keep it fast

@@ -29,6 +29,10 @@ KINDS = {
     "+ui": (S + "ux-quality/",),
     "+data": (S + "database-schema/",),
     "+safe-check": (S + "deep-review/",),
+    "+on demand": (  # detail behind pointers that name its situation: read only when it occurs
+        REF + "gate-details.md", REF + "cases.md", REF + "run-cases.md", S + "ticketing/references/safe-contract.md",
+        S + "ticketing/references/unmerged-pr.md", S + "ticketing/references/epic-cases.md",
+        S + "how-to-make-a-pr/references/branch-cases.md", S + "research-market/references/deep-research.md"),
     "all methods": (S, "skills/"),  # moved text still counts here: a move is not a cut
 }
 TOTAL_ONLY = {"all methods"}
