@@ -31,7 +31,7 @@ G3 MANUAL <outcome>: <what the reviewer judges>
 ```
 
 - Every fix a test is said to pin gets a NEG gate. Set it aside with a patch file, never a stash. A gate that cannot fail proves nothing.
-- A maker's last gate is the narrow test for its change. Slow checks (the full suite, long builds) run once on a runner after the wave, writing their output to a file in the scratch folder; a red run goes to a fresh maker with the failures.
+- A maker's last gate is the narrow test for its change. Slow checks (the full suite, long builds) run once on a runner after the wave, on files nobody edits until they end, writing their output to a file in the scratch folder; a red run goes to a fresh maker with the failures.
 - On handback, re-run every runnable gate yourself before accepting; for a slow check, read the end of its output file instead. MANUAL gates go to the reviewer.
 
 ## Size
