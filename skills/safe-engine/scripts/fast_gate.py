@@ -233,14 +233,11 @@ def open_run(given):
 
 
 def status_text(run, all_sections=None):
-    """The owner's run card (pause reason first), the steps line when the card shows todos instead, then the run,
-    gate and next step."""
+    """The owner's run card (pause reason first, and the steps still to come), then the run, gate and next step."""
     if all_sections is None:
         all_sections = sibling("fast_progress").read(record_path(run["project"]))
-    blocked, cards, steps, done = open_before_build(run), sibling("fast_card"), steps_for(run), run.get("done") or {}
-    shown = cards.card(run, steps, all_sections, now())
-    path = cards.steps_line(steps, done, next((step for step in steps if step not in done), None), run.get("created"))
-    lines = [shown, *([path] if path not in shown else []),  # mid-build the card shows todos, not the steps left
+    blocked = open_before_build(run)
+    lines = [sibling("fast_card").card(run, steps_for(run), all_sections, now(), left=True),
              f"{run['mode']} {run['kind']} run '{run['key']}' at {run['project']}"
              f" (ui={run.get('ui')}, data={run.get('data')}, auth={run.get('auth')})",
              "Gate: " + ("open, source edits allowed" if not blocked else "closed until " + ", ".join(blocked)),

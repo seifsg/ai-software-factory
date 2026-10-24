@@ -46,15 +46,15 @@ Illustration only.
 |---|---|
 | Reload restores default | Reload restores saved choice |
 
-### ✅ Definition of done
-- **A1:** reload keeps the chosen theme.
-- **A2:** a failed save shows an error with retry and keeps the choice.
-
 ### 🔀 Flow
 ```text
 save -> reload -> restore
  | fail -> error, keep choice, retry
 ```
+
+### ✅ Definition of done
+- **A1:** reload keeps the chosen theme.
+- **A2:** a failed save shows an error with retry and keeps the choice.
 
 ### ☑️ Checklist
 - [x] T1 Save on change, restore on start (A1). Proof: reload showed dark.

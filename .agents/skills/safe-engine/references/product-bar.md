@@ -152,7 +152,7 @@ Record unsupported cases. One desktop browser proves nothing about mobile, audio
 
 ## External effects
 
-Payments, messages, webhooks, remote jobs or any other state-changing call: [external effects](cases.md#external-effects).
+Payments, messages, webhooks, remote jobs or any other state-changing call to another system: [external effects](cases.md#external-effects).
 
 ## Release
 
@@ -161,4 +161,7 @@ Proof before any ready claim:
 - Before dependent work, record actual capabilities: build tools, browser or native control, audio inspection, devices, safe accounts and data, integration access. Verify each route exists; surface blockers early and keep independent work moving. No purchases, installs or new credentials implied.
 - Map each criterion to manual, automated or mixed evidence: candidate, environment/device, action, result, limits. Feel, art and interaction need honest observation, not an unrelated passing script. Missing evidence stays UNKNOWN. Never fabricate a tester or infer completion from a screenshot.
 - A demo names the exact build, environment, device, data or save identity, actions and result. Same URL is not same context. Passing checks alone prove no outcome.
-- Local ready, PR approval, merge and live release are separate; never infer deployment authority. Release record (MVP, production slice), live deploy or operation, monitoring or alerts: [live release](cases.md#live-release).
+- Local ready, PR approval, merge and live release are separate; never infer deployment authority.
+- One release record: reviewed build artifact, target environment and config, required services and secrets, migration and app ordering, compatible clients and data, rollback or roll-forward, backups with a usable restore. Attach security, UX, SEO and integration evidence.
+- Operations: log access, failure, stalled-job and capacity signals, an authorized destination and operator, retention and recovery. Reuse existing facilities; no automatic paid monitor, new notifications or perpetual polling.
+- Deploying or operating a live release: [live release](cases.md#live-release).

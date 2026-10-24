@@ -16,13 +16,13 @@ REF = S + "safe-engine/references/"
 # Files a run reads by following its methods; conditional detail stays out.
 BASE = (
     "skills/safe-engine/SKILL.md", S + "safe-engine/SKILL.md", REF + "fast-run.md",
-    REF + "product-bar.md", REF + "work-record-sample.md",
+    REF + "product-bar.md", REF + "sizes.md", REF + "work-record-sample.md",
     S + "ticketing/SKILL.md", S + "ticketing/references/ticket-layout.md",
     S + "ticketing/references/github.md", S + "get-ready-to-code/SKILL.md",
     S + "how-to-make-a-pr/SKILL.md", S + "how-to-make-a-pr/references/pr-layout.md",
     S + "how-to-make-a-pr/references/github.md", S + "how-to-make-a-pr/references/credit.md",
 )
-NEW = (REF + "sizes.md", S + "research-market/SKILL.md", S + "analyze-start/SKILL.md")
+NEW = (S + "research-market/SKILL.md", S + "analyze-start/SKILL.md")
 KINDS = {
     "product, feature": BASE + NEW,
     "change": BASE,
@@ -36,12 +36,14 @@ KINDS = {
     "all methods": (S, "skills/"),  # moved text still counts here: a move is not a cut
 }
 TOTAL_ONLY = {"all methods"}
+# A kind skips a file only where its method says so at the measured revision (phrases, as the gate reads them).
+SKIPS = {"change": {REF + "work-record-sample.md": (REF + "fast-run.md", "A `change` writes only the light-lane markers")}}
 
 
 def git(*args, stdin=None):
     """Run git in the factory root; raise loudly on failure."""
     return subprocess.run(("git", "-C", str(ROOT)) + args, input=stdin, capture_output=True, check=True,
-                          text=True).stdout
+                          text=True, encoding="utf-8").stdout
 
 
 def expand(paths, rev):
@@ -71,11 +73,17 @@ def tok(n):
     return (n + 3) // 4
 
 
+def text(path, rev):
+    """A method file's text at rev, or in the working tree."""
+    return git("show", f"{rev}:{path}") if rev else (ROOT / path).read_text(encoding="utf-8")
+
+
 def report(rev=None):
     """Rows per kind: (kind, [(path, bytes|None)], total bytes)."""
     rows = []
     for kind, paths in KINDS.items():
-        got = sizes(expand(paths, rev), rev)
+        skipped = {path for path, (method, phrase) in SKIPS.get(kind, {}).items() if phrase in text(method, rev)}
+        got = sizes([path for path in expand(paths, rev) if path not in skipped], rev)
         rows.append((kind, list(got.items()), sum(v or 0 for v in got.values())))
     return rows
 
