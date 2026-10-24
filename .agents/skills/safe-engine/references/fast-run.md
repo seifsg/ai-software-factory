@@ -26,7 +26,7 @@ A `change` (bug fix, small change, follow-up) records tickets, plan, build, done
 
 ## Work record
 
-`.factory/fast/work-record.md`, sections in step order; `start` writes the skeleton. Product and feature runs: the [sample](work-record-sample.md) shows every marker for an unrelated product; never copy its content. A `change` writes the markers its rows below name, with the light-lane forms. Labels end with the colon inside the bold: `**Epic:**`. The gate checks (listed tickets: the `**Epic:**` or `**Ticket:**` and `**Sub-issue:**` lines):
+`.factory/fast/work-record.md`, sections in step order; `start` writes the skeleton. The rows below and the skeleton's hints name every marker; a `change` writes the markers its rows name, with the light-lane forms. A `done` refusal its message does not explain: the [sample](work-record-sample.md) shows each section complete for an unrelated product; never copy its content. Labels end with the colon inside the bold: `**Epic:**`. The gate checks (listed tickets: the `**Epic:**` or `**Ticket:**` and `**Sub-issue:**` lines):
 
 | Section | Must contain |
 |---|---|

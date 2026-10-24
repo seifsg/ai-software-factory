@@ -22,22 +22,24 @@ BASE = (
     S + "how-to-make-a-pr/SKILL.md", S + "how-to-make-a-pr/references/pr-layout.md",
     S + "how-to-make-a-pr/references/github.md", S + "how-to-make-a-pr/references/credit.md",
 )
-NEW = (S + "research-market/SKILL.md", S + "analyze-start/SKILL.md")
+DELEGATE = REF + "delegate.md"  # every delegated job is routed, briefed and accepted by it
+NEW = (S + "research-market/SKILL.md", S + "analyze-start/SKILL.md", DELEGATE)  # product, feature: these too; they always delegate
 KINDS = {
     "product, feature": BASE + NEW,
     "change": BASE,
-    "+ui": (S + "ux-quality/",),
+    "+ui": (S + "ux-quality/", DELEGATE),  # its audit is a fresh agent's
     "+data": (S + "database-schema/",),
     "+safe-check": (S + "deep-review/",),
     "+on demand": (  # detail behind pointers that name its situation: read only when it occurs
-        REF + "gate-details.md", REF + "cases.md", REF + "run-cases.md", S + "ticketing/references/safe-contract.md",
+        REF + "work-record-sample.md", REF + "gate-details.md", REF + "cases.md", REF + "run-cases.md", S + "ticketing/references/safe-contract.md",
         S + "ticketing/references/unmerged-pr.md", S + "ticketing/references/epic-cases.md",
         S + "how-to-make-a-pr/references/pr-cases.md", S + "research-market/references/deep-research.md"),
     "all methods": (S, "skills/"),  # moved text still counts here: a move is not a cut
 }
 TOTAL_ONLY = {"all methods"}
 # A kind skips a file only where its method says so at the measured revision (phrases, as the gate reads them).
-SKIPS = {"change": {REF + "work-record-sample.md": (REF + "fast-run.md", "Product and feature runs: the [sample]")}}
+SAMPLE = {REF + "work-record-sample.md": (REF + "fast-run.md", "A `done` refusal its message does not explain: the [sample]")}
+SKIPS = {"product, feature": SAMPLE, "change": SAMPLE}
 
 
 def git(*args, stdin=None):
@@ -79,12 +81,13 @@ def text(path, rev):
 
 
 def report(rev=None):
-    """Rows per kind: (kind, [(path, bytes|None)], total bytes)."""
+    """Rows per kind: (kind, [(path, bytes, None when missing, or 'skipped')], total bytes)."""
     rows = []
     for kind, paths in KINDS.items():
         skipped = {path for path, (method, phrase) in SKIPS.get(kind, {}).items() if phrase in text(method, rev)}
         got = sizes([path for path in expand(paths, rev) if path not in skipped], rev)
-        rows.append((kind, list(got.items()), sum(v or 0 for v in got.values())))
+        rows.append((kind, list(got.items()) + [(path, "skipped") for path in sorted(skipped)],
+                     sum(v or 0 for v in got.values())))
     return rows
 
 
@@ -128,7 +131,7 @@ def main(argv=None):
         for kind, files, total in report(a.rev):
             print(f"{kind:16} {total:>8,} B ~{tok(total):>6,} tok")
             for p, n in [] if a.totals or kind in TOTAL_ONLY else files:
-                print(f"  {'missing' if n is None else format(n, ','):>8}  {p}")
+                print(f"  {'missing' if n is None else n if isinstance(n, str) else format(n, ','):>8}  {p}")
     return 0
 
 

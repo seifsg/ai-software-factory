@@ -14,6 +14,7 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 
 ### Changed
 
+- Leaner runs (#137): product and feature runs read 24% less method text and change runs 27% less, every gate message is shorter with the same facts, `scripts/token_report.py` measures both, and tests hold every method file, gate message and run load to a byte budget.
 - Self-update (#139): a clone install moves only to a release tag on `main` whose files match its manifest, records the previous revision, rolls back a failed install and shows a one-time notice naming both versions.
 
 ## [1.0.0] - 2026-10-24
