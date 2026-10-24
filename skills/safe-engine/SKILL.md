@@ -20,7 +20,7 @@ Git and Python 3.9+. Find them by full path (`python3`, `python` or the platform
 python scripts/resolve_bundle.py --entrypoint safe-engine --project <absolute-target>
 ```
 
-3. A new project gets a pinned checkout of the factory's main branch in `~/.safe-engine/bundles/<commit>`; `.factory/entry-bundle.json` records it. A project with a selection resumes it offline. `--ref <full-sha>` pins a new selection; it never upgrades an existing one. `--bundle <absolute-factory-root>` inspects a given checkout.
+3. A new project gets a pinned checkout of the newest verified factory release (main on the edge channel or before the first release) in `~/.safe-engine/bundles/<commit>`; `.factory/entry-bundle.json` records it. A project with a selection resumes it offline. `--ref <vX.Y.Z, branch or full-sha>` pins a new selection; it never upgrades an existing one. `--bundle <absolute-factory-root>` inspects a given checkout.
 4. Check the returned root, revision, dirty status and entrypoint. Failure: diagnose; never edit a selected bundle.
 
 ## Run

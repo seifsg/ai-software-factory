@@ -88,7 +88,8 @@ class AgentTests(unittest.TestCase):
         names = {f"skills/agents/{role}.md" for role in roles()} | {METHOD.relative_to(ROOT).as_posix()}
         self.assertLessEqual(names, required)
         market = json.loads((ROOT / ".claude-plugin/marketplace.json").read_text(encoding="utf-8"))
-        self.assertEqual([p["source"] for p in market["plugins"]], ["./skills"])  # the root that holds agents/
+        roots = [Path(s if isinstance(s, str) else s["path"]).as_posix() for s in (p["source"] for p in market["plugins"])]
+        self.assertEqual(roots, ["skills"])  # the root that holds agents/, local or pinned to a release tag
         plugin = json.loads((ROOT / "skills/.claude-plugin/plugin.json").read_text(encoding="utf-8"))
         self.assertNotIn("agents", plugin)  # an agents key would replace the agents/ scan
 
