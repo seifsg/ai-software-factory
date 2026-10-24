@@ -1,4 +1,4 @@
-"""Fast gate: who owes an epic at the done-run and handoff (fast-run.md#work-record, "Another run owes an epic")."""
+"""Fast gate: who owes an epic at the done-run and handoff (gate-details.md#owed-epic)."""
 import json
 import unittest
 from unittest.mock import patch

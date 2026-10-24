@@ -12,7 +12,7 @@ DELEGATION = "owner delegation"  # the owner role may defer LOW, and MEDIUM at l
 CORE = ("analyze-start", "get-ready-to-code", "deep-review", "ticketing")
 ROUTES = {"ui": "ux-quality", "assets": "ux-quality", "seo": "ux-quality",
           "persistence": "database-schema", "research": "research-market"}
-ENGINE = ("SKILL.md", "references/product-bar.md", "references/controller.md")
+ENGINE = ("SKILL.md", "references/product-bar.md", "references/cases.md", "references/controller.md")
 
 
 def skill_methods(bundle, names):
