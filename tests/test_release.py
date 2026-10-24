@@ -244,9 +244,12 @@ class ReleaseScriptTests(FixtureRepository):
         manifest = json.loads((out / "release-manifest.json").read_text(encoding="utf-8"))
         self.assertEqual(hashlib.sha256(sums).hexdigest(), manifest["tree"])
         self.assertIn("- A fixture fix.", (out / "notes.md").read_text(encoding="utf-8"))
-        default = run(self.script, "check", f"v{new}", cwd=self.repo)  # again, with no --out: still verifies
+        temp = {name: str(self.root) for name in ("TMP", "TEMP", "TMPDIR")}  # the default folder lands in the fixture
+        default = run(self.script, "check", f"v{new}", cwd=self.repo, env=temp)  # again, no --out: still verifies
         self.assertEqual(default.returncode, 0, default.stderr)
         self.assertNotIn(str(self.repo), default.stdout.rsplit("release files in ", 1)[1])
+        inside = run(self.script, "check", f"v{new}", "--out", self.repo / "dist", cwd=self.repo)
+        self.assertIn("is inside the checkout", inside.stderr)
         self.assertEqual(git(self.repo, "status", "--porcelain"), "")
         self.assertIn("is published; never re-publish", run(self.script, "cut", new, cwd=self.repo).stderr)
         for tag, reason in ((f"v{VERSION}", "version differs"), ("1.0", "no release tag")):

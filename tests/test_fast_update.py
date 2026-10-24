@@ -154,7 +154,7 @@ class SelfUpdateTests(UpdateCase):
         (self.clone / "local.txt").unlink()
         git(self.clone, "checkout", "-q", "-b", "side")
         self.assertEqual(self.updater.update(self.record), "skipped: clone not on main or a release tag")
-        git(self.clone, "checkout", "-q", "--detach", "main")  # a commit checked out by hand, no release tag
+        git(self.clone, "checkout", "-q", "--detach", "origin/main")  # checked out by hand: no tag, not the install
         self.assertEqual(self.updater.update(self.record), "skipped: clone not on main or a release tag")
         git(self.clone, "checkout", "-q", "main")
         (self.gate / "runs").mkdir()
@@ -322,6 +322,21 @@ class ReleaseUpdateTests(UpdateCase):
         saved = json.loads((self.gate / "install.json").read_text(encoding="utf-8"))
         self.assertEqual(saved["previous"], {"ref": "HEAD", "revision": self.v100, "version": "1.0.0"})
         self.assertIn("rolled back to 1.0.0", (self.gate / "update-notice.txt").read_text(encoding="utf-8"))
+
+    def test_a_rollback_off_any_tag_keeps_updating(self):
+        git(self.dev, "tag", "-d", "v1.0.0")  # before the first release: stable follows main
+        pulled = commit(self.dev, "B")
+        broken = commit(self.dev, "C", files={"skills/safe-engine/scripts/fail.flag": "x"})
+        self.publish()
+        self.install(self.remote, pulled, revision=self.v100)  # pulled by hand, never reinstalled
+        git(self.clone, "checkout", "-q", "-B", "main", pulled)
+        result = self.updater.update(self.record)
+        self.assertTrue(result.startswith(f"rolled back to {self.v100}: install of {broken} failed"), result)
+        self.assertEqual(self.head(), self.v100)  # detached at the last completed install
+        (self.dev / "skills/safe-engine/scripts/fail.flag").unlink()
+        fixed = commit(self.dev, "D")
+        self.publish()
+        self.assertEqual(self.updater.update(self.record), f"updated to {fixed} (no release yet: following main)")
 
     def test_edge_follows_main(self):
         tip = commit(self.dev, "B", "1.1.0", tamper=True)

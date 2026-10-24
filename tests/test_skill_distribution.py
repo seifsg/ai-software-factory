@@ -393,6 +393,13 @@ class ReleaseResolutionTests(FixtureCase):
         self.assertEqual((result["revision"], result["channel"], result["notice"]),
                          (self.revision, "edge", "No release yet: using main"))
 
+    def test_a_token_in_the_origin_is_never_echoed(self):
+        self.git("remote", "set-url", "origin",
+                 "https://x-access-token:SECRET@github.com/seifsg/ai-software-factory.git", cwd=self.source)
+        result = resolver.inspect_bundle(self.source)
+        self.assertEqual(result["source_url"], resolver.REPOSITORY)
+        self.assertNotIn("SECRET", json.dumps(result))
+
     def test_the_edge_channel_pins_main_for_new_projects(self):
         self.release("1.0.0")
         self.git("-c", "user.name=t", "-c", "user.email=t@t", "commit", "--allow-empty", "-qm", "edge", cwd=self.source)

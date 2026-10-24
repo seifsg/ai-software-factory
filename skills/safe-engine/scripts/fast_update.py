@@ -67,8 +67,8 @@ def update(record):
     if read_by_a_run(clone):
         return "skipped: an open run reads its methods from this clone"
     ref, head = git(clone, "rev-parse", "--abbrev-ref", "HEAD"), git(clone, "rev-parse", "HEAD")
-    released = dict(release.releases(git(clone, "for-each-ref", TAGS, "refs/tags"))).values()
-    if ref != "main" and (ref != "HEAD" or head not in released):
+    owned = (*dict(release.releases(git(clone, "for-each-ref", TAGS, "refs/tags"))).values(), record.get("revision"))
+    if ref != "main" and (ref != "HEAD" or head not in owned):  # a release tag, or the install (or rollback) itself
         return "skipped: clone not on main or a release tag"  # a commit you checked out yourself stays put
     if git(clone, "status", "--porcelain"):
         return "skipped: clone has local changes"

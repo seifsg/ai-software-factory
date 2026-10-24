@@ -115,15 +115,19 @@ def write_manifest():
                                          encoding="utf-8")
 
 
-def check(tag, out):
-    """The tag workflow's gate; writes the GitHub release's notes, SHA256SUMS and manifest to `out`."""
+def check(tag, out=None):
+    """The tag workflow's gate; writes the GitHub release's notes, SHA256SUMS and manifest to `out` (default: a new
+    temporary folder), never into the checkout, which must stay clean."""
     if not release.TAG.fullmatch(tag):
         raise RuntimeError(f"{tag} is no release tag (vX.Y.Z)")
+    if out and out.resolve().is_relative_to(ROOT):
+        raise RuntimeError(f"--out {out} is inside the checkout; pick a folder outside it")
     release.check_release(ROOT, tag)
     text = LINK.sub("", CHANGELOG.read_text(encoding="utf-8"))
     parts = sections(text)
     if tag[1:] not in parts or not SECTION.match(text, parts[tag[1:]][0])[2]:
         raise RuntimeError(f"CHANGELOG.md has no dated ## [{tag[1:]}] section")
+    out = out or Path(tempfile.mkdtemp(prefix=f"factory-{tag}-"))
     out.mkdir(parents=True, exist_ok=True)
     manifest = release.read_manifest(ROOT)
     (out / "SHA256SUMS").write_text(release.sums(manifest["files"]), encoding="utf-8", newline="\n")
@@ -148,7 +152,7 @@ def main():
         if args.command == "cut":
             cut(args.version)
         else:
-            check(args.tag, args.out or Path(tempfile.mkdtemp(prefix=f"factory-{args.tag}-")))
+            check(args.tag, args.out)
     except RuntimeError as error:
         sys.exit(f"Release refused: {error}")
 

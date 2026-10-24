@@ -128,7 +128,7 @@ def inspect_bundle(root, expected=None, clean=False, entrypoint="improve-factory
     if clean and status:
         raise RuntimeError("Cached bundle has local changes; preserve it and use a fresh cache directory")
     return {"bundle_root": str(root), "revision": revision, "version": read_version(root), "dirty": bool(status),
-            "git_status": status, "source_url": remote,
+            "git_status": status, "source_url": re.sub(r"(?<=//)[^@/]+@", "", remote),  # never echo a token
             "entrypoint": str(root / f".agents/skills/{entrypoint}/SKILL.md")}
 
 

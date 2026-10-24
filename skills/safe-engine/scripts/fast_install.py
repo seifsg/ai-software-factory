@@ -16,6 +16,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 
 CHANNELS = ("stable", "edge")  # the first is the default
 MARKETPLACE = "ai-software-factory"
@@ -116,9 +117,9 @@ def remember(host, project, home, auto, channel=None):
             revision = None
         item = {"host": host, "project": str(Path(project).resolve()) if project else None}
         installs = [old for old in record.get("installs", []) if old != item] + [item]
-        version = root / "skills" / "safe-engine" / "VERSION"  # resolve_bundle.VERSION_FILE: the self-update's way back
-        record.update(clone=str(root), revision=revision, auto=auto, installs=installs,
-                      version=version.read_text(encoding="utf-8").strip() if version.is_file() else None)
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from resolve_bundle import read_version  # the installed version: the self-update's way back
+        record.update(clone=str(root), revision=revision, auto=auto, installs=installs, version=read_version(root))
     write_json(path, record)
     return path
 
