@@ -177,12 +177,13 @@ def read_manifest(root):
 
 
 def present(root, prefix, tops):
-    """Factory file names under root: a checkout's tracked and unignored files, or the given entry folders of a
-    skills folder without caches or the installer's marker."""
-    if not prefix:
-        return set(git("ls-files", "-co", "--exclude-standard", "-z", cwd=root).split("\0")) - {""}
-    return {prefix + path.relative_to(root).as_posix() for top in tops for path in (Path(root) / top).rglob("*")
-            if path.is_file() and path.name != MARKER and "__pycache__" not in path.parts}
+    """Factory files under root, as regular files (a link never stands in for one): a checkout's tracked and
+    unignored files, or the given entry folders of a skills folder without caches or the installer's marker."""
+    root = Path(root)
+    paths = ((root / name for name in git("ls-files", "-co", "--exclude-standard", "-z", cwd=root).split("\0") if name)
+             if not prefix else (path for top in tops for path in (root / top).rglob("*")
+                                 if path.name != MARKER and "__pycache__" not in path.parts))
+    return {prefix + path.relative_to(root).as_posix() for path in paths if path.is_file() and not path.is_symlink()}
 
 
 def verify(root, manifest):
@@ -227,16 +228,28 @@ def releases(listing):
     return sorted(commits.items(), key=lambda item: tuple(map(int, TAG.fullmatch(item[0]).groups())), reverse=True)
 
 
-def channel_ref():
-    """None (stable: the newest release) unless this machine's install chose the edge channel (fast_install)."""
+def install_record():
+    """This machine's install record (fast_install.remember); {} when nothing was installed yet."""
     path = Path(os.environ.get("SAFE_ENGINE_HOME") or Path.home() / ".safe-engine") / "install.json"
     try:
         record = json.loads(path.read_text(encoding="utf-8-sig"))
     except FileNotFoundError:
-        return None
+        return {}
     except (OSError, ValueError) as error:
         raise RuntimeError(f"Unreadable install record {path}: {error}") from error
-    return DEFAULT_REF if isinstance(record, dict) and record.get("channel") == "edge" else None
+    if not isinstance(record, dict):
+        raise RuntimeError(f"Install record {path} is not a JSON object")
+    return record
+
+
+def channel(record):
+    """'edge' only when the record chose it; anything else follows verified releases."""
+    return "edge" if record.get("channel") == "edge" else "stable"
+
+
+def channel_ref():
+    """The ref new projects resolve: None (the newest release) on stable, main on edge."""
+    return DEFAULT_REF if channel(install_record()) == "edge" else None
 
 
 def resolve_release(cache, tag, entrypoint):

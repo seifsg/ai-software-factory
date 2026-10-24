@@ -15,7 +15,9 @@ resolver = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(resolver)
 
 
-class DistributionTests(unittest.TestCase):
+class FixtureCase(unittest.TestCase):
+    """A committed factory-shaped source repository whose origin names the factory."""
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix="factory distribution ")
         self.root = Path(self.temp.name).resolve()
@@ -40,6 +42,14 @@ class DistributionTests(unittest.TestCase):
         return subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True,
                               text=True, encoding="utf-8").stdout.strip()
 
+    def new_project(self):
+        project = self.root / 'app with spaces'
+        project.mkdir()
+        (project / 'user-file.txt').write_text('preserve this\n')
+        return project
+
+
+class DistributionTests(FixtureCase):
     def test_explicit_bundle_is_offline_read_only_and_reports_dirty_inputs(self):
         path = self.source / "AGENTS.md"
         path.write_text("local change\n", encoding="utf-8")
@@ -266,12 +276,6 @@ class DistributionTests(unittest.TestCase):
         self.assertEqual(Path(json.loads(result.stdout)['entrypoint']),
                          self.source / '.agents/skills/safe-engine/SKILL.md')
 
-    def new_project(self):
-        project = self.root / 'app with spaces'
-        project.mkdir()
-        (project / 'user-file.txt').write_text('preserve this\n')
-        return project
-
     def test_project_selection_resumes_offline_and_preserves_app_progress(self):
         project = self.new_project()
         cache = self.root / 'unused cache'
@@ -323,6 +327,87 @@ class DistributionTests(unittest.TestCase):
                 with self.assertRaises(RuntimeError):
                     resolver.select_for_project(project, None, None, self.root / 'cache', 'safe-engine')
             self.assertEqual(receipt.read_text(), value)
+
+
+class ReleaseResolutionTests(FixtureCase):
+    """New projects pin the newest release on main whose files match its manifest; main only before any release."""
+
+    def setUp(self):
+        super().setUp()
+        self.git("branch", "-M", "main", cwd=self.source)
+        self.cache = self.root / "release cache"
+        real_git = resolver.git
+
+        def local_transport(*args, cwd=None):  # only the remote is substituted; clone, checks and Git are real
+            if args[:2] == ("ls-remote", "--tags"):
+                return real_git("ls-remote", "--tags", str(self.source))
+            if args[0] == "ls-remote":
+                return real_git("ls-remote", "--exit-code", str(self.source), args[-1])
+            if args[0] == "clone":
+                result = real_git("clone", "--no-checkout", "--", str(self.source), args[-1])
+                real_git("remote", "set-url", "origin", resolver.REPOSITORY, cwd=args[-1])
+                return result
+            return real_git(*args, cwd=cwd)
+
+        transport = patch.object(resolver, "git", side_effect=local_transport)
+        transport.start()
+        self.addCleanup(transport.stop)
+        home = patch.dict("os.environ", {"SAFE_ENGINE_HOME": str(self.root / "gate")})
+        home.start()
+        self.addCleanup(home.stop)
+
+    def release(self, version, tamper=False):
+        path = self.source / resolver.VERSION_FILE
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(version + "\n", encoding="utf-8")
+        self.git("add", "-A", cwd=self.source)
+        manifest = self.source / resolver.MANIFEST
+        manifest.write_text(json.dumps(resolver.build_manifest(self.source)), encoding="utf-8")
+        if tamper:
+            (self.source / "README.md").write_text("changed after the manifest\n", encoding="utf-8")
+        self.git("add", "-A", cwd=self.source)
+        self.git("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", version, cwd=self.source)
+        self.git("-c", "user.name=t", "-c", "user.email=t@t", "tag", "-a", f"v{version}", "-m", version,
+                 cwd=self.source)
+        return self.git("rev-parse", "HEAD", cwd=self.source)
+
+    def test_new_projects_pin_the_newest_release_that_verifies(self):
+        first = self.release("1.0.0")
+        self.release("1.1.0", tamper=True)
+        result = resolver.resolve_bundle(self.cache)
+        self.assertEqual((result["release"], result["revision"], result["version"], result["channel"]),
+                         ("v1.0.0", first, "1.0.0", "stable"))
+        self.assertEqual(resolver.resolve_bundle(self.cache, "v1.0.0")["revision"], first)
+        with self.assertRaisesRegex(RuntimeError, "No release verifies: v1.1.0 does not match its manifest"):
+            resolver.resolve_bundle(self.cache, "v1.1.0")
+        with self.assertRaisesRegex(RuntimeError, "v2.0.0 does not exist"):
+            resolver.resolve_bundle(self.cache, "v2.0.0")
+
+    def test_releases_that_all_fail_are_refused_never_replaced_by_main(self):
+        self.release("1.0.0", tamper=True)
+        with self.assertRaisesRegex(RuntimeError, "No release verifies"):
+            resolver.resolve_bundle(self.cache)
+
+    def test_no_release_yet_pins_main_with_a_notice(self):
+        result = resolver.resolve_bundle(self.cache)
+        self.assertEqual((result["revision"], result["channel"], result["notice"]),
+                         (self.revision, "edge", "No release yet: using main"))
+
+    def test_the_edge_channel_pins_main_for_new_projects(self):
+        self.release("1.0.0")
+        self.git("-c", "user.name=t", "-c", "user.email=t@t", "commit", "--allow-empty", "-qm", "edge", cwd=self.source)
+        tip = self.git("rev-parse", "HEAD", cwd=self.source)
+        record = self.root / "gate" / "install.json"
+        record.parent.mkdir()
+        record.write_text(json.dumps({"channel": "edge"}), encoding="utf-8")
+        self.assertEqual(resolver.channel_ref(), "main")
+        result = resolver.select_for_project(self.new_project(), None, None, self.cache, "safe-engine")
+        self.assertEqual(result["revision"], tip)
+        record.write_text("{broken", encoding="utf-8")
+        with self.assertRaisesRegex(RuntimeError, "Unreadable install record"):
+            resolver.channel_ref()
+        record.write_text(json.dumps({"channel": "beta"}), encoding="utf-8")
+        self.assertIsNone(resolver.channel_ref())  # anything but edge follows verified releases
 
 
 if __name__ == "__main__":

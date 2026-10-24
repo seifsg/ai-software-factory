@@ -1,6 +1,7 @@
 """Explicit delivery transitions around the analysis and execution methods."""
 
 from pathlib import Path
+import re
 import shutil  # noqa: F401 - patch seam: tests patch safe_engine.workflow.shutil.which
 import uuid
 
@@ -23,9 +24,11 @@ PHASES = {"analyze", "plan", "build", "manual", "testing", "verify", "improve", 
 def resumable(saved):
     """Whether this bundle may load a run saved by bundle version `saved`: same MAJOR and never older (SemVer).
     0.1.0 is the label every bundle carried before 1.0.0 froze that surface."""
+    def parse(text):
+        return tuple(map(int, re.fullmatch(r"(\d+)\.(\d+)\.(\d+)", "1.0.0" if text == "0.1.0" else text).groups()))
     try:
-        old, new = (tuple(map(int, ("1.0.0" if text == "0.1.0" else text).split("."))) for text in (saved, __version__))
-    except (AttributeError, ValueError):
+        old, new = parse(saved), parse(__version__)
+    except (AttributeError, TypeError):  # not a version string
         return False
     return old[0] == new[0] and old <= new
 

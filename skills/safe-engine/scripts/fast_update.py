@@ -67,10 +67,10 @@ def update(record):
         return "skipped: clone not on main or a release"
     if git(clone, "status", "--porcelain"):
         return "skipped: clone has local changes"
-    git(clone, "fetch", "--quiet", "--tags", "origin", timeout=20)  # a moved tag fails here: tags never move
+    git(clone, "fetch", "--tags", "origin", timeout=20)  # a moved tag fails here (git names it): tags never move
     old = {"ref": ref, "revision": git(clone, "rev-parse", "HEAD"), "version": release.read_version(clone)}
     try:
-        note = advance(clone, record.get("channel", "stable"))
+        note = advance(clone, release.channel(record))
     except Exception:
         restore(clone, old)
         raise

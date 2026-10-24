@@ -1,7 +1,6 @@
 """Release identity for the gate: `version`, `verify`, the version line on start and status cards, and the one-time
 update notice (docs/install.md#version-and-updates). Commands load it; hooks never do.
 """
-import json
 import os
 from pathlib import Path
 import sys
@@ -12,14 +11,6 @@ import resolve_bundle as release  # noqa: E402 - the version, manifest and relea
 
 # This copy's root: the factory checkout it sits in, else its skills folder (plugin root or installed copy).
 ROOT = HERE.parents[2] if (HERE.parents[2] / "safe_engine").is_dir() else HERE.parents[1]
-
-
-def record(home):
-    """This machine's install record (fast_install.remember); {} when nothing was installed from a clone."""
-    try:
-        return json.loads((home / "install.json").read_text(encoding="utf-8-sig"))
-    except FileNotFoundError:
-        return {}
 
 
 def notice(home):
@@ -57,7 +48,10 @@ def digest(root):
 
 def version(home):
     """`fast_gate.py version`: version, commit, channel, install route and digest of this copy."""
-    saved = record(home)
+    try:
+        saved = release.install_record()
+    except RuntimeError as error:
+        sys.exit(str(error))
     if not release.layout(ROOT):
         commit = release.git("rev-parse", "HEAD", cwd=ROOT)
     elif (ROOT / "safe-engine" / release.MARKER).exists() and saved.get("revision"):
@@ -65,11 +59,11 @@ def version(home):
     else:
         commit = "unknown (no Git here; the release tag names it)"
     lines = [f"Factory {release.read_version(ROOT) or 'unversioned'}", f"Commit: {commit}",
-             f"Channel: {saved.get('channel', 'stable')}" + ("" if saved.get("auto", True) else " (auto-update off)"),
+             f"Channel: {release.channel(saved)}" + ("" if saved.get("auto", True) else " (auto-update off)"),
              f"Route: {route(ROOT)}", f"Digest: {digest(ROOT)}"]
     previous = saved.get("previous")
     if previous:
-        lines.append(f"Previous: {previous.get('version') or 'unversioned'} at {previous.get('revision')}")
+        lines.append(f"Before the last update: {previous.get('version') or 'unversioned'} at {previous.get('revision')}")
     print("\n".join(lines + list(filter(None, [notice(home)]))))
 
 
@@ -89,7 +83,11 @@ def verify(path):
 def card(run, home):
     """The version line of the start and status cards, then any pending update notice."""
     bundle = run.get("bundle")
-    line = f"Version: {release.read_version(ROOT) or 'unversioned'} ({record(home).get('channel', 'stable')})"
+    try:
+        channel = release.channel(release.install_record())
+    except RuntimeError as error:  # named on the card; a broken record must not stop a run's start
+        channel = f"channel unknown: {error}"
+    line = f"Version: {release.read_version(ROOT) or 'unversioned'} ({channel})"
     if bundle:
         line += f"; run bundle {release.read_version(bundle['root']) or 'unversioned'}"
     return "\n".join(filter(None, [line, notice(home)]))
