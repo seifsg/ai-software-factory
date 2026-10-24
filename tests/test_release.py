@@ -47,7 +47,19 @@ class VersionTests(unittest.TestCase):
         self.assertEqual(safe_engine.__version__, VERSION)
         self.assertEqual(released[0], VERSION)
         self.assertEqual(release.read_manifest(ROOT)["version"], VERSION)
-        self.assertEqual(run(GATE, "version").stdout.splitlines()[0], f"Factory {VERSION}")
+        with tempfile.TemporaryDirectory(prefix="factory gate home ") as home:  # never the developer's own gate home
+            self.assertEqual(run(GATE, "version", env={"SAFE_ENGINE_HOME": home}).stdout.splitlines()[0],
+                             f"Factory {VERSION}")
+
+    def test_the_factory_origin_in_any_spelling_and_nothing_else(self):
+        for url in (release.REPOSITORY, "git@github.com:seifsg/ai-software-factory", "https://github.com/SeifSG/"
+                    "AI-Software-Factory/", "https://user:token@github.com/seifsg/ai-software-factory.git",
+                    "ssh://git@github.com/seifsg/ai-software-factory"):
+            self.assertTrue(release.factory_origin(url), url)
+        for url in ("https://github.com/someone/ai-software-factory.git", "https://evil.example/github.com/seifsg/"
+                    "ai-software-factory", "https://github.com.evil.example/seifsg/ai-software-factory",
+                    "https://github.com/seifsg/ai-software-factory-fork", "C:/fixtures/remote.git"):
+            self.assertFalse(release.factory_origin(url), url)
 
     def test_saved_safe_runs_resume_on_the_same_major_only(self):
         major = int(VERSION.split(".")[0])
@@ -260,7 +272,7 @@ class GateTests(unittest.TestCase):
         shutil.copytree(ROOT / "skills", plugin, ignore=shutil.ignore_patterns("__pycache__"))
         copied = run(plugin / "safe-engine/scripts/fast_gate.py", "version", env=self.env).stdout.splitlines()
         self.assertEqual(copied[3], f"Route: Claude Code plugin {plugin}")
-        self.assertEqual(copied[1], "Commit: unknown (no Git here; the release tag names it)")
+        self.assertEqual(copied[1], f"Commit: the commit of tag v{VERSION} (no Git here)")
 
     def test_verify_exits_nonzero_and_names_each_difference(self):
         plugin = self.root / "plugin"

@@ -407,7 +407,10 @@ class ReleaseResolutionTests(FixtureCase):
         with self.assertRaisesRegex(RuntimeError, "Unreadable install record"):
             resolver.channel_ref()
         record.write_text(json.dumps({"channel": "beta"}), encoding="utf-8")
-        self.assertIsNone(resolver.channel_ref())  # anything but edge follows verified releases
+        with self.assertRaisesRegex(RuntimeError, "Unknown update channel 'beta'"):  # refused, never guessed
+            resolver.channel_ref()
+        record.write_text(json.dumps({"installs": []}), encoding="utf-8")
+        self.assertIsNone(resolver.channel_ref())  # unset: stable
 
 
 if __name__ == "__main__":

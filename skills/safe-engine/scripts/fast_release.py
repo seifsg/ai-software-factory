@@ -39,9 +39,9 @@ def digest(root):
     """The release manifest's tree digest and how the files under root compare with it."""
     try:
         manifest = release.read_manifest(root)
+        problems = release.verify(root, manifest)
     except RuntimeError as error:
         return f"none ({error})"
-    problems = release.verify(root, manifest)
     state = "all files match" if not problems else f"{len(problems)} differ (fast_gate.py verify lists them)"
     return f"sha256:{manifest['tree']} ({manifest['version']} manifest): {state}"
 
@@ -50,16 +50,21 @@ def version(home):
     """`fast_gate.py version`: version, commit, channel, install route and digest of this copy."""
     try:
         saved = release.install_record()
+        channel = release.channel(saved)
     except RuntimeError as error:
         sys.exit(str(error))
+    version = release.read_version(ROOT)
     if not release.layout(ROOT):
-        commit = release.git("rev-parse", "HEAD", cwd=ROOT)
+        try:
+            commit = release.git("rev-parse", "HEAD", cwd=ROOT)
+        except (RuntimeError, OSError):  # a downloaded copy of the repository
+            commit = "unknown (not a Git checkout)"
     elif (ROOT / "safe-engine" / release.MARKER).exists() and saved.get("revision"):
         commit = f"{saved['revision']} (installed from {saved.get('clone')})"
-    else:
-        commit = "unknown (no Git here; the release tag names it)"
-    lines = [f"Factory {release.read_version(ROOT) or 'unversioned'}", f"Commit: {commit}",
-             f"Channel: {release.channel(saved)}" + ("" if saved.get("auto", True) else " (auto-update off)"),
+    else:  # a plugin cache holds no Git: the release tag names the commit
+        commit = f"the commit of tag v{version} (no Git here)" if version else "unknown (no Git here)"
+    lines = [f"Factory {version or 'unversioned'}", f"Commit: {commit}",
+             f"Channel: {channel}" + ("" if saved.get("auto", True) else " (auto-update off)"),
              f"Route: {route(ROOT)}", f"Digest: {digest(ROOT)}"]
     previous = saved.get("previous")
     if previous:

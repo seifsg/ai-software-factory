@@ -141,8 +141,16 @@ def read_version(root):
     """The version a checkout or skills folder declares; None for a factory older than 1.0.0."""
     try:
         return (Path(root) / VERSION_FILE[len(layout(root)):]).read_text(encoding="utf-8").strip()
-    except OSError:
+    except FileNotFoundError:
         return None
+
+
+def factory_origin(url):
+    """Whether a remote URL names the factory repository: ORIGINS, or its GitHub path spelled another way (scheme,
+    credentials, scp form, case, a trailing slash or `.git`)."""
+    path = re.sub(r"^(?:[a-z][a-z0-9+.-]*://)?(?:[^@/]+@)?github\.com[:/]", "", url, flags=re.I)
+    slug = REPOSITORY.removeprefix("https://github.com/").removesuffix(".git")
+    return url in ORIGINS or (path != url and path.rstrip("/").removesuffix(".git").lower() == slug)
 
 
 def file_sha(path):
@@ -243,8 +251,11 @@ def install_record():
 
 
 def channel(record):
-    """'edge' only when the record chose it; anything else follows verified releases."""
-    return "edge" if record.get("channel") == "edge" else "stable"
+    """The record's update channel, stable when unset; any other value is refused, never guessed."""
+    value = record.get("channel", "stable")
+    if value not in ("stable", "edge"):
+        raise RuntimeError(f"Unknown update channel {value!r} in the install record: use stable or edge")
+    return value
 
 
 def channel_ref():

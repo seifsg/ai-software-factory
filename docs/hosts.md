@@ -66,10 +66,10 @@ Every install records this machine's channel in `~/.safe-engine/install.json` (`
 
 **Codex, Cursor and other**, installed from a Git clone, also record the clone, its revision and each `--host`/`--project` pair. A copy that is no Git clone, or a pinned project bundle under `~/.safe-engine/bundles/`, never updates. The session-start hook entry carries an `update` argument (`run-gate.sh <host> update`; the Windows command likewise). Before the gate loads, it runs `fast_update.py`, which at most once a day:
 
-1. leaves the clone alone unless its origin is the factory repository, it has no local changes and it is on `main` or detached;
+1. leaves the clone alone unless its origin is the factory repository, it has no local changes, it is on `main` or detached at a release tag, and no open Fast or Lucky run in this gate home uses it as its bundle (a Safe run is not detected: pin Safe projects to a release bundle, the default, or another checkout);
 2. fetches `main` and tags; a tag that moved on the remote fails the fetch, so nothing changes;
 3. stable: checks out the newest `vX.Y.Z` tag whose commit is on `main` and passes the release check (version equal to the tag, every file matching the release manifest), trying older tags when one fails; edge, or stable before the first release: fast-forwards `main`;
-4. when the revision moved, records the previous ref, revision and version in `install.json`, then reruns the clone's `fast_gate.py install` for each recorded install;
+4. when the revision differs from the last completed install, records the previous ref, revision and version in `install.json`, then reruns the clone's `fast_gate.py install` for each recorded install (it replaces each copy exactly);
 5. an install that fails restores the previous revision and reruns its installer.
 
 The gate's next `start`, `status` or `version` shows a one-time notice: the old and new version with pointers to `CHANGELOG.md` and `UPGRADING.md`, or the rollback. Offline, a diverged `main`, no verifying release, a missing Git or any other error changes nothing; the session goes on and `~/.safe-engine/logs/gate.log` gets an `update` line with the result. Projects keep their pinned bundle. Off: `SAFE_ENGINE_NO_UPDATE=1`, or `install --no-auto-update` (the last install decides); either way no extra process starts. Other hook entries are unchanged; a recorded install's session start starts one more Python (about 0.2 s on Windows). Agents with no session-start hook update by hand ([README](../README.md#-update)).

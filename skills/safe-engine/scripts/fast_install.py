@@ -76,8 +76,8 @@ def enable_plugin(settings):
 
 
 def copy_entries(target):
-    """The two portable entries from this bundle, without caches. Refuses folders it did not install
-    (such as the factory's own canonical .agents/skills methods)."""
+    """The two portable entries from this bundle, without caches, so each copy equals its release exactly (files a
+    release dropped go too). Refuses folders it did not install (such as the factory's own .agents/skills methods)."""
     source = Path(__file__).resolve().parents[2]  # .../skills
     for name in ENTRIES:
         destination = target / name
@@ -87,6 +87,14 @@ def copy_entries(target):
         destination = target / name
         shutil.copytree(source / name, destination, dirs_exist_ok=True,
                         ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+        for path in sorted(destination.rglob("*"), reverse=True):  # deepest first, so emptied folders go too
+            relative = path.relative_to(destination)
+            if path.name == MARKER or "__pycache__" in relative.parts or (source / name / relative).exists():
+                continue
+            if not path.is_dir():
+                path.unlink()
+            elif not any(path.iterdir()):
+                path.rmdir()
         (destination / MARKER).write_text(f"installed from {source / name}\n", encoding="utf-8")
     return target
 

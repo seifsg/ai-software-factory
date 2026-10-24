@@ -167,13 +167,13 @@ Details: [install](docs/install.md) · [hosts](docs/hosts.md).
 
 ## 🔄 Update
 
-Updates arrive as releases: a tag on `main` whose files match its sha256 manifest.
+Updates arrive as releases: a tag on `main` whose files are checked against its sha256 manifest before it is pushed. Clone installs and new projects check it again before taking it.
 
 | Installed with | How it updates |
 |---|---|
 | Claude Code, through the installer | On its own: during a session Claude Code fetches a new release; `/reload-plugins` or a new session loads it |
 | Claude Code, right now (any route) | `claude plugin marketplace update ai-software-factory`, then `claude plugin update safe-engine@ai-software-factory`, then a new session |
-| Codex, Cursor, other, installed from a clone | On its own: at most once a day, the first session start moves your clone to the newest release that verifies (detached at its tag) and reruns your install. A failed install rolls back to the previous revision. A clone with local changes, on another branch or offline is left alone and the gate log says why ([hosts](docs/hosts.md#updates)) |
+| Codex, Cursor, other, installed from a clone | On its own: at most once a day, the first session start moves your clone to the newest release that verifies (detached at its tag) and reruns your install. A failed install rolls back to the previous revision. A clone with local changes, on another branch or commit, used by an open run or offline is left alone and the gate log says why ([hosts](docs/hosts.md#updates)) |
 | Codex, Cursor, other, right now or opted out | In your factory clone `git fetch --tags` and `git checkout vX.Y.Z` (the newest tag), then run the same `fast_gate.py install --host ...` again. It replaces only the factory's own files and hook entries |
 
 After an update or a rollback, the next `start`, `status` or `version` shows one notice with the old and new version. Turn the daily update off with `SAFE_ENGINE_NO_UPDATE=1` in your environment, or install with `--no-auto-update`.

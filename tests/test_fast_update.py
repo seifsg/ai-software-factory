@@ -77,7 +77,8 @@ class UpdateCase(unittest.TestCase):
         self.updater = module("fast_update")
 
     def trust(self, url):
-        trusted = mock.patch.object(self.updater.release, "ORIGINS", {*self.updater.release.ORIGINS, url})
+        import resolve_bundle  # the copy beside fast_update.py, which update() imports
+        trusted = mock.patch.object(resolve_bundle, "ORIGINS", {*resolve_bundle.ORIGINS, url})
         trusted.start()
         self.addCleanup(trusted.stop)
 
@@ -147,16 +148,34 @@ class SelfUpdateTests(UpdateCase):
         saved = json.loads((self.gate / "install.json").read_text(encoding="utf-8"))
         self.assertEqual(saved["previous"], {"ref": "main", "revision": self.installed, "version": None})
 
-    def test_a_dirty_clone_another_branch_or_a_foreign_origin_is_left_alone(self):
+    def test_a_dirty_clone_another_branch_or_commit_a_foreign_origin_or_a_run_bundle_is_left_alone(self):
         (self.clone / "local.txt").write_text("mine\n", encoding="utf-8")
         self.assertEqual(self.updater.update(self.record), "skipped: clone has local changes")
         (self.clone / "local.txt").unlink()
         git(self.clone, "checkout", "-q", "-b", "side")
-        self.assertEqual(self.updater.update(self.record), "skipped: clone not on main or a release")
+        self.assertEqual(self.updater.update(self.record), "skipped: clone not on main or a release tag")
+        git(self.clone, "checkout", "-q", "--detach", "main")  # a commit checked out by hand, no release tag
+        self.assertEqual(self.updater.update(self.record), "skipped: clone not on main or a release tag")
         git(self.clone, "checkout", "-q", "main")
+        (self.gate / "runs").mkdir()
+        run = self.gate / "runs" / "abc.json"
+        run.write_text(json.dumps({"bundle": {"root": str(self.clone), "revision": self.installed}}), encoding="utf-8")
+        self.assertEqual(self.updater.update(self.record), "skipped: an open run reads its methods from this clone")
+        run.write_text("{unreadable", encoding="utf-8")  # cannot tell: keep the clone
+        self.assertEqual(self.updater.update(self.record), "skipped: an open run reads its methods from this clone")
+        run.write_text(json.dumps({"bundle": None}), encoding="utf-8")
         git(self.clone, "remote", "set-url", "origin", "https://example.invalid/fork.git")
         self.assertEqual(self.updater.update(self.record), "skipped: clone origin is not the factory repository")
         self.assertEqual((self.head(), self.calls()), (self.installed, []))
+
+    def test_an_interrupted_install_is_redone_and_an_unknown_channel_refused(self):
+        git(self.clone, "merge", "-q", "--ff-only", "origin/main")  # the clone moved, its install never finished
+        note = " (no release yet: following main)"
+        self.assertEqual(self.updater.update(self.record), f"updated to {self.newest}{note}")
+        self.assertEqual(len(self.calls()), 2)
+        with self.assertRaisesRegex(RuntimeError, "Unknown update channel 'beta'"):
+            self.updater.update({**self.record, "channel": "beta", "revision": self.installed})
+        self.assertEqual(self.head(), self.newest)
 
     def test_a_diverged_main_is_never_merged(self):
         own = commit(self.clone, "own")
@@ -216,6 +235,13 @@ class SelfUpdateTests(UpdateCase):
         self.assertEqual((record["channel"], len(record["installs"])), ("edge", 2))
         installer.install("claude", home=home, log=lambda line: None, channel="stable")
         self.assertEqual(json.loads((self.gate / "install.json").read_text(encoding="utf-8"))["channel"], "stable")
+        copy = home / ".agents" / "skills" / "safe-engine"  # a file a release dropped leaves the copy
+        (copy / "scripts" / "dropped.py").write_text("old\n", encoding="utf-8")
+        (copy / "gone" / "deep").mkdir(parents=True)
+        (copy / "gone" / "deep" / "old.md").write_text("old\n", encoding="utf-8")
+        installer.install("codex", home=home, log=lambda line: None)
+        self.assertFalse((copy / "scripts" / "dropped.py").exists() or (copy / "gone").exists())
+        self.assertTrue((copy / installer.MARKER).exists() and (copy / "scripts" / "fast_gate.py").exists())
 
     def test_both_session_start_launchers_update_before_the_gate(self):
         installer = module("fast_install")
@@ -266,7 +292,7 @@ class ReleaseUpdateTests(UpdateCase):
         notice = (self.gate / "update-notice.txt").read_text(encoding="utf-8")
         self.assertIn("Factory updated from 1.0.0 to 1.1.0", notice)
         self.assertIn("CHANGELOG.md", notice)
-        self.assertTrue(self.updater.update(self.record).startswith("current (v1.1.0; skipped v1.3.0"))
+        self.assertTrue(self.updater.update({**self.record, "revision": v110}).startswith("current (v1.1.0; skipped"))
         self.assertEqual(len(self.calls()), 2)
 
     def test_a_failed_install_restores_the_previous_release(self):
@@ -293,9 +319,11 @@ class ReleaseUpdateTests(UpdateCase):
         commit(self.dev, "B", "1.1.0", tamper=True)
         self.publish("--tags")
         self.install(self.remote, self.v100)
+        git(self.clone, "checkout", "-q", "-B", "main", self.v100)  # on main, before any release it trusts
         with self.assertRaisesRegex(RuntimeError, "no release verifies: v1.1.0 does not match its manifest"):
             self.updater.update(self.record)
         self.assertEqual((self.head(), self.calls()), (self.v100, []))
+        self.assertEqual(git(self.clone, "rev-parse", "--abbrev-ref", "HEAD"), "main")  # put back as it was
 
     def test_a_moved_tag_never_reaches_the_install(self):
         v110 = commit(self.dev, "B", "1.1.0")

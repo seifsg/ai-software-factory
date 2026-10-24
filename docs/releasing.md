@@ -15,22 +15,23 @@ Humans release. Never move or delete a published tag and never re-publish a vers
 2. Write the upgrade steps under `## X.Y.Z` in `UPGRADING.md` and commit them.
 3. `python scripts/release.py cut X.Y.Z`. It refuses a dirty tree, an older version or a published tag, then bumps every version copy, moves `## [Unreleased]` into `## [X.Y.Z] - <today>` (an unpublished section of the same version keeps its text and merges), rebuilds the compare links and writes the release manifest.
 4. `python tests/run.py`, commit, open the release PR and merge it with nothing else merged in between: the manifest describes this exact tree. If `main` moved, rebase and cut again.
-5. Right after the merge, tag the merge commit and push the tag:
+5. Check the merged commit before tagging it. Pushing the tag is the release: Claude Code installs fetch the tag the marketplace names right away, with no check of their own, and clone installs adopt any tag that passes the release check.
 
    ```text
+   git fetch origin && git switch --detach <merge commit>
+   python scripts/release.py check vX.Y.Z --out dist
+   python tests/run.py
    git tag -a vX.Y.Z -m vX.Y.Z <merge commit>
    git push origin vX.Y.Z
    ```
 
-   Claude Code installs fetch the plugin from this tag: until it exists, a new install fails and existing ones keep their copy.
-6. The `release` workflow (`.github/workflows/release.yml`) checks the tag (equal to the version, on `main`, a dated changelog section, every file matching the manifest), runs the tests and publishes the GitHub release with the changelog notes, `release-manifest.json` and `SHA256SUMS`. A failed check publishes nothing; fix forward with a new version.
-
-Run the workflow's check locally: `python scripts/release.py check vX.Y.Z --out dist`.
+   `check` needs no tag yet. Push the tag right after the merge: until it exists, a new Claude Code install fails (existing ones keep their copy).
+6. The `release` workflow (`.github/workflows/release.yml`) runs the same check and the tests again and publishes the GitHub release with the changelog notes, `release-manifest.json` and `SHA256SUMS`. If it fails, the tag is already out: fix forward with a new version.
 
 ## What follows a release
 
-- Installs on the stable channel move to the new tag at their next daily update (Codex, Cursor, other) or Claude Code plugin update; each verifies it first ([hosts](hosts.md#updates)).
-- New projects pin it. Pinned projects and active runs keep their bundle.
+- Codex, Cursor and other installs on the stable channel move to the new tag at their next daily update, after the release check ([hosts](hosts.md#updates)). Claude Code installs take it at their next plugin update.
+- New projects pin it, after the release check. Pinned projects and active runs keep their bundle.
 
 ## Owner settings
 
