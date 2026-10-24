@@ -21,7 +21,7 @@ First-class hosts get an installer route, gate hooks and a Safe reviewer preset.
 | Task list | `TaskCreate` / `TaskUpdate` when the session has them (on by default only for older models; `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` opts in) | the plan view, when the session has its plan tool | none documented: chat lines only |
 | Gate hooks | plugin: `PreToolUse`, `Stop`, `UserPromptSubmit`, `SessionStart` | `~/.codex/hooks.json`: same events and JSON as Claude Code | `~/.cursor/hooks.json`: `preToolUse`, `stop` (a follow-up only when `status` is `completed`), `sessionStart` |
 | Safe reviewer | `review --agent claude`: `claude -p`, Read/Grep/Glob only, `--json-schema` | `review --agent codex`: `codex exec --sandbox read-only --output-schema` | `review --agent cursor`: `agent -p --mode ask` |
-| Model tiers (light / standard / deep) | `haiku` / `sonnet` / `opus` | host models | host models |
+| Delegate roles and tiers | plugin agents `safe-engine:<role>` ([delegation](#delegation)) | the brief names the role ([delegation](#delegation)) | same |
 
 Python runs as `python`, `python3` or `py -3` (Windows). Claude Code hooks need a POSIX `sh` (Git Bash on Windows): the plugin sources `run-gate.sh` in the shell Claude Code already starts for a hook, so a call with no factory run starts no other process. The Codex and Cursor Windows command checks for an active run in Python before loading the gate. Ticket checks use the GitHub CLI `gh` when the tracker is GitHub.
 
@@ -44,6 +44,21 @@ The plugin brings `/safe-engine`, `/improve-factory` and the gate hooks. Its roo
   ```
 
 - **Terminal:** `claude plugin marketplace add https://github.com/seifsg/ai-software-factory.git`, then `claude plugin install safe-engine@ai-software-factory`. Use the HTTPS URL; the `owner/repo` shorthand tries SSH first.
+
+## Delegation
+
+The roles (runner, analyst, maker, builder, reviewer), their tiers and the brief, gate and handback rules live in `.agents/skills/safe-engine/references/delegate.md`. Hosts differ only in how a role gets its model, effort and edit limits, and how the owner overrides them. The owner's own session model and effort never change.
+
+| | Claude Code | Codex | Cursor | Other agents |
+|---|---|---|---|---|
+| Roles | plugin agents `safe-engine:runner`, `analyst`, `maker`, `builder`, `reviewer` from `skills/agents/` | none shipped: the brief names its role | none shipped: the brief names its role | the brief names its role |
+| Tier models, light / standard / deep | `haiku` low / `sonnet` medium / `opus` high, pinned in each agent file | unknown: no documented tier models; the spawn prompt asks for effort `low` / `medium` / `high`, and the model stays the parent's unless the owner sets one | unknown: no documented tier models; a subagent's `model` defaults to `inherit` | unknown: the session's model |
+| Read-only roles | `disallowedTools: Write, Edit, NotebookEdit`; the shell stays, so shell writes are barred by instruction only | by instruction only: an agent file cannot give a subagent its own read-only sandbox | `readonly: true` in an owner's agent file; otherwise by instruction | by instruction |
+| Session ceiling | a role above the session's tier: the coordinator passes the Agent tool's `model` with the session's alias | the parent's model, unless the owner sets one | same | not applicable |
+| Owner override | ask in chat: the coordinator passes `model` and `effort` per Agent call, which beat the agent file (per-call effort: v2.1.292 or later); for every delegate, `CLAUDE_CODE_SUBAGENT_MODEL` with `CLAUDE_CODE_SUBAGENT_MODEL_FORCE=1`; `CLAUDE_CODE_EFFORT_LEVEL` beats agent and per-call effort, and sets the session's too | an agent file in `~/.codex/agents/` or `.codex/agents/` named for the role, with `model` and `model_reasoning_effort`: it beats what a spawn asks. `agents.default_subagent_model` and `agents.default_subagent_reasoning_effort` in `config.toml` are only defaults below a spawn's ask | an agent file in `.cursor/agents/` (beats `~/.cursor/agents/`) named for the role, with `model: <id>[effort=<level>]`; plan, admin and Max Mode limits may still fall back | the host's own means |
+| Models used | `/tasks` names each subagent's model and effort; `claude -p --output-format json` lists usage per model | unknown | unknown | unknown |
+
+Safe review's reviewer CLI (`review --agent`) passes no model or effort: it runs on that CLI's own defaults, the owner's settings. Sources: Claude Code [subagents](https://code.claude.com/docs/en/sub-agents), [plugin components](https://code.claude.com/docs/en/plugins/components), [CLI reference](https://code.claude.com/docs/en/cli-reference) · Codex [subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents), [config reference](https://learn.chatgpt.com/docs/config-file/config-reference) · Cursor [subagents](https://cursor.com/docs/context/subagents).
 
 ## Other agents
 
