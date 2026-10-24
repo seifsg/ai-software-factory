@@ -1,6 +1,6 @@
 ---
 name: reviewer
-description: "Deep tier, no edits. Fresh-context final and independent review: the requirements and the diff in, ranked findings and a verdict out, never the plan or a verdict. Use before a substantive change is accepted. Never edits."
+description: "Deep tier, no edits. Fresh-context final and independent review: the requirements and the diff in, ranked findings and a verdict out, never the plan or a verdict. Also deep judgement that changes no file: an unclear bug's cause, an architecture call. Use before a substantive change is accepted. Never edits."
 model: opus
 effort: high
 disallowedTools: Write, Edit, NotebookEdit
