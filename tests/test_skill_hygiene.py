@@ -1,5 +1,6 @@
 """Skill hygiene: each skill stands alone, stays owner- and date-neutral, and keeps its size limits."""
 import hashlib
+import importlib.util
 from pathlib import Path
 import re
 import unittest
@@ -11,6 +12,15 @@ MONTH = "January|February|March|April|May|June|July|August|September|October|Nov
 DATE = re.compile(rf"\b20\d\d-\d\d-\d\d\b|\b\d{{1,2}} (?:{MONTH})\b|\b(?:{MONTH}) \d{{1,2}}\b")
 BANNED = {"498710fed19a", "6eece5dbd794", "758d3dd5df1e"}  # hashed person/source names, so this guard never spells them
 CREDIT = SKILLS / "how-to-make-a-pr/references/credit.md"  # the factory's credit line names its maker (owner's call)
+# Phrases whose presence turns a gate check on (fast_gate.FLAGS) or that PR-proof adoption requires
+# (fast_pr_policy.source_digest). Losing one silently turns its check off for new runs.
+PHRASES = {
+    "ticketing/references/ticket-layout.md": ("Definition of done", "Every criterion has"),
+    "safe-engine/references/fast-run.md": ("Light lane", "what the owner can do once it is done", "**Hidden checks:**",
+                                           "**Secrets:**", "`**PR:**`"),
+    "ux-quality/SKILL.md": ("| U10 |",),
+    "how-to-make-a-pr/SKILL.md": ("references/credit.md", "**Visual:**", "**Journey:**"),
+}
 
 
 def prose():
@@ -47,6 +57,16 @@ class SkillHygieneTests(unittest.TestCase):
                 self.assertLess(text.count("\n"), 500)
                 for ref in skill.glob("references/*.md"):
                     self.assertLess(ref.read_text(encoding="utf-8").count("\n"), 200, ref.name)
+
+    def test_gate_trigger_phrases_stay_in_their_methods(self):
+        spec = importlib.util.spec_from_file_location("hygiene_gate", ROOT / "skills/safe-engine/scripts/fast_gate.py")
+        gate = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(gate)
+        pinned = {(f".agents/skills/{path}", phrase) for path, phrases in PHRASES.items() for phrase in phrases}
+        self.assertLessEqual(set(gate.FLAGS.values()), pinned)  # a new or moved trigger gets pinned here too
+        for path, phrase in sorted(pinned):
+            with self.subTest(file=path, phrase=phrase):
+                self.assertTrue(phrase in (ROOT / path).read_text(encoding="utf-8"), f"{phrase!r} left {path}")
 
     def test_no_names_dates_or_em_dashes(self):
         for path in prose():
