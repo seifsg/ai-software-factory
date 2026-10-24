@@ -14,15 +14,16 @@ import tarfile
 import tempfile
 from pathlib import Path
 
-GATE = "skills/safe-engine/scripts"
+SKILL = "skills/safe-engine"  # the gate reads its VERSION beside scripts/
+GATE = SKILL + "/scripts"
 TICKETS = "**Ticket:** none (fixture)\n\n**Backlog:** none\n"
 
 
 def scripts(root, rev, dest):
-    """The gate's scripts folder: the working tree's, or rev's extracted into dest."""
+    """The gate's scripts folder: the working tree's, or rev's extracted into dest with its skill folder (VERSION)."""
     if not rev:
         return Path(root) / GATE
-    tar = subprocess.run(("git", "-C", str(root), "archive", "--format=tar", rev, GATE),
+    tar = subprocess.run(("git", "-C", str(root), "archive", "--format=tar", rev, SKILL),
                          capture_output=True, check=True).stdout
     with tarfile.open(fileobj=io.BytesIO(tar)) as archive:
         archive.extractall(dest, **({"filter": "data"} if hasattr(tarfile, "data_filter") else {}))
