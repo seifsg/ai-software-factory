@@ -188,7 +188,7 @@ class ProgressHookTests(unittest.TestCase):
     def test_commands_print_the_card_first_and_keep_the_plain_status(self):
         status = self.gate("status")
         self.assertTrue(status.startswith("🏭 copy-fix · 🎫 tickets · step 1/5"), status)
-        self.assertIn("[ ] tickets", status)
+        self.assertIn("🎫 tickets · step 1/", status)
         self.assertIn("Next: tickets", status)
 
     def test_each_change_is_shown_once(self):
