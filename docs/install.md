@@ -11,14 +11,15 @@ Needs Git and Python 3.9+ (an agent following these steps installs missing ones 
 2. Install for your agent:
 
    ```text
-   python <factory>/skills/safe-engine/scripts/fast_gate.py install --host claude|codex|cursor|other [--project <dir>] [--no-auto-update]
+   python <factory>/skills/safe-engine/scripts/fast_gate.py install --host claude|codex|cursor|other [--project <dir>] [--no-auto-update] [--channel stable|edge]
    ```
 
-   - `claude`: enables the plugin (both launchers and the gate hooks) with auto-update in your user settings. Start a new session.
+   - `claude`: enables the plugin (both launchers and the gate hooks) with auto-update in your user settings. The plugin follows release tags. Start a new session.
    - `codex`, `cursor`: copies both launchers into `~/.agents/skills` and writes the gate hooks. Codex asks you to trust them once.
    - `other`: copies the launchers only; wire hooks by hand per [hosts](hosts.md#other-agents).
    - `--project <dir>` installs into one project instead of your user folders. Re-running replaces only the factory's own entries.
    - From a clone, `codex`, `cursor` and `other` update themselves once a day at session start; `--no-auto-update` turns that off ([hosts](hosts.md#updates)).
+   - `--channel` sets this machine's channel, kept until you change it: `stable` (the default) follows the newest verified release, `edge` follows `main`. It decides what self-updates and new projects get.
 
 3. Ask your agent for the skill, in its own syntax ([hosts](hosts.md)):
 
@@ -30,17 +31,30 @@ Needs Git and Python 3.9+ (an agent following these steps installs missing ones 
 
 Skills appear on the next turn or in a new session. If not, ask the agent to read the installed `SKILL.md` by path.
 
+## Version and updates
+
+```text
+python <launchers>/safe-engine/scripts/fast_gate.py version
+python <launchers>/safe-engine/scripts/fast_gate.py verify [--path <factory checkout or skills folder>]
+```
+
+- `version` prints the version, commit, channel, install route and the release digest with how this copy compares. `start` and `status` cards show the version too, plus a one-time notice after an update or a rollback.
+- `verify` lists every changed, missing or extra file against the release manifest and exits 1 on any. `<launchers>` is `~/.agents/skills` (Codex, Cursor, other), the Claude Code plugin folder, or `skills` in a clone.
+- What changed in each release: `CHANGELOG.md`; what to do: `UPGRADING.md` (both at the repository root).
+- Update, switch channel, roll back: [README](../README.md#-update).
+
 ## What first use does
 
 ```text
-launcher → resolve_bundle.py pins the factory's main branch to one commit in ~/.safe-engine/bundles/<commit>
-         → .factory/entry-bundle.json records the selection (keep .factory/ out of Git)
+launcher → resolve_bundle.py pins the newest release tag on main whose files match its manifest
+           (main on the edge channel, or while no release exists, with a notice)
+         → one commit in ~/.safe-engine/bundles/<commit>; .factory/entry-bundle.json records it (keep .factory/ out of Git)
          → the agent reads .agents/skills/safe-engine/SKILL.md from that bundle and runs it on the target
 ```
 
 - Resume reuses the recorded bundle offline. It never pulls, resets or silently upgrades.
 - An installed launcher older than the factory it fetches says the layout is newer (older launchers say "Incomplete factory bundle"). Update the install.
-- Reproducible installs: check out one commit, install from it, and pass the same SHA to the resolver's `--ref` for a new project.
+- Reproducible installs: check out one release tag, install from it, and pass the same tag (`--ref vX.Y.Z`) or SHA to the resolver for a new project.
 - Installing on one machine does not reach other machines or cloud sessions; install there too. Cloud sessions load skills committed to their repository.
 
 ## Update and uninstall

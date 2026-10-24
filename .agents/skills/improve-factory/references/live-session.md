@@ -57,7 +57,7 @@ Save one unique Git-ignored record. Read it back.
 - Give each delegate: report, expected behavior, invariants, exact project and factory identities, skill paths, raw reproduction, allowed paths and actions, role and return artifact, progress and stops.
 - Delegates read the applicable skills and actual files fully. Inherited chat is not verified state.
 - Reviewers get requirements and evidence, never a verdict.
-- Keep the owner's model and reasoning settings. No hard-coded models, provider switches, reduced reasoning or paid fallbacks without the owner.
+- Keep the owner's model and reasoning settings for this session. Delegates run on their role's tier (`safe-engine` delegate roles; per agent in the factory's `docs/hosts.md`) unless the owner overrides it. No provider switches or paid fallbacks without the owner.
 - Reconcile completed, failed and in-flight actions before any retry.
 - Context lost: reread the case and the actual state, then resume the same case. No duplicate repairs.
 

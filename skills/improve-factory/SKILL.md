@@ -21,7 +21,7 @@ python scripts/resolve_bundle.py --entrypoint improve-factory --bundle <absolute
 python scripts/resolve_bundle.py --entrypoint improve-factory
 ```
 
-   Active run or a local factory checkout: the first, on that checkout. Otherwise the second: it pins a fresh checkout of main in `~/.safe-engine/bundles/<commit>`; `--ref <full-sha>` pins another commit.
+   Active run or a local factory checkout: the first, on that checkout. Otherwise the second: it pins the newest verified release (main on the edge channel or before the first release) in `~/.safe-engine/bundles/<commit>`; `--ref <vX.Y.Z, branch or full-sha>` pins another.
 3. Check the returned root, revision, dirty status and entrypoint. Never pull, reset or edit an active run's bundle; repair in a separate worktree.
 
 ## Run

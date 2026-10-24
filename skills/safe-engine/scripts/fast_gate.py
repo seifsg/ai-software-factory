@@ -384,8 +384,8 @@ def cmd_start(args):
     log("run.start", key=args.key, project=str(project), mode=args.mode, kind=args.kind, bundle=run["bundle"], hooks=hooks)
     bundle = (f"{run['bundle']['root']} @ {run['bundle']['revision'][:12]}" if run["bundle"] else
               "no .factory/entry-bundle.json: run the entry's resolver first, except for factory maintenance")
-    print(status_text(run) + f"\nRecord: {record}\nBundle: {bundle}\nGit: {git_note}\nHooks: {hooks}\n"
-          + setup.TEXT.format(scratch))
+    print(status_text(run) + f"\n{sibling('fast_release').card(run, HOME)}\nRecord: {record}\nBundle: {bundle}\n"
+          f"Git: {git_note}\nHooks: {hooks}\n" + setup.TEXT.format(scratch))
 
 
 def cmd_done(args):
@@ -439,7 +439,7 @@ def cmd_scratch(args):
 def cmd_status(args):
     run = open_run(args.project)[1]
     sibling("fast_pr_policy").notice(HOME, run, strict=True)
-    print(status_text(run))
+    print(status_text(run) + "\n" + sibling("fast_release").card(run, HOME))
 
 
 def cmd_pause(args, reason):
@@ -949,6 +949,7 @@ def main():
     common.add_argument("--project", help="Run project; default: nearest folder with .factory/fast/run.json")
     sub = parser.add_subparsers(dest="command", required=True)
     sibling("fast_cleanup").parser(sub, common)
+    sibling("fast_release").parser(sub)
     start = sub.add_parser("start", parents=[common], help="Begin a run and register it for hooks")
     start.add_argument("--key", required=True)
     start.add_argument("--mode", choices=MODES, default="fast")
@@ -988,12 +989,7 @@ def main():
     rehome = sub.add_parser("rehome", parents=[common],
                             help="Owner only: bring in an open run from another machine or folder")
     rehome.add_argument("--from", dest="source", required=True, help="The folder the run's run.json records")
-    install = sub.add_parser("install", help="Install the entry skills and gate hooks for one host")
-    install.add_argument("--host", required=True, choices=("claude", "codex", "cursor", "other"),
-                         help="other: entry skills only, for agents you wire by hand")
-    install.add_argument("--project", help="Install into this project instead of your user folders")
-    install.add_argument("--no-auto-update", dest="auto", action="store_false",
-                         help="No daily self-update at session start (also SAFE_ENGINE_NO_UPDATE=1)")
+    sibling("fast_install").parser(sub)
     hook = sub.add_parser("hook", help="Answer one host hook event from stdin")
     hook.add_argument("--host", default="claude", help="claude, codex, cursor, or any other hook-capable agent")
     args = parser.parse_args()
@@ -1003,7 +999,8 @@ def main():
                "adopt-pr-proof": lambda a: sibling("fast_pr_policy").adopt(a, sys.modules[__name__]),
                "pr-proof-method": lambda a: sibling("fast_pr_policy").method(HOME),
                "hook": lambda a: sys.exit(cmd_hook(a.host)),
-               "install": lambda a: sibling("fast_install").install(a.host, a.project, auto=a.auto, log=lambda line: (print(line), log("install.write", line=line))),
+               "install": lambda a: sibling("fast_install").install(a.host, a.project, auto=a.auto, channel=a.channel, log=lambda line: (print(line), log("install.write", line=line))),
+               "version": lambda a: sibling("fast_release").version(HOME), "verify": lambda a: sibling("fast_release").verify(a.path),
                "pause": lambda a: cmd_pause(a, a.reason), "resume": lambda a: cmd_pause(a, None)}
     actions[args.command](args)
 

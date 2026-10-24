@@ -96,7 +96,7 @@ The command refuses links, special nodes, protected project or factory overlap a
 ## Install
 
 ```text
-python fast_gate.py install --host claude|codex|cursor|other [--project <abs>] [--no-auto-update]
+python fast_gate.py install --host claude|codex|cursor|other [--project <abs>] [--no-auto-update] [--channel stable|edge]
 ```
 
 Wires the hooks for agents that need it; the factory's `docs/hosts.md` lists each agent's route.
