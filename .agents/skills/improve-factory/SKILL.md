@@ -40,7 +40,7 @@ Keep any active app run safe. The repair never writes the app's source; pausing 
 - Factory repair grants no product scope change. Keep the app ticket and the maintenance ticket separate.
 - Run independent tickets in parallel, each in its own worktree: a checkout holds one open gate run.
 - Work for another session follows the `safe-engine` Delegate rule for it. A product bug: that rule as written, in the product's ticket; during an active app run, `references/live-session.md` first. Factory work: a maintenance ticket, and the prompt invokes `improve-factory` with no kind, a factory repository checkout (never the bundle cache) in place of the project path, and the report. It tells the new session to create its factory worktree from `origin/main` right after `git fetch origin` and resolve with `--bundle <that worktree>` (unlike the repair worktree in `references/live-session.md`). Your unmerged repair is not in it; say so.
-- Worktrees separate files only. Give delegates absolute paths. Isolate shared ports, databases, caches and services.
+- Worktrees separate files only. Give delegates absolute paths; route, brief and accept them by the `safe-engine` delegate rules. Isolate shared ports, databases, caches and services.
 
 ## 3. Analyze and plan
 

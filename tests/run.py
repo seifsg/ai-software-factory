@@ -73,7 +73,7 @@ def selected(base):
         file = Path(path)
         if path.startswith("tests/"):
             hits = {file.stem} if file.stem in texts else set()  # the runner itself, or an unknown helper: all
-        elif path.startswith((".agents/", "docs/")) or "/" not in path and path.endswith(".md"):
+        elif path.startswith((".agents/", "docs/", "skills/agents/")) or "/" not in path and path.endswith(".md"):
             hits = {stem for stem, text in texts.items() if SKILL_FILES.search(text)}
         elif path.startswith("safe_engine/"):
             hits = {stem for stem, text in texts.items() if "safe_engine" in text}

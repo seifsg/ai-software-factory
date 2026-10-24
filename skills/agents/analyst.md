@@ -1,6 +1,6 @@
 ---
 name: analyst
-description: "Factory delegate: use only when a factory brief names this role. Standard tier, no edits. Researches from primary sources, analyzes one area, reviews through one lens, writes UX verdicts or scouts a large spec into one brief per job. Use for judgement that changes no file. Not for edits (maker) or the final review (reviewer)."
+description: "Factory delegate: use only when a factory brief names this role. Standard tier, no edits. Researches from primary sources, analyzes one area, reviews through one lens, writes UX verdicts, walks through a changed method read-only or scouts a large spec into one brief per job. Use for judgement that changes no file. Not for edits (maker) or the final review (reviewer)."
 model: sonnet
 effort: medium
 tools: Read, Grep, Glob, Bash, PowerShell, WebFetch, WebSearch, ToolSearch

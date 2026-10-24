@@ -10,7 +10,7 @@ Read the project's rules file and the skills the brief names before editing; mat
 
 Hand back only these lines, no story:
 
-- `<path:lines>: <change>` per change, then `decision: <choice> because <reason>` per call made;
+- `<path:lines>: <change>` per change, then `decision: <choice> because <reason>` per call made and `T<n> pre: <before> do: <change> post: <check>` per todo;
 - `G<n> PASS <evidence>` or `G<n> FAIL <evidence>` per gate in the brief;
 - `left: <item>: <what it learned>` per unfinished item, when it stops early;
 - at most one refusal, as its last line: `too-big. split: <one-line jobs>`, `needs-confirm. op: <command>` or `ambiguous. ask: <one question>`.

@@ -7,9 +7,9 @@ Each delegated job runs on the cheapest role that can pass its gates. Your agent
 | Role | Tier | Edits | Jobs | Hands back |
 |---|---|---|---|---|
 | runner | light | no | scripted commands with a pass/fail (tests, builds, the full suite), searches, inventories, comparisons, log reading | `<step or path:line>: <result>` per step or hit, then `PASS`, `FAIL <step>` or `<n> hits` |
-| analyst | standard | no | research, per-area analysis, one-lens reviews, UX verdicts, scouting a large spec | `<path:line or URL>: <finding>` per finding, then `<n> findings` |
-| maker | standard | yes | planned or mechanical edits, fix rounds that spell out each fix, walkthroughs, the checker | `<path:lines>: <change>` per change |
-| builder | deep | yes | edits that need design calls: architecture, schema, security, unclear bugs | `<path:lines>: <change>` per change, then `decision: <choice> because <reason>` per call made |
+| analyst | standard | no | research, per-area analysis, one-lens reviews, UX verdicts, read-only method walkthroughs, scouting a large spec | `<path:line or URL>: <finding>` per finding, then `<n> findings` |
+| maker | standard | yes | planned or mechanical edits, fix rounds that spell out each fix, walkthroughs that run the change, the checker | `<path:lines>: <change>` per change, then `T<n> pre: <before> do: <change> post: <check>` per todo |
+| builder | deep | yes | edits that need design calls: architecture, schema, security, unclear bugs | `<path:lines>: <change>` per change, then `decision: <choice> because <reason>` per call made and `T<n> pre: <before> do: <change> post: <check>` per todo |
 | reviewer | deep | no | final and independent review (`deep-review`), judgement calls that change no file: unclear bugs, architecture | `<path:line or URL> <severity>: <problem>. <fix>.` most severe first, then `verdict: ready`, `ready after fixes` or `not ready: <why>`; with no diff, `decision: <choice> because <reason>` instead |
 
 A todo runs on the role its tier and edit access give. A method that names its own report (hidden checks, UX verdicts, `deep-review`) keeps it. Every handback then adds:

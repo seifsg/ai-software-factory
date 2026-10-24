@@ -11,6 +11,7 @@ HOSTS = ROOT / "docs/hosts.md"
 MODELS = {"haiku", "sonnet", "opus", "fable", "inherit"}  # aliases; a full ID starts with claude-
 EFFORTS = {"low", "medium", "high", "xhigh", "max"}
 WRITES = {"Write", "Edit", "NotebookEdit"}
+READERS = {"Read", "Grep", "Glob", "Bash", "PowerShell", "WebFetch", "WebSearch", "ToolSearch"}  # no spawn, write or MCP tool
 
 
 def frontmatter(path):
@@ -69,8 +70,8 @@ class AgentTests(unittest.TestCase):
                 denied = set(re.split(r",\s*", fields.get("disallowedTools", "")))
                 if edits:  # writers keep every tool but Agent: only the coordinator spawns
                     self.assertEqual((allowed, denied), (None, {"Agent"}))
-                else:  # an allowlist, so inherited write-capable and MCP tools stay out too
-                    self.assertTrue(allowed and not allowed & (WRITES | {"Agent"}))
+                else:  # an allowlist of reading tools, so inherited write-capable and MCP tools stay out too
+                    self.assertTrue(allowed and allowed <= READERS)
         self.assertFalse(roles()["reviewer"][1])
 
     def test_handbacks_follow_the_method(self):
@@ -92,9 +93,9 @@ class AgentTests(unittest.TestCase):
         self.assertNotIn("agents", plugin)  # an agents key would replace the agents/ scan
 
     def test_methods_name_tiers_and_roles_never_models(self):
-        model = re.compile(r"\b(?:haiku|sonnet|opus|fable|composer|gpt-\d[\w.-]*|gemini-\d[\w.-]*"
+        model = re.compile(r"\b(?:haiku|sonnet|opus|fable|composer-\d[\w.-]*|gpt-\d[\w.-]*|gemini-\d[\w.-]*"
                            r"|claude-(?:haiku|sonnet|opus|fable)[\w.-]*)\b", re.I)
-        for path in (ROOT / ".agents/skills").rglob("*.md"):
+        for path in (*(ROOT / ".agents/skills").rglob("*.md"), *(ROOT / "skills").glob("*/SKILL.md"), ROOT / "AGENTS.md"):
             with self.subTest(file=path.relative_to(ROOT).as_posix()):
                 self.assertIsNone(model.search(path.read_text(encoding="utf-8")))
 
