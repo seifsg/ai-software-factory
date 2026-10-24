@@ -11,7 +11,7 @@ First-class hosts get an installer route, gate hooks and a Safe reviewer preset.
 | Skills | `safe-engine` plugin (skills + hooks) | `~/.agents/skills/` | `~/.agents/skills/` |
 | Rules file | `AGENTS.md` (read when no `CLAUDE.md` exists; otherwise import it with `@AGENTS.md`) | `AGENTS.md` | `AGENTS.md` |
 | Install | `fast_gate.py install --host claude` or [by hand](#claude-code) | `fast_gate.py install --host codex`, then trust it in `/hooks` | `fast_gate.py install --host cursor` |
-| Updates | marketplace `autoUpdate` | session-start hook, once a day ([updates](#updates)) | same |
+| Updates | marketplace `autoUpdate`, pinned to the release tag ([updates](#updates)) | session-start hook, once a day, to the newest verified release ([updates](#updates)) | same |
 | Invoke (same form for `improve-factory`) | `/safe-engine Build ...` | `$safe-engine Build ...` | `use safe-engine to build ...` |
 | Question tool | `AskUserQuestion` (4 questions, 4 options each) | chat message | chat message |
 | Gate progress messages | hook `systemMessage`, shown to the user | hook `systemMessage`, shown as a warning | not shown: the agent relays the gate's card |
@@ -60,15 +60,19 @@ Their hooks show no gate progress messages: the agent relays the card from the g
 
 ## Updates
 
-Claude Code updates through its marketplace. Every other install made from a Git clone records the clone, its revision and each `--host`/`--project` pair in `~/.safe-engine/install.json`. A copy that is no Git clone, or a pinned project bundle under `~/.safe-engine/bundles/`, records nothing and never updates.
+Every install records this machine's channel in `~/.safe-engine/install.json` (`install --channel stable|edge`, kept until changed; stable by default). New projects follow it: the launcher's resolver pins the newest release tag on `main` whose files match its manifest, or `main` on edge and while no release exists.
 
-The session-start hook entry carries an `update` argument (`run-gate.sh <host> update`; the Windows command likewise). Before the gate loads, it runs `fast_update.py`, which at most once a day:
+**Claude Code** updates through its marketplace. The marketplace entry is a `git-subdir` source pinned to the release tag (`ref: vX.Y.Z`) and the plugin manifest carries the same `version`, so Claude Code fetches exactly that tag and keeps its cached copy until a release changes the version; a tag not yet pushed leaves the installed copy in place. Claude Code has no channels: the edge channel changes what new projects pin; to run the gate and launchers of `main`, disable the plugin (`claude plugin disable safe-engine@ai-software-factory`) and start Claude Code with `--plugin-dir <clone>/skills`.
 
-1. leaves the clone alone unless it is on `main` with no local changes;
-2. fetches, then fast-forwards to its upstream (`git merge --ff-only`);
-3. when the revision moved, reruns that clone's `fast_gate.py install` for each recorded install, which rewrites the launchers, hook entries and record.
+**Codex, Cursor and other**, installed from a Git clone, also record the clone, its revision and each `--host`/`--project` pair. A copy that is no Git clone, or a pinned project bundle under `~/.safe-engine/bundles/`, never updates. The session-start hook entry carries an `update` argument (`run-gate.sh <host> update`; the Windows command likewise). Before the gate loads, it runs `fast_update.py`, which at most once a day:
 
-Offline, a diverged `main`, a missing Git or any other error changes nothing; the session goes on and `~/.safe-engine/logs/gate.log` gets an `update` line with the result. Projects keep their pinned bundle. Off: `SAFE_ENGINE_NO_UPDATE=1`, or `install --no-auto-update` (the last install decides); either way no extra process starts. Other hook entries are unchanged; a recorded install's session start starts one more Python (about 0.2 s on Windows). Agents with no session-start hook update by hand ([README](../README.md#-update)).
+1. leaves the clone alone unless its origin is the factory repository, it has no local changes and it is on `main` or detached;
+2. fetches `main` and tags; a tag that moved on the remote fails the fetch, so nothing changes;
+3. stable: checks out the newest `vX.Y.Z` tag whose commit is on `main` and passes the release check (version equal to the tag, every file matching the release manifest), trying older tags when one fails; edge, or stable before the first release: fast-forwards `main`;
+4. when the revision moved, records the previous ref, revision and version in `install.json`, then reruns the clone's `fast_gate.py install` for each recorded install;
+5. an install that fails restores the previous revision and reruns its installer.
+
+The gate's next `start`, `status` or `version` shows a one-time notice: the old and new version with pointers to `CHANGELOG.md` and `UPGRADING.md`, or the rollback. Offline, a diverged `main`, no verifying release, a missing Git or any other error changes nothing; the session goes on and `~/.safe-engine/logs/gate.log` gets an `update` line with the result. Projects keep their pinned bundle. Off: `SAFE_ENGINE_NO_UPDATE=1`, or `install --no-auto-update` (the last install decides); either way no extra process starts. Other hook entries are unchanged; a recorded install's session start starts one more Python (about 0.2 s on Windows). Agents with no session-start hook update by hand ([README](../README.md#-update)).
 
 ## Evals
 

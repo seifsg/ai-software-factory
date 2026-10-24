@@ -148,10 +148,13 @@ git clone https://github.com/seifsg/ai-software-factory.git
 python ai-software-factory/skills/safe-engine/scripts/fast_gate.py install --host claude
 ```
 
-- `claude` enables the plugin (skills and gate hooks) with auto-update. Start a new session.
+- `claude` enables the plugin (skills and gate hooks) with auto-update. It follows release tags. Start a new session.
 - `codex` and `cursor` copy the `safe-engine` and `improve-factory` skills into `~/.agents/skills` and write the gate hooks. Codex asks you to trust them once in `/hooks`.
 - `other` copies those skills only; wire the hooks by hand ([hosts](docs/hosts.md#other-agents)).
 - `--project <dir>` installs into one project instead of your user folders.
+- `--channel stable|edge` sets this machine's channel: `stable` (the default) follows the newest verified release, `edge` follows `main`.
+
+Check what you run: `fast_gate.py version` prints the version, commit, channel, install route and release digest; `fast_gate.py verify` lists every file that differs from the release manifest. What changed: [CHANGELOG](CHANGELOG.md); what to do on upgrade: [UPGRADING](UPGRADING.md).
 
 Claude Code without a clone. This route leaves auto-update off: turn it on in `/plugin` under Marketplaces, or [update by hand](#-update).
 
@@ -164,22 +167,27 @@ Details: [install](docs/install.md) · [hosts](docs/hosts.md).
 
 ## 🔄 Update
 
+Updates arrive as releases: a tag on `main` whose files match its sha256 manifest.
+
 | Installed with | How it updates |
 |---|---|
-| Claude Code, through the installer | On its own: during a session Claude Code fetches new versions; `/reload-plugins` or a new session loads them |
+| Claude Code, through the installer | On its own: during a session Claude Code fetches a new release; `/reload-plugins` or a new session loads it |
 | Claude Code, right now (any route) | `claude plugin marketplace update ai-software-factory`, then `claude plugin update safe-engine@ai-software-factory`, then a new session |
-| Codex, Cursor, other, installed from a clone | On its own: at most once a day, the first session start fast-forwards your clone when it is clean and on `main`, then reruns your install. A clone with local changes, on another branch or offline is left alone and the gate log says why ([hosts](docs/hosts.md#updates)) |
-| Codex, Cursor, other, right now or opted out | `git pull` in your factory clone, then run the same `fast_gate.py install --host ...` again. It replaces only the factory's own files and hook entries |
+| Codex, Cursor, other, installed from a clone | On its own: at most once a day, the first session start moves your clone to the newest release that verifies (detached at its tag) and reruns your install. A failed install rolls back to the previous revision. A clone with local changes, on another branch or offline is left alone and the gate log says why ([hosts](docs/hosts.md#updates)) |
+| Codex, Cursor, other, right now or opted out | In your factory clone `git fetch --tags` and `git checkout vX.Y.Z` (the newest tag), then run the same `fast_gate.py install --host ...` again. It replaces only the factory's own files and hook entries |
 
-Turn the daily update off with `SAFE_ENGINE_NO_UPDATE=1` in your environment, or install with `--no-auto-update`.
+After an update or a rollback, the next `start`, `status` or `version` shows one notice with the old and new version. Turn the daily update off with `SAFE_ENGINE_NO_UPDATE=1` in your environment, or install with `--no-auto-update`.
 
-**Projects stay pinned.** On first use a project pins the factory's main branch to one commit, and every later run and resume there reads its methods from that commit, offline. New projects get the newest methods; updating the install brings new launchers and hooks. To switch a project to newer methods, ask `improve-factory Switch [absolute project directory] to the newest factory.` It checks the run is compatible first.
+- **Switch channel:** rerun the install with `--channel edge` to follow `main`, or `--channel stable` to return to releases. Claude Code has no channels: edge changes what new projects pin ([hosts](docs/hosts.md#updates)).
+- **Roll back by hand:** in your clone `git checkout vX.Y.Z` (the release you want), then rerun the install with `--no-auto-update` so the daily update keeps it there. Claude Code serves one version: run an older release with `claude --plugin-dir <clone at that tag>/skills`, the plugin disabled.
+
+**Projects stay pinned.** On first use a project pins the newest verified release (on the edge channel, or before the first release, `main`) to one commit, and every later run and resume there reads its methods from that commit, offline. Updating the install brings new launchers and hooks, never new methods to a pinned project. To switch a project to newer methods, ask `improve-factory Switch [absolute project directory] to the newest factory.` It checks the run is compatible first.
 
 ## 🧹 Uninstall
 
 - **Claude Code:** `claude plugin marketplace remove ai-software-factory` removes the marketplace from your settings and uninstalls its plugin. The installer kept your earlier settings as `~/.claude/settings.json.bak-before-safe-engine`.
 - **Codex, Cursor, other:** delete `safe-engine` and `improve-factory` from `~/.agents/skills` (or `<dir>/.agents/skills`), then remove the hook entries naming `run-gate` or `fast_gate` from `hooks.json` in `~/.codex` or `~/.cursor` (or `<dir>/.codex`, `<dir>/.cursor`). Delete your factory clone too.
-- **Data:** `~/.safe-engine/` holds the pinned factory copies and the gate's run state; delete it once no project has an unfinished run. Each project keeps a `.factory/` folder with its work records, kept out of Git; delete it when you no longer need them.
+- **Data:** `~/.safe-engine/` holds the pinned factory copies, the install record (`install.json`, with the channel) and the gate's run state; delete it once no project has an unfinished run. Each project keeps a `.factory/` folder with its work records, kept out of Git; delete it when you no longer need them.
 
 ## 🩺 Troubleshooting
 
@@ -190,6 +198,9 @@ Turn the daily update off with `SAFE_ENGINE_NO_UPDATE=1` in your environment, or
 | Claude Code on Windows: hooks fail | Install Git for Windows (the hooks run in its `sh`, Git Bash), then start a new session |
 | Codex ignores the gate | Trust the factory's hooks once in `/hooks` |
 | "Newer layout" or "Incomplete factory bundle" | Your install is older than the factory it fetched: [update](#-update) |
+| Which factory am I on? Did my install change? | `fast_gate.py version`, then `fast_gate.py verify`: it names every changed, missing or extra file. The update's result is the last `update` line in `~/.safe-engine/logs/gate.log` |
+| Updates stopped: "no release verifies", "not on main" or "would clobber existing tag" | A release tag failed its check or moved on the remote, so the update kept your copy. Report it ([issues](https://github.com/seifsg/ai-software-factory/issues)); never force-fetch tags |
+| Claude Code: "Remote branch vX.Y.Z not found" | The release was merged but its tag is not pushed yet; your installed copy stays. It updates once the tag exists |
 | An edit or command is refused during a run | Source edits wait until the ticket and plan pass. Destructive commands are yours: run them yourself or ask for another approach |
 | The agent will not stop | A run blocks the first stop and names the next step; stopping again right after passes. To end a run early, ask the agent to close it with your reason |
 | The agent's `gh` commands break in PowerShell | Have it run them in Git Bash: PowerShell 5.1 breaks `{owner}/{repo}` placeholders and nested quotes |
@@ -245,6 +256,7 @@ python tests/run.py
 
 - `python tests/run.py --changed` runs only the tests your diff touches; run the full suite before any push.
 - Adding, moving or deleting a factory file: `python scripts/package_skill_entries.py`, then `--check` before pushing.
+- Every PR adds a line to [CHANGELOG](CHANGELOG.md); releases follow [releasing](docs/releasing.md).
 - `python -m evals run` scores the factory against a plain agent ([evals](evals/README.md)).
 
 ## 🗂️ Layout
@@ -255,7 +267,7 @@ skills/                portable launchers, gate scripts and the Claude Code plug
 .claude-plugin/        the Claude Code marketplace
 safe_engine/           Safe mode controller (python -m safe_engine)
 evals/                 factory vs plain agent scoring (repository only)
-scripts/               launcher packaging
-docs/                  install and hosts
+scripts/               launcher packaging and the release script
+docs/                  install, hosts and releasing
 tests/                 controller, gate, installer and skill hygiene tests
 ```

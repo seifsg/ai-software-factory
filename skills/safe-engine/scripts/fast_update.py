@@ -1,9 +1,12 @@
 """Daily self-update for installs without a plugin marketplace (docs/hosts.md#updates).
 
-The session-start hook runs it (`run-gate.sh <host> update`) before the gate loads. At most once a day it
-fast-forwards the factory clone that `install` recorded, only when that clone is clean and on main, then reruns
-the clone's own installer for each recorded install. Fails open: any problem is logged and the session goes on.
-Off with SAFE_ENGINE_NO_UPDATE=1 or `install --no-auto-update`. Pinned project bundles are never touched.
+The session-start hook runs it (`run-gate.sh <host> update`) before the gate loads. At most once a day it moves the
+factory clone that `install` recorded to its channel's newest revision: on stable (the default) the newest release
+tag on main whose files match its manifest, on edge (or stable before the first release) main, fast-forwarded. Only a
+clean clone of the factory repository, on main or detached, moves. It records the previous revision, reruns the
+clone's own installer for each recorded install, restores the previous revision when an install fails, and leaves a
+one-time notice for the gate. Fails open: any problem is logged and the session goes on. Off with
+SAFE_ENGINE_NO_UPDATE=1 or `install --no-auto-update`. Pinned project bundles are never touched.
 """
 import json
 import os
@@ -12,11 +15,17 @@ import subprocess
 import sys
 import time
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import resolve_bundle as release  # noqa: E402 - the origin allowlist and the release check every launcher carries
+from fast_install import write_json  # noqa: E402 - atomic record writes, as the installer's own
+
 HOME = Path(os.environ.get("SAFE_ENGINE_HOME") or Path.home() / ".safe-engine")
 RECORD = HOME / "install.json"  # written by fast_install.remember
 STAMP = HOME / "update.stamp"  # its mtime is the last check
+NOTICE = HOME / "update-notice.txt"  # shown once by the gate (fast_release.notice)
 DAY = 24 * 3600
 OFF = "SAFE_ENGINE_NO_UPDATE"
+TAGS = "--format=%(if)%(*objectname)%(then)%(*objectname)%(else)%(objectname)%(end) %(refname)"  # tag -> commit
 
 
 def due():
@@ -43,27 +52,85 @@ def git(clone, *args, timeout=15):
 
 
 def update(record):
-    """Fast-forward the recorded clone and reinstall when it moved; returns what happened."""
+    """Move the recorded clone to its channel's newest revision and reinstall; returns what happened."""
     if not record.get("auto", True):
         return "off"
+    if not record.get("installs"):
+        return "nothing installed from a clone"
     clone = Path(record["clone"]).resolve()
     if (HOME / "bundles").resolve() in (clone, *clone.parents):
         return "pinned bundle: never updated"
-    if git(clone, "rev-parse", "--abbrev-ref", "HEAD") != "main":
-        return "skipped: clone not on main"
+    if git(clone, "remote", "get-url", "origin") not in release.ORIGINS:
+        return "skipped: clone origin is not the factory repository"
+    ref = git(clone, "rev-parse", "--abbrev-ref", "HEAD")
+    if ref not in ("main", "HEAD"):
+        return "skipped: clone not on main or a release"
     if git(clone, "status", "--porcelain"):
         return "skipped: clone has local changes"
-    git(clone, "fetch", "--quiet", timeout=20)
+    git(clone, "fetch", "--quiet", "--tags", "origin", timeout=20)  # a moved tag fails here: tags never move
+    old = {"ref": ref, "revision": git(clone, "rev-parse", "HEAD"), "version": release.read_version(clone)}
+    try:
+        note = advance(clone, record.get("channel", "stable"))
+    except Exception:
+        restore(clone, old)
+        raise
+    new = {"revision": git(clone, "rev-parse", "HEAD"), "version": release.read_version(clone)}
+    if new["revision"] == old["revision"]:
+        return "current" + note
+    record["previous"] = old
+    write_json(RECORD, record)  # before the new installer runs: a crash mid-install still names the way back
+    try:
+        reinstall(clone, record)
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as error:
+        restore(clone, old)
+        reinstall(clone, record)
+        tell(f"Factory update to {new['version']} failed and was rolled back to {old['version'] or 'unversioned'}; "
+             f"see {HOME / 'logs' / 'gate.log'}.")
+        return f"rolled back to {old['revision']}: install of {new['revision']} failed: {error}{note}"
+    tell(f"Factory updated from {old['version'] or 'unversioned'} to {new['version']}. What changed: "
+         f"{clone / 'CHANGELOG.md'}; what to do: {clone / 'UPGRADING.md'}.")
+    return f"updated to {new['revision']}{note}"
+
+
+def advance(clone, channel):
+    """Check out the channel's target: on stable the newest tag that passes the release check, trying older ones
+    when it fails; on edge, or before any release, main fast-forwarded. Returns a note for the log."""
+    tags = release.releases(git(clone, "for-each-ref", TAGS, "refs/tags")) if channel == "stable" else []
+    skipped = []
+    for tag, commit in tags:
+        git(clone, "checkout", "--quiet", "--detach", commit)
+        try:
+            release.check_release(clone, tag)
+            return f" ({tag}{'; skipped ' + '; '.join(skipped) if skipped else ''})"
+        except RuntimeError as error:
+            skipped.append(str(error))
+    if tags:
+        raise RuntimeError("no release verifies: " + "; ".join(skipped))
+    git(clone, "checkout", "--quiet", "main")
     git(clone, "merge", "--ff-only", "--quiet", "@{upstream}")
-    head = git(clone, "rev-parse", "HEAD")
-    if head == record.get("revision"):
-        return "current"
+    return " (no release yet: following main)" if channel == "stable" else ""
+
+
+def restore(clone, old):
+    """Put the clone back on the branch or commit it had."""
+    git(clone, "checkout", "--quiet", *(["-B", old["ref"]] if old["ref"] != "HEAD" else ["--detach"]), old["revision"])
+
+
+def reinstall(clone, record):
+    """Rerun the clone's installer for each recorded install; it rewrites the launchers, hook entries and record."""
     gate = clone / "skills" / "safe-engine" / "scripts" / "fast_gate.py"
-    for item in record.get("installs", []):  # the new installer rewrites the hooks and this record
+    for item in record["installs"]:
         subprocess.run([sys.executable, str(gate), "install", "--host", item["host"],
                         *(["--project", item["project"]] if item.get("project") else [])],
                        capture_output=True, text=True, timeout=30, check=True, stdin=subprocess.DEVNULL)
-    return f"updated to {head}"
+
+
+def tell(text):
+    """Leave the one-time notice the gate shows on its next start, status or version."""
+    try:
+        NOTICE.write_text(text + "\n", encoding="utf-8")
+    except OSError:
+        pass  # the log line still says it
 
 
 def main():

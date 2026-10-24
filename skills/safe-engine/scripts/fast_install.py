@@ -1,21 +1,23 @@
 """Per-host installer: put the factory's entry skills where the host finds them and wire the Fast gate hooks.
 
-fast_gate.py install --host claude|codex|cursor|other [--project DIR] [--no-auto-update]
+fast_gate.py install --host claude|codex|cursor|other [--project DIR] [--no-auto-update] [--channel stable|edge]
 - claude: declares this repository's marketplace and enables the safe-engine plugin in ~/.claude/settings.json;
-  the plugin carries the skills and hooks.
+  the plugin carries the skills and hooks and follows release tags.
 - codex, cursor: copies skills/safe-engine and skills/improve-factory into ~/.agents/skills (the Agent Skills
   folder both read; <DIR>/.agents/skills with --project), then merges the gate hooks into ~/.codex/hooks.json or
   ~/.cursor/hooks.json (<DIR>/.codex, <DIR>/.cursor). Re-running replaces only the factory's own hook entries.
 - other: the skills only, for agents wired by hand (docs/hosts.md).
-Installed from a Git clone, codex, cursor and other also record the clone in the gate home: their session-start hook
-then updates them once a day (fast_update.py).
+Every host records the machine's update channel in the gate home (stable: release tags; edge: main), which new
+projects and the self-update follow. Installed from a Git clone, codex, cursor and other also record the clone: their
+session-start hook then updates them once a day (fast_update.py).
 """
 import json
 import os
 from pathlib import Path
 import shutil
-import sys
+import subprocess
 
+CHANNELS = ("stable", "edge")  # the first is the default
 MARKETPLACE = "ai-software-factory"
 REPOSITORY = "https://github.com/seifsg/ai-software-factory.git"
 ENTRIES = ("safe-engine", "improve-factory")
@@ -24,8 +26,21 @@ CODEX_EVENTS = {"PreToolUse": "Bash|apply_patch", "Stop": None, "UserPromptSubmi
 CURSOR_EVENTS = {"preToolUse": "Shell|Write|Delete|Edit|StrReplace|MultiEdit", "stop": None, "sessionStart": None}
 
 
-def install(host, project=None, home=None, log=print, auto=True):
-    """Install for one host; returns the files written. auto=False turns the daily self-update off."""
+def parser(sub):
+    """The `install` subcommand (fast_gate.py)."""
+    install = sub.add_parser("install", help="Install the entry skills and gate hooks for one host")
+    install.add_argument("--host", required=True, choices=("claude", "codex", "cursor", "other"),
+                         help="other: entry skills only, for agents you wire by hand")
+    install.add_argument("--project", help="Install into this project instead of your user folders")
+    install.add_argument("--no-auto-update", dest="auto", action="store_false",
+                         help="No daily self-update at session start (also SAFE_ENGINE_NO_UPDATE=1)")
+    install.add_argument("--channel", choices=CHANNELS, help="stable: the newest verified release (default); edge: "
+                                                             "main. Kept for this machine until changed")
+
+
+def install(host, project=None, home=None, log=print, auto=True, channel=None):
+    """Install for one host; returns the files written. auto=False turns the daily self-update off; channel None
+    keeps the recorded channel (stable when none)."""
     home = Path(home or Path.home())
     if host == "claude":
         written = [enable_plugin(home / ".claude" / "settings.json")]
@@ -38,9 +53,9 @@ def install(host, project=None, home=None, log=print, auto=True):
             written.append(merge_codex(base / ".codex" / "hooks.json", gate, auto))
         elif host == "cursor":
             written.append(merge_cursor(base / ".cursor" / "hooks.json", gate, auto))
-        written.append(remember(host, project, home, auto))
     else:
         raise SystemExit(f"Unknown host '{host}': claude, codex, cursor or other (docs/hosts.md)")
+    written.append(remember(host, project, home, auto, channel))
     for path in filter(None, written):
         log(f"wrote {path}")
     return written
@@ -76,24 +91,25 @@ def copy_entries(target):
     return target
 
 
-def remember(host, project, home, auto):
-    """Record this install's clone, revision and targets for the session-start self-update; None when this copy is
-    no Git clone or is a pinned project bundle, which never update."""
+def remember(host, project, home, auto, channel=None):
+    """Record the machine's update channel and, for a host the clone updates, this install's clone, revision and
+    targets for the session-start self-update. A copy that is no Git clone, or is a pinned project bundle, records
+    only the channel and never updates. Other fields (the updater's previous revision) are kept."""
     root = Path(__file__).resolve().parents[3]
     gate_home = Path(os.environ.get("SAFE_ENGINE_HOME") or home / ".safe-engine")
-    if not (root / ".git").exists() or (gate_home / "bundles").resolve() in root.parents:
-        return None
-    sys.path.insert(0, str(Path(__file__).resolve().parent))
-    from fast_update import git
-    try:
-        revision = git(root, "rev-parse", "HEAD")
-    except Exception:  # noqa: BLE001 - no git here: the first daily check reinstalls
-        revision = None
     path = gate_home / "install.json"
     record = read_json(path)
-    item = {"host": host, "project": str(Path(project).resolve()) if project else None}
-    installs = [old for old in record.get("installs", []) if old != item] + [item]
-    write_json(path, {"clone": str(root), "revision": revision, "auto": auto, "installs": installs})
+    record["channel"] = channel or record.get("channel") or CHANNELS[0]
+    if host != "claude" and (root / ".git").exists() and (gate_home / "bundles").resolve() not in root.parents:
+        try:
+            revision = subprocess.run(["git", "-C", str(root), "rev-parse", "HEAD"], capture_output=True, text=True,
+                                      timeout=15, check=True, stdin=subprocess.DEVNULL).stdout.strip()
+        except (OSError, subprocess.SubprocessError):  # no git here: the first daily check reinstalls
+            revision = None
+        item = {"host": host, "project": str(Path(project).resolve()) if project else None}
+        installs = [old for old in record.get("installs", []) if old != item] + [item]
+        record.update(clone=str(root), revision=revision, auto=auto, installs=installs)
+    write_json(path, record)
     return path
 
 

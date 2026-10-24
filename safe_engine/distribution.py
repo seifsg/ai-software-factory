@@ -1,16 +1,29 @@
-"""Resolve a complete, revision-pinned factory; never mutate an existing app/bundle."""
+"""Resolve a complete, revision-pinned factory; never mutate an existing app/bundle.
+
+Also the release identity every launcher carries (docs/releasing.md): the canonical version, the sha256 release
+manifest, and the one check that makes a tag a release.
+"""
 import argparse
+import hashlib
 import json
+import os
 from pathlib import Path
 import re
 import stat
 import subprocess
+import sys
 import tempfile
 
 
 REPOSITORY = "https://github.com/seifsg/ai-software-factory.git"
-DEFAULT_REF = "main"
+ORIGINS = {REPOSITORY, REPOSITORY.removesuffix(".git"), "git@github.com:seifsg/ai-software-factory.git",
+           "ssh://git@github.com/seifsg/ai-software-factory.git"}
+DEFAULT_REF = "main"  # the edge channel, and every new project's factory until the first release exists
 ENTRYPOINTS = ("safe-engine", "improve-factory")
+VERSION_FILE = "skills/safe-engine/VERSION"  # the one canonical version; tests hold every other copy to it
+MANIFEST = "skills/safe-engine/release-manifest.json"  # sha256 of every other file in a release (scripts/release.py)
+MARKER = ".safe-engine-install"  # fast_install.MARKER: an installed copy's ownership mark, never a factory file
+TAG = re.compile(r"v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)")  # stable release tags; no pre-release ever ships
 # This documented pilot predates portable entries and the input contract.
 # Do not apply its compatibility path to unknown revisions or later bundles.
 LEGACY_PILOT = "eeb0da9d26092e67ea2e7abb58ec57ffd815df49"
@@ -34,6 +47,12 @@ def git(*args, cwd=None):
     return result.stdout.strip()
 
 
+def safe_name(name):
+    """A normalized relative bundle path: no empty, dot or parent parts, backslashes or drive colons."""
+    return (isinstance(name, str) and bool(name) and "\\" not in name and ":" not in name
+            and not any(part in ("", ".", "..") for part in name.split("/")))
+
+
 def edited(root, name):
     """Whether the checkout changed `name` locally: a local edit never counts as a newer factory layout."""
     return bool(git("status", "--porcelain", "--", name, cwd=root))
@@ -47,10 +66,7 @@ def inspect_bundle(root, expected=None, clean=False, entrypoint="improve-factory
     if root != actual_root:
         raise RuntimeError("Bundle path must be the Git checkout root, not a subdirectory")
     remote = git("remote", "get-url", "origin", cwd=root)
-    allowed = {REPOSITORY, REPOSITORY.removesuffix(".git"),
-               "git@github.com:seifsg/ai-software-factory.git",
-               "ssh://git@github.com/seifsg/ai-software-factory.git"}
-    if remote not in allowed:
+    if remote not in ORIGINS:
         raise RuntimeError("Bundle origin is not the factory repository")
     revision = git("rev-parse", "HEAD", cwd=root)
     if expected and revision != expected:
@@ -81,9 +97,7 @@ def inspect_bundle(root, expected=None, clean=False, entrypoint="improve-factory
             raise RuntimeError("Invalid factory input contract")
         for key in ("required_files", "source_trees"):
             names = contract[key]
-            if (not isinstance(names, list) or not names
-                    or any(not isinstance(name, str) or not name or "\\" in name or ":" in name
-                           or any(part in ("", ".", "..") for part in name.split("/")) for name in names)
+            if (not isinstance(names, list) or not names or not all(map(safe_name, names))
                     or len({name.casefold() for name in names}) != len(names)):
                 raise RuntimeError(f"Invalid {key} in factory input contract")
         for name in contract["source_trees"]:
@@ -98,9 +112,7 @@ def inspect_bundle(root, expected=None, clean=False, entrypoint="improve-factory
                     or len(historical) != len(set(historical))):
                 raise RuntimeError("Invalid historical_files in factory input contract")
             for name in historical:
-                if (not name.startswith("docs/") or not name.endswith(".md")
-                        or any(part in ("", ".", "..") for part in name.split("/"))
-                        or "\\" in name or ":" in name):
+                if not name.startswith("docs/") or not name.endswith(".md") or not safe_name(name):
                     raise RuntimeError("Invalid historical document in factory input contract")
             required += historical
             declared |= set(historical)
@@ -115,14 +127,142 @@ def inspect_bundle(root, expected=None, clean=False, entrypoint="improve-factory
     status = git("status", "--porcelain", "--untracked-files=all", cwd=root)
     if clean and status:
         raise RuntimeError("Cached bundle has local changes; preserve it and use a fresh cache directory")
-    return {"bundle_root": str(root), "revision": revision, "dirty": bool(status),
+    return {"bundle_root": str(root), "revision": revision, "version": read_version(root), "dirty": bool(status),
             "git_status": status, "source_url": remote,
             "entrypoint": str(root / f".agents/skills/{entrypoint}/SKILL.md")}
 
 
-def resolve_bundle(cache, ref, entrypoint="improve-factory"):
+def layout(root):
+    """'' for a factory checkout, 'skills/' for a skills folder (the plugin root or an installed copy)."""
+    return "" if (Path(root) / "skills" / "safe-engine").is_dir() else "skills/"
+
+
+def read_version(root):
+    """The version a checkout or skills folder declares; None for a factory older than 1.0.0."""
+    try:
+        return (Path(root) / VERSION_FILE[len(layout(root)):]).read_text(encoding="utf-8").strip()
+    except OSError:
+        return None
+
+
+def file_sha(path):
+    """sha256 of a file read with CRLF as LF: the Git blob bytes, whatever line endings the checkout uses."""
+    return hashlib.sha256(Path(path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+
+
+def sums(files):
+    """SHA256SUMS text (`sha256sum -c` format) of {name: sha256}; its own sha256 is the release's tree digest."""
+    return "".join(f"{files[name]}  {name}\n" for name in sorted(files))
+
+
+def build_manifest(root):
+    """The manifest of a clean checkout: its version and the sha256 of every tracked file but the manifest."""
+    names = set(git("ls-files", "-z", cwd=root).split("\0")) - {"", MANIFEST}
+    files = {name: file_sha(Path(root) / name) for name in names}
+    return {"version": read_version(root), "tree": hashlib.sha256(sums(files).encode()).hexdigest(), "files": files}
+
+
+def read_manifest(root):
+    """The release manifest of a checkout or skills folder, refused unless its tree digest matches its file list."""
+    try:
+        manifest = json.loads((Path(root) / MANIFEST[len(layout(root)):]).read_text(encoding="utf-8"))
+    except (OSError, ValueError) as error:
+        raise RuntimeError(f"No readable release manifest: {error}") from error
+    files = manifest.get("files") if isinstance(manifest, dict) else None
+    if (not isinstance(files, dict) or not isinstance(manifest.get("version"), str) or not all(map(safe_name, files))
+            or any(not re.fullmatch(r"[0-9a-f]{64}", str(sha)) for sha in files.values())
+            or manifest.get("tree") != hashlib.sha256(sums(files).encode()).hexdigest()):
+        raise RuntimeError("Release manifest is malformed or its tree digest does not match its file list")
+    return manifest
+
+
+def present(root, prefix, tops):
+    """Factory file names under root: a checkout's tracked and unignored files, or the given entry folders of a
+    skills folder without caches or the installer's marker."""
+    if not prefix:
+        return set(git("ls-files", "-co", "--exclude-standard", "-z", cwd=root).split("\0")) - {""}
+    return {prefix + path.relative_to(root).as_posix() for top in tops for path in (Path(root) / top).rglob("*")
+            if path.is_file() and path.name != MARKER and "__pycache__" not in path.parts}
+
+
+def verify(root, manifest):
+    """Every difference between the files under root and the manifest, as 'changed|missing|extra: <name>'."""
+    root, prefix = Path(root), layout(root)
+    listed = {name: sha for name, sha in manifest["files"].items() if name.startswith(prefix)}
+    tops = {name[len(prefix):].split("/")[0] for name in listed} if prefix else set()
+    tops = {top for top in tops if top in ENTRYPOINTS or (root / top).is_dir()}  # a plugin root adds .claude-plugin
+    listed = {name: sha for name, sha in listed.items() if not prefix or name[len(prefix):].split("/")[0] in tops}
+    found = present(root, prefix, tops) - {MANIFEST}
+    return ([f"changed: {name}" for name in sorted(found & listed.keys())
+             if file_sha(root / name[len(prefix):]) != listed[name]]
+            + [f"missing: {name}" for name in sorted(listed.keys() - found)]
+            + [f"extra: {name}" for name in sorted(found - listed.keys())])
+
+
+def check_release(root, tag):
+    """Raise unless the checkout at root is release `tag`: on main, its version equal to the tag, its files equal to
+    its manifest. The resolver, the self-update and the tag workflow share this one check."""
+    try:
+        git("merge-base", "--is-ancestor", "HEAD", "origin/main", cwd=root)
+    except RuntimeError:
+        raise RuntimeError(f"{tag} is not on main") from None
+    manifest = read_manifest(root)
+    problems = [] if manifest["version"] == read_version(root) == tag[1:] else [f"version differs from {tag}"]
+    problems += verify(root, manifest)
+    if problems:
+        raise RuntimeError(f"{tag} does not match its manifest: " + "; ".join(problems[:5])
+                           + (f"; {len(problems) - 5} more" if len(problems) > 5 else ""))
+
+
+def releases(listing):
+    """(tag, commit) per stable release tag in `git ls-remote --tags` or `git for-each-ref` output, newest first;
+    an annotated tag's peeled `^{}` line names its commit."""
+    commits = {}
+    for line in listing.splitlines():
+        fields = line.split()
+        name = fields[1].removeprefix("refs/tags/") if len(fields) == 2 else ""
+        peeled, name = name.endswith("^{}"), name.removesuffix("^{}")
+        if TAG.fullmatch(name) and re.fullmatch(r"[0-9a-f]{40}", fields[0]) and (peeled or name not in commits):
+            commits[name] = fields[0]
+    return sorted(commits.items(), key=lambda item: tuple(map(int, TAG.fullmatch(item[0]).groups())), reverse=True)
+
+
+def channel_ref():
+    """None (stable: the newest release) unless this machine's install chose the edge channel (fast_install)."""
+    path = Path(os.environ.get("SAFE_ENGINE_HOME") or Path.home() / ".safe-engine") / "install.json"
+    try:
+        record = json.loads(path.read_text(encoding="utf-8-sig"))
+    except FileNotFoundError:
+        return None
+    except (OSError, ValueError) as error:
+        raise RuntimeError(f"Unreadable install record {path}: {error}") from error
+    return DEFAULT_REF if isinstance(record, dict) and record.get("channel") == "edge" else None
+
+
+def resolve_release(cache, tag, entrypoint):
+    """The newest release on main whose files match its manifest (or exactly `tag`); main, with a notice, only while
+    no release exists. Releases that all fail are refused, never replaced by main."""
+    found = [item for item in releases(git("ls-remote", "--tags", REPOSITORY)) if not tag or item[0] == tag]
+    reasons = []
+    for name, commit in found:
+        try:
+            result = resolve_bundle(cache, commit, entrypoint)
+            check_release(result["bundle_root"], name)
+            return {**result, "channel": "stable", "release": name}
+        except RuntimeError as error:
+            reasons.append(str(error))
+    if found or tag:
+        raise RuntimeError("No release verifies: " + ("; ".join(reasons) or f"{tag} does not exist"))
+    return {**resolve_bundle(cache, DEFAULT_REF, entrypoint), "channel": "edge", "notice": "No release yet: using main"}
+
+
+def resolve_bundle(cache, ref=None, entrypoint="improve-factory"):
+    """One clean bundle per commit in the cache: the newest verified release (ref None), a release tag, a branch or
+    a full commit SHA."""
     if entrypoint not in ENTRYPOINTS:
         raise RuntimeError("Unknown factory entrypoint")
+    if ref is None or TAG.fullmatch(ref):
+        return resolve_release(cache, ref, entrypoint)
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._/-]*", ref):
         raise RuntimeError("Use a branch name or full 40-character commit SHA")
     if re.fullmatch(r"[0-9a-fA-F]{40}", ref):
@@ -200,7 +340,7 @@ def select_for_project(project, bundle, ref, cache, entrypoint):
     if existing_runs and not bundle:
         raise RuntimeError("Existing run has no bundle path record; establish its original bundle and use --bundle")
     result = (inspect_bundle(bundle, entrypoint=entrypoint) if bundle
-              else resolve_bundle(cache, ref or DEFAULT_REF, entrypoint=entrypoint))
+              else resolve_bundle(cache, ref or channel_ref(), entrypoint=entrypoint))
     directory.mkdir(exist_ok=True)
     # Exclusive creation protects a concurrent selection; never overwrite runtime evidence.
     try:
@@ -218,7 +358,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     choice = parser.add_mutually_exclusive_group()
     choice.add_argument("--bundle", type=Path, help="Inspect the exact existing checkout; no fetch/update")
-    choice.add_argument("--ref", help="Branch or full SHA for a new run/case; defaults to main")
+    choice.add_argument("--ref", help="Release tag (vX.Y.Z), branch or full SHA for a new run/case; default: the newest "
+                                      "verified release (main on the edge channel or before the first release)")
     parser.add_argument("--cache-dir", type=Path, default=Path.home() / ".safe-engine" / "bundles")
     parser.add_argument("--project", type=Path, help="Remember this project's selection; reuse it offline on resume")
     installed_name = Path(__file__).resolve().parent.parent.name
@@ -230,7 +371,9 @@ def main():
             result = select_for_project(args.project, args.bundle, args.ref, args.cache_dir, args.entrypoint)
         else:
             result = (inspect_bundle(args.bundle, entrypoint=args.entrypoint) if args.bundle else
-                      resolve_bundle(args.cache_dir, args.ref or DEFAULT_REF, entrypoint=args.entrypoint))
+                      resolve_bundle(args.cache_dir, args.ref or channel_ref(), entrypoint=args.entrypoint))
+        if result.get("notice"):
+            print(result["notice"], file=sys.stderr)
         print(json.dumps(result, indent=2))
     except (RuntimeError, OSError, subprocess.TimeoutExpired) as error:
         parser.exit(1, f"Factory unavailable: {error}\nUse existing authorized Git credentials; do not paste tokens into chat.\n")

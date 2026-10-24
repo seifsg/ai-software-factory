@@ -20,6 +20,16 @@ from .tickets import TicketStore, ticket_key
 PHASES = {"analyze", "plan", "build", "manual", "testing", "verify", "improve", "final-verify", "review", "ready", "cancelled"}
 
 
+def resumable(saved):
+    """Whether this bundle may load a run saved by bundle version `saved`: same MAJOR and never older (SemVer).
+    0.1.0 is the label every bundle carried before 1.0.0 froze that surface."""
+    try:
+        old, new = (tuple(map(int, ("1.0.0" if text == "0.1.0" else text).split("."))) for text in (saved, __version__))
+    except (AttributeError, ValueError):
+        return False
+    return old[0] == new[0] and old <= new
+
+
 class Workflow(ContractMixin, CheckMixin, ReviewMixin):
     def __init__(self, project, ticket=None):
         self.project = project
@@ -136,7 +146,7 @@ class Workflow(ContractMixin, CheckMixin, ReviewMixin):
         state = read_json(self.directory / "state.json")
         if not isinstance(state, dict) or state.get("schema_version") != 1 or state.get("phase") not in PHASES:
             raise EngineError("Invalid or unsupported task record; inspect the saved history")
-        if state.get("project") != str(self.project) or state.get("bundle_version") != __version__:
+        if state.get("project") != str(self.project) or not resumable(state.get("bundle_version")):
             raise EngineError("Project or bundle version differs from the saved run")
         draft = state.get("delivery_version") == 2 and not state["contract_sealed"]
         validate_profile(state["profile"], draft=draft)
