@@ -33,7 +33,7 @@ Safe review picks an installed reviewer that did not build the candidate: `revie
 
 ## Claude Code
 
-The plugin brings `/safe-engine`, `/improve-factory` and the gate hooks. Its root is the repository's `skills/` folder. Pick one route:
+The plugin brings `/safe-engine`, `/improve-factory`, the gate hooks and the delegate role agents ([delegation](#delegation)). Its root is the repository's `skills/` folder. Pick one route:
 
 - **Installer:** `python fast_gate.py install --host claude` adds the marketplace over HTTPS with auto-update and enables the plugin in `~/.claude/settings.json`, keeping a backup.
 - **Settings by hand** (desktop app): add these keys to `~/.claude/settings.json`, then start a new session:
@@ -51,12 +51,12 @@ The roles (runner, analyst, maker, builder, reviewer), their tiers and the brief
 
 | | Claude Code | Codex | Cursor | Other agents |
 |---|---|---|---|---|
-| Roles | plugin agents `safe-engine:runner`, `analyst`, `maker`, `builder`, `reviewer` from `skills/agents/` | none shipped: the brief names its role | none shipped: the brief names its role | the brief names its role |
+| Roles | plugin agents `safe-engine:runner`, `analyst`, `maker`, `builder`, `reviewer` from `skills/agents/`; when they are missing (plugin off or older), a general-purpose agent with the tier's `model` and `effort` per call | none shipped: the brief names its role | none shipped: the brief names its role | the brief names its role |
 | Tier models, light / standard / deep | `haiku` low / `sonnet` medium / `opus` high, pinned in each agent file | unknown: no documented tier models; the spawn prompt asks for effort `low` / `medium` / `high`, and the model stays the parent's unless the owner sets one | unknown: no documented tier models; a subagent's `model` defaults to `inherit` | unknown: the session's model |
-| Read-only roles | `disallowedTools: Write, Edit, NotebookEdit`; the shell stays, so shell writes are barred by instruction only | by instruction only: an agent file cannot give a subagent its own read-only sandbox | `readonly: true` in an owner's agent file; otherwise by instruction | by instruction |
+| Read-only roles | a `tools` allowlist (read, search, shell, web) without write tools; a missing tool name is dropped. The shell stays, so shell writes are barred by instruction only. No role gets `Agent`: only the coordinator spawns | by instruction only: an agent file cannot give a subagent its own read-only sandbox | `readonly: true` in an owner's agent file; otherwise by instruction | by instruction |
 | Session ceiling | a role above the session's tier: the coordinator passes the Agent tool's `model` with the session's alias | the parent's model, unless the owner sets one | same | not applicable |
 | Owner override | ask in chat: the coordinator passes `model` and `effort` per Agent call, which beat the agent file (per-call effort: v2.1.292 or later); for every delegate, `CLAUDE_CODE_SUBAGENT_MODEL` with `CLAUDE_CODE_SUBAGENT_MODEL_FORCE=1`; `CLAUDE_CODE_EFFORT_LEVEL` beats agent and per-call effort, and sets the session's too | an agent file in `~/.codex/agents/` or `.codex/agents/` named for the role, with `model` and `model_reasoning_effort`: it beats what a spawn asks. `agents.default_subagent_model` and `agents.default_subagent_reasoning_effort` in `config.toml` are only defaults below a spawn's ask | an agent file in `.cursor/agents/` (beats `~/.cursor/agents/`) named for the role, with `model: <id>[effort=<level>]`; plan, admin and Max Mode limits may still fall back | the host's own means |
-| Models used | `/tasks` names each subagent's model and effort; `claude -p --output-format json` (or `stream-json`) ends with `modelUsage` per model, and each subagent's transcript records its `model` and `effort` | unknown | unknown | unknown |
+| Models used | `/tasks` names each subagent's model and effort; `claude -p --output-format json` (or `stream-json`) ends with `modelUsage` per model, and each subagent's transcript records its `model` and `effort` | unknown | the subagent task card and the usage dashboard name the model that ran | unknown |
 
 Safe review's reviewer CLI (`review --agent`) passes no model or effort: it runs on that CLI's own defaults, the owner's settings. Sources: Claude Code [subagents](https://code.claude.com/docs/en/sub-agents), [plugin components](https://code.claude.com/docs/en/plugins/components), [CLI reference](https://code.claude.com/docs/en/cli-reference) · Codex [subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents), [config reference](https://learn.chatgpt.com/docs/config-file/config-reference) · Cursor [subagents](https://cursor.com/docs/context/subagents).
 

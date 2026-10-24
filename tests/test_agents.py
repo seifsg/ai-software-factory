@@ -61,14 +61,16 @@ class AgentTests(unittest.TestCase):
                 self.assertIn(fields["effort"], EFFORTS)
                 self.assertEqual((fields["model"], fields["effort"]), tiers[tier])
 
-    def test_read_only_roles_have_no_write_tools(self):
+    def test_read_only_roles_have_no_write_tools_and_no_role_spawns(self):
         for role, (_, edits, _) in roles().items():
             with self.subTest(role=role):
                 fields, _ = frontmatter(AGENTS / f"{role}.md")
                 allowed = set(re.split(r",\s*", fields["tools"])) if "tools" in fields else None
                 denied = set(re.split(r",\s*", fields.get("disallowedTools", "")))
-                blocked = WRITES <= denied or (allowed is not None and not allowed & WRITES)
-                self.assertEqual(blocked, not edits)
+                if edits:  # writers keep every tool but Agent: only the coordinator spawns
+                    self.assertEqual((allowed, denied), (None, {"Agent"}))
+                else:  # an allowlist, so inherited write-capable and MCP tools stay out too
+                    self.assertTrue(allowed and not allowed & (WRITES | {"Agent"}))
         self.assertFalse(roles()["reviewer"][1])
 
     def test_handbacks_follow_the_method(self):
@@ -84,9 +86,14 @@ class AgentTests(unittest.TestCase):
         required = set(json.loads((ROOT / "safe_engine/bundle-inputs.json").read_text(encoding="utf-8"))["required_files"])
         names = {f"skills/agents/{role}.md" for role in roles()} | {METHOD.relative_to(ROOT).as_posix()}
         self.assertLessEqual(names, required)
+        market = json.loads((ROOT / ".claude-plugin/marketplace.json").read_text(encoding="utf-8"))
+        self.assertEqual([p["source"] for p in market["plugins"]], ["./skills"])  # the root that holds agents/
+        plugin = json.loads((ROOT / "skills/.claude-plugin/plugin.json").read_text(encoding="utf-8"))
+        self.assertNotIn("agents", plugin)  # an agents key would replace the agents/ scan
 
     def test_methods_name_tiers_and_roles_never_models(self):
-        model = re.compile(r"\b(?:haiku|sonnet|opus|fable|gpt-[\w.-]+|claude-[\w.-]+)\b", re.I)
+        model = re.compile(r"\b(?:haiku|sonnet|opus|fable|composer|gpt-\d[\w.-]*|gemini-\d[\w.-]*"
+                           r"|claude-(?:haiku|sonnet|opus|fable)[\w.-]*)\b", re.I)
         for path in (ROOT / ".agents/skills").rglob("*.md"):
             with self.subTest(file=path.relative_to(ROOT).as_posix()):
                 self.assertIsNone(model.search(path.read_text(encoding="utf-8")))
