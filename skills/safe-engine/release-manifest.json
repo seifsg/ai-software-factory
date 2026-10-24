@@ -38,9 +38,9 @@
   ".gitignore": "01a3125981b2633d3298c27bcd551e5b6cbcdb14bc36bb279f388f01932b19f3",
   "AGENTS.md": "df7157cdba732f8bd11c5a1fa161ef03120b25292bbf2c54ca0479fcf9da9def",
   "CHANGELOG.md": "c80ce8d6cc91c72bac066a9e7fb215749d7fe9bb5d9faaeda515fad8155e9561",
-  "README.md": "6dc01f6459cbbc8b46080b8fcabcdbf725afb13780f064c6c0cf7d2783023eb5",
+  "README.md": "27be3a1928668eb6e9e14f10996b3ecd966c7e5d15af3934c3101efa6c629095",
   "UPGRADING.md": "d466274cbaf4fed4fb5690c6e26502dd365500815b73c14d0039e8037d3b3c19",
-  "docs/hosts.md": "a58638cd5111f1a461f7f599e25386df3741934c988ea22beb4618d1eab80555",
+  "docs/hosts.md": "8113b215b010f9b8bcffbc86b2e601925bafd7a6c1da77167207b2f66f71875c",
   "docs/install.md": "293483d790745ae0a7ba7be90aaa4a0fc965c3fd62f2968ebfdddb3a637b1c78",
   "docs/releasing.md": "066187c2d310e7c3e911a5f21dd0b0d8f57ed6982c4f20c5c26f9bb264783506",
   "evals/README.md": "70340cf126abc35c6f5a8e7f02caee819cbf96fcc9f15cd7e042100292cda45c",
@@ -112,7 +112,7 @@
   "skills/safe-engine/scripts/fast_rules.py": "edb407cf92108d8bdade7ae12cdd0e31618bfcbf269a4024281c1eca86c0a20d",
   "skills/safe-engine/scripts/fast_setup.py": "97f570babb966bf0acd7bb925836fa2b78e25cc18d2ebbaaa977dea4487446df",
   "skills/safe-engine/scripts/fast_shell.py": "bc4a138e6645a5d731c3c2ed3c4bbcb1bcccc25497ada929f80f8c41b90f2b57",
-  "skills/safe-engine/scripts/fast_update.py": "6dfd66152dd69e8e8cc6c74416704e7adb511bdd6604357324c46ccadbf95c47",
+  "skills/safe-engine/scripts/fast_update.py": "b9ca1bc61dffc84d674e2ef76f58a2d54bd80b9a79a1beb498896e70bf4f9c98",
   "skills/safe-engine/scripts/fast_view.py": "3427352cdaaba5aed649f951b9734e2ba2a6b9a7b93200aa278b5196cd2942f6",
   "skills/safe-engine/scripts/resolve_bundle.py": "a4df56a0469b17a41094c538045043372411b885609119bbfc1f4e034cc245f5",
   "skills/safe-engine/scripts/run-gate.sh": "714d76bfa56fd25e38c4859f7de1668ad4434455443217ba0caf6e562276a148",
@@ -153,6 +153,6 @@
   "tests/test_workflow.py": "64f30dbde3f643f2272e408aa19c3d4d58e7d5e8e0b318a26a736e11eb6b1428",
   "tests/ticket_fixtures.py": "94810e6176c09d3dec6f2abf5d5f48e4a1ceb9d620410ccf265d953689f30ecd"
  },
- "tree": "b268f19aa3b43a9d4f94a664d8d986b2d93a9e2daa06143069a8bdcac1f37f07",
+ "tree": "8b66316eed40f2f77d65423b56663db5e19e685a3accffe57fa63ac73664d296",
  "version": "1.0.0"
 }

@@ -3,11 +3,11 @@
 The session-start hook runs it (`run-gate.sh <host> update`) before the gate loads. At most once a day it moves the
 factory clone that `install` recorded to its channel's newest revision: on stable (the default) the newest release
 tag on main whose files match its manifest, on edge (or stable before the first release) main, fast-forwarded. Only a
-clean clone of the factory repository, on main or detached at a release tag, and read by no open run, moves. It
-records the previous revision, reruns the clone's own installer for each recorded install, restores the previous
-revision when an install fails, and leaves a one-time notice for the gate. Fails open: any problem is logged and the
-session goes on. Off with SAFE_ENGINE_NO_UPDATE=1 or `install --no-auto-update`. Pinned project bundles are never
-touched.
+clean clone of the factory repository, on main or detached at a release tag or at the commit it last installed (where
+a rollback leaves it), and read by no open run, moves. It records the previous revision, reruns the clone's own
+installer for each recorded install, restores the previous revision when an install fails, and leaves a one-time
+notice for the gate. Fails open: any problem is logged and the session goes on. Off with SAFE_ENGINE_NO_UPDATE=1 or
+`install --no-auto-update` (the way to keep a hand-picked commit). Pinned project bundles are never touched.
 """
 import json
 import os
@@ -69,7 +69,7 @@ def update(record):
     ref, head = git(clone, "rev-parse", "--abbrev-ref", "HEAD"), git(clone, "rev-parse", "HEAD")
     owned = (*dict(release.releases(git(clone, "for-each-ref", TAGS, "refs/tags"))).values(), record.get("revision"))
     if ref != "main" and (ref != "HEAD" or head not in owned):  # a release tag, or the install (or rollback) itself
-        return "skipped: clone not on main or a release tag"  # a commit you checked out yourself stays put
+        return "skipped: clone not on main or a release tag"  # any other checked-out commit stays put
     if git(clone, "status", "--porcelain"):
         return "skipped: clone has local changes"
     git(clone, "fetch", "--tags", "origin", timeout=20)  # a moved tag fails here (git names it): tags never move
