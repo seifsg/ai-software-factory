@@ -22,6 +22,7 @@ RECORD = """# cockpit
 **Backlog:** searched "cockpit": nothing open
 ## Plan
 **Success:** the gauges move.
+**Ports:** none (no server)
 ### Todos
 - T1 App shell → open /cockpit and see it
 - T2 Gauges </script><!--<script>alert(1)</script> → watch three gauges move

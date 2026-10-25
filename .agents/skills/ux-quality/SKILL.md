@@ -43,7 +43,7 @@ Uncertain interaction, layout, icon, image or sound? Research before choosing.
 
 ## 3. Apply the quality rules
 
-Every audit gives each ID a verdict. U1 to U5 state the goal; their checks live in `references/basics.md`.
+Every audit gives each ID a verdict. U1 to U5 state the goal; their checks live in `references/basics.md`. Builders get these IDs and the project's own UX rule files in their brief before building, so the audit confirms instead of discovering.
 
 | ID | Area | Require |
 |---|---|---|
