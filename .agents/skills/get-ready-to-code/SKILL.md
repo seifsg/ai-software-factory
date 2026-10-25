@@ -56,7 +56,7 @@ To do steps:
 - Each to do is a checklist item in its ticket. Automated test suites still come last.
 - Each to do reads as an outcome the owner understands: what it is → what they can do once it is done, then its ticket and criteria. Example: `T4 Download button → click it and the PDF saves (#12, A2)`. Not `T4 add store_true option`.
 - The plan groups independent to dos into waves by files and dependencies. Each wave runs at once, as many as capacity allows; each to do is ticked after its own check.
-- Each to do names its model tier: light (search, inventory, mechanical edits), standard (planned implementation, one-lens reviews, research, walkthroughs) or deep (architecture, schema, security, unclear bugs, synthesis, final review).
+- Each to do names its model tier, the lowest that can pass its checks: light (commands with a pass/fail, search, inventory, comparison; no edits), standard (planned or mechanical edits, research, one-lens reviews, walkthroughs) or deep (design calls: architecture, schema, security, unclear bugs; final review). Its delegate's role follows from the tier and whether it edits.
 - A ticket is finished when every item is ticked and its definition of done is proven. Until then the loop continues.
 - A to do that depends on an unproven capability (platform API, device, third-party access) goes first as a bounded spike: one question, one stop condition. A failed spike blocks only that item; the rest continues.
 
