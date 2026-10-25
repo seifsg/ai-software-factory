@@ -118,8 +118,9 @@ def steps_line(steps, done, current, created):
     return "   ".join(part for part in parts if part)
 
 
-def card(run, steps, all_sections, now, v=None):
-    """The owner's mini dashboard: the question first when paused, the run line, then the work or the steps."""
+def card(run, steps, all_sections, now, v=None, left=False):
+    """The owner's mini dashboard: the question first when paused, the run line, then the work or the steps.
+    left: mid-build, also the steps line, so the steps still to come stay named (status output)."""
     v = v or view(run, all_sections)
     done, created = run.get("done") or {}, run.get("created")
     current = next((step for step in steps if step not in done), None)
@@ -135,7 +136,8 @@ def card(run, steps, all_sections, now, v=None):
     lines = ([f"⏸️ WAITING ON YOU: {paused.get('reason')}"] if paused else []) + [" · ".join(p for p in head if p)]
     building = current in steps[steps.index("build"):] if "build" in steps else False
     if building and v.ids and (v.now or v.later):
-        return "\n".join(lines + work_lines(v, bool(paused)))
+        tail = [steps_line(steps, done, current, created)] if left else []
+        return "\n".join(lines + work_lines(v, bool(paused)) + tail)
     if building and v.ids:
         lines.append(f"✅ all {len(v.ids)} todos built")
     return "\n".join(lines + [steps_line(steps, done, current, created)])

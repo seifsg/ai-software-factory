@@ -63,13 +63,12 @@ def hook_status(project):
                 continue
             if name not in found and ("fast_gate" in text or "run-gate" in text):
                 found.append(name)
-    return ", ".join(found) or "none detected: the gate records steps but nothing blocks; follow the order yourself"
+    return ", ".join(found) or "none detected: nothing blocks, so follow the step order yourself"
 
 
 KEY = re.compile(r"[a-z][a-z0-9-]{0,63}")  # fast_gate.py's run key rule, checked again: a state may come from a mirror
-TEXT = ("Scratch: {} (the run's throwaway data: point TMPDIR, TEMP and TMP at it for tools and name it by this literal "
-        "path in deletes; rm -r (Bash, / separators) or rd /s alone in its command pass inside it; close removes "
-        "it)")
+TEXT = ("Scratch: {} (the run's throwaway data: point TMPDIR, TEMP and TMP here; deletes inside pass by this literal "
+        "path with rm -r (Bash, / separators) or rd /s, alone in the command; close removes it)")
 
 
 def scratch_path(home, run):
