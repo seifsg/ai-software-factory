@@ -923,6 +923,8 @@ def main():
                             help="Owner only: bring in an open run from another machine or folder")
     rehome.add_argument("--from", dest="source", required=True, help="The folder the run's run.json records")
     sibling("fast_install").parser(sub)
+    orchestrate = sub.add_parser("orchestrate", help="Set up an orchestrator to start factory sessions")
+    sibling("fast_orchestrate").arguments(orchestrate)
     hook = sub.add_parser("hook", help="Answer one host hook event from stdin")
     hook.add_argument("--host", default="claude", help="claude, codex, cursor, or any other hook-capable agent")
     args = parser.parse_args()
@@ -934,7 +936,9 @@ def main():
                "adopt-pr-proof": lambda a: sibling("fast_pr_policy").adopt(a, sys.modules[__name__]),
                "pr-proof-method": lambda a: sibling("fast_pr_policy").method(HOME),
                "hook": lambda a: sys.exit(cmd_hook(a.host)),
-               "install": lambda a: sibling("fast_install").install(a.host, a.project, auto=a.auto, channel=a.channel, log=lambda line: (print(line), log("install.write", line=line))),
+               "install": lambda a: sibling("fast_install").install(a.host, a.project, auto=a.auto, channel=a.channel, codex_home=a.codex_home,
+                                                                    log=lambda line: (print(line), log("install.write", line=line))),
+               "orchestrate": lambda a: sibling("fast_orchestrate").run(a),
                "version": lambda a: sibling("fast_release").version(HOME), "verify": lambda a: sibling("fast_release").verify(a.path),
                "pause": lambda a: cmd_pause(a, a.reason), "resume": lambda a: cmd_pause(a, None)}
     actions[args.command](args)

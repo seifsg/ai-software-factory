@@ -148,6 +148,18 @@ class SelfUpdateTests(UpdateCase):
         saved = json.loads((self.gate / "install.json").read_text(encoding="utf-8"))
         self.assertEqual(saved["previous"], {"ref": "main", "revision": self.installed, "version": None})
 
+    def test_an_orchestrator_codex_home_is_recorded_and_replayed(self):
+        installer, home = module("fast_install"), self.root / "home"
+        (self.gate / "install.json").unlink()
+        installer.install("codex", home=home, log=lambda line: None, codex_home=self.root / "agent-home")
+        record = json.loads((self.gate / "install.json").read_text(encoding="utf-8"))
+        self.assertEqual(record["installs"], [{"host": "codex", "project": None,
+                                               "codex_home": str((self.root / "agent-home").resolve())}])
+        self.assertTrue((self.root / "agent-home" / "hooks.json").exists())
+        self.assertFalse((home / ".codex" / "hooks.json").exists())  # the user's own Codex home is left alone
+        self.updater.update({**self.record, "installs": record["installs"]})
+        self.assertEqual(self.calls(), [f"install --host codex --codex-home {(self.root / 'agent-home').resolve()}"])
+
     def test_a_dirty_clone_another_branch_or_commit_a_foreign_origin_or_a_run_bundle_is_left_alone(self):
         (self.clone / "local.txt").write_text("mine\n", encoding="utf-8")
         self.assertEqual(self.updater.update(self.record), "skipped: clone has local changes")

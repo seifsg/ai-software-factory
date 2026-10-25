@@ -1,11 +1,12 @@
 """Per-host installer: put the factory's entry skills where the host finds them and wire the Fast gate hooks.
 
-fast_gate.py install --host claude|codex|cursor|other [--project DIR] [--no-auto-update] [--channel stable|edge]
+fast_gate.py install --host claude|codex|cursor|other [--project DIR] [--codex-home DIR] [--no-auto-update] [--channel stable|edge]
 - claude: declares this repository's marketplace and enables the safe-engine plugin in ~/.claude/settings.json;
   the plugin carries the skills and hooks and follows release tags.
 - codex, cursor: copies skills/safe-engine and skills/improve-factory into ~/.agents/skills (the Agent Skills
   folder both read; <DIR>/.agents/skills with --project), then merges the gate hooks into ~/.codex/hooks.json or
-  ~/.cursor/hooks.json (<DIR>/.codex, <DIR>/.cursor). Re-running replaces only the factory's own hook entries.
+  ~/.cursor/hooks.json (<DIR>/.codex, <DIR>/.cursor). --codex-home writes the Codex hooks into that CODEX_HOME
+  instead (an orchestrator's per-agent home). Re-running replaces only the factory's own hook entries.
 - other: the skills only, for agents wired by hand (docs/hosts.md).
 Every host records the machine's update channel in the gate home (stable: release tags; edge: main), which new
 projects and the self-update follow. Installed from a Git clone, codex, cursor and other also record the clone: their
@@ -37,9 +38,10 @@ def parser(sub):
                          help="No daily self-update at session start (also SAFE_ENGINE_NO_UPDATE=1)")
     install.add_argument("--channel", choices=CHANNELS, help="stable: the newest verified release (default); edge: "
                                                              "main. Kept for this machine until changed")
+    install.add_argument("--codex-home", help="Codex: write the gate hooks into this CODEX_HOME")
 
 
-def install(host, project=None, home=None, log=print, auto=True, channel=None):
+def install(host, project=None, home=None, log=print, auto=True, channel=None, codex_home=None):
     """Install for one host; returns the files written. auto=False turns the daily self-update off; channel None
     keeps the recorded channel (stable when none)."""
     home = Path(home or Path.home())
@@ -51,12 +53,13 @@ def install(host, project=None, home=None, log=print, auto=True, channel=None):
         written = [skills / name for name in ENTRIES]
         gate = skills / "safe-engine" / "scripts"
         if host == "codex":
-            written.append(merge_codex(base / ".codex" / "hooks.json", gate, auto))
+            hooks = Path(codex_home).resolve() if codex_home else base / ".codex"
+            written.append(merge_codex(hooks / "hooks.json", gate, auto))
         elif host == "cursor":
             written.append(merge_cursor(base / ".cursor" / "hooks.json", gate, auto))
     else:
         raise SystemExit(f"Unknown host '{host}': claude, codex, cursor or other (docs/hosts.md)")
-    written.append(remember(host, project, home, auto, channel))
+    written.append(remember(host, project, home, auto, channel, codex_home))
     for path in filter(None, written):
         log(f"wrote {path}")
     return written
@@ -100,7 +103,7 @@ def copy_entries(target):
     return target
 
 
-def remember(host, project, home, auto, channel=None):
+def remember(host, project, home, auto, channel=None, codex_home=None):
     """Record the machine's update channel and, for a host the clone updates, this install's clone, revision and
     targets for the session-start self-update. A copy that is no Git clone, or is a pinned project bundle, records
     only the channel and never updates. Other fields (the updater's previous revision) are kept."""
@@ -115,7 +118,8 @@ def remember(host, project, home, auto, channel=None):
                                       timeout=15, check=True, stdin=subprocess.DEVNULL).stdout.strip()
         except (OSError, subprocess.SubprocessError):  # no git here: the first daily check reinstalls
             revision = None
-        item = {"host": host, "project": str(Path(project).resolve()) if project else None}
+        item = {"host": host, "project": str(Path(project).resolve()) if project else None,
+                **({"codex_home": str(Path(codex_home).resolve())} if codex_home else {})}
         installs = [old for old in record.get("installs", []) if old != item] + [item]
         sys.path.insert(0, str(Path(__file__).resolve().parent))
         from resolve_bundle import read_version  # the installed version: the self-update's way back

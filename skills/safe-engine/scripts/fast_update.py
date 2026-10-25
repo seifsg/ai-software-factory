@@ -147,7 +147,8 @@ def reinstall(clone, record):
     gate = clone / "skills" / "safe-engine" / "scripts" / "fast_gate.py"
     for item in record["installs"]:
         subprocess.run([sys.executable, str(gate), "install", "--host", item["host"],
-                        *(["--project", item["project"]] if item.get("project") else [])],
+                        *(["--project", item["project"]] if item.get("project") else []),
+                        *(["--codex-home", item["codex_home"]] if item.get("codex_home") else [])],
                        capture_output=True, text=True, timeout=30, check=True, stdin=subprocess.DEVNULL)
 
 

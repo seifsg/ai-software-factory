@@ -106,8 +106,9 @@ The owner sees where the run is without asking: one short line per event, never 
 - Before a wave or slow work (subagents, research, test suites, builds): one line, who does what; one result line when it returns.
 - Waiting on the owner: the question first, then the options.
 - Asked for status: the `fast_gate.py status` card; in Safe, the same card from the controller's `status`.
-- Your agent has a task list: mirror the steps and todos once per wave, in a message with other tool calls.
+- Mirror steps and todos in your agent's task list once per wave, alongside other tool calls.
 - The final report carries the `close` card. The owner's call for more or fewer updates binds the run.
+- Orchestrator-started: no one watches the chat; follow the [orchestrated run](references/orchestrated-run.md).
 
 ## Decide
 
@@ -118,7 +119,7 @@ The owner sees where the run is without asking: one short line per event, never 
 
 ## Authority and stops
 
-1. Continue to the agreed outcome. Defer only what needs the owner's hands or missing hardware, and finish everything else. CI the owner turned off is never waited on; local checks are the gate. Pause dependent work only for: missing access or tools after real discovery, owner-reserved decisions, a required gate you cannot repair, an explicit owner stop. Keep independent work moving.
+1. Continue to the agreed outcome. Defer only what needs the owner's hands or missing hardware, and finish everything else. Pause dependent work only for: missing access or tools after real discovery, owner-reserved decisions, a required gate you cannot repair, an explicit owner stop. Keep independent work moving.
 2. Discover before asking: files, config, run records, integrations, current docs.
 3. Never invent identities, commands, access, status or evidence.
 4. Retry only with a diagnosed cause or new evidence. Second related failure: find the shared cause and why the last fix failed, fix the cause and its consumers, state what prevents recurrence.
