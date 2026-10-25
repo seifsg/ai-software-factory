@@ -11,7 +11,7 @@ First-class hosts get an installer route, gate hooks and a Safe reviewer preset.
 | Skills | `safe-engine` plugin (skills + hooks) | `~/.agents/skills/` | `~/.agents/skills/` |
 | Rules file | `AGENTS.md` (read when no `CLAUDE.md` exists; otherwise import it with `@AGENTS.md`) | `AGENTS.md` | `AGENTS.md` |
 | Install | `fast_gate.py install --host claude` or [by hand](#claude-code) | `fast_gate.py install --host codex`, then trust it in `/hooks` | `fast_gate.py install --host cursor` |
-| Updates | marketplace `autoUpdate` | session-start hook, once a day ([updates](#updates)) | same |
+| Updates | marketplace `autoUpdate`, pinned to the release tag ([updates](#updates)) | session-start hook, once a day, to the newest verified release ([updates](#updates)) | same |
 | Invoke (same form for `improve-factory`) | `/safe-engine Build ...` | `$safe-engine Build ...` | `use safe-engine to build ...` |
 | Question tool | `AskUserQuestion` (4 questions, 4 options each) | chat message | chat message |
 | Gate progress messages | hook `systemMessage`, shown to the user | hook `systemMessage`, shown as a warning | not shown: the agent relays the gate's card |
@@ -21,7 +21,7 @@ First-class hosts get an installer route, gate hooks and a Safe reviewer preset.
 | Task list | `TaskCreate` / `TaskUpdate` when the session has them (on by default only for older models; `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` opts in) | the plan view, when the session has its plan tool | none documented: chat lines only |
 | Gate hooks | plugin: `PreToolUse`, `Stop`, `UserPromptSubmit`, `SessionStart` | `~/.codex/hooks.json`: same events and JSON as Claude Code | `~/.cursor/hooks.json`: `preToolUse`, `stop` (a follow-up only when `status` is `completed`), `sessionStart` |
 | Safe reviewer | `review --agent claude`: `claude -p`, Read/Grep/Glob only, `--json-schema` | `review --agent codex`: `codex exec --sandbox read-only --output-schema` | `review --agent cursor`: `agent -p --mode ask` |
-| Model tiers (light / standard / deep) | `haiku` / `sonnet` / `opus` | host models | host models |
+| Delegate roles and tiers | plugin agents `safe-engine:<role>` ([delegation](#delegation)) | the brief names the role ([delegation](#delegation)) | same |
 
 Python runs as `python`, `python3` or `py -3` (Windows). Claude Code hooks need a POSIX `sh` (Git Bash on Windows): the plugin sources `run-gate.sh` in the shell Claude Code already starts for a hook, so a call with no factory run starts no other process. The Codex and Cursor Windows command checks for an active run in Python before loading the gate. Ticket checks use the GitHub CLI `gh` when the tracker is GitHub.
 
@@ -33,7 +33,7 @@ Safe review picks an installed reviewer that did not build the candidate: `revie
 
 ## Claude Code
 
-The plugin brings `/safe-engine`, `/improve-factory` and the gate hooks. Its root is the repository's `skills/` folder. Pick one route:
+The plugin brings `/safe-engine`, `/improve-factory`, the gate hooks and the delegate role agents ([delegation](#delegation)). Its root is the repository's `skills/` folder. Pick one route:
 
 - **Installer:** `python fast_gate.py install --host claude` adds the marketplace over HTTPS with auto-update and enables the plugin in `~/.claude/settings.json`, keeping a backup.
 - **Settings by hand** (desktop app): add these keys to `~/.claude/settings.json`, then start a new session:
@@ -44,6 +44,21 @@ The plugin brings `/safe-engine`, `/improve-factory` and the gate hooks. Its roo
   ```
 
 - **Terminal:** `claude plugin marketplace add https://github.com/seifsg/ai-software-factory.git`, then `claude plugin install safe-engine@ai-software-factory`. Use the HTTPS URL; the `owner/repo` shorthand tries SSH first.
+
+## Delegation
+
+The roles (runner, analyst, maker, builder, reviewer), their tiers and the brief, gate and handback rules live in `.agents/skills/safe-engine/references/delegate.md`. Hosts differ only in how a role gets its model, effort and edit limits, and how the owner overrides them. The owner's own session model and effort never change.
+
+| | Claude Code | Codex | Cursor | Other agents |
+|---|---|---|---|---|
+| Roles | plugin agents `safe-engine:runner`, `analyst`, `maker`, `builder`, `reviewer` from `skills/agents/`; when they are missing (plugin off or older), a general-purpose agent with the tier's `model` and `effort` per call, told in its brief to stay read-only (read-only roles) and never to spawn | none shipped: the brief names its role | none shipped: the brief names its role | the brief names its role |
+| Tier models, light / standard / deep | `haiku` low / `sonnet` medium / `opus` high, pinned in each agent file | unknown: no documented tier models; the spawn prompt asks for effort `low` / `medium` / `high`, and the model stays the parent's unless the owner sets one | unknown: no documented tier models; a subagent's `model` defaults to `inherit` | unknown: the session's model |
+| Read-only roles | a `tools` allowlist (read, search, shell, web) without write tools (a name the host lacks, such as `PowerShell` off Windows, was dropped on 2.1.308: observed, undocumented). The shell stays, so shell writes are barred by instruction only. No role gets `Agent`: only the coordinator spawns | by instruction only: an agent file cannot give a subagent its own read-only sandbox | `readonly: true` in an owner's agent file; otherwise by instruction | by instruction |
+| Session ceiling | a role above the session's tier: the coordinator passes the Agent tool's `model` with the session's alias | the parent's model, unless the owner sets one | same | not applicable |
+| Owner override | ask in chat: the coordinator passes `model` and `effort` per Agent call, which beat the agent file (per-call effort: v2.1.292 or later); for every delegate, `CLAUDE_CODE_SUBAGENT_MODEL` with `CLAUDE_CODE_SUBAGENT_MODEL_FORCE=1`; `CLAUDE_CODE_EFFORT_LEVEL` beats agent and per-call effort, and sets the session's too | an agent file in `~/.codex/agents/` or `.codex/agents/` named for the role, with `model` and `model_reasoning_effort`: it beats what a spawn asks. `agents.default_subagent_model` and `agents.default_subagent_reasoning_effort` in `config.toml` are only defaults below a spawn's ask | an agent file in `.cursor/agents/` (beats `~/.cursor/agents/`) named for the role, with `model: <id>[effort=<level>]`; plan, admin and Max Mode limits may still fall back | the host's own means |
+| Models used | `/tasks` names each subagent's model and effort; `claude -p --output-format json` (or `stream-json`) ends with `modelUsage` per model, and each subagent's transcript records its `model` and `effort` (observed on 2.1.308, undocumented) | unknown | the subagent task card and the usage dashboard name the model that ran | unknown |
+
+Safe review's reviewer CLI (`review --agent`) passes no model or effort: it runs on that CLI's own defaults, the owner's settings. Sources: Claude Code [subagents](https://code.claude.com/docs/en/sub-agents), [plugin components](https://code.claude.com/docs/en/plugins/components), [CLI reference](https://code.claude.com/docs/en/cli-reference) · Codex [subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents), [config reference](https://learn.chatgpt.com/docs/config-file/config-reference) · Cursor [subagents](https://cursor.com/docs/context/subagents).
 
 ## Other agents
 
@@ -60,15 +75,19 @@ Their hooks show no gate progress messages: the agent relays the card from the g
 
 ## Updates
 
-Claude Code updates through its marketplace. Every other install made from a Git clone records the clone, its revision and each `--host`/`--project` pair in `~/.safe-engine/install.json`. A copy that is no Git clone, or a pinned project bundle under `~/.safe-engine/bundles/`, records nothing and never updates.
+Every install records this machine's channel in `~/.safe-engine/install.json` (`install --channel stable|edge`, kept until changed; stable by default). New projects follow it: the launcher's resolver pins the newest release tag on `main` whose files match its manifest, or `main` on edge and while no release exists.
 
-The session-start hook entry carries an `update` argument (`run-gate.sh <host> update`; the Windows command likewise). Before the gate loads, it runs `fast_update.py`, which at most once a day:
+**Claude Code** updates through its marketplace. The marketplace entry is a `git-subdir` source pinned to the release tag (`ref: vX.Y.Z`) and the plugin manifest carries the same `version`, so Claude Code fetches exactly that tag and keeps its cached copy until a release changes the version; a tag not yet pushed leaves the installed copy in place. Claude Code has no channels: the edge channel changes what new projects pin; to run the gate and launchers of `main`, disable the plugin (`claude plugin disable safe-engine@ai-software-factory`) and start Claude Code with `--plugin-dir <clone>/skills`.
 
-1. leaves the clone alone unless it is on `main` with no local changes;
-2. fetches, then fast-forwards to its upstream (`git merge --ff-only`);
-3. when the revision moved, reruns that clone's `fast_gate.py install` for each recorded install, which rewrites the launchers, hook entries and record.
+**Codex, Cursor and other**, installed from a Git clone, also record the clone, its revision and each `--host`/`--project` pair. A copy that is no Git clone, or a pinned project bundle under `~/.safe-engine/bundles/`, never updates. The session-start hook entry carries an `update` argument (`run-gate.sh <host> update`; the Windows command likewise). Before the gate loads, it runs `fast_update.py`, which at most once a day:
 
-Offline, a diverged `main`, a missing Git or any other error changes nothing; the session goes on and `~/.safe-engine/logs/gate.log` gets an `update` line with the result. Projects keep their pinned bundle. Off: `SAFE_ENGINE_NO_UPDATE=1`, or `install --no-auto-update` (the last install decides); either way no extra process starts. Other hook entries are unchanged; a recorded install's session start starts one more Python (about 0.2 s on Windows). Agents with no session-start hook update by hand ([README](../README.md#-update)).
+1. leaves the clone alone unless its origin is the factory repository, it has no local changes, it is on `main` or detached at a release tag or at the commit it last installed (where a rollback leaves it), and no open Fast or Lucky run in this gate home uses it as its bundle (a Safe run is not detected: pin Safe projects to a release bundle, the default, or another checkout). To keep a hand-picked commit, install from it with `--no-auto-update`;
+2. fetches `main` and tags; a tag that moved on the remote fails the fetch, so nothing changes;
+3. stable: checks out the newest `vX.Y.Z` tag whose commit is on `main` and passes the release check (version equal to the tag, every file matching the release manifest), trying older tags when one fails; edge, or stable before the first release: fast-forwards `main`;
+4. when the revision differs from the last completed install, records the previous ref, revision and version in `install.json`, then reruns the clone's `fast_gate.py install` for each recorded install (it replaces each copy exactly);
+5. an install that fails restores the previous revision and reruns its installer.
+
+The gate's next `start`, `status` or `version` shows a one-time notice: the old and new version with pointers to `CHANGELOG.md` and `UPGRADING.md`, or the rollback. Offline, a diverged `main`, no verifying release, a missing Git or any other error changes nothing; the session goes on and `~/.safe-engine/logs/gate.log` gets an `update` line with the result. Projects keep their pinned bundle. Off: `SAFE_ENGINE_NO_UPDATE=1`, or `install --no-auto-update` (the last install decides); either way no extra process starts. Other hook entries are unchanged; a recorded install's session start starts one more Python (about 0.2 s on Windows). Agents with no session-start hook update by hand ([README](../README.md#-update)).
 
 ## Evals
 

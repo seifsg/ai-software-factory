@@ -69,6 +69,8 @@ class DashboardTests(unittest.TestCase):
             "🔨 NOW  Download button",
             "     → click it and the PDF saves",
             "⏭️ NEXT Download counter"])
+        status = cards.card(self.run, STEPS, self.sections, self.at, left=True).splitlines()  # status names what is left
+        self.assertEqual(status[-1], "✅ tickets · plan   🔨 build   ⬜ done-run · handoff")
 
     def test_paused_card_asks_first_and_holds_the_work(self):
         lines = cards.card({**self.run, "paused": {"reason": "PDF or ZIP?"}}, STEPS, self.sections, self.at).splitlines()
@@ -189,8 +191,10 @@ class ProgressHookTests(unittest.TestCase):
     def test_commands_print_the_card_first_and_keep_the_plain_status(self):
         status = self.gate("status")
         self.assertTrue(status.startswith("🏭 copy-fix · 🎫 tickets · step 1/5"), status)
-        self.assertIn("[ ] tickets", status)
+        self.assertIn("🎫 tickets · step 1/", status)
         self.assertIn("Next: tickets", status)
+        self.plan()  # mid-build the card shows todos; status still names the steps left
+        self.assertIn("🔨 build   ⬜ done-run · handoff", self.gate("status"))
 
     def test_each_change_is_shown_once(self):
         self.assertIn("step 1/5", self.hook()["systemMessage"])

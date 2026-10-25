@@ -657,7 +657,7 @@ def ui_files(run, project):
 def ui_listings(run, project):
     """UI paths under the project, one git call at a time: tracked files changed since the start commit (every tracked
     file when that commit is unknown or unreadable), then untracked files."""
-    base = run.get("base")
+    base = (run.get("baseline_recovery") or {}).get("base", run.get("base"))
     diff = git(project, "diff", "--name-only", "--relative", base) if isinstance(base, str) and HEX.fullmatch(base) else None
     tracked = diff if diff is not None else git(project, "ls-files")
     if tracked is None:

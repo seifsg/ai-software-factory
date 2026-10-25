@@ -20,7 +20,7 @@ LEDGER = re.compile(r"run\.json", re.I)  # the run's ledger: deleting it, even w
 WILDCARD = re.compile(r"[*?[]")  # a pattern target may reach a protected path whatever its flags
 MOVERS = {"mv", "move", "move-item", "mi", "ren", "rename", "rename-item", "rni"}
 MOVE = re.compile(word("|".join(MOVERS)), re.I)
-# never a shell move: their inline code is another language, whose "move" or 'mv' text is data (fast-run.md limits)
+# never a shell move: their inline code is another language, whose "move" or 'mv' text is data (gate-details.md#destructive-guard)
 INTERPRETER = re.compile(r"py|python[\d.]*|pypy[\d.]*|node|nodejs|deno|bun|ruby|perl|php|lua")
 PROTECTED_HINT = re.compile(r"\.git(?![\w-])|\.fact|run\.json|(?<![\w.-])fast(?![\w.-])", re.I)
 PATH_TESTS = {"-path", "-ipath", "-wholename", "-iwholename", "-regex", "-iregex"}

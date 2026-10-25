@@ -113,9 +113,8 @@ def notice(home, run, strict=False):
     """Prompt hooks only read one small receipt; source hashing belongs to commands."""
     try:
         policy = selected(home, run, verify=strict)
-        return (f"PR proof: read {policy['method']}; Visual/Journey declarations and required media apply. "
-                f"Use {Path(__file__).with_name('fast_gate.py')} for handoff; "
-                "the other bundle rules and pause remain unchanged.") if policy else ""
+        return (f"PR proof: read {policy['method']}; Visual/Journey declarations and required media apply; "
+                f"hand off with {Path(__file__).with_name('fast_gate.py')}; other bundle rules and pause stay.") if policy else ""
     except (OSError, ValueError, TypeError) as error:
         if strict:
             failure(error)

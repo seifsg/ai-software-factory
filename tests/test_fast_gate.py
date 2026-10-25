@@ -661,8 +661,8 @@ class FastGateTests(GateHarness, unittest.TestCase):
         self.gate("start", "--key", "copy-fix", "--kind", "change", "--request", "fix the footer copy")
         out = self.hook({"hook_event_name": "PreToolUse", "tool_name": "Bash", "tool_input": {"command": "rm -rf ~"}})
         reason = out["hookSpecificOutput"]["permissionDecisionReason"]  # gate closed: owner advice, not steps
-        self.assertIn("recursive delete outside the project (~). Destructive commands are the owner's", reason)
-        self.assertNotIn("Record these steps", reason)
+        self.assertIn("recursive delete outside the project (~). Ask the owner to run it", reason)
+        self.assertNotIn("Record first", reason)
         self.assertEqual(self.pre("Bash", command="git push"), "allow")
         crafted = "echo \x007\x00; " + "eval " * 1200 + "ls"  # stray placeholder, deep nesting: denied, no hook.error
         self.assertEqual(self.pre("Bash", command=crafted), "deny")
