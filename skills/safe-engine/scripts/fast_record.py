@@ -13,6 +13,7 @@ if HERE not in sys.path:
     sys.path.insert(0, HERE)  # loaded by file path (tests, older gates): find the sibling module
 from fast_progress import built_ids, sections, subsection, todo_ids, without_result  # noqa: E402,F401 - shared parsers
 import fast_proof  # noqa: E402 - the PR body's Before & after check
+import fast_briefs  # noqa: E402 - Interface, Ports, UX rules and DEFERRED items
 
 URL = re.compile(r"https?://[^\s)>\]|]+")
 ISSUE = re.compile(r"https://github\.com/([\w.-]+/[\w.-]+)/issues/(\d+)")
@@ -37,8 +38,9 @@ DEFERRED = re.compile(r"\b(R\d+)\b(?:(?!\bR\d+\b)[^()\n])*\((?i:owner-deferred):
 BULLET = r"(?:(?:[-*+]|\d+[.)])[ \t]+(?:\[[ xX]\][ \t]+)?)?"  # '- ', '1. ', '- [x] ' or none
 # every '**Hidden checks:**' block, blank lines included, up to the next label (bulleted or not) or heading
 HIDDEN = re.compile(rf"\*\*Hidden checks:\*\*(.*?)(?=^[ \t]*{BULLET}\*\*[^*\n]+:\*\*|^#{{1,6}}\s|\Z)", re.M | re.S)
-# one entry, nothing guessed: '#2 A1: PASS' or '#2 A1: FAIL', an optional '(note)' only after the verdict
-ENTRY = r"#(\d+)[ \t]+([A-Z]{1,3}\d+):[ \t]*(PASS|FAIL)(?:[ \t]+\([^()\n]*\))?"
+# one entry, nothing guessed: '#2 A1: PASS', '#2 A1: FAIL' or (briefs runs) '#2 A1: DEFERRED (hardware: <why>)',
+# an optional '(note)' only after the verdict
+ENTRY = r"#(\d+)[ \t]+([A-Z]{1,3}\d+):[ \t]*((?:PASS|FAIL|DEFERRED)(?:[ \t]+\([^()\n]*\))?)"
 ENTRIES = re.compile(rf"{BULLET}{ENTRY}(?:[ \t]*,[ \t]*{ENTRY})*[ \t]*")  # one line: entries, commas
 
 
@@ -362,22 +364,24 @@ def off_layout(ticket):
         f"epic; write it as {LAYOUT}. " if ticket.get("layout") else ""
 
 
-def needs_ticks(ticket):
+def needs_ticks(ticket, deferred=False):
     """Handoff: a listed ticket is finished (every item ticked) unless Blocked, cancelled or deferred to Backlog.
-    An epic other runs finish later (`later`) owes only the items that are this run's todos ('- [ ] T75 ...')."""
+    An epic other runs finish later (`later`) owes only the items that are this run's todos ('- [ ] T75 ...');
+    on briefs runs (`deferred`) an item marked 'DEFERRED (owner|hardware: <why>)' waits for the owner, not this run."""
     if ticket["stopped"] or ticket["backlog"]:
         return None
-    marks = TASK.findall(checklist(ticket["body"]))
-    if not marks:
+    if not TASK.search(checklist(ticket["body"])):
         return needs_checklist(ticket)
     own = ticket.get("later")
-    left = marks.count(" ") if own is None else sum(
-        1 for item in TASK.finditer(checklist(ticket["body"]))
-        if item.group(1) == " " and lead_todos(item.group(0)) & own)
+    left = sum(1 for item in TASK.finditer(checklist(ticket["body"])) if item.group(1) == " "
+               and (own is None or lead_todos(item.group(0)) & own)
+               and not (deferred and fast_briefs.DEFER.search(item.group(0))))
     if not left:
         return None
     return (off_layout(ticket) + f"{left} unticked checklist item(s): finish them, mark the ticket Blocked with its reason, "
-            "or Backlog only when the owner deferred it")
+            "or Backlog only when the owner deferred it" + (
+                "; an item only the owner or their hardware can finish ends 'DEFERRED (owner|hardware: <why>)'"
+                if deferred else ""))
 
 
 def gh(*args):
@@ -406,6 +410,7 @@ def check_plan(run, body, **kwargs):
         problems += [f"T{n} needs its own line with its result: 'T{n} <title> → <what the owner can do once it is "
                      f"done> (#<ticket>, <criteria>)'" for n in without_result(kwargs["all_sections"])]
     labels = ["Success"] if light(run) else ["Logging", "Efficiency"]
+    problems += fast_briefs.plan_problems(run, body, marker, subsection, kwargs.get("runs"), light(run))
     return problems + missing_markers(body, labels) or held(run, kwargs, covered(run, needs_checklist))
 
 
@@ -535,28 +540,32 @@ def hidden(run):
     return bool(run.get("hidden_checks")) and run.get("kind") != "change"
 
 
-def verdicts(body):
-    """Hidden checks entries (issue number, criterion ID, passed) and the lines that are not entries."""
+def verdicts(body, deferred=False):
+    """Hidden checks entries (issue number, criterion ID, not failed) and the lines that are not entries; a
+    DEFERRED entry reads only on briefs runs, with its owner or hardware reason."""
     entries, unreadable = [], []
     for line in "\n".join(HIDDEN.findall(body)).splitlines():
         if not line.strip():
             continue
-        if not ENTRIES.fullmatch(line.strip()):
+        found = re.findall(ENTRY, line) if ENTRIES.fullmatch(line.strip()) else None
+        if not found or any(verdict.startswith("DEFERRED") and not (deferred and fast_briefs.DEFER.fullmatch(verdict))
+                            for _, _, verdict in found):
             unreadable.append(line.strip())
             continue
-        found = re.findall(ENTRY, line)
-        entries += [(number, cid, verdict == "PASS") for number, cid, verdict in found]
+        entries += [(number, cid, not verdict.startswith("FAIL")) for number, cid, verdict in found]
     return entries, unreadable
 
 
 def hidden_checks(body, kwargs, run):
     """Unreadable entries and any FAIL refuse; online, every in-play listed ticket's criterion, the epic's
-    included unless another run owes it (`integration`), needs its own '#<n> <ID>: PASS'; offline, >=1 entry."""
-    entries, unreadable = verdicts(body)
+    included unless another run owes it (`integration`), needs its own '#<n> <ID>: PASS' (or DEFERRED on briefs
+    runs); offline, >=1 entry."""
+    entries, unreadable = verdicts(body, run.get("briefs"))
     if unreadable:
         return [f"unreadable hidden-check entry: {line}" for line in unreadable] + [
-            "write each as '#<n> <ID>: PASS' or '#<n> <ID>: FAIL', a note only after it in parentheses; "
-            "the block ends at the next '**Label:**'"]
+            "write each as '#<n> <ID>: PASS' or '#<n> <ID>: FAIL'" + (
+                " or '#<n> <ID>: DEFERRED (owner|hardware: <why>)'" if run.get("briefs") else "") +
+            ", a note only after it in parentheses; the block ends at the next '**Label:**'"]
     failed = [f"#{number} {cid}" for number, cid, passed in entries if not passed]
     if failed:
         return [f"hidden checks FAIL ({', '.join(dict.fromkeys(failed))}): back to build, then the checker runs them again"]
@@ -648,7 +657,7 @@ def ui_files(run, project):
 def ui_listings(run, project):
     """UI paths under the project, one git call at a time: tracked files changed since the start commit (every tracked
     file when that commit is unknown or unreadable), then untracked files."""
-    base = run.get("base")
+    base = (run.get("baseline_recovery") or {}).get("base", run.get("base"))
     diff = git(project, "diff", "--name-only", "--relative", base) if isinstance(base, str) and HEX.fullmatch(base) else None
     tracked = diff if diff is not None else git(project, "ls-files")
     if tracked is None:
@@ -681,7 +690,10 @@ def digest(path):
 def check_handoff(run, body, **kwargs):
     labels = ["Run", "Statuses", "Unverified", "Follow-ups"] + (["Dev sign-in"] if run.get("auth") else []) + (
         ["PR"] if run.get("pr_proof") else [])
-    return missing_markers(body, labels) or held(run, kwargs, covered(run, needs_ticks), finish=True) + pr_proof(run, body, **kwargs)
+    checks = "\n".join(HIDDEN.findall((kwargs.get("all_sections") or {}).get("done-run") or ""))  # entries, not prose
+    problems = missing_markers(body, labels) + fast_briefs.handoff_problems(run, body, marker, checks)
+    ticks = lambda ticket: needs_ticks(ticket, deferred=bool(run.get("briefs")))  # noqa: E731 - one call site
+    return problems or held(run, kwargs, covered(run, ticks), finish=True) + pr_proof(run, body, **kwargs)
 
 
 def pr_proof(run, body, project=None, offline=None, **_):
@@ -695,7 +707,7 @@ def pr_proof(run, body, project=None, offline=None, **_):
     except (OSError, RuntimeError, subprocess.TimeoutExpired, ValueError) as error:
         return [str(error)]
     ui = bool(run.get("ui") or touched_ui(run, project))
-    found = fast_proof.problems(text, ui) + (fast_proof.credit(text) if run.get("credit") else [])
+    found = fast_proof.problems(text, ui, demo=bool(run.get("pr_demo"))) + (fast_proof.credit(text) if run.get("credit") else [])
     return [f"PR body: {problem}" for problem in found]
 
 

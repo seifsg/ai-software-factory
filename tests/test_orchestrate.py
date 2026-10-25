@@ -49,7 +49,7 @@ class OrchestrateTests(unittest.TestCase):
         (self.user / ".codex/config.toml").write_text('model = "m"\n', encoding="utf-8")
         self.project = self.temp / "product"
         subprocess.run(["git", "init", "-q", str(self.project)], check=True)
-        patch = mock.patch.dict(os.environ, {"HOME": str(self.user), "SAFE_ENGINE_HOME": str(self.temp / "gate")})
+        patch = mock.patch.dict(os.environ, {"HOME": str(self.user), "USERPROFILE": str(self.user), "SAFE_ENGINE_HOME": str(self.temp / "gate")})
         patch.start()
         self.addCleanup(patch.stop)
         self.lines = []
@@ -74,7 +74,8 @@ class OrchestrateTests(unittest.TestCase):
         self.assertNotIn("extraArgs", agent["adapterConfig"])
         hooks = json.loads((home / "hooks.json").read_text(encoding="utf-8"))["hooks"]
         self.assertIn("run-gate", hooks["PreToolUse"][0]["hooks"][0]["command"])
-        self.assertTrue((home / "auth.json").is_symlink())
+        self.assertTrue(os.path.samefile(home / "auth.json", self.user / ".codex/auth.json")  # linked, not copied
+                        or not hasattr(os, "link"))
         self.assertEqual((home / "config.toml").read_text(encoding="utf-8"), 'model = "m"\n')
         self.assertTrue((self.user / ".agents/skills/safe-engine/SKILL.md").exists())
         self.assertTrue(any("/hooks" in line for line in self.lines))

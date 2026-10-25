@@ -1,8 +1,8 @@
 """Fast/Lucky run gate: record each factory step, check it, and answer host hooks.
 
 Method: .agents/skills/safe-engine/references/fast-run.md#the-gate. Python 3.9+, stdlib only.
-Step checks live in fast_record.py (loaded by `done`, and by `start` for a UI snapshot; never by hooks);
-the owner's dashboard in fast_card.py.
+Step checks live in fast_record.py (loaded by `done`, and by `start` for a UI snapshot; never by hooks), the record
+skeleton's hints in fast_hints.py (`start` only), the owner's dashboard in fast_card.py.
 Checks prove a step was recorded, not that it was good.
 """
 import json
@@ -36,38 +36,6 @@ STEPS = (
 TITLES = {"research": "Research", "kickoff": "Kickoff", "tickets": "Tickets", "analysis": "Analysis",
           "plan": "Plan", "design": "Design", "schema": "Schema", "build": "Build log",
           "done-run": "Done-run", "handoff": "Handoff"}
-HINTS = {
-    "research": ">=3 '### <competitor>' subsections each citing a source URL, a feature matrix table, "
-                "an Opportunities line; product runs also '### Stack options' with a 3-row table",
-    "kickoff": "Features, Approach, Answered by lines; product runs also Size and Stack",
-    "tickets": "an Epic URL line, a Backlog line; product/feature runs >=1 Sub-issue URL line; "
-               "online: each listed ticket has a Definition of done",
-    "analysis": "a Success line and a fenced ASCII chart",
-    "plan": "### Files, ### Critique, ### Phases, ### Todos (T1..), ### Whole plan, Logging and Efficiency lines; "
-            "online: each listed ticket has checklist items",
-    "design": ">=4 hex colors; UI kit, Font, Logo, Icons, Layout lines; Theme line naming light mode; "
-              "Journeys line with counts and a minimum; current methods also Map, Hierarchy (naming the primary "
-              "action) and Labels lines",
-    "schema": "a 3-option table, a Chosen line, a fenced ERD or DDL",
-    "build": "one line per plan todo: 'T1 pre: ... do: ... post: ...'",
-    "done-run": ">=1 PASS line from using it, a Logs line; UI runs >=1 existing screenshot path. Current methods only: "
-                "runs that changed UI files count as UI runs, and each UI run also needs a verdict line per U1..U10 "
-                "(no open FAIL) and a UX judge line",
-    "handoff": "Run, Statuses, Unverified, Follow-ups lines; sign-in runs a Dev sign-in line; "
-               "online: each listed ticket fully ticked, or Blocked, Backlog or not planned",
-}
-COVERAGE_HINTS = {  # runs whose methods define coverage and the light lane
-    "tickets": "an Epic URL line (a change: a Ticket line, its URL or 'none (why)'), a Backlog line; product/feature "
-               "runs >=1 Sub-issue URL line and a Requested line (R1, R2, ...); online: each listed ticket is open "
-               "with a Definition of done, and its criteria name every requested item not marked owner-deferred",
-    "plan": "### Files, ### Critique, ### Phases, ### Todos ('T1 <title> → <result> (#ticket, A1)'), ### Whole plan, "
-            "Logging and Efficiency lines (light lane: a Success line and ### Todos); online: each listed ticket has checklist items naming "
-            "every criterion, they hold every plan todo, and criteria still name every requested item not "
-            "owner-deferred",
-    "handoff": "Run, Statuses, Unverified, Follow-ups lines; sign-in runs a Dev sign-in line; online: each listed "
-               "ticket fully ticked, or Blocked, Backlog or not planned; items name every criterion and hold every "
-               "plan todo; criteria name every requested item not owner-deferred",
-}
 HERE = Path(__file__).resolve().parent  # siblings: fast_record, fast_shell, fast_guard, fast_progress, fast_card
 
 
@@ -251,18 +219,16 @@ def open_run(given):
 
 
 def status_text(run, all_sections=None):
-    """The owner's run card, then the step list, gate and next step."""
+    """The owner's run card (pause reason first, and the steps still to come), then the run, gate and next step."""
     if all_sections is None:
         all_sections = sibling("fast_progress").read(record_path(run["project"]))
-    lines = [sibling("fast_card").card(run, steps_for(run), all_sections, now()), "",
-             f"{run['mode']} {run['kind']} run '{run['key']}' at {run['project']}"
-             f" (ui={run.get('ui')}, data={run.get('data')}, auth={run.get('auth')})"]
-    lines += [f"  [{'x' if step in run['done'] else ' '}] {step}" for step in steps_for(run)]
     blocked = open_before_build(run)
-    lines.append("Gate: " + ("open, source edits allowed" if not blocked else "closed until " + ", ".join(blocked)))
-    if run.get("paused"):
-        lines.append("Paused: " + run["paused"]["reason"])
-    lines.append("Next: " + ("closed" if run.get("closed") else next_step(run) or "close"))
+    lines = [sibling("fast_card").card(run, steps_for(run), all_sections, now(), left=True),
+             f"{run['mode']} {run['kind']} run '{run['key']}' at {run['project']}"
+             f" (ui={run.get('ui')}, data={run.get('data')}, auth={run.get('auth')})",
+             "Gate: " + ("open, source edits allowed" if not blocked else "closed until " + ", ".join(blocked)),
+             "Next: " + ("closed" if run.get("closed") else next_step(run) or "close")]
+    lines += list(filter(None, [sibling("fast_pr_policy").notice(HOME, run)]))
     return "\n".join(lines)
 
 
@@ -271,18 +237,7 @@ def skeleton(run):
     lines = [f"# {run['key']}: {run['mode']} {run['kind']} run", "",
              "<!-- Fill each section, then `fast_gate.py done <step>`. Markers: fast-run.md#work-record -->", "",
              "## Request", "", *quoted, ""]
-    hints = {**HINTS, **COVERAGE_HINTS} if run.get("coverage") else dict(HINTS)
-    if run.get("scans"):  # Size starts with POC, MVP, production or none (<why>); Lucky has no kickoff to hold it
-        if run["mode"] == "lucky" and run["kind"] != "change":
-            hints["tickets"] += "; Lucky product/feature runs: a Size line"
-        hints["done-run"] += "; sized MVP or production: Secrets, Dependencies, Static lines"
-    if run.get("pr_proof"):
-        hints["handoff"] += ("; a PR line naming the draft PR, whose Before & after section has one heading per outcome, "
-                             "each Before and After with an image, a recording or a fenced block")
-    if run.get("credit"):
-        hints["handoff"] += "; the PR body's last line is the factory credit line (how-to-make-a-pr credit.md)"
-    if sibling("fast_record").hidden(run):
-        hints["done-run"] += "; a Hidden checks block: '#<n> <ID>: PASS' per criterion of every listed ticket"
+    hints = sibling("fast_hints").record_hints(run)
     for step in steps_for(run):
         lines += [f"## {TITLES[step]}", "", f"<!-- gate: {hints[step]} -->", ""]
     return "\n".join(lines)
@@ -297,7 +252,7 @@ FLAGS = {"ticket_checks": (LAYOUT, "Definition of done"), "coverage": (LAYOUT, "
          "light": (FAST_RUN, "Light lane"), "outcomes": (FAST_RUN, "what the owner can do once it is done"),
          "hidden_checks": (FAST_RUN, "**Hidden checks:**"),
          "scans": (FAST_RUN, "**Secrets:**"), "ux_rules": (UX, "| U10 |"), "pr_proof": (FAST_RUN, "`**PR:**`"),
-         "credit": (PR, "references/credit.md")}
+         "credit": (PR, "references/credit.md"), "pr_demo": (PR, "**Visual:**"), "briefs": (FAST_RUN, "**Ports:**")}
 
 
 def method_flags(bundle, project):
@@ -341,7 +296,8 @@ def cmd_start(args):
     run = {"version": VERSION, "key": args.key, "project": str(project), "mode": args.mode, "kind": args.kind,
            "ui": product if args.ui is None else args.ui, "data": product if args.data is None else args.data,
            "auth": args.auth, "request": request.strip(), "created": now(), "done": {}, "paused": None,
-           "closed": False, "bundle": bundle, **method_flags(bundle, project)}
+           "closed": False, "bundle": bundle, "pr_instance": os.urandom(16).hex(), **method_flags(bundle, project)}
+    run.update(sibling("fast_pr_policy").start(HOME))
     if "analysis" not in steps_for(run):  # older hook copies still require it before build: mark it skipped
         run["done"]["analysis"] = {"at": now(), "skipped": "light lane"}
     if run.get("ux_rules") and not run["ui"]:  # only these runs later ask which UI files they changed
@@ -357,9 +313,9 @@ def cmd_start(args):
     save(registry_path(project), store.new_registration(project, args.key))
     log("run.start", key=args.key, project=str(project), mode=args.mode, kind=args.kind, bundle=run["bundle"], hooks=hooks)
     bundle = (f"{run['bundle']['root']} @ {run['bundle']['revision'][:12]}" if run["bundle"] else
-              "no .factory/entry-bundle.json; run the entry's resolver first (skip only for factory maintenance)")
-    print(status_text(run) + f"\nRecord: {record}\nBundle: {bundle}\nGit: {git_note}\nHooks: {hooks}\n"
-          + setup.TEXT.format(scratch))
+              "no .factory/entry-bundle.json: run the entry's resolver first, except for factory maintenance")
+    print(status_text(run) + f"\n{sibling('fast_release').card(run, HOME)}\nRecord: {record}\nBundle: {bundle}\n"
+          f"Git: {git_note}\nHooks: {hooks}\n" + setup.TEXT.format(scratch))
 
 
 def cmd_done(args):
@@ -379,16 +335,20 @@ def cmd_done(args):
     except OSError as error:
         fail(f"Cannot read the work record: {error}")
     body = all_sections.get(TITLES[step].lower(), "")
-    problems = (CHECKS[step](run, body, project=project, offline=args.offline, all_sections=all_sections)
+    checked = sibling("fast_pr_policy").effective(HOME, run) if step == "handoff" else run
+    problems = (CHECKS[step](checked, body, project=project, offline=args.offline, all_sections=all_sections, runs=active_runs)
                 if body.strip() else [f"section '## {TITLES[step]}' is missing or empty"])
     if problems:
         log("step.refused", key=run["key"], step=step, problems=problems)
         fail(f"'{step}' not recorded:\n- " + "\n- ".join(problems))
     run["done"][step] = {"at": now(), **({"unverified": args.offline} if args.offline else {})}
+    if step == "handoff" and checked.get("pr_policy"):
+        run["done"][step]["pr_policy"] = checked["pr_policy"]["digest"]
     if step in ("kickoff", "tickets") and record.run_size(all_sections) and "size" not in run:
         run.update(size=record.run_size(all_sections), size_at=step)  # frozen: editing the line later skips nothing
     if step == "plan":  # who owes the epic's integration todos is read from the plan as recorded here
         run["todos"] = list(dict.fromkeys(run.get("todos", []) + [f"T{n}" for n in record.todo_ids(all_sections)]))
+        run["ports"] = sibling("fast_briefs").ports(record.marker(body, "Ports"))  # later lanes' plans avoid them
     if step == "tickets":  # later ticket checks keep reading these even if the record drops one
         epic, subs = record.ticket_urls(body)
         run["tickets"] = list(dict.fromkeys(run.get("tickets", []) + epic + subs))
@@ -408,7 +368,9 @@ def cmd_scratch(args):
 
 
 def cmd_status(args):
-    print(status_text(open_run(args.project)[1]))
+    run = open_run(args.project)[1]
+    sibling("fast_pr_policy").notice(HOME, run, strict=True)
+    print(status_text(run) + "\n" + sibling("fast_release").card(run, HOME))
 
 
 def cmd_pause(args, reason):
@@ -468,6 +430,8 @@ def cmd_close(args):
         return close_lost(project, args.abandon) if args.abandon else fail(lost_text(project))
     if "handoff" not in run["done"] and not args.abandon:
         fail("Record the handoff first, or close --abandon \"<the owner's reason>\"")
+    if not args.abandon:
+        sibling("fast_pr_policy").close(HOME, run)
     run.update(closed=True, closed_at=now(), abandoned=args.abandon, paused=None)
     put(project, run)
     entry = registry_path(project)
@@ -663,8 +627,8 @@ def refusal(item, path):
 def deny_reason(run, what, advice=None):
     """Logged deny text: what is blocked, then the advice, or the steps that unblock it."""
     blocked = open_before_build(run)
-    steps = (f" Record these steps first: {', '.join(blocked)}. Fill .factory/fast/work-record.md and run "
-             "`fast_gate.py done <step>` (fast-run.md). .factory/ stays writable.") if blocked else ""
+    steps = (f" Record first: {', '.join(blocked)}, in .factory/fast/work-record.md, then `fast_gate.py done <step>`"
+             " (fast-run.md); .factory/ stays writable.") if blocked else ""
     if run.get("lost"):
         steps = (" Its run state in the gate home is missing or unreadable, so the gate stays closed: the owner "
                  f"runs `fast_gate.py close --project \"{run['project']}\" --abandon \"<reason>\"`.")
@@ -680,8 +644,7 @@ def guard(command, runs, cwd, session, dialect=None):
     rule = item and sibling("fast_guard").Judge(norm(item[2]["project"]), norm, inside, str(HOME),
                                                 lambda: sibling("fast_setup").scratch_path(HOME, item[2])).rule(
         command, cwd, dialect)
-    return rule and deny_reason(item[2], rule, " Destructive commands are the owner's: ask the owner to run it, "
-                                               "or to approve another approach.")
+    return rule and deny_reason(item[2], rule, " Ask the owner to run it or to approve another approach.")
 
 
 def where(cds, cwd):
@@ -706,7 +669,7 @@ def pre_tool(event, runs, cwd, session):
         targets = [norm(name, where(cds, cwd)) for cds, name in shell.writes(event["command"])]
     else:
         return None
-    vault = (norm(ACTIVE), norm(HOME / "runs")) if targets else ()
+    vault = (norm(ACTIVE), norm(HOME / "runs"), norm(HOME / "pr-proof")) if targets else ()
     for path in targets:
         if any(inside(path, folder) for folder in vault):  # the gate home's run files: only gate commands write them
             item = owner(runs, cwd) or next(iter(mine(runs, cwd, session)), None) or runs[0]
@@ -840,22 +803,23 @@ def stop(event, runs, cwd, session):
                 log("hook.wait_stop", key=run["key"], next=step)
                 return None
             log("hook.block_stop", key=run["key"], next=step)
-            return (f"Factory {run['mode']} run '{run['key']}' is not finished. Next: "
-                    f"{step or 'close'}. Continue it. Waiting on the owner? `fast_gate.py pause --reason \"...\"`. "
-                    "The owner stopped it? `fast_gate.py close --abandon \"<their reason>\"`.")
+            return (f"Factory {run['mode']} run '{run['key']}' unfinished. Next: {step or 'close'}. Continue it; waiting "
+                    "on the owner: `fast_gate.py pause --reason \"...\"`; owner stopped it: `fast_gate.py close --abandon "
+                    "\"<their reason>\"`.")
     return None
 
 
 def context(event, runs, cwd, session):
     lines = []
     for _, _, run in mine(runs, cwd, session)[:3]:
-        line = (f"Factory {run['mode']} run '{run['key']}' at {run['project']}: next step "
+        line = (f"Factory {run['mode']} run '{run['key']}' at {run['project']}: next "
                 f"{next_step(run) or 'close'}; gate {'open' if not open_before_build(run) else 'closed (no source edits)'}")
         if run.get("paused"):
             line += f"; paused: {run['paused']['reason']}"
         if run.get("lost"):
             line += "; its run state in the gate home is missing: the owner closes it with --abandon"
         lines.append(line + ". Method: .agents/skills/safe-engine/references/fast-run.md.")
+        lines += list(filter(None, [sibling("fast_pr_policy").notice(HOME, run)]))
     return "\n".join(lines) or None
 
 
@@ -915,6 +879,10 @@ def main():
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--project", help="Run project; default: nearest folder with .factory/fast/run.json")
     sub = parser.add_subparsers(dest="command", required=True)
+    sibling("fast_cleanup").parser(sub, common)
+    sibling("fast_shots").parser(sub, common)
+    sibling("fast_baseline").parser(sub, common)
+    sibling("fast_release").parser(sub)
     start = sub.add_parser("start", parents=[common], help="Begin a run and register it for hooks")
     start.add_argument("--key", required=True)
     start.add_argument("--mode", choices=MODES, default="fast")
@@ -925,6 +893,13 @@ def main():
     start.add_argument("--auth", action="store_true", help="The product has sign-in")
     start.add_argument("--request")
     start.add_argument("--request-file")
+    sub.add_parser("pr-proof-method", help="Read the owner-selected PR method for any mode")
+    adopt = sub.add_parser("adopt-pr-proof", help="Owner-authorized PR-only policy; preserves existing run state")
+    target = adopt.add_mutually_exclusive_group(required=True)
+    target.add_argument("--project")
+    target.add_argument("--new-runs", action="store_true")
+    adopt.add_argument("--method", required=True, help="Absolute canonical PR SKILL.md; preserve its whole folder")
+    adopt.add_argument("--reason", required=True, help="Owner instruction and source authorizing adoption")
     done = sub.add_parser("done", parents=[common], help="Check and record one step")
     done.add_argument("step", choices=list(TITLES))
     done.add_argument("--offline", help="Record tickets, plan, handoff or a hidden-check done-run without reading tickets "
@@ -947,13 +922,7 @@ def main():
     rehome = sub.add_parser("rehome", parents=[common],
                             help="Owner only: bring in an open run from another machine or folder")
     rehome.add_argument("--from", dest="source", required=True, help="The folder the run's run.json records")
-    install = sub.add_parser("install", help="Install the entry skills and gate hooks for one host")
-    install.add_argument("--host", required=True, choices=("claude", "codex", "cursor", "other"),
-                         help="other: entry skills only, for agents you wire by hand")
-    install.add_argument("--project", help="Install into this project instead of your user folders")
-    install.add_argument("--no-auto-update", dest="auto", action="store_false",
-                         help="No daily self-update at session start (also SAFE_ENGINE_NO_UPDATE=1)")
-    install.add_argument("--codex-home", help="Codex: write the gate hooks into this CODEX_HOME")
+    sibling("fast_install").parser(sub)
     orchestrate = sub.add_parser("orchestrate", help="Set up an orchestrator to start factory sessions")
     sibling("fast_orchestrate").arguments(orchestrate)
     hook = sub.add_parser("hook", help="Answer one host hook event from stdin")
@@ -961,10 +930,16 @@ def main():
     args = parser.parse_args()
     actions = {"start": cmd_start, "done": cmd_done, "status": cmd_status, "close": cmd_close, "rehome": cmd_rehome,
                "try": cmd_try, "view": cmd_view, "scratch": cmd_scratch,
+               "cleanup-temp": lambda a: sibling("fast_cleanup").run(a, sys.modules[__name__]),
+               "shots": lambda a: sibling("fast_shots").run(a, sys.modules[__name__]),
+               "recover-baseline": lambda a: sibling("fast_baseline").recover(a, sys.modules[__name__]),
+               "adopt-pr-proof": lambda a: sibling("fast_pr_policy").adopt(a, sys.modules[__name__]),
+               "pr-proof-method": lambda a: sibling("fast_pr_policy").method(HOME),
                "hook": lambda a: sys.exit(cmd_hook(a.host)),
-               "install": lambda a: sibling("fast_install").install(a.host, a.project, auto=a.auto, codex_home=a.codex_home,
+               "install": lambda a: sibling("fast_install").install(a.host, a.project, auto=a.auto, channel=a.channel, codex_home=a.codex_home,
                                                                     log=lambda line: (print(line), log("install.write", line=line))),
                "orchestrate": lambda a: sibling("fast_orchestrate").run(a),
+               "version": lambda a: sibling("fast_release").version(HOME), "verify": lambda a: sibling("fast_release").verify(a.path),
                "pause": lambda a: cmd_pause(a, a.reason), "resume": lambda a: cmd_pause(a, None)}
     actions[args.command](args)
 

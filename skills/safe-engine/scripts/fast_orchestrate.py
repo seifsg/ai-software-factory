@@ -55,12 +55,21 @@ def base_ref(project):
     return result.stdout.strip() or None
 
 
+def link(source, target):
+    """One login refreshed in place: a symlink, else a hard link, else a copy (Windows without the symlink right)."""
+    for make in (lambda: target.symlink_to(source), lambda: os.link(source, target), lambda: shutil.copyfile(source, target)):
+        try:
+            return make()
+        except OSError:
+            continue
+
+
 def codex_home(root, user=None):
     """A self-managed CODEX_HOME: the user's Codex login and settings, plus the gate hooks written later."""
     target, user = root / "codex-home", Path(user or Path.home() / ".codex")
     target.mkdir(parents=True, exist_ok=True)
     if (user / "auth.json").is_file() and not (target / "auth.json").exists():
-        (target / "auth.json").symlink_to(user / "auth.json")  # one login, refreshed in place
+        link(user / "auth.json", target / "auth.json")
     if (user / "config.toml").is_file() and not (target / "config.toml").exists():
         shutil.copyfile(user / "config.toml", target / "config.toml")
     return target

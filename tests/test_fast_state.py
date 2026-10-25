@@ -201,7 +201,7 @@ class RunStateTests(harness.GateHarness, unittest.TestCase):
         follows = setup.scratch_path(self.root / "home2", {**run, "project": str(moved)})
         self.assertEqual((old_scratch.exists(), (follows / "profile").is_dir()), (False, True))  # it follows the run
         status = self.gate("status", project=moved)
-        for line in ("'copy-fix'", "[x] tickets", "Paused: owner away", "Next: plan"):
+        for line in ("'copy-fix'", "✅ tickets", "WAITING ON YOU: owner away", "Next: plan"):
             self.assertIn(line, status)
         mirror = json.loads((moved / ".factory/fast/run.json").read_text(encoding="utf-8"))
         self.assertEqual((mirror["project"], mirror["moves"][0]["from"]), (str(moved), str(self.project)))

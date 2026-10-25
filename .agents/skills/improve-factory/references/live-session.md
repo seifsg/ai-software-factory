@@ -10,7 +10,7 @@ App coordinator ── checkpoint ───────────────�
                         one writer per file  fresh agent
 ```
 
-- No command pauses, resumes, upgrades or migrates a run. Checkpoints are records you write.
+- No command upgrades a whole run. Fast gate `pause`/`resume` control its stop state; checkpoints are records you write. The PR-only adoption below preserves the selected bundle.
 - Never invent commands or edit saved run state to allow adoption.
 - Keep the selected bundle. New optional methods do not reopen QA on completed or checkpointed work.
 
@@ -57,7 +57,7 @@ Save one unique Git-ignored record. Read it back.
 - Give each delegate: report, expected behavior, invariants, exact project and factory identities, skill paths, raw reproduction, allowed paths and actions, role and return artifact, progress and stops.
 - Delegates read the applicable skills and actual files fully. Inherited chat is not verified state.
 - Reviewers get requirements and evidence, never a verdict.
-- Keep the owner's model and reasoning settings. No hard-coded models, provider switches, reduced reasoning or paid fallbacks without the owner.
+- Keep the owner's model and reasoning settings for this session. Delegates run on their role's tier (`safe-engine` delegate roles; per agent in the factory's `docs/hosts.md`) unless the owner overrides it. No provider switches or paid fallbacks without the owner.
 - Reconcile completed, failed and in-flight actions before any retry.
 - Context lost: reread the case and the actual state, then resume the same case. No duplicate repairs.
 
@@ -85,6 +85,10 @@ Save one unique Git-ignored record. Read it back.
 - Adopt within authority. A local trial grants no merge, release, global install or change to other sessions.
 
 ## 6. Entry receipt
+
+**PR-proof-only adoption:** with explicit owner authorization, use the current installed gate's `adopt-pr-proof --project <abs> --method <absolute how-to-make-a-pr/SKILL.md> --reason "<owner request and source>"`. Select an immutable reviewed method bundle. This separate run-identity receipt changes only effective PR proof checks; it never rewrites application files, saved progress, pauses or other bundle pins. `--new-runs` instead of `--project` sets the policy for later starts. Status/prompt hooks name the adopted method: read it, reassess the proof inventory and use the current installed gate for handoff. Old gate executables do not acquire new checks. A source mismatch or finished handoff blocks adoption; preserve the run and diagnose it. Rechecking proof grants no resume, merge or release authority. No project quiescence is needed for this receipt-only operation; whole-bundle adoption still follows all checkpoints above.
+
+For whole-bundle adoption only:
 
 1. Checkpoint `.factory/entry-bundle.json`.
 2. After authorized compatible adoption, save the old selection in the maintenance record.

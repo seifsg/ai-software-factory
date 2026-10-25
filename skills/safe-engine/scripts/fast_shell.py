@@ -29,7 +29,8 @@ PIPELINES = re.compile(r"([()])|\|\||&&|[;\n]|(?<![^\s;&|(){}])(?:\{(?!\})|(?<!\
 OPERATOR = r"\d*(?:<<<|<<|<|&?>>?)(?:&[\d-]|\|)?"  # a redirect operator
 TOKEN = {"bash": re.compile(OPERATOR + r"|(?:\\\s|[^\s<>])+"),  # Bash: backslash-space is an escaped space
          "windows": re.compile(OPERATOR + r"|[^\s<>]+")}  # PowerShell and cmd: a backslash is a path separator
-QUOTED = {"bash": re.compile(r"'[^']*'|\"(?:\\.|[^\"\\])*\"", re.S), "windows": re.compile(r"'[^']*'|\"[^\"]*\"")}
+QUOTED = {"bash": re.compile(r"'[^']*'|\"(?:\\.|[^\"\\])*\"", re.S), "windows": re.compile(r"'(?:''|[^'])*'|\"[^\"]*\"")}
+OUTPUT = re.compile(r"(^|[;\n|])([ \t\r]*)(\x00(\d+)\x00)(?=[ \t\r]*(?:[;|\n>]|$))")
 BRACES = re.compile(r"([^{}]*)\{([^{}]*,[^{}]*)\}([^{}]*)")  # one simple {a,b} list inside a word
 PLACEHOLDER = re.compile(r"\x00(\d+)\x00")
 CAT_HEREDOC = re.compile(r"\$\(\s*cat\s*<<(?:(?!\$\(|`).)*\)\s*", re.S)  # $(cat <<'EOF' ...) with no code inside
@@ -58,6 +59,10 @@ CD = {"cd", "pushd", "popd", "chdir", "set-location", "sl", "push-location", "po
 UNREADABLE = "\x00unreadable"  # an undecodable or too deep command; NUL never survives mask(), so none can forge it
 UNCLEAR = "\x00unclear"  # a $( ), backtick, mid-command group or brace the parse cannot follow
 Command = namedtuple("Command", "words env inputs text outer", defaults=("", False))
+
+
+class Literal(str):
+    """Single-quoted PowerShell data: backticks and substitutions do not execute until a consumer interprets it."""
 
 
 def bodies(text, hold):
@@ -89,8 +94,10 @@ def mask(command, dialect="bash"):
     text = command.replace("\x00", "")
     for pattern, value in SUBSTITUTE:
         text = pattern.sub(value, text)
-    text = HERESTRING.sub(lambda match: hold(match.group(0)[2:-2]), bodies(text, hold))
-    text = QUOTED[dialect].sub(lambda match: hold(match.group(0)[1:-1]), text)
+    text = HERESTRING.sub(lambda m: hold(Literal(m[0][2:-2]) if dialect == "windows" and m[0][1] == "'"
+                                        else m[0][2:-2]), bodies(text, hold))
+    text = QUOTED[dialect].sub(lambda m: hold(Literal(m[0][1:-1].replace("''", "'"))
+                                             if dialect == "windows" and m[0][0] == "'" else m[0][1:-1]), text)
     return ARITHMETIC.sub(lambda match: f" {hold(match.group(0))} ", text), tuple(quotes)
 
 
@@ -118,6 +125,9 @@ def writes(command):
 
 def unquote(word, quotes):
     """word with placeholders back to their text, nested ones too (a quote inside a held body)."""
+    whole = PLACEHOLDER.fullmatch(word)
+    if whole and isinstance(quotes[int(whole[1])], Literal):
+        return quotes[int(whole[1])]  # preserve non-expanding provenance for a whole quoted token
     for _ in range(4):
         if "\x00" not in word:
             break
@@ -138,7 +148,7 @@ def program(word):
 
 def literal(word):
     """True when word cannot run code: no $( ) or backtick, or only a quoted-tag heredoc fed to cat."""
-    return not re.search(r"\$\(|`", word) or bool(CAT_HEREDOC.fullmatch(word))
+    return isinstance(word, Literal) or not re.search(r"\$\(|`", word) or bool(CAT_HEREDOC.fullmatch(word))
 
 
 def expand(token):
@@ -183,7 +193,7 @@ def said(cmd, onward):
     words, name = cmd.words, program(cmd.words[0])
     cut = {i for i in range(1, len(words))
            if message(words[i - 1], name) or ("=" in words[i] and message(words[i].split("=")[0], name))}
-    if name in ECHOES and not onward:
+    if not onward and (name in ECHOES or name in SINKS):
         cut.update(range(1, len(words)))
     if name in SEARCHERS:  # the first free word is the pattern, and so is the value of -e / -Pattern
         cut.update(i for i in range(1, len(words)) if words[i - 1].lower() in PATTERN_FLAGS)
@@ -252,6 +262,9 @@ def pipelines(command, dialect="bash", exported=None, depth=0):
         yield Command([UNREADABLE], [], [], UNREADABLE)
         return
     code, quotes = mask(command, dialect)
+    if dialect == "windows":  # a bare quoted expression emits data; an & invocation is deliberately excluded
+        code = OUTPUT.sub(lambda m: m[1] + m[2] + ("Write-Output " if isinstance(quotes[int(m[4])], Literal)
+                                                  else "") + m[3], code)
     if "`" in code:
         yield Command([UNCLEAR], [], [], UNCLEAR)
     last = ""
