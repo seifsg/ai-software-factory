@@ -50,6 +50,7 @@ Delegates return their log lines; the coordinator writes the record. During buil
 `fast_gate.py` (debugging the gate: [modules](gate-details.md#modules)) sits in `scripts/` beside the installed launcher and in `skills/safe-engine/scripts/` of the factory bundle. Python 3.9+, standard library only.
 
 Before `start` on a product, select the factory bundle with the launcher's `resolve_bundle.py --project <abs>` (it writes `.factory/entry-bundle.json`); skip it when the run maintains the factory itself.
+Git-backed starts fetch their upstream first, keeping dirty work; the start commit anchors UI proof.
 
 ```text
 python fast_gate.py start --project <abs> --key <slug> --mode fast|lucky --kind product|feature|change [--[no-]ui] [--[no-]data] [--auth] --request-file <file>
@@ -68,7 +69,7 @@ python fast_gate.py view [--port 8765] [--snapshot <file>]
 - `done tickets`, `done plan`, `done handoff` and, on hidden-check runs, `done done-run` read the listed GitHub tickets online; `done handoff` also reads the PR body. Other trackers or no network: `--offline "<reason>"` records the step unverified, and the handoff's PR line names the body file, `**PR:** <url> (body: <file>)`; refused when the listed GitHub tickets are readable.
 - Runs started on older methods keep their recorded checks unless the owner explicitly adopts the PR-proof policy.
 - `pause` before waiting on the owner; the next `done` or `resume` clears it. `close` needs `handoff`, or `--abandon` with the owner's reason; `close --project <dir> --abandon` also works when the run state is missing or unreadable.
-- Only on the owner's explicit instruction: [`rehome`](gate-details.md#rehome) (move a run between machines or folders), [`adopt-pr-proof`](gate-details.md#adopt-pr-proof), [`cleanup-temp`](gate-details.md#cleanup-temp) (obsolete temp fixtures). Hook wiring: [`install`](gate-details.md#install).
+- Only on the owner's explicit instruction: [`rehome`](gate-details.md#rehome) (move a run between machines or folders), [`adopt-pr-proof`](gate-details.md#adopt-pr-proof), [`cleanup-temp`](gate-details.md#cleanup-temp) (obsolete temp fixtures), [`recover-baseline`](gate-details.md#recover-baseline). Hook wiring: [`install`](gate-details.md#install).
 
 ## Hooks
 

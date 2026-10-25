@@ -93,6 +93,20 @@ Obsolete fixtures outside managed scratch, only on the owner's explicit instruct
 
 The command refuses links, special nodes, protected project or factory overlap and changed metadata; it saves a private receipt before removal and reports leftovers. Keep targets quiescent: this is no protection against hostile concurrent filesystem changes. A refusal never authorizes a wider delete or disabling the guard; correct the cause and preview again.
 
+## Recover baseline
+
+```text
+python fast_gate.py recover-baseline --project <abs> --base <full-sha> --upstream refs/remotes/<remote>/<branch> --reason "<owner authority>" [--expect <preview SHA256>]
+```
+
+A stale start baseline, only on the owner's explicit instruction: Git dates and remote ancestry alone do not prove ownership.
+
+1. Pause and checkpoint the run, stop its writers, fetch the actual upstream, then preview.
+2. Review every excluded commit and path against owned work before repeating with `--expect`.
+3. Resume explicitly after reviewing the receipt.
+
+The command requires an ancestor of HEAD and upstream, commits predating start, unchanged initial UI snapshots and no completed done-run; it refuses changed previews. It keeps the original base, snapshot, pause, progress and an audit receipt; only later UI comparison uses the corrected base, and remaining UI edits still need proof. One correction per run; unknown ownership, an already corrected baseline or later acceptance needs reviewed maintenance, never manual ledger edits. Older gate copies stay conservative: use the reviewed corrected gate for later checks, without a global install.
+
 ## Install
 
 ```text
