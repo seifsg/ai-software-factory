@@ -1,393 +1,497 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Factory floor</title>
+<title>Factory progress</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=IBM+Plex+Mono:wght@400;600&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=bedtime,block,bolt,check_circle,close,cloud_off,confirmation_number,construction,content_copy,dark_mode,database,error,forum,front_hand,image,inventory_2,light_mode,link,map,notifications,open_in_new,palette,psychology,refresh,rocket_launch,schedule,science,search,smart_toy,terminal&display=block">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=arrow_forward,check,check_circle,close,cloud_off,construction,content_copy,dark_mode,flag,forum,front_hand,light_mode,open_in_new,play_arrow,refresh,schedule,smart_toy,target,terminal&display=block">
 <style>
-/* Layout: summary strip; then a sticky rail (andon, Ready to try, activity, or a run's detail) beside the production lines. DOM order = phone order. */
-:root{
-  --floor:light-dark(#ECEEEA,#121416);--sheet:light-dark(#FFFFFF,#1B1E21);--ink:light-dark(#17191A,#ECEFEA);--steel:light-dark(#55606A,#A3ABB3);--rule:light-dark(#C9CEC8,#30353A);
-  --hazard:#FFC400;--andon:light-dark(#B42318,#FF7A6E);--go:light-dark(#1B6E37,#5BD68A);--try:light-dark(#1E4FC9,#8FB2FF);
-  --t-andon:light-dark(#FBE9E7,#3A1D1A);--t-go:light-dark(#E6F2EA,#16301F);--t-try:light-dark(#E8EEFB,#1A2440);--on-try:light-dark(#FFFFFF,#0B1020);
-  --display:"Archivo",system-ui,"Segoe UI",sans-serif;--plate:"IBM Plex Mono",ui-monospace,"Cascadia Mono",Menlo,Consolas,monospace;
-}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark}}
-:root[data-theme="dark"]{color-scheme:dark}
-:root[data-theme="light"]{color-scheme:light}
-@property --p{syntax:"<number>";inherits:false;initial-value:0}
+/* Prioritize outcome and current work; disclose finished history and internal stages. */
+:root{color-scheme:light;--floor:#F6F7FB;--sheet:#FFF;--ink:#192238;--steel:#596479;--rule:#E0E4ED;--accent:#4F46C8;--soft:#EFEDFC;--go:#16704A;--good:#EAF5EF;--warn:#985814;--warn-bg:#FFF5DF;--track:#E7EBF1;--hazard:#EBC65A;--display:"Archivo",system-ui,"Segoe UI",sans-serif;--mono:"IBM Plex Mono",ui-monospace,monospace;--shadow:0 2px 8px #19223804}
+
+:root[data-theme="dark"]{color-scheme:dark;--floor:#111522;--sheet:#1B2130;--ink:#F0F2F8;--steel:#B8C2D5;--rule:#354057;--accent:#BBB6FF;--soft:#302D50;--go:#8BDFB5;--good:#1F3930;--warn:#F2CA83;--warn-bg:#3B3022;--track:#364157;--shadow:none}
+
 *{box-sizing:border-box}
-[x-cloak],[hidden],[data-away]>*{display:none!important}
-.icons .ms{visibility:visible}
-.contents{display:contents}
-body{background:var(--floor);color:var(--ink);font:15px/1.45 var(--display);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 40px}
-h1,h2,h3,p{margin:0;text-wrap:balance}
-button,a,select{font:inherit;color:inherit}
-button{cursor:pointer}
-ul{margin:0;padding:0;list-style:none}
-:focus-visible{outline:3px solid var(--try);outline-offset:2px}
-.ms{visibility:hidden;font-family:"Material Symbols Rounded";font-size:20px;line-height:1;display:inline-block;vertical-align:-4px;user-select:none;text-transform:none;letter-spacing:normal}
-.plate{font-family:var(--plate);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
-.caps{font:600 11px/1.2 var(--plate);letter-spacing:.08em;text-transform:uppercase}
+body{margin:0;background:var(--floor);color:var(--ink);font:14px/1.45 var(--display)}
+[x-cloak],[hidden]{display:none!important}
+h1,h2,h3,h4,p{margin:0}
+h1{font-size:18px;line-height:1.25;letter-spacing:-.04em}
+h2{font-size:18px;line-height:1.3;letter-spacing:-.025em}
+h3{font-size:16px;line-height:1.35}
+h4{font-size:14px}
+p,h1,h2,h3,h4,span,a,code{overflow-wrap:anywhere}
+
+button,input,select{font:inherit;color:inherit}
+button,a,summary,select{touch-action:manipulation}
+button,summary{cursor:pointer}
+a{color:var(--accent);text-underline-offset:3px}
+button:disabled{cursor:wait}
+ul,ol{margin:0;padding:0;list-style:none}
+:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.skip{position:fixed;top:-80px;left:16px;z-index:20;background:var(--sheet);padding:12px}
+.skip:focus{top:12px}
+
+.app{max-width:1600px;margin:auto;padding:12px max(20px,env(safe-area-inset-right)) 20px max(20px,env(safe-area-inset-left));display:grid;gap:10px}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.spread{justify-content:space-between}
+.stack{display:grid;gap:10px;min-width:0}
+.small{font-size:12px}
 .muted{color:var(--steel)}
-.sm{font-size:12px}
-.sp{flex:1}
-.row{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center}
-.app{max-width:1440px;margin:0 auto;display:grid;gap:14px}
-.boot{padding:24px;border:1.5px dashed var(--rule);font-family:var(--plate)}
-/* header */
-.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--floor);padding-block:6px;gap:8px 16px}
-h1{font:800 22px/1 var(--display);font-stretch:75%;letter-spacing:.02em;text-transform:uppercase}
-.dot{flex:none;width:10px;height:10px;border-radius:50%;background:var(--go)}
-.lost .dot{background:var(--andon)}
-.btn{border:1.5px solid var(--rule);background:var(--sheet);color:var(--ink);padding:6px 11px;border-radius:3px;font-size:13px;font-weight:600;display:inline-flex;gap:6px;align-items:center;justify-self:start;text-decoration:none;white-space:nowrap}
-.btn .ms{font-size:18px;vertical-align:0}
-.btn.primary{background:var(--ink);border-color:var(--ink);color:var(--floor)}
-.btn.try{border-color:var(--try);color:var(--try)}
-.btn.try.primary{background:var(--try);color:var(--on-try)}
-.btn[aria-pressed="true"]{border:2px solid var(--ink);background:var(--t-try);box-shadow:inset 0 -3px 0 var(--ink)}
-.link{border:0;background:none;color:var(--try);padding:0;text-decoration:underline;font-size:13px}
-.strip{border:2px solid var(--andon);background:var(--t-andon);padding:8px 12px;border-radius:3px}
-.strip .ms{color:var(--andon)}
-/* summary */
-.sum{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
-.tile-s{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;align-items:center;text-decoration:none;background:var(--sheet);border:1px solid var(--rule);border-radius:3px;padding:10px 12px}
-.tile-s .ms{grid-row:span 2;font-size:28px}
-.tile-s b{font:800 26px/1 var(--display);font-stretch:80%}
-.tile-s.w{border-color:var(--andon);background:var(--t-andon)}.tile-s.w .ms{color:var(--andon)}
-.tile-s.r .ms{color:var(--try)}.tile-s.d .ms{color:var(--go)}
-/* floor */
-.floor{display:grid;grid-template-columns:380px minmax(0,1fr);grid-template-areas:"rail lines";gap:16px;align-items:start}
-.col{display:grid;gap:14px;min-width:0}
-.rail{grid-area:rail;position:sticky;top:calc(env(safe-area-inset-top,0px) + 52px);max-height:calc(100vh - 64px);overflow:auto;padding:2px}
-main{grid-area:lines}
-.sec{font:700 12px/1 var(--plate);letter-spacing:.1em;text-transform:uppercase;display:flex;gap:8px;align-items:center}
-/* line */
-.line{background:var(--sheet);border:1px solid var(--rule);border-radius:3px;padding:14px;display:grid;gap:12px;min-width:0;transition:opacity .3s;content-visibility:auto;contain-intrinsic-size:auto 330px} /* off-screen lines skip rendering and their animations */
-.line.held{border-color:var(--andon)}
-.line.open{box-shadow:0 0 0 2px var(--ink)}
-.stale .line{border-style:dashed}
-.stale .stations,.stale .track,.stale .ring{filter:grayscale(1) opacity(.6)}
-.lh h3{font:700 19px/1.1 var(--display);font-stretch:85%}
-.name{border:0;background:none;padding:0;text-align:left;text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:1.5px}
-.ring{--p:0;width:46px;height:46px;border-radius:50%;background:conic-gradient(var(--go) calc(var(--p)*1%),var(--rule) 0);display:grid;place-items:center;transition:--p .8s ease-out;flex:0 0 auto}
-.ring span{width:36px;height:36px;border-radius:50%;background:var(--sheet);display:grid;place-items:center;font:600 11px var(--plate)}
-.tag{font:600 11px/1 var(--plate);letter-spacing:.05em;text-transform:uppercase;padding:4px 6px;border:1px solid currentColor;border-radius:3px;display:inline-flex;gap:4px;align-items:center}
-.tag .ms{font-size:14px;vertical-align:0}
-.held-c{color:var(--andon)}
-.light{width:12px;height:12px;border-radius:50%;background:var(--andon);animation:blink 1s steps(2) infinite}
-@keyframes blink{50%{opacity:.25}}
-.stations{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));position:relative;row-gap:6px}
-.stations::before,.stations .fill{content:"";position:absolute;left:calc(50%/var(--n));right:calc(50%/var(--n));top:17px;height:4px;background:var(--rule);border-radius:2px}
-.stations .fill{background:var(--ink);transform-origin:left;transition:transform .6s ease-out}
-.st{display:grid;justify-items:center;gap:4px;text-align:center;min-width:0}
-.st i{width:38px;height:38px;display:grid;place-items:center;border:2px solid var(--rule);background:var(--sheet);border-radius:50%;z-index:1;font-style:normal;position:relative;transition:background .4s,border-color .4s}
-.st.done i{border-color:var(--ink);background:var(--ink);color:var(--sheet)}
-.st.now i{border-color:var(--ink);background:var(--hazard);color:#17191A}
-.st.now i::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:2px solid var(--ink);animation:ping 1.6s ease-out infinite}
-.held .st.now i::after{animation:none;opacity:.4}
-@keyframes ping{from{transform:scale(.85);opacity:1}to{transform:scale(1.25);opacity:0}}
-.st small{font:600 11px/1.2 var(--plate);letter-spacing:.04em;text-transform:uppercase;color:var(--steel);overflow-wrap:anywhere}
-.st.now small{color:var(--ink)}
-.workers{grid-row:2;display:flex;justify-content:center;gap:2px}
-.workers .ms{font-size:18px;color:var(--try);animation:bob 1.2s ease-in-out infinite}
-.workers .ms:nth-child(2){animation-delay:.2s}.workers .ms:nth-child(3){animation-delay:.4s}
-@keyframes bob{50%{transform:translateY(-4px)}}
-.track{position:relative;overflow:hidden;padding-bottom:12px}
-.track::after{content:"";position:absolute;left:-14px;right:-14px;bottom:2px;height:6px;background:repeating-linear-gradient(90deg,var(--ink) 0 2px,transparent 2px 14px);opacity:.35;animation:roll 1s linear infinite;pointer-events:none}
-.quiet .track::after{animation-duration:6s;opacity:.2}
-.held .track::after,.stale .track::after{animation:none}
-@keyframes roll{from{transform:translateX(-14px)}to{transform:none}}
-.belt{display:flex;gap:6px;overflow:auto hidden;padding:4px 12px 10px 2px}
-.tile{flex:0 0 auto;width:156px;border:1.5px solid var(--rule);border-radius:3px;padding:6px 8px;display:grid;gap:2px;align-content:start;font-size:12px;background:var(--sheet)}
-.tile b{font:600 12px var(--plate);display:flex;justify-content:space-between;gap:6px}
-.tile .t{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.tile.done{border-color:var(--go);background:var(--t-go)}
-.tile.done .ms{color:var(--go);font-size:16px;vertical-align:-3px}
-.pile{margin-right:10px;box-shadow:3px 3px 0 var(--sheet),4px 4px 0 var(--go),7px 7px 0 var(--sheet),8px 8px 0 var(--go)}
-.tile.now{border:2px solid var(--ink);background:repeating-linear-gradient(-45deg,var(--hazard) 0 8px,#17191A 8px 16px) top/100% 6px no-repeat,var(--sheet);padding-top:11px}
-.tile.next{border-color:var(--ink)}
-.tile.later,.tile.more{border-style:dashed}
-.tile.more{place-content:center;text-align:center;color:var(--steel)}
-.chip{font:12px var(--plate);border:1px solid var(--rule);padding:3px 7px;border-radius:3px;display:inline-flex;gap:4px;align-items:center}
-.chip .ms{font-size:15px;vertical-align:0}
-.chip.run .ms{color:var(--try)}.chip.fin{color:var(--steel)}
-.err{color:var(--andon);font-size:13px}
-/* rail */
-.andon{border:2px solid var(--andon);background:var(--t-andon);padding:12px 14px;border-radius:3px;display:grid;gap:8px}
-.andon .caps{color:var(--andon);display:flex;gap:6px;align-items:center}
-.andon p{font-weight:600}
-.card{background:var(--sheet);border:1px solid var(--rule);border-left:4px solid var(--try);padding:10px 12px;display:grid;gap:6px;border-radius:3px}
-.card.glow{animation:glow 4s ease-out}
-.enter{animation:enter .3s ease-out}
-@keyframes enter{from{opacity:0;transform:translateY(-6px)}}
-@keyframes glow{from{background:var(--t-try);box-shadow:0 0 0 3px var(--try)}to{background:var(--sheet)}}
-.card h3{font:600 14px/1.3 var(--display);display:flex;gap:6px}
-.card h3 .ms{color:var(--try)}
-.cmd{display:flex;gap:8px;align-items:center;min-width:0}
-code{flex:1;min-width:0;white-space:pre-wrap;word-break:break-all;background:var(--floor);padding:6px 8px;border-radius:3px;font:12px var(--plate)}
-.thumb{width:100%;max-width:min(100%,260px);aspect-ratio:16/9;object-fit:cover;border:1px solid var(--rule);border-radius:3px}
-#feed summary{cursor:pointer;list-style:none;display:flex;gap:8px;align-items:baseline}#feed summary::after{content:"Hide";font:12px var(--plate);color:var(--try);text-decoration:underline}#feed:not([open]) summary::after{content:"Show"}#feed summary::-webkit-details-marker{display:none}
-.feed{margin-top:8px;display:grid;gap:6px;font-size:13px}
-.feed li{display:grid;grid-template-columns:44px 20px 1fr;gap:6px;align-items:start}
-.feed .ms{font-size:17px}
-/* detail */
-.detail{background:var(--sheet);border:1.5px solid var(--ink);border-radius:3px;padding:14px;display:grid;gap:14px}
-.detail h2{font:700 19px/1.1 var(--display);font-stretch:85%}
-.detail h2:focus{outline:none}
-.gantt{display:grid;gap:4px}
-.gantt div{display:grid;grid-template-columns:86px 1fr 60px;gap:8px;align-items:center;font:12px var(--plate)}
-.gantt i{height:10px;border-radius:2px;background:var(--ink);display:block}
-.gantt .now i{background:repeating-linear-gradient(-45deg,var(--hazard) 0 6px,#17191A 6px 12px)}
-.gantt .left i{background:var(--rule)}
-.bar{height:6px;background:var(--rule);border-radius:3px;overflow:hidden}
-.bar i{display:block;height:100%;background:var(--go);transform-origin:left;transition:transform .6s}
-.todo{border-top:1px solid var(--rule);padding-top:6px;font-size:13px}
-.todo summary{cursor:pointer;display:flex;gap:8px;align-items:baseline}
-.todo summary b{font:600 12px var(--plate)}
-.todo p{white-space:pre-line;font:12px/1.5 var(--plate);color:var(--steel);padding:4px 0 2px 26px}
-/* toasts */
-.toasts{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));display:grid;gap:8px;z-index:9;width:min(360px,calc(100vw - 32px))}
-.toast{background:var(--ink);color:var(--floor);padding:10px 12px;border-radius:3px;display:flex;gap:8px;align-items:center;font-size:13px;box-shadow:0 6px 20px #0004}
-.toast .ms{color:var(--hazard)}
-.foot{font-size:12px;color:var(--steel);border-top:1px solid var(--rule);padding-top:10px}
-@media (max-width:1099px){.floor{grid-template-columns:minmax(0,1fr);grid-template-areas:"rail" "lines"}.rail{position:static;max-height:none;overflow:visible}.rail>.col{grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));align-items:start}}
-@media (max-width:640px){.top{position:static}.sum{grid-template-columns:repeat(2,minmax(0,1fr))}.tile-s{padding:8px}.tile-s b{font-size:22px}
-  .stations{grid-template-columns:repeat(var(--n),68px);overflow-x:auto;padding-bottom:4px}.stations,.belt{-webkit-mask-image:linear-gradient(90deg,transparent,#000 18px,#000 calc(100% - 18px),transparent);mask-image:linear-gradient(90deg,transparent,#000 18px,#000 calc(100% - 18px),transparent)} /* fades say: scroll for more */.st i{width:30px;height:30px}.st .ms{font-size:16px}.stations::before,.stations .fill{top:13px;left:34px;right:auto;width:calc(68px * (var(--n) - 1))}
-  .detail{border-radius:0}}
-@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+.mono{font:12px var(--mono)}
+.eyebrow{font-size:12px;font-weight:600;color:var(--steel)}
+.grow{flex:1}
+.ms{font-family:"Material Symbols Rounded";font-size:20px;line-height:1;display:inline-block;vertical-align:middle;visibility:hidden;flex-shrink:0;text-transform:none;letter-spacing:normal;overflow-wrap:normal;white-space:nowrap;font-weight:normal;font-style:normal}
+.icons .ms{visibility:visible}
+
+.top{gap:16px;position:relative}
+.identity{display:flex;align-items:center;gap:9px;min-width:0}
+.brand-mark{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;background:var(--ink);color:var(--sheet);flex-shrink:0}
+.brand-mark .ms{font-size:20px}
+.top-actions{gap:10px}
+.live{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--steel)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--go);flex-shrink:0}
+.lost .dot{background:var(--warn)}
+
+.btn{min-height:34px;padding:6px 11px;border:1px solid var(--rule);border-radius:7px;background:var(--sheet);color:var(--ink);display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;font-size:12px;font-weight:600;max-width:100%;text-align:center}
+.btn:hover{border-color:var(--accent);background:var(--soft)}
+.btn.primary{background:var(--accent);color:#FFF;border-color:var(--accent)}
+[data-theme="dark"] .btn.primary{color:#17142E}
+.btn.small{padding:4px 8px}
+.btn[aria-pressed="true"]{background:var(--soft);border-color:var(--accent);color:var(--accent)}
+.link-button{border:0;background:none;color:var(--accent);text-align:left;padding:4px 0;min-height:28px;text-decoration:none;font-weight:600}
+.link-button:hover{text-decoration:underline}
+.round-icon{width:34px;padding:6px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+
+.nav{display:flex;flex-wrap:wrap;gap:22px}
+.nav a{font-size:12px;text-decoration:none;color:var(--steel);padding:4px 0}
+.nav a:hover{color:var(--accent)}
+
+.panel{background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:12px;min-width:0;box-shadow:var(--shadow)}
+.summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.summary-card{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;align-items:center;padding:7px 12px;border:1px solid var(--rule);border-radius:9px;background:var(--sheet);text-decoration:none;color:var(--ink);min-height:58px}
+.summary-card:hover{border-color:var(--accent)}
+.summary-card .ms{display:none}
+.summary-card b{grid-column:1;grid-row:1/3;font-size:26px;line-height:1;letter-spacing:-.04em}
+.summary-card span:last-child{grid-column:2;grid-row:1;font-size:12px;font-weight:600}
+.summary-card small{grid-column:2;grid-row:2;font-size:11px;color:var(--steel)}
+.summary-card.ready.available{background:var(--good);border-color:color-mix(in srgb,var(--go) 22%,var(--rule))}
+.summary-card{border-top:3px solid var(--accent)}
+.summary-card.ready.available{border-top-color:var(--go)}
+
+.workspace{display:grid;gap:10px;min-width:0}
+.goal-strip{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:0;background:var(--sheet);border:1px solid var(--rule);border-radius:10px;overflow:hidden}
+.floor-section,.ticket-section{min-width:0}
+.goal-panel,.try-panel{display:grid;gap:4px;padding:10px 12px;border:0;border-radius:0;box-shadow:none;align-content:start}
+.goal-panel{border-right:1px solid var(--rule)}
+.try-panel.available{background:var(--good)}
+.try-panel{grid-template-columns:1fr auto}
+.try-panel>.row,.try-panel>h2,.try-panel>p,.try-panel .command{grid-column:1/-1}
+.try-panel .artifact{display:contents}
+.try-panel details[open]{grid-column:1/-1}
+.goal-top .selector{flex:1;min-width:0}
+.goal-top .selector select{max-width:230px}
+.project-info{position:static}
+.project-info summary{font-size:12px;min-height:28px;padding:5px 0;color:var(--steel)}
+.project-info>div{position:absolute;right:0;top:100%;z-index:3;background:var(--sheet);border:1px solid var(--rule);border-radius:8px;padding:12px;width:min(440px,80vw);box-shadow:0 8px 24px #0002}
+.viewing{font-size:13px;font-weight:600;color:var(--go);padding:5px 0}
+.overview-tools{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.overview-tools label{font-size:12px;color:var(--steel)}
+.overview-tools select{min-height:32px;border:1px solid var(--rule);border-radius:6px;background:var(--sheet);padding:4px 8px;max-width:100%;font-size:12px}
+
+.goal-heading{font-size:16px;line-height:1.35;letter-spacing:-.025em}
+.goal-progress{display:grid;grid-template-columns:auto minmax(35px,1fr);gap:7px 12px;align-items:center;font-size:12px;color:var(--steel)}
+.goal-progress strong{grid-row:1/3;font-size:24px;font-weight:700;line-height:1;letter-spacing:-.04em;color:var(--ink)}
+.goal-progress .bar{grid-column:2;grid-row:1}
+.goal-progress>details{grid-column:2;grid-row:2}
+.goal-progress>details[open],.goal-progress.unmeasured>details{grid-column:1/-1}
+.goal-progress:has(details[open]) strong{grid-row:1}
+.goal-progress{row-gap:4px}
+.selector{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:8px}
+.selector label,.search label{font-size:12px;color:var(--steel)}
+.selector select,.search input{background:var(--sheet);border:1px solid var(--rule);border-radius:6px;min-height:32px;padding:5px 8px;max-width:100%;width:100%;min-width:0;font-size:12px}
+.compact-details summary{min-height:24px;font-size:12px;color:var(--steel);padding:3px 0}
+.compact-details>div,.compact-details>ol{padding-top:7px}
+.milestones{display:grid;gap:7px}
+.milestones li{display:flex;gap:8px;align-items:center;font-size:12px}
+.milestones .node{border:1px solid var(--rule);border-radius:50%;width:23px;height:23px;display:grid;place-items:center;flex-shrink:0}
+.milestones .done .node{background:var(--good);color:var(--go)}
+.milestones small{color:var(--steel);margin-left:auto}
+
+.artifact{display:grid;gap:6px}
+.artifact h3{font-size:14px}
+.thumb{display:block;width:100%;max-height:180px;object-fit:contain;border:1px solid var(--rule);border-radius:7px;background:var(--floor)}
+.command{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+code{font:12px/1.4 var(--mono);background:var(--floor);padding:7px 9px;border-radius:6px;white-space:pre-wrap;word-break:break-word;min-width:0}
+.command code{flex:1 1 180px}
+.command .btn{flex:1 0 132px;min-height:36px}
+.facts{margin:0;display:grid;gap:5px}
+.facts div{display:grid;grid-template-columns:60px minmax(0,1fr);gap:8px;font-size:12px}
+.facts dt{color:var(--steel)}
+.facts dd{margin:0}
+.feedback,.pending{font-size:12px;color:var(--steel)}
+
+.notice{border:1px solid var(--warn);background:var(--warn-bg);border-radius:9px;padding:10px 12px;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.notice .ms{color:var(--warn)}
+.notice p{font-size:12px}
+.empty{padding:28px;text-align:center;display:grid;justify-items:center;gap:10px}
+.feature-icon{color:var(--accent)}
+.section-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.section-head p{margin-top:3px}
+.count{display:inline-grid;place-items:center;min-width:23px;min-height:23px;border-radius:6px;background:var(--track);font-size:12px;color:var(--steel);margin-left:6px;vertical-align:middle}
+.session-grid{display:grid;gap:9px;align-items:start}
+.session{display:grid;gap:7px;align-content:start;position:relative;--signal:var(--steel)}
+/* State rails reinforce the text without consuming card space. */
+.session:before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:3px;background:var(--signal);pointer-events:none}
+.session[data-state="working"]{--signal:var(--accent)}
+.session[data-state="waiting"]{--signal:var(--warn)}
+.session[data-state="waiting"]:before{background:repeating-linear-gradient(0deg,var(--signal) 0 5px,transparent 5px 7px)}
+.session[data-state="quiet"]:before{background:repeating-linear-gradient(0deg,var(--signal) 0 2px,transparent 2px 5px)}
+.test-ready{background:var(--good);color:var(--go);padding-inline:7px;border-radius:5px}
+.session.focused{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.session-title{display:flex;gap:10px;align-items:center}
+.card-signals{display:flex;align-items:center;gap:5px;flex-shrink:0}
+.card-signals .badge{white-space:nowrap}
+.session-title>div:first-child{min-width:0;flex:1}
+.session-title h3 .link-button{font-size:14px;padding:0;min-height:24px;line-height:1.35;color:var(--ink)}
+.session-title p{margin-top:3px}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;border:1px solid var(--rule);border-radius:5px;padding:3px 6px;background:var(--floor);color:var(--steel)}
+.badge.working{background:var(--soft);color:var(--accent);border-color:transparent}
+.badge.finished{background:var(--good);color:var(--go);border-color:transparent}
+.badge.blocked{background:var(--warn-bg);color:var(--warn);border-color:transparent}
+.bar{height:6px;background:var(--track);border-radius:6px;overflow:hidden}
+.bar i{height:100%;display:block;background:var(--go);transform-origin:left}
+.goal-progress .bar i{background:var(--accent)}
+.progress-note{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--steel);margin-bottom:6px}
+
+/* The track moves only while the session reports recent work. */
+.stations{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));position:relative;gap:4px}
+.stations:before{content:"";position:absolute;left:calc(50%/var(--n));right:calc(50%/var(--n));top:13px;height:2px;background:var(--rule)}
+.station{display:grid;justify-items:center;gap:5px;text-align:center;min-width:0}
+.station i{position:relative;z-index:1;width:28px;height:28px;display:grid;place-items:center;background:var(--sheet);border:1px solid var(--rule);border-radius:50%;font:600 12px var(--display)}
+.station.done i{border-color:var(--go);background:var(--good);color:var(--go)}
+.station.now i{border-color:var(--accent);background:var(--accent);color:var(--sheet);box-shadow:0 0 0 4px var(--soft)}
+[data-theme="dark"] .station.now i{color:#17142E}
+.station small{font-size:10px;line-height:1.3;color:var(--steel)}
+.track{position:relative;overflow:hidden;padding-bottom:8px}
+.track:after{content:"";position:absolute;left:-14px;right:-14px;bottom:0;height:6px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);background:repeating-linear-gradient(90deg,var(--steel) 0 2px,transparent 2px 14px);opacity:.45;animation:roll 1s linear infinite paused;pointer-events:none}
+.moving .track:after{animation-play-state:running}
+@keyframes roll{from{transform:translateX(-14px)}
+to{transform:translateX(0)}
+}
+.belt{display:flex;flex-wrap:wrap;gap:7px;padding:2px 0 6px}
+.tile{flex:1 1 180px;min-width:0;border:1px solid var(--rule);border-radius:8px;padding:7px 9px;background:var(--floor);font-size:12px;display:grid;gap:6px}
+.tile b{font:500 11px var(--mono);display:flex;justify-content:space-between;gap:6px;color:var(--steel)}
+.tile.done{border-color:color-mix(in srgb,var(--go) 28%,var(--rule));background:var(--good)}
+.tile.now{border-color:color-mix(in srgb,var(--accent) 45%,var(--rule));background:linear-gradient(var(--accent),var(--accent)) top/100% 3px no-repeat,var(--soft);padding-top:9px}
+.session[data-state="waiting"] .tile.now{border-color:#C5AC57;background:repeating-linear-gradient(-45deg,var(--hazard) 0 7px,#51472D 7px 14px) top/100% 3px no-repeat,var(--warn-bg)}
+.session[data-state="quiet"] .tile.now,.stale .tile.now{border-color:var(--rule);background:var(--floor)}
+.tile.next,.tile.later{border-style:dashed}
+.tile-title{line-height:1.4}
+.tile.more{flex-basis:90px;place-content:center}
+.children{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:0 14px}
+.child{border-top:1px solid var(--rule);padding:8px 0;display:grid;gap:4px;min-width:0}
+.child .row{gap:5px}
+.child b,.child p{font-size:12px}
+.child-meta{font-size:11px;color:var(--steel)}
+.session-bottom>.compact-details{order:2}
+.session-bottom>.link-button{order:3}
+.session-bottom>.compact-details[open]{flex-basis:100%;order:4}
+.session-bottom{padding-top:0;display:flex;flex-wrap:wrap;gap:5px 12px;justify-content:space-between;align-items:center}
+.task-progress{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.task-progress .bar{width:46px;height:5px;flex-shrink:0}
+.search{display:grid;gap:3px;min-width:min(100%,210px)}
+.filters{display:flex;flex-wrap:wrap;gap:5px}
+.subsession-head{display:flex;flex-wrap:wrap;gap:7px;align-items:center;justify-content:space-between}
+.subsession-head .btn{min-height:28px;font-size:11px}
+
+.tickets{display:grid;gap:0}
+.ticket{display:grid;grid-template-columns:minmax(0,1fr) 170px;gap:16px;padding:10px 0;border-bottom:1px solid var(--rule)}
+.ticket:first-child{padding-top:0}
+.ticket:last-child{padding-bottom:0;border-bottom:0}
+.ticket h3{font-size:14px}
+.ticket h3 a{text-decoration:none}
+.ticket p{margin-top:5px;font-size:12px;color:var(--steel)}
+.ticket-count{grid-column:2;align-self:center;font-size:12px;color:var(--steel)}
+.ticket-count .bar{margin-top:6px}
+.ticket-section .section-head{margin-bottom:10px}
+.technical{border-top:1px solid var(--rule);padding-top:5px}
+.technical summary,.archive summary{min-height:30px;padding:6px 0;color:var(--steel);font-size:12px}
+.technical-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:20px;padding:12px 0}
+.technical h3{margin-bottom:8px;font-size:14px}
+.feed{display:grid;gap:7px}
+.feed li{display:grid;grid-template-columns:50px minmax(0,1fr);gap:8px;font-size:12px}
+.step-list{display:grid;gap:8px}
+.step-list li{display:grid;grid-template-columns:110px minmax(0,1fr) 50px;gap:10px;align-items:center;font-size:12px}
+.step-list .bar i{background:var(--accent)}
+.archive ul{display:grid;gap:6px;padding-top:5px}
+.archive li{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center}
+.detail-panel{display:grid;gap:18px}
+.task-list{display:grid}
+.task{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:10px;padding:13px 0;border-bottom:1px solid var(--rule)}
+.task p{margin-top:5px;font-size:13px;color:var(--steel)}
+.task code{display:block;margin-top:6px}
+.errors{color:var(--warn);font-size:12px}
+.toast{position:fixed;bottom:20px;right:20px;max-width:min(400px,calc(100vw - 40px));border:1px solid var(--rule);border-radius:10px;background:var(--sheet);box-shadow:0 8px 32px #0002;padding:12px 16px;z-index:10;font-size:13px}
+.boot{max-width:700px;margin:60px auto;padding:24px}
+.stale .bar,.stale .stations,.stale .track{filter:grayscale(1)}
+.detail-layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:16px;align-items:start}
+.detail-nav{display:grid;gap:14px;position:sticky;top:14px;max-height:85vh;overflow:auto}
+.detail-nav .search{min-width:0}
+.detail-nav ul{display:grid;gap:5px}
+.detail-nav a{display:block;padding:8px;border-radius:6px;font-size:13px;text-decoration:none}
+.detail-nav a[aria-current="page"]{background:var(--soft);font-weight:700}
+
+/* Intermediate desktop panes keep the overview together before phone reflow. */
+@media(min-width:820px){.session-grid.pair:not(:has(.subsession-block[open])){grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(min-width:1100px){.session-grid.pair,.session-grid.many,.tickets.many{grid-template-columns:repeat(2,minmax(0,1fr))}
+.tickets.many{column-gap:24px}
+.tickets.many .ticket{padding:10px 0}}
+
+@media(max-width:760px){.app{padding:14px 12px;gap:12px}
+.top{align-items:flex-start}
+.top-actions{gap:12px;justify-content:flex-end}
+.identity h1{font-size:18px}
+.nav{gap:14px}
+.summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.summary-card{padding:9px;min-height:66px}
+.summary-card span:last-child{font-size:12px}
+.workspace{display:grid;gap:12px}
+.workspace>*,.goal-strip{width:100%}
+.goal-strip{grid-template-columns:1fr}
+.goal-panel{border-right:0;border-bottom:1px solid var(--rule)}
+.ticket{grid-template-columns:1fr;gap:6px}
+.ticket-count{grid-column:1}
+.overview-tools{gap:6px}
+.tile{flex-basis:140px}
+.session-grid{grid-template-columns:1fr}
+.panel{padding:12px}
+.btn,.link-button{min-height:36px}
+.subsession-head .btn{min-height:32px}
+.detail-layout{grid-template-columns:1fr}
+.detail-nav{display:none}
+.task{grid-template-columns:36px minmax(0,1fr)}
+.task>.badge{grid-column:2;justify-self:start}
+.search{width:100%}
+.stations{grid-template-columns:repeat(var(--n),minmax(0,1fr));padding:4px 1px 5px}
+.stations:before{top:17px}
+.session-title{align-items:flex-start}
+.session-title>.badge{max-width:100px}
+.step-list li{grid-template-columns:90px minmax(0,1fr) 44px}
+}
+
+/* Only the overview gains columns here; detail navigation keeps its phone layout. */
+@media(min-width:640px) and (max-width:760px){
+.app{padding-top:10px;gap:8px}
+.summary{grid-template-columns:repeat(4,minmax(0,1fr))}
+.summary-card{padding:6px 10px;min-height:54px}
+.goal-strip{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}
+.goal-panel,.try-panel{padding:6px 10px;gap:2px}
+.goal-panel{border-right:1px solid var(--rule);border-bottom:0}
+.session{padding:10px;gap:5px}
+.workspace{gap:8px}
+}
+
+@media(prefers-reduced-motion:reduce){.motion-toggle{display:none}
+*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
+
 </style>
 </head>
 <body>
-
-<div class="boot" id="boot">Loading the Factory floor… If this stays, the view's libraries did not load (offline or blocked). The text card still works: <code>fast_gate.py status</code>.</div>
-
-<div class="app" x-data="floor" x-cloak :class="lost && 'lost'" @keydown.escape.window="close()" x-effect="document.title = sel ? 'Run ' + sel.label + ' · Factory floor' : 'Factory floor · ' + plural(open.length, 'run')">
-  <header class="top row">
-    <h1>Factory floor</h1>
-    <span class="plate muted" x-text="plural(open.length, 'run') + ' open'"></span>
-    <span class="sp"></span>
-    <span class="row" style="gap:6px;font-size:13px"><span class="dot" x-effect="beat($el, at)"></span><span x-text="liveText"></span></span>
-    <button class="btn" x-show="!snap" @click="toggleNotify()" :aria-pressed="!!notify"><span class="ms" aria-hidden="true">notifications</span><span x-text="notify===null ? 'Notifications blocked here' : notify ? 'Notifying' : 'Notify me'"></span></button>
-    <button class="btn" @click="switchTheme()"><span class="ms" aria-hidden="true" x-text="dark ? 'light_mode' : 'dark_mode'"></span><span x-text="'Use ' + (dark ? 'light' : 'dark') + ' theme'"></span></button>
+<a href="#main" class="skip">Skip to progress</a>
+<div id="boot" class="boot">Loading factory progress… If this stays, the page libraries may be offline or blocked. Check progress in your session with <code>fast_gate.py status</code>.</div>
+<div class="app" x-data="floor" x-cloak :class="{lost,stale:lost}" @keydown.escape.window="close()" x-effect="document.title=(sel ? 'Session '+sel.label+' · ' : '')+(scope?.name || 'Connecting')+' · Factory progress'">
+  <header class="top row spread">
+    <div class="identity"><span class="brand-mark"><span class="ms" aria-hidden="true">construction</span></span><div><h1 x-text="sel?.label || scope?.name || 'Connecting to project…'"></h1></div></div>
+    <div class="row top-actions"><details class="project-info"><summary>Project info</summary><div><p class="small" x-text="scope?.kind==='all'?'All projects':scope?.kind==='repository'?'This repository and its worktrees':'This project folder'"></p><p class="mono muted" x-text="scope?.project || 'Waiting for project data'"></p></div></details><span class="live"><span class="dot" aria-hidden="true"></span><span x-text="liveText"></span></span><button class="btn round-icon" @click="switchTheme()" :aria-label="'Use '+(dark?'light':'dark')+' theme'"><span class="ms" aria-hidden="true" x-text="dark?'light_mode':'dark_mode'"></span></button></div>
   </header>
+  <div class="notice" x-show="lost" role="alert"><span class="ms" aria-hidden="true">cloud_off</span><div class="grow"><b>Live updates disconnected</b><p x-text="okAt?'Showing the last received state. Retrying automatically.':'No progress received yet. Check that the preview server is available.'"></p></div><button class="btn" @click="poll()" :disabled="polling"><span class="ms" aria-hidden="true">refresh</span>Retry now</button></div>
+  <main id="main" class="stack">
 
-  <div class="strip row" x-show="lost" x-effect="$el.hidden = modal"><span class="ms" aria-hidden="true">cloud_off</span><span role="alert"><b>Lost the live feed.</b> <span x-text="okAt ? 'Showing the state from ' + clock(okAt) + '.' : 'No state yet. Is fast_gate.py view running?'"></span></span><span class="muted" aria-hidden="true" x-text="'Retrying every ' + (hidden ? 15 : 2) + ' s'"></span><button class="btn" @click="poll(true)"><span class="ms" aria-hidden="true">refresh</span>Retry now</button></div>
-
-  <section class="sum" aria-label="Summary" x-effect="$el.hidden = modal"><nav class="contents" aria-label="Jump to a section">
-    <a class="tile-s" href="#lines"><span class="ms" aria-hidden="true">construction</span><b x-text="open.length"></b><span class="caps">Runs open</span></a>
-    <a class="tile-s w" href="#waiting" x-show="waiting.length"><span class="ms" aria-hidden="true">front_hand</span><b x-text="waiting.length"></b><span class="caps">Waiting on you</span></a>
-    <a class="tile-s r" href="#ready"><span class="ms" aria-hidden="true">rocket_launch</span><b x-text="readyTotal"></b><span class="caps">Ready to try</span></a></nav>
-    <div class="tile-s d"><span class="ms" aria-hidden="true">check_circle</span><b x-text="open.reduce((a,r)=>a+r.done,0)"></b><span class="caps">Todos done</span></div>
-  </section>
-
-  <div class="floor">
-    <aside class="col rail" aria-label="Waiting on you, Ready to try, activity and run detail">
-      <section id="waiting" class="col" x-show="waiting.length" aria-label="Waiting on you" x-effect="$el.hidden = modal">
-        <template x-for="(r,i) in waiting" :key="r.key"><div class="andon">
-          <span class="caps"><span class="light"></span><span x-text="'Waiting on you · ' + r.label + ' · ' + age(r.paused.since)"></span></span>
-          <p x-text="r.paused.reason"></p>
-          <div class="cmd"><code x-text="r.project"></code><button class="btn" :class="r.key===waiting[0]?.key && !sel && 'primary'" @click="copy('s'+r.key, r.project, $el)"><span class="ms" aria-hidden="true">content_copy</span><span x-text="copyLabel('s'+r.key, 'Copy folder path')"></span></button></div>
-        </div></template>
+    <div x-show="!sel" class="stack">
+      <section x-show="!focus" class="panel empty" aria-labelledby="empty-title"><div class="feature-icon"><span class="ms" aria-hidden="true">flag</span></div><h2 id="empty-title" x-text="loaded?'No sessions recorded yet':'Connecting to your project'"></h2><p class="muted" x-text="loaded?'Start a factory session here to see its goal, work and next chance to try.':'Your goal and active sessions will appear here.'"></p><code x-show="loaded">safe-engine</code></section>
+      <section class="summary" aria-label="Project summary">
+        <a class="summary-card" href="#sessions" @click.prevent="go('sessions')"><span class="ms" aria-hidden="true">construction</span><b x-text="open.length"></b><small x-text="waiting.length?'Open · '+waiting.length+' waiting':'Open now'"></small><span>Sessions</span></a>
+        <a class="summary-card" href="#sessions" @click.prevent="go('sessions')"><span class="ms" aria-hidden="true">smart_toy</span><b x-text="workingChildren"></b><small>From session reports</small><span>Working subsessions</span></a>
+        <a class="summary-card" href="#tickets" @click.prevent="go('tickets')"><span class="ms" aria-hidden="true">flag</span><b x-text="activeTickets.length"></b><small>From local tasks</small><span>Tickets in progress</span></a>
+        <a class="summary-card ready" :class="{available:focusReady.length}" :href="focus?'#ready':'#sessions'" @click.prevent="go(focus?'ready':'sessions')"><span class="ms" aria-hidden="true">play_arrow</span><b x-text="focusReady.length"></b><small>Selected session</small><span>Ready to try</span></a>
       </section>
-      <div class="col" x-show="!sel">
-        <section id="ready" class="col" aria-labelledby="ready-h" style="gap:8px">
-          <div class="row"><h2 class="sec" id="ready-h"><span class="ms" aria-hidden="true">rocket_launch</span> Ready to try</h2><span class="sp"></span><button class="link" x-show="ready.length>3" @click="all=!all" x-text="all ? 'Show fewer' : ready.length < readyTotal ? 'Show ' + ready.length + ' newest' : 'Show all ' + ready.length"></button></div>
-          <div class="col" style="gap:8px">
-            <template x-for="(t,i) in (all ? ready : ready.slice(0,3))" :key="t.key">
-              <div class="card" x-init="loaded && $el.classList.add('glow')">
-                <h3><span class="ms" aria-hidden="true" x-text="KIND[t.kind]"></span><span x-text="t.result"></span></h3>
-                <span class="plate muted sm" x-text="t.run + ' · ' + t.id + ' ' + t.title + ' · ' + age(t.at) + ' ago'"></span>
-                <template x-if="safeSrc(t.thumb)"><img class="thumb" @error="$el.remove()" :src="t.thumb" :alt="'Screenshot: ' + t.result"></template>
-                <div class="cmd"><code x-text="t.value"></code>
-                  <template x-if="t.kind==='url' && safeUrl(t.value)"><a class="btn try" :class="t.key===ready[0]?.key && !waiting.length && 'primary'" :href="t.value" target="_blank" rel="noopener noreferrer"><span class="ms" aria-hidden="true">open_in_new</span>Open link</a></template>
-                  <template x-if="!(t.kind==='url' && safeUrl(t.value))"><button class="btn try" :class="t.key===ready[0]?.key && !waiting.length && 'primary'" @click="copy(t.run+'/'+t.id, t.value, $el)"><span class="ms" aria-hidden="true">content_copy</span><span x-text="copyLabel(t.run+'/'+t.id, t.kind==='cmd' ? 'Copy command' : t.kind==='url' ? 'Copy link' : 'Copy path')"></span></button></template>
-                </div>
-                <span class="plate muted sm" x-show="t.kind==='cmd'" :title="t.cwd" x-text="'in the ' + t.cwd.split(/[\\/]/).pop() + ' folder'"></span>
-              </div>
-            </template>
-          </div>
-          <p class="muted" x-show="!ready.length">Nothing to try yet. Finished todos with a command, link or file show here.</p>
-        </section>
-        <details id="feed" class="col" style="gap:8px" :open="!narrow">
-          <summary class="sec"><h2 class="sec" id="feed-h"><span class="ms" aria-hidden="true">schedule</span> Recent activity</h2></summary>
-          <ul class="feed">
-            <template x-for="e in events.slice(-7).reverse()" :key="e.id"><li x-init="loaded && $el.classList.add('enter')"><span class="plate muted" x-text="clock(e.t)"></span><span class="ms" aria-hidden="true" x-text="e.icon"></span><span><b x-text="e.run"></b> <span x-text="e.text"></span></span></li></template>
-          </ul>
-          <p class="muted" x-show="!events.length">No activity yet.</p>
-        </details>
-      </div>
-      <template x-if="sel">
-        <section class="detail" :aria-labelledby="'d-' + sel.key">
-          <div class="row"><h2 tabindex="-1" :id="'d-' + sel.key" x-text="'Run ' + sel.label"></h2><span class="sp"></span><button class="btn primary" @click="close()"><span class="ms" aria-hidden="true">close</span>Back to all runs</button></div>
-          <span class="plate muted" x-text="'in ' + sel.name + ' · ' + sel.kind + ' run · ' + fmt(sel.steps.reduce((a,s)=>a+s.secs,0)) + ' total' + (sel.closed ? ' · ' + sel.closed : '')"></span>
-          <p class="err" x-show="sel.error" x-text="sel.error"></p>
-          <div class="andon" x-show="narrow && sel.paused"><span class="caps"><span class="light"></span>Waiting on you</span><p x-text="sel.paused?.reason"></p>
-            <div class="cmd"><code x-text="sel.project"></code><button class="btn" @click="copy('s'+sel.key, sel.project, $el)"><span class="ms" aria-hidden="true">content_copy</span><span x-text="copyLabel('s'+sel.key, 'Copy folder path')"></span></button></div></div>
-          <h3 class="sec">Time per step</h3>
-          <div class="gantt">
-            <template x-for="s in sel.steps" :key="s.id"><div :class="s.s"><span x-text="name(s.id)"></span><i :style="'width:' + Math.max(2, s.secs / (Math.max(...sel.steps.map(x=>x.secs)) || 1) * 100) + '%'"></i><span class="muted" x-text="s.s==='left' ? 'not yet' : fmt(s.secs)"></span></div></template>
-          </div>
-          <h3 class="sec row"><span x-text="sel.ticket"></span><span class="sp"></span><span x-text="sel.done + ' of ' + sel.total + ' done'"></span></h3>
-          <div class="bar"><i :style="'transform:scaleX(' + sel.pct/100 + ')'"></i></div>
-          <div>
-            <template x-for="t in detail" :key="t.id"><details class="todo"><summary><b x-text="t.id"></b><span x-text="t.title"></span><span class="sp"></span><span class="caps" x-text="t.state"></span></summary><p x-text="'→ ' + t.result + (t.value ? '\nTry: ' + t.value : '')"></p></details></template>
-          </div>
-          <span class="plate muted sm" x-text="'Record: ' + sel.record"></span>
-        </section>
+      <div class="workspace">
+      <template x-if="focus">
+        <div class="goal-strip" x-data="{current:focus}" x-effect="if(focus) current=focus">
+          <section id="goal" class="panel goal-panel" aria-labelledby="goal-title">
+            <div class="row spread goal-top"><div class="selector" x-show="runs.length>1"><label for="goal-session">Session</label><select id="goal-session" @change="choose($event.target.value)"><template x-for="r in ordered" :key="r.key"><option :value="r.key" :selected="r.key===current.key" x-text="r.label+(r.closed?' · closed':'')+(targets(r).length?' · '+plural(targets(r).length,'preview'):'')"></option></template></select></div><p class="eyebrow" x-show="runs.length<=1">Session goal</p><span class="badge" :class="statusClass(current)" x-text="status(current)"></span></div>
+            <h2 class="goal-heading" id="goal-title" x-text="current.goal?.title || 'Goal not recorded'"></h2>
+            <p class="small" x-show="current.paused && !shown.some(r=>r.key===current.key)" x-text="current.paused ? current.paused.reason+' Reply in this session to continue.' : ''"></p>
+            <div class="goal-progress" :class="{unmeasured:!hasGoalProgress(current)}"><strong x-show="hasGoalProgress(current)" role="img" :aria-label="goalLabel(current)" x-text="hasGoalProgress(current)?current.goal.pct+'%':'—'"></strong><div class="bar" x-show="hasGoalProgress(current)"><i :style="'transform:scaleX('+goalPercent(current)/100+')'"></i></div>
+              <details class="compact-details"><summary x-text="hasGoalProgress(current)?'Goal milestones: '+current.goal.done+'/'+current.goal.total+' complete':'Milestones'"></summary><ol class="milestones" x-show="current.goal?.milestones?.length" aria-label="Goal milestones"><template x-for="(m,i) in (current.goal?.milestones || [])" :key="m.id"><li :class="{done:m.done}"><span class="node" aria-hidden="true" x-text="m.done?'✓':i+1"></span><b x-text="m.title"></b><small x-text="m.done?'Complete':'Not complete'"></small></li></template></ol><p class="small muted" x-text="hasGoalProgress(current)?'Recorded goal milestones. Task completion and test readiness are separate.':current.goal?'This goal has no recorded milestone measure.':'Add the intended outcome and milestones to this session’s work record.'"></p></details>
+            </div>
+
+          </section>
+          <section id="ready" class="panel try-panel" :class="{available:focusReady.length}" aria-labelledby="ready-title">
+            <div class="row spread"><p class="eyebrow" x-text="focusReady.length?'Ready to try':'Next chance to try'"></p><span class="small muted" x-show="current.nextTest?.estimate || !focusReady.length" x-text="current.nextTest?.estimate || 'No estimate recorded'"></span></div>
+            <h2 id="ready-title" class="goal-heading" x-text="current.nextTest?.title || focusReady[0]?.title || (focusReady.length?'Recorded test target available':'Test milestone not recorded')"></h2>
+            <p class="small muted" x-show="!focusReady.length"><b>When: </b><span x-text="current.nextTest?.when || 'Test condition not recorded'"></span></p>
+            <p class="pending" x-show="!focusReady.length">No test target reported yet. A preview, command or file will appear here.</p>
+            <template x-for="(t,i) in focusReady" :key="t.key"><div class="artifact"><p class="small" x-show="i>0" x-text="t.result || t.title"></p><div class="command"><p class="viewing" x-show="currentPreview(t.value)">You’re viewing this preview</p><code x-show="t.kind!=='url'" x-text="t.value"></code><template x-if="t.kind==='url' && safeUrl(t.value) && !currentPreview(t.value)"><a class="btn" :class="i===0?'primary':''" :href="t.value" target="_blank" rel="noopener noreferrer"><span class="ms" aria-hidden="true">open_in_new</span>Open preview</a></template><template x-if="!(t.kind==='url' && safeUrl(t.value))"><button class="btn" :class="i===0?'primary':''" @click="copy(t.key,t.value,$el)"><span class="ms" aria-hidden="true">content_copy</span><span x-text="copyLabel(t.key,t.kind==='cmd'?'Copy command':t.kind==='url'?'Copy link':'Copy path')"></span></button></template></div><details class="compact-details"><summary x-text="t.id+' · Test details'"></summary><p class="small muted" x-text="(current.nextTest?.title || t.title)+' · reported '+age(t.at)+' ago'"></p><p class="small muted" x-show="current.nextTest?.when" x-text="current.nextTest?.when"></p><p class="mono muted" x-show="t.kind==='cmd'" x-text="'Folder: '+(t.cwd || current.project)"></p><template x-if="safeSrc(t.thumb)"><img class="thumb" :src="t.thumb" :alt="'Preview of '+t.title" loading="lazy"></template></details></div></template>
+            <details class="compact-details feedback"><summary>Give feedback</summary><p class="small muted" x-text="current.nextTest?.feedback || 'Reply in this session with what you tried, what happened and what felt confusing.'"></p></details>
+
+          </section>
+        </div>
       </template>
-    </aside>
 
-    <main id="lines" class="col" :class="lost && 'stale'" aria-labelledby="lines-h" x-effect="$el.toggleAttribute('data-away', modal)">
-      <div class="row">
-        <h2 class="sec" id="lines-h"><span class="ms" aria-hidden="true">construction</span> Runs</h2><span class="sp"></span>
-        <template x-for="f in FILTERS" :key="f[0]"><button class="btn" x-show="(open.length > 1 || filter!=='all') && (count(f[0]) || filter===f[0] || f[0]==='all')" :aria-pressed="filter===f[0]" @click="setFilter(f[0])" x-text="f[1] + ' ' + count(f[0])"></button></template>
+      <section id="sessions" class="floor-section" aria-labelledby="sessions-title">
+        <div class="section-head"><h2 id="sessions-title">Sessions</h2><div class="overview-tools"><label for="session-filter" x-show="open.length>1 || filter!=='all'">Show</label><select id="session-filter" aria-label="Show sessions" x-show="open.length>1 || filter!=='all'" @change="setFilter($event.target.value)"><template x-for="f in FILTERS" :key="f[0]"><option :value="f[0]" :selected="filter===f[0]" x-text="f[1]+' ('+count(f[0])+')'"></option></template></select><button class="btn motion-toggle" @click="motion=!motion;storeMotion()" :aria-pressed="!motion" x-text="motion?'Pause animation':'Resume animation'"></button></div><div class="search" x-show="open.length>4 || query"><label for="session-search">Find a session or task</label><input id="session-search" type="search" x-model="query" @input="updateQuery()" placeholder="Session, task or ticket"></div></div>
+
+        <div class="session-grid" :class="{pair:shown.length===2,many:shown.length>2}"><template x-for="r in shown" :key="r.key"><article class="panel session" x-data="{childFilter:null}" :class="{focused:focus?.key===r.key,moving:isMoving(r)}" :data-state="lost&&!r.paused?'quiet':kind(r)" :aria-labelledby="'n-'+r.key">
+          <div class="session-title"><div><h3><button class="link-button" :id="'n-'+r.key" @click="show(r.key)" x-text="r.label"></button></h3><p class="small muted" x-show="r.goal?.title && focus?.key!==r.key" x-text="r.goal?.title"></p></div><div class="card-signals"><span class="badge" :class="statusClass(r)" x-text="r.paused?'Paused':status(r)"></span><button class="link-button small test-ready" x-show="targets(r).length" :aria-label="'Test · '+targets(r).length+' — '+r.label" @click="choose(r.key);go('ready')"><span aria-hidden="true">▶ </span><span x-text="'Test · '+targets(r).length"></span></button></div></div>
+          <p class="errors" x-show="r.paused"><span x-text="r.paused?.reason"></span> <span class="small">Reply in this session to continue.</span></p>
+
+          <div class="track" x-show="beltTasks(r).length || r.more || !r.total"><div class="belt" tabindex="0" role="list" :aria-label="'Session tasks: '+r.done+' of '+r.total+' complete.'"><template x-for="t in beltTasks(r)" :key="t.id"><div class="tile" :class="t.state || 'now'" role="listitem"><b><span x-text="t.id"></span><span x-text="beltStatus(r,t)"></span></b><span class="tile-title" :title="t.title" x-text="t.title"></span></div></template><div role="listitem" x-show="r.more"><button class="tile more link-button" @click="show(r.key)" >View all tasks</button></div><div role="listitem" class="small muted" x-show="!r.total">No tasks recorded.</div></div></div>
+          <details class="compact-details subsession-block" x-show="r.subsessions.length" :open="r.subsessions.some(a=>a.status!=='finished')"><summary x-text="r.subsessions.every(a=>a.status==='finished')?r.subsessions.length+' finished subsessions':'Subsessions · '+r.subsessions.length"></summary><div class="stack" style="gap:6px"><div class="subsession-head"><div class="filters" x-show="r.subsessions.length>6" :aria-label="'Filter subsessions in '+r.label"><template x-for="f in CHILD_FILTERS" :key="f[0]"><button class="btn small" :aria-pressed="childMode(r,childFilter)===f[0]" @click="childFilter=f[0]" x-text="f[1]+' '+(f[0]==='all'?r.subsessions.length:r.subsessions.filter(a=>a.status===f[0]).length)"></button></template></div></div><ul class="children"><template x-for="a in children(r,childFilter)" :key="a.id"><li class="child"><div class="row spread"><b x-text="a.title || a.id"></b><span class="badge" :class="a.status" x-text="childStatus(a)"></span></div><p><span x-text="a.task || 'Current task not reported'"></span> <span class="child-meta" x-text="' · '+(a.parent?'Parent: '+childParent(r,a)+' · ':'')+(a.updated?age(a.updated)+' ago':'Update time unknown')"></span></p></li></template></ul><p class="small muted" x-show="!r.subsessions.length">No subsessions reported.</p><p class="small muted" x-show="r.subsessions.length && !children(r,childFilter).length">No subsessions match this filter. <button class="link-button" @click="childFilter='all'">Show all subsessions</button></p></div></details>
+          <div class="session-bottom"><div class="task-progress small muted"><div class="bar" aria-hidden="true"><i :style="'transform:scaleX('+percent(r.pct)/100+')'"></i></div><span x-text="r.done+'/'+r.total+' tasks · '+stage(r)"></span><span x-text="'Updated '+age(r.changed)+' ago'"></span></div><button class="link-button small" x-show="!targets(r).length" @click="choose(r.key);go('goal')">Goal &amp; test</button><details class="compact-details"><summary>Stages &amp; completed work</summary><div class="stations" tabindex="0" role="img" x-show="r.steps.length" :style="'--n:'+r.steps.length" :aria-label="'Factory stages: '+r.steps.map(s=>stepName(s.id)+(s.s==='now'?' current':s.s==='done'?' complete':'')).join(', ')"><template x-for="(s,i) in r.steps" :key="s.id"><div class="station" :class="s.s"><i aria-hidden="true" x-text="s.s==='done'?'✓':i+1"></i><small x-text="stepName(s.id)"></small></div></template></div><p class="small muted" x-show="r.last" x-text="'Last completed: '+(r.last?.title || '')"></p></details></div>
+
+        </article></template></div>
+        <p class="muted" x-show="open.length && !shown.length">No sessions match. <button class="link-button" @click="query='';setFilter('all')">Clear filters</button></p><p class="muted" x-show="!open.length">No active sessions. Start a session with <code>safe-engine</code> to continue this project.</p>
+      </section>
+      <section id="tickets" class="ticket-section" aria-labelledby="tickets-title"><div class="section-head"><div><h2 id="tickets-title">Tickets in progress</h2><p class="small muted">From local session tasks</p></div></div><div class="panel tickets" :class="{many:activeTickets.length>3}"><template x-for="t in activeTickets" :key="t.key"><article class="ticket"><div><h3><template x-if="safeUrl(t.url)"><a :href="t.url" target="_blank" rel="noopener noreferrer" x-text="ticketLabel(t)"></a></template><template x-if="!safeUrl(t.url)"><span x-text="ticketLabel(t)"></span></template></h3><p x-text="'Session: '+t.session"></p><details class="compact-details"><summary>Current work</summary><p x-text="ticketWork(t)"></p></details></div><div class="ticket-count"><p x-text="t.total?t.done+'/'+t.total+' planned tasks complete':'No linked tasks recorded'"></p><div class="bar" role="img" :aria-label="t.done+' of '+t.total+' tasks complete'"><i :style="'transform:scaleX('+percent(t.pct)/100+')'"></i></div></div></article></template><p class="muted small" x-show="!activeTickets.length">No tickets have tasks reported in progress. Session details show all recorded tickets and tasks.</p></div></section>
       </div>
-      <div class="col">
-        <template x-for="r in shown" :key="r.key">
-          <article class="line" :class="{held:r.paused, quiet:quiet(r), open:selKey===r.key}" :aria-labelledby="'n-'+r.key">
-            <div class="row lh">
-              <div class="ring" role="img" :style="'--p:' + r.pct" :aria-label="r.done + ' of ' + r.total + ' todos done'"><span x-text="r.pct + '%'"></span></div>
-              <h3><button class="name" :id="'n-'+r.key" :aria-current="selKey===r.key ? 'true' : null" @click="show(r.key)" x-text="r.label"></button></h3>
-              <span class="plate muted" x-text="'in ' + r.name + (r.ticket ? ' · ' + r.ticket : '')"></span>
-              <span class="sp"></span>
-              <span class="tag held-c" x-show="r.paused"><span class="light"></span>Waiting on you</span>
-              <span class="tag muted" x-show="quiet(r)"><span class="ms" aria-hidden="true">bedtime</span><span x-text="'Quiet ' + age(r.changed)"></span></span>
-              <span class="plate muted" x-show="r.steps.length" x-text="name(r.steps[r.at]?.id) + ' · step ' + (r.at+1) + ' of ' + r.steps.length + ' · ' + age(r.stepSince) + ' in step'"></span>
-            </div>
-            <p class="err" x-show="r.error" x-text="r.error"></p>
-            <div class="stations" tabindex="0" role="img" x-show="r.steps.length" x-effect="r.at; narrow && $nextTick(()=>$el.scrollLeft=($el.querySelector('.now')?.offsetLeft||0)-$el.clientWidth/2+34)" :style="'--n:' + r.steps.length" :aria-label="'Steps: ' + r.steps.map(s=>name(s.id) + (s.s==='left' ? '' : ' ' + s.s)).join(', ')">
-              <div class="fill" :style="'transform:scaleX(' + r.at/Math.max(1, r.steps.length-1) + ')'"></div>
-              <template x-for="s in r.steps" :key="s.id">
-                <div class="st" :class="s.s"><i><span class="ms" aria-hidden="true" x-text="s.s==='done' ? 'check_circle' : ICON[s.id]"></span></i><small x-text="name(s.id)"></small></div>
-              </template>
-              <div class="workers" :style="'grid-column:' + (r.at+1)" x-show="r.agents.some(a=>a.run)"><template x-for="a in r.agents.filter(a=>a.run).slice(0,3)" :key="a.id"><span class="ms" aria-hidden="true">smart_toy</span></template></div>
-            </div>
-            <div class="track">
-              <div class="belt" tabindex="0" role="list" :aria-label="'Todos: ' + r.done + ' of ' + r.total + ' done' + (r.now.length>1 ? ', ' + r.now.length + ' in parallel' : '')">
-                <div role="listitem" class="tile done pile" x-show="r.done" x-effect="stamp($el, r.done)"><b><span><span class="ms" aria-hidden="true">check_circle</span> <span x-text="r.done + ' done'"></span></span></b><span class="t" x-text="r.last ? 'Last: ' + r.last.id + ' ' + r.last.title : ''"></span></div>
-                <template x-for="t in r.open" :key="t.id">
-                  <div role="listitem" class="tile" :class="t.state" x-init="loaded && $el.classList.add('enter')"><b><span x-text="t.id"></span><span class="caps" x-text="t.state"></span></b><span class="t" x-text="t.title"></span></div>
-                </template>
-                <div role="listitem" class="tile more" x-show="r.more" x-text="'+' + r.more + ' later'"></div>
-              </div>
-            </div>
-            <ul class="row" style="gap:6px" aria-label="Agents and sessions">
-              <template x-for="a in r.agents" :key="a.id"><li class="chip" :class="a.run ? 'run' : 'fin'"><span class="ms" aria-hidden="true" x-text="a.run ? 'smart_toy' : 'check_circle'"></span><span x-text="'Agent: ' + a.desc + (a.run ? ', running' : ', finished')"></span></li></template>
-              <li class="chip" x-show="r.sessions"><span class="ms" aria-hidden="true">terminal</span><span x-text="plural(r.sessions, 'session')"></span></li>
-            </ul>
-          </article>
-        </template>
-      </div>
-      <p class="muted" x-show="!open.length">No factory runs open on this machine. Start one in your agent with <code style="padding:0 4px">safe-engine</code>.</p>
-      <p class="muted" x-show="open.length && !shown.length">No runs match this filter.</p>
-      <details x-show="finished.length"><summary class="sec" x-text="'Closed today · ' + finished.length"></summary>
-        <ul class="col" style="gap:6px;padding-top:8px"><template x-for="r in finished" :key="r.key"><li class="row plate sm"><span class="ms" aria-hidden="true" x-text="r.closed==='stopped' ? 'block' : 'check_circle'"></span><button class="name" :id="'n-'+r.key" @click="show(r.key)" x-text="r.label"></button><span class="muted" x-text="r.closed + ' · ' + plural(r.total, 'todo') + ' · ' + fmt(r.steps.reduce((a,s)=>a+s.secs,0))"></span></li></template></ul>
-      </details>
-    </main>
-  </div>
+      <details class="archive" x-show="finished.length"><summary x-text="'Closed sessions · '+finished.length"></summary><ul><template x-for="r in finished" :key="r.key"><li><button class="link-button" :id="'n-'+r.key" @click="show(r.key)" x-text="r.label"></button><span class="small muted" x-text="r.closed+' · '+r.done+'/'+r.total+' planned tasks complete'"></span></li></template></ul></details>
+      <details class="technical"><summary>Activity &amp; data</summary><div class="technical-grid"><section><h2 class="small">Recent activity</h2><ul class="feed" style="margin-top:12px"><template x-for="e in events.slice(-10).reverse()" :key="e.id"><li><span class="mono muted" x-text="clock(e.t)"></span><span><b x-text="e.run"></b> <span x-text="human(e.text)"></span></span></li></template></ul><p class="small muted" x-show="!events.length">No activity reported.</p></section><section><h2 class="small">Preview data</h2><p class="small muted" style="margin-top:12px">This page reflects saved local session records. Open session details for gate timing and the work record.</p><p class="small muted" x-text="'Received: '+(okAt?new Date(okAt).toLocaleString():'No data yet')"></p><p class="small muted" x-show="snap">Snapshot only. Progress will not update.</p></section></div></details>
+    </div>
+    <template x-if="sel"><div class="detail-layout"><aside class="panel detail-nav" aria-labelledby="detail-nav-title"><h2 id="detail-nav-title">Sessions</h2><div class="search" x-show="runs.length>4 || detailQuery"><label for="detail-search">Find a session</label><input id="detail-search" type="search" x-model="detailQuery" placeholder="Session name"></div><nav aria-label="Session navigation"><ul><template x-for="r in detailSessions" :key="r.key"><li><a :href="'#session-'+encodeURIComponent(r.key)" @click.prevent="show(r.key)" :aria-current="selKey===r.key?'page':null" x-text="r.label"></a></li></template></ul></nav><p class="small muted" x-show="!detailSessions.length">No sessions match.</p></aside><section class="panel detail-panel" x-data="{current:sel}" x-effect="if(sel) current=sel" :aria-labelledby="'d-'+current.key">
+      <div class="row spread"><div class="stack" style="gap:5px"><p class="eyebrow" x-text="scope?.name"></p><h2 tabindex="-1" :id="'d-'+current.key">Session details</h2></div><button class="btn" @click="close()"><span class="ms" aria-hidden="true">close</span>Back to overview</button></div>
+      <p x-text="current.goal?.title || 'Goal not recorded'"></p><div class="notice" x-show="current.paused"><span class="ms" aria-hidden="true">front_hand</span><div><b>Waiting on you</b><p x-text="current.paused?.reason"></p></div></div>
+      <div class="row"><span class="badge" :class="statusClass(current)" x-text="status(current)"></span><span class="small muted" x-text="current.done+' of '+current.total+' planned tasks complete'"></span><button class="link-button" @click="choose(current.key);close();$nextTick(()=>document.getElementById('ready')?.scrollIntoView())">View test targets &amp; feedback</button></div>
+      <section class="stack"><h3>Recorded tickets</h3><ul class="stack" style="gap:9px"><template x-for="t in current.tickets" :key="t.id"><li class="row"><span class="badge" :class="t.state" x-text="ticketStatus(t.state)"></span><template x-if="safeUrl(t.url)"><a :href="t.url" target="_blank" rel="noopener noreferrer" x-text="ticketLabel(t)"></a></template><template x-if="!safeUrl(t.url)"><span x-text="ticketLabel(t)"></span></template></li></template></ul><p class="small muted" x-show="!current.tickets.length">No ticket references recorded.</p></section>
+      <section><h3>Session tasks</h3><p class="small muted" x-show="detailError" role="alert">Could not load task details. <button class="link-button" @click="loadDetail()">Retry task details</button></p><ul class="task-list"><template x-for="t in detail" :key="t.id"><li class="task"><b class="mono" x-text="t.id"></b><div><b x-text="t.title"></b><p x-text="t.result"></p><code x-show="t.value" x-text="t.value"></code></div><span class="badge" :class="t.state==='now'?'working':t.state==='done'?'finished':''" x-text="taskStatus(t.state)"></span></li></template></ul><p class="small muted" x-show="!detail.length && !detailError">No task details recorded.</p></section>
+      <details class="technical"><summary>Gate timing &amp; work record</summary><div class="technical-grid"><section><h3>Time per gate step</h3><ul class="step-list"><template x-for="s in current.steps" :key="s.id"><li><span x-text="stepName(s.id)"></span><div class="bar"><i :style="'transform:scaleX('+Math.max(.02,s.secs/Math.max(1,...current.steps.map(x=>x.secs)))+')'"></i></div><span class="muted" x-text="s.s==='left'?'Not yet':fmt(s.secs)"></span></li></template></ul></section><section class="stack" style="gap:8px"><h3>Work record</h3><code x-text="current.record"></code><p class="mono muted" x-text="current.project"></p><p class="errors" x-show="current.error" x-text="current.error"></p><ul class="errors"><template x-for="(e,i) in current.metadataErrors" :key="i"><li x-text="e"></li></template></ul></section></div></details>
+    </section></div></template>
+  </main>
 
-  <footer class="foot plate" x-effect="$el.hidden = modal" x-text="snap ? 'Snapshot file: no live updates. Run fast_gate.py view for the live view.' : 'Written by the factory gate when a run changes · served on 127.0.0.1 · ' + plural(runs.length, 'run')"></footer>
-
-  <div class="toasts" aria-live="polite">
-    <template x-for="m in toasts" :key="m.id"><div class="toast enter"><span class="ms" aria-hidden="true" x-text="m.icon"></span><span x-text="m.text"></span></div></template>
-  </div>
+  <div class="toast" role="status" x-show="toast" x-text="toast"></div>
 </div>
-
 <script id="snapshot" type="application/json"></script>
-</body>
-</html>
 <script type="module">
 import Alpine from "https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/+esm";
 
-// The gate writes state.json (all runs) and <key>.todos.json (one run's todos) when a run changes: fast_view.py.
-let etag = "";
-async function source(){ // null when nothing changed since the last poll (the server answers 304 by ETag)
-  const inline = document.getElementById("snapshot").textContent.trim();
-  if (inline) { page.snap = true; return JSON.parse(inline); }
-  const res = await fetch("state.json", {cache: "no-cache"});
-  if (!res.ok) throw new Error("state.json " + res.status);
-  const tag = res.headers.get("ETag");
-  if (tag && tag === etag) return null;
-  etag = tag;
-  return res.json();
+let page,etag="";
+// Relative requests and embedded snapshots preserve the selected project boundary.
+async function source(){
+  const inline=document.getElementById("snapshot").textContent.trim();
+  if(inline){page.snap=true;return JSON.parse(inline)}
+  const res=await fetch("state.json",{cache:"no-cache"});
+  if(!res.ok)throw Error("Progress unavailable");
+  const tag=res.headers.get("ETag");if(tag&&tag===etag)return null;
+  const data=await res.json();etag=tag;return data;
 }
-async function details(key){ // a run's full todo list, only while its detail is open
-  if (page.snap) return [];
-  const res = await fetch(encodeURIComponent(key) + ".todos.json", {cache: "no-cache"});
-  return res.ok ? res.json() : [];
-}
-const ICON={research:"search",kickoff:"forum",tickets:"confirmation_number",analysis:"psychology",plan:"map",design:"palette",schema:"database",build:"construction","done-run":"science",handoff:"inventory_2"};
-const KIND={cmd:"terminal",url:"link",file:"image"};
-const FILTERS=[["all","All"],["waiting","Waiting on you"],["running","Running"],["quiet","Quiet"]];
+const FILTERS=[["all","All"],["working","Active"],["waiting","Waiting on you"],["quiet","No recent update"]];
+const CHILD_FILTERS=[["working","Working"],["all","All"],["finished","Finished"],["blocked","Blocked"]];
+const systemTheme=matchMedia("(prefers-color-scheme:dark)");
 const store={get(k){try{return localStorage.getItem(k)}catch(_){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(_){}}};
-const calm=()=>matchMedia("(prefers-reduced-motion: reduce)").matches,narrowQ=matchMedia("(max-width:640px)"),darkQ=matchMedia("(prefers-color-scheme: dark)");
-let page;
-const ID=x=>x&&typeof x==="object"&&("key" in x?"key":"id" in x?"id":null);
-function merge(a,b){ // poll result into live state, keeping identity: only bindings whose values changed re-run
+const ID=x=>x&&typeof x==="object"&&("key"in x?"key":"id"in x?"id":null);
+// Preserve keyed objects so unchanged polls do not rebuild session cards or steal focus.
+function merge(a,b){
   if(Array.isArray(b)){const k=ID(b[0]);if(!Array.isArray(a)||!k)return JSON.stringify(a)===JSON.stringify(b)?a:b;
     const old=new Map(a.map(x=>[x[k],x])),out=b.map(x=>old.has(x[k])?merge(old.get(x[k]),x):x);
     return out.length===a.length&&out.every((x,i)=>x===a[i])?a:out}
-  if(b&&typeof b==="object"&&a&&typeof a==="object"&&!Array.isArray(a)){for(const k in b){const v=merge(a[k],b[k]);if(a[k]!==v)a[k]=v}for(const k in a)if(!(k in b))delete a[k];return a}
-  return b}
+  if(b&&typeof b==="object"&&a&&typeof a==="object"&&!Array.isArray(a)){for(const k in b){const v=merge(a[k],b[k]);if(a[k]!==v)a[k]=v}for(const k in a)if(!(k in b))delete a[k];return a}return b;
+}
+// Old records remain useful without inventing goals, child work or delivery estimates.
+function normalize(r){return{steps:[],now:[],agents:[],ready:[],tasks:null,tickets:[],subsessions:[],metadataErrors:[],done:0,total:0,pct:0,...r}}
 Alpine.data("floor",()=>({
-  ICON,KIND,FILTERS,runs:[],ready:[],readyTotal:0,events:[],at:0,detail:[],          // state.json
-  now:Date.now(),okAt:0,lost:false,hidden:document.hidden,loaded:false,seen:0,
-  selKey:"",filter:new URLSearchParams(location.search).get("runs")||"all",all:false,copied:"",mode:store.get("theme")||"system",notify:false,toasts:[],narrow:narrowQ.matches,sysDark:darkQ.matches,snap:false,
-  get open(){return this.runs.filter(r=>!r.closed)}, get finished(){return this.runs.filter(r=>r.closed)},
-  get waiting(){return this.open.filter(r=>r.paused)}, get sel(){return this.runs.find(r=>r.key===this.selKey)},
-  get shown(){return this.filter==="all"?this.open:this.open.filter(r=>this.kind(r)===this.filter)},
-  get dark(){return this.mode==="dark"||this.mode==="system"&&this.sysDark}, // the theme on screen
-  get modal(){return !!(this.sel&&this.narrow)},
-  get liveText(){return this.snap?"Snapshot · "+this.clock(this.at):this.lost?(this.okAt?"Last update "+this.clock(this.okAt):"Not connected"):!this.okAt?"Connecting…":"Live · updated "+Math.max(0,Math.round((this.now-this.okAt)/1000))+" s ago"},
-  init(){page=this;document.getElementById("boot").remove();document.fonts?.load('20px "Material Symbols Rounded"').then(f=>f.length&&document.documentElement.classList.add("icons")).catch(()=>{});document.documentElement.lang="en";this.applyTheme();
-    this.notify=store.get("notify")==="1"&&window.Notification?.permission==="granted";
-    narrowQ.addEventListener("change",e=>this.narrow=e.matches);darkQ.addEventListener("change",e=>this.sysDark=e.matches);
+  FILTERS,CHILD_FILTERS,detailQuery:"",runs:[],ready:[],events:[],scope:null,at:0,detail:[],detailError:false,
+  motion:store.get("motion")!=="off",now:Date.now(),okAt:0,lost:false,hidden:document.hidden,loaded:false,polling:false,snap:false,
+  selKey:"",focusKey:new URLSearchParams(location.search).get("goal")||"",filter:"all",query:"",copied:"",toast:"",mode:["dark","system"].includes(store.get("theme"))?store.get("theme"):"light",sysDark:systemTheme.matches,
+  get open(){return this.runs.filter(r=>!r.closed)},get finished(){return this.runs.filter(r=>r.closed)},
+  get ordered(){return [...this.open,...this.finished]},get waiting(){return this.open.filter(r=>r.paused)},
+  get focus(){return this.runs.find(r=>r.key===this.focusKey)||this.newest(this.open.filter(r=>r.goal?.title))||this.newest(this.open)||this.newest(this.finished)},
+  get sel(){return this.runs.find(r=>r.key===this.selKey)},get focusReady(){return this.focus?this.targets(this.focus):[]},
+  get workingChildren(){return this.open.reduce((n,r)=>n+r.subsessions.filter(a=>a.status==="working").length,0)},
+  get dark(){return this.mode==="dark"||this.mode==="system"&&this.sysDark},
+  // Keep selected work first without overriding filters or reordering other sessions.
+  get shown(){const q=this.query.toLowerCase(),key=this.focus?.key;
+    const rows=this.open.filter(r=>(this.filter==="all"||this.kind(r)===this.filter)&&(!q||[r.label,r.goal?.title,r.ticket,...r.now.map(t=>t.title),...r.subsessions.map(a=>a.title+" "+a.task)].join(" ").toLowerCase().includes(q)));
+    const i=rows.findIndex(r=>r.key===key);if(i>0)rows.unshift(rows.splice(i,1)[0]);return rows;
+  },
+  get detailSessions(){const q=this.detailQuery.toLowerCase();return this.ordered.filter(r=>!q||r.label.toLowerCase().includes(q))},
+  get activeTickets(){return this.open.flatMap(r=>r.tickets.filter(t=>t.state==="working").map(t=>({...t,key:r.key+"/"+t.id,session:r.label,current:r.now.filter(n=>t.tasks.includes(n.id))})))},
+  get liveText(){return this.snap?"Snapshot · "+this.clock(this.at):this.lost?(this.okAt?"Last received "+this.clock(this.okAt):"Not connected"):!this.okAt?"Connecting…":"Live · received "+this.clock(this.okAt)},
+  init(){page=this;document.getElementById("boot").remove();this.applyTheme();
+    systemTheme.addEventListener("change",e=>{this.sysDark=e.matches;this.applyTheme()});
+    document.fonts?.load('22px "Material Symbols Rounded"').then(f=>f.length&&document.documentElement.classList.add("icons")).catch(()=>{});
     addEventListener("popstate",()=>this.route());addEventListener("hashchange",()=>this.route());
-    document.addEventListener("visibilitychange",()=>{this.hidden=document.hidden;if(!this.hidden)this.poll(true)});
-    setInterval(()=>this.now=Date.now(),1000);
-    this.poll()},
-  async poll(once){
-    clearTimeout(this.timer);if(this.polling)return;this.polling=true; // one poll at a time, one timer chain
+    document.addEventListener("visibilitychange",()=>{this.hidden=document.hidden;if(!this.hidden){this.now=Date.now();this.poll()}});
+    setInterval(()=>{if(!this.hidden)this.now=Date.now()},15000);this.route(true);this.poll();
+  },
+  async poll(){clearTimeout(this.timer);if(this.polling)return;this.polling=true;
     try{const s=await source();if(s)this.apply(s);this.okAt=Date.now();this.lost=false}catch(_){this.lost=true}
-    this.polling=false;clearTimeout(this.timer);if(!this.snap)this.timer=setTimeout(()=>this.poll(),this.hidden?15e3:2e3)},
-  apply(s){s={runs:[],ready:[],readyTotal:0,events:[],at:Date.now(),...s};const fresh=this.loaded?s.events.filter(e=>e.id>this.seen):[]; // any missing field gets its empty value
-    for(const k of ["runs","ready","readyTotal","events","at"])this[k]=merge(this[k],s[k]);this.seen=s.events.at(-1)?.id||0;this.route(true);this.loadDetail();
-    this.$nextTick(()=>this.loaded=true);this.announce(fresh)},
-  announce(es){if(!es.length)return;
-    this.say(es.at(-1).icon,es.length===1?es[0].run+": "+es[0].text:es.length+" updates · latest "+es.at(-1).run+": "+es.at(-1).text);
-    if(es.some(e=>e.kind==="finish")&&!calm())import("https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/+esm").then(m=>m.default({particleCount:120,spread:80,origin:{y:.3},disableForReducedMotion:true})).catch(()=>{})},
-  say(icon,text){const id=Date.now()+Math.random();this.toasts=[...this.toasts.slice(-2),{id,icon,text}];setTimeout(()=>this.toasts=this.toasts.filter(m=>m.id!==id),5000);
-    if(this.notify&&this.hidden)try{new Notification("Factory floor",{body:text})}catch(_){}},
-  setFilter(f){this.filter=f;const u=new URL(location);f==="all"?u.searchParams.delete("runs"):u.searchParams.set("runs",f);history.replaceState(null,"",u)},
-  quiet(r){return !r.paused&&!r.closed&&this.now-r.changed>9e5}, // no record edit, step or pause for 15 min
-  kind(r){return r.paused?"waiting":this.quiet(r)?"quiet":"running"},
+    this.polling=false;if(!this.snap)this.timer=setTimeout(()=>this.poll(),this.hidden?15000:2000);
+  },
+  apply(s){const data={runs:[],ready:[],events:[],scope:null,at:Date.now(),...s};data.runs=data.runs.map(normalize);
+    for(const k of ["runs","ready","events","scope","at"])this[k]=merge(this[k],data[k]);this.loaded=true;this.route(true);this.loadDetail();
+  },
+  // A link to this selected dashboard is already open; avoid spawning duplicate tabs.
+  currentPreview(value){try{return this.safeUrl(value)&&new URL(value,location.href).href===location.href}catch(_){return false}},
+  stage(r){const s=r.steps.find(s=>s.s==="now");return s?this.stepName(s.id):r.closed?"Closed":"No current stage"},
+  targets(r){return r.ready?.length?r.ready:this.ready.filter(t=>t.key.startsWith(r.key+"/"))},
+  newest:rows=>rows.reduce((latest,r)=>!latest||(r.created||r.changed||0)>(latest.created||latest.changed||0)?r:latest,null),
+  percent:n=>Number.isFinite(n)?Math.max(0,Math.min(100,n)):0,
+  hasGoalProgress:r=>r.goal?.basis==="recorded-milestones"&&r.goal.total>0&&Number.isFinite(r.goal.pct),
+  goalPercent(r){return this.hasGoalProgress(r)?this.percent(r.goal.pct):0},
+  goalLabel(r){return this.hasGoalProgress(r)?r.goal.done+" of "+r.goal.total+" recorded goal milestones complete, "+r.goal.pct+" percent":"Goal progress has no recorded measure"},
+  // Keep all current tasks visible even when the queued-task preview is capped.
+  beltTasks(r){return [...r.now.map(t=>({...t,state:"now"})),...(r.open||[]).filter(t=>t.state!=="now")]},
+  // Decorative motion requires current evidence, never just an open session.
+  storeMotion(){store.set("motion",this.motion?"on":"off")},
+  isMoving(r){return this.motion&&!this.hidden&&!this.lost&&!this.snap&&!r.closed&&!r.paused&&Number.isFinite(r.changed)&&this.now-r.changed<=900000&&r.now.length>0},
+  quiet(r){return !r.paused&&!r.closed&&this.now-r.changed>900000},
+  kind(r){return r.paused?"waiting":this.quiet(r)?"quiet":"working"},
+  status(r){return r.closed?"Closed":r.paused?"Waiting on you":this.lost?"Last reported":this.quiet(r)?"No recent update":r.now.length?"Working":"Active"},
+  statusClass(r){return r.closed?"finished":r.paused?"blocked":this.lost||this.quiet(r)?"":"working"},
+  childStatus(a){return a.status==="working"&&!a.updated?"Working report undated":a.status==="working"&&this.now-a.updated>900000?"Working report is stale":({working:"Reported working",finished:"Finished",blocked:"Blocked",unknown:"Status unknown"}[a.status]||"Status unknown")},
+  // Filters belong to each keyed session card; large groups start with current work.
+  childMode:(r,chosen)=>r.subsessions.length<=6?'all':chosen||(r.subsessions.some(a=>a.status==='working')?'working':'all'),
+  children(r,chosen){const mode=this.childMode(r,chosen);return mode==='all'?r.subsessions:r.subsessions.filter(a=>a.status===mode)},
+  childParent:(r,a)=>r.subsessions.find(x=>x.id===a.parent)?.title||a.parent,
+  // Distinguish current execution from paused or last-received task reports.
+  beltStatus(r,t){return t.state!=="now"?this.taskStatus(t.state):r.paused?"Paused":this.lost||this.quiet(r)?"Last reported":"Working"},
+  taskStatus:s=>({now:"In progress",done:"Complete",next:"Next",later:"Planned"}[s]||"Unknown"),
+  ticketWork:t=>t.current.length?t.current.map(n=>n.id+" "+n.title).join(" · "):"Current linked task not reported",
+  ticketLabel:t=>(t.number?"#"+t.number+" ":"")+(t.title||"Untitled ticket"),
+  ticketStatus:s=>({working:"In progress",finished:"Tasks complete",next:"No task active",unknown:"Status unknown"}[s]||"Status unknown"),
   count(f){return f==="all"?this.open.length:this.open.filter(r=>this.kind(r)===f).length},
   plural:(n,w)=>n+" "+w+(n===1?"":"s"),
-  name:s=>s?s[0].toUpperCase()+s.slice(1):"",
-  fmt(s){const m=Math.round((s||0)/60),h=m/60|0;return m<60?m+"m":h<24?h+"h"+String(m%60).padStart(2,"0"):(h/24|0)+"d"+h%24+"h"}, // as the chat card: 14m, 1h02, 2d3h
-  age(t){return this.fmt((this.now-t)/1000)}, // reads `now`, so every age ticks
-  clock:t=>new Date(t).toTimeString().slice(0,5),
-  safeUrl:v=>/^https?:\/\//i.test(v||""), safeSrc:v=>/^shots\/[\w.-]+$/.test(v||""), // record text never becomes script
-  show(k){history.pushState(null,"","#run-"+k);this.route();if(this.narrow)this.$nextTick(()=>scrollTo(0,0))},
+  fmt(s){const m=Math.max(0,Math.round((s||0)/60)),h=Math.floor(m/60);return m<60?m+"m":h<24?h+"h "+m%60+"m":Math.floor(h/24)+"d "+h%24+"h"},
+  age(t){return t?this.fmt((this.now-t)/1000):"unknown time"},
+  clock:t=>new Date(t).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),
+  human:s=>String(s||"").replace(/^run (finished|stopped)$/i,"Session $1").replace(/^Done-run started$/,"Verification started"),
+  stepName:s=>s==="done-run"?"Verification":s?s[0].toUpperCase()+s.slice(1):"",
+  safeUrl:v=>/^https?:\/\//i.test(v||""),safeSrc:v=>/^shots\/[\w.-]+$/.test(v||""),
+  choose(k){this.focusKey=k;const u=new URL(location);u.searchParams.set("goal",k);history.replaceState(null,"",u)},
+  setFilter(f){this.filter=f;this.updateQuery()},
+  updateQuery(){const u=new URL(location);u.searchParams.delete("runs");this.filter==="all"?u.searchParams.delete("sessions"):u.searchParams.set("sessions",this.filter);this.query?u.searchParams.set("q",this.query):u.searchParams.delete("q");history.replaceState(null,"",u)},
+  // Section navigation exits detail and retains the selected session's goal.
+  go(id){if(this.sel)this.choose(this.selKey);history.pushState(null,'','#'+id);this.route(true);this.$nextTick(()=>{const target=document.getElementById(id);if(!target)return;const heading=target.querySelector('h2')||target;heading.setAttribute('tabindex','-1');heading.focus({preventScroll:true});target.scrollIntoView({block:'start'})})},
+  show(k){history.pushState(null,"","#session-"+encodeURIComponent(k));this.route()},
   close(){if(this.selKey){history.pushState(null,"",location.pathname+location.search);this.route()}},
-  route(keep){const k=/^#run-/.test(location.hash)?decodeURIComponent(location.hash.slice(5)):"",was=this.selKey;
-    this.selKey=this.runs.some(r=>r.key===k)?k:"";if(keep||was===this.selKey)return;this.detail=[];this.loadDetail();
-    this.$nextTick(()=>document.getElementById(this.selKey?"d-"+this.selKey:"n-"+was)?.focus())},
-  async loadDetail(){if(this.selKey)try{this.detail=merge(this.detail,await details(this.selKey))}catch(_){}},
-  copyLabel(k,label){return this.copied===k?"Copied":this.copied==="!"+k?"Press Ctrl+C":label},
-  copy(k,v,el){const done=ok=>{this.copied=(ok?"":"!")+k;setTimeout(()=>this.copied.endsWith(k)&&(this.copied=""),2500);
-      if(!ok)getSelection().selectAllChildren(el.parentElement.querySelector("code"))};
-    try{navigator.clipboard.writeText(v).then(()=>done(true),()=>done(false))}catch(_){done(false)}},
-  applyTheme(){const d=document.documentElement;this.mode==="system"?d.removeAttribute("data-theme"):d.dataset.theme=this.mode},
-  switchTheme(){this.mode=this.dark?"light":"dark";this.applyTheme();store.set("theme",this.mode)},
-  async toggleNotify(){if(this.notify){this.notify=false;store.set("notify","0");return}
-    try{this.notify=(await Notification.requestPermission())==="granted"||null}catch(_){this.notify=null}store.set("notify",this.notify?"1":"0")},
-  stamp(el,v){if(el._v!==undefined&&el._v!==v&&!calm())el.animate([{transform:"scale(1.15) rotate(-2deg)"},{transform:"none"}],350);el._v=v},
-  beat(el,v){if(el._v!==undefined&&!calm())el.animate([{transform:"scale(1.4)"},{transform:"none"}],600);el._v=v},
+  route(keep){const u=new URL(location),old=this.selKey;let k="";try{k=decodeURIComponent(u.hash.replace(/^#(?:session|run)-/,""))}catch(_){}
+    this.focusKey=u.searchParams.get("goal")||"";const f=u.searchParams.get("sessions")||u.searchParams.get("runs")||"all";this.filter=FILTERS.some(x=>x[0]===f)?f:f==="running"?"working":"all";this.query=u.searchParams.get("q")||"";
+    this.selKey=/^#(?:session|run)-/.test(u.hash)&&this.runs.some(r=>r.key===k)?k:"";
+    if(keep||old===this.selKey)return;this.detail=[];this.loadDetail();this.$nextTick(()=>{const el=document.getElementById(this.selKey?"d-"+this.selKey:"n-"+old);el?.focus();if(this.selKey)el?.scrollIntoView({block:"start"})});
+  },
+  async loadDetail(){const key=this.selKey,r=this.sel;if(!r)return;this.detailError=false;
+    if(Array.isArray(r.tasks)){this.detail=merge(this.detail,r.tasks);return}if(this.snap){this.detail=[];return}
+    try{const res=await fetch(encodeURIComponent(key)+".todos.json",{cache:"no-cache"});if(!res.ok)throw Error();const rows=await res.json();if(key===this.selKey)this.detail=merge(this.detail,rows)}catch(_){if(key===this.selKey)this.detailError=true}
+  },
+  copyLabel(k,label){return this.copied===k?"Copied":this.copied==="!"+k?"Select & copy":label},
+  copy(k,value,el){const done=ok=>{this.copied=(ok?"":"!")+k;this.toast=ok?"Copied to clipboard":"Clipboard unavailable. Select the text and copy it.";clearTimeout(this.toastTimer);this.toastTimer=setTimeout(()=>{this.toast="";this.copied=""},5000);if(!ok){const code=el.closest(".command")?.querySelector("code");if(code)window.getSelection()?.selectAllChildren(code)}};
+    try{navigator.clipboard.writeText(value||"").then(()=>done(true),()=>done(false))}catch(_){done(false)}
+  },
+  applyTheme(){document.documentElement.dataset.theme=this.dark?"dark":"light"},switchTheme(){this.mode=this.dark?"light":"dark";this.applyTheme();store.set("theme",this.mode)},
 }));
 Alpine.start();
 </script>

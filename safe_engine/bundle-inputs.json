@@ -18,6 +18,7 @@
     ".agents/skills/improve-factory/SKILL.md",
     ".agents/skills/safe-engine/SKILL.md",
     ".agents/skills/safe-engine/references/fast-run.md",
+    ".agents/skills/safe-engine/references/preview-reporting.md",
     ".agents/skills/safe-engine/references/product-bar.md",
     ".agents/skills/safe-engine/references/sizes.md",
     ".agents/skills/safe-engine/references/controller.md",
@@ -86,6 +87,9 @@
     "skills/safe-engine/scripts/resolve_bundle.py",
     "skills/safe-engine/scripts/run-gate.sh",
     "skills/safe-engine/scripts/fast_view.py",
+    "skills/safe-engine/scripts/fast_view_model.py",
+    "skills/safe-engine/scripts/fast_view_scope.py",
+    "skills/safe-engine/scripts/fast_view_server.py",
     "skills/safe-engine/scripts/view/index.html"
   ],
   "historical_files": [],

@@ -144,7 +144,8 @@ The run card:
 
 ## Live view internals
 
-- One server shows every run. `view --snapshot <file>` writes the page with the current state, without live updates.
+- A busy port gets the next free one; a running server prints the requested link. One server handles every project's scoped URL; the URL keeps its scope through filters, details and reload. In Git, worktrees sharing a local repository are one project; separate clones and submodules stay separate; outside Git, the exact canonical folder. `view --project <abs> --snapshot <file>` writes that project's page with the current state, marked static.
 - The gate is the only writer of its data, `view/state.json` in the gate home: at each gate command, and at each hook whose file-time check saw the run state or record change, from delegates and on every host. Nothing changed: no extra work. The page polls every 2 s; an unchanged file costs one 304.
+- The page leads with the selected session's goal, measured milestones and next test, then sessions, reported subsessions and ticket activity; task progress is separate from goal completion. All data, details and thumbnails included, shares the project scope; an empty project offers starting a session there.
 - It shows each run's steps, its todos (done, now, next, later, counted as the card counts), its agents and sessions, the owner's open question and Ready to try. Agents: the todos in `**Now:**`, plus the background agents your agent reports at a stop (the factory's `docs/hosts.md`). Screenshots under `.factory/fast/shots/` show as thumbnails.
-- On the first prompt and every sixth after, the prompt hook's message to the owner carries the view's link, or says the view is off and how to start it.
+- On the first prompt and every sixth after, the prompt hook's message to the owner carries this run's project link, or says the view is off and how to start it for that project.

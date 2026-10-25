@@ -406,21 +406,30 @@ def cmd_try(args):
 def cmd_view(args):
     """Serve the owner's live view on 127.0.0.1 until stopped, or write it as one snapshot file."""
     views, keep = sibling("fast_view"), set()
-    running = views.live_url(HOME / "view")
-    if running and not args.snapshot:
-        print(f"Live view already running: {running}")  # one server per machine shows every run
-        return
+    try:
+        scope = views.scope_for(native(args.project) if args.project is not None else None, args.all_projects)
+        if args.project is None and scope["kind"] == "folder":
+            project = store.registered(ACTIVE, os.getcwd())
+            if project:
+                scope = views.scope_for(project)
+    except ValueError as error:
+        log("view.scope_failed", reason="project_unavailable")
+        fail(str(error))
     for _, _, run in active_runs():  # every open run shows, even one started before the view existed
         if not run.get("lost"):
             view(run["project"], run)
             keep.add(view_id(run["project"], run["key"]))
     views.prune(HOME / "view", keep)  # runs closed while lost, or left by an older home
     if args.snapshot:
-        views.page(HOME / "view")
-        print(f"Snapshot: {views.snapshot(HOME / 'view', args.snapshot)}")
+        print(f"Snapshot: {views.snapshot(HOME / 'view', args.snapshot, scope)}")
         return
-    log("view.serve", port=args.port)
-    views.serve(HOME / "view", args.port, log=lambda url: print(f"Live view: {url}  (Ctrl+C stops it)", flush=True))
+    running = views.live_url(HOME / "view", scope)
+    log("view.serve", port=args.port, scope=scope["id"], kind=scope["kind"], reused=bool(running))
+    if running:
+        print(f"Live view already running: {running}")
+        return
+    views.serve(HOME / "view", args.port, scope=scope,
+                log=lambda url: print(f"Live view: {url}  (Ctrl+C stops it)", flush=True))
 
 
 def cmd_close(args):
@@ -774,19 +783,20 @@ def reminder(runs, cwd, session):
         path.write_text(str(count), encoding="utf-8")
         if count % VIEW_EVERY != 1:
             return None
-        url = sibling("fast_view").live_url(HOME / "view")
-        return (f"🏭 Live view of every run: {url}" if url else
-                "🏭 Live view is off: ask your agent to start `fast_gate.py view`, then open the link it prints")
+        views, project = sibling("fast_view"), item[2]["project"]
+        url = views.live_url(HOME / "view", views.scope_for(project))
+        return (f"🏭 Live view for this project: {url}" if url else
+                f'🏭 Live view is off: start `fast_gate.py view --project "{project}"`, then open its link')
     except Exception as error:  # noqa: BLE001 - a courtesy; the prompt's answer comes first
         log("hook.error", where="reminder", error=repr(error))
         return None
 
 
 def note_agents(runs, cwd, session, agents):
-    """Keep the host's background agents in this session's run views when the list changed (Stop events only)."""
+    """Record each explicit Stop observation, including unchanged work, so freshness stays truthful."""
     try:
         for entry, _, run in mine(runs, cwd, session, bind_cwd=False)[:3]:
-            if not run.get("lost") and sibling("fast_view").agents_of(HOME / "view", view_id(run["project"], run["key"])) != agents:
+            if not run.get("lost"):
                 view(run["project"], load(store.state_path(entry)), agents)
     except Exception as error:  # noqa: BLE001 - a courtesy for the owner; the stop decision comes first
         log("hook.error", where="agents", error=repr(error))
@@ -914,7 +924,10 @@ def main():
     target = tried.add_mutually_exclusive_group(required=True)
     for flag, what in (("cmd", "a command to run"), ("url", "an http(s) link"), ("file", "a path inside the project")):
         target.add_argument(f"--{flag}", help=what)
-    shown = sub.add_parser("view", help="Serve the owner's live view of every open run on 127.0.0.1")
+    shown = sub.add_parser("view", help="Serve this project's live progress on 127.0.0.1")
+    scope = shown.add_mutually_exclusive_group()
+    scope.add_argument("--project", help="Project folder; default: current folder and its repository worktrees")
+    scope.add_argument("--all-projects", action="store_true", help="Explicitly show every project's progress")
     shown.add_argument("--port", type=int, default=8765, help="Default 8765; a busy port falls back to a free one")
     shown.add_argument("--snapshot", help="Write one HTML file with the current state instead of serving")
     close = sub.add_parser("close", parents=[common])

@@ -33,7 +33,7 @@ REQUIRED = ["AGENTS.md", "README.md", "docs/install.md", "docs/hosts.md", "safe_
             ".agents/skills/safe-engine/references/fast-run.md",
             ".agents/skills/improve-factory/references/live-session.md"]
 REQUIRED += [f".agents/skills/{name}/SKILL.md" for name in SKILLS]
-# New gate helpers (including baseline recovery) use each bundle's required-file contract, preserving older pins.
+# New gate helpers (baseline recovery, preview scoping and reporting) use each bundle's required-file contract, preserving older pins.
 NEWER = ("This factory revision uses a newer layout than this launcher knows ({}). Update the installed factory from "
          "a current checkout (skills/safe-engine/scripts/fast_gate.py install --host <your agent>, or update the "
          "plugin), then retry.")
@@ -104,6 +104,7 @@ def inspect_bundle(root, expected=None, clean=False, entrypoint="improve-factory
             folder = root / name
             if folder.is_symlink() or not folder.is_dir() or not folder.resolve().is_relative_to(root):
                 raise RuntimeError("Incomplete factory source area: " + name)
+        # Revision-specific helpers (including scoped view modules) come from the contract, preserving older pins.
         required += [contract_name, *contract["required_files"]]
         declared = {contract_name, *contract["required_files"]}
         if version == 2:

@@ -49,9 +49,9 @@ Delegates return their log lines; the coordinator writes the record. During buil
 
 Agents work from recorded facts, never guesses; the plan fixes them once:
 
-- **Interface** (`### Interface`): the public names as they will be written: exports and types, record shapes with their fields, UI labels and test ids, routes and endpoints, commands and flags, files the checks read, and the committed files that hold them (an index or types file, an API schema). `none (<why>)` only when nothing is public. A light-lane plan writes it when it delegates.
+- **Interface** (`### Interface`): the public names as written: exports, record shapes, UI labels and test ids, routes, commands and flags, and the committed files holding them. `none (<why>)` only when nothing is public. A light-lane plan writes it when it delegates.
 - **Ports** (`**Ports:**`): this checkout's dev port per server the run starts (app, API, hub, a spare). The main checkout (lane 0) keeps the project's defaults; lane n, an extra worktree, takes its own fixed block for its whole life: the project's lane rule, else the defaults plus 100 × n. Add two spare ports for `shots`. Never start, reuse or stop another lane's stack. `done plan` refuses a port another open run's plan holds. `none (<why>)` when the run serves nothing.
-- **UX rules** (UI runs, `**UX rules:**`): U1 to U10 (`ux-quality` step 3) plus the project's own UX rule files by path. Builders read them before building, so the judge confirms instead of discovering.
+- **UX rules** (UI runs, `**UX rules:**`): U1 to U10 (`ux-quality` step 3) plus the project's own UX rule files by path.
 
 Each brief (checker, builder, UX judge, reviewer) also carries the Interface and Ports verbatim and, for UI work, the UX rules line. A checker binds its checks to those names and reads the committed interface files they name, never the implementation. A name a brief lacks: read the named interface files; still missing, the agent returns `blocked: <name>` instead of inventing one, and the coordinator adds it to the Interface (committed code wins) and briefs again.
 
@@ -69,7 +69,8 @@ python fast_gate.py start --project <abs> --key <slug> --mode fast|lucky --kind 
 python fast_gate.py done <step> [--project <abs>] [--offline "<reason>"]
 python fast_gate.py status | scratch | pr-proof-method | pause --reason "<why>" | resume | close [--abandon "<reason>"]
 python fast_gate.py try T3 --cmd "<command>" | --url <http(s) link> | --file <path in the project> [--project <abs>]
-python fast_gate.py view [--port 8765] [--snapshot <file>]
+python fast_gate.py view --project <abs> [--port 8765] [--snapshot <file>]
+python fast_gate.py view --all-projects [--port 8765] [--snapshot <file>]
 python fast_gate.py shots --base <ref> --serve "<dev command, {port} for its port>" --path <view> [--path <view>] [--setup "<command>"] [--ports <before>,<after>] [--size 1280x800] [--browser <exe>] [--project <abs>]
 ```
 
@@ -100,8 +101,9 @@ python fast_gate.py shots --base <ref> --serve "<dev command, {port} for its por
 
 ## Live view
 
-- `view` serves every open run on this machine, and runs closed today, at `http://127.0.0.1:8765/` (a busy port gets another); when a server already answers, it prints that link and exits. Start it in your agent's background shell; give the owner the link once per run. Only the gate writes `view/state.json`. Debugging the view: [view internals](gate-details.md#live-view-internals).
+- `view --project <abs>` serves that project's runs, open or closed today, at `http://127.0.0.1:8765/`; no `--project`: the current repository, never all. Start it in the background; give the owner the link once per run. Only the gate writes `view/state.json`. Debugging the view: [view internals](gate-details.md#live-view-internals).
 - When a ticked todo leaves something the owner can use, record it with `try`; it refuses an unknown todo or any other target and names the form.
+- The preview's goal, next test and child sessions: [preview reporting](preview-reporting.md), at dispatch, task change and finish.
 
 ## Keep it fast
 

@@ -18,6 +18,8 @@ if str(HERE) not in sys.path:
     sys.path.insert(0, str(HERE))  # loaded by file path (tests): find the sibling modules
 import fast_card as card  # noqa: E402 - the chat card's facts, so chat and view always agree
 import fast_progress as facts  # noqa: E402
+import fast_view_model as model  # noqa: E402
+from fast_view_scope import scope_for, project_state, route, identity_stamp, VERSION as SCOPE_VERSION  # noqa: E402
 
 PAGE = HERE / "view" / "index.html"
 OPEN_TILES, EVENTS, READY = 7, 12, 20  # belt tiles per run, events kept per run, Ready to try cards sent
@@ -159,6 +161,19 @@ class Lock:
         self.path.unlink(missing_ok=True)
 
 
+def scope_id(folder, project):
+    """Reuse Git discovery across gate processes; one replaceable entry per project folder."""
+    key, stamp = identity_stamp(project)
+    path = folder / "identities" / f"{key}.json"
+    saved = read(path, {}) or {}
+    if saved.get("stamp") == stamp and saved.get("id"):
+        return saved["id"]
+    selected = scope_for(project)["id"]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    dump(path, {"stamp": stamp, "id": selected})
+    return selected
+
+
 def write(folder, project, run, steps, sessions=0, agents=None, now_ms=None, vid=None):
     """Update this run in state.json (one atomic replace per change) and write its todo list for the detail.
     vid: the view's id, unique across projects (the gate passes key plus project hash). agents=None keeps the last
@@ -177,7 +192,8 @@ def write(folder, project, run, steps, sessions=0, agents=None, now_ms=None, vid
     except OSError:
         edited = 0
     view = {
-        "key": key, "label": label, "name": Path(project).name, "project": str(project), "kind": run.get("kind"), "mode": run.get("mode"),
+        "key": key, "scopeId": scope_id(folder, project), "scopeVersion": SCOPE_VERSION,
+        "label": label, "name": Path(project).name, "project": str(project), "kind": run.get("kind"), "mode": run.get("mode"),
         "ticket": f"#{v.focus} {v.tickets.get(v.focus, '')}".strip() if v.focus else "",
         "steps": rows, "at": at, "stepSince": since, "created": ms(run.get("created"), now_ms),
         "changed": max(edited, since, ms((paused or {}).get("at"), 0)),  # Quiet: no record edit, step or pause for 15 min
@@ -191,6 +207,7 @@ def write(folder, project, run, steps, sessions=0, agents=None, now_ms=None, vid
         "last": next(({"id": t["id"], "title": t["title"]} for t in todos if t["state"] == "done"), None),
         "open": opened[:OPEN_TILES], "more": max(0, len(opened) - OPEN_TILES),
         "doneIds": [t["id"] for t in todos if t["state"] == "done"],
+        "tasks": todos, "tickets": model.tickets(sections, v), **model.metadata(sections),
     }
     tried = [t for t in todos if t["state"] == "done" and t.get("kind")]
     thumbs = {t["id"]: shot(folder, project, key, t["id"][1:], t["value"]) for t in tried if t["kind"] == "file"}  # copies stay out of the lock
@@ -201,6 +218,8 @@ def write(folder, project, run, steps, sessions=0, agents=None, now_ms=None, vid
         old = {} if old.get("closed") and not view["closed"] else old  # the same key started again: a fresh history
         first = {t["key"]: t["at"] for t in old.get("ready") or []}
         view["agents"] = (old.get("agents") or []) if agents is None else agents
+        view["agentsObservedAt"] = old.get("agentsObservedAt") if agents is None else now_ms
+        view["subsessions"] = model.subsessions(view["subsessions"], view["agents"], view["agentsObservedAt"])
         view["ready"] = [{"key": f"{key}/{t['id']}", "run": label, "id": t["id"], "title": t["title"], "result": t["result"],
                           "kind": t["kind"], "value": t["value"], "cwd": str(project),
                           "at": first.get(f"{key}/{t['id']}", now_ms),
@@ -290,80 +309,41 @@ def page(folder):
         shutil.copyfile(PAGE, target)
 
 
-def snapshot(folder, out):
-    """One file: the page with the current state inside it, no live updates."""
-    state = (folder / "state.json").read_text(encoding="utf-8") if (folder / "state.json").exists() else json.dumps({"at": int(time.time() * 1000), "runs": [], "ready": [], "readyTotal": 0, "events": []})
+def register_scope(folder, scope):
+    """Share an explicitly opened project with the running server, even when it has no runs."""
+    folder = Path(folder)
+    with Lock(folder):
+        path = folder / "scopes.json"
+        scopes = read(path, {}) or {}
+        if scopes.get(scope["id"]) != scope:
+            scopes[scope["id"]] = scope
+            dump(path, scopes)
+
+
+def scoped_state(folder, scope):
+    """Project the same nested data for live and snapshot responses."""
+    return project_state(read(Path(folder) / "state.json", {}) or {}, scope, READY, EVENTS * 2)
+
+
+def snapshot(folder, out, scope=None):
+    """One file containing only the requested project's current state."""
+    selected = scoped_state(folder, scope or scope_for(all_projects=True))
+    selected["at"] = selected["at"] or int(time.time() * 1000)
+    state = json.dumps(selected, separators=(",", ":"), ensure_ascii=False)
     html = PAGE.read_text(encoding="utf-8").replace('<script id="snapshot" type="application/json"></script>',
                                                     '<script id="snapshot" type="application/json">'
-                                                    + state.replace("<", "\\u003c") + "</script>", 1)  # no record text can end or nest the block
+                                                    + state.replace("<", "\\u003c") + "</script>", 1)
     Path(out).write_text(html, encoding="utf-8")
     return Path(out).resolve()
 
 
-CSP = ("default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; "
-       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; "
-       "img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'")
-
-
-def serve(folder, port=0, log=print):
-    """Serve the view folder on 127.0.0.1 until stopped: ETags so an unchanged poll is one 304, other Hosts refused."""
-    from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
-
-    class Server(ThreadingHTTPServer):
-        allow_reuse_address = os.name != "nt"  # Windows would let a second server share a busy port
-
-    folder.mkdir(parents=True, exist_ok=True)
-    page(folder)
-    if not (folder / "state.json").exists():
-        with Lock(folder):
-            save_state(folder, [])
-
-    class Handler(SimpleHTTPRequestHandler):
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, directory=str(folder), **kwargs)
-
-        def send_head(self):
-            if self.headers.get("Host", "").rsplit(":", 1)[0] not in ("127.0.0.1", "localhost"):
-                self.send_error(403, "Use the address fast_gate.py view printed")  # DNS rebinding
-                return None
-            path = Path(self.translate_path(self.path))
-            self.tag = None
-            if path.is_file():
-                stat = path.stat()
-                self.tag = f'"{stat.st_mtime_ns:x}-{stat.st_size:x}"'
-                if self.headers.get("If-None-Match") == self.tag:
-                    self.send_response(304)
-                    self.end_headers()
-                    return None
-            del self.headers["If-Modified-Since"]  # second-resolution dates would hide a change: ETags decide
-            return super().send_head()
-
-        def end_headers(self):
-            for name, value in (("Cache-Control", "no-cache"), ("Content-Security-Policy", CSP),
-                                ("X-Content-Type-Options", "nosniff"), ("ETag", getattr(self, "tag", None))):
-                if value:
-                    self.send_header(name, value)
-            super().end_headers()
-
-        def log_message(self, *args):
-            pass  # one request every 2 s: no console noise
-
-    try:
-        server = Server(("127.0.0.1", port), Handler)
-    except OSError:  # the port is taken (another app): any free one
-        server = Server(("127.0.0.1", 0), Handler)
-    url = f"http://127.0.0.1:{server.server_address[1]}/"
-    (folder / "url").write_text(url, encoding="utf-8")  # the hooks' link reminder reads it
-    log(url)
-    try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        pass
-    finally:
-        server.server_close()
-        if read_text(folder / "url") == url:  # another view may have started since
-            (folder / "url").unlink(missing_ok=True)
-    return url
+def serve(folder, port=0, log=print, scope=None):
+    """Start the allowlisted shared server; the selected scope owns the printed URL."""
+    from types import SimpleNamespace
+    import fast_view_server
+    helpers = SimpleNamespace(PAGE=PAGE, register_scope=register_scope, Lock=Lock, save_state=save_state,
+                              read=read, read_text=read_text)
+    return fast_view_server.serve(helpers, folder, port, log, scope)
 
 
 def read_text(path):
@@ -374,12 +354,27 @@ def read_text(path):
         return ""
 
 
-def live_url(folder):
-    """The running view's address, or None: no server, or the address of one that died (one 0.2 s connect)."""
-    import socket
+def live_url(folder, scope=None):
+    """Reuse only a server supporting scoped routes; never mistake an older global server for it."""
+    from http.client import HTTPConnection, HTTPException
+    from urllib.parse import urlsplit
+    from fast_view_server import PROTOCOL
+    connection = None
     try:
-        url = (Path(folder) / "url").read_text(encoding="utf-8").strip()
-        with socket.create_connection(("127.0.0.1", int(url.rstrip("/").rsplit(":", 1)[1])), timeout=0.2):
-            return url
-    except (OSError, ValueError, IndexError):
+        base = read_text(Path(folder) / "project-url")
+        parsed = urlsplit(base)
+        if parsed.scheme != "http" or parsed.hostname != "127.0.0.1" or not parsed.port:
+            return None
+        connection = HTTPConnection("127.0.0.1", parsed.port, timeout=0.3)
+        connection.request("GET", "/.well-known/factory-view")
+        response = connection.getresponse()
+        if response.status != 200 or response.read(100).decode() != PROTOCOL:
+            return None
+        selected = scope or scope_for(all_projects=True)
+        register_scope(folder, selected)
+        return f"http://127.0.0.1:{parsed.port}" + route(selected)
+    except (OSError, ValueError, UnicodeError, HTTPException):
         return None
+    finally:
+        if connection:
+            connection.close()
