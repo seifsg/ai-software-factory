@@ -13,7 +13,7 @@ The `## Work rules` section of `.agents/skills/safe-engine/SKILL.md` applies to 
 1. One folder per skill: `.agents/skills/<name>/SKILL.md`. `name` equals the folder. `description` says what it does and when to use it, third person, under 1024 characters, no process summary.
 2. Write like `analyze-start` and `get-ready-to-code`: short imperative lines, numbered steps when order matters, explicit stops. Only what an agent would get wrong without it.
 3. Self-contained: link only to files in the skill's own folder, one level deep. Name other skills in backticks; never link them. Phase skills never name the coordinator.
-4. No person, company or product names. No dates, history, decision logs or provenance. Git keeps history (tag `history-archive`).
+4. No person, company or product names. No dates, history, decision logs or provenance. Git keeps history (tag `history-archive`); release history lives only in `CHANGELOG.md` and `UPGRADING.md` at the root.
 5. No agent, OS or tracker specifics in methods. They live in `docs/hosts.md`, the adapters (`skills/.claude-plugin/plugin.json`, `fast_hosts.py`, `fast_install.py`, `safe_engine/reviewers.py`) and reference files named for one tool (`references/github.md`).
 6. SKILL.md under 500 lines (aim for 150). References under 200; over 100 lines starts with a contents line.
 7. Every operative rule lives once per skill that needs it. Merge duplicates; cut filler.
@@ -29,3 +29,8 @@ The `## Work rules` section of `.agents/skills/safe-engine/SKILL.md` applies to 
 ## PRs
 
 Draft PRs, through `how-to-make-a-pr`, linked to their ticket, unless the owner says push direct. Humans decide ready, merge and release. No AI attribution lines in commits. PR bodies end with the factory credit line (`how-to-make-a-pr`).
+
+## Releases
+
+- Every PR adds a line under `## [Unreleased]` in `CHANGELOG.md` (Keep a Changelog), and steps under the next version in `UPGRADING.md` when installs or active runs must act.
+- One canonical version, `skills/safe-engine/VERSION`, SemVer. Humans cut, tag and publish releases with `scripts/release.py` ([releasing](docs/releasing.md)); never move or re-publish a tag.

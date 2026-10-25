@@ -63,7 +63,7 @@ python fast_gate.py rehome --project <abs> --from <the folder its run.json recor
 python fast_gate.py adopt-pr-proof --project <abs> | --new-runs --method <absolute PR SKILL.md> --reason "<owner authority>"
 python fast_gate.py pr-proof-method
 python fast_gate.py cleanup-temp --project <abs> --path <absolute temp child> --reason "<owner authority>" [--expect <preview SHA256>]
-python fast_gate.py install --host <host> [--project <abs>] [--no-auto-update]
+python fast_gate.py install --host <host> [--project <abs>] [--no-auto-update] [--channel stable|edge]
 python fast_gate.py try T3 --cmd "<command>" | --url <http(s) link> | --file <path in the project> [--project <abs>]
 python fast_gate.py view [--port 8765] [--snapshot <file>]
 ```

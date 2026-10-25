@@ -7,7 +7,12 @@
   "plugins": [
     {
       "name": "safe-engine",
-      "source": "./skills",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/seifsg/ai-software-factory.git",
+        "path": "skills",
+        "ref": "v1.0.0"
+      },
       "description": "Safe Engine delivery and Improve Factory maintenance skills, plus the Fast run gate hooks."
     }
   ]
