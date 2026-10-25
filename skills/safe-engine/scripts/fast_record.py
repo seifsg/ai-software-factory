@@ -690,8 +690,8 @@ def digest(path):
 def check_handoff(run, body, **kwargs):
     labels = ["Run", "Statuses", "Unverified", "Follow-ups"] + (["Dev sign-in"] if run.get("auth") else []) + (
         ["PR"] if run.get("pr_proof") else [])
-    problems = missing_markers(body, labels) + fast_briefs.handoff_problems(
-        run, body, marker, (kwargs.get("all_sections") or {}).get("done-run"))
+    checks = "\n".join(HIDDEN.findall((kwargs.get("all_sections") or {}).get("done-run") or ""))  # entries, not prose
+    problems = missing_markers(body, labels) + fast_briefs.handoff_problems(run, body, marker, checks)
     ticks = lambda ticket: needs_ticks(ticket, deferred=bool(run.get("briefs")))  # noqa: E731 - one call site
     return problems or held(run, kwargs, covered(run, ticks), finish=True) + pr_proof(run, body, **kwargs)
 

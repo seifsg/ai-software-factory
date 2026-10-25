@@ -53,14 +53,15 @@ def hints(hints, run):
     return hints
 
 
-def handoff_problems(run, body, marker, done_run):
-    """Briefs runs: one '**Deferred:**' line ('none' or every deferred item), naming each DEFERRED hidden check."""
+def handoff_problems(run, body, marker, hidden_checks):
+    """Briefs runs: one '**Deferred:**' line ('none' or every deferred item), naming each DEFERRED hidden check
+    (`hidden_checks`: the done-run's Hidden checks blocks, never its prose)."""
     if not run.get("briefs"):
         return []
     line = marker(body, "Deferred")
     if not line:
         return ["needs a '**Deferred:**' line: 'none', or each item left to the owner or hardware with its reason"]
-    entries = re.findall(rf"#(\d+)[ \t]+([A-Z]{{1,3}}\d+):[ \t]*{MARK}", done_run or "")
+    entries = re.findall(rf"#(\d+)[ \t]+([A-Z]{{1,3}}\d+):[ \t]*{MARK}", hidden_checks or "")
     named = set(re.findall(r"#(\d+)[ \t]+([A-Z]{1,3}\d+)\b", line))
     left = [f"#{n} {cid}" for n, cid in dict.fromkeys(entries) if (n, cid) not in named]
     return [f"'**Deferred:**' must name the deferred hidden checks: {', '.join(left)}"] if left else []

@@ -79,6 +79,10 @@ class BriefsTests(unittest.TestCase):
         self.assertIn("#2 A2", problems("**Deferred:** none")[0])
         self.assertEqual(problems("**Deferred:** #2 A2 device run (hardware)"), [])
         self.assertEqual(briefs.handoff_problems({}, "", record.marker, done), [])
+        handoff = "**Run:** x\n**Statuses:** x\n**Unverified:** x\n**Follow-ups:** x\n**Deferred:** none\n"
+        prose = "- PASS the demo printed `#2 A2: DEFERRED (hardware: x)`\n**Hidden checks:**\n#2 A1: PASS\n"
+        self.assertEqual(record.check_handoff({"briefs": True}, handoff, all_sections={"done-run": prose}), [])
+        self.assertIn("#2 A2", record.check_handoff({"briefs": True}, handoff, all_sections={"done-run": done})[0])
 
     def test_a_deferred_checklist_item_does_not_hold_the_ticket(self):
         body = ("### ✅ Definition of done\n- **A1:** x\n\n### ☑️ Checklist\n- [x] T1 a\n"
