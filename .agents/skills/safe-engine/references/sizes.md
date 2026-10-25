@@ -23,38 +23,38 @@ Every feature, journey, integration and behavior the owner asked for, plus what 
 
 ## POC
 
-The owner wants to see the requested features work. Build each one minimally: nothing extra, nothing cut.
+Show each requested feature working, built minimally: nothing extra, nothing cut.
 
-- Minimal backend: the smallest real service and storage that run the requested behavior end to end (one local process, a file or an embedded database). It stays structured so the MVP can grow it.
-- No sign-in layer. Requested roles switch through a development-only role switcher. A requested role rule is built as asked, checked on the server; it does not pull in the rest of the security bar.
+- Minimal backend: the smallest real service and storage running the requested behavior end to end (one local process, a file or an embedded database), structured so the MVP can grow it.
+- No sign-in layer; requested roles switch through a development-only role switcher. A requested role rule is built as asked, checked on the server, without the rest of the security bar.
 - No done-run scans (secrets, dependencies, static analysis).
-- Local only. Any shared preview counts as exposure: the security bar applies in full before it.
-- An owner-approved simplification of a requested item (a mock checkout) follows the requested-scope rule above, follow-ups ticket entry included, and stays labeled in the interface.
-- List the skipped parts once in the epic's guardrails as "POC skips". An MVP run turns that list into tickets. No follow-up ticket per skip.
+- Local only. Any shared preview is exposure: the full security bar applies before it.
+- An owner-approved simplification of a requested item (a mock checkout) follows the requested-scope rule, follow-ups ticket entry included, and stays labeled in the interface.
+- List skipped parts once in the epic's guardrails as "POC skips"; an MVP run turns that list into tickets. No follow-up ticket per skip.
 
 ## MVP
 
-The owner wants to publish it and test it with real users. Fill every gap a launch needs.
+The owner publishes it to test with real users: fill every gap a launch needs.
 
-- Launch baseline, part of the MVP size, built without asking:
+- Launch baseline (part of MVP), built without asking:
   - real sign-in and enforced roles when anyone signs in or roles exist;
-  - the security bar in full, with the three done-run scans (secrets, dependencies, static analysis);
+  - the full security bar, with the three done-run scans (secrets, dependencies, static analysis);
   - landing page and SEO for public products;
   - privacy and terms pages when it collects personal data;
-  - the legal and platform duties of what it does (for example consent and one-click unsubscribe for marketing email);
+  - its legal and platform duties (for example consent and one-click unsubscribe for marketing email);
   - onboarding;
   - transactional email when journeys send mail;
   - a logging destination (asked once when unknown) and error alerts;
-  - product analytics on the key journey events, under the [product bar](product-bar.md)'s privacy rules, sent to a destination asked once when unknown (default: the app's own storage);
+  - product analytics on key journey events, under the [product bar](product-bar.md)'s privacy rules, to a destination asked once when unknown (default: the app's own storage);
   - in-app feedback that reaches the owner, with the page and app version attached;
-  - migrations for persisted data, and backups stored apart from the data they protect, with a tested restore;
+  - migrations for persisted data; backups stored apart from that data, with a tested restore;
   - automated tests, written after the journeys work, running in CI;
   - a release record ready to deploy.
 - Deploying needs the owner's authority.
-- Research launch gaps the owner may not think of: what competitors offer, what users expect before they trust a product, what breaks at first real use. Present each as a suggestion: gap, evidence, cost, recommendation.
-- Suggestions go beyond the baseline. The owner approves or declines each; approved ones become criteria, declined or unanswered ones go to the epic's follow-ups ticket in Backlog.
-- Suggest again whenever delivery uncovers a gap, at the latest when each sub-issue finishes. Keep it to one short message, not a gate.
+- Research launch gaps the owner may miss: what competitors offer, what users expect before trusting a product, what breaks at first real use. Present each as a suggestion beyond the baseline: gap, evidence, cost, recommendation.
+- The owner approves or declines each; approved ones become criteria, declined or unanswered ones go to the epic's follow-ups ticket in Backlog.
+- Suggest again whenever delivery uncovers a gap, at the latest when each sub-issue finishes: one short message, not a gate.
 
 ## Production slice
 
-The full product bar for the affected paths, release and operations included.
+Full product bar for the affected paths, release and operations included.

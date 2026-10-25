@@ -1,8 +1,8 @@
 """Fast/Lucky run gate: record each factory step, check it, and answer host hooks.
 
 Method: .agents/skills/safe-engine/references/fast-run.md#the-gate. Python 3.9+, stdlib only.
-Step checks live in fast_record.py (loaded by `done`, and by `start` for a UI snapshot; never by hooks);
-the owner's dashboard in fast_card.py.
+Step checks live in fast_record.py (loaded by `done`, and by `start` for a UI snapshot; never by hooks), the record
+skeleton's hints in fast_hints.py (`start` only), the owner's dashboard in fast_card.py.
 Checks prove a step was recorded, not that it was good.
 """
 import json
@@ -36,38 +36,6 @@ STEPS = (
 TITLES = {"research": "Research", "kickoff": "Kickoff", "tickets": "Tickets", "analysis": "Analysis",
           "plan": "Plan", "design": "Design", "schema": "Schema", "build": "Build log",
           "done-run": "Done-run", "handoff": "Handoff"}
-HINTS = {
-    "research": ">=3 '### <competitor>' subsections each citing a source URL, a feature matrix table, "
-                "an Opportunities line; product runs also '### Stack options' with a 3-row table",
-    "kickoff": "Features, Approach, Answered by lines; product runs also Size and Stack",
-    "tickets": "an Epic URL line, a Backlog line; product/feature runs >=1 Sub-issue URL line; "
-               "online: each listed ticket has a Definition of done",
-    "analysis": "a Success line and a fenced ASCII chart",
-    "plan": "### Files, ### Critique, ### Phases, ### Todos (T1..), ### Whole plan, Logging and Efficiency lines; "
-            "online: each listed ticket has checklist items",
-    "design": ">=4 hex colors; UI kit, Font, Logo, Icons, Layout lines; Theme line naming light mode; "
-              "Journeys line with counts and a minimum; current methods also Map, Hierarchy (naming the primary "
-              "action) and Labels lines",
-    "schema": "a 3-option table, a Chosen line, a fenced ERD or DDL",
-    "build": "one line per plan todo: 'T1 pre: ... do: ... post: ...'",
-    "done-run": ">=1 PASS line from using it, a Logs line; UI runs >=1 existing screenshot path. Current methods only: "
-                "runs that changed UI files count as UI runs, and each UI run also needs a verdict line per U1..U10 "
-                "(no open FAIL) and a UX judge line",
-    "handoff": "Run, Statuses, Unverified, Follow-ups lines; sign-in runs a Dev sign-in line; "
-               "online: each listed ticket fully ticked, or Blocked, Backlog or not planned",
-}
-COVERAGE_HINTS = {  # runs whose methods define coverage and the light lane
-    "tickets": "an Epic URL line (a change: a Ticket line, its URL or 'none (why)'), a Backlog line; product/feature "
-               "runs >=1 Sub-issue URL line and a Requested line (R1, R2, ...); online: each listed ticket is open "
-               "with a Definition of done, and its criteria name every requested item not marked owner-deferred",
-    "plan": "### Files, ### Critique, ### Phases, ### Todos ('T1 <title> → <result> (#ticket, A1)'), ### Whole plan, "
-            "Logging and Efficiency lines (light lane: a Success line and ### Todos); online: each listed ticket has checklist items naming "
-            "every criterion, they hold every plan todo, and criteria still name every requested item not "
-            "owner-deferred",
-    "handoff": "Run, Statuses, Unverified, Follow-ups lines; sign-in runs a Dev sign-in line; online: each listed "
-               "ticket fully ticked, or Blocked, Backlog or not planned; items name every criterion and hold every "
-               "plan todo; criteria name every requested item not owner-deferred",
-}
 HERE = Path(__file__).resolve().parent  # siblings: fast_record, fast_shell, fast_guard, fast_progress, fast_card
 
 
@@ -251,18 +219,15 @@ def open_run(given):
 
 
 def status_text(run, all_sections=None):
-    """The owner's run card, then the step list, gate and next step."""
+    """The owner's run card (pause reason first, and the steps still to come), then the run, gate and next step."""
     if all_sections is None:
         all_sections = sibling("fast_progress").read(record_path(run["project"]))
-    lines = [sibling("fast_card").card(run, steps_for(run), all_sections, now()), "",
-             f"{run['mode']} {run['kind']} run '{run['key']}' at {run['project']}"
-             f" (ui={run.get('ui')}, data={run.get('data')}, auth={run.get('auth')})"]
-    lines += [f"  [{'x' if step in run['done'] else ' '}] {step}" for step in steps_for(run)]
     blocked = open_before_build(run)
-    lines.append("Gate: " + ("open, source edits allowed" if not blocked else "closed until " + ", ".join(blocked)))
-    if run.get("paused"):
-        lines.append("Paused: " + run["paused"]["reason"])
-    lines.append("Next: " + ("closed" if run.get("closed") else next_step(run) or "close"))
+    lines = [sibling("fast_card").card(run, steps_for(run), all_sections, now(), left=True),
+             f"{run['mode']} {run['kind']} run '{run['key']}' at {run['project']}"
+             f" (ui={run.get('ui')}, data={run.get('data')}, auth={run.get('auth')})",
+             "Gate: " + ("open, source edits allowed" if not blocked else "closed until " + ", ".join(blocked)),
+             "Next: " + ("closed" if run.get("closed") else next_step(run) or "close")]
     lines += list(filter(None, [sibling("fast_pr_policy").notice(HOME, run)]))
     return "\n".join(lines)
 
@@ -272,20 +237,7 @@ def skeleton(run):
     lines = [f"# {run['key']}: {run['mode']} {run['kind']} run", "",
              "<!-- Fill each section, then `fast_gate.py done <step>`. Markers: fast-run.md#work-record -->", "",
              "## Request", "", *quoted, ""]
-    hints = {**HINTS, **COVERAGE_HINTS} if run.get("coverage") else dict(HINTS)
-    if run.get("scans"):  # Size starts with POC, MVP, production or none (<why>); Lucky has no kickoff to hold it
-        if run["mode"] == "lucky" and run["kind"] != "change":
-            hints["tickets"] += "; Lucky product/feature runs: a Size line"
-        hints["done-run"] += "; sized MVP or production: Secrets, Dependencies, Static lines"
-    if run.get("pr_proof"):
-        hints["handoff"] += ("; a PR line naming the draft PR, whose Before & after section has one heading per outcome, "
-                             "each Before and After with an image, a recording or a fenced block")
-        if run.get("pr_demo"):
-            hints["handoff"] += "; every outcome declares Visual and Journey; visual: screenshot pair, journey: Video; only scoped owner Media waiver"
-    if run.get("credit"):
-        hints["handoff"] += "; the PR body's last line is the factory credit line (how-to-make-a-pr credit.md)"
-    if sibling("fast_record").hidden(run):
-        hints["done-run"] += "; a Hidden checks block: '#<n> <ID>: PASS' per criterion of every listed ticket"
+    hints = sibling("fast_hints").record_hints(run)
     for step in steps_for(run):
         lines += [f"## {TITLES[step]}", "", f"<!-- gate: {hints[step]} -->", ""]
     return "\n".join(lines)
@@ -361,7 +313,7 @@ def cmd_start(args):
     save(registry_path(project), store.new_registration(project, args.key))
     log("run.start", key=args.key, project=str(project), mode=args.mode, kind=args.kind, bundle=run["bundle"], hooks=hooks)
     bundle = (f"{run['bundle']['root']} @ {run['bundle']['revision'][:12]}" if run["bundle"] else
-              "no .factory/entry-bundle.json; run the entry's resolver first (skip only for factory maintenance)")
+              "no .factory/entry-bundle.json: run the entry's resolver first, except for factory maintenance")
     print(status_text(run) + f"\n{sibling('fast_release').card(run, HOME)}\nRecord: {record}\nBundle: {bundle}\n"
           f"Git: {git_note}\nHooks: {hooks}\n" + setup.TEXT.format(scratch))
 
@@ -674,8 +626,8 @@ def refusal(item, path):
 def deny_reason(run, what, advice=None):
     """Logged deny text: what is blocked, then the advice, or the steps that unblock it."""
     blocked = open_before_build(run)
-    steps = (f" Record these steps first: {', '.join(blocked)}. Fill .factory/fast/work-record.md and run "
-             "`fast_gate.py done <step>` (fast-run.md). .factory/ stays writable.") if blocked else ""
+    steps = (f" Record first: {', '.join(blocked)}, in .factory/fast/work-record.md, then `fast_gate.py done <step>`"
+             " (fast-run.md); .factory/ stays writable.") if blocked else ""
     if run.get("lost"):
         steps = (" Its run state in the gate home is missing or unreadable, so the gate stays closed: the owner "
                  f"runs `fast_gate.py close --project \"{run['project']}\" --abandon \"<reason>\"`.")
@@ -691,8 +643,7 @@ def guard(command, runs, cwd, session, dialect=None):
     rule = item and sibling("fast_guard").Judge(norm(item[2]["project"]), norm, inside, str(HOME),
                                                 lambda: sibling("fast_setup").scratch_path(HOME, item[2])).rule(
         command, cwd, dialect)
-    return rule and deny_reason(item[2], rule, " Destructive commands are the owner's: ask the owner to run it, "
-                                               "or to approve another approach.")
+    return rule and deny_reason(item[2], rule, " Ask the owner to run it or to approve another approach.")
 
 
 def where(cds, cwd):
@@ -851,16 +802,16 @@ def stop(event, runs, cwd, session):
                 log("hook.wait_stop", key=run["key"], next=step)
                 return None
             log("hook.block_stop", key=run["key"], next=step)
-            return (f"Factory {run['mode']} run '{run['key']}' is not finished. Next: "
-                    f"{step or 'close'}. Continue it. Waiting on the owner? `fast_gate.py pause --reason \"...\"`. "
-                    "The owner stopped it? `fast_gate.py close --abandon \"<their reason>\"`.")
+            return (f"Factory {run['mode']} run '{run['key']}' unfinished. Next: {step or 'close'}. Continue it; waiting "
+                    "on the owner: `fast_gate.py pause --reason \"...\"`; owner stopped it: `fast_gate.py close --abandon "
+                    "\"<their reason>\"`.")
     return None
 
 
 def context(event, runs, cwd, session):
     lines = []
     for _, _, run in mine(runs, cwd, session)[:3]:
-        line = (f"Factory {run['mode']} run '{run['key']}' at {run['project']}: next step "
+        line = (f"Factory {run['mode']} run '{run['key']}' at {run['project']}: next "
                 f"{next_step(run) or 'close'}; gate {'open' if not open_before_build(run) else 'closed (no source edits)'}")
         if run.get("paused"):
             line += f"; paused: {run['paused']['reason']}"
