@@ -87,6 +87,7 @@ Every ticket, every mode. The ticket is unfinished until both are complete.
 5. Tickets run in parallel, as many at once as files, dependencies and capacity allow. A dependent ticket waits only for what the dependency rule under Sessions and workspaces needs, never for the final proof of its criteria, which comes at the end. Each ticket keeps its own checklist loop.
 6. Ticks are progress, not activity entries: the next boundary entry lists the items ticked since the last one.
 7. An owner-deferred item is ticked as `Deferred by the owner: <decision link>`; its criteria leave the ticket with it. It counts as resolved, never as delivered.
+8. An item only the owner's hands or hardware the run lacks can finish (another OS, a physical device, an owner sign-off) stays unticked and ends `DEFERRED (hardware: <what is needed>)` or `DEFERRED (owner: <what is needed>)`. It is not Blocked: everything else finishes, the ticket reaches Ready for QA with the deferred items in its activity, and the owner ticks each once done. Never for work the run can do.
 
 ## Fast and Lucky
 
@@ -100,7 +101,7 @@ Product and feature runs list every requested item and every approved addition a
 4. At plan: write each ticket's checklist from the plan's todos.
 5. POC skips go once in the epic's guardrails. Optional ideas go to the epic's follow-ups ticket.
 6. Move every ticket through the backlog statuses, one activity entry per change.
-7. Write into the run's work record: `**Epic:** <url>` (a `change` run: `**Ticket:** <url>`, or `**Ticket:** none (<why>)`), `**Sub-issue:** <url>` for each sub-issue in the run, `**Requested:**` R-ids (product and feature runs), `**Backlog:**` owned, affected and untouched items, follow-ups included. At handoff: `**Statuses:**` each owned ticket's final status: Ready for QA with its PR, Blocked, or Backlog when owner-deferred.
+7. Write into the run's work record: `**Epic:** <url>` (a `change` run: `**Ticket:** <url>`, or `**Ticket:** none (<why>)`), `**Sub-issue:** <url>` for each sub-issue in the run, `**Requested:**` R-ids (product and feature runs), `**Backlog:**` owned, affected and untouched items, follow-ups included. At handoff: `**Statuses:**` each owned ticket's final status: Ready for QA with its PR (naming any items deferred to the owner or hardware), Blocked, or Backlog when owner-deferred.
 
 Moving an epic to Safe: reuse it and add the contract below.
 
@@ -133,7 +134,7 @@ Number the confirmed contract. Each change records old and new scope, reason, so
 - Hand over the contract, authority and stops, decisions, current scope, checkout state, dependencies, evidence, unfinished phase and pending operations.
 - Record the real session, ticket revision, absolute checkout and base/head. A label is not a dispatched session. Missing capability stays explicit.
 - Parallel tickets need disjoint files, runtime effects, acceptance and decisions; isolate or serialize shared ports, databases, caches, services and build output.
-- Fast and Lucky share the epic checkout, one writer per file; Safe tickets take their own worktrees. Stop prior operations before handoff. Never overwrite or delete another ticket's state.
+- A Fast or Lucky run's tickets share its checkout, one writer per file. Parallel runs (lanes) on one epic each take their own worktree, branch and dev ports and merge into the wave's integration branch. Safe tickets take their own worktrees. Stop prior operations before handoff. Never overwrite or delete another ticket's state.
 - A dependency in the same run and branch (Fast, Lucky) is met once the items it needs are ticked there. Across branches (every Safe ticket), it is met by the dependency's handed-off result: its checked and reviewed commit in this ticket's base, by branching from it or, with several dependencies, by merging their delivered commits into this ticket's branch locally first, and its recorded delivery; no owner merge is needed. Split work so parts without the dependency form their own tickets and start at once. Closed status alone proves nothing. Changed dependency scope: revalidate affected analysis and evidence.
 
 ## Review and deliver

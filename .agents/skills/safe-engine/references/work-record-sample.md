@@ -21,7 +21,6 @@ Summary shown to the owner: all three leaders cover booking, waitlists, packs, c
 ### Momence
 
 - One calendar for classes, courses and workshops; automated waitlists; memberships, packs, drop-ins; optional branded app; livestream and on-demand. https://www.momence.com/yoga-studio-software/
-- Waitlist modes: first-come, double opt-in, fast-fingers by SMS. https://help.momence.com/en/articles/12028307-waitlist-faq-s-classes
 - Pricing not published (demo or quote). https://www.momence.com/pricing/
 
 ### Glofox
@@ -36,12 +35,10 @@ Summary shown to the owner: all three leaders cover booking, waitlists, packs, c
 | Packs and memberships | ✅ | ✅ | ✅ |
 | Branded app or site | ✅ add-on | ✅ | ✅ |
 | Staff check-in | ✅ | ✅ | ✅ |
-| Online or video classes | ✅ add-on | ✅ | ✅ |
 
 **Opportunities:** (inference)
 - Commission-free direct booking with the branded site included, against first-purchase fees and paid app add-ons.
 - Flat published pricing for comparison shoppers; two of three leaders publish none.
-- Video included in the base plan instead of an add-on.
 
 ### Stack options
 
@@ -80,8 +77,6 @@ member ─ role ─► schedule ─► class ─┬─ spot free ─► book (�
 staff  ─ role ─► schedule editor ─► today's classes ─► check-in list
 ```
 
-**Unknowns:** payment provider after the POC; cancellation window rules.
-
 ## Plan
 
 ### Files
@@ -105,11 +100,15 @@ Waves: 1 = T1, T2, T8; 2 = T3, T4; 3 = T5, T6, T7.
 - T7 (standard) Staff schedule editor and check-in → staff publish classes and check members in (#5, A1)
 - T8 (standard) Header, footer, logo → every page shows the studio's name and navigation (#2, A3)
 
+### Interface
+`lib/booking.ts` exports `book(memberId, classId)`, `cancel(bookingId)`, `promote(classId)`; record `Booking { id, memberId, classId, status: booked | waitlisted | cancelled }` in `lib/types.ts`; routes `/schedule`, `/account`, `/staff/schedule`, `/staff/today`; buttons `Book`, `Join waitlist`, `Cancel booking`, `Check in`.
+
 ### Whole plan
 Next.js app, SQLite through Drizzle, booking rules in one module. Light theme with the design brief below.
-
 **Logging:** `lib/log.ts` JSON lines to `logs/app.log`; booking, waitlist, credit and check-in events with request IDs; secrets redacted.
 **Efficiency:** one indexed query per schedule week, booking in a single transaction, no N+1 on rosters; first load under 200 KB JS on member pages.
+**Ports:** app 3000 (main checkout, the project default)
+**UX rules:** U1 to U10 (ux-quality); the project has no rule file of its own
 
 ## Design
 
@@ -187,6 +186,7 @@ indexes: classes(starts_at), bookings(class_id, status), waitlist(class_id, posi
 **Statuses:** every requested item delivered, real payments owner-deferred to #6 (mock checkout in this POC); #2, #3, #4, #5 checklists ticked, done-run PASS: Ready for QA with PR #7, Done on merge; epic #1 Ready for QA; #6 Backlog
 **Dev sign-in:** header role switcher (Member, Staff), development only; this POC has no sign-in
 **PR:** https://github.com/acme/studio-booking/pull/7 (body: .factory/fast/pr-body.md): Visual/Journey declarations and screenshot pairs for every changed view/state; videos cover role navigation, schedule, pack purchase/credit spend, booking/cancellation, waitlist/promotion, staff publishing and check-in, plus changed failure/retry paths. Shared clips identify each journey's timestamps.
+**Deferred:** none
 **Unverified:** automated tests, independent review, Safari, payment provider
 **Follow-ups:** real payments (#6, owner-approved mock in this POC, revisit at MVP kickoff). POC skips (real sign-in, security hardening, deployment, landing page) are listed in epic #1 for the MVP
 

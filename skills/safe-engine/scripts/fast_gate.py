@@ -284,6 +284,7 @@ def skeleton(run):
             hints["handoff"] += "; every outcome declares Visual and Journey; visual: screenshot pair, journey: Video; only scoped owner Media waiver"
     if run.get("credit"):
         hints["handoff"] += "; the PR body's last line is the factory credit line (how-to-make-a-pr credit.md)"
+    hints = sibling("fast_briefs").hints(hints, run) if run.get("briefs") else hints
     if sibling("fast_record").hidden(run):
         hints["done-run"] += "; a Hidden checks block: '#<n> <ID>: PASS' per criterion of every listed ticket"
     for step in steps_for(run):
@@ -300,7 +301,7 @@ FLAGS = {"ticket_checks": (LAYOUT, "Definition of done"), "coverage": (LAYOUT, "
          "light": (FAST_RUN, "Light lane"), "outcomes": (FAST_RUN, "what the owner can do once it is done"),
          "hidden_checks": (FAST_RUN, "**Hidden checks:**"),
          "scans": (FAST_RUN, "**Secrets:**"), "ux_rules": (UX, "| U10 |"), "pr_proof": (FAST_RUN, "`**PR:**`"),
-         "credit": (PR, "references/credit.md"), "pr_demo": (PR, "**Visual:**")}
+         "credit": (PR, "references/credit.md"), "pr_demo": (PR, "**Visual:**"), "briefs": (FAST_RUN, "**Ports:**")}
 
 
 def method_flags(bundle, project):
@@ -384,7 +385,7 @@ def cmd_done(args):
         fail(f"Cannot read the work record: {error}")
     body = all_sections.get(TITLES[step].lower(), "")
     checked = sibling("fast_pr_policy").effective(HOME, run) if step == "handoff" else run
-    problems = (CHECKS[step](checked, body, project=project, offline=args.offline, all_sections=all_sections)
+    problems = (CHECKS[step](checked, body, project=project, offline=args.offline, all_sections=all_sections, runs=active_runs)
                 if body.strip() else [f"section '## {TITLES[step]}' is missing or empty"])
     if problems:
         log("step.refused", key=run["key"], step=step, problems=problems)
@@ -396,6 +397,7 @@ def cmd_done(args):
         run.update(size=record.run_size(all_sections), size_at=step)  # frozen: editing the line later skips nothing
     if step == "plan":  # who owes the epic's integration todos is read from the plan as recorded here
         run["todos"] = list(dict.fromkeys(run.get("todos", []) + [f"T{n}" for n in record.todo_ids(all_sections)]))
+        run["ports"] = sibling("fast_briefs").ports(record.marker(body, "Ports"))  # later lanes' plans avoid them
     if step == "tickets":  # later ticket checks keep reading these even if the record drops one
         epic, subs = record.ticket_urls(body)
         run["tickets"] = list(dict.fromkeys(run.get("tickets", []) + epic + subs))
@@ -928,6 +930,7 @@ def main():
     common.add_argument("--project", help="Run project; default: nearest folder with .factory/fast/run.json")
     sub = parser.add_subparsers(dest="command", required=True)
     sibling("fast_cleanup").parser(sub, common)
+    sibling("fast_shots").parser(sub, common)
     start = sub.add_parser("start", parents=[common], help="Begin a run and register it for hooks")
     start.add_argument("--key", required=True)
     start.add_argument("--mode", choices=MODES, default="fast")
@@ -979,6 +982,7 @@ def main():
     actions = {"start": cmd_start, "done": cmd_done, "status": cmd_status, "close": cmd_close, "rehome": cmd_rehome,
                "try": cmd_try, "view": cmd_view, "scratch": cmd_scratch,
                "cleanup-temp": lambda a: sibling("fast_cleanup").run(a, sys.modules[__name__]),
+               "shots": lambda a: sibling("fast_shots").run(a, sys.modules[__name__]),
                "adopt-pr-proof": lambda a: sibling("fast_pr_policy").adopt(a, sys.modules[__name__]),
                "pr-proof-method": lambda a: sibling("fast_pr_policy").method(HOME),
                "hook": lambda a: sys.exit(cmd_hook(a.host)),

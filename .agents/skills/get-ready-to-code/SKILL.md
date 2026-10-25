@@ -19,7 +19,7 @@ Prepare a :
 - next step, criticize our suggested summary of files, is it optimal, is that the best path for our plan
 - steps or phases.
 - The entire list of to do. It becomes each ticket's checklist.
-- The entire plan.
+- The entire plan. It fixes what every agent's brief carries, so none guesses: the public interface as it will be written (names, record shapes, labels, routes, commands, and the committed files that hold them), this checkout's own dev ports, and for UI work the UX rules every builder follows (`ux-quality` rule IDs plus the project's own rule files).
 
 Keep these five outputs in one compact work record. Full depth, the file-summary stop and every 0–4 step stay. Reuse source/decisions; link proof. Within step 3, finish affected callers, counts and links before recording completion. No extra finishing gate.
 
