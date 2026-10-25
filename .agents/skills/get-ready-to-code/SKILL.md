@@ -18,7 +18,7 @@ Prepare:
 - critique of that summary: is it optimal, the best path for our plan?
 - steps or phases.
 - the entire to do list. It becomes each ticket's checklist.
-- the entire plan.
+- the entire plan, fixing what every brief carries so no agent guesses: Interface, this checkout's dev Ports and, for UI work, UX rules (safe-engine fast-run, Briefs).
 
 Keep these five outputs in one compact work record. Full depth, the file-summary stop and every 0–4 step stay. Reuse source/decisions; link proof. Within step 3, finish affected callers, counts and links before recording completion. No extra finishing gate.
 

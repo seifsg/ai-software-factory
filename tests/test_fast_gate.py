@@ -25,6 +25,7 @@ LIGHT = """# copy-fix
 **Backlog:** searched "footer": nothing open
 ## Plan
 **Success:** the footer reads "Contact us".
+**Ports:** none (no server)
 ### Todos
 - T1 fix the footer word → the footer reads "Contact us"
 ## Build log
@@ -38,6 +39,7 @@ LIGHT = """# copy-fix
 **PR:** https://github.com/acme/site/pull/2 (body: .factory/fast/pr-body.md)
 **Unverified:** none
 **Follow-ups:** none
+**Deferred:** none
 """
 PR_BODY = """## 🎬 Before & after
 
@@ -1003,14 +1005,14 @@ class FastGateTests(GateHarness, unittest.TestCase):
         spec.loader.exec_module(gate)
         layout, lane, ux, pr = Path(gate.LAYOUT), Path(gate.FAST_RUN), Path(gate.UX), Path(gate.PR)
         for name, texts in (("new", ("### ✅ Definition of done\nEvery criterion has an item.",
-                                     "## Light lane\nT1 <title> → <what the owner can do once it is done>\n**Hidden checks:**\n**Secrets:**\n`**PR:**`",
+                                     "## Light lane\nT1 <title> → <what the owner can do once it is done>\n**Hidden checks:**\n**Secrets:**\n`**PR:**`\n**Ports:**",
                                      "| U10 | Performance |", "**Visual:** yes; credit in `references/credit.md`")),
                             ("old", ("### ✅ Done when", "## Hooks", "| Performance |", "No AI or tool attribution"))):
             for path, text in zip((layout, lane, ux, pr), texts):
                 (self.root / name / path).parent.mkdir(parents=True, exist_ok=True)
                 (self.root / name / path).write_text(text, encoding="utf-8")
         on = {"ticket_checks": True, "coverage": True, "light": True, "outcomes": True, "hidden_checks": True, "scans": True,
-              "ux_rules": True, "pr_proof": True, "credit": True, "pr_demo": True}
+              "ux_rules": True, "pr_proof": True, "credit": True, "pr_demo": True, "briefs": True}
         off = dict.fromkeys(on, False)
         self.assertEqual(gate.method_flags({"root": str(self.root / "new")}, self.project), on)
         self.assertEqual(gate.method_flags({"root": str(self.root / "old")}, self.project), off)
@@ -1020,7 +1022,7 @@ class FastGateTests(GateHarness, unittest.TestCase):
         (self.root / "new" / layout).write_bytes(b"\xff\xfe broken")
         self.assertEqual(gate.method_flags({"root": str(self.root / "new")}, self.project),
                          {**off, "light": True, "outcomes": True, "hidden_checks": True, "scans": True,
-                          "ux_rules": True, "pr_proof": True, "credit": True, "pr_demo": True})  # fast-run.md, ux-quality, PR still read
+                          "ux_rules": True, "pr_proof": True, "credit": True, "pr_demo": True, "briefs": True})  # fast-run.md, ux-quality, PR still read
         lucky = {"mode": "lucky", "kind": "change"}
         self.assertNotIn("done-run", gate.steps_for(lucky))
         self.assertIn("done-run", gate.steps_for({**lucky, "ticket_checks": True}))

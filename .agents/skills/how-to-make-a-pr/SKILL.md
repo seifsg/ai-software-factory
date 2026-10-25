@@ -25,6 +25,7 @@ Find the real repository, branches, release policy, PR template, signing rule, c
 
 - Work on your own branch; never commit to the base. Protect dirty and foreign work: new branch or isolated checkout.
 - Base = the project's integration branch, else the default branch. Say so in the PR when it differs.
+- **Epic waves:** a wave's runs share one integration branch (`<scope>/<epic>-wave<n>` or the project's convention) and one draft PR. A finished lane merges it into its own worktree branch, resolves and rechecks there, then merges back and pushes (never force). No PR per lane or run, none stacked.
 - Dependent Safe ticket, wrong base or hotfix: `references/pr-cases.md`.
 - Check the remote, not the local list: shallow and single-branch clones hide branches.
 
@@ -40,7 +41,7 @@ git switch -c <scope>/<short-name> origin/<base>
 Every PR shows a skeptical owner truthful before/after proof: what failed or was missing, what now works, the observed benefit. Required in every mode. A short schema, diagram, table or labeled emoji may explain nonvisual proof; prose or illustrative diagrams never replace observed results. Shared backend changes that affect a UI journey still demonstrate that journey.
 
 1. **Inventory now:** map the ticket and diff to every changed or new view, distinct visual state and touched user journey, with affected entry points and results even when only shared logic changed. One outcome per journey; shared views may link the same screenshot pair. Reconcile it again against the final diff.
-2. **Capture each Before now**, with minimum safe navigation. Exercise or side effects needed: an isolated fixture or existing evidence, conditions stated. Missed: capture from the base commit in a separate checkout and say so. Never fabricate it or reset dirty work to recreate it.
+2. **Capture each Before now**, with minimum safe navigation. Exercise or side effects needed: an isolated fixture or existing evidence, conditions stated. Missed: capture from the base commit in a separate checkout and say so. Web views: the gate's `shots` serves base and head on their own ports and shoots the same views at one size. Never fabricate it or reset dirty work to recreate it.
 3. **Prepare the demo:** a fresh isolated slot, profile or test workspace by default; data needed: seed only deterministic, non-sensitive fixtures and record their reset recipe. Preserve the owner's workspace and data. Match before/after viewport, state, sample data and workload; explain unavoidable differences.
 4. **Capture each After during final manual QA**, per the table: each journey from entry, single-step flows included, through real controls to its confirmed result, plus relevant changed validation, failure, edge and recovery paths. A success toast alone does not prove an external result. Use authorized test destinations; recording grants no sending permission.
 
@@ -70,6 +71,7 @@ Every PR shows a skeptical owner truthful before/after proof: what failed or was
 - Honor required signing with the existing authorized identity; never invent one or bypass signing, permissions or protected gates.
 - **No AI or tool attribution lines** in commits. The PR body ends with the factory credit line in `references/credit.md`.
 - Required gates (step 1) pass before push. A check not run is **unverified**, not passed.
+- CI the owner turned off, or failing on billing or quota: never wait on or rerun it. The local runs of the same checks are the gate; the PR names their commands and results and says CI did not run and why.
 - Tests come last: implementation, manual QA on the real behavior, then write or adjust and run tests. A production fix found by tests goes back through manual QA, then tests rerun. No tests that restate the implementation.
 
 ## 6. Open the draft
@@ -89,7 +91,7 @@ Every PR shows a skeptical owner truthful before/after proof: what failed or was
 
 ## 8. Fast and Lucky PRs
 
-Open one for every run, unasked. Before creating or updating it, offer once per PR: **"Run a Safe check first? (optional)"** (final manual QA, relevant tests, one independent review of the finished work). Yes: run it, fix, then open. No or no answer: open the draft as is.
+Open one for every run, unasked, unless its wave's draft PR is open: then push to that branch and update that PR, appending the run's outcomes, criteria verification and remaining steps and refreshing the summary. Before creating or updating it, offer once per PR (a wave's shared PR: its first run): **"Run a Safe check first? (optional)"** (final manual QA, relevant tests, one independent review of the finished work). Yes: run it, fix, then open. No or no answer: open the draft as is.
 
 - Variations requested: one branch and draft PR per variation, each following these rules with its own proof.
 - List missing tests, review and baseline as unverified. Link the run's epic.

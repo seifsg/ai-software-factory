@@ -81,6 +81,10 @@ In sub-issue checklists; the epic's lists #2 to #5 and the done-run. Tier per to
 Next.js app, SQLite through Drizzle, booking rules in one module.
 **Logging:** `lib/log.ts`: JSON lines with request IDs to `logs/app.log`; secrets redacted.
 **Efficiency:** one indexed query per week, one booking transaction, no N+1; under 200 KB JS.
+**Ports:** app 3000 (main checkout, the project default)
+**UX rules:** U1 to U10 (ux-quality); no project rule file
+### Interface
+`lib/booking.ts` exports `book(memberId, classId)`, `cancel(bookingId)`, `promote(classId)`; `Booking { id, memberId, classId, status: booked | waitlisted | cancelled }` in `lib/types.ts`; routes `/schedule`, `/account`, `/staff/schedule`, `/staff/today`; buttons `Book`, `Join waitlist`, `Cancel booking`, `Check in`.
 
 ## Design
 **UI kit:** shadcn/ui
@@ -152,6 +156,7 @@ indexes: classes(starts_at), bookings(class_id, status), waitlist(class_id, posi
 **Statuses:** all requested items delivered; #2 to #5 ticked, done-run PASS: Ready for QA with PR #7, Done on merge; epic #1 Ready for QA; #6 Backlog
 **Dev sign-in:** header role switcher (Member, Staff), development only; this POC has no sign-in
 **PR:** https://github.com/acme/studio-booking/pull/7 (body: .factory/fast/pr-body.md): Before & after per outcome with Visual and Journey; screenshot pairs for every changed view and state; videos per journey plus changed failure/retry paths; shared clips mark each journey's timestamps
+**Deferred:** none
 **Unverified:** automated tests, independent review, Safari, payments
 **Follow-ups:** real payments (#6, revisit at MVP kickoff); POC skips (sign-in, hardening, deployment, landing page) in epic #1
 

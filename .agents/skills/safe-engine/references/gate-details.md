@@ -107,6 +107,14 @@ A stale start baseline, only on the owner's explicit instruction: Git dates and 
 
 The command requires an ancestor of HEAD and upstream, commits predating start, unchanged initial UI snapshots and no completed done-run; it refuses changed previews. It keeps the original base, snapshot, pause, progress and an audit receipt; only later UI comparison uses the corrected base, and remaining UI edits still need proof. One correction per run; unknown ownership, an already corrected baseline or later acceptance needs reviewed maintenance, never manual ledger edits. Older gate copies stay conservative: use the reviewed corrected gate for later checks, without a global install.
 
+## Shots
+
+```text
+python fast_gate.py shots --base <ref> --serve "<dev command, {port} for its port>" --path <view> [--path <view>] [--setup "<command>"] [--ports <before>,<after>] [--size 1280x800] [--browser <exe>] [--project <abs>]
+```
+
+`shots` makes the PR's Before and After screenshots in one go: it checks out `--base` in the run's scratch folder, runs `--setup` in each tree, serves both at once on their own ports (`{port}` in `--serve`, also `PORT`), shoots each `--path` at one size with a headless Chromium-family browser (`--browser` or `SAFE_ENGINE_BROWSER` when none is found), stops both servers and removes the base checkout. Shots land in `.factory/fast/shots/` as `<view>-before.png` and `<view>-after.png`. Views behind sign-in or seeded state still need the project's own capture; Git Bash rewrites a bare `/`, so pass `--path=/` there.
+
 ## Install
 
 ```text

@@ -21,6 +21,7 @@ RECORD = """# copy-fix
 **Backlog:** searched "footer": nothing open
 ## Plan
 **Success:** the footer reads "Contact us".
+**Ports:** none (no server)
 ### Todos
 - T1 fix the footer word → the footer reads Contact us
 - T2 link the footer to the contact page → click Contact and the form opens

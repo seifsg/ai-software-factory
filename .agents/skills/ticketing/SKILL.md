@@ -78,6 +78,7 @@ Every ticket, every mode: unfinished until both are complete.
 3. Independent items and tickets run in parallel as far as files, dependencies and capacity allow; each item is ticked after its own check, each ticket keeps its own checklist loop. One writer per ticket body: the coordinator ticks, delegates report.
 4. Finished: every item ticked and every criterion proven; otherwise loop on the failing item until it passes. Blocked only when the run cannot clear it (access, capability, owner decision): reason, next action, who unblocks; its independent items continue.
 5. An owner-deferred item is ticked as `Deferred by the owner: <decision link>`; its criteria leave the ticket with it. It counts as resolved, never as delivered.
+6. An item only the owner or missing hardware can finish stays unticked, ending `DEFERRED (owner|hardware: <what is needed>)` (safe-engine fast-run, Briefs). Not Blocked: the rest finishes, the ticket reaches Ready for QA naming it, the owner ticks it once done.
 
 ## Fast and Lucky
 
@@ -87,7 +88,7 @@ Product and feature runs list every requested item and approved addition as R1, 
 
 1. Product and feature runs: create the epic after the owner's kickoff answers (Lucky: from the request), with the owner's words, the answers and every layout section, the definition of done with IDs included. Change runs update the ticket they follow up, create one only for a new outcome, none when trivial.
 2. Create the sub-issues in user-value order, linked as native sub-issues. Optional ideas go to the epic's follow-ups ticket.
-3. Write into the run's work record: `**Epic:** <url>` (a `change` run: `**Ticket:** <url>`, or `**Ticket:** none (<why>)`), `**Sub-issue:** <url>` for each sub-issue in the run, `**Requested:**` R-ids (product and feature runs), `**Backlog:**` owned, affected and untouched items, follow-ups included. At handoff: `**Statuses:**` each owned ticket's final status: Ready for QA with its PR, Blocked, or Backlog when owner-deferred.
+3. Write into the run's work record: `**Epic:** <url>` (a `change` run: `**Ticket:** <url>`, or `**Ticket:** none (<why>)`), `**Sub-issue:** <url>` for each sub-issue in the run, `**Requested:**` R-ids (product and feature runs), `**Backlog:**` owned, affected and untouched items, follow-ups included. At handoff: `**Statuses:**` each owned ticket's final status: Ready for QA with its PR (naming items deferred to the owner or hardware), Blocked, or Backlog when owner-deferred.
 
 ## Safe
 
@@ -108,7 +109,7 @@ Safe runs, or moving an epic to Safe: [the contract](references/safe-contract.md
 - Hand over the contract, authority and stops, decisions, current scope, checkout state, dependencies, evidence, unfinished phase and pending operations.
 - Record the real session, ticket revision, absolute checkout and base/head. A label is not a dispatched session. Missing capability stays explicit.
 - Parallel tickets need disjoint files, runtime effects, acceptance and decisions; isolate or serialize shared ports, databases, caches, services and build output.
-- Fast and Lucky share the epic checkout, one writer per file; Safe tickets take their own worktrees. Stop prior operations before handoff. Never overwrite or delete another ticket's state.
+- A Fast or Lucky run's tickets share its checkout, one writer per file. Parallel runs (lanes) on one epic each take their own worktree, branch and dev ports and merge into the wave's integration branch. Safe tickets take their own worktrees. Stop prior operations before handoff. Never overwrite or delete another ticket's state.
 - A dependency in the same run and branch (Fast, Lucky) is met once the items it needs are ticked there; across branches (every Safe ticket), by its handed-off result: its checked and reviewed commit in this ticket's base (branch from it or, with several dependencies, merge their delivered commits into this branch locally first) and its recorded delivery; no owner merge is needed. A dependent ticket waits only for that, never for the final proof of its criteria, which comes at the end. Closed status alone proves nothing. Parts without the dependency form their own tickets and start at once. Changed dependency scope: revalidate affected analysis and evidence.
 
 ## Review and deliver

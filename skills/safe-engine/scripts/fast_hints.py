@@ -2,6 +2,7 @@
 
 Loaded by `start` (fast_gate.skeleton), never by hooks. The checks themselves live in fast_record.py.
 """
+import fast_briefs
 import fast_record as record
 
 HINTS = {  # record markers per step (fast-run.md#work-record); record_hints() adds what this run's kind and flags need
@@ -74,5 +75,6 @@ def record_hints(run):
         hints["done-run"] += "; a Hidden checks block: '#<n> <ID>: PASS' per criterion of every listed ticket"
     ticked = "each listed ticket fully ticked, or Blocked, Backlog or not planned" + (
         "; items name every criterion and hold every plan todo" if coverage else "")
+    hints = fast_briefs.hints(hints, run) if run.get("briefs") else hints  # Interface, Ports, UX rules, Deferred
     hints["handoff"] += (", a Dev sign-in line" if run.get("auth") else "") + pr_hint(run) + online + ticked + named
     return hints
