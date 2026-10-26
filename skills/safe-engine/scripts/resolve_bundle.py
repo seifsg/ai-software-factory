@@ -33,7 +33,7 @@ REQUIRED = ["AGENTS.md", "README.md", "docs/install.md", "docs/hosts.md", "safe_
             ".agents/skills/safe-engine/references/fast-run.md",
             ".agents/skills/improve-factory/references/live-session.md"]
 REQUIRED += [f".agents/skills/{name}/SKILL.md" for name in SKILLS]
-# Revision-specific helpers, including worth scoring and its review schema, use each bundle's required-file contract.
+# Revision-specific gate helpers and schemas use each bundle's required-file contract, preserving older pins.
 NEWER = ("This factory revision uses a newer layout than this launcher knows ({}). Update the installed factory from "
          "a current checkout (skills/safe-engine/scripts/fast_gate.py install --host <your agent>, or update the "
          "plugin), then retry.")

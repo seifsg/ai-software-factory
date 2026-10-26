@@ -59,11 +59,11 @@ Record every step in one work record and pass the gate: [fast-run](references/fa
 4. **Tickets:** `ticketing`: read the backlog, then epic(s) + 1 or many outcome sub-issues in To do.
 5. **Analysis** (product, feature): `analyze-start` in full. No code yet: analyze the requirements, platform and intended consumers, and say so.
 6. **Plan:** `get-ready-to-code`: five outputs, todos `T1..Tn` in each ticket's checklist, logging map, efficiency budget, and the [briefs](references/fast-run.md#briefs): Interface, Ports and, for UI work, UX rules. This request authorizes going past its file-summary stop. Product, feature: start the hidden checks.
-7. **Design** (UI): plan it as `get-ready-to-code` plans code; only the best, never mediocre. Brief from the product bar and `ux-quality` step 1, Map, Hierarchy and Labels included. Audit at the done-run: a fresh agent's verdict per UX rule (`ux-quality` step 4).
+7. **Design** (UI): plan with `get-ready-to-code`. Use the product bar and `ux-quality` step 1, including Map, Hierarchy and Labels; design ports follow its reference coverage. At done-run, a fresh agent judges every UX rule (`ux-quality` step 4).
 8. **Schema** (persistence): `database-schema`, only if needed.
-9. **Build:** each checklist item through the 0–4 loop, an unproven capability first as a spike; tick it in its ticket after its check.
+9. **Build:** each item through 0–4; spike unknown capabilities first, tick after use. UI: [Look, Show, Prove, Ship](references/show.md).
    - On each tick, write that todo's one log line, `T3 pre: … do: … post: …`, and in the same edit set `**Now:**` to the todos in progress.
-   - An MVP or production slice writes automated tests as its last checklist items, once the rest works; a POC waits for `verify` or Safe.
+   - Final tests follow manual use; UI also completes Show first. A POC waits for `verify` or Safe.
 10. **Done-run:** prove each ticket's definition of done.
     - Start it once. Use every requested journey and the most likely failure through real controls (simulated input proves no requested integration). Read the logs; fix blockers.
     - Meanwhile capture the PR's complete view and journey inventory (`how-to-make-a-pr`). A demo bug restarts its capture cycle after the checked fix.

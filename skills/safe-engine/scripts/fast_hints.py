@@ -16,6 +16,7 @@ HINTS = {  # record markers per step (fast-run.md#work-record); record_hints() a
               "with counts and a minimum",
     "schema": "a 3-option table, a Chosen line, a fenced ERD or DDL",
     "build": "one line per plan todo: 'T1 pre: ... do: ... post: ...'",
+    "show": "share every planned reference/current pair; record actual delivery and owner reply or elapsed deadline",
     "done-run": ">=1 PASS line from using it, a Logs line",
     "handoff": "Run, Statuses, Unverified, Follow-ups lines",
 }
@@ -48,6 +49,8 @@ def pr_hint(run):
 def record_hints(run):
     """Each step's record markers for this run only: its kind, lane and the checks its methods turn on."""
     hints = dict(HINTS)
+    if run.get("show_first"):
+        hints["plan"] += "; UI phases: Look, Show, Prove, Ship; freeze show --plan before done plan"
     delivers, lane, coverage = run["kind"] != "change", record.light(run), run.get("coverage")  # delivers: product, feature
     online = "; online: "
     named = "; criteria name every requested item not owner-deferred" if delivers and coverage else ""
@@ -58,6 +61,8 @@ def record_hints(run):
         hints["tickets"] += ", >=1 Sub-issue URL line" + (", a Requested line (R1, R2, ...)" if coverage else "")
     if coverage and not lane:
         hints["plan"] = hints["plan"].replace("(T1..)", "('T1 <title> → <result> (#ticket, A1)')")
+    if lane and run.get("show_first"):
+        hints["plan"] += "; UI phases: Look, Show, Prove, Ship; freeze show --plan before done plan"
     if run.get("scans") and run["mode"] == "lucky" and delivers:  # Lucky has no kickoff to hold the Size line
         hints["tickets"] += ", a Size line"
     hints["tickets"] += online + ("each listed ticket is open with a Definition of done" if coverage else

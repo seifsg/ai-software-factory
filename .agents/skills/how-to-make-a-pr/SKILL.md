@@ -25,7 +25,7 @@ Find the real repository, branches, release policy, PR template, signing rule, c
 
 - Work on your own branch; never commit to the base. Protect dirty and foreign work: new branch or isolated checkout.
 - Base = the project's integration branch, else the default branch. Say so in the PR when it differs.
-- **Epic waves:** a wave's runs share one integration branch (`<scope>/<epic>-wave<n>` or the project's convention) and one draft PR. A finished lane merges it into its own worktree branch, resolves and rechecks there, then merges back and pushes (never force). No PR per lane or run, none stacked.
+- **Epic waves:** share an integration branch and draft PR. Finished lanes incorporate it, resolve/recheck, then integrate and push without force. Exception: an independently complete UI ticket ships its own draft after Show and Prove; dependencies must be included and checked. Humans alone authorize merge; do not wait for unrelated wave tickets.
 - Dependent Safe ticket, wrong base or hotfix: `references/pr-cases.md`.
 - Check the remote, not the local list: shallow and single-branch clones hide branches.
 

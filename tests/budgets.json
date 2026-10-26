@@ -53,7 +53,9 @@
     "skills/safe-engine/SKILL.md": 3000,
     ".agents/skills/deep-review/references/worth-it.md": 1700,
     ".agents/skills/safe-engine/references/worth-it.md": 2800,
-    ".agents/skills/ticketing/references/finishing-touches.md": 1300
+    ".agents/skills/ticketing/references/finishing-touches.md": 1300,
+    ".agents/skills/ux-quality/references/coverage.md": 4400,
+    ".agents/skills/safe-engine/references/show.md": 4700
   },
   "gate": {
     "start": 771,

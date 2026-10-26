@@ -265,6 +265,8 @@ No. They see tool calls, not intent: a command run from inside a script passes. 
 
 ## 🛠️ Work on the factory
 
+Design ports use `fast_gate.py start --design-port`, then `fast_gate.py design --input <coverage.json>` before plan. `fast_gate.py design --candidate` identifies the source for a fresh judge; `fast_gate.py design --review <review.json>` records matched screenshots and element observations. `fast_gate.py design` reports completed, partial, missing and approved-cut counts against the fixed original inventory ([usage](docs/design-coverage.md)).
+
 Rules live in [AGENTS.md](AGENTS.md); changes go through `improve-factory`. Report problems as [issues](https://github.com/seifsg/ai-software-factory/issues).
 
 ```bash
@@ -293,3 +295,5 @@ docs/                  docs/install.md, docs/hosts.md, docs/orchestrators.md, do
 tests/                 controller, gate, installer, budget, docs-sync and skill hygiene tests
 CHANGELOG.md           what changed per release; UPGRADING.md: what to do
 ```
+
+UI delivery uses [Look, Show, Prove, Ship](docs/show-first.md): `show --plan`, `show --candidate`, `show --prepare`, `show --shared`, `show --reply`, `done show`, then `prove --suite`. Only actual shared pictures start the owner-response window. Installed entries use the selected bundle runner; completion requires any retained suite pass to match current source. Humans retain merge authority.

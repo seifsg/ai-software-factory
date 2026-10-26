@@ -10,13 +10,13 @@ Build in complete working iterations. Tiny bug or full product, same logic.
 
 - First: smallest real user journey we can see and use. Order by user value; explain required blockers. Order never drops scope: every requested item maps to todos, or stays open in its ticket when the owner narrowed this iteration.
 - Before dependent work: shared state owner, invariants and their enforcers, entry points, limits, compatibility and failure behavior. Root fix, not patch; big or risky ones go to the owner.
-- Required quality stays. Optional polish/enhancements later: owner, ticket, acceptance condition.
-- Complete outcome ticket -> finish iteration -> manual QA -> relevant final tests/review. Full requested outcome stays open until delivered.
+- Design ports keep frozen coverage. Optional polish: owner, ticket, acceptance.
+- Complete outcome ticket -> finish iteration -> manual QA -> relevant final tests/review.
 
 Prepare:
 - summary of files about to change, then stop (continue only when your instructions already authorize it).
 - critique of that summary: is it optimal, the best path for our plan?
-- steps or phases.
+- steps or phases; UI: Look, Show, Prove, Ship.
 - the entire to do list. It becomes each ticket's checklist.
 - the entire plan, fixing what every brief carries so no agent guesses: Interface, this checkout's dev Ports and, for UI work, UX rules (safe-engine fast-run, Briefs).
 

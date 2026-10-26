@@ -6,6 +6,9 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 
 ## [Unreleased]
 
+### Added
+- UI Look/Show/Prove/Ship checkpoint with current paired pictures, recorded sharing and owner feedback/deadlines before the declared suite (#154).
+
 ### Changed
 
 - Worth-it repairs (#157): bounded finding scores prioritize optional polish, Fast/Lucky and new Safe runs validate selected fixes, authorized Finishing touches batches reuse the epic's existing follow-ups, and parked reports explain what waits without weakening mandatory quality or owner authority.
@@ -33,3 +36,4 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 
 [Unreleased]: https://github.com/seifsg/ai-software-factory/compare/v1.0.0...HEAD
 [1.0.0]: https://github.com/seifsg/ai-software-factory/releases/tag/v1.0.0
+- Design ports (#155): immutable reference coverage, owner-recorded cuts, independent matched likeness receipts and measured element counts; stale or incomplete evidence blocks completion.
