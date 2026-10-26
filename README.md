@@ -151,7 +151,7 @@ git clone https://github.com/seifsg/ai-software-factory.git
 python ai-software-factory/skills/safe-engine/scripts/fast_gate.py install --host claude
 ```
 
-- `claude` enables the plugin (skills and gate hooks) with auto-update. It follows release tags. Start a new session.
+- `claude` enables the plugin (skills and gate hooks) with auto-update, installs it with Claude Code's own CLI and checks `claude plugin list`. It follows release tags. Start a new session. No CLI found or the install failed: it exits 1 and names the fix. It looks on `PATH`, in `~/.local/bin` and in the Windows desktop app's `%APPDATA%\Claude\claude-code` folder; elsewhere, set `SAFE_ENGINE_CLAUDE` to the CLI's path.
 - `codex` and `cursor` copy the `safe-engine` and `improve-factory` skills into `~/.agents/skills` and write the gate hooks. Codex asks you to trust them once in `/hooks`.
 - `other` copies those skills only; wire the hooks by hand ([hosts](docs/hosts.md#other-agents)).
 - `--project <dir>` installs into one project instead of your user folders.
@@ -208,7 +208,7 @@ After an update or a rollback, the next `start`, `status` or `version` shows one
 
 | Symptom | Fix |
 |---|---|
-| `safe-engine` does not show up | Start a new session. Still missing: ask the agent to read the installed `safe-engine/SKILL.md` by path (Codex, Cursor: `~/.agents/skills/safe-engine/SKILL.md`) |
+| `safe-engine` does not show up | Start a new session. Claude Code: `claude plugin list` must show `safe-engine@ai-software-factory`; enabled in settings is not installed. Missing: `claude plugin install safe-engine@ai-software-factory --scope user` (or `/plugin`), then a new session; the run card's `Hooks:` line names this too. Still missing: ask the agent to read the installed `safe-engine/SKILL.md` by path (Codex, Cursor: `~/.agents/skills/safe-engine/SKILL.md`) |
 | Clone or install asks for a password or fails with "not found" | You need read access to this repository. Run `gh auth login` so Git uses your GitHub credentials over HTTPS |
 | Claude Code on Windows: hooks fail | Install Git for Windows (the hooks run in its `sh`, Git Bash), then start a new session |
 | Codex ignores the gate | Trust the factory's hooks once in `/hooks` |

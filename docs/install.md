@@ -14,7 +14,7 @@ Needs Git and Python 3.9+ (an agent following these steps installs missing ones 
    python <factory>/skills/safe-engine/scripts/fast_gate.py install --host claude|codex|cursor|other [--project <dir>] [--no-auto-update] [--channel stable|edge] [--codex-home <dir>]
    ```
 
-   - `claude`: enables the plugin (both launchers and the gate hooks) with auto-update in your user settings. The plugin follows release tags. Start a new session.
+   - `claude`: enables the plugin (both launchers and the gate hooks) with auto-update in your user settings, then installs it at user scope with Claude Code's CLI (`claude plugin marketplace update` or `add`, `claude plugin install`) and checks `claude plugin list --json`. The plugin follows release tags. Start a new session. It exits 1 with the fix when the CLI is missing or a step fails: enabled in settings alone may never install. It finds the CLI on `PATH`, in `~/.local/bin` or in the Windows desktop app's `%APPDATA%\Claude\claude-code` folder; set `SAFE_ENGINE_CLAUDE` to its path otherwise.
    - `codex`, `cursor`: copies both launchers into `~/.agents/skills` and writes the gate hooks. Codex asks you to trust them once.
    - `other`: copies the launchers only; wire hooks by hand per [hosts](hosts.md#other-agents).
    - `--project <dir>` installs into one project instead of your user folders. Re-running replaces only the factory's own entries.

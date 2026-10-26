@@ -46,15 +46,23 @@ def git(project, *args):
 
 
 def hook_status(project):
-    """Hosts wired to call this gate: an enabled Claude Code plugin, or factory entries in Codex/Cursor hook files."""
+    """Hosts wired to call this gate: a Claude Code plugin both enabled and installed, or factory entries in
+    Codex/Cursor hook files. Enabled but never installed loads no hooks, so it says so with the fix."""
     home = Path.home()
     found = []
     try:
         plugins = json.loads((home / ".claude" / "settings.json").read_text(encoding="utf-8")).get("enabledPlugins", {})
-        if any(name.startswith("safe-engine@") and value is True for name, value in plugins.items()):
-            found.append("Claude Code")
+        enabled = [name for name, value in plugins.items() if name.startswith("safe-engine@") and value is True]
     except (OSError, ValueError, AttributeError):
-        pass
+        enabled = []
+    if enabled:
+        try:
+            listed = json.loads((home / ".claude" / "plugins" / "installed_plugins.json").read_text(encoding="utf-8"))
+            installed = [name for name in enabled if listed.get("plugins", {}).get(name)]
+        except (OSError, ValueError, AttributeError):
+            installed = []
+        found.append("Claude Code" if installed else f"Claude Code plugin enabled but not installed (run `claude "
+                                                     f"plugin install {enabled[0]} --scope user`, then a new session)")
     for name, folder in (("Codex", ".codex"), ("Cursor", ".cursor")):
         for base in (home, Path(project)):
             try:
