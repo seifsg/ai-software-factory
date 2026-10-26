@@ -24,7 +24,7 @@ Read the last line first. A refusal is never done: split, confirm or ask the own
 
 Carry the goal, role, absolute paths, edit limits, conventions, owned branch, handback shape and, in Fast and Lucky, [scratch folder](fast-run.md#the-gate). Quote only needed rules; whole documents only for walkthroughs or reviews. End with one gate per required outcome:
 
-Set workdir to the lane; without host support, pass it per tool call. First action: verify cwd against the brief before writes; stop on mismatch. Pass lane resources and cache settings to commands and browsers.
+Set workdir to the lane, per call if needed. Verify cwd before writes; stop on mismatch. Pass lane resources to commands and browsers. Awaiting results: use [quiet waits](waiting.md).
 
 ```text
 G1 <outcome> CHECK: <command> EXPECT: <text its output must show>

@@ -280,6 +280,8 @@ Parallel local stacks use `fast_gate.py lane start`, `lane status` and `lane sto
 
 ## 🗂️ Layout
 
+For finite helper work, [quiet waits](docs/waiting.md) records completion identities with `wait --add`, `wait --finish` and `wait --status`. Supported pending results release Stop; terminal or unknown work restores the reminder.
+
 ```text
 .agents/skills/        the skills (canonical methods)
 skills/                portable launchers, gate scripts and the Claude Code plugin root

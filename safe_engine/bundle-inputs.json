@@ -97,7 +97,11 @@
     "safe_engine/windows_job.py",
     "safe_engine/resources.py",
     "safe_engine/lanes.py",
-    "skills/safe-engine/scripts/fast_lane.py"
+    "skills/safe-engine/scripts/fast_lane.py",
+    "skills/safe-engine/scripts/fast_wait.py",
+    "skills/safe-engine/scripts/fast_wait_command.py",
+    ".agents/skills/safe-engine/references/waiting.md",
+    "docs/waiting.md"
   ],
   "historical_files": [],
   "source_trees": [

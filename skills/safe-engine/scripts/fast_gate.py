@@ -229,6 +229,9 @@ def status_text(run, all_sections=None):
              "Gate: " + ("open, source edits allowed" if not blocked else "closed until " + ", ".join(blocked)),
              "Next: " + ("closed" if run.get("closed") else next_step(run) or "close")]
     lines += list(filter(None, [sibling("fast_pr_policy").notice(HOME, run)]))
+    waiting = sibling("fast_wait").state(HOME, run)
+    if waiting["recorded"]:
+        lines.append(sibling("fast_wait").describe(waiting))
     return "\n".join(lines)
 
 
@@ -250,7 +253,7 @@ PR = ".agents/skills/how-to-make-a-pr/SKILL.md"
 # run flag -> (method file, phrase): a check applies only when the methods the run reads define it
 FLAGS = {"ticket_checks": (LAYOUT, "Definition of done"), "coverage": (LAYOUT, "Every criterion has"),
          "light": (FAST_RUN, "Light lane"), "outcomes": (FAST_RUN, "what the owner can do once it is done"),
-         "hidden_checks": (FAST_RUN, "**Hidden checks:**"),
+         "hidden_checks": (FAST_RUN, "**Hidden checks:**"), "wait_receipts": (FAST_RUN, "wait --add"),
          "scans": (FAST_RUN, "**Secrets:**"), "ux_rules": (UX, "| U10 |"), "pr_proof": (FAST_RUN, "`**PR:**`"),
          "credit": (PR, "references/credit.md"), "pr_demo": (PR, "**Visual:**"), "briefs": (FAST_RUN, "**Ports:**")}
 
@@ -678,7 +681,7 @@ def pre_tool(event, runs, cwd, session):
         targets = [norm(name, where(cds, cwd)) for cds, name in shell.writes(event["command"])]
     else:
         return None
-    vault = (norm(ACTIVE), norm(HOME / "runs"), norm(HOME / "pr-proof")) if targets else ()
+    vault = (norm(ACTIVE), norm(HOME / "runs"), norm(HOME / "pr-proof"), norm(HOME / "waits")) if targets else ()
     for path in targets:
         if any(inside(path, folder) for folder in vault):  # the gate home's run files: only gate commands write them
             item = owner(runs, cwd) or next(iter(mine(runs, cwd, session)), None) or runs[0]
@@ -806,16 +809,13 @@ def stop(event, runs, cwd, session):
     """Reason to keep working when a run is unfinished; once per stop, never for paused runs or background waits."""
     if event["again"]:
         return None  # one reminder per stop; never trap the session
-    for _, _, run in mine(runs, cwd, session):
-        if not run.get("paused"):
-            step = next_step(run)
-            if event.get("waiting"):  # a background agent's result starts a new turn, whose stop is checked again
-                log("hook.wait_stop", key=run["key"], next=step)
-                return None
-            log("hook.block_stop", key=run["key"], next=step)
-            return (f"Factory {run['mode']} run '{run['key']}' unfinished. Next: {step or 'close'}. Continue it; waiting "
-                    "on the owner: `fast_gate.py pause --reason \"...\"`; owner stopped it: `fast_gate.py close --abandon "
-                    "\"<their reason>\"`.")
+    run = sibling("fast_wait").blocked(event, mine(runs, cwd, session), session, sys.modules[__name__])
+    if run:
+        step = next_step(run)
+        log("hook.block_stop", key=run["key"], next=step)
+        return (f"Factory {run['mode']} run '{run['key']}' unfinished. Next: {step or 'close'}. Continue it; waiting "
+                "on the owner: `fast_gate.py pause --reason \"...\"`; owner stopped it: `fast_gate.py close --abandon "
+                "\"<their reason>\"`.")
     return None
 
 
@@ -859,6 +859,8 @@ def cmd_hook(host="claude"):
                 note_agents(runs, cwd, session, event["agents"])
             reason = stop(event, runs, cwd, session)
             out = hosts.keep_going(host, reason) if reason else None
+            if event.get("wait_message"):
+                out = hosts.with_message(out, event["wait_message"])
             if out:
                 log("hook.answer", host=host, hook_event=event["name"], answer="keep_going")
         elif event["kind"] in ("prompt", "session"):
@@ -866,7 +868,7 @@ def cmd_hook(host="claude"):
             out = hosts.context(host, event["name"], text) if text else None
         if event["kind"]:  # the view refreshes on every host; delegates' messages may not reach the owner
             show = hosts.notifies(host) and not event.get("delegate")
-            lines = news(runs, cwd, session, show)
+            lines = "\n".join(filter(None, (event.get("wait_message"), news(runs, cwd, session, show)))) or None
             if show and event["kind"] == "prompt":
                 lines = "\n".join(line for line in (lines, reminder(runs, cwd, session)) if line) or None
             out = hosts.with_message(out, lines) if show else out
@@ -902,6 +904,7 @@ def main():
     sibling("fast_cleanup").parser(sub, common)
     sibling("fast_shots").parser(sub, common)
     sibling("fast_lane").parser(sub, common)
+    sibling("fast_wait_command").parser(sub, common)
     sibling("fast_baseline").parser(sub, common)
     sibling("fast_release").parser(sub)
     start = sub.add_parser("start", parents=[common], help="Begin a run and register it for hooks")
@@ -953,6 +956,7 @@ def main():
     hook.add_argument("--host", default="claude", help="claude, codex, cursor, or any other hook-capable agent")
     args = parser.parse_args()
     actions = {"start": lambda a: sibling("fast_entry").start(a, sys.modules[__name__]),
+               "wait": lambda a: sibling("fast_wait_command").run(a, sys.modules[__name__]),
                "done": cmd_done, "status": cmd_status, "close": cmd_close, "rehome": cmd_rehome,
                "try": cmd_try, "view": cmd_view, "scratch": cmd_scratch,
                "cleanup-temp": lambda a: sibling("fast_cleanup").run(a, sys.modules[__name__]),

@@ -35,7 +35,7 @@ def selected_command(gate, project):
 
 def route(args, gate):
     """Forward project commands to the pinned gate before installed argument validation."""
-    commands = {"done", "status", "close", "try", "scratch", "pause", "resume", "shots", "lane", "cleanup-temp", "recover-baseline"}
+    commands = {"done", "status", "close", "try", "scratch", "pause", "resume", "shots", "lane", "wait", "cleanup-temp", "recover-baseline"}
     options = args[:args.index("--")] if "--" in args else args
     if not options or options[0] not in commands or {"-h", "--help"} & set(options):
         return None
@@ -64,8 +64,11 @@ def hook(host, raw, event, runs, gate):
             if out is None:
                 print(reason, file=sys.stderr)
         elif event["kind"] == "stop":
-            if not event["again"] and not event.get("waiting") and any(not item[2].get("paused") for item in relevant):
-                out = hosts.keep_going(host, reason)
+            if not event["again"]:
+                if gate.sibling("fast_wait").blocked(event, relevant, event["session"], gate):
+                    out = hosts.keep_going(host, reason)
+                elif event.get("wait_message"):
+                    out = hosts.with_message(None, event["wait_message"])
         else:
             out = hosts.context(host, event["name"], reason)
         if out:
@@ -91,7 +94,7 @@ def hook_runs(event, runs, cwd, gate):
         item = gate.owner(runs, path)
         if item and item not in relevant:
             relevant.append(item)
-        elif any(gate.inside(path, gate.norm(folder)) for folder in (gate.ACTIVE, gate.HOME / "runs", gate.HOME / "pr-proof")):
+        elif any(gate.inside(path, gate.norm(folder)) for folder in (gate.ACTIVE, gate.HOME / "runs", gate.HOME / "pr-proof", gate.HOME / "waits")):
             if runs and not relevant:
                 relevant.append(runs[0])
     return relevant

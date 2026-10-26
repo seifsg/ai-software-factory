@@ -16,7 +16,7 @@ EDIT_TOOLS = {"Write", "Edit", "MultiEdit", "NotebookEdit", "Delete", "StrReplac
 SHELL_TOOLS = {"Bash", "PowerShell", "Shell", "run_shell_command", "shell", "bash"}
 PATH_KEYS = ("file_path", "notebook_path", "path", "target_file", "filePath", "absolute_path")
 SAME_AS_CLAUDE = ("claude", "codex")
-WAKERS = ("subagent", "workflow")  # Stop input background tasks that end on their own and report back (Claude Code)
+WAKERS = ("subagent", "workflow")  # Legacy optional host observations; current runs require explicit receipts.
 
 
 def read(host, event):
@@ -39,12 +39,13 @@ def read(host, event):
     found = shape(kind, event.get("session_id") or event.get("conversation_id") or event.get("sessionId"),
                   event.get("cwd"), tool, args, bool(event.get("stop_hook_active") or event.get("loop_count")), name)
     found["delegate"] = bool(event.get("agent_id"))  # Claude Code marks hook calls from inside a subagent
-    found["waiting"] = waits(event.get("background_tasks"))  # Claude Code lists in-flight background work at Stop
+    found["waiting"] = waits(event.get("background_tasks"))  # Explicit receipts take precedence over this optional list.
     found["agents"] = agents(event.get("background_tasks"))
+    found["observations"] = agents(event.get("background_tasks"), all_types=True)
     return found
 
 
-def agents(tasks):
+def agents(tasks, all_types=False):
     """The host's background agents for the owner's view, or None when the host sends no list: id, what, running."""
     if not isinstance(tasks, list):
         return None
@@ -52,14 +53,23 @@ def agents(tasks):
                 "blocked": "blocked", "failed": "blocked", "cancelled": "blocked"}
     return [{"id": str(task.get("id") or i), "desc": str(task.get("description") or task.get("name") or task.get("type"))[:60],
              "run": task.get("status") in ("running", "pending"),
-             "status": statuses.get(str(task.get("status")), "unknown")}
-            for i, task in enumerate(tasks) if isinstance(task, dict) and task.get("type") in WAKERS]
+             "status": statuses.get(str(task.get("status")), "unknown"),
+             **({"type": task.get("type")} if all_types else {}),
+             **({"observer": True} if task.get("observer") else {}),
+             **({"persistent": True} if task.get("persistent") else {})}
+            for i, task in enumerate(tasks) if isinstance(task, dict) and (all_types or task.get("type") in WAKERS)]
 
 
 def waits(tasks):
-    """Whether a background agent still runs: its result starts a new turn, whose stop the gate checks again."""
+    """Legacy host-list compatibility; new runs require explicit completion routes."""
     return isinstance(tasks, list) and any(isinstance(task, dict) and task.get("type") in WAKERS
+                                           and not task.get("observer") and not task.get("persistent")
                                            and task.get("status") in ("running", "pending") for task in tasks)
+
+
+def completion_route(host, kind, route):
+    """Only native finite subagent results have a supported parent wakeup contract here."""
+    return host in ("codex", "claude") and kind == "helper" and route == "native-subagent-result"
 
 
 def shape(kind, session, cwd, tool, args, again, name):

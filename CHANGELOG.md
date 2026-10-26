@@ -7,6 +7,7 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 ## [Unreleased]
 
 ### Added
+- Quiet helper waits with immutable generation/completion receipts, named pending work and per-run Stop reconciliation.
 - Owned lane start/stop/status, short browser profiles, explicit cache adapters and helper working-directory verification.
 
 ### Changed
