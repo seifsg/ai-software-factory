@@ -57,7 +57,8 @@
     ".agents/skills/ux-quality/references/coverage.md": 4400,
     ".agents/skills/safe-engine/references/show.md": 4700,
     ".agents/skills/safe-engine/references/hidden-checks.md": 3800,
-    ".agents/skills/safe-engine/references/playwright.md": 1900
+    ".agents/skills/safe-engine/references/playwright.md": 1900,
+    ".agents/skills/safe-engine/references/waiting.md": 2200
   },
   "gate": {
     "start": 771,

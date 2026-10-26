@@ -105,7 +105,7 @@ def inspect_bundle(root, expected=None, clean=False, entrypoint="improve-factory
             folder = root / name
             if folder.is_symlink() or not folder.is_dir() or not folder.resolve().is_relative_to(root):
                 raise RuntimeError("Incomplete factory source area: " + name)
-        # Revision-specific helpers (including scoped view modules) come from the contract, preserving older pins.
+        # Revision-specific helpers (including wait receipts) (including scoped view modules) come from the contract, preserving older pins.
         required += [contract_name, *contract["required_files"]]
         declared = {contract_name, *contract["required_files"]}
         if version == 2:

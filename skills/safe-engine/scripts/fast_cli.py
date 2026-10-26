@@ -12,6 +12,7 @@ def parse(gate):
     sibling("fast_cleanup").parser(sub, common)
     sibling("fast_shots").parser(sub, common)
     sibling("fast_lane").parser(sub, common)
+    sibling("fast_wait_command").parser(sub, common)
     sibling("fast_baseline").parser(sub, common)
     sibling("fast_release").parser(sub)
     sibling("fast_design_command").parser(sub, common)

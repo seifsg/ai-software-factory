@@ -17,7 +17,7 @@ CREDIT = SKILLS / "how-to-make-a-pr/references/credit.md"  # the factory's credi
 PHRASES = {
     "ticketing/references/ticket-layout.md": ("Definition of done", "Every criterion has"),
     "safe-engine/references/fast-run.md": ("Light lane", "what the owner can do once it is done", "Reasoned proof selection", "**Hidden checks:**",
-                                           "**Secrets:**", "`**PR:**`", "**Ports:**", "**Findings:**", "Look, Show, Prove, Ship"),
+                                           "**Secrets:**", "`**PR:**`", "**Ports:**", "**Findings:**", "Look, Show, Prove, Ship", "wait --add"),
     "ux-quality/SKILL.md": ("| U10 |",),
     "how-to-make-a-pr/SKILL.md": ("references/credit.md", "**Visual:**", "**Journey:**"),
 }

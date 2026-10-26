@@ -120,7 +120,11 @@
     "skills/safe-engine/scripts/playwright_checks.mjs",
     ".agents/skills/safe-engine/references/hidden-checks.md",
     ".agents/skills/safe-engine/references/playwright.md",
-    "docs/hidden-checks.md"
+    "docs/hidden-checks.md",
+    "skills/safe-engine/scripts/fast_wait.py",
+    "skills/safe-engine/scripts/fast_wait_command.py",
+    ".agents/skills/safe-engine/references/waiting.md",
+    "docs/waiting.md"
   ],
   "historical_files": [],
   "source_trees": [

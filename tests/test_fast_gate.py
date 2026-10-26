@@ -705,11 +705,11 @@ class FastGateTests(GateHarness, unittest.TestCase):
         agent = {"id": "a", "type": "subagent", "status": "running", "agent_type": "general-purpose"}
         server = {"id": "b", "type": "shell", "status": "running", "command": "npm run dev"}
         waiting = self.hook({**stop, "background_tasks": [server, agent]}) or {}  # progress may ride along
-        self.assertNotIn("decision", waiting)  # its result starts a new turn
+        self.assertEqual(waiting["decision"], "block")  # current methods require a registered wakeup
         self.assertEqual(self.hook({**stop, "background_tasks": [server]})["decision"], "block")  # may never end
         self.assertEqual(self.hook({**stop, "background_tasks": []})["decision"], "block")  # the work ends here
         log = (self.root / "home/logs/gate.log").read_text(encoding="utf-8")
-        self.assertEqual((log.count('"hook.wait_stop"'), log.count('"hook.block_stop"')), (1, 2))
+        self.assertEqual((log.count('"hook.wait_stop"'), log.count('"hook.block_stop"')), (0, 3))
 
     def test_reading_a_project_does_not_bind_a_session(self):
         self.start()
@@ -1029,13 +1029,14 @@ class FastGateTests(GateHarness, unittest.TestCase):
                 (self.root / name / path).write_text(text, encoding="utf-8")
         on = {"ticket_checks": True, "coverage": True, "light": True, "outcomes": True, "hidden_checks": True, "scans": True,
               "ux_rules": True, "pr_proof": True, "credit": True, "pr_demo": True, "briefs": True, "worth": True,
-              "check_selection": True, "show_first": True}
+              "check_selection": True, "show_first": True, "wait_receipts": False}
         off = dict.fromkeys(on, False)
         self.assertEqual(gate.method_flags({"root": str(self.root / "new")}, self.project), on)
         self.assertEqual(gate.method_flags({"root": str(self.root / "old")}, self.project), off)
         self.assertEqual(gate.method_flags({"root": str(self.root / "missing")}, self.project), off)
-        self.assertEqual(gate.method_flags(None, self.project), {**on, "check_selection": False, "show_first": False})  # needs resolved methods
-        self.assertEqual(gate.method_flags(None, SCRIPTS.parents[2]), on)  # this checkout's own methods define them
+        self.assertEqual(gate.method_flags(None, self.project), {**on, "check_selection": False, "show_first": False,
+                                                                 "wait_receipts": True})  # unresolved older methods
+        self.assertEqual(gate.method_flags(None, SCRIPTS.parents[2]), {**on, "wait_receipts": True})
         (self.root / "new" / layout).write_bytes(b"\xff\xfe broken")
         self.assertEqual(gate.method_flags({"root": str(self.root / "new")}, self.project),
                          {**off, "light": True, "outcomes": True, "hidden_checks": True, "scans": True,
