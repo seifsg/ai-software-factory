@@ -98,8 +98,10 @@ python fast_gate.py shots --base <ref> --serve "<dev command, {port} for its por
 
 ## Progress
 
+Use [plain owner reports](owner-reports.md) for coordinator updates.
+
 - `start`, `done`, `status`, `pause`, `resume` and `close` print the run card first, a mini dashboard. Hooks show the owner each unseen card, built todo and new NOW once (debugging it: [progress internals](gate-details.md#progress-internals)); a delegate's hook calls show nothing, the next main-thread call does.
-- Never repeat a gate message your agent already showed. Where it shows no hook messages (the factory's `docs/hosts.md`), relay the card from the command output.
+- Relay unseen cards only; host display support: the factory's `docs/hosts.md`.
 
 ## Live view
 

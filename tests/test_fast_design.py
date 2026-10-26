@@ -2,24 +2,15 @@
 import copy
 import json
 from pathlib import Path
-import struct
 import subprocess
 import sys
 import tempfile
 import unittest
-import zlib
+from png_fixtures import png
 
 SCRIPTS = Path(__file__).resolve().parents[1] / "skills/safe-engine/scripts"
 sys.path.insert(0, str(SCRIPTS))
 import fast_design as design
-
-
-def png(path, color=0):
-    """Write a real one-pixel PNG without adding an image dependency."""
-    def chunk(kind, body):
-        return struct.pack(">I", len(body)) + kind + body + struct.pack(">I", zlib.crc32(kind + body))
-    path.write_bytes(b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", 1, 1, 8, 2, 0, 0, 0))
-                     + chunk(b"IDAT", zlib.compress(bytes([0, color, 0, 0]))) + chunk(b"IEND", b""))
 
 
 class DesignTests(unittest.TestCase):
@@ -34,7 +25,7 @@ class DesignTests(unittest.TestCase):
         png(self.root / ".factory/ref.png")
         png(self.root / ".factory/current.png")
         self.data = {"version": 1, "builder": "builder", "screens": [
-            {"id": "home", "reference": ".factory/ref.png", "viewport": [1, 1], "theme": "light", "state": "ready"}],
+            {"id": "home", "reference": ".factory/ref.png", "viewport": [64, 32], "theme": "light", "state": "ready"}],
             "elements": [{"id": "title", "screen": "home", "name": "Title", "status": "done"},
                          {"id": "panel", "screen": "home", "name": "Panel", "status": "missing"}]}
         self.run = {"design_port": True, "project": str(self.root), "design": {
@@ -48,7 +39,7 @@ class DesignTests(unittest.TestCase):
         """A controlled fixture identity is evidence data, not a real independent verdict."""
         return {"version": 1, "reviewer": "judge", "independent": True,
                 "candidate": design.candidate(self.root), "screens": [
-                    {"id": "home", "capture": ".factory/current.png", "viewport": [1, 1],
+                    {"id": "home", "capture": ".factory/current.png", "viewport": [64, 32],
                      "theme": "light", "state": "ready"}],
                 "elements": [{"id": e["id"], "status": e["status"], "evidence": "Observed fixture",
                               "differences": [] if e["status"] == "done" else ["Panel absent"]}
@@ -80,7 +71,7 @@ class DesignTests(unittest.TestCase):
     def test_original_inventory_and_reference_bytes_cannot_change(self):
         for mutation in (lambda: self.data["elements"].pop(),
                          lambda: self.data["elements"][0].update(name="Different"),
-                         lambda: png(self.root / ".factory/ref.png", 1)):
+                         lambda: png(self.root / ".factory/ref.png", color=1)):
             with self.subTest(mutation=mutation):
                 original = copy.deepcopy(self.data)
                 mutation()
@@ -120,7 +111,7 @@ class DesignTests(unittest.TestCase):
 
     def test_done_proof_expires_on_source_capture_report_or_review_change(self):
         mutations = [lambda: (self.root / "source.txt").write_text("changed"),
-                     lambda: png(self.root / ".factory/current.png", 2),
+                     lambda: png(self.root / ".factory/current.png", color=2),
                      lambda: (self.root / ".factory/review.json").write_text("{}"),
                      lambda: self.data.update(note="new coverage observation")]
         for mutation in mutations:

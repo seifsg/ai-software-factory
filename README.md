@@ -19,6 +19,8 @@ Coding agents jump straight to code. They skip the research, forget the ticket, 
 
 The factory **enforces** the process. Hooks block source edits until the ticket, analysis and plan are recorded. Every run ends in a draft pull request with before/after proof and a list of what is still unverified. You merge.
 
+Plain progress reports show per-ticket spend, worth and checked pictures: [report command](docs/owner-reports.md).
+
 ## ⚡ Quick start
 
 **You need:**

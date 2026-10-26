@@ -147,7 +147,8 @@ class GateHarness:
         record.write_text(text or SAMPLE.read_text(encoding="utf-8"), encoding="utf-8")
         shot = self.project / ".factory/fast/shots/schedule.png"
         shot.parent.mkdir(parents=True, exist_ok=True)
-        shot.write_bytes(b"PNG")
+        from png_fixtures import png
+        png(shot)
         self.pr_body()
         for step in STEPS[:STEPS.index(until) if until else None]:
             self.gate("done", step, *(["--offline", "sample URLs"] if step in ONLINE else []))

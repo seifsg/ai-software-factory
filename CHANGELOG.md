@@ -7,6 +7,9 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 ## [Unreleased]
 
 ### Added
+- Plain owner reports with explicit per-ticket spend and estimates, body-code lint, latest pictures in the live view, and bounded PNG content checks before publication.
+
+### Added
 - UI Look/Show/Prove/Ship checkpoint with current paired pictures, recorded sharing and owner feedback/deadlines before the declared suite (#154).
 
 ### Changed

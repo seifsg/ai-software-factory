@@ -18,7 +18,7 @@ A todo runs on the role its tier and edit access give. A method that names its o
 - `left: <item>: <what it learned>` per unfinished item, when it stops early;
 - at most one refusal, as its last line: `too-big. split: <one-line jobs>`, `needs-confirm. op: <command>` or `ambiguous. ask: <one question>`.
 
-Read the last line first. A refusal is never done: split, confirm or ask the owner, then brief again.
+Read the last line first. A refusal is not done: split, confirm or ask, then brief again. Owner handbacks follow [plain reports](owner-reports.md).
 
 ## Brief
 

@@ -71,6 +71,8 @@ def image(project, value, viewport, hash_image=True):
     require(isinstance(viewport, list) and len(viewport) == 2
             and all(type(n) is int and 0 < n <= 32768 for n in viewport), "viewport: needs [width, height]")
     path = local(project, value)
+    import fast_image
+    fast_image.check(path)
     with path.open("rb") as source:
         header = source.read(24)
     require(len(header) == 24 and header[:8] == b"\x89PNG\r\n\x1a\n" and header[12:16] == b"IHDR",

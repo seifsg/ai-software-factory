@@ -963,10 +963,12 @@ def main():
     hook = sub.add_parser("hook", help="Answer one host hook event from stdin")
     hook.add_argument("--host", default="claude", help="claude, codex, cursor, or any other hook-capable agent")
     sibling("fast_show_command").parser(sub, common)
+    sibling("fast_report_command").parser(sub, common)
     args = parser.parse_args()
     actions = {"start": cmd_start, "done": cmd_done, "status": cmd_status, "close": cmd_close, "rehome": cmd_rehome,
                "try": cmd_try, "view": cmd_view, "scratch": cmd_scratch,
                "fix-round": lambda a: sibling("fast_round").run(a, sys.modules[__name__]),
+               "report": lambda a: sibling("fast_report_command").run(a, sys.modules[__name__]),
                "design": lambda a: sibling("fast_design_command").run(a, sys.modules[__name__]),
                "show": lambda a: sibling("fast_show_command").run(a, sys.modules[__name__]),
                "prove": lambda a: sibling("fast_show_command").run(a, sys.modules[__name__]),

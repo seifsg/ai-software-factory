@@ -106,7 +106,12 @@
     "skills/safe-engine/scripts/fast_show.py",
     "skills/safe-engine/scripts/fast_show_command.py",
     ".agents/skills/safe-engine/references/show.md",
-    "docs/show-first.md"
+    "docs/show-first.md",
+    "skills/safe-engine/scripts/fast_image.py",
+    "skills/safe-engine/scripts/fast_report.py",
+    "skills/safe-engine/scripts/fast_report_command.py",
+    ".agents/skills/safe-engine/references/owner-reports.md",
+    "docs/owner-reports.md"
   ],
   "historical_files": [],
   "source_trees": [

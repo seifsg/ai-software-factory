@@ -161,6 +161,8 @@ def shoot(browser, url, size, work, target):
                    capture_output=True, timeout=120)
     if not target.is_file() or not target.stat().st_size:
         raise RuntimeError(f"no screenshot of {url}")
+    import fast_image
+    fast_image.check(target)
     return target
 
 

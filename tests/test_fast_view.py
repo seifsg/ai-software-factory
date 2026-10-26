@@ -13,6 +13,7 @@ import unittest
 from unittest.mock import patch
 import urllib.error
 import urllib.request
+from png_fixtures import png
 
 SCRIPTS = Path(__file__).resolve().parents[1] / "skills/safe-engine/scripts"
 GATE = SCRIPTS / "fast_gate.py"
@@ -110,7 +111,7 @@ class LiveViewTests(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0, args)
             self.assertIn(why, result.stderr)
             self.assertIn("Form: fast_gate.py try T3", result.stderr)
-        (self.project / ".factory/fast/shots/shell.png").write_bytes(b"\x89PNG")
+        png(self.project / ".factory/fast/shots/shell.png")
         self.gate("try", "T1", "--url", "http://localhost:5173/cockpit")
         self.gate("try", "t1", "--file", ".factory/fast/shots/shell.png")
         self.assertIn("**Try:** T1 file .factory/fast/shots/shell.png\n", self.record.read_text(encoding="utf-8"))
@@ -118,6 +119,58 @@ class LiveViewTests(unittest.TestCase):
         self.assertEqual([(t["id"], t["kind"], t["run"]) for t in ready], [("T1", "file", "cockpit")])  # the last Try line wins
         self.assertRegex(ready[0]["thumb"], r"^shots/cockpit-[0-9a-f]{6}-T1\.png$")
         self.assertTrue((self.view / ready[0]["thumb"]).is_file())
+
+    def test_accepted_report_picture_reuses_checked_thumbnail_in_full_view_write(self):
+        self.plan("- T1 pre: a do: b post: c\n")
+        shot = self.project / ".factory/fast/shots/current.png"
+        png(shot)
+        self.gate("try", "T1", "--file", ".factory/fast/shots/current.png")
+        metrics = {key: {"status": "unavailable", "value": None, "source": "Work record", "reason": "Not measured"}
+                   for key in ("elapsed_minutes", "active_minutes", "tokens", "planned_minutes", "planned_tokens")}
+        report = {"version": 1, "items": [{"ticket": "https://github.com/o/r/issues/11",
+                  "feature": "Visible progress", "changed": "Current page is ready", "next": "Inspect the page",
+                  "waiting": "Nobody", "time_left": "One hour", "worth": {"unavailable": "No estimate"},
+                  "spend": metrics, "visual": True,
+                  "picture": {"path": ".factory/fast/shots/current.png", "caption": "Current page"}}]}
+        (self.project / ".factory/report.json").write_text(json.dumps(report), encoding="utf-8")
+        self.gate("report", "--file", ".factory/report.json")
+        view = module("fast_view")
+        run = json.loads((self.project / ".factory/fast/run.json").read_text(encoding="utf-8"))
+        steps = ["tickets", "plan", "build", "done-run", "handoff"]
+        with patch("fast_image.check", side_effect=AssertionError("accepted picture decoded again")):
+            for _ in range(2):
+                result = view.write(self.view, self.project, run, steps, vid=self.run_view()["key"])
+                thumb = result["ownerReport"]["items"][0]["picture"]["thumb"]
+                self.assertEqual(result["pictures"][0]["thumb"], thumb)
+                self.assertEqual(result["ready"][0]["thumb"], thumb)
+        png(shot, blank=True)
+        changed = view.write(self.view, self.project, run, steps, vid=self.run_view()["key"])
+        self.assertIn("error", changed["ownerReport"]["items"][0]["picture"])
+        self.assertEqual(changed["pictures"], [])
+        self.assertFalse(changed["ready"][0].get("thumb"))
+
+    def test_current_show_picture_fills_empty_report_and_expires_with_candidate(self):
+        self.plan()
+        subprocess.run(["git", "init", "-q", str(self.project)], check=True)
+        (self.project / ".gitignore").write_text(".factory/\n", encoding="utf-8")
+        view, design = module("fast_view"), module("fast_design")
+        capture = self.project / ".factory/show.png"
+        artifact = self.project / ".factory/show.md"
+        png(capture)
+        artifact.write_text("Current Show", encoding="utf-8")
+        run = json.loads((self.project / ".factory/fast/run.json").read_text(encoding="utf-8"))
+        run["show"] = {"plan": {"surfaces": [{"id": "home", "name": "Home page"}]},
+                       "report": {"candidate": design.candidate(self.project), "path": ".factory/show.md",
+                                  "sha256": design.file_hash(artifact), "screens": [
+                                      {"id": "home-light-desktop", "surface": "home", "theme": "light", "device": "desktop",
+                                       "capture": {"path": ".factory/show.png", "sha256": design.file_hash(capture)}}]}}
+        steps = ["tickets", "plan", "build", "done-run", "handoff"]
+        current = view.write(self.view, self.project, run, steps, vid=self.run_view()["key"])
+        self.assertEqual(current["pictures"][0]["caption"], "Home page · light · desktop")
+        self.assertTrue((self.view / current["pictures"][0]["thumb"]).is_file())
+        png(capture, color=21)
+        stale = view.write(self.view, self.project, run, steps, vid=self.run_view()["key"])
+        self.assertEqual(stale["pictures"], [])
 
     def test_hooks_refresh_the_view_from_delegates_without_using_up_the_owners_message(self):
         self.plan()
@@ -257,7 +310,7 @@ class LiveViewTests(unittest.TestCase):
     def test_scoped_server_reuse_and_foreign_resources_are_isolated(self):
         self.plan("- T1 pre: a do: b post: c\n")
         local_shot = self.project / ".factory/fast/shots/local.png"
-        local_shot.write_bytes(b"sample png")
+        png(local_shot)
         self.gate("try", "T1", "--file", str(local_shot))
         other = self.other_project()
         (self.view / "url").write_text("http://127.0.0.1:8765/", encoding="utf-8")
@@ -270,7 +323,7 @@ class LiveViewTests(unittest.TestCase):
         with urllib.request.urlopen(url + state["runs"][0]["key"] + ".todos.json") as response:
             self.assertEqual(len(json.loads(response.read())), 2)
         with urllib.request.urlopen(url + state["ready"][0]["thumb"]) as response:
-            self.assertEqual(response.read(), b"sample png")
+            self.assertEqual(response.read(), local_shot.read_bytes())
         base = url.split("/projects/")[0] + "/"
         for denied in (url + foreign["key"] + ".todos.json", base, base + "state.json", url + "shots/", url + "../state.json"):
             with self.assertRaises(urllib.error.HTTPError) as blocked:

@@ -121,6 +121,16 @@ def steps_line(steps, done, current, created):
 def card(run, steps, all_sections, now, v=None, left=False):
     """The owner's mini dashboard: the question first when paused, the run line, then the work or the steps.
     left: mid-build, also the steps line, so the steps still to come stay named (status output)."""
+    if run.get("owner_report"):
+        import fast_report
+        paused = run.get("paused")
+        state = ([f"⏸️ WAITING ON YOU: {paused.get('reason')}"] if paused else [])
+        if run.get("abandoned"):
+            state.append("🏁 abandoned")
+        elif run.get("closed"):
+            state.append("🏁 closed")
+        return "\n".join(state + ["Last published report:",
+                                  fast_report.markdown(run["owner_report"], run.get("project"), bool(state))])
     v = v or view(run, all_sections)
     done, created = run.get("done") or {}, run.get("created")
     current = next((step for step in steps if step not in done), None)
