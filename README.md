@@ -91,6 +91,7 @@ flowchart LR
 - 🔎 **Research before code.** New products and big features start with competitors, a feature matrix, opportunities and stack options.
 - ❓ **Questions that fit the size.** A POC builds exactly what you asked and asks only what the request leaves open. An MVP researches launch gaps, suggests features you did not think of and ships analytics and in-app feedback. Answers are recorded and binding.
 - 🎫 **A living backlog.** Every run reads it, cleans up issues after merged or closed PRs, and opens an epic with outcome sub-issues; follow-ups update existing tickets instead. Each ticket has a definition of done and a checklist; an item is ticked only after it works. Tickets move through To do, In progress, Dev done and Ready for QA; your merge makes them Done.
+- 💸 **The cheapest model that can do the job.** Delegated work runs on its role's tier: light jobs (commands, comparisons) on a small model, building and review on a larger one; a job that fails its gates twice moves one tier up. On Claude Code these are the plugin's `safe-engine:<role>` agents; ask in chat to override the model or effort ([delegation](docs/hosts.md#delegation)).
 - 🎚️ **Right-sized.** Fast by default, Lucky for quick tries, Safe for work that must not break. Small tasks and follow-ups take a light lane: no analysis step, a short plan, the same checks.
 - 🧪 **Proof, not promises.** Every requested item traces to a criterion, a checklist item and proof. In product and feature runs, a fresh agent writes a check for every criterion before the build, from the tickets and plan alone; the builder never sees them, and any FAIL sends the work back. Then a done-run with real controls and logs, and a PR showing before and after for every outcome, which the gate reads before the run can finish. MVPs and production slices also record a secret scan, a dependency audit and static analysis. Safe adds manual QA, tests and an independent reviewer.
 - 🩹 **Root causes, not patches.** A bug or edge case is fixed where it starts: impossible by design, or rejected loudly where data enters. No silent defaults. A big or risky refactor waits for your yes.
@@ -137,6 +138,8 @@ improve-factory The factory did [observed]; expected [result].
 - **Resume** reads the ticket and the work record, then continues the first unfinished step.
 - **Verify** adds manual QA and tests to a Fast or Lucky run. **Promote** moves it to Safe on the same epic.
 - **improve-factory** repairs the factory itself when it skipped a step or misbehaved. Product bugs go back to `safe-engine`.
+- **Watch it live:** once per run the agent starts `fast_gate.py view --project <dir>` and gives you a local link with the run's steps, todos, sessions and anything ready to try. `--all-projects` shows every project on this machine.
+- **Unattended:** `fast_gate.py orchestrate paperclip --agent claude|codex --company <id> --project <dir>` sets up an orchestrator to start factory sessions from its tickets ([orchestrators](docs/orchestrators.md)).
 - **Your part:** answer its questions (the run waits, and your answers bind it), review the draft PR and merge. Before a Fast or Lucky PR it offers an optional Safe check: manual QA, tests and an independent review.
 
 ## 📦 Install options
@@ -153,6 +156,18 @@ python ai-software-factory/skills/safe-engine/scripts/fast_gate.py install --hos
 - `other` copies those skills only; wire the hooks by hand ([hosts](docs/hosts.md#other-agents)).
 - `--project <dir>` installs into one project instead of your user folders.
 - `--channel stable|edge` sets this machine's channel: `stable` (the default) follows the newest verified release, `edge` follows `main`.
+- `--no-auto-update` turns the daily self-update off; `--codex-home <dir>` writes Codex hooks into that `CODEX_HOME` (an orchestrator's own Codex).
+
+What gets installed, per host:
+
+| Host | Skills | Gate hooks | Delegate agents |
+|---|---|---|---|
+| `claude` | plugin `safe-engine@ai-software-factory` (`safe-engine`, `improve-factory`) | plugin hooks | plugin agents `safe-engine:runner`, `analyst`, `maker`, `builder`, `reviewer` |
+| `codex` | `~/.agents/skills/` | `~/.codex/hooks.json` (trust once in `/hooks`) | named in each brief |
+| `cursor` | `~/.agents/skills/` | `~/.cursor/hooks.json` | named in each brief |
+| `other` | `~/.agents/skills/` | by hand ([hosts](docs/hosts.md#other-agents)) | named in each brief |
+
+Machine data lives in `~/.safe-engine/` (`install.json`, pinned bundles, run state, `logs/gate.log`); each project gets `.factory/`, kept out of Git.
 
 Check what you run: `fast_gate.py version` prints the version, commit, channel, install route and release digest; `fast_gate.py verify` lists every file that differs from the release manifest. What changed: [CHANGELOG](CHANGELOG.md); what to do on upgrade: [UPGRADING](UPGRADING.md).
 
@@ -256,7 +271,9 @@ python tests/run.py
 
 - `python tests/run.py --changed` runs only the tests your diff touches; run the full suite before any push.
 - Adding, moving or deleting a factory file: `python scripts/package_skill_entries.py`, then `--check` before pushing.
-- Every PR adds a line to [CHANGELOG](CHANGELOG.md); releases follow [releasing](docs/releasing.md).
+- Every PR adds a line to [CHANGELOG](CHANGELOG.md), and updates this README and `docs/` when it changes a command, flag, host, install or update step, release step, skill or folder; `tests/test_docs_sync.py` fails until they match.
+- Releases are local, no CI: `python scripts/release.py cut X.Y.Z`, merge the release PR, tag, then `python scripts/release.py publish vX.Y.Z` ([releasing](docs/releasing.md)).
+- Method byte budgets: `python scripts/token_report.py --against origin/main` shows what a change adds to every run.
 - `python -m evals run` scores the factory against a plain agent ([evals](evals/README.md)).
 
 ## 🗂️ Layout
@@ -264,10 +281,13 @@ python tests/run.py
 ```text
 .agents/skills/        the skills (canonical methods)
 skills/                portable launchers, gate scripts and the Claude Code plugin root
-.claude-plugin/        the Claude Code marketplace
+skills/agents/         delegate roles as Claude Code agents (runner, analyst, maker, builder, reviewer)
+skills/safe-engine/    VERSION and release-manifest.json (the release identity)
+.claude-plugin/        the Claude Code marketplace, pinned to the release tag
 safe_engine/           Safe mode controller (python -m safe_engine)
 evals/                 factory vs plain agent scoring (repository only)
-scripts/               launcher packaging and the release script
-docs/                  install, hosts and releasing
-tests/                 controller, gate, installer and skill hygiene tests
+scripts/               launcher packaging, release.py and token_report.py
+docs/                  docs/install.md, docs/hosts.md, docs/orchestrators.md, docs/releasing.md
+tests/                 controller, gate, installer, budget, docs-sync and skill hygiene tests
+CHANGELOG.md           what changed per release; UPGRADING.md: what to do
 ```
