@@ -1005,24 +1005,24 @@ class FastGateTests(GateHarness, unittest.TestCase):
         spec.loader.exec_module(gate)
         layout, lane, ux, pr = Path(gate.LAYOUT), Path(gate.FAST_RUN), Path(gate.UX), Path(gate.PR)
         for name, texts in (("new", ("### ✅ Definition of done\nEvery criterion has an item.",
-                                     "## Light lane\nT1 <title> → <what the owner can do once it is done>\n**Hidden checks:**\n**Secrets:**\n`**PR:**`\n**Ports:**",
+                                     "## Light lane\nT1 <title> → <what the owner can do once it is done>\n**Hidden checks:**\n**Secrets:**\n`**PR:**`\n**Ports:**\nLook, Show, Prove, Ship",
                                      "| U10 | Performance |", "**Visual:** yes; credit in `references/credit.md`")),
                             ("old", ("### ✅ Done when", "## Hooks", "| Performance |", "No AI or tool attribution"))):
             for path, text in zip((layout, lane, ux, pr), texts):
                 (self.root / name / path).parent.mkdir(parents=True, exist_ok=True)
                 (self.root / name / path).write_text(text, encoding="utf-8")
         on = {"ticket_checks": True, "coverage": True, "light": True, "outcomes": True, "hidden_checks": True, "scans": True,
-              "ux_rules": True, "pr_proof": True, "credit": True, "pr_demo": True, "briefs": True}
+              "ux_rules": True, "pr_proof": True, "credit": True, "pr_demo": True, "briefs": True, "show_first": True}
         off = dict.fromkeys(on, False)
         self.assertEqual(gate.method_flags({"root": str(self.root / "new")}, self.project), on)
         self.assertEqual(gate.method_flags({"root": str(self.root / "old")}, self.project), off)
         self.assertEqual(gate.method_flags({"root": str(self.root / "missing")}, self.project), off)
-        self.assertEqual(gate.method_flags(None, self.project), on)
+        self.assertEqual(gate.method_flags(None, self.project), {**on, "show_first": False})  # needs resolved Show methods
         self.assertEqual(gate.method_flags(None, SCRIPTS.parents[2]), on)  # this checkout's own methods define them
         (self.root / "new" / layout).write_bytes(b"\xff\xfe broken")
         self.assertEqual(gate.method_flags({"root": str(self.root / "new")}, self.project),
                          {**off, "light": True, "outcomes": True, "hidden_checks": True, "scans": True,
-                          "ux_rules": True, "pr_proof": True, "credit": True, "pr_demo": True, "briefs": True})  # fast-run.md, ux-quality, PR still read
+                          "ux_rules": True, "pr_proof": True, "credit": True, "pr_demo": True, "briefs": True, "show_first": True})  # fast-run.md, ux-quality, PR still read
         lucky = {"mode": "lucky", "kind": "change"}
         self.assertNotIn("done-run", gate.steps_for(lucky))
         self.assertIn("done-run", gate.steps_for({**lucky, "ticket_checks": True}))

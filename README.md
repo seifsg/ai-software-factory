@@ -293,3 +293,5 @@ docs/                  docs/install.md, docs/hosts.md, docs/orchestrators.md, do
 tests/                 controller, gate, installer, budget, docs-sync and skill hygiene tests
 CHANGELOG.md           what changed per release; UPGRADING.md: what to do
 ```
+
+UI delivery uses [Look, Show, Prove, Ship](docs/show-first.md): `show --plan`, `show --candidate`, `show --prepare`, `show --shared`, `show --reply`, `done show`, then `prove --suite`. Only actual shared pictures start the owner-response window. Installed entries use the selected bundle runner; completion requires any retained suite pass to match current source. Humans retain merge authority.

@@ -94,7 +94,11 @@
     "skills/safe-engine/scripts/fast_design.py",
     "skills/safe-engine/scripts/fast_design_command.py",
     ".agents/skills/ux-quality/references/coverage.md",
-    "docs/design-coverage.md"
+    "docs/design-coverage.md",
+    "skills/safe-engine/scripts/fast_show.py",
+    "skills/safe-engine/scripts/fast_show_command.py",
+    ".agents/skills/safe-engine/references/show.md",
+    "docs/show-first.md"
   ],
   "historical_files": [],
   "source_trees": [

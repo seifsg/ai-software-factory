@@ -4,7 +4,7 @@ description: "Plans the build from a finished analysis: summary of files to chan
 ---
 
 Prepare to build from our plan and analysis.
-Important: We do not care about effort time or code that would take to build. We only care about quality. Do not factor code effort or time to develop at all within the plan. AI will develop and write it.
+Plan for quality, without discounting requirements for implementation effort.
 
 Build in complete working iterations. Tiny bug or full product, same logic.
 
@@ -16,7 +16,7 @@ Build in complete working iterations. Tiny bug or full product, same logic.
 Prepare:
 - summary of files about to change, then stop (continue only when your instructions already authorize it).
 - critique of that summary: is it optimal, the best path for our plan?
-- steps or phases.
+- steps or phases; UI: Look, Show, Prove, Ship.
 - the entire to do list. It becomes each ticket's checklist.
 - the entire plan, fixing what every brief carries so no agent guesses: Interface, this checkout's dev Ports and, for UI work, UX rules (safe-engine fast-run, Briefs).
 

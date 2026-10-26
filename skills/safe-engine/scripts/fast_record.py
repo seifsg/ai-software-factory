@@ -403,6 +403,7 @@ def light(run):
 
 def check_plan(run, body, **kwargs):
     import fast_design
+    import fast_show
     titles = ("Todos",) if light(run) else ("Files", "Critique", "Phases", "Todos", "Whole plan")
     problems = [f"needs a '### {title}' subsection" for title in titles if subsection(body, title) is None]
     if not todo_ids(kwargs["all_sections"]):
@@ -413,6 +414,9 @@ def check_plan(run, body, **kwargs):
     labels = ["Success"] if light(run) else ["Logging", "Efficiency"]
     problems += fast_briefs.plan_problems(run, body, marker, subsection, kwargs.get("runs"), light(run))
     problems += fast_design.problems(run, kwargs.get("project"))
+    problems += fast_show.problems(run, kwargs.get("project"))
+    if fast_show.enabled(run) and not all(re.search(rf"\b{phase}\b", body, re.I) for phase in ("Look", "Show", "Prove", "Ship")):
+        problems.append("UI plan needs Look, Show, Prove, Ship phases")
     return problems + missing_markers(body, labels) or held(run, kwargs, covered(run, needs_checklist))
 
 
@@ -517,6 +521,7 @@ def placeholder_problems(body, labels):
 
 def check_done_run(run, body, project, **kwargs):
     import fast_design
+    import fast_show
     sections = kwargs.get("all_sections") or {}
     own = HIDDEN.sub("", body) if hidden(run) else body  # the builder's own done-run, apart from the checker's
     touched = touched_ui(run, project)
@@ -524,6 +529,7 @@ def check_done_run(run, body, project, **kwargs):
     parsed = audit_lines(own) if audited else None
     used = parsed[2] if parsed else own  # rule and judge lines never stand in for using it
     problems = [] if re.search(r"\bPASS\b", used) else ["needs >=1 PASS result"]
+    problems += fast_show.completion_problems(run, project)
     labels = scans(run, sections)
     cause = f" ({scan_cause(run, sections)})" if labels else ""
     problems += missing_markers(body, ["Logs"]) + [problem + cause for problem in missing_markers(body, labels)]
@@ -692,11 +698,13 @@ def digest(path):
 
 def check_handoff(run, body, **kwargs):
     import fast_design
+    import fast_show
     labels = ["Run", "Statuses", "Unverified", "Follow-ups"] + (["Dev sign-in"] if run.get("auth") else []) + (
         ["PR"] if run.get("pr_proof") else [])
     checks = "\n".join(HIDDEN.findall((kwargs.get("all_sections") or {}).get("done-run") or ""))  # entries, not prose
     problems = missing_markers(body, labels) + fast_briefs.handoff_problems(run, body, marker, checks)
     problems += fast_design.problems(run, kwargs.get("project"), final=True)
+    problems += fast_show.completion_problems(run, kwargs.get("project"))
     ticks = lambda ticket: needs_ticks(ticket, deferred=bool(run.get("briefs")))  # noqa: E731 - one call site
     return problems or held(run, kwargs, covered(run, ticks), finish=True) + pr_proof(run, body, **kwargs)
 
@@ -735,6 +743,12 @@ def pr_body(value, project, offline):
                            "and name the PR body file") from error
 
 
+def check_show(run, body, project, **kwargs):
+    """Show is complete only when the actual shared candidate can proceed to proof."""
+    import fast_show
+    return fast_show.problems(run, project, final=True)
+
+
 CHECKS = {"research": check_research, "kickoff": check_kickoff, "tickets": check_tickets,
           "analysis": check_analysis, "plan": check_plan, "design": check_design, "schema": check_schema,
-          "build": check_build, "done-run": check_done_run, "handoff": check_handoff}
+          "build": check_build, "show": check_show, "done-run": check_done_run, "handoff": check_handoff}

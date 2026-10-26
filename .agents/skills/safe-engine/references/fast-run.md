@@ -1,6 +1,6 @@
 # Fast run: record and gate
 
-Every Fast or Lucky run records each step in one work record and passes the gate. Step ids: `research`, `kickoff`, `tickets`, `analysis`, `plan`, `design`, `schema`, `build`, `done-run`, `handoff`; the gate skips those a run's kind does not need. The gate proves a step was recorded, not that it was good; quality stays with each method and the done-run.
+Record applicable steps in order: `research`, `kickoff`, `tickets`, `analysis`, `plan`, `design`, `schema`, `build`, `show`, `done-run`, `handoff`. New UI runs use [Look, Show, Prove, Ship](show.md); others skip Show. The gate checks records, not quality.
 
 ## Kickoff questions
 
@@ -17,7 +17,7 @@ More than four open: ask the rest in a second call of the same round. Pause the 
 
 ## Light lane
 
-A `change` records tickets, plan, build, done-run and handoff; design/schema with `--ui`/`--data`. Design ports start with `--design-port` (implies UI); follow `ux-quality` reference coverage before plan.
+A `change` records tickets, plan, build, done-run and handoff; design/Show with `--ui`, schema with `--data`. Design ports start with `--design-port` (implies UI); follow `ux-quality` reference coverage before plan.
 
 - Tickets: `**Ticket:** <url>` names the ticket it follows up and updates. A new ticket only for a new outcome; `**Ticket:** none (<why>)` when trivial.
 - No analysis step. Plan: `**Success:**` and `### Todos`. Unknown cause or several consumers: run `analyze-start` first and keep its result in the plan.

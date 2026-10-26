@@ -9,6 +9,8 @@ For every release:
 
 ## Next release
 
+New UI runs on the resolved current bundle freeze a Show plan and share current pictures before proof. Existing runs keep their recorded sequence; do not rewrite active ledgers. See [Show first](docs/show-first.md).
+
 - New design-port runs use `start --design-port` and record reference coverage before plan. Existing runs keep their selected methods and obligations; do not add the flag or rewrite their ledger mid-run.
 
 ## 1.0.0

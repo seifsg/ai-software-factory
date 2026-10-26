@@ -51,7 +51,8 @@
     "skills/agents/runner.md": 1200,
     "skills/improve-factory/SKILL.md": 2300,
     "skills/safe-engine/SKILL.md": 3000,
-    ".agents/skills/ux-quality/references/coverage.md": 4400
+    ".agents/skills/ux-quality/references/coverage.md": 4400,
+    ".agents/skills/safe-engine/references/show.md": 4700
   },
   "gate": {
     "start": 771,

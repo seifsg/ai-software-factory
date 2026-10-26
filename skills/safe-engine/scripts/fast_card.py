@@ -16,7 +16,7 @@ if HERE not in sys.path:
 import fast_progress as facts  # noqa: E402 - record facts
 
 ICONS = {"research": "🔎", "kickoff": "❓", "tickets": "🎫", "analysis": "🧠", "plan": "🗺️", "design": "🎨",
-         "schema": "🗄️", "build": "🔨", "done-run": "🧪", "handoff": "📦"}
+         "schema": "🗄️", "build": "🔨", "show": "🖼️", "done-run": "🧪", "handoff": "📦"}
 SHOWN_DONE = 6  # finished-todo lines per message; the rest are counted
 
 

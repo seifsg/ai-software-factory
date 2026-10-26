@@ -29,13 +29,14 @@ STEPS = (
     ("design", ("fast",), KINDS, "ui"),
     ("schema", ("fast",), KINDS, "data"),
     ("build", MODES, KINDS, None),
+    ("show", MODES, KINDS, "show_first"),
     ("done-run", ("fast",), KINDS, None),
     ("done-run", ("lucky",), KINDS, "ticket_checks"),
     ("handoff", MODES, KINDS, None),
 )
 TITLES = {"research": "Research", "kickoff": "Kickoff", "tickets": "Tickets", "analysis": "Analysis",
           "plan": "Plan", "design": "Design", "schema": "Schema", "build": "Build log",
-          "done-run": "Done-run", "handoff": "Handoff"}
+          "show": "Show", "done-run": "Done-run", "handoff": "Handoff"}
 HERE = Path(__file__).resolve().parent  # siblings: fast_record, fast_shell, fast_guard, fast_progress, fast_card
 
 
@@ -229,6 +230,8 @@ def status_text(run, all_sections=None):
              "Gate: " + ("open, source edits allowed" if not blocked else "closed until " + ", ".join(blocked)),
              "Next: " + ("closed" if run.get("closed") else next_step(run) or "close")]
     lines += list(filter(None, [sibling("fast_pr_policy").notice(HOME, run)]))
+    if run.get("show_first"):
+        lines.append(sibling("fast_show").notice(run["project"], run))
     return "\n".join(lines)
 
 
@@ -252,7 +255,8 @@ FLAGS = {"ticket_checks": (LAYOUT, "Definition of done"), "coverage": (LAYOUT, "
          "light": (FAST_RUN, "Light lane"), "outcomes": (FAST_RUN, "what the owner can do once it is done"),
          "hidden_checks": (FAST_RUN, "**Hidden checks:**"),
          "scans": (FAST_RUN, "**Secrets:**"), "ux_rules": (UX, "| U10 |"), "pr_proof": (FAST_RUN, "`**PR:**`"),
-         "credit": (PR, "references/credit.md"), "pr_demo": (PR, "**Visual:**"), "briefs": (FAST_RUN, "**Ports:**")}
+         "credit": (PR, "references/credit.md"), "pr_demo": (PR, "**Visual:**"), "briefs": (FAST_RUN, "**Ports:**"),
+         "show_first": (FAST_RUN, "Look, Show, Prove, Ship")}
 
 
 def method_flags(bundle, project):
@@ -262,7 +266,7 @@ def method_flags(bundle, project):
         try:
             flags[flag] = phrase in (root / path).read_text(encoding="utf-8")
         except (OSError, ValueError):
-            flags[flag] = not bundle  # a product without a resolved bundle follows the current methods
+            flags[flag] = not bundle and flag != "show_first"  # Show needs its actual resolved method contract
     return flags
 
 
@@ -302,6 +306,7 @@ def cmd_start(args):
     run.update(sibling("fast_pr_policy").start(HOME))
     if getattr(args, "design_port", False):
         run.update(design_port=True, ui=True)
+    run["show_first"] = bool(run.get("show_first") and run["ui"])
     if "analysis" not in steps_for(run):  # older hook copies still require it before build: mark it skipped
         run["done"]["analysis"] = {"at": now(), "skipped": "light lane"}
     if run.get("ux_rules") and not run["ui"]:  # only these runs later ask which UI files they changed
@@ -445,6 +450,7 @@ def cmd_close(args):
         fail("Record the handoff first, or close --abandon \"<the owner's reason>\"")
     if not args.abandon:
         problems = sibling("fast_design").problems(run, project, final=True)
+        problems += sibling("fast_show").completion_problems(run, project)
         if problems:
             fail("\n".join(problems))
         sibling("fast_pr_policy").close(HOME, run)
@@ -678,6 +684,11 @@ def pre_tool(event, runs, cwd, session):
         reason = guard(event["command"], runs, cwd, session, event.get("dialect"))
         if reason:
             return reason
+        item = owner(runs, cwd) or mentioned(runs, event["command"])
+        if item and item[2].get("show_first"):
+            reason = sibling("fast_show").suite_guard(event["command"], item[2], item[2]["project"], event.get("dialect"))
+            if reason:
+                return deny_reason(item[2], reason)
     if event["tool"] == "edit":
         targets = [norm(path, cwd) for path in event["paths"]]
     elif event["tool"] == "shell":
@@ -949,10 +960,13 @@ def main():
     sibling("fast_orchestrate").arguments(orchestrate)
     hook = sub.add_parser("hook", help="Answer one host hook event from stdin")
     hook.add_argument("--host", default="claude", help="claude, codex, cursor, or any other hook-capable agent")
+    sibling("fast_show_command").parser(sub, common)
     args = parser.parse_args()
     actions = {"start": cmd_start, "done": cmd_done, "status": cmd_status, "close": cmd_close, "rehome": cmd_rehome,
                "try": cmd_try, "view": cmd_view, "scratch": cmd_scratch,
                "design": lambda a: sibling("fast_design_command").run(a, sys.modules[__name__]),
+               "show": lambda a: sibling("fast_show_command").run(a, sys.modules[__name__]),
+               "prove": lambda a: sibling("fast_show_command").run(a, sys.modules[__name__]),
                "cleanup-temp": lambda a: sibling("fast_cleanup").run(a, sys.modules[__name__]),
                "shots": lambda a: sibling("fast_shots").run(a, sys.modules[__name__]),
                "recover-baseline": lambda a: sibling("fast_baseline").recover(a, sys.modules[__name__]),
