@@ -264,17 +264,18 @@ def verdict_problems(run, body, record):
                     continue
                 key = matches[0]
             entries.append((key, value))
+    problems = []
     if any(value.startswith("FAIL") for _, value in entries):
-        return ["Hidden checks contain FAIL; fix the build and rerun"]
+        problems.append("Hidden checks contain FAIL; fix the build and rerun")
     if len({key for key, _ in entries}) != len(entries):
-        return ["Duplicate hidden-check verdict; keep one final entry per criterion"]
+        problems.append("Duplicate hidden-check verdict; keep one final entry per criterion")
     found = {key: value for key, value in entries}
     extra = sorted(set(found) - wanted(run))
     if extra:
-        return ["Hidden-check verdict belongs outside this run: " + ", ".join(extra)]
+        problems.append("Hidden-check verdict belongs outside this run: " + ", ".join(extra))
     missing = [key for key in wanted(run) if not found.get(key)]
     altered = [key for key, observation in run.get("checks", {}).get("observations", {}).items()
-               if found.get(key, "").split()[0] != observation["verdict"]]
-    return [f"unreadable hidden-check entry: {line}" for line in unreadable] + (
+               if key in found and found[key].split(maxsplit=1)[0] != observation["verdict"]]
+    return problems + [f"unreadable hidden-check entry: {line}; write '<ticket>#<ID>: <verdict>'" for line in unreadable] + (
         ["Manual verdict differs from recorded observation: " + ", ".join(altered)] if altered else []) + (
         ["Hidden criteria missing or failed: " + ", ".join(sorted(missing))] if missing else [])

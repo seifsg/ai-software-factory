@@ -54,6 +54,8 @@ Optional polish is scored and collected in the epic's existing **Finishing touch
 
 New runs use `fast_gate.py checks` to record reasoned hidden-check selection, actual runtime names and parsed/executed proof. Visual-only ports keep likeness plus the suite. See [hidden checks](docs/hidden-checks.md).
 
+An approved plan can start with `fast_gate.py start --from-plan <link> --plan-record <project-local.json>` plus the normal run flags. The gate validates current inputs and tickets before reusing planning; design, schema, Show, proof and draft PR obligations remain. See [approved plans](docs/approved-plans.md) for the bounded snapshot and complete record diagnostics.
+
 Illustrative example:
 
 ```text

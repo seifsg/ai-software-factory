@@ -295,8 +295,6 @@ def cmd_start(args):
     if registry_path(project).is_file():
         fail(f"Run '{home_run(project).get('key')}' is still open here; close it first (a lost one: "
              f"fast_gate.py close --project \"{project}\" --abandon \"<reason>\")")
-    archive_run(project)
-    forget_shown(project)
     product, bundle = args.kind == "product", bundle_receipt(project)
     if getattr(args, "design_port", False) and args.ui is False:
         fail("--design-port is UI work; remove --no-ui")
@@ -312,6 +310,16 @@ def cmd_start(args):
         run["done"]["analysis"] = {"at": now(), "skipped": "light lane"}
     if run.get("ux_rules") and not run["ui"]:  # only these runs later ask which UI files they changed
         run.update(sibling("fast_record").ui_start(project))
+    try:
+        imported = sibling("fast_plan_reuse").prepare(args, project, run, sys.modules[__name__])
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        fail(str(error))
+    if imported is not None and record_path(project).exists() and not (
+            store.closed_run(registry_path(project)) or ledger_path(project).exists()):
+        fail(f"Approved plan import would leave the existing work record at {record_path(project)} in place; "
+             "preserve or move that record, then retry. No run was started.")
+    archive_run(project)
+    forget_shown(project)
     setup = sibling("fast_setup")
     git_note, hooks = setup.ignore_factory(project), setup.hook_status(project)
     scratch = setup.scratch_path(HOME, run)
@@ -319,7 +327,7 @@ def cmd_start(args):
     scratch.mkdir(parents=True, exist_ok=True)  # after the state: a failed start leaves no folder behind
     record = record_path(project)
     if not record.exists():
-        record.write_text(skeleton(run), encoding="utf-8")
+        record.write_text(imported if imported is not None else skeleton(run), encoding="utf-8")
     save(registry_path(project), store.new_registration(project, args.key))
     log("run.start", key=args.key, project=str(project), mode=args.mode, kind=args.kind, bundle=run["bundle"], hooks=hooks)
     bundle = (f"{run['bundle']['root']} @ {run['bundle']['revision'][:12]}" if run["bundle"] else
@@ -346,8 +354,9 @@ def cmd_done(args):
         fail(f"Cannot read the work record: {error}")
     body = all_sections.get(TITLES[step].lower(), "")
     checked = sibling("fast_pr_policy").effective(HOME, run) if step == "handoff" else run
-    problems = (CHECKS[step](checked, body, project=project, offline=args.offline, all_sections=all_sections, runs=active_runs)
-                if body.strip() else [f"section '## {TITLES[step]}' is missing or empty"])
+    problems = [] if body.strip() else [f"section '## {TITLES[step]}' is missing or empty"]
+    problems += CHECKS[step](checked, body, project=project, offline=args.offline,
+                             all_sections=all_sections, runs=active_runs)
     if problems:
         log("step.refused", key=run["key"], step=step, problems=problems)
         fail(f"'{step}' not recorded:\n- " + "\n- ".join(problems))

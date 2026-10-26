@@ -9,6 +9,8 @@ For every release:
 
 ## Next version
 
+- Update installed launchers after release to accept `start --from-plan` and `--plan-record`. Existing runs keep their pins. Reuse requires a source-verified approved snapshot and readable current tickets; old proof receipts never transfer. Record refusals now collect independent problems, and quoted FAIL text no longer overrides an explicit verdict. See [approved plans](docs/approved-plans.md).
+
 - New Fast/Lucky runs record `checks --plan` before plan and current check receipts before completion. Existing runs retain their prior checks. After release update launchers for `checks`; keep active bundles pinned. See [hidden checks](docs/hidden-checks.md).
 
 - Worth-it rounds: update the installed launchers to obtain `fix-round`; new Fast/Lucky runs record `**Findings:** none` or their final scored report path. New complete-cycle Safe runs require worth fields and explicit repair selections. Existing saved runs keep their prior checks/schema. Do not upgrade an active run's pinned bundle. See [worth-it rounds](docs/worth-it.md).

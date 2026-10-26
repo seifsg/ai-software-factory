@@ -7,6 +7,7 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 ## [Unreleased]
 
 ### Added
+- Validated approved-plan starts with `--from-plan`/`--plan-record`, explicit verdict-field checks and accumulated record diagnostics (#163).
 - Reasoned hidden-check selection, pasted checker briefs, syntax/execution receipts and scoped browser trap helpers (#159).
 - UI Look/Show/Prove/Ship checkpoint with current paired pictures, recorded sharing and owner feedback/deadlines before the declared suite (#154).
 
