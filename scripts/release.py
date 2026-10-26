@@ -2,8 +2,10 @@
 
 python scripts/release.py cut X.Y.Z               bump every version copy, fold Unreleased into the version's
                                                   changelog section, require its upgrade notes, write the manifest
-python scripts/release.py check vX.Y.Z [--out DIR]  the tag workflow's gate: the release check plus a dated changelog
-                                                    section; writes notes.md, SHA256SUMS and the manifest to DIR
+python scripts/release.py check vX.Y.Z [--out DIR]  the release check plus a dated changelog section; writes
+                                                    notes.md, SHA256SUMS and the manifest to DIR
+python scripts/release.py publish vX.Y.Z           check, the full suite, then the GitHub release with those files;
+                                                    runs on the owner's machine, no CI
 """
 import argparse
 from datetime import date
@@ -11,6 +13,7 @@ import json
 from pathlib import Path
 import re
 import shutil
+import subprocess
 import sys
 import tempfile
 
@@ -116,7 +119,7 @@ def write_manifest():
 
 
 def check(tag, out=None):
-    """The tag workflow's gate; writes the GitHub release's notes, SHA256SUMS and manifest to `out` (default: a new
+    """The release gate; writes the GitHub release's notes, SHA256SUMS and manifest to `out` (default: a new
     temporary folder), never into the checkout, which must stay clean."""
     if not release.TAG.fullmatch(tag):
         raise RuntimeError(f"{tag} is no release tag (vX.Y.Z)")
@@ -139,6 +142,23 @@ def check(tag, out=None):
           f"release files in {out}")
 
 
+def publish(tag):
+    """Publish a pushed tag's GitHub release from this checkout: the check, the full suite, then `gh release create`.
+    Why: releases never wait on CI; the same gate runs locally."""
+    out = Path(tempfile.mkdtemp(prefix=f"factory-{tag}-"))
+    check(tag, out)
+    for cmd in ([sys.executable, str(ROOT / "tests/run.py")],
+                ["gh", "release", "create", tag, "--verify-tag", "--title", tag, "--notes-file", str(out / "notes.md"),
+                 str(out / "release-manifest.json"), str(out / "SHA256SUMS")]):
+        try:
+            failed = subprocess.run(cmd, cwd=ROOT).returncode
+        except OSError as error:  # gh or Python missing
+            raise RuntimeError(f"cannot run {cmd[0]}: {error}") from None
+        if failed:
+            raise RuntimeError(f"{' '.join(cmd[:3])} failed; nothing published after it")
+    print(f"{tag} published: {LINKS}releases/tag/{tag}")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = parser.add_subparsers(dest="command", required=True)
@@ -147,12 +167,16 @@ def main():
     checked.add_argument("tag", help="vX.Y.Z")
     checked.add_argument("--out", type=Path, help="Folder for the release files; default: a new temporary folder "
                                                   "(never inside the checkout, which must stay clean)")
+    sub.add_parser("publish", help="Check a pushed tag, run the suite and publish its GitHub release").add_argument(
+        "tag", help="vX.Y.Z")
     args = parser.parse_args()
     try:
         if args.command == "cut":
             cut(args.version)
-        else:
+        elif args.command == "check":
             check(args.tag, args.out)
+        else:
+            publish(args.tag)
     except RuntimeError as error:
         sys.exit(f"Release refused: {error}")
 

@@ -71,7 +71,7 @@ Every PR shows a skeptical owner truthful before/after proof: what failed or was
 - Honor required signing with the existing authorized identity; never invent one or bypass signing, permissions or protected gates.
 - **No AI or tool attribution lines** in commits. The PR body ends with the factory credit line in `references/credit.md`.
 - Required gates (step 1) pass before push. A check not run is **unverified**, not passed.
-- CI the owner turned off, or failing on billing or quota: never wait on or rerun it. The local runs of the same checks are the gate; the PR names their commands and results and says CI did not run and why.
+- CI is never required: the local runs of the required checks are the gate, and the PR names their commands and results. Never wait on or rerun CI; a CI result that arrives is extra evidence.
 - Tests come last: implementation, manual QA on the real behavior, then write or adjust and run tests. A production fix found by tests goes back through manual QA, then tests rerun. No tests that restate the implementation.
 
 ## 6. Open the draft

@@ -12,6 +12,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 import safe_engine
 from safe_engine import distribution as release
@@ -254,6 +255,33 @@ class ReleaseScriptTests(FixtureRepository):
         self.assertIn("is published; never re-publish", run(self.script, "cut", new, cwd=self.repo).stderr)
         for tag, reason in ((f"v{VERSION}", "version differs"), ("1.0", "no release tag")):
             self.assertIn(reason, run(self.script, "check", tag, "--out", out, cwd=self.repo).stderr)
+
+
+class PublishTests(unittest.TestCase):
+    """release.py publish: the check, the suite, then the GitHub release; no CI, nothing after a failed step."""
+
+    def setUp(self):
+        spec = importlib.util.spec_from_file_location("release_script", ROOT / "scripts/release.py")
+        self.script = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(self.script)
+        self.calls = []
+        self.script.check = lambda tag, out: self.calls.append(("check", tag))
+
+    def publish(self, codes):
+        codes = iter(codes)
+        self.script.subprocess = mock.Mock(run=lambda cmd, cwd: (self.calls.append(tuple(cmd[:3])),
+                                                                 mock.Mock(returncode=next(codes)))[1])
+        self.script.publish("v9.9.9")
+
+    def test_check_then_suite_then_release(self):
+        self.publish([0, 0])
+        self.assertEqual([call[:2] for call in self.calls],
+                         [("check", "v9.9.9"), (sys.executable, str(ROOT / "tests/run.py")), ("gh", "release")])
+
+    def test_a_red_suite_publishes_nothing(self):
+        with self.assertRaisesRegex(RuntimeError, "failed; nothing published"):
+            self.publish([1])
+        self.assertNotIn("gh", [call[0] for call in self.calls])
 
 
 class GateTests(unittest.TestCase):
