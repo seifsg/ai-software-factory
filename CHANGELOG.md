@@ -6,6 +6,9 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 
 ## [Unreleased]
 
+### Added
+- Owned lane start/stop/status, short browser profiles, explicit cache adapters and helper working-directory verification.
+
 ### Changed
 
 - New runs (#160): automatic project selections refresh to the newest verified immutable bundle; active, explicit and legacy-unknown pins stay intact. Start reports selected/latest versions and failed newer releases, and project commands/hooks follow the selected gate.

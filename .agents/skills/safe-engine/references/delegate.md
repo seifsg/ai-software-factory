@@ -1,6 +1,6 @@
 # Delegate: roles, briefs and gates
 
-Each delegated job runs on the cheapest role that can pass its gates. Your agent's role names, models and override routes: the factory's `docs/hosts.md`.
+Use the cheapest role that can pass its gates. Host models and overrides: the factory's `docs/hosts.md`.
 
 ## Roles
 
@@ -22,7 +22,9 @@ Read the last line first. A refusal is never done: split, confirm or ask the own
 
 ## Brief
 
-Carry what the delegate cannot infer: the goal, its role, absolute paths, read-only or not, the conventions in play, the branch it owns, its handback shape and, in Fast and Lucky, the run's scratch folder ([fast-run](fast-run.md#the-gate)). Quote the paragraphs a job needs; a whole document only when reading it is the job (a walkthrough, a review). End with one gate per required outcome:
+Carry the goal, role, absolute paths, edit limits, conventions, owned branch, handback shape and, in Fast and Lucky, [scratch folder](fast-run.md#the-gate). Quote only needed rules; whole documents only for walkthroughs or reviews. End with one gate per required outcome:
+
+Set workdir to the lane; without host support, pass it per tool call. First action: verify cwd against the brief before writes; stop on mismatch. Pass lane resources and cache settings to commands and browsers.
 
 ```text
 G1 <outcome> CHECK: <command> EXPECT: <text its output must show>

@@ -901,6 +901,7 @@ def main():
     sub = parser.add_subparsers(dest="command", required=True)
     sibling("fast_cleanup").parser(sub, common)
     sibling("fast_shots").parser(sub, common)
+    sibling("fast_lane").parser(sub, common)
     sibling("fast_baseline").parser(sub, common)
     sibling("fast_release").parser(sub)
     start = sub.add_parser("start", parents=[common], help="Begin a run and register it for hooks")
@@ -956,6 +957,7 @@ def main():
                "try": cmd_try, "view": cmd_view, "scratch": cmd_scratch,
                "cleanup-temp": lambda a: sibling("fast_cleanup").run(a, sys.modules[__name__]),
                "shots": lambda a: sibling("fast_shots").run(a, sys.modules[__name__]),
+               "lane": lambda a: sibling("fast_lane").run(a, sys.modules[__name__]),
                "recover-baseline": lambda a: sibling("fast_baseline").recover(a, sys.modules[__name__]),
                "adopt-pr-proof": lambda a: sibling("fast_pr_policy").adopt(a, sys.modules[__name__]),
                "pr-proof-method": lambda a: sibling("fast_pr_policy").method(HOME),

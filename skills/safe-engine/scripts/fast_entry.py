@@ -35,12 +35,13 @@ def selected_command(gate, project):
 
 def route(args, gate):
     """Forward project commands to the pinned gate before installed argument validation."""
-    commands = {"done", "status", "close", "try", "scratch", "pause", "resume", "shots", "cleanup-temp", "recover-baseline"}
-    if not args or args[0] not in commands or {"-h", "--help"} & set(args):
+    commands = {"done", "status", "close", "try", "scratch", "pause", "resume", "shots", "lane", "cleanup-temp", "recover-baseline"}
+    options = args[:args.index("--")] if "--" in args else args
+    if not options or options[0] not in commands or {"-h", "--help"} & set(options):
         return None
-    project = next((arg.split("=", 1)[1] for arg in args if arg.startswith("--project=")), None)
-    if "--project" in args and args.index("--project") + 1 < len(args):
-        project = args[args.index("--project") + 1]
+    project = next((arg.split("=", 1)[1] for arg in options if arg.startswith("--project=")), None)
+    if "--project" in options and options.index("--project") + 1 < len(options):
+        project = options[options.index("--project") + 1]
     project = Path(gate.native(project)).resolve() if project else gate.find_project(None)
     target = selected_command(gate, project)
     return subprocess.call([sys.executable, str(target), *args]) if target else None

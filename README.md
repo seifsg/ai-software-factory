@@ -276,6 +276,8 @@ python tests/run.py
 - Method byte budgets: `python scripts/token_report.py --against origin/main` shows what a change adds to every run.
 - `python -m evals run` scores the factory against a plain agent ([evals](evals/README.md)).
 
+Parallel local stacks use `fast_gate.py lane start`, `lane status` and `lane stop` with explicit project, lane name and fixed ports. They retain owned descendants, confirm shutdown before reporting cleanup, isolate supported caches and use short browser profiles. Screenshot cleanup attempts every acquired process and preserves artifacts when shutdown is unconfirmed. Installed entries preserve child arguments after `--`; commands, cleanup retries and platform limits are in [hosts](docs/hosts.md#lane-resources).
+
 ## 🗂️ Layout
 
 ```text

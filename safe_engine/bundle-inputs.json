@@ -91,7 +91,13 @@
     "skills/safe-engine/scripts/fast_view_model.py",
     "skills/safe-engine/scripts/fast_view_scope.py",
     "skills/safe-engine/scripts/fast_view_server.py",
-    "skills/safe-engine/scripts/view/index.html"
+    "skills/safe-engine/scripts/view/index.html",
+    "safe_engine/processes.py",
+    "safe_engine/posix_session.py",
+    "safe_engine/windows_job.py",
+    "safe_engine/resources.py",
+    "safe_engine/lanes.py",
+    "skills/safe-engine/scripts/fast_lane.py"
   ],
   "historical_files": [],
   "source_trees": [

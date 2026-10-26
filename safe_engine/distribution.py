@@ -34,7 +34,8 @@ REQUIRED = ["AGENTS.md", "README.md", "docs/install.md", "docs/hosts.md", "safe_
             ".agents/skills/safe-engine/references/fast-run.md",
             ".agents/skills/improve-factory/references/live-session.md"]
 REQUIRED += [f".agents/skills/{name}/SKILL.md" for name in SKILLS]
-# Gate helpers, including new-run selection, use each bundle's contract, preserving older pins.
+# Lane ownership (processes, posix_session, windows_job, resources, lanes, fast_lane) uses the bundle's
+# required-file contract below: hard-coding them here would reject valid older releases and active pins.
 NEWER = ("This factory revision uses a newer layout than this launcher knows ({}). Update the installed factory from "
          "a current checkout (skills/safe-engine/scripts/fast_gate.py install --host <your agent>, or update the "
          "plugin), then retry.")
