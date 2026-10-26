@@ -106,7 +106,13 @@
     "skills/safe-engine/scripts/fast_show.py",
     "skills/safe-engine/scripts/fast_show_command.py",
     ".agents/skills/safe-engine/references/show.md",
-    "docs/show-first.md"
+    "docs/show-first.md",
+    "skills/safe-engine/scripts/fast_checks.py",
+    "skills/safe-engine/scripts/fast_checks_command.py",
+    "skills/safe-engine/scripts/playwright_checks.mjs",
+    ".agents/skills/safe-engine/references/hidden-checks.md",
+    ".agents/skills/safe-engine/references/playwright.md",
+    "docs/hidden-checks.md"
   ],
   "historical_files": [],
   "source_trees": [

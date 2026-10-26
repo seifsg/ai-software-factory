@@ -404,6 +404,7 @@ def light(run):
 def check_plan(run, body, **kwargs):
     import fast_design
     import fast_show
+    import fast_checks
     titles = ("Todos",) if light(run) else ("Files", "Critique", "Phases", "Todos", "Whole plan")
     problems = [f"needs a '### {title}' subsection" for title in titles if subsection(body, title) is None]
     if not todo_ids(kwargs["all_sections"]):
@@ -415,6 +416,9 @@ def check_plan(run, body, **kwargs):
     problems += fast_briefs.plan_problems(run, body, marker, subsection, kwargs.get("runs"), light(run))
     problems += fast_design.problems(run, kwargs.get("project"))
     problems += fast_show.problems(run, kwargs.get("project"))
+    problems += fast_checks.problems(run, kwargs.get("project"))
+    if fast_checks.enabled(run):
+        problems += online(run, kwargs, lambda ticket: fast_checks.verify_plan(run, ticket))
     if fast_show.enabled(run) and not all(re.search(rf"\b{phase}\b", body, re.I) for phase in ("Look", "Show", "Prove", "Ship")):
         problems.append("UI plan needs Look, Show, Prove, Ship phases")
     return problems + missing_markers(body, labels) or held(run, kwargs, covered(run, needs_checklist))
@@ -494,8 +498,12 @@ def check_schema(run, body, **_):
 def check_build(run, body, **kwargs):
     """Each plan todo has its own 'pre: do: post:' line (fast_progress.built_ids)."""
     built = built_ids(body, strict=bool(run.get("coverage")))
-    return [f"T{number} needs its own 'T{number} pre: ... do: ... post: ...' line"
-            for number in todo_ids(kwargs["all_sections"]) if number not in built]
+    problems = [f"T{number} needs its own 'T{number} pre: ... do: ... post: ...' line"
+                for number in todo_ids(kwargs["all_sections"]) if number not in built]
+    if run.get("check_selection"):
+        import fast_checks
+        problems += fast_checks.syntax_problems(run, kwargs.get("project"))
+    return problems
 
 
 def scans(run, all_sections):
@@ -523,7 +531,7 @@ def check_done_run(run, body, project, **kwargs):
     import fast_design
     import fast_show
     sections = kwargs.get("all_sections") or {}
-    own = HIDDEN.sub("", body) if hidden(run) else body  # the builder's own done-run, apart from the checker's
+    own = HIDDEN.sub("", body) if hidden(run) or run.get("check_selection") else body
     touched = touched_ui(run, project)
     audited = run.get("ux_rules") and (run.get("ui") or touched)  # this run owes the UX audit
     parsed = audit_lines(own) if audited else None
@@ -545,11 +553,15 @@ def check_done_run(run, body, project, **kwargs):
     if run.get("worth"):
         import fast_round
         problems += fast_round.findings(body, project, marker, run)
+    if run.get("check_selection"):
+        import fast_checks
+        problems += fast_checks.problems(run, project, final=True) + fast_checks.verdict_problems(run, body, sys.modules[__name__])
+        problems += online(run, kwargs, lambda ticket: fast_checks.refreshed(run, ticket), finish=True)
     return problems + fast_design.problems(run, project, final=True) + (hidden_checks(body, kwargs, run) if hidden(run) else [])
 
 def hidden(run):
     """Product and feature runs whose methods define hidden checks; change runs and older runs never."""
-    return bool(run.get("hidden_checks")) and run.get("kind") != "change"
+    return not run.get("check_selection") and bool(run.get("hidden_checks")) and run.get("kind") != "change"
 
 
 def verdicts(body, deferred=False):
@@ -708,6 +720,10 @@ def check_handoff(run, body, **kwargs):
     problems = missing_markers(body, labels) + fast_briefs.handoff_problems(run, body, marker, checks)
     problems += fast_design.problems(run, kwargs.get("project"), final=True)
     problems += fast_show.completion_problems(run, kwargs.get("project"))
+    if run.get("check_selection"):
+        import fast_checks
+        problems += fast_checks.problems(run, kwargs.get("project"), final=True)
+        problems += online(run, kwargs, lambda ticket: fast_checks.refreshed(run, ticket), finish=True)
     ticks = lambda ticket: needs_ticks(ticket, deferred=bool(run.get("briefs")))  # noqa: E731 - one call site
     return problems or held(run, kwargs, covered(run, ticks), finish=True) + pr_proof(run, body, **kwargs)
 

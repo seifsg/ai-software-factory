@@ -256,7 +256,7 @@ FLAGS = {"ticket_checks": (LAYOUT, "Definition of done"), "coverage": (LAYOUT, "
          "hidden_checks": (FAST_RUN, "**Hidden checks:**"),
          "scans": (FAST_RUN, "**Secrets:**"), "ux_rules": (UX, "| U10 |"), "pr_proof": (FAST_RUN, "`**PR:**`"),
          "credit": (PR, "references/credit.md"), "pr_demo": (PR, "**Visual:**"), "briefs": (FAST_RUN, "**Ports:**"),
-         "worth": (FAST_RUN, "**Findings:**"),
+         "worth": (FAST_RUN, "**Findings:**"), "check_selection": (FAST_RUN, "Reasoned proof selection"),
          "show_first": (FAST_RUN, "Look, Show, Prove, Ship")}
 
 
@@ -267,7 +267,7 @@ def method_flags(bundle, project):
         try:
             flags[flag] = phrase in (root / path).read_text(encoding="utf-8")
         except (OSError, ValueError):
-            flags[flag] = not bundle and flag != "show_first"  # Show needs its actual resolved method contract
+            flags[flag] = not bundle and flag not in ("show_first", "check_selection")  # New proof contracts need resolved methods.
     return flags
 
 
@@ -358,6 +358,8 @@ def cmd_done(args):
         run.update(size=record.run_size(all_sections), size_at=step)  # frozen: editing the line later skips nothing
     if step == "plan":  # who owes the epic's integration todos is read from the plan as recorded here
         run["todos"] = list(dict.fromkeys(run.get("todos", []) + [f"T{n}" for n in record.todo_ids(all_sections)]))
+        if run.get("check_selection"):
+            sibling("fast_checks").freeze_ownership(run)
         run["ports"] = sibling("fast_briefs").ports(record.marker(body, "Ports"))  # later lanes' plans avoid them
     if step == "tickets":  # later ticket checks keep reading these even if the record drops one
         epic, subs = record.ticket_urls(body)
@@ -452,6 +454,7 @@ def cmd_close(args):
     if not args.abandon:
         problems = sibling("fast_design").problems(run, project, final=True)
         problems += sibling("fast_show").completion_problems(run, project)
+        problems += sibling("fast_checks").problems(run, project, final=True)
         if problems:
             fail("\n".join(problems))
         sibling("fast_pr_policy").close(HOME, run)
@@ -963,10 +966,12 @@ def main():
     hook = sub.add_parser("hook", help="Answer one host hook event from stdin")
     hook.add_argument("--host", default="claude", help="claude, codex, cursor, or any other hook-capable agent")
     sibling("fast_show_command").parser(sub, common)
+    sibling("fast_checks_command").parser(sub, common)
     args = parser.parse_args()
     actions = {"start": cmd_start, "done": cmd_done, "status": cmd_status, "close": cmd_close, "rehome": cmd_rehome,
                "try": cmd_try, "view": cmd_view, "scratch": cmd_scratch,
                "fix-round": lambda a: sibling("fast_round").run(a, sys.modules[__name__]),
+               "checks": lambda a: sibling("fast_checks_command").run(a, sys.modules[__name__]),
                "design": lambda a: sibling("fast_design_command").run(a, sys.modules[__name__]),
                "show": lambda a: sibling("fast_show_command").run(a, sys.modules[__name__]),
                "prove": lambda a: sibling("fast_show_command").run(a, sys.modules[__name__]),

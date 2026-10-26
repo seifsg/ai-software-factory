@@ -61,10 +61,12 @@ staff  -> editor -> today -> check-in
 **Unknowns:** payment provider; cancellation window.
 
 ## Plan
+
+`checks --plan` first.
 ### Files
 `app/(app)/schedule/**`, `app/(staff)/**`, `lib/db/schema.ts`, `lib/booking.ts`, `lib/log.ts`, `scripts/seed.ts`
 ### Critique
-One `lib/booking.ts` transaction holds capacity, credits and promotion: no races. Mock checkout is one function.
+`lib/booking.ts` transaction holds capacity, credits and promotion: no races. One checkout mock.
 ### Phases
 1. Schema, seed, logging. 2. Booking. 3. Waitlist, packs. 4. Staff tools. 5. Header, footer. 6. Done-run.
 ### Todos

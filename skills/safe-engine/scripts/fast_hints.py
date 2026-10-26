@@ -80,6 +80,10 @@ def record_hints(run):
         hints["done-run"] += "; sized MVP or production: Secrets, Dependencies, Static lines"
     if record.hidden(run):
         hints["done-run"] += "; a Hidden checks block: '#<n> <ID>: PASS' per criterion of every listed ticket"
+    if run.get("check_selection"):
+        hints["plan"] += "; checks --plan: pasted tickets, category and proof reason"
+        hints["build"] += "; selected hidden checks: prepare syntax before build completion"
+        hints["done-run"] += "; current executed check receipts and selected criterion verdicts; visual ports: likeness + suite"
     ticked = "each listed ticket fully ticked, or Blocked, Backlog or not planned" + (
         "; items name every criterion and hold every plan todo" if coverage else "")
     hints = fast_briefs.hints(hints, run) if run.get("briefs") else hints  # Interface, Ports, UX rules, Deferred

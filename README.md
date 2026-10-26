@@ -52,6 +52,8 @@ Optional polish is scored and collected in the epic's existing **Finishing touch
 
 ## 🎬 What a run looks like
 
+New runs use `fast_gate.py checks` to record reasoned hidden-check selection, actual runtime names and parsed/executed proof. Visual-only ports keep likeness plus the suite. See [hidden checks](docs/hidden-checks.md).
+
 Illustrative example:
 
 ```text

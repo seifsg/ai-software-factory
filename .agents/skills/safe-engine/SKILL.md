@@ -58,7 +58,7 @@ Record every step in one work record and pass the gate: [fast-run](references/fa
 3. **Kickoff** (product, feature): the kickoff questions for its size.
 4. **Tickets:** `ticketing`: read the backlog, then epic(s) + 1 or many outcome sub-issues in To do.
 5. **Analysis** (product, feature): `analyze-start` in full. No code yet: analyze the requirements, platform and intended consumers, and say so.
-6. **Plan:** `get-ready-to-code`: five outputs, todos `T1..Tn` in each ticket's checklist, logging map, efficiency budget, and the [briefs](references/fast-run.md#briefs): Interface, Ports and, for UI work, UX rules. This request authorizes going past its file-summary stop. Product, feature: start the hidden checks.
+6. **Plan:** `get-ready-to-code`: five outputs, todos `T1..Tn` in each ticket's checklist, logging map, efficiency budget, and the [briefs](references/fast-run.md#briefs): Interface, Ports and, for UI work, UX rules. This request authorizes going past its file-summary stop. Select proof and start the required independent checker.
 7. **Design** (UI): plan with `get-ready-to-code`. Use the product bar and `ux-quality` step 1, including Map, Hierarchy and Labels; design ports follow its reference coverage. At done-run, a fresh agent judges every UX rule (`ux-quality` step 4).
 8. **Schema** (persistence): `database-schema`, only if needed.
 9. **Build:** each item through 0–4; spike unknown capabilities first, tick after use. UI: [Look, Show, Prove, Ship](references/show.md).
@@ -69,17 +69,10 @@ Record every step in one work record and pass the gate: [fast-run](references/fa
     - Meanwhile capture the PR's complete view and journey inventory (`how-to-make-a-pr`). A demo bug restarts its capture cycle after the checked fix.
     - No browser: drive its HTTP or CLI interface and say so; required UI media still apply.
     - MVP, production slice: also the [product bar](references/product-bar.md#security) scans.
-    - Product, feature: run the hidden checks.
+    - Run selected hidden checks; visual-only ports keep current likeness and the declared suite.
 11. **Handoff:** open the draft PR (`how-to-make-a-pr`); report how to run, dev sign-in, each requested item (delivered, open for a later iteration, blocked with reason, owner-deferred, or deferred to the owner or hardware), verified, unverified, the `**Deferred:**` list, the follow-ups ticket and each owned ticket's final status (Ready for QA with its PR, naming items deferred to the owner or hardware; Blocked; or Backlog when owner-deferred); `close`. Any requested item not delivered, owner-deferred or deferred to the owner or hardware: the overall outcome is unfinished. Deferred items never hold the run open.
 
-Hidden checks (product, feature):
-
-- Before each build wave (optionally during the previous one), start the checker, a fresh agent that will not build, for the criteria the wave's todos name that this run owes and that lack checks: every listed ticket's; the epic's with the last wave, unless another run owes it (its integration todos all another run's: [owed epic](references/gate-details.md#owed-epic)).
-- From the tickets, the plan and the committed interface files its Interface names, never the implementation, it writes one runnable check per such criterion ID in `.factory/fast/checks/<key>/<ticket number>/`, bound to the names, commands, routes, files and ports the Interface and Ports name, never guessed ([briefs](references/fast-run.md#briefs)); one it cannot automate gets a written manual check. It returns only "ready" and the paths.
-- The builder never opens the checks; only that wave waits for "ready". A plan change adding owed criteria restarts the checker for those.
-- At the done-run, never earlier, a fresh checker runs every check, manual ones included, against a working build: one entry per criterion, `#<n> <ID>: PASS` or `#<n> <ID>: FAIL`, or `#<n> <ID>: DEFERRED (owner|hardware: <why>)` for a check only the owner or hardware this machine lacks can run; a note only after it in parentheses.
-- A FAIL is a FAIL. Only a checker that has not seen the build code may call a check wrong and change it, the reason in the note: `#2 A1: PASS (check changed: <reason>)`.
-- The coordinator copies the entries under `**Hidden checks:**`, never relabeling one. Any FAIL: back to build, then rerun the checks.
+Hidden checks: follow [proof selection](references/hidden-checks.md). Record each ticket's route and reason during plan. Visual-only ports default to likeness plus the required suite; logic, data, safety and mixed tickets keep independent checks. Prepare syntax before build, actual runtime names and execution after manual use/Show. The builder never reads hidden checks. Safe retains its sealed-check controller.
 
 The owner names `lucky`, `verify` or `promote`: [run cases](references/run-cases.md#lucky-verify-promote).
 
