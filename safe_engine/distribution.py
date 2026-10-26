@@ -211,7 +211,7 @@ def verify(root, manifest):
 
 def check_release(root, tag):
     """Raise unless the checkout at root is release `tag`: on main, its version equal to the tag, its files equal to
-    its manifest. The resolver, the self-update and the tag workflow share this one check."""
+    its manifest. The resolver, the self-update and `release.py` share this one check."""
     try:
         git("merge-base", "--is-ancestor", "HEAD", "origin/main", cwd=root)
     except RuntimeError:

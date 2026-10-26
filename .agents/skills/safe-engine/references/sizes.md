@@ -48,7 +48,7 @@ The owner publishes it to test with real users: fill every gap a launch needs.
   - product analytics on key journey events, under the [product bar](product-bar.md)'s privacy rules, to a destination asked once when unknown (default: the app's own storage);
   - in-app feedback that reaches the owner, with the page and app version attached;
   - migrations for persisted data; backups stored apart from that data, with a tested restore;
-  - automated tests, written after the journeys work, running in CI;
+  - automated tests, written after the journeys work, run by one local command;
   - a release record ready to deploy.
 - Deploying needs the owner's authority.
 - Research launch gaps the owner may miss: what competitors offer, what users expect before trusting a product, what breaks at first real use. Present each as a suggestion beyond the baseline: gap, evidence, cost, recommendation.
