@@ -48,6 +48,8 @@ The factory **enforces** the process. Hooks block source edits until the ticket,
 
 Already have code? Point it at that directory. Feature runs analyze the existing code and every consumer before planning (`analyze-start`).
 
+Optional polish is scored and collected in the epic's existing **Finishing touches** follow-ups. `fast_gate.py fix-round --file <report.json> --finding F1` selects worthwhile repairs; `--finishing-authority` records an explicit batch request. Selected work needs resolution evidence or owner cancellation before completion. Required quality stays mandatory. See [worth-it rounds](docs/worth-it.md) for the shared Fast/Safe report and commands.
+
 ## 🎬 What a run looks like
 
 Illustrative example:

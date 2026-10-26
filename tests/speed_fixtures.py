@@ -25,12 +25,30 @@ def report(verdict="PASS", findings=()):
 def finding(severity="HIGH", disposition="blocking", exception=None):
     return {"severity": severity, "location": "README.md:1", "description": "Synthetic finding",
             "disposition": disposition, "exception": exception, "layer": "product",
-            "evidence_status": "valid", "evidence": DOUBLE, "action": "Synthetic action"}
+            "evidence_status": "valid", "evidence": DOUBLE, "action": "Synthetic action",
+            "worth": {"notice": 1, "harm": 1, "minutes": 10, "required": disposition == "blocking", "reason": DOUBLE}}
 
 
 def deferral(owner="owner", authority=DELEGATION):
     return {"owner": owner, "reason": "Synthetic reason", "scope": "local", "revisit": "Before release",
             "authority": authority, "destination": "synthetic:followup-1"}
+
+
+def reconcile_double(body, state):
+    """Explicit synthetic reconciliation for existing lifecycle tests; omission regressions bypass this helper."""
+    if not isinstance(body, dict) or not isinstance(body.get("findings"), list) or not state.get("fix_rounds"):
+        return body
+    body = deepcopy(body)
+    owed = {(receipt["sha256"], f"F{index}"): item for receipt in state["fix_rounds"]
+            for index, item in enumerate(receipt["report"]["findings"], 1)}
+    body.update(retained=[], resolved=[])
+    for (digest, number), item in owed.items():
+        entry = {"report_sha256": digest, "finding": number}
+        if item in body["findings"]:
+            body["retained"].append({**entry, "current_finding": f"F{body['findings'].index(item) + 1}"})
+        else:
+            body["resolved"].append({**entry, "evidence": DOUBLE})
+    return body
 
 
 REVIEWER_BINARIES = {"codex", "claude", "agent", "cursor-agent"}
@@ -80,6 +98,7 @@ class Base(unittest.TestCase):
         return f
 
     def codex_review(self, f, body):
+        body = reconcile_double(body, f.flow.load())
         def double(argv, cwd, timeout, log, stdin):
             atomic_json(Path(argv[argv.index("--output-last-message") + 1]), body)
             log.parent.mkdir(parents=True, exist_ok=True)
@@ -90,7 +109,7 @@ class Base(unittest.TestCase):
 
     def redo(self, f):
         """One full correction cycle back to the review phase."""
-        f.flow.repair("Synthetic correction")
+        f.repair("Synthetic correction")
         f.finish_manual()
         f.artifact("batch")
         self.assertTrue(f.flow.check()["checks_passed"])

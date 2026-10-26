@@ -338,8 +338,9 @@ class ProofDraftAndHandoffTests(Base):
         text = Path(f.flow.handoff()["handoff"]).read_text(encoding="utf-8")
         self.assertIn("| A1: Criterion A1 holds | Recorded implementation: artifacts/", text)
         self.assertIn("manual-evidence.txt", text)
-        self.assertIn("## Deferred findings", text)
-        self.assertIn("- LOW README.md:1: Synthetic finding (accepted-deferral; synthetic:followup-1)", text)
+        self.assertIn("## Finishing touches", text)
+        self.assertIn("Parked: Synthetic finding (worth it 4/7). Synthetic reason", text)
+        self.assertIn("Follow-ups: synthetic:followup-1", text)
 
     def test_clean_review_has_no_deferred_section(self):
         f = self.to_review()
@@ -382,7 +383,7 @@ class CarriedManualQaTests(Base):
         f.artifact("implementation")
         self.record(f, ["A1", "A2"], tag="one")
         sha = f.flow.load()["artifacts"]["manual"]["sha256"]
-        f.flow.repair("Synthetic fix touching A1 only")
+        f.repair("Synthetic fix touching A1 only")
         f.artifact("implementation")
         return f, sha
 
@@ -436,7 +437,7 @@ class CarriedManualQaTests(Base):
     def test_amendment_clears_the_archive_so_old_receipts_cannot_be_carried(self):
         f, sha = self.repaired()
         self.record(f, ["A1"], {"A2": (sha, "ok")}, tag="two")
-        f.flow.repair("Second repair")
+        f.repair("Second repair")
         self.assertEqual(len(f.flow.status()["prior_manual_receipts"]), 2)
         f.flow.amend(f.task, f.profile, f.review_double(), "Synthetic reviewed amendment")
         self.assertEqual(f.flow.status()["prior_manual_receipts"], [])

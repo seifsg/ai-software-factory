@@ -55,6 +55,9 @@ def main():
         if name == "repair":
             command.add_argument("--records-only", action="store_true",
                                  help="Reassess records using eligible exact-input raw evidence; version 2 opt-in only")
+            command.add_argument("--findings", help="Scored failure report before review; later use the recorded review")
+            command.add_argument("--finding", action="append", help="Finding F1, F2 in report order; repeat")
+            command.add_argument("--finishing-authority", help="Owner instruction and source for a finishing batch")
     extend = commands.add_parser("extend-reviews", help="Owner-approved extra review rounds after the cap")
     extend.add_argument("--rounds", required=True, type=int)
     extend.add_argument("--reason", required=True)
@@ -164,7 +167,8 @@ def run(args):
             elif args.command == "amend":
                 result = workflow.amend(read_json(args.task), read_json(args.profile), read_json(args.review), args.reason)
             elif args.command == "repair":
-                result = workflow.repair(args.reason, records_only=args.records_only)
+                result = workflow.repair(args.reason, records_only=args.records_only, findings=args.findings,
+                                         selected=args.finding, finishing_authority=args.finishing_authority)
             elif args.command == "extend-reviews":
                 result = workflow.extend_reviews(args.rounds, args.reason)
             elif args.command == "cancel":

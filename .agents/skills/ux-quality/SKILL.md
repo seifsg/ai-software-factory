@@ -65,7 +65,7 @@ Every audit gives each ID a verdict. U1 to U5 state the goal; their checks live 
 3. Read the logs. Inspect rendered assets at real size and theme. Listen to sounds in context. Screenshots cannot prove interaction. Filenames and waveforms cannot prove sound quality.
 4. Capture each core screen in each of its states at the main width, plus once at the other width (phone and desktop). First viewport and full page. Web: run the page outline and the scan from `references/basics.md` on each.
 5. A fresh agent that did not build it judges from the shots, outlines, scan and use log, as `references/basics.md` sets out. One line per ID: `U3 PASS <screens checked>: <evidence>`, `U3 FAIL <screen, state>: <element, quoted text>`, or N/A or UNKNOWN with the reason. A FAIL names its rule, an in-scope screen and the visible evidence.
-6. Fix in-scope FAILs, re-run the affected paths, recapture, and the judge rechecks those IDs once. A FAIL the builder contests becomes UNKNOWN with both reasons, for the owner. Findings outside the change go to the follow-ups ticket.
+6. Score findings with `deep-review`; required UX/accessibility stays mandatory. Fix in-scope FAILs, rerun affected paths, recapture; the judge rechecks IDs once. Contested FAILs become UNKNOWN with both reasons for the owner. Outside-scope findings go to follow-ups.
 7. No hearing, device, assistive tool or runtime available? UNKNOWN. Name the check needed. A walkthrough of the instructions proves no real-user usability.
 8. After manual use passes, write and run the accessibility, interaction and other final checks. Automation proves neither aesthetics nor manual use.
 

@@ -4,7 +4,7 @@ description: "Plans the build from a finished analysis: summary of files to chan
 ---
 
 Prepare to build from our plan and analysis.
-Important: We do not care about effort time or code that would take to build. We only care about quality. Do not factor code effort or time to develop at all within the plan. AI will develop and write it.
+Keep required quality. Use `deep-review` worth-it scores to schedule optional polish; retain scope, owner authority and unknown cost.
 
 Build in complete working iterations. Tiny bug or full product, same logic.
 

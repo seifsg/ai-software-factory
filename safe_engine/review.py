@@ -5,6 +5,7 @@ from pathlib import Path
 import uuid
 
 from . import reviewers
+from . import worth
 
 from .project import EngineError, digest, file_hash, rescan
 from .review_packet import DELEGATION, review_prompt, schema_errors
@@ -61,7 +62,8 @@ class ReviewMixin:
     @staticmethod
     def schema_path(state):
         package = Path(__file__).resolve().parent
-        return package / ("review-schema-v2.json" if state.get("delivery_version") == 2 else "review-schema.json")
+        return package / ("review-schema-worth.json" if state.get("worth") else
+                          "review-schema-v2.json" if state.get("delivery_version") == 2 else "review-schema.json")
 
     def review_packet(self, out):
         """Prompt for any host's fresh read-only subagent; binds the current inputs and state."""
@@ -161,6 +163,8 @@ class ReviewMixin:
 
     @staticmethod
     def finding_blocks(finding, state):
+        if state.get("worth") and worth.assess(finding)["mandatory"]:
+            return True
         if state.get("delivery_version") != 2:
             return finding["severity"] in ("CRITICAL", "HIGH", "MEDIUM")
         if finding["severity"] in ("CRITICAL", "HIGH") or finding["disposition"] == "blocking":
@@ -190,6 +194,11 @@ class ReviewMixin:
                 raise EngineError("Review requires supported criterion outcomes")
         if not isinstance(report.get("findings"), list):
             raise EngineError("Review must include its findings, including an empty list for a clean result")
+        if state.get("worth"):
+            try:
+                worth.reconcile(report, state.get("fix_rounds", []), completed=report["verdict"] == "PASS")
+            except ValueError as error:
+                raise EngineError(str(error)) from error
         for finding in report["findings"]:
             if not isinstance(finding, dict) or finding.get("severity") not in ("CRITICAL", "HIGH", "MEDIUM", "LOW"):
                 raise EngineError("Malformed review finding")
@@ -213,6 +222,28 @@ class ReviewMixin:
                         raise EngineError("Nonblocking findings need bounded actual authority; high severity cannot be deferred")
                     if "destination" in exception and (not isinstance(exception["destination"], str) or not exception["destination"].strip()):
                         raise EngineError("Deferral needs a destination ticket")
+
+    def select_repairs(self, state, findings, selected, finishing):
+        """Bind selected fixes to the intact review, or a supplied failure report when no review exists."""
+        review = state.get("review")
+        if review:
+            path = Path(review["report"])
+            if file_hash(path) != review["sha256"]:
+                raise EngineError("Review report changed; preserve it and obtain fresh evidence")
+            if findings:
+                if read_json(path)["findings"]:
+                    raise EngineError("Select from the recorded review; do not substitute another findings file")
+                path = self.outside_inputs(findings)  # A new defect after a clean review has no prior finding to select.
+        elif findings:
+            path = self.outside_inputs(findings)
+        else:
+            raise EngineError("Repair needs --findings <check-report.json> before review, and --finding F1 selections")
+        report = read_json(path)
+        try:
+            decision = worth.select(report, selected, finishing)
+        except ValueError as error:
+            raise EngineError(str(error)) from error
+        state.setdefault("fix_rounds", []).append({"report": report, "sha256": file_hash(path), **decision})
 
     def extend_reviews(self, rounds, reason):
         """Owner-approved extra review rounds after the cap; the reason stays in history."""

@@ -50,7 +50,10 @@
     "skills/agents/reviewer.md": 1600,
     "skills/agents/runner.md": 1200,
     "skills/improve-factory/SKILL.md": 2300,
-    "skills/safe-engine/SKILL.md": 3000
+    "skills/safe-engine/SKILL.md": 3000,
+    ".agents/skills/deep-review/references/worth-it.md": 1700,
+    ".agents/skills/safe-engine/references/worth-it.md": 2800,
+    ".agents/skills/ticketing/references/finishing-touches.md": 1300
   },
   "gate": {
     "start": 771,

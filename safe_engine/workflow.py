@@ -129,7 +129,7 @@ class Workflow(ContractMixin, CheckMixin, ReviewMixin):
                  "protected": protected_inputs(self.project, profile), "created_at": now()}
         if modern:
             state.update(delivery_version=2, contract_sealed=False, contract_revision=0,
-                         original_task=task, contract_history=[], manual=None)
+                         original_task=task, contract_history=[], manual=None, worth=True)
         if ticket:
             state.update(ticket=ticket, ticket_observation=capture["sequence"], builder_session=session)
         state["initial_fingerprint"] = self.current(state)
@@ -300,7 +300,7 @@ class Workflow(ContractMixin, CheckMixin, ReviewMixin):
         target.write_text(content, encoding="utf-8")
         state["artifacts"][kind] = {"path": relative, "sha256": file_hash(target), "fingerprint": current}
 
-    def repair(self, reason, records_only=False):
+    def repair(self, reason, records_only=False, findings=None, selected=None, finishing_authority=None):
         state = self.load()
         self.require_ticket(state)
         if records_only:
@@ -312,6 +312,8 @@ class Workflow(ContractMixin, CheckMixin, ReviewMixin):
             self.require_phase(state, "manual", "testing", "verify", "improve", "final-verify", "review", "ready")
         if not reason.strip():
             raise EngineError("Record the reason for correction")
+        if state.get("worth"):
+            self.select_repairs(state, findings, selected, finishing_authority)
         state["repairs_used"] += 1
         state["phase"] = "build"
         state["checks"] = None

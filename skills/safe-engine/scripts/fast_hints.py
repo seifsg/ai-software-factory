@@ -35,13 +35,13 @@ def pr_hint(run):
     """The handoff's PR markers this run's methods turn on."""
     parts = []
     if run.get("pr_proof"):
-        parts.append("a PR line naming the draft PR: its Before & after section has one heading per outcome, each "
-                     "Before and After with an image, a recording or a fenced block")
+        parts.append("a draft PR line: Before & after has a heading per outcome, each "
+                     "Before and After with an image, recording or fenced block")
         if run.get("pr_demo"):
             parts.append("each outcome declares Visual and Journey (visual: screenshot pair, journey: Video; only a "
                          "scoped owner Media waiver)")
     if run.get("credit"):
-        parts.append("the PR body's last line is the factory credit line (how-to-make-a-pr credit.md)")
+        parts.append("PR ends with factory credit (how-to-make-a-pr credit.md)")
     return "".join("; " + part for part in parts)
 
 
@@ -69,6 +69,8 @@ def record_hints(run):
     if run.get("ux_rules"):
         hints["design"] += "; Map, Hierarchy (naming the primary action) and Labels lines"
     hints["done-run"] += ui_hint(run)
+    if run.get("worth"):
+        hints["done-run"] += "; Findings: clean none or scored JSON + resolutions"
     if run.get("scans"):  # Size starts with POC, MVP, production or none (<why>)
         hints["done-run"] += "; sized MVP or production: Secrets, Dependencies, Static lines"
     if record.hidden(run):

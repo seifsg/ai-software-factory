@@ -1,6 +1,6 @@
 # Fast run: record and gate
 
-Every Fast or Lucky run records each step in one work record and passes the gate. Step ids: `research`, `kickoff`, `tickets`, `analysis`, `plan`, `design`, `schema`, `build`, `done-run`, `handoff`; the gate skips those a run's kind does not need. The gate proves a step was recorded, not that it was good; quality stays with each method and the done-run.
+Fast/Lucky steps: `research`, `kickoff`, `tickets`, `analysis`, `plan`, `design`, `schema`, `build`, `done-run`, `handoff`. Record each applicable step in one work record and pass the gate. It proves recording, not quality; methods and done-run still apply.
 
 ## Kickoff questions
 
@@ -25,6 +25,8 @@ A `change` (bug fix, small change, follow-up) records tickets, plan, build, done
 - An older installed gate refuses a light record: [gate details](gate-details.md#older-gate).
 
 ## Work record
+
+New runs record `**Findings:** none` or final scored JSON at done-run; use [fix rounds](worth-it.md) before repairs.
 
 `.factory/fast/work-record.md`, sections in step order; `start` writes the skeleton. The rows below and the skeleton's hints name every marker; a `change` writes the markers its rows name, with the light-lane forms. A `done` refusal its message does not explain: the [sample](work-record-sample.md) shows each section complete for an unrelated product; never copy its content. Labels end with the colon inside the bold: `**Epic:**`. The gate checks (listed tickets: the `**Epic:**` or `**Ticket:**` and `**Sub-issue:**` lines):
 

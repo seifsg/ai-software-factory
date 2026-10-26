@@ -90,7 +90,15 @@
     "skills/safe-engine/scripts/fast_view_model.py",
     "skills/safe-engine/scripts/fast_view_scope.py",
     "skills/safe-engine/scripts/fast_view_server.py",
-    "skills/safe-engine/scripts/view/index.html"
+    "skills/safe-engine/scripts/view/index.html",
+    "safe_engine/worth.py",
+    "safe_engine/review-schema-worth.json",
+    "skills/safe-engine/scripts/fast_worth.py",
+    "skills/safe-engine/scripts/fast_round.py",
+    ".agents/skills/deep-review/references/worth-it.md",
+    ".agents/skills/safe-engine/references/worth-it.md",
+    ".agents/skills/ticketing/references/finishing-touches.md",
+    "docs/worth-it.md"
   ],
   "historical_files": [],
   "source_trees": [

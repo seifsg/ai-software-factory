@@ -33,6 +33,7 @@ LIGHT = """# copy-fix
 ## Done-run
 - PASS: home page footer reads "Contact us"
 **Logs:** dev server log clean
+**Findings:** none
 ## Handoff
 **Run:** npm run dev
 **Statuses:** no ticket (trivial)
@@ -138,6 +139,7 @@ class GateHarness:
         """The draft PR's body file the handoff's PR line names (read offline)."""
         (self.project / ".factory/fast").mkdir(parents=True, exist_ok=True)
         (self.project / ".factory/fast/pr-body.md").write_text(PR_BODY, encoding="utf-8")
+        (self.project / ".factory/fast/final-findings.json").write_text('{"findings": []}', encoding="utf-8")
 
     def finish_sample(self, text=None, until=None):
         """Record the sample (or `text`) and pass the steps before `until`, or all of them."""
@@ -789,6 +791,7 @@ class FastGateTests(GateHarness, unittest.TestCase):
 
     def test_hidden_checks_gate_the_sample_done_run(self):
         self.start("--no-ui")
+        self.pr_body()
         text = SAMPLE.read_text(encoding="utf-8")
         record_file = self.project / ".factory/fast/work-record.md"
         self.assertIn("Hidden checks block", record_file.read_text(encoding="utf-8"))
@@ -1005,14 +1008,14 @@ class FastGateTests(GateHarness, unittest.TestCase):
         spec.loader.exec_module(gate)
         layout, lane, ux, pr = Path(gate.LAYOUT), Path(gate.FAST_RUN), Path(gate.UX), Path(gate.PR)
         for name, texts in (("new", ("### ✅ Definition of done\nEvery criterion has an item.",
-                                     "## Light lane\nT1 <title> → <what the owner can do once it is done>\n**Hidden checks:**\n**Secrets:**\n`**PR:**`\n**Ports:**",
+                                     "## Light lane\nT1 <title> → <what the owner can do once it is done>\n**Hidden checks:**\n**Secrets:**\n`**PR:**`\n**Ports:**\n**Findings:**",
                                      "| U10 | Performance |", "**Visual:** yes; credit in `references/credit.md`")),
                             ("old", ("### ✅ Done when", "## Hooks", "| Performance |", "No AI or tool attribution"))):
             for path, text in zip((layout, lane, ux, pr), texts):
                 (self.root / name / path).parent.mkdir(parents=True, exist_ok=True)
                 (self.root / name / path).write_text(text, encoding="utf-8")
         on = {"ticket_checks": True, "coverage": True, "light": True, "outcomes": True, "hidden_checks": True, "scans": True,
-              "ux_rules": True, "pr_proof": True, "credit": True, "pr_demo": True, "briefs": True}
+              "ux_rules": True, "pr_proof": True, "credit": True, "pr_demo": True, "briefs": True, "worth": True}
         off = dict.fromkeys(on, False)
         self.assertEqual(gate.method_flags({"root": str(self.root / "new")}, self.project), on)
         self.assertEqual(gate.method_flags({"root": str(self.root / "old")}, self.project), off)
@@ -1022,7 +1025,7 @@ class FastGateTests(GateHarness, unittest.TestCase):
         (self.root / "new" / layout).write_bytes(b"\xff\xfe broken")
         self.assertEqual(gate.method_flags({"root": str(self.root / "new")}, self.project),
                          {**off, "light": True, "outcomes": True, "hidden_checks": True, "scans": True,
-                          "ux_rules": True, "pr_proof": True, "credit": True, "pr_demo": True, "briefs": True})  # fast-run.md, ux-quality, PR still read
+                          "ux_rules": True, "pr_proof": True, "credit": True, "pr_demo": True, "briefs": True, "worth": True})  # fast-run.md, ux-quality, PR still read
         lucky = {"mode": "lucky", "kind": "change"}
         self.assertNotIn("done-run", gate.steps_for(lucky))
         self.assertIn("done-run", gate.steps_for({**lucky, "ticket_checks": True}))

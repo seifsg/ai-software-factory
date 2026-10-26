@@ -533,6 +533,9 @@ def check_done_run(run, body, project, **kwargs):
         missing += ux_audit(own, parsed) if run.get("ux_rules") else []
         problems += ([f"this run changed UI files ({', '.join(touched[:3])}): record the UX audit"]
                      if missing and touched else []) + missing
+    if run.get("worth"):
+        import fast_round
+        problems += fast_round.findings(body, project, marker, run)
     return problems + (hidden_checks(body, kwargs, run) if hidden(run) else [])
 
 def hidden(run):

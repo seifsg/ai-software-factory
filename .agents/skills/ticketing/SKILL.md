@@ -67,7 +67,7 @@ Open tickets are the backlog, kept current in every mode, autonomously unless th
 - One or more outcome sub-issues, plus the follow-ups ticket. A small change: one ticket at most. Never one per todo.
 - Do not split risky work to dodge full checks.
 - Every requested item (feature, journey, integration, behavior) maps to an outcome ticket criterion. Only the owner's recorded decision moves it to the follow-ups ticket; unavailable capability keeps it Blocked in the run.
-- Deferred items go to one open follow-ups ticket per epic (a sub-issue in Backlog, low priority), each appended with owner, reason and revisit condition; never one ticket per item. They include review findings left after round 3, owner-deferred ideas, declined or unanswered MVP suggestions and the real version of an owner-approved simplification.
+- One open low-priority Backlog follow-ups sub-issue per epic, never per item: owner, reason and revisit condition. Include findings left after round 3, owner-deferred ideas, declined/unanswered MVP suggestions and the real version of owner-approved simplifications. Scored polish uses [Finishing touches](references/finishing-touches.md) in that same ticket.
 
 ## Definition of done and checklist
 

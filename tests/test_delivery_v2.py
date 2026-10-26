@@ -50,6 +50,17 @@ class DeliveryV2Tests(unittest.TestCase):
         self.artifact("analysis")
         self.artifact("plan")
 
+    def repair(self, reason):
+        """Supply explicit scored test-double findings to the new repair contract."""
+        from speed_fixtures import finding
+        state = self.flow.load()
+        review = state.get("review")
+        if review and json.loads(Path(review["report"]).read_text(encoding="utf-8"))["findings"]:
+            return self.flow.repair(reason, selected=["F1"])
+        path = self.root / ".factory/failure-double.json"
+        atomic_json(path, {"findings": [finding()]})
+        return self.flow.repair(reason, findings=path, selected=["F1"])
+
     def receipt(self):
         evidence = self.root / ".factory" / "manual-evidence.txt"
         evidence.write_text("Synthetic observation of the fixture document. No product QA claimed.\n", encoding="utf-8")
@@ -143,7 +154,7 @@ class DeliveryV2Tests(unittest.TestCase):
         (self.root / "README.md").write_text("Changed production document", encoding="utf-8")
         with self.assertRaisesRegex(EngineError, "Current final manual"):
             self.flow.require_manual(state)
-        self.flow.repair("Correct changed implementation")
+        self.repair("Correct changed implementation")
         self.assertIsNone(self.flow.load()["manual"])
         self.assertEqual(self.flow.status()["phase"], "build")
 

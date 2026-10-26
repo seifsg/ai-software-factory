@@ -13,9 +13,9 @@ Lucky runs the Fast steps 1, 4, a short 5 and 6, 9, 10 and 11. It asks and resea
 
 One round = review, fixes, fresh review.
 
-- If at round 3 no high severity issues are found, proceed with the agreed outcome; otherwise keep going against high and critical issues until resolved.
-- Medium and below can stay open in the follow-ups ticket.
-- Hard cap: 6 rounds with high or critical unresolved. Then stop and give the owner findings per round, the shared cause and options: extend, defer, amend scope, cancel.
+- Apply [worth-it rounds](worth-it.md) before fixing. Mandatory findings keep the loop open; optional polish needs a worthwhile selection or an authorized finishing batch.
+- After round 3, authorized optional deferrals stay in the follow-ups ticket.
+- Hard cap: 6 failed rounds. Then stop and give the owner findings per round, the shared cause and options: extend, authorized deferral, amend scope, cancel.
 
 ## Factory fault
 

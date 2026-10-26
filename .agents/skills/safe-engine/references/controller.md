@@ -105,7 +105,7 @@ Amend returns to `build` (to `analyze` when the ticket scope changed) and clears
 Failed check, blocking finding or a defect found after `record implementation`:
 
 1. Classify it: product, evidence or report defect. Second related failure: find the shared cause, why the last fix failed, and what prevents recurrence.
-2. `repair --reason "<failure and cause>"`. Returns to `build`, clears checks, review and manual evidence, archives manual receipts for carrying. No numerical limit; `repairs_used` counts.
+2. `repair --reason "<failure and cause>"`, with [scored selections](worth-it.md). Returns to `build`; clears checks/review/manual proof, archives receipts for carrying. Counts repairs without limit.
 3. Fix surgically. Then `record implementation`, re-observe affected criteria, `record manual`, tests, `record batch`, `check`, review. The sealed contract stands; a protected-file or contract fix goes through `amend`.
 
 Records-only correction: `repair --records-only --reason "<defective record, why raw proof stays valid>"`. Keeps original manual and check evidence. Needs all of: profile `reuse_record_evidence: true`, sealed contract, fresh unchanged ticket, phase `review` or `ready`, intact checks, manual receipt, outputs and review report, every criterion PASS, method followed, every finding on layer `evidence` or `report` with `evidence_status: valid`.

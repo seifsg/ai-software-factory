@@ -252,7 +252,8 @@ FLAGS = {"ticket_checks": (LAYOUT, "Definition of done"), "coverage": (LAYOUT, "
          "light": (FAST_RUN, "Light lane"), "outcomes": (FAST_RUN, "what the owner can do once it is done"),
          "hidden_checks": (FAST_RUN, "**Hidden checks:**"),
          "scans": (FAST_RUN, "**Secrets:**"), "ux_rules": (UX, "| U10 |"), "pr_proof": (FAST_RUN, "`**PR:**`"),
-         "credit": (PR, "references/credit.md"), "pr_demo": (PR, "**Visual:**"), "briefs": (FAST_RUN, "**Ports:**")}
+         "credit": (PR, "references/credit.md"), "pr_demo": (PR, "**Visual:**"), "briefs": (FAST_RUN, "**Ports:**"),
+         "worth": (FAST_RUN, "**Findings:**")}
 
 
 def method_flags(bundle, project):
@@ -935,6 +936,7 @@ def main():
     rehome = sub.add_parser("rehome", parents=[common],
                             help="Owner only: bring in an open run from another machine or folder")
     rehome.add_argument("--from", dest="source", required=True, help="The folder the run's run.json records")
+    sibling("fast_round").parser(sub, common)
     sibling("fast_install").parser(sub)
     orchestrate = sub.add_parser("orchestrate", help="Set up an orchestrator to start factory sessions")
     sibling("fast_orchestrate").arguments(orchestrate)
@@ -943,6 +945,7 @@ def main():
     args = parser.parse_args()
     actions = {"start": cmd_start, "done": cmd_done, "status": cmd_status, "close": cmd_close, "rehome": cmd_rehome,
                "try": cmd_try, "view": cmd_view, "scratch": cmd_scratch,
+               "fix-round": lambda a: sibling("fast_round").run(a, sys.modules[__name__]),
                "cleanup-temp": lambda a: sibling("fast_cleanup").run(a, sys.modules[__name__]),
                "shots": lambda a: sibling("fast_shots").run(a, sys.modules[__name__]),
                "recover-baseline": lambda a: sibling("fast_baseline").recover(a, sys.modules[__name__]),
