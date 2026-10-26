@@ -224,7 +224,11 @@ def status_text(run, all_sections=None):
     if all_sections is None:
         all_sections = sibling("fast_progress").read(record_path(run["project"]))
     blocked = open_before_build(run)
-    lines = [sibling("fast_card").card(run, steps_for(run), all_sections, now(), left=True),
+    waiting = sibling("fast_wait").state(HOME, run)
+    live_wait = bool(waiting["recorded"] or waiting["problems"])
+    suppress_report = sibling("fast_wait").suppress_report(waiting, run.get("owner_report"))
+    lines = ([sibling("fast_wait").describe(waiting)] if live_wait else []) + [
+             sibling("fast_card").card(run, steps_for(run), all_sections, now(), left=True, current=suppress_report),
              f"{run['mode']} {run['kind']} run '{run['key']}' at {run['project']}"
              f" (ui={run.get('ui')}, data={run.get('data')}, auth={run.get('auth')})",
              "Gate: " + ("open, source edits allowed" if not blocked else "closed until " + ", ".join(blocked)),
@@ -232,9 +236,6 @@ def status_text(run, all_sections=None):
     lines += list(filter(None, [sibling("fast_pr_policy").notice(HOME, run)]))
     if run.get("show_first"):
         lines.append(sibling("fast_show").notice(run["project"], run))
-    waiting = sibling("fast_wait").state(HOME, run)
-    if waiting["recorded"]:
-        lines.append(sibling("fast_wait").describe(waiting))
     return "\n".join(lines)
 
 
@@ -299,8 +300,6 @@ def cmd_start(args):
     if registry_path(project).is_file():
         fail(f"Run '{home_run(project).get('key')}' is still open here; close it first (a lost one: "
              f"fast_gate.py close --project \"{project}\" --abandon \"<reason>\")")
-    archive_run(project)
-    forget_shown(project)
     product, bundle = args.kind == "product", bundle_receipt(project)
     if getattr(args, "design_port", False) and args.ui is False:
         fail("--design-port is UI work; remove --no-ui")
@@ -316,6 +315,16 @@ def cmd_start(args):
         run["done"]["analysis"] = {"at": now(), "skipped": "light lane"}
     if run.get("ux_rules") and not run["ui"]:  # only these runs later ask which UI files they changed
         run.update(sibling("fast_record").ui_start(project))
+    try:
+        imported = sibling("fast_plan_reuse").prepare(args, project, run, sys.modules[__name__])
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        fail(str(error))
+    if imported is not None and record_path(project).exists() and not (
+            store.closed_run(registry_path(project)) or ledger_path(project).exists()):
+        fail(f"Approved plan import would leave the existing work record at {record_path(project)} in place; "
+             "preserve or move that record, then retry. No run was started.")
+    archive_run(project)
+    forget_shown(project)
     setup = sibling("fast_setup")
     git_note, hooks = setup.ignore_factory(project), setup.hook_status(project)
     scratch = setup.scratch_path(HOME, run)
@@ -323,7 +332,7 @@ def cmd_start(args):
     scratch.mkdir(parents=True, exist_ok=True)  # after the state: a failed start leaves no folder behind
     record = record_path(project)
     if not record.exists():
-        record.write_text(skeleton(run), encoding="utf-8")
+        record.write_text(imported if imported is not None else skeleton(run), encoding="utf-8")
     save(registry_path(project), store.new_registration(project, args.key))
     log("run.start", key=args.key, project=str(project), mode=args.mode, kind=args.kind, bundle=run["bundle"], hooks=hooks)
     bundle = (f"{run['bundle']['root']} @ {run['bundle']['revision'][:12]}" if run["bundle"] else
@@ -350,8 +359,9 @@ def cmd_done(args):
         fail(f"Cannot read the work record: {error}")
     body = all_sections.get(TITLES[step].lower(), "")
     checked = sibling("fast_pr_policy").effective(HOME, run) if step == "handoff" else run
-    problems = (CHECKS[step](checked, body, project=project, offline=args.offline, all_sections=all_sections, runs=active_runs)
-                if body.strip() else [f"section '## {TITLES[step]}' is missing or empty"])
+    problems = [] if body.strip() else [f"section '## {TITLES[step]}' is missing or empty"]
+    problems += CHECKS[step](checked, body, project=project, offline=args.offline,
+                             all_sections=all_sections, runs=active_runs)
     if problems:
         log("step.refused", key=run["key"], step=step, problems=problems)
         fail(f"'{step}' not recorded:\n- " + "\n- ".join(problems))
@@ -926,6 +936,7 @@ def main():
                "try": cmd_try, "view": cmd_view, "scratch": cmd_scratch,
                "fix-round": lambda a: sibling("fast_round").run(a, sys.modules[__name__]),
                "checks": lambda a: sibling("fast_checks_command").run(a, sys.modules[__name__]),
+               "report": lambda a: sibling("fast_report_command").run(a, sys.modules[__name__]),
                "design": lambda a: sibling("fast_design_command").run(a, sys.modules[__name__]),
                "show": lambda a: sibling("fast_show_command").run(a, sys.modules[__name__]),
                "prove": lambda a: sibling("fast_show_command").run(a, sys.modules[__name__]),

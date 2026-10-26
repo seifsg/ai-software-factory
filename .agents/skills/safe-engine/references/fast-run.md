@@ -4,9 +4,11 @@ Steps: `research`, `kickoff`, `tickets`, `analysis`, `plan`, `design`, `schema`,
 
 Reasoned proof selection: [hidden checks](hidden-checks.md), new runs.
 
+Reuse an approved plan: [source and input checks](approved-plans.md).
+
 ## Kickoff questions
 
-After research, `product` and `feature` only. A POC asks one round; an MVP or production slice asks rounds until its launch baseline choices are decided; unanswered suggestions follow [sizes](sizes.md). Use your agent's question tool when it has one (multiple choice, recommended option first, one-line tradeoff each), else one short message. Ask only what the request leaves open:
+After research, `product`/`feature` only: one round for POC; MVP/production until launch-baseline choices are decided. Unanswered suggestions: [sizes](sizes.md). Use the question tool (choices, recommended first, one-line tradeoffs), else one short message. Ask only gaps:
 
 1. **Size:** POC (it works and does exactly what was asked), MVP (it can go live with real test users) or production slice. Ask it first; features depend on it.
 2. **Features:** every requested item is fixed, never an option. POC: ask only what the requested items leave open; extra ideas go to the epic's follow-ups ticket. MVP: offer the researched launch gaps and extra features with their evidence, up to four per question.
@@ -42,7 +44,7 @@ New runs record `**Findings:** none` or final scored JSON at done-run; use [fix 
 | Design | ≥4 `#RRGGBB` hex colors, `**UI kit:**`, `**Font:**`, `**Logo:**`, `**Icons:**`, `**Layout:**`, `**Theme:**` naming light mode, `**Journeys:**` with counts and a minimum (`<journey>: 2 actions, 1 load, min 2`), `**Map:**`, `**Hierarchy:**` naming primary actions, `**Labels:**` |
 | Schema | a 3-option table, `**Chosen:**`, a fenced ERD or DDL |
 | Build log | one line per plan todo, starting with its ID: `- T1 pre: … do: … post: …`; `**Now:** T2 T3` names the todos in progress; `**Try:** T1 cmd\|url\|file <target>` lines come only from `try`, never by hand |
-| Done-run | ≥1 `PASS` line from using it (on UI runs, lines naming a rule and the judge line do not count), `**Logs:**`; UI runs and runs that create, edit or delete UI files in their project also ≥1 existing screenshot path under `.factory/fast/shots/`, one verdict line per rule `U1` to `U10` (`- U3 PASS <screens checked>: <evidence>`; N/A and UNKNOWN with the reason; no FAIL, FAILS or FAILED left in a verdict, the lines under it or any line naming the rule, except in a contested UNKNOWN) and `**UX judge:**` naming the fresh agent that wrote them; a run sized MVP or production also `**Secrets:**`, `**Dependencies:**`, `**Static:**` (tool, command, result; [product bar](product-bar.md#security)); legacy product/feature runs a `**Hidden checks:**` block up to the next label, only entries `#2 A1: PASS`, on current methods also `#2 A1: DEFERRED (owner: <why>)` or `(hardware: <why>)` (a note only after it in parentheses), one per line or comma-separated; any other line or a FAIL is refused; online, every criterion of each listed ticket not Blocked, Backlog or not planned needs its PASS or DEFERRED (an epic another run owes: none); offline, ≥1 entry |
+| Done-run | ≥1 `PASS` line from using it (on UI runs, lines naming a rule and the judge line do not count), `**Logs:**`; UI runs and runs that create, edit or delete UI files in their project also ≥1 existing screenshot path under `.factory/fast/shots/`, one verdict line per rule `U1` to `U10` (`- U3 PASS <screens checked>: <evidence>`; N/A and UNKNOWN with the reason; no explicit FAIL verdict; quoted failure words do not change the verdict; one final verdict per rule) and `**UX judge:**` naming the fresh agent that wrote them; a run sized MVP or production also `**Secrets:**`, `**Dependencies:**`, `**Static:**` (tool, command, result; [product bar](product-bar.md#security)); legacy product/feature runs a `**Hidden checks:**` block up to the next label, only entries `#2 A1: PASS`, on current methods also `#2 A1: DEFERRED (owner: <why>)` or `(hardware: <why>)` (a note only after it in parentheses), one per line or comma-separated; any other line or a FAIL is refused; online, every criterion of each listed ticket not Blocked, Backlog or not planned needs its PASS or DEFERRED (an epic another run owes: none); offline, ≥1 entry |
 | Handoff | `**Run:**`, `**Statuses:**` (each owned ticket's final status), `**Unverified:**`, `**Follow-ups:**`; current methods also `**Deferred:**` (`none`, or every deferred item, naming each DEFERRED hidden check), and an unticked checklist item ending `DEFERRED (owner|hardware: <why>)` is not open; sign-in runs `**Dev sign-in:**`; online, each listed ticket not Blocked, Backlog or not planned (label or board status) is fully ticked (an epic another run owes: only the items this run's todos lead), with an item naming each criterion, every plan todo an item and every R-id not marked owner-deferred named by a criterion; `**PR:**` with the draft PR's URL; its body (`how-to-make-a-pr`) ends with the factory credit line and has a heading naming Before and after, under it one heading per outcome that is not a file or path, each with `**Before:**` then `**After:**` (each followed by an image, a recording or a fenced block; Before may say "did not exist") or one `**Before → After:**` or `\| Before \| After \|` table with a `diff` block (`-` or `+` lines beside other lines) or two images; image and video links `https`, not localhost; on current methods each outcome declares Visual and Journey (yes, or no with a reason): a visual needs distinct before/after screenshots, a journey a Video link, unless an explicitly scoped owner media waiver covers it; UI runs need a visual outcome. The gate checks declarations and link structure, not full coverage, playable media or waiver authority |
 
 An epic's checklist (a change: its ticket's) holds integration todos (`T<n>`-led items naming its criteria), each another run's: who owes it, [gate details](gate-details.md#owed-epic).
@@ -103,8 +105,10 @@ python fast_gate.py shots --base <ref> --serve "<dev command, {port} for its por
 
 ## Progress
 
+Use [plain owner reports](owner-reports.md) for coordinator updates.
+
 - `start`, `done`, `status`, `pause`, `resume` and `close` print the card first. Hooks show unseen cards, built todos and new NOW once ([details](gate-details.md#progress-internals)); delegates emit nothing until the next main-thread call.
-- Relay cards only when hooks show none (factory `docs/hosts.md`). Never repeat shown cards.
+- Relay unseen cards only; host display support: the factory's `docs/hosts.md`.
 
 ## Live view
 

@@ -21,7 +21,7 @@ All JSON is inside the project, normally ignored `.factory/`. `show --plan` free
 
 `viewports` optionally sets `desktop:[1280,800]` and `phone:[390,844]` (defaults); phone must be narrower. Each pair uses its planned size.
 
-`show --prepare` takes `version:1`, `candidate` and `screens`. One row per surface/theme/device combination, each with a unique `id`, `surface`, `theme` (`light`/`dark`), `device` (`desktop`/`phone`), `viewport:[width,height]`, `state`, matching `reference_state`, PNG `reference` and `capture` paths, one-line `description`, and `inspected:true` only after inspecting both. A design-port run also includes every frozen design screen under its original ID/reference. Header validation cannot detect blank or misleading images.
+`show --prepare` takes `version:1`, `candidate` and `screens`. One row per surface/theme/device combination, each with a unique `id`, `surface`, `theme` (`light`/`dark`), `device` (`desktop`/`phone`), `viewport:[width,height]`, `state`, matching `reference_state`, PNG `reference` and `capture` paths, one-line `description`, and `inspected:true` only after inspecting both. A design-port run also includes every frozen design screen under its original ID/reference. Pixel checks refuse blank images, not misleading content.
 
 `show --shared` takes `channel` (`chat`/`tool`/`url`), actual `source`, `sent:true` and `images_accessible:true`. Verify these facts first. URL sources use HTTPS; local files may be shown through the host's actual owner-visible image tool, with that tool result as source. The gate cannot prove delivery.
 

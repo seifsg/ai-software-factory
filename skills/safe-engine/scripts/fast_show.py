@@ -20,6 +20,29 @@ def integer(value, name, low, high):
     return value
 
 
+def suite_inputs(value):
+    """Normalize declared inputs and report invalid plans through the start command's error type."""
+    from fast_lane import runtime
+    suites = runtime("suites")
+    try:
+        return suites.inputs(value)
+    except suites.EngineError as error:
+        raise ValueError(str(error)) from error
+
+
+def suite_plan(data):
+    """Normalize non-UI obligations without importing or running any proof."""
+    evidence.require(isinstance(data, dict), "suite_plan needs an object")
+    evidence.require(type(data.get("version")) is int and data["version"] == 1, "Suite plan needs version 1")
+    command = data.get("full_suite")
+    evidence.require(isinstance(command, list) and 0 < len(command) <= 100, "full_suite needs an argv list")
+    result = {"full_suite": [evidence.text(arg, "suite argument") for arg in command],
+              "timeout_seconds": integer(data.get("timeout_seconds", 1800), "timeout_seconds", 1, 86400)}
+    if "suite_inputs" in data:
+        result["suite_inputs"] = suite_inputs(data["suite_inputs"])
+    return result
+
+
 def plan(data):
     """Freeze changed surfaces, the exact suite and the configured owner-response window."""
     evidence.require(type(data.get("version")) is int and data["version"] == 1, "Show plan version must be 1")
@@ -38,8 +61,7 @@ def plan(data):
             "wait_minutes": integer(data.get("wait_minutes", 30), "wait_minutes", 0, 1440),
             "timeout_seconds": integer(data.get("timeout_seconds", 1800), "timeout_seconds", 1, 86400)}
     if 'suite_inputs' in data:
-        from fast_lane import runtime
-        result['suite_inputs'] = runtime('suites').inputs(data['suite_inputs'])
+        result['suite_inputs'] = suite_inputs(data['suite_inputs'])
     return result
 
 

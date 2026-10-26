@@ -94,13 +94,13 @@ The owner names `lucky`, `verify` or `promote`: [run cases](references/run-cases
 
 ## Keep the owner posted
 
-The owner sees where the run is without asking: one short line per event, never a play-by-play of tool calls.
+Use [plain owner reports](references/owner-reports.md); report events, not tool calls.
 
 - Fast and Lucky: the gate shows [progress](references/fast-run.md#progress); give the [live view](references/fast-run.md#live-view) link once per run; `fast_gate.py try` for each usable result.
-- Before a wave or slow work (subagents, research, test suites, builds): one line, who does what; one result line when it returns.
+- Before slow work: who does what; report its result.
 - Waiting on the owner: the question first, then the options.
 - Asked for status: the `fast_gate.py status` card; in Safe, the same card from the controller's `status`.
-- Mirror steps and todos in your agent's task list once per wave, alongside other tool calls.
+- Mirror steps and todos in the agent task list once per wave.
 - The final report carries the `close` card. The owner's call for more or fewer updates binds the run.
 - Orchestrator-started: no one watches the chat; follow the [orchestrated run](references/orchestrated-run.md).
 

@@ -3,12 +3,11 @@ import copy
 import json
 import os
 from pathlib import Path
-import struct
 import subprocess
 import sys
 import tempfile
 import unittest
-import zlib
+from png_fixtures import png
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ROOT / "skills/safe-engine/scripts"
@@ -18,14 +17,6 @@ import fast_install
 import fast_ledger as ledger
 import fast_record
 import fast_show as show
-
-
-def png(path, width, color=0):
-    """Tiny real PNGs exercise byte and viewport checks without a rendering dependency."""
-    def chunk(kind, body):
-        return struct.pack(">I", len(body)) + kind + body + struct.pack(">I", zlib.crc32(kind + body))
-    path.write_bytes(b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", width, 1, 8, 2, 0, 0, 0))
-                     + chunk(b"IDAT", zlib.compress(bytes([0] + [color, 0, 0] * width))) + chunk(b"IEND", b""))
 
 
 class ShowFixture(unittest.TestCase):
@@ -38,13 +29,13 @@ class ShowFixture(unittest.TestCase):
         (self.project / ".gitignore").write_text(".factory/\n")
         (self.project / "source.txt").write_text("candidate A\n")
         (self.project / ".factory/fast").mkdir(parents=True)
-        for device, width in (("desktop", 2), ("phone", 1)):
+        for device, width in (("desktop", 64), ("phone", 48)):
             png(self.project / f".factory/{device}.png", width)
         self.plan = {"version": 1, "surfaces": [{"id": "home", "name": "Home"}],
                      "full_suite": [sys.executable, "-c", "from pathlib import Path; "
                         "p=Path('.factory/invocations'); p.write_text(p.read_text()+'run\\n' if p.exists() else 'run\\n'); "
                         "raise SystemExit(3 if Path('.factory/fail').exists() else 0)"],
-                     "viewports": {"desktop": [2, 1], "phone": [1, 1]}, "wait_minutes": 0, "timeout_seconds": 10}
+                     "viewports": {"desktop": [64, 32], "phone": [48, 32]}, "wait_minutes": 0, "timeout_seconds": 10}
         self.state = {"version": 1, "key": "show-test", "project": str(self.project), "mode": "fast", "kind": "change",
                       "ui": True, "show_first": True, "light": True, "closed": False, "paused": None,
                       "created": "2020-01-01T00:00:00+00:00", "request": "Show fixture", "tickets": [],
@@ -186,7 +177,7 @@ class ShowCommandTests(ShowFixture):
         self.shown()
         self.cli("prove", "--suite")
         original = ledger.load(ledger.state_path(self.entry))["show"]["proof"]
-        png(self.project / ".factory/phone.png", 1, color=20)
+        png(self.project / ".factory/phone.png", 48, color=20)
         self.shown()
         state = ledger.load(ledger.state_path(self.entry))
         self.assertEqual(state["show"]["proof"], original)

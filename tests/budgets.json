@@ -1,5 +1,6 @@
 {
   "methods": {
+    ".agents/skills/safe-engine/references/approved-plans.md": 5400,
     ".agents/skills/analyze-start/SKILL.md": 1400,
     ".agents/skills/database-schema/SKILL.md": 6500,
     ".agents/skills/deep-review/SKILL.md": 10200,
@@ -59,6 +60,7 @@
     ".agents/skills/safe-engine/references/hidden-checks.md": 3800,
     ".agents/skills/safe-engine/references/playwright.md": 1900,
     ".agents/skills/safe-engine/references/waiting.md": 2200,
+    ".agents/skills/safe-engine/references/owner-reports.md": 2100,
     ".agents/skills/safe-engine/references/affected-checks.md": 1000
   },
   "gate": {

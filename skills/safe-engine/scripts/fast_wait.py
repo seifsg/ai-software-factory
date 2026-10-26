@@ -105,14 +105,15 @@ def completion(data, item):
     return {**data, "source": word(data["source"], "completion source")}
 
 
-def terminal(directory, item):
+def terminal(directory, item, include_at=False):
     path = directory / (item["generation"] + ".terminal.json")
     if not path.exists():
         return None
     value = read(path)
     require("at" in value, "Completion timestamp missing")
-    instant(value["at"])
-    return completion({key: value[key] for key in value if key != "at"}, item)
+    at = instant(value["at"])
+    result = completion({key: value[key] for key in value if key != "at"}, item)
+    return {**result, "at": at} if include_at else result
 
 
 def add(home, run, data):
@@ -148,7 +149,7 @@ def finish(home, run, data):
 
 def state(home, run, session=None, observations=None):
     """A bad, stale or unsupported observation cannot grant a quiet wait."""
-    result = {"recorded": False, "pending": [], "finished": [], "problems": []}
+    result = {"recorded": False, "pending": [], "finished": [], "problems": [], "latest_completed_at": None}
     if run.get("closed") or run.get("paused"):
         return result
     try:
@@ -159,9 +160,10 @@ def state(home, run, session=None, observations=None):
             item = pending(path, run)
             if session is not None and item["coordinator"] != session:
                 continue
-            done = terminal(directory, item)
+            done = terminal(directory, item, include_at=True)
             if done is not None:
                 result["finished"].append(f"{item['name']} ({done['status']})")
+                result["latest_completed_at"] = max(result["latest_completed_at"] or done["at"], done["at"])
             elif any(isinstance(seen, dict) and seen.get("id") == item["job"]
                      and (not seen.get("run") or seen.get("observer") or seen.get("persistent")
                           or seen.get("type") not in hosts.WAKERS)
@@ -176,6 +178,19 @@ def state(home, run, session=None, observations=None):
     except (OSError, ValueError, KeyError, TypeError) as error:
         result["problems"].append(f"Wait state unknown: {error}")
     return result
+
+
+def suppress_report(waiting, report):
+    """Hide directions while work is pending or until a newer report follows completion."""
+    if waiting["pending"] or waiting["problems"]:
+        return True
+    completed = waiting["latest_completed_at"]
+    if completed is None:
+        return False
+    try:
+        return instant((report or {}).get("at")) <= completed
+    except (ValueError, TypeError):
+        return True
 
 
 def describe(value):

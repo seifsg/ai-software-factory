@@ -83,15 +83,7 @@ def run(args, gate):
                 evidence.require(not state.get('ui') and 'plan' not in state['done'] and not state.get('suite'),
                                  'Declare the non-UI suite once before done plan; UI uses show --plan')
                 data = evidence.read(evidence.local(project, args.plan))
-                from fast_lane import runtime
-                evidence.require(type(data.get('version')) is int and data['version'] == 1,
-                                 'Suite plan needs version 1')
-                command = data.get('full_suite')
-                evidence.require(isinstance(command, list) and 0 < len(command) <= 100, 'full_suite needs an argv list')
-                state['suite'] = {'plan': {'full_suite': [evidence.text(a, 'suite argument') for a in command],
-                    'timeout_seconds': show.integer(data.get('timeout_seconds', 1800), 'timeout_seconds', 1, 86400),
-                    **({'suite_inputs': runtime('suites').inputs(data['suite_inputs'])}
-                       if 'suite_inputs' in data else {})}}
+                state['suite'] = {'plan': show.suite_plan(data)}
                 gate.put(project, state)
                 print('Full suite plan recorded')
                 return

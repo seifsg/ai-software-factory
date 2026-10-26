@@ -19,6 +19,8 @@ Coding agents jump straight to code. They skip the research, forget the ticket, 
 
 The factory **enforces** the process. Hooks block source edits until the ticket, analysis and plan are recorded. Every run ends in a draft pull request with before/after proof and a list of what is still unverified. You merge.
 
+Plain progress reports show per-ticket spend, worth and checked pictures: [report command](docs/owner-reports.md).
+
 ## ⚡ Quick start
 
 **You need:**
@@ -53,6 +55,8 @@ Optional polish is scored and collected in the epic's existing **Finishing touch
 ## 🎬 What a run looks like
 
 New runs use `fast_gate.py checks` to record reasoned hidden-check selection, actual runtime names and parsed/executed proof. Visual-only ports keep likeness plus the suite. See [hidden checks](docs/hidden-checks.md).
+
+An approved plan can start with `fast_gate.py start --from-plan <link> --plan-record <project-local.json>` plus the normal run flags. The gate validates current inputs and tickets before reusing planning, including the current suite declaration; design, schema, Show, proof and draft PR obligations remain. See [approved plans](docs/approved-plans.md) for the bounded snapshot and complete record diagnostics.
 
 Browser journeys use a fixed instant and timezone before navigation. Declare their source files and run `node skills/safe-engine/scripts/journey_clock_lint.mjs <manifest.json>`; see [fixed browser time and affected tests](docs/journey-clock.md).
 

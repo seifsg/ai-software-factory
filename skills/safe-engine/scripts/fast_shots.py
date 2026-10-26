@@ -228,6 +228,8 @@ def shoot(browser, url, size, work, target):
             raise RuntimeError(f"Browser profile cleanup failed: {left}")
     if not target.is_file() or not target.stat().st_size:
         raise RuntimeError(f"no screenshot of {url}")
+    import fast_image
+    fast_image.check(target)
     return target
 
 

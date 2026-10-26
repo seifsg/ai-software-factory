@@ -142,7 +142,7 @@ class ProofTests(unittest.TestCase):
         rec, run = record(), {"kind": "change", "pr_proof": True}
         url = "https://github.com/acme/site/pull/7"
         check = lambda text, **kw: rec.check_handoff(run, text, all_sections={}, **{"offline": None, **kw})
-        self.assertIn("needs a '**PR:**' line", check(HANDOFF.replace("**PR:** {}\n", ""))[0])
+        self.assertIn("needs a '**PR:** <value or evidence>' line", check(HANDOFF.replace("**PR:** {}\n", ""))[0])
         self.assertEqual(rec.check_handoff({"kind": "change"}, HANDOFF.replace("**PR:** {}\n", ""), offline=None,
                                            all_sections={}), [])  # runs on older methods keep the old check
         with patch.object(rec, "gh", return_value=HEAD + PAIR) as gh:

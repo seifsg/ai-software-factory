@@ -9,11 +9,14 @@ For every release:
 
 ## Next version
 
+- Update installed launchers after release to accept `start --from-plan` and `--plan-record`. Existing runs keep their pins. Reuse requires a source-verified approved snapshot and readable current tickets; old proof receipts never transfer. Record refusals now collect independent problems, and quoted FAIL text no longer overrides an explicit verdict. See [approved plans](docs/approved-plans.md).
+
 After release, update launchers for `prove --plan` and `prove --suite --fresh`. New Fast plans declare their suite before plan completion; explicit `suite_inputs` enables reuse. New Safe states adopt the shared complete-suite queue automatically. Existing runs keep their saved policy and bundle. See [complete suites](docs/suite-checks.md).
 
 Journey checks should import the resolved bundle's fixed-clock helper, declare an explicit instant/timezone and list their files in the journey lint manifest. Update new plans with an affected-test command and mapping; complete suites still wait for Prove. Existing active pins stay unchanged. See [fixed browser time](docs/journey-clock.md).
 
 - New Fast/Lucky runs record `checks --plan` before plan and current check receipts before completion. Existing runs retain their prior checks. After release update launchers for `checks`; keep active bundles pinned. See [hidden checks](docs/hidden-checks.md).
+- New report publication checks picture content. Convert palette/interlaced/animated images to static 8-bit RGB/RGBA PNGs and inspect the result. Install updated launchers for `report`; supply honest per-ticket metrics or unavailable reasons. Existing saved reports are not fabricated from session totals.
 
 - Worth-it rounds: update the installed launchers to obtain `fix-round`; new Fast/Lucky runs record `**Findings:** none` or their final scored report path. New complete-cycle Safe runs require worth fields and explicit repair selections. Existing saved runs keep their prior checks/schema. Do not upgrade an active run's pinned bundle. See [worth-it rounds](docs/worth-it.md).
 

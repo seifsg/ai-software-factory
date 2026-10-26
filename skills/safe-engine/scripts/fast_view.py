@@ -17,6 +17,7 @@ HERE = Path(__file__).resolve().parent
 if str(HERE) not in sys.path:
     sys.path.insert(0, str(HERE))  # loaded by file path (tests): find the sibling modules
 import fast_card as card  # noqa: E402 - the chat card's facts, so chat and view always agree
+import fast_wait  # noqa: E402 - the gate's recorded helper state outranks the last report
 import fast_progress as facts  # noqa: E402
 import fast_view_model as model  # noqa: E402
 from fast_view_scope import scope_for, project_state, route, identity_stamp, VERSION as SCOPE_VERSION  # noqa: E402
@@ -114,20 +115,88 @@ def events_of(old, new, todos, now_ms):
     return ((old.get("events") or []) + fresh)[-EVENTS:]
 
 
-def shot(folder, project, vid, n, value):
+def shot(folder, project, vid, n, value, accepted=None):
     """A screenshot inside the run's shots folder, copied into the view folder when new or changed; its page path."""
     source = Path(project, value).resolve()
     if not SHOT.search(value) or not str(source).startswith(str(Path(project, ".factory", "fast", "shots").resolve()) + os.sep):
         return None
     name = f"{vid}-T{n}{source.suffix.lower()}"
     try:
+        if accepted and str(source) in accepted:
+            import fast_design
+            digest, thumb = accepted[str(source)]
+            return thumb if thumb and fast_design.file_hash(source) == digest else None
+        import fast_image
+        fast_image.check(source)
         target = folder / "shots" / name
         if not target.exists() or target.stat().st_mtime_ns < source.stat().st_mtime_ns:  # a retaken screenshot
             target.parent.mkdir(exist_ok=True)
             shutil.copyfile(source, target)
         return f"shots/{name}"
-    except OSError:
+    except (OSError, ValueError):
         return None
+
+
+def owner_report(folder, project, key, run):
+    """Project accepted reports and immutable checked pictures, never expose arbitrary paths."""
+    import fast_design, fast_report
+    report = run.get("owner_report")
+    if not report:
+        return None
+    result = {"at": report["at"], "items": []}
+    for index, item in enumerate(report["items"]):
+        row = {**item}
+        if picture := item.get("picture"):
+            row["picture"] = {"caption": picture["caption"]}
+            try:
+                source = fast_report.checked_picture(picture, project)
+                name = f"{key}-report-{index}-{picture['sha256'][:16]}.png"
+                target = folder / "shots" / name
+                target.parent.mkdir(exist_ok=True)
+                if not target.exists() or fast_design.file_hash(target) != picture["sha256"]:
+                    shutil.copyfile(source, target)
+                fast_design.require(fast_design.file_hash(target) == picture["sha256"], "Picture changed during projection")
+                row["picture"]["thumb"] = "shots/" + name
+            except (OSError, ValueError) as error:
+                row["picture"]["error"] = str(error)
+        result["items"].append(row)
+    return result
+
+
+def show_pictures(folder, project, key, run):
+    """Show accepted captures only while the candidate and every shown image retain their identities."""
+    import fast_design
+    report = (run.get("show") or {}).get("report") or {}
+    if not report.get("screens"):
+        return []
+    try:
+        if report.get("candidate") != fast_design.candidate(project):
+            return []
+        artifact = fast_design.local(project, report["path"])
+        fast_design.require(fast_design.file_hash(artifact) == report["sha256"], "Show report changed")
+        sources = []
+        for screen in report["screens"]:
+            capture = screen["capture"]
+            source = fast_design.local(project, capture["path"])
+            fast_design.require(fast_design.file_hash(source) == capture["sha256"], "Show capture changed")
+            sources.append((screen, capture, source))
+    except (OSError, ValueError, KeyError, TypeError):
+        return []
+    names = {s["id"]: s["name"] for s in (run.get("show") or {}).get("plan", {}).get("surfaces", [])}
+    pictures = []
+    for screen, capture, source in sources:
+        try:
+            name = f"{key}-show-{screen['id']}-{capture['sha256'][:16]}.png"
+            target = folder / "shots" / name
+            target.parent.mkdir(exist_ok=True)
+            if not target.exists() or fast_design.file_hash(target) != capture["sha256"]:
+                shutil.copyfile(source, target)
+            fast_design.require(fast_design.file_hash(target) == capture["sha256"], "Show capture changed during projection")
+            pictures.append({"thumb": "shots/" + name,
+                             "caption": " · ".join((names.get(screen["surface"], screen["surface"]), screen["theme"], screen["device"]))})
+        except (OSError, ValueError, KeyError, TypeError):
+            return []
+    return pictures
 
 
 class Lock:
@@ -209,8 +278,20 @@ def write(folder, project, run, steps, sessions=0, agents=None, now_ms=None, vid
         "doneIds": [t["id"] for t in todos if t["state"] == "done"],
         "tasks": todos, "tickets": model.tickets(sections, v), **model.metadata(sections),
     }
+    view["ownerReport"] = owner_report(folder, project, key, run)
+    waiting = fast_wait.state(folder.parent, run)
+    view["helperWait"] = {**waiting, "message": fast_wait.describe(waiting),
+                          "suppressReport": fast_wait.suppress_report(waiting, run.get("owner_report"))} if waiting["recorded"] or waiting["problems"] else None
+    accepted = {str(Path(item["picture"]["path"]).resolve()):
+                (item["picture"]["sha256"], row["picture"].get("thumb"))
+                for item, row in zip((run.get("owner_report") or {}).get("items", []),
+                                     (view["ownerReport"] or {}).get("items", [])) if item.get("picture")}
     tried = [t for t in todos if t["state"] == "done" and t.get("kind")]
-    thumbs = {t["id"]: shot(folder, project, key, t["id"][1:], t["value"]) for t in tried if t["kind"] == "file"}  # copies stay out of the lock
+    thumbs = {t["id"]: shot(folder, project, key, t["id"][1:], t["value"], accepted) for t in tried if t["kind"] == "file"}  # copies stay out of the lock
+    view["pictures"] = [{"thumb": thumbs[t["id"]], "caption": t["result"] or t["title"]}
+                        for t in tried if thumbs.get(t["id"])]
+    if not view["ownerReport"] and not view["pictures"]:
+        view["pictures"] = show_pictures(folder, project, key, run)
     with Lock(folder):
         state = read(folder / "state.json", {}) or {}
         runs = {r["key"]: r for r in state.get("runs") or [] if isinstance(r, dict) and "key" in r}
@@ -284,6 +365,12 @@ def try_problem(project, sections, n, kind, value):
         target = Path(project, value).resolve()
         if not str(target).startswith(str(Path(project).resolve()) + os.sep) or not target.is_file():
             return f"{value} is not a file inside {project}"
+        if SHOT.search(value):
+            try:
+                import fast_image
+                fast_image.check(target)
+            except (OSError, ValueError) as error:
+                return str(error)
     return None
 
 

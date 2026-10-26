@@ -7,14 +7,18 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 ## [Unreleased]
 
 ### Added
+- Validated approved-plan starts with `--from-plan`/`--plan-record`, explicit verdict-field checks and accumulated record diagnostics (#163).
+
 - Complete-suite input declarations, evidence reuse and a machine-wide queue; fixed browser-clock helpers, declared journey-time lint and affected-test feedback after manual use (#158).
 - Reasoned hidden-check selection, pasted checker briefs, syntax/execution receipts and scoped browser trap helpers (#159).
+- Plain owner reports with explicit per-ticket spend and estimates, body-code lint, latest pictures in the live view, and bounded PNG content checks before publication.
 - UI Look/Show/Prove/Ship checkpoint with current paired pictures, recorded sharing and owner feedback/deadlines before the declared suite (#154).
 - Quiet helper waits with immutable generation/completion receipts, named pending work and per-run Stop reconciliation.
 - Owned lane start/stop/status, short browser profiles, explicit cache adapters and helper working-directory verification.
 
 ### Changed
 
+- Current helper receipts take priority over stale report directions; reports published after completion restore the next action. Approved non-UI planning retains the required suite declaration without importing execution proof.
 - Combined factory commands retain selected-bundle routing, with lazy CLI registration split from the hook path to keep the gate small.
 - Worth-it repairs (#157): bounded finding scores prioritize optional polish, Fast/Lucky and new Safe runs validate selected fixes, authorized Finishing touches batches reuse the epic's existing follow-ups, and parked reports explain what waits without weakening mandatory quality or owner authority.
 - New runs (#160): automatic project selections refresh to the newest verified immutable bundle; active, explicit and legacy-unknown pins stay intact. Start reports selected/latest versions and failed newer releases, and project commands/hooks follow the selected gate.
