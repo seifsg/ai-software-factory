@@ -7,6 +7,7 @@ import sys
 import unittest
 
 from test_fast_gate import GateHarness, GATE, LIGHT, PR_BODY, module
+from bundle_fixtures import legacy_bundle, offline_gate
 
 
 class PrPolicyTests(GateHarness, unittest.TestCase):
@@ -16,10 +17,10 @@ class PrPolicyTests(GateHarness, unittest.TestCase):
         shutil.copytree(GATE.parents[3] / ".agents/skills/how-to-make-a-pr", self.skill)
         self.method = self.skill / "SKILL.md"
         self.home = Path(self.env["SAFE_ENGINE_HOME"])
-        old = self.root / "old-bundle"
-        old.mkdir()
+        self.bundle = legacy_bundle(self.root / "old-bundle")
+        self.gate_command = offline_gate()
         (self.project / ".factory").mkdir()
-        (self.project / ".factory/entry-bundle.json").write_text(json.dumps({"bundle_root": str(old), "revision": "old"}))
+        (self.project / ".factory/entry-bundle.json").write_text(json.dumps(self.bundle))
 
     def state(self):
         return next((self.home / "runs").glob("*.json"))
@@ -73,7 +74,8 @@ class PrPolicyTests(GateHarness, unittest.TestCase):
         self.gate("close", "--abandon", "fixture done")
         self.start(kind="change")
         run = json.loads(self.state().read_text())
-        self.assertEqual((run["pr_proof"], run["pr_demo"], run["bundle"]["revision"]), (True, True, "old"))
+        self.assertEqual((run["pr_proof"], run["pr_demo"], run["bundle"]["revision"]),
+                         (True, True, self.bundle["revision"]))
         self.assertIn("new-run snapshot", self.adopt())
         second = self.root / "next-policy"
         shutil.copytree(self.skill, second)

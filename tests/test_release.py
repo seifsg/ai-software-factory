@@ -17,6 +17,7 @@ from unittest import mock
 import safe_engine
 from safe_engine import distribution as release
 from safe_engine.workflow import resumable
+from bundle_fixtures import legacy_bundle, offline_gate
 
 ROOT = Path(__file__).resolve().parents[1]
 GATE = ROOT / "skills/safe-engine/scripts/fast_gate.py"
@@ -330,11 +331,11 @@ class GateTests(unittest.TestCase):
         project = self.root / "project"
         project.mkdir()
         git(project, "init", "-q")
-        bundle = {"version": 1, "bundle_root": str(ROOT), "revision": "0" * 40}
+        bundle = legacy_bundle(self.root / "bundle")
         (project / ".factory").mkdir()
         (project / ".factory" / "entry-bundle.json").write_text(json.dumps(bundle), encoding="utf-8")
         (project / "request.md").write_text("Fix one thing.\n", encoding="utf-8")
-        start = run(GATE, "start", "--project", project, "--key", "card", "--kind", "change",
+        start = run(*offline_gate()[1:], "start", "--project", project, "--key", "card", "--kind", "change",
                     "--request-file", project / "request.md", env=self.env)
         line = f"Version: {VERSION} (stable); run bundle {VERSION}"
         self.assertIn(line, start.stdout, start.stderr)

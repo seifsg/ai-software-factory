@@ -9,7 +9,7 @@ This folder only launches the factory; the methods live in the factory bundle. A
 
 ## Requirements
 
-Git and Python 3.9+, found by full path (`python3`, `python` or the platform launcher). Missing or too old: install from the official source with the platform's package manager, user scope when possible, asking first if your agent requires it; report what you installed. No credentials in commands.
+Find Git and Python 3.9+ by full path. Missing or old: install from official sources, user scope where possible, with any required approval; report it. No credentials in commands.
 
 ## Select the bundle
 
@@ -20,20 +20,21 @@ Git and Python 3.9+, found by full path (`python3`, `python` or the platform lau
 python scripts/resolve_bundle.py --entrypoint safe-engine --project <absolute-target>
 ```
 
-3. A new project gets a pinned checkout of the newest verified factory release (main on the edge channel or before the first release) in `~/.safe-engine/bundles/<commit>`, recorded in `.factory/entry-bundle.json`. A project with a selection resumes it offline. `--ref <vX.Y.Z, branch or full-sha>` pins a new selection, never upgrading an existing one. `--bundle <absolute-factory-root>` inspects a given checkout.
-4. Check the returned root, revision, dirty status and entrypoint. Failure: diagnose; never edit a selected bundle.
+3. New projects select the newest verified release (main on edge or before any release), cached by commit. For a new run add `--new-run`: only automatic selections without open or unknown state refresh. Resume omits it and stays offline.
+4. `--ref <tag, branch or full-sha>` or `--bundle <absolute-factory-root>` records an explicit pin. Older receipts without pin provenance stay pinned. Never edit a receipt to unpin it.
+5. Check the returned root, revision, entrypoint and notice. Failed latest checks name the retained version; rejected newer releases stay visible when an older one verifies. Never edit a selected bundle.
 
 ## Run
 
-Before a new run in any mode, run `python scripts/fast_gate.py pr-proof-method` beside this entry. It verifies the owner's optional PR-policy default and prints its method path and digest.
+Before a new run, run `python scripts/fast_gate.py pr-proof-method` beside this entry to verify the owner's optional PR policy.
 
-- Selected: record both in the run plan, read that method now and use it for PR proof instead of the bundle's older PR method. All other methods stay pinned.
+- Selected: record its path and digest in the plan, read and use it for PR proof. Other methods stay pinned.
 - No override: the selected bundle's method.
 - A failed lookup blocks dependent proof work; diagnose it.
 - Resumed runs keep their recorded PR method; gate status, not a later default, names an active Fast or Lucky adoption.
 
 1. Read the returned `entrypoint` (`.agents/skills/safe-engine/SKILL.md`) fully; follow it from the bundle against the target.
-2. Fast and Lucky: start the gate, `scripts/fast_gate.py` beside this file, after the resolver and before research.
+2. Fast and Lucky: `scripts/fast_gate.py start` checks freshness and runs the selected gate. If selection changed, read that entrypoint before proceeding. Project commands and hooks keep the active gate. Receipt-less bare starts are legacy use, with no freshness guarantee.
 3. Read each method the entrypoint names when its step starts.
 4. Safe runs the controller from the bundle root, as the entrypoint's controller reference describes.
 

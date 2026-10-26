@@ -4,8 +4,14 @@ What installs and active runs must do for each release, newest first. What chang
 
 For every release:
 
-- **Pinned projects never change.** Each keeps the factory commit its `.factory/entry-bundle.json` names, including active runs. To move a project to a newer release, ask `improve-factory Switch [absolute project directory] to the newest factory.`; it checks the run is compatible first.
+- **Active and explicit pins never change automatically.** Ask `improve-factory` for a compatible pin change; never edit a selected bundle or receipt.
 - **Check what you run:** `fast_gate.py version` names the version, commit, channel and route; `fast_gate.py verify` lists every file that differs from the release manifest.
+
+## Next release
+
+- Reinstall the launchers/hooks to enable new-run selection and selected-gate routing. Existing active runs retain their bundle and recorded behavior.
+- New automatic receipts refresh at the next start, or with `resolve_bundle.py --project <dir> --new-run`. Resume omits `--new-run` and remains offline. Explicit selections and existing v1 receipts retain their pin; v1 has no trustworthy pin provenance and is never automatically migrated.
+- Latest-check failures name the version retained. An unknown latest is not a successful check. Read a newly selected entrypoint before continuing the run. Bare-gate starts without a receipt remain legacy use.
 
 ## 1.0.0
 

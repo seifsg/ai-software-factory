@@ -67,6 +67,7 @@
     "skills/safe-engine/scripts/fast_baseline.py",
     "skills/safe-engine/scripts/fast_hints.py",
     "skills/safe-engine/scripts/fast_gate.py",
+    "skills/safe-engine/scripts/fast_entry.py",
     "skills/safe-engine/scripts/fast_guard.py",
     "skills/safe-engine/scripts/fast_hosts.py",
     "skills/safe-engine/scripts/fast_install.py",

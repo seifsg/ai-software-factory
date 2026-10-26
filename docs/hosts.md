@@ -89,6 +89,8 @@ Every install records this machine's channel in `~/.safe-engine/install.json` (`
 
 The gate's next `start`, `status` or `version` shows a one-time notice: the old and new version with pointers to `CHANGELOG.md` and `UPGRADING.md`, or the rollback. Offline, a diverged `main`, no verifying release, a missing Git or any other error changes nothing; the session goes on and `~/.safe-engine/logs/gate.log` gets an `update` line with the result. Projects keep their pinned bundle. Off: `SAFE_ENGINE_NO_UPDATE=1`, or `install --no-auto-update` (the last install decides); either way no extra process starts. Other hook entries are unchanged; a recorded install's session start starts one more Python (about 0.2 s on Windows). Agents with no session-start hook update by hand ([README](../README.md#-update)).
 
+New-run selection is separate from installed-copy updates: `resolve_bundle.py --project <dir> --new-run` refreshes only automatic selections with no active or unknown run. `fast_gate.py start` prints selected/latest versions and executes that bundle's gate while holding the project selection lock. Project commands and hooks route to the active run's saved gate offline. Explicit and legacy-unknown pins stay fixed. Failed release checks identify the retained version. Named Safe runs release selection after cancellation or checked handoff with matching released claims and saved history. Hooks include bound sessions and absolute targets outside cwd; tool calls spanning different factory versions require separate sessions and calls per project. Bare starts without a receipt remain legacy use; see [install](install.md#what-first-use-does).
+
 ## Orchestrators
 
 An orchestrator starts agent sessions and hands each one a task: [orchestrators.md](orchestrators.md).

@@ -313,7 +313,7 @@ def cmd_start(args):
     save(registry_path(project), store.new_registration(project, args.key))
     log("run.start", key=args.key, project=str(project), mode=args.mode, kind=args.kind, bundle=run["bundle"], hooks=hooks)
     bundle = (f"{run['bundle']['root']} @ {run['bundle']['revision'][:12]}" if run["bundle"] else
-              "no .factory/entry-bundle.json: run the entry's resolver first, except for factory maintenance")
+              "legacy start; latest unknown (resolve the entry first)")
     print(status_text(run) + f"\n{sibling('fast_release').card(run, HOME)}\nRecord: {record}\nBundle: {bundle}\n"
           f"Git: {git_note}\nHooks: {hooks}\n" + setup.TEXT.format(scratch))
 
@@ -842,6 +842,9 @@ def cmd_hook(host="claude"):
         hosts = sibling("fast_hosts")
         raw = json.loads(sys.stdin.buffer.read().decode("utf-8-sig") or "{}")  # hosts send UTF-8
         event = hosts.read(host, raw if isinstance(raw, dict) else {})
+        routed = sibling("fast_entry").hook(host, raw, event, runs, sys.modules[__name__])
+        if routed is not None:
+            return routed
         cwd, session = norm(event["cwd"] or os.getcwd()), event["session"]
         out, code = None, 0
         if event["kind"] == "pre_tool":
@@ -880,6 +883,13 @@ def main():
         sys.exit("fast_gate.py needs Python 3.9+")  # non-zero: the hook launcher tries the next Python
     for stream in (sys.stdout, sys.stderr):
         stream.reconfigure(encoding="utf-8", errors="backslashreplace")  # the card's symbols survive any pipe
+    try:
+        routed = (sibling("fast_entry").route(sys.argv[1:], sys.modules[__name__])
+                  if sys.argv[1:2] != ["hook"] else None)
+        if routed is not None:
+            sys.exit(routed)
+    except (RuntimeError, OSError, ValueError) as error:
+        fail(str(error))
     if sys.argv[1:2] == ["hook"] and not {"-h", "--help"} & set(sys.argv):  # hot path: skip argparse
         flags = " ".join(sys.argv[2:]).replace("--host=", "--host ").split()
         host = flags[flags.index("--host") + 1] if "--host" in flags[:-1] else "claude"
@@ -941,7 +951,8 @@ def main():
     hook = sub.add_parser("hook", help="Answer one host hook event from stdin")
     hook.add_argument("--host", default="claude", help="claude, codex, cursor, or any other hook-capable agent")
     args = parser.parse_args()
-    actions = {"start": cmd_start, "done": cmd_done, "status": cmd_status, "close": cmd_close, "rehome": cmd_rehome,
+    actions = {"start": lambda a: sibling("fast_entry").start(a, sys.modules[__name__]),
+               "done": cmd_done, "status": cmd_status, "close": cmd_close, "rehome": cmd_rehome,
                "try": cmd_try, "view": cmd_view, "scratch": cmd_scratch,
                "cleanup-temp": lambda a: sibling("fast_cleanup").run(a, sys.modules[__name__]),
                "shots": lambda a: sibling("fast_shots").run(a, sys.modules[__name__]),
@@ -954,7 +965,10 @@ def main():
                "orchestrate": lambda a: sibling("fast_orchestrate").run(a),
                "version": lambda a: sibling("fast_release").version(HOME), "verify": lambda a: sibling("fast_release").verify(a.path),
                "pause": lambda a: cmd_pause(a, a.reason), "resume": lambda a: cmd_pause(a, None)}
-    actions[args.command](args)
+    try:
+        actions[args.command](args)
+    except (RuntimeError, OSError) as error:
+        fail(str(error))
 
 
 if __name__ == "__main__":

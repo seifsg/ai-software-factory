@@ -4,6 +4,7 @@ Also the release identity every launcher carries (docs/releasing.md): the canoni
 manifest, and the one check that makes a tag a release.
 """
 import argparse
+from contextlib import contextmanager
 import hashlib
 import json
 import os
@@ -33,7 +34,7 @@ REQUIRED = ["AGENTS.md", "README.md", "docs/install.md", "docs/hosts.md", "safe_
             ".agents/skills/safe-engine/references/fast-run.md",
             ".agents/skills/improve-factory/references/live-session.md"]
 REQUIRED += [f".agents/skills/{name}/SKILL.md" for name in SKILLS]
-# New gate helpers (baseline recovery, preview scoping and reporting) use each bundle's required-file contract, preserving older pins.
+# Gate helpers, including new-run selection, use each bundle's contract, preserving older pins.
 NEWER = ("This factory revision uses a newer layout than this launcher knows ({}). Update the installed factory from "
          "a current checkout (skills/safe-engine/scripts/fast_gate.py install --host <your agent>, or update the "
          "plugin), then retry.")
@@ -273,9 +274,12 @@ def resolve_release(cache, tag, entrypoint):
         try:
             result = resolve_bundle(cache, commit, entrypoint)
             check_release(result["bundle_root"], name)
-            return {**result, "channel": "stable", "release": name}
-        except RuntimeError as error:
-            reasons.append(str(error))
+            result.update(channel="stable", release=name, latest_release=found[0][0])
+            if reasons:
+                result["notice"] = "Newer release unavailable: " + "; ".join(reasons) + f". Using verified {name}."
+            return result
+        except (RuntimeError, OSError, subprocess.TimeoutExpired) as error:
+            reasons.append(f"{name}: {error}" if not str(error).startswith(name) else str(error))
     if found or tag:
         raise RuntimeError("No release verifies: " + ("; ".join(reasons) or f"{tag} does not exist"))
     return {**resolve_bundle(cache, DEFAULT_REF, entrypoint), "channel": "edge", "notice": "No release yet: using main"}
@@ -323,14 +327,14 @@ def resolve_bundle(cache, ref=None, entrypoint="improve-factory"):
         raise RuntimeError(f"Bundle resolution failed; partial checkout preserved at {pending}: {error}") from error
 
 
-def select_for_project(project, bundle, ref, cache, entrypoint):
-    """Record a selection once; resume never resolves a newer remote branch."""
+def selection_paths(project):
+    """Reject aliases before any selection read or write."""
     project = Path(project).expanduser().resolve()
     if not project.is_dir():
         raise RuntimeError("Create or locate the target project directory first")
     directory = project / ".factory"
     receipt = directory / "entry-bundle.json"
-    for path in (directory, receipt):
+    for path in (directory, receipt, directory / "entry.lock"):
         try:
             info = path.lstat()
         except FileNotFoundError:
@@ -338,44 +342,206 @@ def select_for_project(project, bundle, ref, cache, entrypoint):
         if (stat.S_ISLNK(info.st_mode)
                 or getattr(info, "st_file_attributes", 0) & stat.FILE_ATTRIBUTE_REPARSE_POINT):
             raise RuntimeError("Factory selection paths must not be symlinks or reparse points")
+    return directory, receipt
+
+
+@contextmanager
+def selection_lock(project):
+    """Serialize selection and run creation; OS releases the lock if the process exits."""
+    directory, _ = selection_paths(project)
+    directory.mkdir(exist_ok=True)
+    with (directory / "entry.lock").open("a+b") as handle:
+        if not os.fstat(handle.fileno()).st_size:
+            handle.write(b"0")
+            handle.flush()
+        handle.seek(0)
+        try:
+            if os.name == "nt":
+                import msvcrt
+                msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
+            else:
+                import fcntl
+                fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError as error:
+            raise RuntimeError("Another factory selection or start is active; retry after it finishes") from error
+        try:
+            yield
+        finally:
+            if os.name == "nt":
+                handle.seek(0)
+                msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+            else:
+                fcntl.flock(handle, fcntl.LOCK_UN)
+
+
+def active_selection(project):
+    """Only demonstrably closed Fast runs permit refresh; Safe/unknown evidence keeps its pin."""
+    project = Path(project).resolve()
+    directory, _ = selection_paths(project)
+    home = Path(os.environ.get("SAFE_ENGINE_HOME") or Path.home() / ".safe-engine")
+    key = hashlib.sha1(os.path.normcase(os.path.realpath(project)).encode()).hexdigest()[:16] + ".json"
+    registration = home / "active" / key
+    if os.path.lexists(registration):
+        return "open or unknown Fast/Lucky run"
+    # The gate home owns lifecycle truth; a project mirror cannot reopen an owner-closed run.
+    paths = [home / "runs" / key, home / "runs" / "closed" / key]
+    if not any(os.path.lexists(path) for path in paths):
+        paths = [directory / "fast" / "run.json"]
+    for path in paths:
+        for node in (path.parent, path):
+            if os.path.lexists(node):
+                info = node.lstat()
+                if (stat.S_ISLNK(info.st_mode)
+                        or getattr(info, "st_file_attributes", 0) & stat.FILE_ATTRIBUTE_REPARSE_POINT):
+                    return "aliased run state"
+        try:
+            run = json.loads(path.read_text(encoding="utf-8-sig"))
+        except FileNotFoundError:
+            continue
+        except (OSError, ValueError):
+            return "unreadable run state"
+        if not isinstance(run, dict) or run.get("version") != 1 or run.get("closed") is not True:
+            return "open or unknown Fast/Lucky run"
+    if os.path.lexists(directory / "state.json") or os.path.lexists(directory / "history"):
+        return "existing Safe run"
+    named = directory / "runs"
+    if os.path.lexists(named):
+        for path in (named, *named.iterdir()) if named.is_dir() else (named,):
+            info = path.lstat()
+            if (stat.S_ISLNK(info.st_mode)
+                    or getattr(info, "st_file_attributes", 0) & stat.FILE_ATTRIBUTE_REPARSE_POINT):
+                raise RuntimeError("Named runs must not use symlinks or reparse points")
+        if not named.is_dir() or (any(named.iterdir()) and not terminal_named_runs(project, named)):
+            return "existing or unknown named Safe run"
+    if (directory / "fast" / "work-record.md").exists() and not any(path.exists() for path in paths):
+        return "work record without run identity"
+    return None
+
+
+def terminal_named_runs(project, named):
+    """Only released claims with matching terminal records permit another ticket's factory selection."""
+    try:
+        common = Path(git("rev-parse", "--git-common-dir", cwd=project))
+        common = common if common.is_absolute() else project / common
+        claims_path = common / "safe-engine/tickets/claims.json"
+
+        def read(path, text=False):
+            # Lifecycle proof through an alias is not evidence about this checkout.
+            for node in (path, *path.parents):
+                info = node.lstat()
+                if (stat.S_ISLNK(info.st_mode)
+                        or getattr(info, "st_file_attributes", 0) & stat.FILE_ATTRIBUTE_REPARSE_POINT):
+                    raise ValueError("aliased lifecycle evidence")
+            value = path.read_text(encoding="utf-8-sig")
+            return value if text else json.loads(value)
+
+        claims = read(claims_path)
+        if not isinstance(claims, dict):
+            return False
+        if any(not isinstance(claim, dict) or (claim.get("project") == str(project) and claim.get("active") is not False)
+               for claim in claims.values()):
+            return False
+        for directory in named.iterdir():
+            state, claim = read(directory / "state.json"), claims.get(directory.name, {})
+            if (not isinstance(state, dict) or not isinstance(claim, dict)
+                    or state.get("schema_version") != 1 or not state.get("run_id")
+                    or state.get("project") != str(project) or state.get("pending_operation", True) is not None
+                    or claim != {"project": str(project), "directory": str(directory),
+                                 "run_id": state["run_id"], "active": False}):
+                return False
+            sequence = state.get("sequence")
+            if type(sequence) is not int or sequence < 1 or read(directory / "history" / f"{sequence:04d}.json") != state:
+                return False
+            if state.get("phase") == "cancelled":
+                continue
+            history = state.get("history")
+            if (state.get("phase") != "ready" or not isinstance(history, list) or not history
+                    or not isinstance(history[-1], dict)
+                    or history[-1].get("event") != "Prepared checked local handoff"
+                    or f"Run: {state['run_id']}\n" not in read(directory / "handoff.md", text=True)):
+                return False
+        return True
+    except (RuntimeError, OSError, ValueError, TypeError):
+        return False  # Unknown or interrupted transitions retain the previous factory.
+
+
+def saved_selection(receipt):
+    """Read known receipt versions; absence of pin provenance stays unknown."""
     if receipt.exists():
         try:
             saved = json.loads(receipt.read_text(encoding="utf-8"))
         except (OSError, ValueError) as error:
             raise RuntimeError(f"Cannot read existing bundle selection: {error}") from error
-        if (not isinstance(saved, dict) or saved.get("version") != 1
+        if (not isinstance(saved, dict) or saved.get("version") not in (1, 2)
                 or not isinstance(saved.get("bundle_root"), str)
                 or not Path(saved["bundle_root"]).is_absolute()
                 or not isinstance(saved.get("revision"), str)
                 or not re.fullmatch(r"[0-9a-f]{40}", saved["revision"])):
             raise RuntimeError("Invalid bundle selection; preserve it and establish the original identity")
+        if saved["version"] == 2 and saved.get("policy") not in ("automatic", "explicit"):
+            raise RuntimeError("Invalid bundle selection policy; preserve its original identity")
+        return saved
+    return None
+
+
+def save_selection(receipt, result, policy):
+    """Publish a complete receipt under selection_lock; a failed write preserves the old receipt."""
+    data = {"version": 2, "bundle_root": result["bundle_root"], "revision": result["revision"], "policy": policy}
+    handle, temporary = tempfile.mkstemp(prefix="entry-", suffix=".tmp", dir=receipt.parent)
+    try:
+        with os.fdopen(handle, "w", encoding="utf-8") as output:
+            json.dump(data, output, indent=2)
+            output.write("\n")
+        os.replace(temporary, receipt)
+    finally:
+        Path(temporary).unlink(missing_ok=True)
+
+
+def select_for_project(project, bundle, ref, cache, entrypoint, new_run=False):
+    """Resume offline by default; explicit new-run intent may refresh an automatic selection."""
+    with selection_lock(project):
+        return select_locked(project, bundle, ref, cache, entrypoint, new_run)
+
+
+def select_locked(project, bundle, ref, cache, entrypoint, new_run=False):
+    """Select while the caller holds the project lock, including through subsequent run creation."""
+    directory, receipt = selection_paths(project)
+    saved = saved_selection(receipt)
+    held = active_selection(project)
+    policy = saved.get("policy", "legacy") if saved else "explicit" if bundle or ref else "automatic"
+    if saved:
         if ref is not None or (bundle and Path(bundle).expanduser().resolve() != Path(saved["bundle_root"]).resolve()):
             raise RuntimeError("An existing selection cannot be upgraded here; use improve-factory")
-        result = inspect_bundle(saved["bundle_root"], expected=saved["revision"], entrypoint=entrypoint)
-        result["selection_record"] = str(receipt)
-        return result
-    named_runs = directory / "runs"
-    if named_runs.exists():
-        for path in (named_runs, *named_runs.iterdir()):
-            info = path.lstat()
-            if (stat.S_ISLNK(info.st_mode)
-                    or getattr(info, "st_file_attributes", 0) & stat.FILE_ATTRIBUTE_REPARSE_POINT):
-                raise RuntimeError("Named runs must not use symlinks or reparse points")
-    existing_runs = (directory / "state.json").exists() or (named_runs.exists() and any(named_runs.glob("*/state.json")))
-    if existing_runs and not bundle:
-        raise RuntimeError("Existing run has no bundle path record; establish its original bundle and use --bundle")
-    result = (inspect_bundle(bundle, entrypoint=entrypoint) if bundle
-              else resolve_bundle(cache, ref or channel_ref(), entrypoint=entrypoint))
-    directory.mkdir(exist_ok=True)
-    # Exclusive creation protects a concurrent selection; never overwrite runtime evidence.
-    try:
-        with receipt.open("x", encoding="utf-8") as output:
-            json.dump({"version": 1, "bundle_root": result["bundle_root"],
-                       "revision": result["revision"]}, output, indent=2)
-            output.write("\n")
-    except FileExistsError as error:
-        raise RuntimeError("Another entry selected a bundle; inspect its record before continuing") from error
-    result["selection_record"] = str(receipt)
+        result = inspect_bundle(saved["bundle_root"], expected=saved["revision"], clean=policy == "automatic", entrypoint=entrypoint)
+        if not new_run or held:
+            return {**result, "selection_record": str(receipt), "selection_policy": policy,
+                    **({"notice": f"Keeping selected factory: {held}."} if new_run and held else {})}
+        try:
+            latest = resolve_bundle(cache, channel_ref(), entrypoint=entrypoint)
+        except (RuntimeError, OSError, subprocess.TimeoutExpired) as error:
+            return {**result, "selection_record": str(receipt), "selection_policy": policy,
+                    "notice": f"Latest factory check failed: {error}. Keeping factory {result['version'] or 'unversioned'} "
+                              f"at {result['revision']}."}
+        if policy == "automatic":
+            if saved_selection(receipt) != saved:
+                raise RuntimeError("Bundle selection changed during resolution; preserve it and retry")
+            if held := active_selection(project):
+                return {**result, "selection_record": str(receipt), "selection_policy": policy,
+                        "notice": f"Keeping selected factory: {held} appeared during resolution."}
+            result = latest
+            save_selection(receipt, result, policy)
+        else:
+            result.update(latest_release=latest.get("latest_release", latest.get("release")),
+                          notice=f"Keeping {policy} pin. " + latest.get("notice", ""))
+    else:
+        if held and not bundle:
+            raise RuntimeError("Existing run has no bundle path record; establish its original bundle and use --bundle")
+        result = (inspect_bundle(bundle, entrypoint=entrypoint) if bundle
+                  else resolve_bundle(cache, ref or channel_ref(), entrypoint=entrypoint))
+        if receipt.exists() or (not bundle and active_selection(project)):
+            raise RuntimeError("A selection or run appeared during resolution; preserve it and retry")
+        save_selection(receipt, result, policy)
+    result.update(selection_record=str(receipt), selection_policy=policy)
     return result
 
 
@@ -387,13 +553,16 @@ def main():
                                       "verified release (main on the edge channel or before the first release)")
     parser.add_argument("--cache-dir", type=Path, default=Path.home() / ".safe-engine" / "bundles")
     parser.add_argument("--project", type=Path, help="Remember this project's selection; reuse it offline on resume")
+    parser.add_argument("--new-run", action="store_true", help="Refresh an automatic selection only before a new run; preserve pins")
     installed_name = Path(__file__).resolve().parent.parent.name
     parser.add_argument("--entrypoint", choices=ENTRYPOINTS,
                         default=installed_name if installed_name in ENTRYPOINTS else "safe-engine")
     args = parser.parse_args()
+    if args.new_run and not args.project:
+        parser.error("--new-run needs --project")
     try:
         if args.project:
-            result = select_for_project(args.project, args.bundle, args.ref, args.cache_dir, args.entrypoint)
+            result = select_for_project(args.project, args.bundle, args.ref, args.cache_dir, args.entrypoint, args.new_run)
         else:
             result = (inspect_bundle(args.bundle, entrypoint=args.entrypoint) if args.bundle else
                       resolve_bundle(args.cache_dir, args.ref or channel_ref(), entrypoint=args.entrypoint))
