@@ -263,6 +263,8 @@ No. They see tool calls, not intent: a command run from inside a script passes. 
 
 ## 🛠️ Work on the factory
 
+Design ports use `fast_gate.py start --design-port`, then `fast_gate.py design --input <coverage.json>` before plan. `fast_gate.py design --candidate` identifies the source for a fresh judge; `fast_gate.py design --review <review.json>` records matched screenshots and element observations. `fast_gate.py design` reports completed, partial, missing and approved-cut counts against the fixed original inventory ([usage](docs/design-coverage.md)).
+
 Rules live in [AGENTS.md](AGENTS.md); changes go through `improve-factory`. Report problems as [issues](https://github.com/seifsg/ai-software-factory/issues).
 
 ```bash

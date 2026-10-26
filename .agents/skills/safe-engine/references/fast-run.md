@@ -17,7 +17,7 @@ More than four open: ask the rest in a second call of the same round. Pause the 
 
 ## Light lane
 
-A `change` (bug fix, small change, follow-up) records tickets, plan, build, done-run and handoff; design and schema only when started with `--ui` or `--data`.
+A `change` records tickets, plan, build, done-run and handoff; design/schema with `--ui`/`--data`. Design ports start with `--design-port` (implies UI); follow `ux-quality` reference coverage before plan.
 
 - Tickets: `**Ticket:** <url>` names the ticket it follows up and updates. A new ticket only for a new outcome; `**Ticket:** none (<why>)` when trivial.
 - No analysis step. Plan: `**Success:**` and `### Todos`. Unknown cause or several consumers: run `analyze-start` first and keep its result in the plan.

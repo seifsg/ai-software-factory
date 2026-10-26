@@ -7,6 +7,10 @@ For every release:
 - **Pinned projects never change.** Each keeps the factory commit its `.factory/entry-bundle.json` names, including active runs. To move a project to a newer release, ask `improve-factory Switch [absolute project directory] to the newest factory.`; it checks the run is compatible first.
 - **Check what you run:** `fast_gate.py version` names the version, commit, channel and route; `fast_gate.py verify` lists every file that differs from the release manifest.
 
+## Next release
+
+- New design-port runs use `start --design-port` and record reference coverage before plan. Existing runs keep their selected methods and obligations; do not add the flag or rewrite their ledger mid-run.
+
 ## 1.0.0
 
 From an install made before versioning:

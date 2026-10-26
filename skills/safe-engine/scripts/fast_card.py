@@ -134,6 +134,9 @@ def card(run, steps, all_sections, now, v=None, left=False):
     head.append("🏁 abandoned" if run.get("abandoned") else "🏁 closed" if run.get("closed") else "")
     paused = run.get("paused")
     lines = ([f"⏸️ WAITING ON YOU: {paused.get('reason')}"] if paused else []) + [" · ".join(p for p in head if p)]
+    if run.get("design_port"):
+        import fast_design
+        lines.append(fast_design.report(run))
     building = current in steps[steps.index("build"):] if "build" in steps else False
     if building and v.ids and (v.now or v.later):
         tail = [steps_line(steps, done, current, created)] if left else []

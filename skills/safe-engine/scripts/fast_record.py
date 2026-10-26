@@ -402,6 +402,7 @@ def light(run):
 
 
 def check_plan(run, body, **kwargs):
+    import fast_design
     titles = ("Todos",) if light(run) else ("Files", "Critique", "Phases", "Todos", "Whole plan")
     problems = [f"needs a '### {title}' subsection" for title in titles if subsection(body, title) is None]
     if not todo_ids(kwargs["all_sections"]):
@@ -411,6 +412,7 @@ def check_plan(run, body, **kwargs):
                      f"done> (#<ticket>, <criteria>)'" for n in without_result(kwargs["all_sections"])]
     labels = ["Success"] if light(run) else ["Logging", "Efficiency"]
     problems += fast_briefs.plan_problems(run, body, marker, subsection, kwargs.get("runs"), light(run))
+    problems += fast_design.problems(run, kwargs.get("project"))
     return problems + missing_markers(body, labels) or held(run, kwargs, covered(run, needs_checklist))
 
 
@@ -514,6 +516,7 @@ def placeholder_problems(body, labels):
 
 
 def check_done_run(run, body, project, **kwargs):
+    import fast_design
     sections = kwargs.get("all_sections") or {}
     own = HIDDEN.sub("", body) if hidden(run) else body  # the builder's own done-run, apart from the checker's
     touched = touched_ui(run, project)
@@ -533,7 +536,7 @@ def check_done_run(run, body, project, **kwargs):
         missing += ux_audit(own, parsed) if run.get("ux_rules") else []
         problems += ([f"this run changed UI files ({', '.join(touched[:3])}): record the UX audit"]
                      if missing and touched else []) + missing
-    return problems + (hidden_checks(body, kwargs, run) if hidden(run) else [])
+    return problems + fast_design.problems(run, project, final=True) + (hidden_checks(body, kwargs, run) if hidden(run) else [])
 
 def hidden(run):
     """Product and feature runs whose methods define hidden checks; change runs and older runs never."""
@@ -688,10 +691,12 @@ def digest(path):
 
 
 def check_handoff(run, body, **kwargs):
+    import fast_design
     labels = ["Run", "Statuses", "Unverified", "Follow-ups"] + (["Dev sign-in"] if run.get("auth") else []) + (
         ["PR"] if run.get("pr_proof") else [])
     checks = "\n".join(HIDDEN.findall((kwargs.get("all_sections") or {}).get("done-run") or ""))  # entries, not prose
     problems = missing_markers(body, labels) + fast_briefs.handoff_problems(run, body, marker, checks)
+    problems += fast_design.problems(run, kwargs.get("project"), final=True)
     ticks = lambda ticket: needs_ticks(ticket, deferred=bool(run.get("briefs")))  # noqa: E731 - one call site
     return problems or held(run, kwargs, covered(run, ticks), finish=True) + pr_proof(run, body, **kwargs)
 

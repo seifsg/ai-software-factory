@@ -90,7 +90,11 @@
     "skills/safe-engine/scripts/fast_view_model.py",
     "skills/safe-engine/scripts/fast_view_scope.py",
     "skills/safe-engine/scripts/fast_view_server.py",
-    "skills/safe-engine/scripts/view/index.html"
+    "skills/safe-engine/scripts/view/index.html",
+    "skills/safe-engine/scripts/fast_design.py",
+    "skills/safe-engine/scripts/fast_design_command.py",
+    ".agents/skills/ux-quality/references/coverage.md",
+    "docs/design-coverage.md"
   ],
   "historical_files": [],
   "source_trees": [

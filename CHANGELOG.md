@@ -31,3 +31,4 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 
 [Unreleased]: https://github.com/seifsg/ai-software-factory/compare/v1.0.0...HEAD
 [1.0.0]: https://github.com/seifsg/ai-software-factory/releases/tag/v1.0.0
+- Design ports (#155): immutable reference coverage, owner-recorded cuts, independent matched likeness receipts and measured element counts; stale or incomplete evidence blocks completion.

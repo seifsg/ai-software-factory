@@ -13,7 +13,7 @@ Review and design requests stay read-only. Do not code unless told.
 
 ## 1. Understand the job
 
-- Read the request, the design system, the actual interface and settled choices.
+- Read the request, design system, UI and decisions. Design ports: [coverage](references/coverage.md).
 - Record audience, goal, devices and inputs, accessibility needs, success and failure states.
 - Map each core journey: `intent → entry → actions/decisions/waits → outcome → recovery/exit`. For the most common case, count its actions from entry (each click, tap, submit or filled field) and its loads (new pages or screens; dialogs, tabs and expands are not loads). The minimum is the fewest actions the job itself needs, whatever the design. Above it needs a reason, such as deliberate friction. Find repeated entry, confusion, dead ends, lost work.
 - Remove accidental effort. Keep intended game challenge, consent, safety and comprehension. No deceptive defaults, no hidden costs.

@@ -293,11 +293,15 @@ def cmd_start(args):
     archive_run(project)
     forget_shown(project)
     product, bundle = args.kind == "product", bundle_receipt(project)
+    if getattr(args, "design_port", False) and args.ui is False:
+        fail("--design-port is UI work; remove --no-ui")
     run = {"version": VERSION, "key": args.key, "project": str(project), "mode": args.mode, "kind": args.kind,
            "ui": product if args.ui is None else args.ui, "data": product if args.data is None else args.data,
            "auth": args.auth, "request": request.strip(), "created": now(), "done": {}, "paused": None,
            "closed": False, "bundle": bundle, "pr_instance": os.urandom(16).hex(), **method_flags(bundle, project)}
     run.update(sibling("fast_pr_policy").start(HOME))
+    if getattr(args, "design_port", False):
+        run.update(design_port=True, ui=True)
     if "analysis" not in steps_for(run):  # older hook copies still require it before build: mark it skipped
         run["done"]["analysis"] = {"at": now(), "skipped": "light lane"}
     if run.get("ux_rules") and not run["ui"]:  # only these runs later ask which UI files they changed
@@ -440,6 +444,9 @@ def cmd_close(args):
     if "handoff" not in run["done"] and not args.abandon:
         fail("Record the handoff first, or close --abandon \"<the owner's reason>\"")
     if not args.abandon:
+        problems = sibling("fast_design").problems(run, project, final=True)
+        if problems:
+            fail("\n".join(problems))
         sibling("fast_pr_policy").close(HOME, run)
     run.update(closed=True, closed_at=now(), abandoned=args.abandon, paused=None)
     put(project, run)
@@ -893,10 +900,12 @@ def main():
     sibling("fast_shots").parser(sub, common)
     sibling("fast_baseline").parser(sub, common)
     sibling("fast_release").parser(sub)
+    sibling("fast_design_command").parser(sub, common)
     start = sub.add_parser("start", parents=[common], help="Begin a run and register it for hooks")
     start.add_argument("--key", required=True)
     start.add_argument("--mode", choices=MODES, default="fast")
     start.add_argument("--kind", choices=KINDS, required=True)
+    start.add_argument("--design-port", action="store_true", help="UI reference port: require immutable coverage and likeness proof")
     for flag in ("ui", "data"):
         start.add_argument(f"--{flag}", dest=flag, action="store_true", default=None)
         start.add_argument(f"--no-{flag}", dest=flag, action="store_false", default=None)
@@ -943,6 +952,7 @@ def main():
     args = parser.parse_args()
     actions = {"start": cmd_start, "done": cmd_done, "status": cmd_status, "close": cmd_close, "rehome": cmd_rehome,
                "try": cmd_try, "view": cmd_view, "scratch": cmd_scratch,
+               "design": lambda a: sibling("fast_design_command").run(a, sys.modules[__name__]),
                "cleanup-temp": lambda a: sibling("fast_cleanup").run(a, sys.modules[__name__]),
                "shots": lambda a: sibling("fast_shots").run(a, sys.modules[__name__]),
                "recover-baseline": lambda a: sibling("fast_baseline").recover(a, sys.modules[__name__]),

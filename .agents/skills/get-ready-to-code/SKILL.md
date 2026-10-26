@@ -10,7 +10,7 @@ Build in complete working iterations. Tiny bug or full product, same logic.
 
 - First: smallest real user journey we can see and use. Order by user value; explain required blockers. Order never drops scope: every requested item maps to todos, or stays open in its ticket when the owner narrowed this iteration.
 - Before dependent work: shared state owner, invariants and their enforcers, entry points, limits, compatibility and failure behavior. Root fix, not patch; big or risky ones go to the owner.
-- Required quality stays. Optional polish/enhancements later: owner, ticket, acceptance condition.
+- Required quality stays. Design ports keep frozen coverage. Optional polish: owner, ticket, acceptance.
 - Complete outcome ticket -> finish iteration -> manual QA -> relevant final tests/review. Full requested outcome stays open until delivered.
 
 Prepare:
