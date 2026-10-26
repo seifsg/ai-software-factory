@@ -200,7 +200,7 @@ After an update or a rollback, the next `start`, `status` or `version` shows one
 - **Switch channel:** rerun the install with `--channel edge` to follow `main`, or `--channel stable` to return to releases. Claude Code has no channels: edge changes what new projects pin ([hosts](docs/hosts.md#updates)).
 - **Roll back by hand:** in your clone `git checkout vX.Y.Z` (the release you want), then rerun the install with `--no-auto-update` so the daily update keeps it there. Claude Code serves one version: run an older release with `claude --plugin-dir <clone at that tag>/skills`, the plugin disabled.
 
-**Projects stay pinned.** On first use a project pins the newest verified release (on the edge channel, or before the first release, `main`) to one commit, and every later run and resume there reads its methods from that commit, offline. Updating the install brings new launchers and hooks, never new methods to a pinned project. To switch a project to newer methods, ask `improve-factory Switch [absolute project directory] to the newest factory.` It checks the run is compatible first.
+**Active runs stay pinned.** New automatic selections use the newest verified release (`main` on edge or before the first release). `resolve_bundle.py --project <dir> --new-run` refreshes only before a new run; ordinary resume stays offline. Explicit `--ref`/`--bundle` pins and older receipts with unknown pin intent stay fixed. `fast_gate.py start` prints selected/latest versions, reports failed release checks and executes the selected gate. Its project commands and hooks follow that run's saved identity, including session-bound or absolute-path work outside the project directory. Tool calls spanning different factory versions must be split. A Fast/Lucky run closed in the gate home permits the next selection even if its project mirror is missing or stale. A named Safe run with a confirmed cancellation or checked handoff releases selection for the next ticket. Receipt-less bare starts are legacy use, not a freshness guarantee. Pin changes need `improve-factory`; never edit an active receipt.
 
 ## 🧹 Uninstall
 
@@ -281,6 +281,10 @@ python tests/run.py
 - Releases are local, no CI: `python scripts/release.py cut X.Y.Z`, merge the release PR, tag, then `python scripts/release.py publish vX.Y.Z` ([releasing](docs/releasing.md)).
 - Method byte budgets: `python scripts/token_report.py --against origin/main` shows what a change adds to every run.
 - `python -m evals run` scores the factory against a plain agent ([evals](evals/README.md)).
+
+The gate loads command arguments from `fast_cli.py` only for CLI calls; tool hooks retain their direct fast path.
+
+Parallel local stacks use `fast_gate.py lane start`, `lane status` and `lane stop` with explicit project, lane name and fixed ports. They retain owned descendants, confirm shutdown before reporting cleanup, isolate supported caches and use short browser profiles. Screenshot cleanup attempts every acquired process and preserves artifacts when shutdown is unconfirmed. Installed entries preserve child arguments after `--`; commands, cleanup retries and platform limits are in [hosts](docs/hosts.md#lane-resources).
 
 ## 🗂️ Layout
 

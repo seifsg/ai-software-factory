@@ -1,7 +1,9 @@
 """Run with python -m safe_engine --project /absolute/project <command>."""
 
 import argparse
+from contextlib import nullcontext
 import json
+from pathlib import Path
 import sys
 
 from .project import EngineError, discover, project_root, snapshot
@@ -91,7 +93,7 @@ def main():
         if args.command == "review" and result["phase"] != "ready":
             return 1
         return 0
-    except (EngineError, OSError, ValueError, KeyError, TypeError) as exc:
+    except (EngineError, RuntimeError, OSError, ValueError, KeyError, TypeError) as exc:
         print(json.dumps({"error": str(exc)}, ensure_ascii=False), file=sys.stderr)
         return 2
     except KeyboardInterrupt:
@@ -143,8 +145,14 @@ def run(args):
                 git(project, "check-ignore", "-q", (workflow.directory / "state.json").relative_to(project).as_posix())
             except EngineError:
                 raise EngineError("Add .factory/ to the project's Git ignore rules before initialization")
-        with locked(workflow.directory):
+        from .distribution import selection_lock, saved_selection, inspect_bundle
+        with selection_lock(project) if args.command == "init" else nullcontext(), locked(workflow.directory):
             if args.command == "init":
+                selection = saved_selection(project / ".factory/entry-bundle.json")
+                if selection:
+                    if Path(selection["bundle_root"]).resolve() != Path(__file__).resolve().parent.parent:
+                        raise EngineError("Factory selection changed; read its selected methods and run its controller")
+                    inspect_bundle(selection["bundle_root"], expected=selection["revision"], entrypoint="safe-engine")
                 result = workflow.initialize(read_json(args.task), read_json(args.profile), args.max_repairs, args.session)
             elif args.command == "record":
                 result = workflow.record(args.kind, args.file)

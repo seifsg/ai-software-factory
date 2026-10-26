@@ -323,7 +323,7 @@ def cmd_start(args):
     save(registry_path(project), store.new_registration(project, args.key))
     log("run.start", key=args.key, project=str(project), mode=args.mode, kind=args.kind, bundle=run["bundle"], hooks=hooks)
     bundle = (f"{run['bundle']['root']} @ {run['bundle']['revision'][:12]}" if run["bundle"] else
-              "no .factory/entry-bundle.json: run the entry's resolver first, except for factory maintenance")
+              "legacy start; latest unknown (resolve the entry first)")
     print(status_text(run) + f"\n{sibling('fast_release').card(run, HOME)}\nRecord: {record}\nBundle: {bundle}\n"
           f"Git: {git_note}\nHooks: {hooks}\n" + setup.TEXT.format(scratch))
 
@@ -864,6 +864,9 @@ def cmd_hook(host="claude"):
         hosts = sibling("fast_hosts")
         raw = json.loads(sys.stdin.buffer.read().decode("utf-8-sig") or "{}")  # hosts send UTF-8
         event = hosts.read(host, raw if isinstance(raw, dict) else {})
+        routed = sibling("fast_entry").hook(host, raw, event, runs, sys.modules[__name__])
+        if routed is not None:
+            return routed
         cwd, session = norm(event["cwd"] or os.getcwd()), event["session"]
         out, code = None, 0
         if event["kind"] == "pre_tool":
@@ -902,73 +905,20 @@ def main():
         sys.exit("fast_gate.py needs Python 3.9+")  # non-zero: the hook launcher tries the next Python
     for stream in (sys.stdout, sys.stderr):
         stream.reconfigure(encoding="utf-8", errors="backslashreplace")  # the card's symbols survive any pipe
+    try:
+        routed = (sibling("fast_entry").route(sys.argv[1:], sys.modules[__name__])
+                  if sys.argv[1:2] != ["hook"] else None)
+        if routed is not None:
+            sys.exit(routed)
+    except (RuntimeError, OSError, ValueError) as error:
+        fail(str(error))
     if sys.argv[1:2] == ["hook"] and not {"-h", "--help"} & set(sys.argv):  # hot path: skip argparse
         flags = " ".join(sys.argv[2:]).replace("--host=", "--host ").split()
         host = flags[flags.index("--host") + 1] if "--host" in flags[:-1] else "claude"
         sys.exit(cmd_hook(host))
-    import argparse
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    common = argparse.ArgumentParser(add_help=False)
-    common.add_argument("--project", help="Run project; default: nearest folder with .factory/fast/run.json")
-    sub = parser.add_subparsers(dest="command", required=True)
-    sibling("fast_cleanup").parser(sub, common)
-    sibling("fast_shots").parser(sub, common)
-    sibling("fast_baseline").parser(sub, common)
-    sibling("fast_release").parser(sub)
-    sibling("fast_design_command").parser(sub, common)
-    start = sub.add_parser("start", parents=[common], help="Begin a run and register it for hooks")
-    start.add_argument("--key", required=True)
-    start.add_argument("--mode", choices=MODES, default="fast")
-    start.add_argument("--kind", choices=KINDS, required=True)
-    start.add_argument("--design-port", action="store_true", help="UI reference port: require immutable coverage and likeness proof")
-    for flag in ("ui", "data"):
-        start.add_argument(f"--{flag}", dest=flag, action="store_true", default=None)
-        start.add_argument(f"--no-{flag}", dest=flag, action="store_false", default=None)
-    start.add_argument("--auth", action="store_true", help="The product has sign-in")
-    start.add_argument("--request")
-    start.add_argument("--request-file")
-    sub.add_parser("pr-proof-method", help="Read the owner-selected PR method for any mode")
-    adopt = sub.add_parser("adopt-pr-proof", help="Owner-authorized PR-only policy; preserves existing run state")
-    target = adopt.add_mutually_exclusive_group(required=True)
-    target.add_argument("--project")
-    target.add_argument("--new-runs", action="store_true")
-    adopt.add_argument("--method", required=True, help="Absolute canonical PR SKILL.md; preserve its whole folder")
-    adopt.add_argument("--reason", required=True, help="Owner instruction and source authorizing adoption")
-    done = sub.add_parser("done", parents=[common], help="Check and record one step")
-    done.add_argument("step", choices=list(TITLES))
-    done.add_argument("--offline", help="Record tickets, plan, handoff or a hidden-check done-run without reading tickets "
-                                         "through gh, with the reason")
-    sub.add_parser("status", parents=[common])
-    sub.add_parser("scratch", parents=[common], help="Print the open run's scratch folder for throwaway data")
-    pause = sub.add_parser("pause", parents=[common], help="Waiting on the owner; lets the session stop")
-    pause.add_argument("--reason", required=True)
-    sub.add_parser("resume", parents=[common])
-    tried = sub.add_parser("try", parents=[common], help="How the owner tries a finished todo: a command, link or file")
-    tried.add_argument("todo", help="The todo's ID, such as T3")
-    target = tried.add_mutually_exclusive_group(required=True)
-    for flag, what in (("cmd", "a command to run"), ("url", "an http(s) link"), ("file", "a path inside the project")):
-        target.add_argument(f"--{flag}", help=what)
-    shown = sub.add_parser("view", help="Serve this project's live progress on 127.0.0.1")
-    scope = shown.add_mutually_exclusive_group()
-    scope.add_argument("--project", help="Project folder; default: current folder and its repository worktrees")
-    scope.add_argument("--all-projects", action="store_true", help="Explicitly show every project's progress")
-    shown.add_argument("--port", type=int, default=8765, help="Default 8765; a busy port falls back to a free one")
-    shown.add_argument("--snapshot", help="Write one HTML file with the current state instead of serving")
-    close = sub.add_parser("close", parents=[common])
-    close.add_argument("--abandon", help="The owner stopped the run: their reason")
-    rehome = sub.add_parser("rehome", parents=[common],
-                            help="Owner only: bring in an open run from another machine or folder")
-    rehome.add_argument("--from", dest="source", required=True, help="The folder the run's run.json records")
-    sibling("fast_round").parser(sub, common)
-    sibling("fast_install").parser(sub)
-    orchestrate = sub.add_parser("orchestrate", help="Set up an orchestrator to start factory sessions")
-    sibling("fast_orchestrate").arguments(orchestrate)
-    hook = sub.add_parser("hook", help="Answer one host hook event from stdin")
-    hook.add_argument("--host", default="claude", help="claude, codex, cursor, or any other hook-capable agent")
-    sibling("fast_show_command").parser(sub, common)
-    sibling("fast_checks_command").parser(sub, common)
-    args = parser.parse_args()
-    actions = {"start": cmd_start, "done": cmd_done, "status": cmd_status, "close": cmd_close, "rehome": cmd_rehome,
+    args = sibling("fast_cli").parse(sys.modules[__name__])
+    actions = {"start": lambda a: sibling("fast_entry").start(a, sys.modules[__name__]),
+               "done": cmd_done, "status": cmd_status, "close": cmd_close, "rehome": cmd_rehome,
                "try": cmd_try, "view": cmd_view, "scratch": cmd_scratch,
                "fix-round": lambda a: sibling("fast_round").run(a, sys.modules[__name__]),
                "checks": lambda a: sibling("fast_checks_command").run(a, sys.modules[__name__]),
@@ -977,6 +927,7 @@ def main():
                "prove": lambda a: sibling("fast_show_command").run(a, sys.modules[__name__]),
                "cleanup-temp": lambda a: sibling("fast_cleanup").run(a, sys.modules[__name__]),
                "shots": lambda a: sibling("fast_shots").run(a, sys.modules[__name__]),
+               "lane": lambda a: sibling("fast_lane").run(a, sys.modules[__name__]),
                "recover-baseline": lambda a: sibling("fast_baseline").recover(a, sys.modules[__name__]),
                "adopt-pr-proof": lambda a: sibling("fast_pr_policy").adopt(a, sys.modules[__name__]),
                "pr-proof-method": lambda a: sibling("fast_pr_policy").method(HOME),
@@ -986,7 +937,10 @@ def main():
                "orchestrate": lambda a: sibling("fast_orchestrate").run(a),
                "version": lambda a: sibling("fast_release").version(HOME), "verify": lambda a: sibling("fast_release").verify(a.path),
                "pause": lambda a: cmd_pause(a, a.reason), "resume": lambda a: cmd_pause(a, None)}
-    actions[args.command](args)
+    try:
+        actions[args.command](args)
+    except (RuntimeError, OSError) as error:
+        fail(str(error))
 
 
 if __name__ == "__main__":

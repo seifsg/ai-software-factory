@@ -12,6 +12,8 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
+from bundle_fixtures import legacy_bundle, offline_gate
+
 SCRIPTS = Path(__file__).resolve().parents[1] / "skills/safe-engine/scripts"
 GATE = SCRIPTS / "fast_gate.py"
 sys.path.insert(0, str(SCRIPTS))
@@ -113,7 +115,8 @@ class GateHarness:
             self.assertNotIn("hook.error", log.read_text(encoding="utf-8"))  # have swallowed an exception
 
     def gate(self, *args, ok=True, project=None):
-        result = subprocess.run([sys.executable, str(GATE), *args, "--project", str(project or self.project)],
+        result = subprocess.run([*getattr(self, "gate_command", [sys.executable, str(GATE)]), *args,
+                                 "--project", str(project or self.project)],
                                 capture_output=True, text=True, encoding="utf-8", errors="replace", env=self.env)
         self.assertEqual(result.returncode == 0, ok, result.stdout + result.stderr)
         return result.stdout + result.stderr
@@ -163,17 +166,27 @@ class FastGateTests(GateHarness, unittest.TestCase):
         self.assertIn("missing or empty", self.gate("done", "research", ok=False))
         self.assertIn("still open", self.gate("start", "--key", "again", "--kind", "change", "--request", "x", ok=False))
 
-    def test_start_keeps_factory_out_of_git_and_notes_the_bundle(self):
+    def test_start_rejects_missing_bundle_and_preserves_legacy_methods(self):
         subprocess.run(["git", "init", "-q", str(self.project)], check=True)
         (self.project / ".factory").mkdir()
         receipt = {"version": 1, "bundle_root": str(self.root / "bundle"), "revision": "a" * 40}
         (self.project / ".factory/entry-bundle.json").write_text(json.dumps(receipt), encoding="utf-8")
-        output = self.gate("start", "--key", "portal-poc", "--kind", "change", "--request", "fix copy")
+        self.gate("start", "--key", "portal-poc", "--kind", "change", "--request", "fix copy", ok=False)
+        self.assertFalse((self.project / ".factory/fast/run.json").exists())
+        # A real older-shaped checkout retains its methods; nonexistent roots no longer stand in for one.
+        receipt = legacy_bundle(self.root / "bundle")
+        (self.project / ".factory/entry-bundle.json").write_text(json.dumps(receipt), encoding="utf-8")
+        result = subprocess.run([*offline_gate(), "start", "--project",
+                                 str(self.project), "--key", "portal-poc", "--kind", "change", "--request", "fix copy"],
+                                capture_output=True, text=True, encoding="utf-8", env=self.env)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        output = result.stdout + result.stderr
         self.assertIn("added .factory/ to", output)
         self.assertIn(".factory/\n", (self.project / ".git/info/exclude").read_text(encoding="utf-8"))
         self.assertFalse((self.project / ".gitignore").exists())  # no project file changes
         run = json.loads((self.project / ".factory/fast/run.json").read_text(encoding="utf-8"))
-        self.assertEqual(run["bundle"]["revision"], "a" * 40)
+        self.assertEqual(run["bundle"]["revision"], receipt["revision"])
+        self.assertIn("Latest factory check failed: offline fixture", output)
         self.assertIn("Hooks:", output)
         record = (self.project / ".factory/fast/work-record.md").read_text(encoding="utf-8")
         self.assertIn("## Analysis", record)  # methods without the light lane keep it, with their own hints
