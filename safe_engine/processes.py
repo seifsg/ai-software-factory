@@ -11,7 +11,7 @@ import time
 
 class ProcessTree:
     """Command PID, streams and poll/wait, with retained ownership and bounded stop."""
-    def __init__(self, argv, cwd, *, shell=False, **options):
+    def __init__(self, argv, cwd, *, shell=False, owned_lease=None, **options):
         cwd = Path(cwd).resolve(strict=True)
         if not cwd.is_dir() or not argv:
             raise ValueError("A command and existing working directory are required")
@@ -20,7 +20,8 @@ class ProcessTree:
         self.stop_note = None
         if os.name == "nt":
             from .windows_job import Job
-            self.job = Job()
+            from .suite_lease import job_name
+            self.job = Job(job_name(owned_lease) if owned_lease else None)
         try:
             if self.job:
                 # No command can spawn until the waiting bootstrap belongs to our job.
@@ -43,7 +44,7 @@ class ProcessTree:
                         raise
             else:
                 from .posix_session import Session
-                self.process = Session(argv, cwd, shell=shell, **options)
+                self.process = Session(argv, cwd, shell=shell, owned_lease=owned_lease, **options)
         except BaseException:
             if self.job:
                 self.job.close()

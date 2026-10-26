@@ -260,7 +260,8 @@ FLAGS = {"ticket_checks": (LAYOUT, "Definition of done"), "coverage": (LAYOUT, "
          "scans": (FAST_RUN, "**Secrets:**"), "ux_rules": (UX, "| U10 |"), "pr_proof": (FAST_RUN, "`**PR:**`"),
          "credit": (PR, "references/credit.md"), "pr_demo": (PR, "**Visual:**"), "briefs": (FAST_RUN, "**Ports:**"),
          "worth": (FAST_RUN, "**Findings:**"), "check_selection": (FAST_RUN, "Reasoned proof selection"),
-         "show_first": (FAST_RUN, "Look, Show, Prove, Ship")}
+         "show_first": (FAST_RUN, "Look, Show, Prove, Ship"),
+         "suite_policy": (FAST_RUN, "One full suite per effective version")}
 
 
 def method_flags(bundle, project):
@@ -270,7 +271,7 @@ def method_flags(bundle, project):
         try:
             flags[flag] = phrase in (root / path).read_text(encoding="utf-8")
         except (OSError, ValueError):
-            flags[flag] = not bundle and flag not in ("show_first", "check_selection")  # New proof contracts need resolved methods.
+            flags[flag] = not bundle and flag not in ("show_first", "check_selection", "suite_policy")  # New proof contracts need resolved methods.
     return flags
 
 

@@ -7,6 +7,7 @@ import time
 
 from .storage import now
 from .processes import ProcessTree
+from .project import executable_path
 
 
 LOG_LIMIT = 1_000_000
@@ -43,7 +44,7 @@ def stop_process(process):
     process.stop()
 
 
-def run_command(argv, cwd, timeout, log_path, stdin=None, stop=None):
+def run_command(argv, cwd, timeout, log_path, stdin=None, stop=None, owned_lease=None):
     """stop: optional threading.Event; when set, the process tree is stopped like a timeout."""
     started = now()
     clock = time.monotonic()
@@ -53,8 +54,10 @@ def run_command(argv, cwd, timeout, log_path, stdin=None, stop=None):
         if stdin is not None:
             input_file.write(stdin.encode("utf-8"))
             input_file.seek(0)
-        process = ProcessTree(argv, cwd=cwd, stdin=input_file if stdin is not None else subprocess.DEVNULL,
-                              stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        executable = executable_path(argv[0], cwd)
+        command = [str(executable), *argv[1:]] if executable else argv
+        process = ProcessTree(command, cwd=cwd, stdin=input_file if stdin is not None else subprocess.DEVNULL,
+                              stdout=subprocess.PIPE, stderr=subprocess.STDOUT, owned_lease=owned_lease)
         timed_out = False
         output = bytearray()
         size = 0

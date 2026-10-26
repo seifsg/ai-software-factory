@@ -439,8 +439,27 @@ def factory_inputs():
                   lambda: scan_hashes(bundle, bundle_input_paths(bundle), missing=None))
 
 
-def executable_hash(name):
-    found = shutil.which(name)
+def executable_path(name, project):
+    """Resolve once from the command's cwd; identity and launch must choose the same file."""
+    project = Path(project).resolve()
+    if Path(name).drive and not Path(name).is_absolute():
+        return None  # A drive-relative command depends on hidden per-drive state.
+    if os.path.dirname(name):
+        candidates = [project / name]
+    else:
+        folders = os.environ.get('PATH', os.defpath).split(os.pathsep)
+        if any(Path(folder).drive and not Path(folder).is_absolute() for folder in folders):
+            return None
+        candidates = [project / folder / name for folder in (([''] if os.name == 'nt' else []) + folders)]
+    for candidate in candidates:
+        found = shutil.which(str(candidate))
+        if found:
+            return Path(found).resolve()
+    return None
+
+
+def executable_hash(name, project=None):
+    found = executable_path(name, project) if project is not None else shutil.which(name)
     return file_hash(Path(found)) if found else None
 
 
@@ -450,7 +469,7 @@ def fingerprint(project, profile, task, run_dir, draft=False, ticket=None):
     executables = {}
     for check in profile["checks"]:
         first = command_argv(check, project, run_dir)[0]
-        executables[first] = cached(("executable", first), lambda: executable_hash(first))
+        executables[first] = cached(("executable", str(project), first), lambda: executable_hash(first, project))
         if not executables[first]:
             if not draft or profile.get("version") != 2:
                 raise EngineError(f"Check executable unavailable: {first}")

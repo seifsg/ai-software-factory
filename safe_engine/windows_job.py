@@ -20,10 +20,11 @@ class Accounting(ctypes.Structure):
 
 class Job:
     """A non-inherited, kill-on-close handle; children cannot break away."""
-    def __init__(self):
+    def __init__(self, name=None, *, reopen=False):
         self.api = ctypes.WinDLL("kernel32", use_last_error=True)
-        for name, args, result in (
+        for function_name, args, result in (
             ("CreateJobObjectW", [W.LPVOID, W.LPCWSTR], W.HANDLE),
+            ("OpenJobObjectW", [W.DWORD, W.BOOL, W.LPCWSTR], W.HANDLE),
             ("SetInformationJobObject", [W.HANDLE, ctypes.c_int, W.LPVOID, W.DWORD], W.BOOL),
             ("AssignProcessToJobObject", [W.HANDLE, W.HANDLE], W.BOOL),
             ("QueryInformationJobObject", [W.HANDLE, ctypes.c_int, W.LPVOID, W.DWORD, W.LPVOID], W.BOOL),
@@ -33,11 +34,17 @@ class Job:
             ("WaitForSingleObject", [W.HANDLE, W.DWORD], W.DWORD),
             ("CloseHandle", [W.HANDLE], W.BOOL),
         ):
-            function = getattr(self.api, name)
+            function = getattr(self.api, function_name)
             function.argtypes, function.restype = args, result
-        self.handle = self.api.CreateJobObjectW(None, None)
+        self.handle = (self.api.OpenJobObjectW(0x001F001F, False, name) if reopen
+                       else self.api.CreateJobObjectW(None, name))
         self.waiting = {}
         self.check(self.handle)
+        if reopen:
+            return
+        if name and ctypes.get_last_error() == 183:
+            self.close()
+            raise RuntimeError('Owned job name already exists; existing job left untouched')
         limit = Extended()
         limit.basic.flags = 0x2000
         try:

@@ -54,6 +54,8 @@ Optional polish is scored and collected in the epic's existing **Finishing touch
 
 New runs use `fast_gate.py checks` to record reasoned hidden-check selection, actual runtime names and parsed/executed proof. Visual-only ports keep likeness plus the suite. See [hidden checks](docs/hidden-checks.md).
 
+Browser journeys use a fixed instant and timezone before navigation. Declare their source files and run `node skills/safe-engine/scripts/journey_clock_lint.mjs <manifest.json>`; see [fixed browser time and affected tests](docs/journey-clock.md).
+
 Illustrative example:
 
 ```text
@@ -305,3 +307,5 @@ CHANGELOG.md           what changed per release; UPGRADING.md: what to do
 ```
 
 UI delivery uses [Look, Show, Prove, Ship](docs/show-first.md): `show --plan`, `show --candidate`, `show --prepare`, `show --shared`, `show --reply`, `done show`, then `prove --suite`. Only actual shared pictures start the owner-response window. Installed entries use the selected bundle runner; completion requires any retained suite pass to match current source. Humans retain merge authority.
+
+New non-UI Fast runs declare `prove --plan <plan.json>` before plan completion. All new complete suites use a machine-wide queue and reuse intact evidence only for matching effective inputs; `prove --suite --fresh` explicitly reruns diagnostics. Safe `check` uses the same queue; new complete-cycle runs permit `feature-check --checks <ids> --file <json>` after completed-item use. See [complete suites](docs/suite-checks.md) for declarations, manual receipts, reuse and compatibility.

@@ -14,7 +14,10 @@ def parser(sub, common):
         actions.add_argument(f"--{name}", help=f"{name} JSON inside the project")
     actions.add_argument("--candidate", action="store_true", help="Current source fingerprint for Show captures")
     prove = sub.add_parser("prove", parents=[common], help="Run the declared suite after the owner checkpoint")
-    prove.add_argument("--suite", action="store_true", required=True)
+    proof = prove.add_mutually_exclusive_group(required=True)
+    proof.add_argument("--suite", action="store_true")
+    proof.add_argument("--plan", help="Declare a non-UI full suite and its effective inputs before plan")
+    prove.add_argument('--fresh', action='store_true', help='Explicit diagnostic rerun; still uses the machine queue')
 
 
 def invalidate(state):
@@ -26,25 +29,43 @@ def invalidate(state):
         state["done"].pop(step, None)
 
 
-def prove(project, state, gate):
-    """Use the existing bounded, cancellable runner; no new process or suite-cache machinery."""
-    print(show.ready_for_prove(project, state))
-    evidence.require("show" in state["done"], "Record done show before running the suite")
+def prove(project, state, gate, fresh=False):
+    """Current owner/manual gates remain authoritative even when command evidence is reused."""
+    if show.enabled(state):
+        print(show.ready_for_prove(project, state))
+        evidence.require("show" in state["done"], "Record done show before running the suite")
+    else:
+        evidence.require('build' in state['done'], 'Record done build before the full suite')
     from resolve_bundle import inspect_bundle
     bundle = state.get("bundle") or {"root": Path(__file__).resolve().parents[3]}
     selected = inspect_bundle(bundle["root"], expected=bundle.get("revision"), entrypoint="safe-engine")
     sys.path.insert(0, selected["bundle_root"])
     from safe_engine.runner import run_command
-    plan = show.show_plan(state)
-    if state["show"].get("proof") is not None:
-        gate.log("show.proof_replaced", key=state["key"], proof=state["show"]["proof"])
-    state["show"]["proof"] = {"passed": False, "status": "running"}
+    holder = state['show'] if show.enabled(state) else state.get('suite')
+    evidence.require(isinstance(holder, dict) and holder.get('plan'), 'Declare prove --plan before running a non-UI suite')
+    plan = holder['plan']
+    candidate = evidence.candidate(project)
+    if holder.get('proof') is not None:
+        gate.log("show.proof_replaced", key=state["key"], proof=holder['proof'])
+    holder['proof'] = {"passed": False, "status": "running"}
     gate.put(project, state)
-    result = run_command(plan["full_suite"], project, plan["timeout_seconds"],
-                         Path(project, ".factory/fast/prove-suite.log"))
+    if state.get('suite_policy') or 'suite_inputs' in plan:
+        from safe_engine.suites import describe, execute
+        def identify():
+            return describe(project, [plan['full_suite']], plan.get('suite_inputs'), plan)
+        def launch(slot):
+            return [run_command(plan['full_suite'], project, plan['timeout_seconds'],
+                                Path(project, '.factory/fast/prove-suite.log'), owned_lease=slot.lease())]
+        batch = execute(project, identify, launch, cache=not fresh)
+        result = {**batch['results'][0], 'reused': batch['reused'], 'suite_execution': batch['execution'],
+                  'suite_identity': batch['identity']}
+        result['passed'] = result['passed'] and batch['unchanged']
+    else:
+        result = run_command(plan["full_suite"], project, plan["timeout_seconds"],
+                             Path(project, ".factory/fast/prove-suite.log"))
     result["candidate"] = evidence.candidate(project)
-    result["passed"] = result["passed"] and result["candidate"] == state["show"]["report"]["candidate"]
-    state["show"]["proof"] = result
+    result["passed"] = result["passed"] and result["candidate"] == candidate
+    holder['proof'] = result
     gate.put(project, state)
     gate.log("show.prove", key=state["key"], passed=result["passed"])
     print(Path(result["log"]).read_text(encoding="utf-8", errors="replace"))
@@ -55,10 +76,28 @@ def run(args, gate):
     """Only the normal gate writes protected records; all input remains untrusted evidence."""
     try:
         project, state = gate.open_run(args.project)
-        evidence.require(show.enabled(state) and not state.get("closed"), "Show needs an open UI run on current methods")
+        evidence.require(not state.get('closed'), 'Show/Prove needs an open run')
         if args.command == "prove":
-            prove(project, state, gate)
+            if getattr(args, 'plan', None):
+                evidence.require(not args.fresh, '--fresh applies only to prove --suite')
+                evidence.require(not state.get('ui') and 'plan' not in state['done'] and not state.get('suite'),
+                                 'Declare the non-UI suite once before done plan; UI uses show --plan')
+                data = evidence.read(evidence.local(project, args.plan))
+                from fast_lane import runtime
+                evidence.require(type(data.get('version')) is int and data['version'] == 1,
+                                 'Suite plan needs version 1')
+                command = data.get('full_suite')
+                evidence.require(isinstance(command, list) and 0 < len(command) <= 100, 'full_suite needs an argv list')
+                state['suite'] = {'plan': {'full_suite': [evidence.text(a, 'suite argument') for a in command],
+                    'timeout_seconds': show.integer(data.get('timeout_seconds', 1800), 'timeout_seconds', 1, 86400),
+                    **({'suite_inputs': runtime('suites').inputs(data['suite_inputs'])}
+                       if 'suite_inputs' in data else {})}}
+                gate.put(project, state)
+                print('Full suite plan recorded')
+                return
+            prove(project, state, gate, getattr(args, 'fresh', False))
             return
+        evidence.require(show.enabled(state), 'Show needs an open UI run on current methods')
         if args.candidate:
             print(evidence.candidate(project))
             return
@@ -91,5 +130,5 @@ def run(args, gate):
         gate.log(f"show.{action}", key=state["key"])
         if action in ("shared", "reply"):
             print(show.notice(project, state))
-    except (OSError, ValueError, KeyError, TypeError, RuntimeError, ImportError) as error:
+    except Exception as error:
         gate.fail(f"Show: {error}")

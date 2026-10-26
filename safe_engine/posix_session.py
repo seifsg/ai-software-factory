@@ -11,7 +11,7 @@ import time
 
 class Session:
     """Only stop reaps the guardian, so its PID and PGID cannot be reused first."""
-    def __init__(self, argv, cwd, *, shell=False, **options):
+    def __init__(self, argv, cwd, *, shell=False, owned_lease=None, **options):
         self.check_reaper()
         self.control = tempfile.TemporaryDirectory(prefix="factory-session-")
         self.result = Path(self.control.name) / "exit"
@@ -20,7 +20,7 @@ class Session:
         self.signals_done = False
         try:
             self.anchor = subprocess.Popen([sys.executable, str(Path(__file__).resolve()), str(self.result),
-                                            json.dumps(argv), str(int(shell))],
+                                            json.dumps(argv), str(int(shell)), *([str(owned_lease)] if owned_lease else [])],
                                            cwd=cwd, start_new_session=True, **options)
         except BaseException:
             self.control.cleanup()
@@ -84,6 +84,11 @@ class Session:
 
 def guardian():
     """Stay alive after command exit; caught handlers reset to default on child exec."""
+    if len(sys.argv) == 5:
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+        from safe_engine.suite_lease import guardian as leased_guardian
+        leased_guardian(Path(sys.argv[1]), json.loads(sys.argv[2]), bool(int(sys.argv[3])), sys.argv[4])
+        return
     signal.signal(signal.SIGTERM, lambda *_: None)
     signal.signal(signal.SIGINT, lambda *_: None)
     result = Path(sys.argv[1])

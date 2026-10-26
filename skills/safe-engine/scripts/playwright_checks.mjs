@@ -1,3 +1,25 @@
+/** Freeze a new page's Date before its first navigation; timers still run. */
+export async function fixedBrowserClock(page, instant) {
+  if (typeof instant !== 'string' || !/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?(?:Z|[+-]\d\d:\d\d)$/.test(instant)
+      || !Number.isFinite(Date.parse(instant))) throw new Error('instant must be an ISO date-time with an offset');
+  if (page.url() !== 'about:blank') throw new Error('fix browser clock before navigation');
+  await page.clock.setFixedTime(instant);
+}
+
+/** Create an isolated timezone-bound page with deterministic wall time. */
+export async function fixedBrowserPage(browser, { instant, timezoneId }) {
+  if (typeof timezoneId !== 'string' || !timezoneId.trim()) throw new Error('timezoneId is required');
+  const context = await browser.newContext({ timezoneId });
+  try {
+    const page = await context.newPage();
+    await fixedBrowserClock(page, instant);
+    return { context, page };
+  } catch (error) {
+    await context.close();
+    throw error;
+  }
+}
+
 /** Observations for explicit checks; no browser launch or automatic visual verdict. */
 export async function rendered(locator) {
   const found = [];

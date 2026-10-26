@@ -60,7 +60,7 @@ Every audit gives each ID a verdict. U1 to U5 state the goal; their checks live 
 
 ## 4. Use it. Audit it.
 
-1. Finish the visual build, then share Show before this audit. During Look: only type checks and a quick render.
+1. Finish Look and share Show before auditing. Use each item before affected tests, type checks and rendering.
 2. Use it by hand through the real browser, native app, game or CLI. Complete the journey, its failure and recovery states, each supported input and display variant. Recount each core journey; above its recorded minimum without the reason is a FAIL. Record what you did and saw: journeys with their counts, states, inputs, devices. That record is the judge's use log.
 3. Read logs; inspect assets at real size/theme; listen in context. Screenshots prove no interaction; filenames/waveforms prove no sound quality.
 4. Capture each core screen in each of its states at the main width, plus once at the other width (phone and desktop). First viewport and full page. Web: run the page outline and the scan from `references/basics.md` on each.

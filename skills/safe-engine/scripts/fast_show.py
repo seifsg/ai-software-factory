@@ -32,11 +32,15 @@ def plan(data):
         evidence.require(isinstance(size, list) and len(size) == 2
                          and all(type(n) is int and 0 < n <= 32768 for n in size), "Invalid planned viewport")
     evidence.require(sizes["desktop"][0] > sizes["phone"][0], "Phone viewport must be narrower than desktop")
-    return {"surfaces": [{"id": key, "name": evidence.text(row.get("name"), "surface name")}
+    result = {"surfaces": [{"id": key, "name": evidence.text(row.get("name"), "surface name")}
                          for key, row in surfaces.items()],
             "full_suite": [evidence.text(arg, "suite argument") for arg in suite], "viewports": sizes,
             "wait_minutes": integer(data.get("wait_minutes", 30), "wait_minutes", 0, 1440),
             "timeout_seconds": integer(data.get("timeout_seconds", 1800), "timeout_seconds", 1, 86400)}
+    if 'suite_inputs' in data:
+        from fast_lane import runtime
+        result['suite_inputs'] = runtime('suites').inputs(data['suite_inputs'])
+    return result
 
 
 def show_plan(run):
@@ -155,10 +159,12 @@ def ready_for_prove(project, run, at=None):
 
 def problems(run, project, final=False):
     """Surface invalid plans/receipts in the existing gate without changing older runs."""
-    if not enabled(run):
-        return []
     try:
-        ready_for_prove(project, run) if final else show_plan(run)
+        holder = run.get('show' if enabled(run) else 'suite', {})
+        if run.get('suite_policy'):
+            evidence.require(holder.get('plan'), 'Declare the full suite before done plan')
+        if enabled(run):
+            ready_for_prove(project, run) if final else show_plan(run)
         return []
     except (OSError, ValueError, KeyError, TypeError) as error:
         return [f"Show: {error}"]
@@ -175,21 +181,33 @@ def notice(project, run):
 def completion_problems(run, project):
     """A known failed or interrupted suite cannot disappear behind a manual PASS line."""
     found = problems(run, project, final=True)
-    proof = run.get("show", {}).get("proof")
-    if enabled(run) and proof is not None:
+    proof = (run.get('show' if enabled(run) else 'suite') or {}).get('proof')
+    if run.get('suite_policy') and proof is None:
+        found.append('Full suite: run prove --suite for the finished candidate before handoff')
+    if (enabled(run) or run.get('suite')) and proof is not None:
         if not isinstance(proof, dict) or proof.get("passed") is not True:
             found.append("Show: declared suite failed or was interrupted; finish its correction before handoff")
-        elif proof.get("candidate") != run["show"].get("report", {}).get("candidate"):
+        elif proof.get("candidate") != evidence.candidate(project):
             found.append("Show: declared suite proof is stale; run prove --suite for the current source before handoff")
+        elif run.get('suite_policy') or 'suite_identity' in proof:
+            from fast_lane import runtime
+            suites = runtime('suites')
+            planned = run['show' if enabled(run) else 'suite']['plan']
+            try:
+                current_identity = suites.describe(project, [planned['full_suite']], planned.get('suite_inputs'), planned)
+                if (proof.get('suite_identity') != current_identity or not suites.evidence(Path(project).resolve(), [proof])):
+                    found.append('Full suite: effective inputs or saved evidence changed; run prove --suite again')
+            except (OSError, ValueError, RuntimeError, suites.EngineError) as error:
+                found.append(f'Full suite: {error}')
     return found
 
 
 def suite_guard(command, run, project, dialect=None):
     """Match declared direct suite invocations using the existing parser, not a new shell classifier."""
-    if not enabled(run):
+    if not enabled(run) and not run.get('suite'):
         return None
     import fast_shell
-    suite = run.get("show", {}).get("plan", {}).get("full_suite")
+    suite = (run.get('show') if enabled(run) else run.get('suite') or {}).get('plan', {}).get('full_suite')
     if not suite:
         return None
     def normalized(words):
@@ -199,5 +217,8 @@ def suite_guard(command, run, project, dialect=None):
     for mode in ([dialect] if dialect else ["bash", "windows"]):
         for cmd in fast_shell.pipelines(command, mode):
             if isinstance(cmd, fast_shell.Command) and not cmd.outer and normalized(cmd.words)[:len(expected)] == expected:
-                return "; ".join(problems(run, project, final=True)) or None
+                if run.get('suite_policy'):
+                    return 'Run the declared full suite through prove --suite so queue and evidence checks apply'
+                return (("; ".join(problems(run, project, final=True)) or None) if enabled(run)
+                        else None if 'build' in run.get('done', {}) else 'Full suite waits until done build')
     return None

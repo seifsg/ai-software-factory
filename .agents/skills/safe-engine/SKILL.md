@@ -63,7 +63,7 @@ Record every step in one work record and pass the gate: [fast-run](references/fa
 8. **Schema** (persistence): `database-schema`, only if needed.
 9. **Build:** each item through 0–4; spike unknown capabilities first, tick after use. UI: [Look, Show, Prove, Ship](references/show.md).
    - On each tick, write that todo's one log line, `T3 pre: … do: … post: …`, and in the same edit set `**Now:**` to the todos in progress.
-   - Final tests follow manual use; UI also completes Show first. A POC waits for `verify` or Safe.
+   - After actual item use, run only mapped affected tests for feedback during build and fixes. In the plan, declare the project's command and changed-input mapping; an unknown mapping needs a manual choice and reason. A command that runs the complete suite, including `tests/run.py --changed` when its mapping falls back to all, is never a narrow check. Final tests follow manual use; UI also completes Show first. A POC waits for `verify` or Safe.
 10. **Done-run:** prove each ticket's definition of done.
     - Start it once. Use every requested journey and the most likely failure through real controls (simulated input proves no requested integration). Read the logs; fix blockers.
     - Meanwhile capture the PR's complete view and journey inventory (`how-to-make-a-pr`). A demo bug restarts its capture cycle after the checked fix.
@@ -83,7 +83,7 @@ The owner names `lucky`, `verify` or `promote`: [run cases](references/run-cases
 
 ## Every mode
 
-- Tests last, whenever tests run (Safe, `verify`, a Safe check): finish the work, use it (every requested journey, failure and recovery), then write and run tests.
+- Tests follow actual use: affected feedback checks after each item use; final tests after all work and, for UI, Show. In Safe, `verify` or a Safe check, complete every requested journey, failure and recovery before final tests.
 - Repair findings: [worth-it rounds](references/worth-it.md).
 - Every UI change: `ux-quality`. New or changed persistence: `database-schema`. Material unknowns: `research-market`.
 - Every PR: all of `how-to-make-a-pr`, including its mandatory visual and journey demonstration, scoped owner waivers and capture recovery. Plan its inventory and capture Before before editing; reuse final QA for After. One branch and draft PR per variation; an epic's wave: one integration branch and one draft PR its runs update, never a PR per run.

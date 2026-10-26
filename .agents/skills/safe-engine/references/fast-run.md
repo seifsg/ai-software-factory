@@ -93,6 +93,8 @@ python fast_gate.py shots --base <ref> --serve "<dev command, {port} for its por
 
 ## Hooks
 
+**One full suite per effective version.** Before `done plan`, declare argv, file/environment inputs and browser clock via `show --plan` (UI) or `prove --plan`. After manual use, Build and UI Show, `prove --suite` queues the suite and reuses intact matching proof. Old runs keep their policy.
+
 - Until every step before `build` passes, source edits, shell writes (`>`, `>>`, `&>`, `>|`, piped `tee`) and scaffold or install commands in the run's project are denied. Quoted text, heredoc bodies and here-strings never count, so ticket bodies pass. `.factory/` stays writable, except `run.json`.
 - Destructive commands are denied in every step of an active run; the owner runs them or approves another approach: recursive deletes (`rm -r`, `Remove-Item -Recurse`, `find -delete`) outside the project (the run's scratch folder excepted), of the whole project, of `.factory` or `.factory/fast`; any delete, move or wildcard that can reach `.factory/fast/run.json`, or anything in `.git` except `index.lock`; `git clean -x`/`-X`, `git stash --all`; force, mirror, prune or `main`/`master`-delete pushes; `DROP` or `TRUNCATE` through a database client, and database wipes; deletes, moves and writes reaching the gate home's `active/` or `runs/`; migrations naming a production env value. A command you need matches one, or a deny came: [what passes, what hooks miss](gate-details.md#destructive-guard).
 - Stop reminds once for unfinished work; repeat, paused and closed stops pass. For finite helpers, `wait --add` records a supported completion wakeup: follow [quiet waits](waiting.md). Every owned run needs its own valid wait. Servers never qualify; do not `pause` for helpers.
@@ -101,8 +103,8 @@ python fast_gate.py shots --base <ref> --serve "<dev command, {port} for its por
 
 ## Progress
 
-- `start`, `done`, `status`, `pause`, `resume` and `close` print the run card first, a mini dashboard. Hooks show the owner each unseen card, built todo and new NOW once (debugging it: [progress internals](gate-details.md#progress-internals)); a delegate's hook calls show nothing, the next main-thread call does.
-- Never repeat a gate message your agent already showed. Where it shows no hook messages (the factory's `docs/hosts.md`), relay the card from the command output.
+- `start`, `done`, `status`, `pause`, `resume` and `close` print the card first. Hooks show unseen cards, built todos and new NOW once ([details](gate-details.md#progress-internals)); delegates emit nothing until the next main-thread call.
+- Relay cards only when hooks show none (factory `docs/hosts.md`). Never repeat shown cards.
 
 ## Live view
 
@@ -112,5 +114,5 @@ python fast_gate.py shots --base <ref> --serve "<dev command, {port} for its por
 
 ## Keep it fast
 
-- One record; status moves at boundaries.
+- One record; boundary status only.
 - No controller capture/seal commands or routine independent code review in Fast or Lucky. PR screenshot and video capture still applies in full (`how-to-make-a-pr`). Exception: on UI work, a fresh agent writes the done-run's UX verdicts (`ux-quality` step 4). `verify` adds manual QA and tests; `promote` moves to Safe.

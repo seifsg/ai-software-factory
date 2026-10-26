@@ -15,6 +15,7 @@ from safe_engine.project import EngineError, production_fingerprint, validate_pr
 from safe_engine.review_packet import method_paths, preflight, prompt_for
 from safe_engine.storage import atomic_json
 from safe_engine.workflow import Workflow
+from suite_fixture import isolate_suite_queue
 
 
 class DeliveryV2Tests(unittest.TestCase):
@@ -22,6 +23,7 @@ class DeliveryV2Tests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name).resolve()
+        isolate_suite_queue(self)
         self.git("init", "-q")
         (self.root / ".gitignore").write_text(".factory/\n.env\n", encoding="utf-8")
         (self.root / "README.md").write_text("Fixture document: preserve this sentence.\n", encoding="utf-8")

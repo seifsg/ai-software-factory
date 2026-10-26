@@ -7,6 +7,7 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 ## [Unreleased]
 
 ### Added
+- Complete-suite input declarations, evidence reuse and a machine-wide queue; fixed browser-clock helpers, declared journey-time lint and affected-test feedback after manual use (#158).
 - Reasoned hidden-check selection, pasted checker briefs, syntax/execution receipts and scoped browser trap helpers (#159).
 - UI Look/Show/Prove/Ship checkpoint with current paired pictures, recorded sharing and owner feedback/deadlines before the declared suite (#154).
 - Quiet helper waits with immutable generation/completion receipts, named pending work and per-run Stop reconciliation.

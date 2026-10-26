@@ -12,12 +12,14 @@ from unittest.mock import patch
 from safe_engine.project import EngineError, bundle_input_paths, validate_profile
 from safe_engine.storage import atomic_json
 from safe_engine.workflow import Workflow
+from suite_fixture import isolate_suite_queue
 
 
 class FeatureBatchTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.root = Path(self.temp.name).resolve()
+        self.queue = isolate_suite_queue(self)
         self.git('init', '-q')
         (self.root / '.gitignore').write_text('.factory/\n__pycache__/\n')
         (self.root / 'app.py').write_text('value = 1\n')
@@ -40,6 +42,7 @@ class FeatureBatchTests(unittest.TestCase):
         self.flow = Workflow(self.root)
 
     def tearDown(self):
+        self.doCleanups()
         self.temp.cleanup()
 
     def git(self, *args):
@@ -100,7 +103,9 @@ class FeatureBatchTests(unittest.TestCase):
 
     def test_legacy_profile_keeps_fresh_final_execution(self):
         self.profile.pop('reuse_unchanged_checks')
-        self.full()
+        self.build()
+        state=self.flow.load();state.pop('suite_policy');atomic_json(self.root/'.factory/state.json',state)
+        self.flow.record('batch',self.draft('batch'));self.flow.check()
         self.assertFalse(self.final()['checks_reused'])
         self.assertEqual(self.counts(),(2,2))
         self.assertEqual(self.flow.load()['schema_version'],1)
@@ -125,7 +130,7 @@ class FeatureBatchTests(unittest.TestCase):
         self.assertEqual(self.counts(),(2,2))
 
     def test_changed_declared_file_executes_full_suite(self):
-        f=self.root/'.factory/runtime-input';f.parent.mkdir();f.write_text('one')
+        f=self.root/'.factory/runtime-input';f.parent.mkdir(exist_ok=True);f.write_text('one')
         self.profile['input_files']=['.factory/runtime-input'];self.full();f.write_text('two')
         self.assertFalse(self.final()['checks_reused'])
         self.assertEqual(self.counts(),(2,2))
@@ -147,20 +152,17 @@ class FeatureBatchTests(unittest.TestCase):
         with self.assertRaisesRegex(EngineError,'repair'):self.flow.check()
         self.assertEqual(self.counts(),(1,1))
 
-    def test_log_tamper_refuses_reuse_preserving_evidence(self):
+    def test_log_tamper_reruns_instead_of_reusing_evidence(self):
         self.full();self.flow.record('improvement',self.draft('improvement'))
         before=self.flow.load();Path(before['checks']['results'][0]['log']).write_text('tampered')
-        with self.assertRaisesRegex(EngineError,'evidence'):self.flow.check()
-        self.assertEqual(self.flow.load(),before)
-        self.assertEqual(self.counts(),(1,1))
+        self.assertFalse(self.flow.check()['checks_reused'])
+        self.assertEqual(self.counts(),(2,2))
 
-    def test_output_tamper_or_deletion_refuses_reuse(self):
+    def test_output_tamper_reruns_instead_of_reusing_evidence(self):
         self.full();self.flow.record('improvement',self.draft('improvement'))
         out=self.root/'.factory/outputs/a.txt';out.write_text('tampered')
-        with self.assertRaisesRegex(EngineError,'output evidence'):self.flow.check()
-        out.unlink()
-        with self.assertRaisesRegex(EngineError,'not a file'):self.flow.check()
-        self.assertEqual(self.counts(),(1,1))
+        self.assertFalse(self.flow.check()['checks_reused'])
+        self.assertEqual(self.counts(),(2,2))
 
     def test_missing_duplicate_or_altered_command_results_refuse_acceptance(self):
         self.full();self.flow.record('improvement',self.draft('improvement'))
@@ -239,7 +241,11 @@ class FeatureBatchTests(unittest.TestCase):
 
     def test_cli_feature_feedback_exit_codes_and_no_version_acceptance(self):
         self.build()
-        def cli(*args):return subprocess.run([sys.executable,'-m','safe_engine','--project',str(self.root),*args],
+        code = ('import runpy,sys; from pathlib import Path; from unittest.mock import patch\n'
+                'queue=Path(sys.argv.pop(1)); queue.mkdir(parents=True, exist_ok=True)\n'
+                'with patch("safe_engine.suite_queue.machine_directory", return_value=queue):\n'
+                '    runpy.run_module("safe_engine", run_name="__main__")')
+        def cli(*args):return subprocess.run([sys.executable,'-c',code,str(self.queue),'--project',str(self.root),*args],
             cwd=Path(__file__).resolve().parents[1],capture_output=True, text=True, encoding="utf-8")
         artifact=str(self.draft('feature'))
         good=cli('feature-check','--checks','a','--file',artifact)

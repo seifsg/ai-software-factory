@@ -2,7 +2,7 @@
 
 Contents: setup, task and profile, phases, ticket commands, repair, review, evidence, status and resume.
 
-The controller records stages, runs checks and launches review. It does not build, push, merge, deploy, provision sessions or worktrees, or run as a daemon.
+Records stages, checks and reviews; never builds, pushes, merges, deploys, provisions sessions/worktrees or runs as a daemon.
 
 ## Setup
 
@@ -52,7 +52,7 @@ Each `record` needs its matching phase. Artifacts are substantive Markdown; the 
 |---|---|---|
 | `analyze` | Run `analyze-start`. No code. | `record analysis --file <analysis.md>` |
 | `plan` | Run `get-ready-to-code`: five outputs; file-summary stop unless the owner already confirmed the ticket's before/after. New software: first plan, `research-market`, revised plan; save all three. Write the todos into the ticket's checklist. No code. | `record plan --file <plan.md>` |
-| `build` | Run the 0-4 loop for every checklist item; tick each in the ticket after its check (use it, see it work). Finish all implementation and worthwhile in-scope improvements. No test writing, no final walkthrough. | `record implementation --file <summary.md>` |
+| `build` | Run the 0-4 loop per item; tick it after actual use. New runs permit selected feedback below. Finish implementation and worthwhile improvements; final walkthrough comes next. | `record implementation --file <summary.md>` |
 | `manual` | Final actual-use QA with failure and recovery paths. | `record manual --file <receipt.json>` |
 | `testing` | Write tests in `test_paths`. Seal reviewed acceptance, then record the batch (tests written, commands run, results). | `contract-proposal`, `seal`, `record batch --file <tests.md>` |
 | `verify` | One complete final gate. Read the logs. | `check` |
@@ -62,6 +62,8 @@ Each `record` needs its matching phase. Artifacts are substantive Markdown; the 
 
 - `record analysis` and `record plan` are refused if source or declared inputs changed since `init`. Restore the starting candidate.
 - `record implementation` freezes the production candidate (`manual_candidate`). A production change after it invalidates manual evidence: `repair`. Test-only changes do not.
+
+For item feedback, follow [affected checks](affected-checks.md).
 
 ## Ticket commands
 
@@ -140,7 +142,7 @@ The cap applies to every review loop: controller review, seal and amend review, 
 
 ## Evidence
 
-- Order: finish implementation, `record manual`, then tests. Never test early.
+- Final proof: finish implementation, `record manual`, then complete tests.
 - Receipt file:
 
 ```json
