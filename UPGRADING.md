@@ -11,7 +11,7 @@ For every release:
 
 - Existing Claude Code installs: after release, update the factory and rerun `python skills/safe-engine/scripts/fast_gate.py install --host claude` if `claude plugin list --json` lacks the enabled `safe-engine@ai-software-factory` entry. The installer now installs and verifies the plugin, not only its settings. Start a new Claude Code session afterward. Keep active factory bundle pins unchanged.
 
-- Update installed launchers after release to accept `start --from-plan` and `--plan-record`. Existing runs keep their pins. Reuse requires a source-verified approved snapshot and readable current tickets; old proof receipts never transfer. Record refusals now collect independent problems, and quoted FAIL text no longer overrides an explicit verdict. See [approved plans](docs/approved-plans.md).
+- Record refusals now collect independent problems, and quoted FAIL text no longer overrides an explicit verdict. Existing runs keep their pins. See [record diagnostics](docs/record-diagnostics.md).
 
 After release, update launchers for `prove --plan` and `prove --suite --fresh`. New Fast plans declare their suite before plan completion; explicit `suite_inputs` enables reuse. New Safe states adopt the shared complete-suite queue automatically. Existing runs keep their saved policy and bundle. See [complete suites](docs/suite-checks.md).
 

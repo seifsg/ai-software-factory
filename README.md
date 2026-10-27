@@ -56,7 +56,7 @@ Optional polish is scored and collected in the epic's existing **Finishing touch
 
 New runs use `fast_gate.py checks` to record reasoned hidden-check selection, actual runtime names and parsed/executed proof. Visual-only ports keep likeness plus the suite. See [hidden checks](docs/hidden-checks.md).
 
-An approved plan can start with `fast_gate.py start --from-plan <link> --plan-record <project-local.json>` plus the normal run flags. The gate validates current inputs and tickets before reusing planning, including the current suite declaration; design, schema, Show, proof and draft PR obligations remain. See [approved plans](docs/approved-plans.md) for the bounded snapshot and complete record diagnostics.
+Record refusals collect independent problems with repair examples; explicit verdict fields distinguish a failed check from explanatory wording. See [record diagnostics](docs/record-diagnostics.md).
 
 Browser journeys use a fixed instant and timezone before navigation. Each declared source calls `fixedBrowserPage` or `fixedBrowserClock`; run `node skills/safe-engine/scripts/journey_clock_lint.mjs <manifest.json>`. See [fixed browser time and affected tests](docs/journey-clock.md).
 

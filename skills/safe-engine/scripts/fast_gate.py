@@ -315,14 +315,6 @@ def cmd_start(args):
         run["done"]["analysis"] = {"at": now(), "skipped": "light lane"}
     if run.get("ux_rules") and not run["ui"]:  # only these runs later ask which UI files they changed
         run.update(sibling("fast_record").ui_start(project))
-    try:
-        imported = sibling("fast_plan_reuse").prepare(args, project, run, sys.modules[__name__])
-    except (OSError, ValueError, KeyError, TypeError) as error:
-        fail(str(error))
-    if imported is not None and record_path(project).exists() and not (
-            store.closed_run(registry_path(project)) or ledger_path(project).exists()):
-        fail(f"Approved plan import would leave the existing work record at {record_path(project)} in place; "
-             "preserve or move that record, then retry. No run was started.")
     archive_run(project)
     forget_shown(project)
     setup = sibling("fast_setup")
@@ -332,7 +324,7 @@ def cmd_start(args):
     scratch.mkdir(parents=True, exist_ok=True)  # after the state: a failed start leaves no folder behind
     record = record_path(project)
     if not record.exists():
-        record.write_text(imported if imported is not None else skeleton(run), encoding="utf-8")
+        record.write_text(skeleton(run), encoding="utf-8")
     save(registry_path(project), store.new_registration(project, args.key))
     log("run.start", key=args.key, project=str(project), mode=args.mode, kind=args.kind, bundle=run["bundle"], hooks=hooks)
     bundle = (f"{run['bundle']['root']} @ {run['bundle']['revision'][:12]}" if run["bundle"] else

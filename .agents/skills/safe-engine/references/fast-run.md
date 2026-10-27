@@ -4,7 +4,7 @@ Steps: `research`, `kickoff`, `tickets`, `analysis`, `plan`, `design`, `schema`,
 
 Reasoned proof selection: [hidden checks](hidden-checks.md), new runs.
 
-Reuse an approved plan: [source and input checks](approved-plans.md).
+Read record refusals: [complete diagnostics and verdict fields](record-diagnostics.md).
 
 ## Kickoff questions
 
