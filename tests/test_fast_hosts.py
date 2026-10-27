@@ -146,17 +146,89 @@ class LauncherAndInstallerTests(unittest.TestCase):
             code, out, _ = self.launch("cursor", self.cursor_write(), skills / "safe-engine" / "scripts" / "run-gate.sh")
             self.assertEqual(out["permission"], "deny")  # the installed copy gates too
 
-    def test_installer_enables_the_claude_plugin_over_https(self):
+    def fake_claude(self, fail="", listed=True):
+        """A stand-in Claude Code CLI: logs each call with its CLAUDE_CONFIG_DIR, fails calls starting with `fail`."""
+        script, calls = self.root / "fake_claude.py", self.root / "claude-calls.txt"
+        rows = [{"id": "safe-engine@ai-software-factory", "version": "9.9.9", "scope": "user", "enabled": True}]
+        script.write_text(
+            "import json, os, sys\nargs = ' '.join(sys.argv[1:])\n"
+            f"open({str(calls)!r}, 'a', encoding='utf-8').write(os.environ.get('CLAUDE_CONFIG_DIR', '') + '|' + args + '\\n')\n"
+            f"if {fail!r} and args.startswith({fail!r}):\n    print('boom'); sys.exit(1)\n"
+            f"if args.startswith('plugin list'):\n    print(json.dumps({rows if listed else []!r}))\n", encoding="utf-8")
+        patch = mock.patch.object(installer, "find_claude", return_value=[sys.executable, str(script)])
+        patch.start()
+        self.addCleanup(patch.stop)
+        return lambda: [line.split("|", 1) for line in calls.read_text(encoding="utf-8").splitlines()]
+
+    def test_installer_enables_installs_and_verifies_the_claude_plugin(self):
         settings = self.home / ".claude" / "settings.json"
         settings.parent.mkdir(parents=True)
         settings.write_text(json.dumps({"theme": "light"}), encoding="utf-8")
-        installer.install("claude", home=self.home, log=lambda line: None)
+        calls, lines = self.fake_claude(), []
+        installer.install("claude", home=self.home, log=lines.append)
         data = json.loads(settings.read_text(encoding="utf-8"))
         self.assertEqual(data["theme"], "light")
         self.assertTrue(data["enabledPlugins"]["safe-engine@ai-software-factory"])
         source = data["extraKnownMarketplaces"]["ai-software-factory"]["source"]
         self.assertEqual((source["source"], source["url"]), ("git", "https://github.com/seifsg/ai-software-factory.git"))
         self.assertTrue(settings.with_name("settings.json.bak-before-safe-engine").exists())
+        self.assertEqual(calls(), [[str(self.home / ".claude"), "plugin marketplace update ai-software-factory"],
+                                   [str(self.home / ".claude"), "plugin install safe-engine@ai-software-factory --scope user"],
+                                   [str(self.home / ".claude"), "plugin list --json"]])  # never the real user's config
+        self.assertIn("installed safe-engine@ai-software-factory 9.9.9", lines[-1])
+
+    def test_an_unknown_marketplace_is_added_before_the_plugin_installs(self):
+        calls = self.fake_claude(fail="plugin marketplace update")
+        installer.install("claude", home=self.home, log=lambda line: None)
+        self.assertEqual([args for _, args in calls()][:3],
+                         ["plugin marketplace update ai-software-factory",
+                          "plugin marketplace add https://github.com/seifsg/ai-software-factory.git",
+                          "plugin install safe-engine@ai-software-factory --scope user"])
+
+    def test_a_plugin_left_uninstalled_fails_loudly_with_the_fix(self):
+        settings = self.home / ".claude" / "settings.json"
+        for fake in ({"fail": "plugin install"}, {"listed": False}, None):
+            with self.subTest(fake=fake):
+                if fake is None:  # no CLI anywhere
+                    patch = mock.patch.object(installer, "find_claude", return_value=None)
+                    patch.start()
+                    self.addCleanup(patch.stop)
+                else:
+                    self.fake_claude(**fake)
+                with self.assertRaises(SystemExit) as stop:
+                    installer.install("claude", home=self.home, log=lambda line: None)
+                self.assertIn("enabled but not installed", str(stop.exception))
+                self.assertIn("claude plugin install safe-engine@ai-software-factory --scope user", str(stop.exception))
+                self.assertTrue(json.loads(settings.read_text(encoding="utf-8"))["enabledPlugins"]
+                                ["safe-engine@ai-software-factory"])  # settings stay written
+
+    def test_the_claude_cli_is_found_off_path(self):
+        appdata = self.root / "appdata"
+        for version in ("2.1.99", "2.1.308"):
+            exe = appdata / "Claude" / "claude-code" / version / "abc" / "claude.exe"
+            exe.parent.mkdir(parents=True)
+            exe.write_text("", encoding="utf-8")
+        env = {"APPDATA": str(appdata), "HOME": str(self.home), "USERPROFILE": str(self.home)}
+        with mock.patch.dict(os.environ, env), mock.patch.object(installer.shutil, "which", return_value=None):
+            os.environ.pop("SAFE_ENGINE_CLAUDE", None)
+            self.assertEqual(installer.find_claude(), [str(appdata / "Claude/claude-code/2.1.308/abc/claude.exe")])
+            with mock.patch.dict(os.environ, {"SAFE_ENGINE_CLAUDE": "/opt/claude"}):
+                self.assertEqual(installer.find_claude(), ["/opt/claude"])
+            shutil.rmtree(appdata)
+            self.assertIsNone(installer.find_claude())
+
+    def test_start_reports_a_claude_plugin_enabled_but_not_installed(self):
+        setup = module("fast_setup")
+        claude = self.home / ".claude"
+        claude.mkdir(parents=True)
+        (claude / "settings.json").write_text(json.dumps({"enabledPlugins": {"safe-engine@ai-software-factory": True}}),
+                                              encoding="utf-8")
+        with mock.patch.dict(os.environ, {"HOME": str(self.home), "USERPROFILE": str(self.home)}):
+            self.assertIn("enabled but not installed", setup.hook_status(self.project))
+            (claude / "plugins").mkdir()
+            (claude / "plugins" / "installed_plugins.json").write_text(json.dumps(
+                {"version": 2, "plugins": {"safe-engine@ai-software-factory": [{"scope": "user"}]}}), encoding="utf-8")
+            self.assertEqual(setup.hook_status(self.project), "Claude Code")
 
     def test_a_missing_gate_never_blocks_any_host(self):
         if not shutil.which("sh"):

@@ -35,8 +35,8 @@ Safe review picks an installed reviewer that did not build the candidate: `revie
 
 The plugin brings `/safe-engine`, `/improve-factory`, the gate hooks and the delegate role agents ([delegation](#delegation)). Its root is the repository's `skills/` folder. Pick one route:
 
-- **Installer:** `python fast_gate.py install --host claude` adds the marketplace over HTTPS with auto-update and enables the plugin in `~/.claude/settings.json`, keeping a backup.
-- **Settings by hand** (desktop app): add these keys to `~/.claude/settings.json`, then start a new session:
+- **Installer:** `python fast_gate.py install --host claude` adds the marketplace over HTTPS with auto-update and enables the plugin in `~/.claude/settings.json`, keeping a backup. It then installs the plugin at user scope with the Claude Code CLI and confirms `claude plugin list --json` shows it installed and enabled; otherwise it exits 1 with the fix. CLI lookup: `SAFE_ENGINE_CLAUDE`, `PATH`, `~/.local/bin`, then the newest `%APPDATA%\Claude\claude-code\<version>\<build>\claude.exe` the Windows desktop app keeps.
+- **Settings by hand** (desktop app): add these keys to `~/.claude/settings.json`, then start a new session. Enabled is not installed: Claude Code may register the marketplace and never fetch the plugin, so check `/plugin` or `claude plugin list`, and install from there when it is missing:
 
   ```json
   "extraKnownMarketplaces": {"ai-software-factory": {"source": {"source": "git", "url": "https://github.com/seifsg/ai-software-factory.git"}, "autoUpdate": true}},

@@ -8,6 +8,7 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 
 ### Fixed
 - Journey clock lint accepts both documented direct fixed-clock helpers while retaining wall-time checks (#182).
+- Claude Code install (#152): `install --host claude` now installs the plugin with Claude Code's CLI and checks `claude plugin list`, exiting 1 with the fix when it cannot; it used to only enable it in settings, which could leave no plugin. The run card's `Hooks:` line names an enabled but uninstalled plugin. Existing Claude Code installs: when `claude plugin list` lacks `safe-engine@ai-software-factory`, rerun `install --host claude`.
 
 ### Added
 - Validated approved-plan starts with `--from-plan`/`--plan-record`, explicit verdict-field checks and accumulated record diagnostics (#163).
