@@ -33,20 +33,17 @@ class Tree:
         with self._lock:
             if self._stopped:
                 return
-            self._stopped = True
-            try:
-                if self.job:
-                    winjob.close(self.job)
-                elif WINDOWS:
-                    subprocess.run(["taskkill", "/F", "/T", "/PID", str(self.process.pid)], capture_output=True,
-                                   timeout=60)
-                else:
+            if WINDOWS:
+                winjob.close(self.job)
+            else:
+                try:
                     os.killpg(self.process.pid, signal.SIGKILL)
-            except (OSError, subprocess.SubprocessError):
-                pass  # the group is already gone
+                except OSError:
+                    pass  # the group is already gone
             if self.process.poll() is None:
                 self.process.kill()
-        self.process.wait()
+            self.process.wait(timeout=10)
+            self._stopped = True
 
 
 def _feed(pipe, data):

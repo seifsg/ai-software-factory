@@ -12,22 +12,25 @@ import types
 
 BOOT = ("import json, sys; payload = json.loads(sys.stdin.buffer.readline()); scope = {'__name__': 'evals_check'}; "
         "exec(compile(payload.pop('check'), 'check', 'exec'), scope); sys.exit(scope['run'](payload))")
-MODULES = ("winjob", "proc", "rubric_tools")  # in import order; winjob exists only for Windows
+MODULES = ("safe_engine.windows_job", "evals.winjob", "evals.proc", "evals.rubric_tools")  # import order
 
 
 def install(payload):
     """Make `evals.<module>` importable for the rubric, each built from the sent source."""
-    package = types.ModuleType("evals")
-    package.__path__ = []
-    sys.modules["evals"] = package
+    for name in ("safe_engine", "evals"):
+        package = types.ModuleType(name)
+        package.__path__ = []
+        sys.modules[name] = package
     for name in MODULES:
-        if name == "winjob" and os.name != "nt":
+        parent, part = name.split(".")
+        if part in ("windows_job", "winjob") and os.name != "nt":
             continue
-        module = types.ModuleType(f"evals.{name}")
-        sys.modules[module.__name__] = module
-        setattr(package, name, module)
-        exec(compile(payload[name], name, "exec"), module.__dict__)
-    package.rubric_tools.HARNESS, package.rubric_tools.RECORD = payload["harness"], payload.get("record")
+        module = types.ModuleType(name)
+        sys.modules[name] = module
+        setattr(sys.modules[parent], part, module)
+        exec(compile(payload[part], name, "exec"), module.__dict__)
+    tools = sys.modules["evals.rubric_tools"]
+    tools.HARNESS, tools.RECORD = payload["harness"], payload.get("record")
 
 
 def record(folder, item):
