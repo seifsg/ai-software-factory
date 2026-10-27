@@ -288,7 +288,7 @@ python tests/run.py
 - Every PR adds a line to [CHANGELOG](CHANGELOG.md), and updates this README and `docs/` when it changes a command, flag, host, install or update step, release step, skill or folder; `tests/test_docs_sync.py` fails until they match.
 - Releases are local, no CI: `python scripts/release.py cut X.Y.Z`, merge the release PR, tag, then `python scripts/release.py publish vX.Y.Z` ([releasing](docs/releasing.md)).
 - Method byte budgets: `python scripts/token_report.py --against origin/main` shows what a change adds to every run.
-- `python -m evals run` scores the factory against a plain agent ([evals](evals/README.md)).
+- `python -m evals run` scores the factory against a plain agent ([evals](evals/README.md)). Windows evals require confirmed job ownership and descendant cleanup; isolated checks receive the same snapshotted ownership helper.
 
 The gate loads command arguments from `fast_cli.py` only for CLI calls; tool hooks retain their direct fast path.
 

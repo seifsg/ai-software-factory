@@ -33,20 +33,21 @@ class Tree:
         with self._lock:
             if self._stopped:
                 return
-            self._stopped = True
             try:
-                if self.job:
+                if WINDOWS:
                     winjob.close(self.job)
-                elif WINDOWS:
-                    subprocess.run(["taskkill", "/F", "/T", "/PID", str(self.process.pid)], capture_output=True,
-                                   timeout=60)
                 else:
-                    os.killpg(self.process.pid, signal.SIGKILL)
-            except (OSError, subprocess.SubprocessError):
-                pass  # the group is already gone
-            if self.process.poll() is None:
-                self.process.kill()
-        self.process.wait()
+                    try:
+                        os.killpg(self.process.pid, signal.SIGKILL)
+                    except OSError:
+                        pass  # the group is already gone
+            finally:
+                try:
+                    if self.process.poll() is None:
+                        self.process.kill()
+                finally:
+                    self.process.wait(timeout=10)
+            self._stopped = True
 
 
 def _feed(pipe, data):
@@ -77,9 +78,11 @@ def _supervise(tree, seconds, stdin_data):
     except subprocess.TimeoutExpired:
         code, timed_out = None, True
     finally:
-        tree.stop()  # leftovers die after a normal exit too
-        if reader:
-            reader.join(10)
+        try:
+            tree.stop()  # leftovers die after a normal exit too
+        finally:
+            if reader:
+                reader.join(10)
     return code, timed_out, b"".join(captured)
 
 
@@ -101,7 +104,8 @@ def run_limited(command, cwd, seconds, env=None, shell=False, stdin_path=None, s
             code, timed_out, captured = _supervise(tree, seconds, stdin_data)
         finally:
             with _LOCK:
-                _LIVE.discard(tree)
+                if tree._stopped:
+                    _LIVE.discard(tree)
     finally:
         for handle in (stdin if stdin_path else None, output if log else None):
             if handle:
@@ -112,9 +116,17 @@ def run_limited(command, cwd, seconds, env=None, shell=False, stdin_path=None, s
 
 
 def stop_all():
-    """Refuse new processes and kill every running tree: an interrupt must leave no paid agent running."""
+    """Refuse new processes, attempt every tree, and return failures; unconfirmed trees stay retryable."""
     STOPPING.set()
     with _LOCK:
         live = list(_LIVE)
+    errors = []
     for tree in live:
-        tree.stop()
+        try:
+            tree.stop()
+        except Exception as error:
+            errors.append(f"process {tree.process.pid}: {type(error).__name__}: {error}")
+        else:
+            with _LOCK:
+                _LIVE.discard(tree)
+    return errors

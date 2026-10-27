@@ -77,8 +77,10 @@ def load(names=None):
 
 def kit():
     """The check program and the modules it ships to the check child, read once with the samples."""
-    return {name: (CODE / f"{name}.py").read_text(encoding="utf-8")
-            for name in ("check", "rubric_tools", "harness", "proc", "winjob")}
+    sources = {name: (CODE / f"{name}.py").read_text(encoding="utf-8")
+               for name in ("check", "rubric_tools", "harness", "proc", "winjob")}
+    sources["windows_job"] = (CODE.parent / "safe_engine/windows_job.py").read_text(encoding="utf-8")
+    return sources
 
 
 def write_files(files, work):
