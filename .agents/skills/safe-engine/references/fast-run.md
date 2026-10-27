@@ -68,7 +68,7 @@ Each brief (checker, builder, UX judge, reviewer) also carries the Interface and
 
 `fast_gate.py` (debugging the gate: [modules](gate-details.md#modules)) sits in `scripts/` beside the installed launcher and in `skills/safe-engine/scripts/` of the factory bundle. Python 3.9+, standard library only.
 
-Before `start` on a product, select the factory bundle with the launcher's `resolve_bundle.py --project <abs>` (it writes `.factory/entry-bundle.json`); skip it when the run maintains the factory itself.
+Before product `start`, select with `resolve_bundle.py --project <abs>` (writes `.factory/entry-bundle.json`). Factory maintenance selection: `improve-factory`.
 Git-backed starts fetch their upstream first, keeping dirty work; the start commit anchors UI proof.
 
 ```text

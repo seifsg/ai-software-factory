@@ -1,6 +1,6 @@
 ---
 name: improve-factory
-description: "Repairs or improves the factory itself: its skills, gate, controller and host adapters. Use when the factory skipped a step, gave unclear or wrong instructions, or when its gate, controller or an adapter misbehaved. Not for product bugs; those go back to delivery."
+description: "Repairs factory skills, gates, controllers and adapters when factory instructions or behavior fail. Product bugs go back to delivery."
 ---
 
 # Improve Factory
@@ -10,7 +10,7 @@ Keep any active app run safe. The repair never writes the app's source; pausing 
 
 ## Mode
 
-- Fast by default: a light-lane `change` run on its maintenance ticket (the one it follows up, or a new one), with recorded steps, gated by `skills/safe-engine/scripts/fast_gate.py`, started once the maintenance worktree exists. The gate itself blocks the repair: pause the blocking run's gate first. Its done-run is step 5 below.
+- Fast by default: a light-lane `change` run on its maintenance ticket, gated by `skills/safe-engine/scripts/fast_gate.py` after the worktree exists. Pause a blocking run's gate first. Its done-run is step 5.
   - A small repair (wording, one rule) uses the light lane as is: step 3 keeps the cause, a success line and the todos.
   - A method, gate or controller change runs step 3 in full and records it in the Plan section, since the light lane has no Analysis section.
 - Safe on request: the full `ticketing` cycle in its own builder session, the file-summary stop and the review in step 6.
@@ -35,11 +35,13 @@ Keep any active app run safe. The repair never writes the app's source; pausing 
 ## 2. Isolate
 
 - Repair in its own branch or worktree. One writer per file in the candidate.
+- Keep runner, candidate and target app distinct. For a new run, pin the immutable runner via `resolve_bundle.py --project <candidate> --bundle <runner>`; use its gate with `--project <candidate>`. Never select the editable candidate as runner or change an active pin.
+- Base the candidate on the runner revision or an owner-approved unmerged commit. Record the base and unmerged status; neither choice releases or adopts it.
 - Active app run: follow `references/live-session.md` before any workspace change or delegation. Checkpoint → isolated repair → independent review → compatible resume.
 - Never silently stash, reset, switch or upgrade a target, its bundle or global settings.
 - Factory repair grants no product scope change. Keep the app ticket and the maintenance ticket separate.
 - Run independent tickets in parallel, each in its own worktree: a checkout holds one open gate run.
-- Work for another session follows the `safe-engine` Delegate rule for it. A product bug: that rule as written, in the product's ticket; during an active app run, `references/live-session.md` first. Factory work: a maintenance ticket, and the prompt invokes `improve-factory` with no kind, a factory repository checkout (never the bundle cache) in place of the project path, and the report. It tells the new session to create its factory worktree from `origin/main` right after `git fetch origin` and resolve with `--bundle <that worktree>` (unlike the repair worktree in `references/live-session.md`). Your unmerged repair is not in it; say so.
+- Other-session work follows `safe-engine` Delegate. A product bug uses its ticket; active app work reads `references/live-session.md` first. Factory work invokes `improve-factory` with a maintenance ticket, factory checkout and report. Name runner, base and app; fetch before candidate creation. Use `origin/main` only when intended; state if the base is unmerged.
 - Worktrees separate files only. Give delegates absolute paths; route, brief and accept them by the `safe-engine` delegate rules. Isolate shared ports, databases, caches and services.
 
 ## 3. Analyze and plan
@@ -79,7 +81,7 @@ Do not code before the plan is recorded.
    - Evidence reuse: both reuse and rejection (changed inputs, tampered proof, pending operations).
 3. Isolate fixtures from real project work and secrets. No product pilot or simulation unless the owner asks.
 4. Check every changed skill stays self-contained: links only inside its own folder; no names, dates or host specifics.
-5. Run the full test suite: `python tests/run.py`, in parallel, the same tests as `python -m unittest discover -s tests`. It must pass. While iterating, `--changed` runs only what the diff touches. Write or fix tests only after step 1.
+5. After manual use, run affected checks. Commit planned source, docs, tests and packaging edits. Run `python tests/run.py` on that commit via the selected runner's Prove if available; else directly under its recorded gate workflow. Retain runner receipt, commit, inputs, command, log and result. After edits, repeat affected checks and final proof. Write tests only after step 1.
 6. Each check proves only itself. A walkthrough does not prove a code repair; a passing suite does not prove a walkthrough.
 
 ## 6. Independent review
