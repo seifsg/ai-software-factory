@@ -6,6 +6,8 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-27
+
 ### Fixed
 - Journey clock lint accepts both documented direct fixed-clock helpers while retaining wall-time checks (#182).
 - Claude Code install (#152): `install --host claude` now installs the plugin with Claude Code's CLI and checks `claude plugin list`, exiting 1 with the fix when it cannot; it used to only enable it in settings, which could leave no plugin. The run card's `Hooks:` line names an enabled but uninstalled plugin. Existing Claude Code installs: when `claude plugin list` lacks `safe-engine@ai-software-factory`, rerun `install --host claude`.
@@ -52,5 +54,6 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 - Leaner runs (#137): product, feature and change runs each read 24% less method text, every gate message is shorter with the same facts, `scripts/token_report.py` measures both, and tests hold every method file and the gate's fixture messages to a byte budget and the product and change loads to 80% of their earlier size.
 - Self-update (#139): a clone install moves only to a release tag on `main` whose files match its manifest, records the previous revision, rolls back a failed install and shows a one-time notice naming both versions.
 
-[Unreleased]: https://github.com/seifsg/ai-software-factory/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/seifsg/ai-software-factory/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/seifsg/ai-software-factory/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/seifsg/ai-software-factory/releases/tag/v1.0.0
