@@ -5,12 +5,14 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import threading
 import unittest
 from unittest.mock import patch
 
 from safe_engine.project import EngineError
 from safe_engine.runner import run_command
 from safe_engine.suites import describe, execute
+from safe_engine.suite_queue import admission
 from safe_engine.workflow import Workflow
 
 
@@ -78,6 +80,95 @@ class SuitePolicyTests(unittest.TestCase):
         self.assertFalse(execute(self.root, unknown, run)['reused'])
         self.assertEqual(len(calls), 4)
         self.assertEqual(first['results'][0]['exit_code'], 0)
+
+    def test_non_object_cache_receipts_queue_fresh_suite(self):
+        argv = [sys.executable, '-c', 'print("ok")']
+        calls = []
+        identity = lambda: {'commit': 'fixture', 'fingerprint': 'same'}
+        def run(slot):
+            log = self.root / '.factory' / f'log-{len(calls)}.txt'
+            calls.append(slot.generation)
+            return [run_command(argv, self.root, 8, log, owned_lease=slot.lease())]
+        execute(self.root, identity, run)
+        receipt = next((self.root / '.factory' / 'suite-cache').glob('*.json'))
+        for index, payload in enumerate(('42', 'null', '[]', '"bad"'), start=2):
+            with self.subTest(payload=payload):
+                receipt.write_text(payload)
+                row = execute(self.root, identity, run)
+                self.assertFalse(row['reused'])
+                self.assertEqual(len(calls), index)
+
+    def test_valid_hit_skips_held_admission_without_launching(self):
+        argv = [sys.executable, '-c', 'print("ok")']
+        calls = []
+        identity = lambda: describe(self.root, [argv], {'files': [], 'environment': []}, {})
+        def run(slot):
+            log = self.root / '.factory' / f'log-{len(calls)}.txt'
+            calls.append(log)
+            return [run_command(argv, self.root, 8, log, owned_lease=slot.lease())]
+        execute(self.root, identity, run)
+        held, release = threading.Event(), threading.Event()
+        def owner():
+            with admission():
+                held.set()
+                release.wait(8)
+        thread = threading.Thread(target=owner)
+        thread.start()
+        try:
+            self.assertTrue(held.wait(8))
+            row = execute(self.root, identity, run)
+            self.assertTrue(row['reused'])
+            self.assertEqual(len(list(self.queue.glob('*.request.json'))), 1)
+            self.assertEqual(len(calls), 1)
+        finally:
+            release.set()
+            thread.join(8)
+
+    def test_hit_rejects_mutation_and_cancellation_before_return(self):
+        argv = [sys.executable, '-c', 'print("ok")']
+        calls = []
+        value = {'commit': 'fixture', 'fingerprint': 1}
+        def run(slot):
+            log = self.root / '.factory' / f'log-{len(calls)}.txt'
+            calls.append(log)
+            return [run_command(argv, self.root, 8, log, owned_lease=slot.lease())]
+        execute(self.root, lambda: value.copy(), run)
+        from safe_engine import suites
+        original = suites.cached
+        def mutate(*args):
+            row = original(*args)
+            value['fingerprint'] = 2
+            return row
+        with patch.object(suites, 'cached', side_effect=mutate):
+            with self.assertRaisesRegex(EngineError, 'changed during cache reuse'):
+                execute(self.root, lambda: value.copy(), run)
+        value['fingerprint'] = 1
+        stop = threading.Event()
+        stop.set()
+        with self.assertRaisesRegex(EngineError, 'cancelled before return'):
+            execute(self.root, lambda: value.copy(), run, stop=stop)
+        self.assertEqual(len(calls), 1)
+        self.assertFalse(list(self.queue.glob('*.request.json')))
+
+    def test_hit_rechecks_log_after_identity_scan(self):
+        argv = [sys.executable, '-c', 'print("ok")']
+        logs = []
+        value = {'commit': 'fixture', 'fingerprint': 1}
+        def run(slot):
+            log = self.root / '.factory' / f'log-{len(logs)}.txt'
+            logs.append(log)
+            return [run_command(argv, self.root, 8, log, owned_lease=slot.lease())]
+        execute(self.root, lambda: value.copy(), run)
+        scans = 0
+        def identity():
+            nonlocal scans
+            scans += 1
+            if scans == 2:
+                logs[0].write_text('tampered')
+            return value.copy()
+        row = execute(self.root, identity, run)
+        self.assertFalse(row['reused'])
+        self.assertEqual(len(logs), 2)
 
     def test_safe_completed_item_feedback_keeps_final_barriers_and_legacy_rule(self):
         profile = {'version': 2, 'interface': 'library', 'checks': [
