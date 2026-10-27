@@ -43,6 +43,9 @@ class LiveViewTests(unittest.TestCase):
         temp = tempfile.TemporaryDirectory(prefix="live view ")
         self.addCleanup(temp.cleanup)
         self.root = Path(temp.name).resolve()
+        cache_home = patch.dict(os.environ, SAFE_ENGINE_HOME=str(self.root / "home"))
+        cache_home.start()
+        self.addCleanup(cache_home.stop)
         self.project = self.root / "app ü"
         (self.project / ".factory/fast/shots").mkdir(parents=True)
         self.env = dict(os.environ, SAFE_ENGINE_HOME=str(self.root / "home"), GH_CONFIG_DIR=str(self.root / "gh"))
@@ -112,6 +115,11 @@ class LiveViewTests(unittest.TestCase):
             self.assertIn(why, result.stderr)
             self.assertIn("Form: fast_gate.py try T3", result.stderr)
         png(self.project / ".factory/fast/shots/shell.png")
+        wrong_type = self.project / ".factory/fast/shots/shell.jpg"
+        wrong_type.write_bytes((self.project / ".factory/fast/shots/shell.png").read_bytes())
+        rejected = self.run_gate("try", "T1", "--file", ".factory/fast/shots/shell.jpg")
+        self.assertNotEqual(rejected.returncode, 0)
+        self.assertIn("supported PNG screenshot", rejected.stderr)
         self.gate("try", "T1", "--url", "http://localhost:5173/cockpit")
         self.gate("try", "t1", "--file", ".factory/fast/shots/shell.png")
         self.assertIn("**Try:** T1 file .factory/fast/shots/shell.png\n", self.record.read_text(encoding="utf-8"))

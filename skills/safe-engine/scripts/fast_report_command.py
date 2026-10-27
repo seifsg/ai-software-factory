@@ -20,7 +20,7 @@ def run(args, gate):
         project = gate.find_project(args.project)
         if args.picture:
             import fast_image
-            width, height = fast_image.check(evidence.local(project, args.picture))
+            width, height = fast_image.check(evidence.local(project, args.picture), project=project)
             print(f'Picture content check passed: {width} × {height}. Inspect the actual result before sharing.')
             return
         if args.lint:

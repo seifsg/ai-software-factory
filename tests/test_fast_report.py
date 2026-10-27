@@ -1,8 +1,12 @@
 """Report boundaries and picture evidence across owner-facing consumers."""
 from pathlib import Path
+import json
+import os
+import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from png_fixtures import png
 
@@ -30,6 +34,9 @@ class ReportTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.project = Path(self.temp.name)
+        cache_home = patch.dict(os.environ, SAFE_ENGINE_HOME=str(self.project / "cache-home"))
+        cache_home.start()
+        self.addCleanup(cache_home.stop)
         (self.project / ".factory").mkdir()
         self.picture = self.project / ".factory/current.png"
         png(self.picture)
@@ -101,6 +108,34 @@ class ReportTests(unittest.TestCase):
         self.picture.write_bytes(b"x" * (fast_image.MAX_BYTES + 1))
         with self.assertRaisesRegex(ValueError, "16 MiB"):
             fast_image.check(self.picture)
+
+    def test_accepted_cache_reuses_across_processes_but_rejects_changed_and_tampered_bytes(self):
+        code = ("import sys; from pathlib import Path; sys.path.insert(0, sys.argv[1]); "
+                "import fast_image; count=[0]; old=fast_image.inspect_bytes; "
+                "fast_image.inspect_bytes=lambda data: (count.__setitem__(0,count[0]+1),old(data))[1]; "
+                "print(fast_image.check(sys.argv[2], project=sys.argv[3]), count[0])")
+
+        def run():
+            return subprocess.run([sys.executable, "-c", code, str(SCRIPTS), str(self.picture), str(self.project)],
+                                  text=True, capture_output=True, env=os.environ.copy())
+
+        self.assertIn("(64, 32) 1", run().stdout)
+        self.assertIn("(64, 32) 0", run().stdout)
+        png(self.picture, color=21)
+        self.assertIn("(64, 32) 1", run().stdout)
+        cache = self.project / "cache-home/image-cache.json"
+        png(self.picture, blank=True)
+        forged = json.loads(cache.read_text(encoding="utf-8"))
+        forged["entries"][0]["digest"] = fast_report.evidence.file_hash(self.picture)
+        cache.write_text(json.dumps(forged), encoding="utf-8")
+        rejected = run()
+        self.assertNotEqual(rejected.returncode, 0)
+        self.assertIn("blank or near-blank", rejected.stderr)
+        png(self.picture)
+        cache.unlink()
+        self.assertIn("(64, 32) 1", run().stdout)
+        cache.write_text("{corrupt", encoding="utf-8")
+        self.assertIn("(64, 32) 1", run().stdout)
 
     def test_card_puts_lifecycle_status_ahead_of_last_accepted_report(self):
         import fast_card

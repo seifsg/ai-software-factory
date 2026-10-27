@@ -119,8 +119,8 @@ def prepare(data, project, tickets):
             plain(caption, exceptions)
             import fast_image
             path = evidence.local(project, picture.get('path'))
-            width, height = fast_image.check(path)
-            item['picture'] = {'path': str(path), 'caption': caption, 'sha256': evidence.file_hash(path), 'width': width, 'height': height}
+            width, height, image_hash = fast_image.check(path, project=project, with_digest=True)
+            item['picture'] = {'path': str(path), 'caption': caption, 'sha256': image_hash, 'width': width, 'height': height}
         items.append(item)
     return {'version': 1, 'items': items, 'literal_exceptions': supplied}
 

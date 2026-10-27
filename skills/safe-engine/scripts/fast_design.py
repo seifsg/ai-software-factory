@@ -2,7 +2,6 @@
 import hashlib
 import json
 from pathlib import Path
-import struct
 
 import fast_setup
 
@@ -72,14 +71,9 @@ def image(project, value, viewport, hash_image=True):
             and all(type(n) is int and 0 < n <= 32768 for n in viewport), "viewport: needs [width, height]")
     path = local(project, value)
     import fast_image
-    fast_image.check(path)
-    with path.open("rb") as source:
-        header = source.read(24)
-    require(len(header) == 24 and header[:8] == b"\x89PNG\r\n\x1a\n" and header[12:16] == b"IHDR",
-            f"{value}: use a PNG screenshot")
-    require(list(struct.unpack(">II", header[16:24])) == viewport, f"{value}: screenshot size differs from viewport")
+    _, _, image_hash = fast_image.check(path, project=project, expected=viewport, with_digest=True)
     return {"path": path.relative_to(Path(project).resolve()).as_posix(),
-            "sha256": file_hash(path) if hash_image else None}
+            "sha256": image_hash if hash_image else None}
 
 
 def inventory(project, data, hash_images=True):
