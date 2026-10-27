@@ -68,4 +68,5 @@ def parse(gate):
     sibling("fast_show_command").parser(sub, common)
     sibling("fast_checks_command").parser(sub, common)
     sibling("fast_report_command").parser(sub, common)
+    sibling("fast_metrics_command").parser(sub, common)
     return parser.parse_args()

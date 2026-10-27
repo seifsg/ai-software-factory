@@ -327,6 +327,7 @@ def cmd_start(args):
         record.write_text(skeleton(run), encoding="utf-8")
     save(registry_path(project), store.new_registration(project, args.key))
     log("run.start", key=args.key, project=str(project), mode=args.mode, kind=args.kind, bundle=run["bundle"], hooks=hooks)
+    sibling("fast_metrics").on_start(project, run)
     bundle = (f"{run['bundle']['root']} @ {run['bundle']['revision'][:12]}" if run["bundle"] else
               "legacy start; latest unknown (resolve the entry first)")
     print(status_text(run) + f"\n{sibling('fast_release').card(run, HOME)}\nRecord: {record}\nBundle: {bundle}\n"
@@ -373,6 +374,7 @@ def cmd_done(args):
     run["paused"] = None
     put(project, run)
     log("step.done", key=run["key"], step=step, unverified=args.offline)
+    sibling("fast_metrics").on_done(project, run, step, steps)
     print(status_text(run, all_sections))
 
 
@@ -396,6 +398,7 @@ def cmd_pause(args, reason):
     run["paused"] = {"reason": reason, "at": now()} if reason else None
     put(project, run)
     log("run.pause" if reason else "run.resume", key=run["key"], reason=reason)
+    sibling("fast_metrics").on_pause(project, run, reason)
     print(status_text(run))
 
 
@@ -475,6 +478,7 @@ def cmd_close(args):
         log("state.retire_failed", key=run["key"], error=repr(error))  # it stays closed in runs/: hooks skip it
     forget_shown(project)
     log("run.close", key=run["key"], abandoned=args.abandon)
+    sibling("fast_metrics").on_close(project, run, args.abandon)
     print(status_text(run) + drop_scratch(run["key"], sibling("fast_setup").scratch_path(HOME, run)))
 
 
@@ -929,6 +933,7 @@ def main():
                "fix-round": lambda a: sibling("fast_round").run(a, sys.modules[__name__]),
                "checks": lambda a: sibling("fast_checks_command").run(a, sys.modules[__name__]),
                "report": lambda a: sibling("fast_report_command").run(a, sys.modules[__name__]),
+               "metrics": lambda a: sibling("fast_metrics_command").run(a, sys.modules[__name__]),
                "design": lambda a: sibling("fast_design_command").run(a, sys.modules[__name__]),
                "show": lambda a: sibling("fast_show_command").run(a, sys.modules[__name__]),
                "prove": lambda a: sibling("fast_show_command").run(a, sys.modules[__name__]),

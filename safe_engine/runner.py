@@ -48,6 +48,15 @@ def run_command(argv, cwd, timeout, log_path, stdin=None, stop=None, owned_lease
     """stop: optional threading.Event; when set, the process tree is stopped like a timeout."""
     started = now()
     clock = time.monotonic()
+    op_id = None
+    try:
+        from . import run_metrics
+        if run_metrics.current():
+            op_id = f"cmd-{int(clock * 1e9)}"
+            run_metrics.emit_current("operation.start", name=str(argv[0]), event_id=op_id,
+                                     argv0=str(argv[0]))
+    except Exception:
+        op_id = None
     log_path.parent.mkdir(parents=True, exist_ok=True)
     # A file avoids Windows' blocking communicate(input=...) pipe write.
     with tempfile.TemporaryFile() as input_file:
@@ -92,7 +101,17 @@ def run_command(argv, cwd, timeout, log_path, stdin=None, stop=None, owned_lease
             process.stop()
             process.stdout.close()
         log_path.write_bytes(output)
-    return {"argv": argv, "started_at": started, "duration_seconds": round(time.monotonic() - clock, 3),
-            "exit_code": process.returncode, "timed_out": timed_out,
-            "passed": process.returncode == 0 and not timed_out,
-            "log": str(log_path), "log_truncated": size > LOG_LIMIT}
+    duration = round(time.monotonic() - clock, 3)
+    result = {"argv": argv, "started_at": started, "duration_seconds": duration,
+              "exit_code": process.returncode, "timed_out": timed_out,
+              "passed": process.returncode == 0 and not timed_out,
+              "log": str(log_path), "log_truncated": size > LOG_LIMIT}
+    if op_id:
+        try:
+            from . import run_metrics
+            run_metrics.emit_current("operation.finish", name=str(argv[0]), event_id=op_id + "-end",
+                                     parent_id=op_id, duration_seconds=duration,
+                                     passed=result["passed"], timed_out=timed_out)
+        except Exception:
+            pass
+    return result

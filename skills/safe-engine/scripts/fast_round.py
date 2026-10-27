@@ -29,6 +29,18 @@ def run(args, gate):
             state["done"].pop(step, None)
         gate.put(project, state)
         gate.log("run.fix_round", key=state["key"], findings=args.finding, sha256=receipt["sha256"])
+        try:
+            import fast_metrics
+            fast_metrics.safe(
+                "emit",
+                project,
+                state["key"],
+                "invalidate",
+                reason="fix_round",
+                findings=list(args.finding),
+            )
+        except Exception:
+            pass
         print(json.dumps(decision, indent=2))
         for line in worth.parked_lines(report):
             print(line)

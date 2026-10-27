@@ -129,6 +129,20 @@ def add(home, run, data):
     value = {**data, "run": run["pr_instance"], "generation": uuid.uuid4().hex,
              "created": datetime.now(timezone.utc).isoformat()}
     ledger.save(directory / (value["generation"] + ".pending.json"), storable(value), new=True)
+    try:
+        import fast_metrics
+        fast_metrics.safe(
+            "emit_wait",
+            run["project"],
+            run["key"],
+            "start",
+            "helper",
+            event_id=f"wait-{value['generation']}",
+            job=value.get("job"),
+            name=value.get("name"),
+        )
+    except Exception:
+        pass
     return {key: value[key] for key in IDENTITY}
 
 
@@ -144,6 +158,20 @@ def finish(home, run, data):
         ledger.save(path, storable({**value, "at": datetime.now(timezone.utc).isoformat()}), new=True)
     except FileExistsError:
         require(terminal(directory, item) == value, "Conflicting completion; original terminal result retained")
+    try:
+        import fast_metrics
+        fast_metrics.safe(
+            "emit_wait",
+            run["project"],
+            run["key"],
+            "finish",
+            "helper",
+            event_id=f"wait-{token}-end",
+            parent_id=f"wait-{token}",
+            status=value["status"],
+        )
+    except Exception:
+        pass
     return value["status"]
 
 

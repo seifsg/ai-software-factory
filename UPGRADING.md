@@ -7,6 +7,10 @@ For every release:
 - **Active and explicit pins never change automatically.** Ask `improve-factory` for a compatible pin change; never edit a selected bundle or receipt.
 - **Check what you run:** `fast_gate.py version` names the version, commit, channel and route; `fast_gate.py verify` lists every file that differs from the release manifest.
 
+## Unreleased
+
+- After release, update launchers for `metrics` (`report`, `compare`, `export`, `delete`, `overhead`). New Fast/Lucky/Safe runs write local analytics under `.factory/metrics/` (gitignored). Existing active pins stay unchanged; no migration of prior runs. See [run metrics](docs/run-metrics.md).
+
 ## 1.1.1
 
 - Update the full factory repository before eval runs. Ownership setup/resume failures now refuse execution, and unconfirmed cleanup reports an error. The isolated checker snapshots the canonical ownership helper; no saved-run or active-pin migration is needed. The immutable 1.1.0 tag remains, but its GitHub publication stopped on a cleanup regression; use this fix-forward release.

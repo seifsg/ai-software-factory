@@ -56,6 +56,7 @@
     "safe_engine/review_packet.py",
     "safe_engine/reviewers.py",
     "safe_engine/runner.py",
+    "safe_engine/run_metrics.py",
     "safe_engine/storage.py",
     "safe_engine/tickets.py",
     "safe_engine/workflow.py",
@@ -139,6 +140,10 @@
     "skills/safe-engine/scripts/fast_report_command.py",
     ".agents/skills/safe-engine/references/owner-reports.md",
     "docs/owner-reports.md",
+    "skills/safe-engine/scripts/fast_metrics.py",
+    "skills/safe-engine/scripts/fast_metrics_command.py",
+    ".agents/skills/safe-engine/references/run-metrics.md",
+    "docs/run-metrics.md",
     ".agents/skills/safe-engine/references/affected-checks.md"
   ],
   "historical_files": [],

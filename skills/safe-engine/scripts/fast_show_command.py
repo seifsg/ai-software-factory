@@ -49,20 +49,24 @@ def prove(project, state, gate, fresh=False):
         gate.log("show.proof_replaced", key=state["key"], proof=holder['proof'])
     holder['proof'] = {"passed": False, "status": "running"}
     gate.put(project, state)
-    if state.get('suite_policy') or 'suite_inputs' in plan:
-        from safe_engine.suites import describe, execute
-        def identify():
-            return describe(project, [plan['full_suite']], plan.get('suite_inputs'), plan)
-        def launch(slot):
-            return [run_command(plan['full_suite'], project, plan['timeout_seconds'],
-                                Path(project, '.factory/fast/prove-suite.log'), owned_lease=slot.lease())]
-        batch = execute(project, identify, launch, cache=not fresh)
-        result = {**batch['results'][0], 'reused': batch['reused'], 'suite_execution': batch['execution'],
-                  'suite_identity': batch['identity']}
-        result['passed'] = result['passed'] and batch['unchanged']
-    else:
-        result = run_command(plan["full_suite"], project, plan["timeout_seconds"],
-                             Path(project, ".factory/fast/prove-suite.log"))
+    import fast_metrics
+    binder = fast_metrics.bind(project, state)
+    from contextlib import nullcontext
+    with binder if binder is not None else nullcontext():
+        if state.get('suite_policy') or 'suite_inputs' in plan:
+            from safe_engine.suites import describe, execute
+            def identify():
+                return describe(project, [plan['full_suite']], plan.get('suite_inputs'), plan)
+            def launch(slot):
+                return [run_command(plan['full_suite'], project, plan['timeout_seconds'],
+                                    Path(project, '.factory/fast/prove-suite.log'), owned_lease=slot.lease())]
+            batch = execute(project, identify, launch, cache=not fresh)
+            result = {**batch['results'][0], 'reused': batch['reused'], 'suite_execution': batch['execution'],
+                      'suite_identity': batch['identity']}
+            result['passed'] = result['passed'] and batch['unchanged']
+        else:
+            result = run_command(plan["full_suite"], project, plan["timeout_seconds"],
+                                 Path(project, ".factory/fast/prove-suite.log"))
     result["candidate"] = evidence.candidate(project)
     result["passed"] = result["passed"] and result["candidate"] == candidate
     holder['proof'] = result

@@ -53,6 +53,28 @@ class Workflow(ContractMixin, CheckMixin, ReviewMixin):
     # One seam per side effect: mixins resolve save/run_command here, so patching this module still applies.
     def persist(self, state, event):
         save(self.directory, state, event)
+        try:
+            from . import run_metrics
+            key = state.get("run_id") or self.ticket_key or "safe-run"
+            run_metrics.ensure_run(
+                self.project,
+                key,
+                factory_revision=state.get("bundle_revision"),
+                mode="safe",
+                kind=state.get("kind") or "change",
+            )
+            phase = state.get("phase")
+            if phase:
+                run_metrics.emit_phase(
+                    self.project,
+                    key,
+                    phase,
+                    "start" if event in ("start", "resume") else "finish",
+                    event_id=f"{key}-{phase}-{event}-{state.get('updated_at', '')}",
+                    workflow_event=event,
+                )
+        except Exception:
+            pass
 
     @staticmethod
     def launch(*args, **kwargs):

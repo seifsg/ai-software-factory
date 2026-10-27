@@ -114,15 +114,36 @@ def execute(project, identity, run, *, cache=True, stop=None, validate=lambda re
             if stop is not None and stop.is_set():
                 raise EngineError('Suite reuse cancelled before return')
             print('Reused unchanged full-suite result: ' + before['commit'], flush=True)
+            try:
+                from . import run_metrics
+                run_metrics.emit_current('reuse', name='full_suite', commit=before.get('commit'))
+            except Exception:
+                pass
             return {**prior, 'reused': True}
     with admission(stop=stop) as slot:
         current = identity()
         if current != before:
+            try:
+                from . import run_metrics
+                run_metrics.emit_current('invalidate', reason='suite_inputs_changed_while_queued')
+            except Exception:
+                pass
             raise EngineError('Suite inputs changed while queued; request proof for the current candidate')
         prior = cached(project, path, before, validate) if cache and before is not None else None
         if prior:
             print('Reused unchanged full-suite result: ' + before['commit'], flush=True)
+            try:
+                from . import run_metrics
+                run_metrics.emit_current('reuse', name='full_suite', commit=before.get('commit'), after_queue=True)
+            except Exception:
+                pass
             return {**prior, 'reused': True}
+        op_id = f'suite-exec-{slot.generation}'
+        try:
+            from . import run_metrics
+            run_metrics.emit_current('operation.start', name='full_suite', event_id=op_id)
+        except Exception:
+            pass
         results = run(slot)
         after = identity()
         for result in results:
@@ -133,4 +154,13 @@ def execute(project, identity, run, *, cache=True, stop=None, validate=lambda re
         if (before is not None and unchanged and evidence(project, results) and validate(results)
                 and (path.exists() or sum(1 for _ in directory.glob('*.json')) < 256)):
             atomic_json(path, {**row, 'checksum': digest(row)})
+        try:
+            from . import run_metrics
+            duration = sum(float(item.get('duration_seconds') or 0) for item in results)
+            run_metrics.emit_current('operation.finish', name='full_suite', event_id=op_id + '-end',
+                                     parent_id=op_id, duration_seconds=round(duration, 3), reused=False)
+            if not unchanged:
+                run_metrics.emit_current('invalidate', reason='suite_inputs_changed_after_execution')
+        except Exception:
+            pass
         return {**row, 'reused': False}
