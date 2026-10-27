@@ -20,6 +20,7 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 
 - Intact matching complete-suite evidence returns before execution queue admission; misses retain FIFO admission and post-admission rechecks (#176).
 - Accepted PNG checks reuse bounded, authenticated validation across gate processes; image Try accepts `.png`, explains unsupported formats, and thumbnails follow validated current bytes even when timestamps do not advance (#177).
+- Factory maintenance separates the immutable gate runner from its editable candidate, allows an explicit approved unmerged base, and commits planned edits before final proof using the selected runner's capabilities (#178).
 - Current helper receipts take priority over stale report directions; reports published after completion restore the next action. Approved non-UI planning retains the required suite declaration without importing execution proof.
 - Combined factory commands retain selected-bundle routing, with lazy CLI registration split from the hook path to keep the gate small.
 - Worth-it repairs (#157): bounded finding scores prioritize optional polish, Fast/Lucky and new Safe runs validate selected fixes, authorized Finishing touches batches reuse the epic's existing follow-ups, and parked reports explain what waits without weakening mandatory quality or owner authority.
