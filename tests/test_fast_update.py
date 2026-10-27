@@ -246,10 +246,14 @@ class SelfUpdateTests(UpdateCase):
         self.assertEqual((record["auto"], record["channel"], len(record["installs"])), (False, "edge", 2))
         cursor = json.loads((self.root / "p" / ".cursor" / "hooks.json").read_text(encoding="utf-8"))["hooks"]
         self.assertTrue(cursor["sessionStart"][0]["command"].endswith("cursor"))  # opted out: no extra process at all
-        installer.install("claude", home=home, log=lambda line: None)  # keeps the channel and the clone installs
-        record = json.loads((self.gate / "install.json").read_text(encoding="utf-8"))
-        self.assertEqual((record["channel"], len(record["installs"])), ("edge", 2))
-        installer.install("claude", home=home, log=lambda line: None, channel="stable")
+        # Plugin CLI behavior has separate subprocess coverage; this fixture owns update channels.
+        with mock.patch.object(installer, "install_plugin") as plugin:
+            installer.install("claude", home=home, log=lambda line: None)
+            record = json.loads((self.gate / "install.json").read_text(encoding="utf-8"))
+            self.assertEqual((record["channel"], len(record["installs"])), ("edge", 2))
+            installer.install("claude", home=home, log=lambda line: None, channel="stable")
+            self.assertEqual(plugin.call_count, 2)
+            self.assertTrue(all(call.args[0] == home for call in plugin.call_args_list))
         self.assertEqual(json.loads((self.gate / "install.json").read_text(encoding="utf-8"))["channel"], "stable")
         copy = home / ".agents" / "skills" / "safe-engine"  # a file a release dropped leaves the copy
         (copy / "scripts" / "dropped.py").write_text("old\n", encoding="utf-8")
