@@ -1,0 +1,9 @@
+# #177 thumbnail retake proof
+
+Before: `e0c24df` behavior, using its exact `fast_view.py` blob (`0335af0...`) in an isolated copy of the scripts. After: candidate `8f7896fbe5653e1b8f5dbb8eb9a7fc96f387e77c`. Both run the public gate in separate temporary homes and projects. The same 480x240 fixture PNG is first blue, then green at the same path. Its mtime stays `1600000000000000000` ns, older than the first published thumbnail. The public `try T1 --file .factory/fast/shots/capture.png` command runs before and after the retake.
+
+The actual loopback live view is served through `fast_gate.py view --project ... --port 0`. Chrome opens the page, expands **Test details**, then reloads after the second Try. The before screenshot shows the stale blue thumbnail in the Try panel and session card; the after screenshot shows green. The matched detail screenshots show the same issue and fix in the session detail. The 7.16-second candidate video shows entry, Test details, refresh, updated picture, session detail, and return to overview. No application state was set through browser JavaScript.
+
+Reproduce locally from this checkout: run `python .factory/maintenance/177/proof/fixture.py setup before`, then `setup after`, then `node .factory/maintenance/177/proof/capture.cjs`. `verify.cjs` plays the saved WebM in Chrome, confirms time advances, and samples frames. Capture stopped both owned view servers and Chrome. `before-result.json` and `after-result.json` record source, thumbnail, and previous thumbnail SHA-256 values; `manifest.json` hashes the delivered proof files.
+
+The images are deliberately colored test inputs. The browser screenshots and recording are unedited captures of the real live-view UI. The video records the after candidate only; the before behavior is documented by the matched screenshots and hash result. Browser testing was against the isolated fixture, not a live production run.

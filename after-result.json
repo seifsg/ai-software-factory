@@ -1,0 +1,9 @@
+{
+  "variant": "after",
+  "source_mtime_ns": 1600000000000000000,
+  "previous_thumbnail_mtime_ns": 1793083777846207300,
+  "source_sha256": "450dc623056465da8d48ba19b813d9c221feb2d2bb7ddafc0db54c0453ed57b3",
+  "thumbnail_sha256": "450dc623056465da8d48ba19b813d9c221feb2d2bb7ddafc0db54c0453ed57b3",
+  "previous_thumbnail_sha256": "5323cf2b646089685aa714fbfb0f0c92a9b77d4249b354e1989eaed5beb8fbaf",
+  "current_bytes_match": true
+}
