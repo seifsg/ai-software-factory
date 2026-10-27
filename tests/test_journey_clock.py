@@ -12,6 +12,31 @@ FIXTURE = 'await fixedBrowserPage(browser, options);\n'
 
 
 class JourneyClockTests(unittest.TestCase):
+    def test_documented_helpers_need_executable_setup(self):
+        """Accept either public setup while rejecting mentions and wall-time reads."""
+        node = shutil.which('node')
+        if not node:
+            self.skipTest('Node is unavailable')
+        cases = (
+            ('await fixedBrowserPage(browser, options);', True),
+            ('await fixedBrowserClock(page, instant);', True),
+            ('// fixedBrowserClock(page, instant)', False),
+            ('const label = "fixedBrowserClock(page, instant)";', False),
+            ('const page = await browser.newPage();', False),
+            ('await fixedBrowserClock(page, instant); const stamp = Date.now();', False),
+            ('await fixedBrowserClock(page, instant); const stamp = new Date();', False),
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            manifest = root / 'manifest.json'
+            manifest.write_text(json.dumps({'version': 1, 'journey_tests': ['journey.mjs']}), encoding='utf-8')
+            for source, accepted in cases:
+                with self.subTest(source=source):
+                    (root / 'journey.mjs').write_text(source + '\n', encoding='utf-8')
+                    result = subprocess.run([node, str(LINT), str(manifest)], capture_output=True,
+                                            text=True, encoding='utf-8', timeout=10)
+                    self.assertEqual(result.returncode, 0 if accepted else 1, result.stdout + result.stderr)
+
     def test_cli_classifies_executable_time_and_literals(self):
         """Run real manifest files through the CLI to protect lexical boundaries."""
         node = shutil.which('node')

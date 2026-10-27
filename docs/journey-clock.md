@@ -33,7 +33,8 @@ From the factory checkout, run:
 node skills/safe-engine/scripts/journey_clock_lint.mjs <manifest.json>
 ```
 
-The scoped lint rejects missing fixed-page fixtures and direct wall-time reads
+The scoped lint requires a direct `fixedBrowserPage` or `fixedBrowserClock` call
+in each declared file and rejects direct wall-time reads
 such as `Date.now()` and `new Date()`. Literal fixed dates and monotonic duration
 measurement remain valid. It inspects only declared files, not the application's
 whole dependency graph. Unsupported dynamic construction requires manual review;

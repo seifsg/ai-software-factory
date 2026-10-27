@@ -6,6 +6,9 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 
 ## [Unreleased]
 
+### Fixed
+- Journey clock lint accepts both documented direct fixed-clock helpers while retaining wall-time checks (#182).
+
 ### Added
 - Validated approved-plan starts with `--from-plan`/`--plan-record`, explicit verdict-field checks and accumulated record diagnostics (#163).
 

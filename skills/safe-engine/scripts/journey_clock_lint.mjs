@@ -100,7 +100,7 @@ function inspect(source) {
   try { ({ code, bare } = executableText(source)); }
   catch (error) { return [error.message]; }
   const findings = [];
-  if (!/\bfixedBrowserPage\s*\(/.test(bare)) findings.push('missing fixedBrowserPage fixture');
+  if (!/\bfixedBrowser(?:Page|Clock)\s*\(/.test(bare)) findings.push('missing fixedBrowserPage or fixedBrowserClock fixture');
   if (/\bDate\s*\.\s*now\s*\(/.test(bare)) findings.push('real-time Date.now()');
   for (const match of bare.matchAll(/\bnew\s+Date\s*\(/g)) {
     const end = bare.indexOf(')', match.index + match[0].length);

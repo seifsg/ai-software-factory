@@ -58,7 +58,7 @@ New runs use `fast_gate.py checks` to record reasoned hidden-check selection, ac
 
 An approved plan can start with `fast_gate.py start --from-plan <link> --plan-record <project-local.json>` plus the normal run flags. The gate validates current inputs and tickets before reusing planning, including the current suite declaration; design, schema, Show, proof and draft PR obligations remain. See [approved plans](docs/approved-plans.md) for the bounded snapshot and complete record diagnostics.
 
-Browser journeys use a fixed instant and timezone before navigation. Declare their source files and run `node skills/safe-engine/scripts/journey_clock_lint.mjs <manifest.json>`; see [fixed browser time and affected tests](docs/journey-clock.md).
+Browser journeys use a fixed instant and timezone before navigation. Each declared source calls `fixedBrowserPage` or `fixedBrowserClock`; run `node skills/safe-engine/scripts/journey_clock_lint.mjs <manifest.json>`. See [fixed browser time and affected tests](docs/journey-clock.md).
 
 Illustrative example:
 
