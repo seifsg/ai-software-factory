@@ -22,6 +22,7 @@ from safe_engine.storage import atomic_json, locked, read_json
 from safe_engine.tickets import TicketStore, binding, parse_body, render_ticket, scope_digest, ticket_key
 from safe_engine.workflow import DELEGATION, Workflow
 from ticket_fixtures import SYNTHETIC, base_contract, confirm, visual_contract
+from suite_fixture import isolate_suite_queue
 
 
 BUNDLE = Path(__file__).resolve().parents[1]
@@ -33,6 +34,7 @@ class TicketTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name).resolve() / "consumer"
         self.root.mkdir()
+        isolate_suite_queue(self)
         self.git("init", "-q")
         (self.root / ".gitignore").write_text(".factory/\n__pycache__/\n", encoding="utf-8")
         (self.root / "README.md").write_text("Synthetic fixture: preserve this sentence.\n", encoding="utf-8")
@@ -863,6 +865,9 @@ class TicketTests(unittest.TestCase):
         task["acceptance"][0] = {"id": "A1", "text": task["acceptance"][0]["text"], "checks": ["document"]}
         legacy = Workflow(self.root)
         legacy.initialize(task, profile)
+        state = legacy.load()
+        state.pop('suite_policy')
+        atomic_json(legacy.directory / 'state.json', state)
         for kind in ("analysis", "plan", "batch"):
             self.artifact(kind, legacy)
         self.assertEqual(legacy.check()["phase"], "improve")

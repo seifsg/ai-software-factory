@@ -120,7 +120,7 @@ class Workflow(ContractMixin, CheckMixin, ReviewMixin):
             raise EngineError("Deprecated max-repairs metadata must be a nonnegative integer")
         if git(self.project, "status", "--porcelain", "--untracked-files=normal"):
             raise EngineError("Initialize from a clean, committed project; preserve existing work before starting")
-        state = {"schema_version": 1, "bundle_version": __version__, "run_id": str(uuid.uuid4()), "checklist_required": True,
+        state = {"schema_version": 1, "suite_policy": 1, "bundle_version": __version__, "run_id": str(uuid.uuid4()), "checklist_required": True,
                  "project": str(self.project), "task": task, "profile": profile,
                  "contract_digest": self.contract_digest(task, profile, ticket),
                  "base_commit": git(self.project, "rev-parse", "HEAD"), "phase": "analyze",
@@ -129,7 +129,7 @@ class Workflow(ContractMixin, CheckMixin, ReviewMixin):
                  "protected": protected_inputs(self.project, profile), "created_at": now()}
         if modern:
             state.update(delivery_version=2, contract_sealed=False, contract_revision=0,
-                         original_task=task, contract_history=[], manual=None)
+                         original_task=task, contract_history=[], manual=None, worth=True)
         if ticket:
             state.update(ticket=ticket, ticket_observation=capture["sequence"], builder_session=session)
         state["initial_fingerprint"] = self.current(state)
@@ -209,6 +209,7 @@ class Workflow(ContractMixin, CheckMixin, ReviewMixin):
                 "contract_sealed": state.get("contract_sealed", True),
                 "contract_revision": state.get("contract_revision", 0),
                 "manual_candidate": state.get("manual_candidate"),
+                "feature_candidate": current if state.get('suite_policy') and state['phase'] == 'build' else None,
                 "bundle_root": str(Path(__file__).resolve().parent.parent),
                 "bundle_revision": bundle_revision(Path(__file__).resolve().parent.parent),
                 "review_execution": self.review_kind(state.get("review")),
@@ -255,6 +256,8 @@ class Workflow(ContractMixin, CheckMixin, ReviewMixin):
         if kind in ("analysis", "plan") and current != state["initial_fingerprint"]:
             raise EngineError("Code or declared inputs changed during analysis/planning")
         if kind == "implementation":
+            if state.get('feature_checks') and not state['feature_checks']['passed']:
+                raise EngineError('Failed feature feedback requires repair before final implementation')
             state["manual_candidate"] = production_fingerprint(self.project, state["profile"], state.get("ticket"))
         if kind == "manual":
             if production_fingerprint(self.project, state["profile"], state.get("ticket")) != state["manual_candidate"]:
@@ -300,7 +303,7 @@ class Workflow(ContractMixin, CheckMixin, ReviewMixin):
         target.write_text(content, encoding="utf-8")
         state["artifacts"][kind] = {"path": relative, "sha256": file_hash(target), "fingerprint": current}
 
-    def repair(self, reason, records_only=False):
+    def repair(self, reason, records_only=False, findings=None, selected=None, finishing_authority=None):
         state = self.load()
         self.require_ticket(state)
         if records_only:
@@ -312,6 +315,8 @@ class Workflow(ContractMixin, CheckMixin, ReviewMixin):
             self.require_phase(state, "manual", "testing", "verify", "improve", "final-verify", "review", "ready")
         if not reason.strip():
             raise EngineError("Record the reason for correction")
+        if state.get("worth"):
+            self.select_repairs(state, findings, selected, finishing_authority)
         state["repairs_used"] += 1
         state["phase"] = "build"
         state["checks"] = None

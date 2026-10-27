@@ -13,7 +13,7 @@ Review and design requests stay read-only. Do not code unless told.
 
 ## 1. Understand the job
 
-- Read the request, the design system, the actual interface and settled choices.
+- Read the request, design system, UI and decisions. Design ports: [coverage](references/coverage.md).
 - Record audience, goal, devices and inputs, accessibility needs, success and failure states.
 - Map each core journey: `intent → entry → actions/decisions/waits → outcome → recovery/exit`. For the most common case, count its actions from entry (each click, tap, submit or filled field) and its loads (new pages or screens; dialogs, tabs and expands are not loads). The minimum is the fewest actions the job itself needs, whatever the design. Above it needs a reason, such as deliberate friction. Find repeated entry, confusion, dead ends, lost work.
 - Remove accidental effort. Keep intended game challenge, consent, safety and comprehension. No deceptive defaults, no hidden costs.
@@ -60,13 +60,13 @@ Every audit gives each ID a verdict. U1 to U5 state the goal; their checks live 
 
 ## 4. Use it. Audit it.
 
-1. Finish implementation first. No product testing before then.
+1. Finish Look and share Show before auditing. Use each item before affected tests, type checks and rendering.
 2. Use it by hand through the real browser, native app, game or CLI. Complete the journey, its failure and recovery states, each supported input and display variant. Recount each core journey; above its recorded minimum without the reason is a FAIL. Record what you did and saw: journeys with their counts, states, inputs, devices. That record is the judge's use log.
-3. Read the logs. Inspect rendered assets at real size and theme. Listen to sounds in context. Screenshots cannot prove interaction. Filenames and waveforms cannot prove sound quality.
+3. Read logs; inspect assets at real size/theme; listen in context. Screenshots prove no interaction; filenames/waveforms prove no sound quality.
 4. Capture each core screen in each of its states at the main width, plus once at the other width (phone and desktop). First viewport and full page. Web: run the page outline and the scan from `references/basics.md` on each.
 5. A fresh agent that did not build it judges from the shots, outlines, scan and use log, as `references/basics.md` sets out. One line per ID: `U3 PASS <screens checked>: <evidence>`, `U3 FAIL <screen, state>: <element, quoted text>`, or N/A or UNKNOWN with the reason. A FAIL names its rule, an in-scope screen and the visible evidence.
-6. Fix in-scope FAILs, re-run the affected paths, recapture, and the judge rechecks those IDs once. A FAIL the builder contests becomes UNKNOWN with both reasons, for the owner. Findings outside the change go to the follow-ups ticket.
-7. No hearing, device, assistive tool or runtime available? UNKNOWN. Name the check needed. A walkthrough of the instructions proves no real-user usability.
+6. Score findings with `deep-review`; keep required UX/accessibility. Fix in-scope FAILs, rerun affected paths, recapture; the judge rechecks IDs once. Contested FAILs become UNKNOWN with both reasons for the owner. Outside-scope findings go to follow-ups.
+7. Missing hearing, device, assistive tool or runtime: UNKNOWN; name the check. Instruction walkthroughs prove no real-user usability.
 8. After manual use passes, write and run the accessibility, interaction and other final checks. Automation proves neither aesthetics nor manual use.
 
 Handoff: choices, asset sources and rights, findings and fixes, limits.

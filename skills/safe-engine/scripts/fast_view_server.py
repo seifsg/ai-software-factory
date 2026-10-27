@@ -125,6 +125,10 @@ def serve(views, folder, port=0, log=print, scope=None):
                 return data, "application/json; charset=utf-8", tag
             allowed = {f"{run['key']}.todos.json" for run in state["runs"]}
             allowed.update(t["thumb"] for run in state["runs"] for t in run.get("ready") or [] if t.get("thumb"))
+            allowed.update(p["thumb"] for run in state["runs"] for p in run.get("pictures", []) if p.get("thumb"))
+            allowed.update(item["picture"]["thumb"] for run in state["runs"]
+                           for item in (run.get("ownerReport") or {}).get("items", [])
+                           if item.get("picture", {}).get("thumb"))
             if name not in allowed:
                 return None
             target = (folder / name).resolve()

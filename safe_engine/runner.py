@@ -1,12 +1,13 @@
 """Run explicitly configured checks without a shell; retain bounded output."""
 
 import os
-import signal
 import subprocess
 import tempfile
 import time
 
 from .storage import now
+from .processes import ProcessTree
+from .project import executable_path
 
 
 LOG_LIMIT = 1_000_000
@@ -40,17 +41,10 @@ def _read_available(pipe):
 
 
 def stop_process(process):
-    if os.name == "nt":
-        subprocess.run(["taskkill", "/PID", str(process.pid), "/T", "/F"], capture_output=True, timeout=20)
-    else:
-        try:
-            os.killpg(process.pid, signal.SIGKILL)
-        except ProcessLookupError:
-            pass
-    process.wait(timeout=20)
+    process.stop()
 
 
-def run_command(argv, cwd, timeout, log_path, stdin=None, stop=None):
+def run_command(argv, cwd, timeout, log_path, stdin=None, stop=None, owned_lease=None):
     """stop: optional threading.Event; when set, the process tree is stopped like a timeout."""
     started = now()
     clock = time.monotonic()
@@ -60,9 +54,10 @@ def run_command(argv, cwd, timeout, log_path, stdin=None, stop=None):
         if stdin is not None:
             input_file.write(stdin.encode("utf-8"))
             input_file.seek(0)
-        options = {"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP} if os.name == "nt" else {"start_new_session": True}
-        process = subprocess.Popen(argv, cwd=cwd, stdin=input_file if stdin is not None else subprocess.DEVNULL,
-                                   stdout=subprocess.PIPE, stderr=subprocess.STDOUT, **options)
+        executable = executable_path(argv[0], cwd)
+        command = [str(executable), *argv[1:]] if executable else argv
+        process = ProcessTree(command, cwd=cwd, stdin=input_file if stdin is not None else subprocess.DEVNULL,
+                              stdout=subprocess.PIPE, stderr=subprocess.STDOUT, owned_lease=owned_lease)
         timed_out = False
         output = bytearray()
         size = 0
@@ -94,6 +89,7 @@ def run_command(argv, cwd, timeout, log_path, stdin=None, stop=None):
             stop_process(process)
             raise
         finally:
+            process.stop()
             process.stdout.close()
         log_path.write_bytes(output)
     return {"argv": argv, "started_at": started, "duration_seconds": round(time.monotonic() - clock, 3),

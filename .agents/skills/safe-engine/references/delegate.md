@@ -1,6 +1,6 @@
 # Delegate: roles, briefs and gates
 
-Each delegated job runs on the cheapest role that can pass its gates. Your agent's role names, models and override routes: the factory's `docs/hosts.md`.
+Use the cheapest role that can pass its gates. Host models and overrides: the factory's `docs/hosts.md`.
 
 ## Roles
 
@@ -18,11 +18,13 @@ A todo runs on the role its tier and edit access give. A method that names its o
 - `left: <item>: <what it learned>` per unfinished item, when it stops early;
 - at most one refusal, as its last line: `too-big. split: <one-line jobs>`, `needs-confirm. op: <command>` or `ambiguous. ask: <one question>`.
 
-Read the last line first. A refusal is never done: split, confirm or ask the owner, then brief again.
+Read the last line first. A refusal is not done: split, confirm or ask, then brief again. Owner handbacks follow [plain reports](owner-reports.md).
 
 ## Brief
 
-Carry what the delegate cannot infer: the goal, its role, absolute paths, read-only or not, the conventions in play, the branch it owns, its handback shape and, in Fast and Lucky, the run's scratch folder ([fast-run](fast-run.md#the-gate)). Quote the paragraphs a job needs; a whole document only when reading it is the job (a walkthrough, a review). End with one gate per required outcome:
+Carry the goal, role, absolute paths, edit limits, conventions, owned branch, handback shape and, in Fast and Lucky, [scratch folder](fast-run.md#the-gate). Quote only needed rules; whole documents only for walkthroughs or reviews. End with one gate per required outcome:
+
+Set workdir to the lane, per call if needed. Verify cwd before writes; stop on mismatch. Pass lane resources to commands and browsers. Awaiting results: use [quiet waits](waiting.md).
 
 ```text
 G1 <outcome> CHECK: <command> EXPECT: <text its output must show>

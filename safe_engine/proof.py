@@ -73,8 +73,17 @@ def handoff_table(state, project, proof=None):
 
 def deferred_findings(report):
     """Nonblocking review findings stay visible in the handoff with their follow-up."""
+    parked_output = []
+    if any("worth" in finding for finding in report.get("findings", [])):
+        from .worth import parked, parked_lines
+        lines = parked_lines(report)
+        links = sorted({item["destination"] for item in parked(report)})
+        if lines:
+            parked_output = ["", "## Finishing touches", "", *lines, "", "Follow-ups: " + ", ".join(links)]
+        report = {**report, "findings": [finding for finding in report["findings"]
+                                        if finding.get("disposition") != "accepted-deferral"]}
     rows = [f"- {f['severity']} {f['location']}: {f['description']} ({f.get('disposition')}; "
             f"{(f.get('exception') or {}).get('destination') or (f.get('exception') or {}).get('revisit', 'no follow-up')})"
             for f in report.get("findings", []) if f.get("disposition") in ("accepted-deferral", "before-exposure")
             or f.get("severity") == "LOW"]
-    return ["", "## Deferred findings", "", *rows] if rows else []
+    return parked_output + (["", "## Deferred findings", "", *rows] if rows else [])

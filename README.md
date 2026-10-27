@@ -19,6 +19,8 @@ Coding agents jump straight to code. They skip the research, forget the ticket, 
 
 The factory **enforces** the process. Hooks block source edits until the ticket, analysis and plan are recorded. Every run ends in a draft pull request with before/after proof and a list of what is still unverified. You merge.
 
+Plain progress reports show per-ticket spend, worth and checked PNG pictures: [report command](docs/owner-reports.md).
+
 ## ⚡ Quick start
 
 **You need:**
@@ -48,7 +50,15 @@ The factory **enforces** the process. Hooks block source edits until the ticket,
 
 Already have code? Point it at that directory. Feature runs analyze the existing code and every consumer before planning (`analyze-start`).
 
+Optional polish is scored and collected in the epic's existing **Finishing touches** follow-ups. `fast_gate.py fix-round --file <report.json> --finding F1` selects worthwhile repairs; `--finishing-authority` records an explicit batch request. Selected work needs resolution evidence or owner cancellation before completion. Required quality stays mandatory. See [worth-it rounds](docs/worth-it.md) for the shared Fast/Safe report and commands.
+
 ## 🎬 What a run looks like
+
+New runs use `fast_gate.py checks` to record reasoned hidden-check selection, actual runtime names and parsed/executed proof. Visual-only ports keep likeness plus the suite. See [hidden checks](docs/hidden-checks.md).
+
+Record refusals collect independent problems with repair examples; explicit verdict fields distinguish a failed check from explanatory wording. See [record diagnostics](docs/record-diagnostics.md).
+
+Browser journeys use a fixed instant and timezone before navigation. Each declared source calls `fixedBrowserPage` or `fixedBrowserClock`; run `node skills/safe-engine/scripts/journey_clock_lint.mjs <manifest.json>`. See [fixed browser time and affected tests](docs/journey-clock.md).
 
 Illustrative example:
 
@@ -151,7 +161,7 @@ git clone https://github.com/seifsg/ai-software-factory.git
 python ai-software-factory/skills/safe-engine/scripts/fast_gate.py install --host claude
 ```
 
-- `claude` enables the plugin (skills and gate hooks) with auto-update. It follows release tags. Start a new session.
+- `claude` enables the plugin (skills and gate hooks) with auto-update, installs it with Claude Code's own CLI and checks `claude plugin list`. It follows release tags. Start a new session. No CLI found or the install failed: it exits 1 and names the fix. It looks on `PATH`, in `~/.local/bin` and in the Windows desktop app's `%APPDATA%\Claude\claude-code` folder; elsewhere, set `SAFE_ENGINE_CLAUDE` to the CLI's path.
 - `codex` and `cursor` copy the `safe-engine` and `improve-factory` skills into `~/.agents/skills` and write the gate hooks. Codex asks you to trust them once in `/hooks`.
 - `other` copies those skills only; wire the hooks by hand ([hosts](docs/hosts.md#other-agents)).
 - `--project <dir>` installs into one project instead of your user folders.
@@ -196,7 +206,9 @@ After an update or a rollback, the next `start`, `status` or `version` shows one
 - **Switch channel:** rerun the install with `--channel edge` to follow `main`, or `--channel stable` to return to releases. Claude Code has no channels: edge changes what new projects pin ([hosts](docs/hosts.md#updates)).
 - **Roll back by hand:** in your clone `git checkout vX.Y.Z` (the release you want), then rerun the install with `--no-auto-update` so the daily update keeps it there. Claude Code serves one version: run an older release with `claude --plugin-dir <clone at that tag>/skills`, the plugin disabled.
 
-**Projects stay pinned.** On first use a project pins the newest verified release (on the edge channel, or before the first release, `main`) to one commit, and every later run and resume there reads its methods from that commit, offline. Updating the install brings new launchers and hooks, never new methods to a pinned project. To switch a project to newer methods, ask `improve-factory Switch [absolute project directory] to the newest factory.` It checks the run is compatible first.
+**Active runs stay pinned.** New automatic selections use the newest verified release (`main` on edge or before the first release). `resolve_bundle.py --project <dir> --new-run` refreshes only before a new run; ordinary resume stays offline. Explicit `--ref`/`--bundle` pins and older receipts with unknown pin intent stay fixed. `fast_gate.py start` prints selected/latest versions, reports failed release checks and executes the selected gate. Its project commands and hooks follow that run's saved identity, including session-bound or absolute-path work outside the project directory. Tool calls spanning different factory versions must be split. A Fast/Lucky run closed in the gate home permits the next selection even if its project mirror is missing or stale. A named Safe run with a confirmed cancellation or checked handoff releases selection for the next ticket. Receipt-less bare starts are legacy use, not a freshness guarantee. Pin changes need `improve-factory`; never edit an active receipt.
+
+Factory maintenance uses an immutable selected runner and a separate editable candidate. The candidate can start from an explicitly approved unmerged dependency; that does not release or adopt it. Complete and commit planned changes before final candidate-bound proof. Use Prove when the selected runner supports it; otherwise run the required full suite directly on the committed candidate under its recorded gate workflow, retaining runner, commit, inputs, command, log and result. See `improve-factory` for the maintenance flow.
 
 ## 🧹 Uninstall
 
@@ -208,7 +220,7 @@ After an update or a rollback, the next `start`, `status` or `version` shows one
 
 | Symptom | Fix |
 |---|---|
-| `safe-engine` does not show up | Start a new session. Still missing: ask the agent to read the installed `safe-engine/SKILL.md` by path (Codex, Cursor: `~/.agents/skills/safe-engine/SKILL.md`) |
+| `safe-engine` does not show up | Start a new session. Claude Code: `claude plugin list` must show `safe-engine@ai-software-factory`; enabled in settings is not installed. Missing: `claude plugin install safe-engine@ai-software-factory --scope user` (or `/plugin`), then a new session; the run card's `Hooks:` line names this too. Still missing: ask the agent to read the installed `safe-engine/SKILL.md` by path (Codex, Cursor: `~/.agents/skills/safe-engine/SKILL.md`) |
 | Clone or install asks for a password or fails with "not found" | You need read access to this repository. Run `gh auth login` so Git uses your GitHub credentials over HTTPS |
 | Claude Code on Windows: hooks fail | Install Git for Windows (the hooks run in its `sh`, Git Bash), then start a new session |
 | Codex ignores the gate | Trust the factory's hooks once in `/hooks` |
@@ -263,6 +275,8 @@ No. They see tool calls, not intent: a command run from inside a script passes. 
 
 ## 🛠️ Work on the factory
 
+Design ports use `fast_gate.py start --design-port`, then `fast_gate.py design --input <coverage.json>` before plan. `fast_gate.py design --candidate` identifies the source for a fresh judge; `fast_gate.py design --review <review.json>` records matched screenshots and element observations. `fast_gate.py design` reports completed, partial, missing and approved-cut counts against the fixed original inventory ([usage](docs/design-coverage.md)).
+
 Rules live in [AGENTS.md](AGENTS.md); changes go through `improve-factory`. Report problems as [issues](https://github.com/seifsg/ai-software-factory/issues).
 
 ```bash
@@ -276,7 +290,13 @@ python tests/run.py
 - Method byte budgets: `python scripts/token_report.py --against origin/main` shows what a change adds to every run.
 - `python -m evals run` scores the factory against a plain agent ([evals](evals/README.md)).
 
+The gate loads command arguments from `fast_cli.py` only for CLI calls; tool hooks retain their direct fast path.
+
+Parallel local stacks use `fast_gate.py lane start`, `lane status` and `lane stop` with explicit project, lane name and fixed ports. They retain owned descendants, confirm shutdown before reporting cleanup, isolate supported caches and use short browser profiles. Screenshot cleanup attempts every acquired process and preserves artifacts when shutdown is unconfirmed. Installed entries preserve child arguments after `--`; commands, cleanup retries and platform limits are in [hosts](docs/hosts.md#lane-resources).
+
 ## 🗂️ Layout
+
+For finite helper work, [quiet waits](docs/waiting.md) records completion identities with `wait --add`, `wait --finish` and `wait --status`. Supported pending results release Stop; terminal or unknown work restores the reminder.
 
 ```text
 .agents/skills/        the skills (canonical methods)
@@ -291,3 +311,7 @@ docs/                  docs/install.md, docs/hosts.md, docs/orchestrators.md, do
 tests/                 controller, gate, installer, budget, docs-sync and skill hygiene tests
 CHANGELOG.md           what changed per release; UPGRADING.md: what to do
 ```
+
+UI delivery uses [Look, Show, Prove, Ship](docs/show-first.md): `show --plan`, `show --candidate`, `show --prepare`, `show --shared`, `show --reply`, `done show`, then `prove --suite`. Only actual shared pictures start the owner-response window. Installed entries use the selected bundle runner; completion requires any retained suite pass to match current source. Humans retain merge authority.
+
+New non-UI Fast runs declare `prove --plan <plan.json>` before plan completion. Intact matching complete-suite evidence returns before the machine-wide execution queue; misses join the queue and recheck. `prove --suite --fresh` explicitly reruns diagnostics. Safe `check` uses the same behavior; new complete-cycle runs permit `feature-check --checks <ids> --file <json>` after completed-item use. See [complete suites](docs/suite-checks.md) for declarations, manual receipts, reuse and compatibility.

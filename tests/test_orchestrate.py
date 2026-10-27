@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import sys
 import tempfile
 import unittest
 from unittest import mock
@@ -53,6 +54,11 @@ class OrchestrateTests(unittest.TestCase):
         patch.start()
         self.addCleanup(patch.stop)
         self.lines = []
+        sys.path.insert(0, str(SCRIPTS))
+        self.addCleanup(sys.path.remove, str(SCRIPTS))
+        installer = __import__("fast_install")  # the module orchestrate imports by name
+        self.plugin = mock.patch.object(installer, "install_plugin").start()  # never runs the real Claude Code CLI
+        self.addCleanup(mock.patch.stopall)
 
     def args(self, *extra):
         parser = argparse.ArgumentParser()
@@ -90,6 +96,7 @@ class OrchestrateTests(unittest.TestCase):
         self.assertEqual(agent["adapterConfig"]["workspaceStrategy"], {"type": "git_worktree"})
         settings = json.loads((self.user / ".claude/settings.json").read_text(encoding="utf-8"))
         self.assertTrue(settings["enabledPlugins"]["safe-engine@ai-software-factory"])
+        self.plugin.assert_called_once()  # and installed through the CLI
 
     def test_an_agent_with_the_same_name_is_updated_not_duplicated(self):
         api = FakeApi({"agents": [{"id": "a9", "name": "Factory engineer (Claude Code)"}]})

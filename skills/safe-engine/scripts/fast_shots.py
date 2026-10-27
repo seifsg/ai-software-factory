@@ -5,7 +5,6 @@ import os
 from pathlib import Path
 import re
 import shutil
-import signal
 import socket
 import subprocess
 import sys
@@ -13,6 +12,8 @@ import tempfile
 import time
 import urllib.error
 import urllib.request
+
+from fast_lane import runtime
 
 BROWSERS = ("chrome", "google-chrome", "google-chrome-stable", "chromium", "chromium-browser", "msedge",
             "microsoft-edge")
@@ -22,6 +23,39 @@ KNOWN = ("C:/Program Files/Google/Chrome/Application/chrome.exe",
          "C:/Program Files/Microsoft/Edge/Application/msedge.exe",
          "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
          "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge")
+
+
+class CleanupError(RuntimeError):
+    """Keep failed owners available for explicit retry while the caller lives."""
+    def __init__(self, failures):
+        self.failures = failures
+        self.paths = []
+        super().__init__("Cleanup unconfirmed: " + "; ".join(
+            f"PID {process.pid}: {error}" for process, error in failures))
+
+    def retry(self):
+        """Retry each retained owner; artifact removal remains the caller's decision."""
+        try:
+            cleanup([process for process, _ in self.failures])
+        except CleanupError as error:
+            error.paths.extend(self.paths)
+            raise
+        self.failures.clear()
+
+
+def cleanup(processes, pending=None):
+    """Attempt every acquired owner before propagating aggregate cleanup failure."""
+    failures = list(pending.failures) if isinstance(pending, CleanupError) else []
+    for process in processes:
+        try:
+            stop(process)
+        except BaseException as error:
+            failures.append((process, error))
+    if failures:
+        error = CleanupError(failures)
+        if isinstance(pending, CleanupError):
+            error.paths.extend(pending.paths)
+        raise error
 
 
 def parser(sub, common):
@@ -48,18 +82,26 @@ def run(args, gate):
     out.mkdir(parents=True, exist_ok=True)
     work = Path(tempfile.mkdtemp(prefix="shots-", dir=scratch(project, gate)))
     base = work / "base"
+    retained = False
     try:
         git(project, "worktree", "add", "--detach", str(base), args.base)
-        pairs = capture(args, [(base, ports[0], "before"), (project, ports[1], "after")], browser, size, work, out)
+        pairs = capture(args, [(base, ports[0], "before"), (project, ports[1], "after")], browser, size, work, out, project)
+    except CleanupError as error:
+        retained = True
+        error.paths.append(base)
+        print(f"shots: cleanup unconfirmed; retained paths: {error.paths}. "
+              "Retry ownership is available only while this caller remains alive.", file=sys.stderr)
+        raise
     except (OSError, RuntimeError, subprocess.SubprocessError) as error:
         gate.fail(f"shots: {error}")
     finally:
-        git(project, "worktree", "remove", "--force", str(base), check=False)
+        if not retained:
+            git(project, "worktree", "remove", "--force", str(base), check=False)
     for path, before, after in pairs:
         print(f"{path}: {before} -> {after}")
 
 
-def capture(args, trees, browser, size, work, out):
+def capture(args, trees, browser, size, work, out, project):
     """Set up and serve each tree, shoot each path in both, stop both servers whatever happens."""
     servers = []
     try:
@@ -70,10 +112,9 @@ def capture(args, trees, browser, size, work, out):
         for server, (_, port, label) in zip(servers, trees):
             wait_up(server, port, args.wait, work / f"{label}-server.log")
         return [(path, *(shoot(browser, f"http://127.0.0.1:{port}{route(path)}", size, work,
-                               out / f"{slug(path)}-{label}.png") for _, port, label in trees)) for path in args.path]
+                               out / f"{slug(path)}-{label}.png", project) for _, port, label in trees)) for path in args.path]
     finally:
-        for server in servers:
-            stop(server)
+        cleanup(servers, sys.exc_info()[1])
 
 
 def find_browser(given):
@@ -118,18 +159,30 @@ def git(project, *args, check=True):
 
 
 def shell(command, cwd, log, timeout):
+    resources, ProcessTree = runtime("resources"), runtime("processes").ProcessTree
     with open(log, "w", encoding="utf-8") as sink:
-        if subprocess.run(command, shell=True, cwd=cwd, stdout=sink, stderr=subprocess.STDOUT, timeout=timeout).returncode:
-            raise RuntimeError(f"'{command}' failed in {cwd}; see {log}")
+        process = ProcessTree(command, cwd, shell=True, stdout=sink, stderr=subprocess.STDOUT,
+                              env=resources.environment(resources.resource_root(cwd)))
+        try:
+            if process.wait(timeout=timeout):
+                raise RuntimeError(f"'{command}' failed in {cwd}; see {log}")
+        finally:
+            cleanup([process])
 
 
 def serve(command, cwd, port, log):
-    """Start the dev server in its own process group so stop() ends its whole tree."""
-    group = ({"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP} if os.name == "nt" else {"start_new_session": True})
+    """Own the whole server tree and refuse an already occupied port."""
+    resources, ProcessTree = runtime("resources"), runtime("processes").ProcessTree
+    if runtime("lanes").occupied([port]):
+        raise RuntimeError(f"Port {port} already occupied; occupant untouched")
     sink = open(log, "w", encoding="utf-8")  # closed with the process in stop()
-    env = {**os.environ, "PORT": str(port)}
-    process = subprocess.Popen(command.replace("{port}", str(port)), shell=True, cwd=cwd, stdout=sink,
-                               stderr=subprocess.STDOUT, env=env, **group)
+    env = {**resources.environment(resources.resource_root(cwd)), "PORT": str(port)}
+    try:
+        process = ProcessTree(command.replace("{port}", str(port)), cwd, shell=True, stdout=sink,
+                              stderr=subprocess.STDOUT, env=env)
+    except BaseException:
+        sink.close()
+        raise
     process.sink = sink
     return process
 
@@ -138,7 +191,7 @@ def wait_up(process, port, seconds, log):
     """Any HTTP answer on the port counts; an exited server or the deadline fails with its log."""
     deadline = time.monotonic() + seconds
     while time.monotonic() < deadline:
-        if process.poll() is not None:
+        if process.poll() is not None and not process.members():
             raise RuntimeError(f"server exited ({process.returncode}) before answering on {port}; see {log}")
         try:
             urllib.request.urlopen(f"http://127.0.0.1:{port}/", timeout=2).close()
@@ -150,34 +203,41 @@ def wait_up(process, port, seconds, log):
     raise RuntimeError(f"nothing answered on port {port} within {seconds}s; see {log}")
 
 
-def shoot(browser, url, size, work, target):
+def shoot(browser, url, size, work, target, project):
     """One headless screenshot; its own profile folder keeps the owner's browser untouched."""
-    profile = Path(tempfile.mkdtemp(prefix="profile-", dir=work))
+    user_data = runtime("resources").profile(work)
+    ProcessTree = runtime("processes").ProcessTree
     if target.exists():
         target.unlink()
-    subprocess.run([browser, "--headless=new", "--disable-gpu", "--hide-scrollbars", "--no-first-run",
-                    "--no-default-browser-check", f"--user-data-dir={profile}", "--virtual-time-budget=5000",
+    process = ProcessTree([browser, "--headless=new", "--disable-gpu", "--hide-scrollbars", "--no-first-run",
+                    "--no-default-browser-check", f"--user-data-dir={user_data}", "--virtual-time-budget=5000",
                     f"--window-size={size.group(1)},{size.group(2)}", f"--screenshot={target}", url],
-                   capture_output=True, timeout=120)
+                    work, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    try:
+        process.wait(timeout=120)
+    finally:
+        try:
+            cleanup([process])
+        except CleanupError as error:
+            error.paths.append(user_data)
+            raise
+        from fast_setup import remove
+        left = []
+        remove(user_data, left)
+        if left:
+            raise RuntimeError(f"Browser profile cleanup failed: {left}")
     if not target.is_file() or not target.stat().st_size:
         raise RuntimeError(f"no screenshot of {url}")
+    import fast_image
+    fast_image.check(target, project=project)
     return target
 
 
 def stop(process):
-    """End the server's whole process tree: taskkill /T on Windows, TERM then KILL to its group elsewhere."""
-    for force in (False, True):
-        if process.poll() is not None:
-            break
-        if os.name == "nt":
-            subprocess.run(["taskkill", "/PID", str(process.pid), "/T", "/F"], capture_output=True)
-        else:
-            os.killpg(process.pid, signal.SIGKILL if force else signal.SIGTERM)
-        try:
-            process.wait(timeout=10)
-        except subprocess.TimeoutExpired:
-            continue
-    process.sink.close()
+    """Stop retained descendants even after the command's parent has exited."""
+    process.stop()
+    if hasattr(process, "sink"):
+        process.sink.close()
 
 
 def route(path):

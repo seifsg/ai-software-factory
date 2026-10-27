@@ -5,7 +5,8 @@ from pathlib import Path
 import threading
 
 from .project import EngineError, command_argv, file_hash, inside, reject_path_aliases, rescan
-from .storage import atomic_json
+from .storage import atomic_json, read_json
+from .acceptance import validate_manual_receipt
 
 
 class CheckMixin:
@@ -21,7 +22,7 @@ class CheckMixin:
         anchor = "batch" if state["phase"] == "verify" else "improvement"
         if state["artifacts"][anchor]["fingerprint"] != current:
             raise EngineError(f"Candidate changed after the {anchor} record; enter repair and record the new batch")
-        if (state["phase"] == "final-verify" and not fresh
+        if (not state.get('suite_policy') and state["phase"] == "final-verify" and not fresh
                 and state["profile"].get("reuse_unchanged_checks", False)
                 and state.get("checks") and state["checks"]["fingerprint"] == current):
             self.require_checks(state)
@@ -32,8 +33,21 @@ class CheckMixin:
         state["review"] = None
         state["pending_operation"] = "checks"
         self.persist(state, "Started check batch; previous acceptance invalidated")
-        results = self.execute_checks(state, state["profile"]["checks"])
-        unchanged = self.current(state) == current
+        reused, stable = False, True
+        if state.get('suite_policy'):
+            from .suites import describe, execute
+            profile = state['profile']
+            configured = profile['checks']
+            def identify():
+                return describe(self.project, [command_argv(c, self.project, self.directory) for c in configured],
+                                {'files': profile['input_files'], 'environment': profile['environment_inputs']},
+                                {'profile': profile, 'contract': self.current(state)})
+            batch = execute(self.project, identify, lambda slot: self.execute_checks(state, configured, slot),
+                            cache=not fresh, validate=lambda rows: self.complete_results(configured, rows))
+            results, reused, stable = batch['results'], batch['reused'], batch['unchanged']
+        else:
+            results = self.execute_checks(state, state["profile"]["checks"])
+        unchanged = stable and self.current(state) == current
         self.integrity(state)
         passed = unchanged and all(result["passed"] for result in results)
         state["checks"] = {"fingerprint": current, "passed": passed, "inputs_unchanged": unchanged, "results": results}
@@ -42,17 +56,31 @@ class CheckMixin:
             state["phase"] = ("review" if state.get("delivery_version") == 2
                               else "improve" if state["phase"] == "verify" else "review")
         self.persist(state, "Check batch passed" if passed else "Check batch failed; correction required")
-        return {**self.status(state), "checks_reused": False, "results": results}
+        return {**self.status(state), "checks_reused": reused, "results": results}
 
-    def execute_checks(self, state, configured):
+    def complete_results(self, configured, results):
+        """A cached aggregate cannot replace the required per-command evidence."""
+        expected = {check['id']: check for check in configured}
+        if len(results) != len(expected) or {row.get('id') for row in results} != set(expected):
+            return False
+        for row in results:
+            check = expected[row['id']]
+            if (row.get('argv') != command_argv(check, self.project, self.directory)
+                    or row.get('kind') != check['kind']
+                    or {a['path'] for a in row.get('artifacts', [])}
+                    != {str(inside(self.project, p)) for p in check.get('artifacts', [])}):
+                return False
+        return True
+
+    def execute_checks(self, state, configured, slot=None):
         """Serial by default; reviewed parallel_checks runs independent commands at once."""
         try:
             if not (state.get("profile", {}).get("parallel_checks") and len(configured) > 1):
-                return [self.run_check(state, check, self.prepare_outputs(check)) for check in configured]
+                return [self.run_check(state, check, self.prepare_outputs(check), slot=slot) for check in configured]
             prepared = [(check, self.prepare_outputs(check)) for check in configured]
             stop = threading.Event()
             with ThreadPoolExecutor(min(len(prepared), 32)) as pool:
-                futures = [pool.submit(self.run_check, state, check, outputs, stop) for check, outputs in prepared]
+                futures = [pool.submit(self.run_check, state, check, outputs, stop, slot) for check, outputs in prepared]
                 try:
                     pending = set(futures)
                     while pending:  # Timed waits keep Ctrl+C responsive on Windows.
@@ -79,10 +107,11 @@ class CheckMixin:
                 output.unlink()
         return outputs
 
-    def run_check(self, state, check, outputs, stop=None):
+    def run_check(self, state, check, outputs, stop=None, slot=None):
         log = self.directory / "logs" / f"{state['sequence']:04d}-{check['id']}.log"
         result = self.launch(command_argv(check, self.project, self.directory), self.project,
-                            check["timeout_seconds"], log, **({"stop": stop} if stop else {}))
+                            check["timeout_seconds"], log, **({"stop": stop} if stop else {}),
+                            **({'owned_lease': slot.lease()} if slot is not None else {}))
         artifacts = []
         for output in outputs:
             try:
@@ -97,9 +126,11 @@ class CheckMixin:
     def feature_check(self, check_ids, source):
         """Partial feedback for a completed capability; never version acceptance."""
         state = self.load()
-        if state.get("delivery_version") == 2:
+        modern = state.get("delivery_version") == 2
+        if modern and not state.get('suite_policy'):
             raise EngineError("All testing waits until finished implementation and final manual QA")
         self.require_phase(state, "build")
+        self.require_ticket(state)
         self.integrity(state)
         if state.get("feature_checks") and not state["feature_checks"]["passed"]:
             raise EngineError("Failed feature feedback requires a correction; use repair before another batch")
@@ -108,6 +139,7 @@ class CheckMixin:
                 or any(identifier not in configured for identifier in check_ids)):
             raise EngineError("Select unique configured check IDs for this feature batch")
         current = self.current(state)
+        manual = self.feature_manual(state, source, current, check_ids, configured) if modern else None
         kind = f"feature-{state['sequence'] + 1:04d}"
         self.capture_artifact(state, kind, source, current)
         state["checks"] = None
@@ -122,6 +154,10 @@ class CheckMixin:
         evidence = {"fingerprint": current, "passed": unchanged and all(r["passed"] for r in results),
                     "inputs_unchanged": unchanged, "results": results,
                     "missing_required_checks": [identifier for identifier in configured if identifier not in check_ids]}
+        if manual:
+            if self.feature_manual(state, source, current, check_ids, configured) != manual:
+                raise EngineError('Feature manual evidence changed during feedback; repeat actual use')
+            evidence['manual'] = manual
         state["feature_checks"] = evidence
         relative = f"artifacts/{state['sequence']:04d}-feature-results.json"
         atomic_json(self.directory / relative, evidence)
@@ -132,6 +168,28 @@ class CheckMixin:
              else "Feature feedback failed; correction required")
         return {**self.status(state), "feature_checks_passed": evidence["passed"],
                 "missing_required_checks": evidence["missing_required_checks"], "results": results}
+
+    def feature_manual(self, state, source, candidate, check_ids, configured):
+        """Bind one completed item's observations to partial feedback, never final acceptance."""
+        if set(check_ids) == set(configured):
+            raise EngineError('Feature feedback must select fewer than all configured checks; complete checks wait for final QA')
+        if Path(source).stat().st_size > 1_000_000:
+            raise EngineError('Feature manual receipt is too large')
+        receipt = read_json(source)
+        if (not isinstance(receipt, dict) or type(receipt.get('version')) is not int
+                or receipt['version'] != 1 or receipt.get('completed') is not True):
+            raise EngineError('Feature feedback needs a version 1 completed-item manual receipt')
+        for field in ('item', 'mapping'):
+            if not isinstance(receipt.get(field), str) or not receipt[field].strip():
+                raise EngineError(f'Feature manual receipt needs {field}')
+        observations = receipt.get('observations')
+        if (not isinstance(observations, list) or not observations or len(observations) > 100
+                or any(not isinstance(o, dict) or 'carried' in o for o in observations)):
+            raise EngineError('Feature feedback needs fresh item observations, never carried final QA')
+        selected = {o.get('criterion') for o in observations if isinstance(o.get('criterion'), str)}
+        task = {'acceptance': [c for c in state['task']['acceptance'] if c['id'] in selected]}
+        manual = validate_manual_receipt(receipt, candidate, task, self.project)
+        return {**manual, 'item': receipt['item'], 'mapping': receipt['mapping']}
 
     def require_checks(self, state):
         self.require_ticket(state)

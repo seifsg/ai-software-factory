@@ -6,7 +6,30 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 
 ## [Unreleased]
 
+### Fixed
+- Journey clock lint accepts both documented direct fixed-clock helpers while retaining wall-time checks (#182).
+- Claude Code install (#152): `install --host claude` now installs the plugin with Claude Code's CLI and checks `claude plugin list`, exiting 1 with the fix when it cannot; it used to only enable it in settings, which could leave no plugin. The run card's `Hooks:` line names an enabled but uninstalled plugin. Existing Claude Code installs: when `claude plugin list` lacks `safe-engine@ai-software-factory`, rerun `install --host claude`.
+
+### Added
+- Design ports (#155): immutable reference coverage, owner-recorded cuts, independent matched likeness receipts and measured element counts; stale or incomplete evidence blocks completion.
+- Explicit verdict-field checks and accumulated record diagnostics (#163); approved-plan import remains outside this release pending manual acceptance (#184).
+
+- Complete-suite input declarations, evidence reuse and a machine-wide queue; fixed browser-clock helpers, declared journey-time lint and affected-test feedback after manual use (#158).
+- Reasoned hidden-check selection, pasted checker briefs, syntax/execution receipts and scoped browser trap helpers (#159).
+- Plain owner reports with explicit per-ticket spend and estimates, body-code lint, latest pictures in the live view, and bounded PNG content checks before publication.
+- UI Look/Show/Prove/Ship checkpoint with current paired pictures, recorded sharing and owner feedback/deadlines before the declared suite (#154).
+- Quiet helper waits with immutable generation/completion receipts, named pending work and per-run Stop reconciliation.
+- Owned lane start/stop/status, short browser profiles, explicit cache adapters and helper working-directory verification.
+
 ### Changed
+
+- Intact matching complete-suite evidence returns before execution queue admission; misses retain FIFO admission and post-admission rechecks (#176).
+- Accepted PNG checks reuse bounded, authenticated validation across gate processes; image Try accepts `.png`, explains unsupported formats, and thumbnails follow validated current bytes even when timestamps do not advance (#177).
+- Factory maintenance separates the immutable gate runner from its editable candidate, allows an explicit approved unmerged base, and commits planned edits before final proof using the selected runner's capabilities (#178).
+- Current helper receipts take priority over stale report directions; reports published after completion restore the next action.
+- Combined factory commands retain selected-bundle routing, with lazy CLI registration split from the hook path to keep the gate small.
+- Worth-it repairs (#157): bounded finding scores prioritize optional polish, Fast/Lucky and new Safe runs validate selected fixes, authorized Finishing touches batches reuse the epic's existing follow-ups, and parked reports explain what waits without weakening mandatory quality or owner authority.
+- New runs (#160): automatic project selections refresh to the newest verified immutable bundle; active, explicit and legacy-unknown pins stay intact. Start reports selected/latest versions and failed newer releases, and project commands/hooks follow the selected gate.
 
 - Synced docs (#150): the README covers every install host and flag, what each host gets, orchestrators, the live view, model routing, local releases and the full layout; `tests/test_docs_sync.py` fails when a command, flag, host, release step, doc page, skill or folder goes undocumented.
 - No GitHub CI/CD (#148): the release workflow is gone; `python scripts/release.py publish vX.Y.Z` checks the tag, runs the suite and publishes the GitHub release locally, and methods treat local checks as the gate in every project, never waiting on CI.

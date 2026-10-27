@@ -29,13 +29,14 @@ STEPS = (
     ("design", ("fast",), KINDS, "ui"),
     ("schema", ("fast",), KINDS, "data"),
     ("build", MODES, KINDS, None),
+    ("show", MODES, KINDS, "show_first"),
     ("done-run", ("fast",), KINDS, None),
     ("done-run", ("lucky",), KINDS, "ticket_checks"),
     ("handoff", MODES, KINDS, None),
 )
 TITLES = {"research": "Research", "kickoff": "Kickoff", "tickets": "Tickets", "analysis": "Analysis",
           "plan": "Plan", "design": "Design", "schema": "Schema", "build": "Build log",
-          "done-run": "Done-run", "handoff": "Handoff"}
+          "show": "Show", "done-run": "Done-run", "handoff": "Handoff"}
 HERE = Path(__file__).resolve().parent  # siblings: fast_record, fast_shell, fast_guard, fast_progress, fast_card
 
 
@@ -223,12 +224,18 @@ def status_text(run, all_sections=None):
     if all_sections is None:
         all_sections = sibling("fast_progress").read(record_path(run["project"]))
     blocked = open_before_build(run)
-    lines = [sibling("fast_card").card(run, steps_for(run), all_sections, now(), left=True),
+    waiting = sibling("fast_wait").state(HOME, run)
+    live_wait = bool(waiting["recorded"] or waiting["problems"])
+    suppress_report = sibling("fast_wait").suppress_report(waiting, run.get("owner_report"))
+    lines = ([sibling("fast_wait").describe(waiting)] if live_wait else []) + [
+             sibling("fast_card").card(run, steps_for(run), all_sections, now(), left=True, current=suppress_report),
              f"{run['mode']} {run['kind']} run '{run['key']}' at {run['project']}"
              f" (ui={run.get('ui')}, data={run.get('data')}, auth={run.get('auth')})",
              "Gate: " + ("open, source edits allowed" if not blocked else "closed until " + ", ".join(blocked)),
              "Next: " + ("closed" if run.get("closed") else next_step(run) or "close")]
     lines += list(filter(None, [sibling("fast_pr_policy").notice(HOME, run)]))
+    if run.get("show_first"):
+        lines.append(sibling("fast_show").notice(run["project"], run))
     return "\n".join(lines)
 
 
@@ -250,9 +257,12 @@ PR = ".agents/skills/how-to-make-a-pr/SKILL.md"
 # run flag -> (method file, phrase): a check applies only when the methods the run reads define it
 FLAGS = {"ticket_checks": (LAYOUT, "Definition of done"), "coverage": (LAYOUT, "Every criterion has"),
          "light": (FAST_RUN, "Light lane"), "outcomes": (FAST_RUN, "what the owner can do once it is done"),
-         "hidden_checks": (FAST_RUN, "**Hidden checks:**"),
+         "hidden_checks": (FAST_RUN, "**Hidden checks:**"), "wait_receipts": (FAST_RUN, "wait --add"),
          "scans": (FAST_RUN, "**Secrets:**"), "ux_rules": (UX, "| U10 |"), "pr_proof": (FAST_RUN, "`**PR:**`"),
-         "credit": (PR, "references/credit.md"), "pr_demo": (PR, "**Visual:**"), "briefs": (FAST_RUN, "**Ports:**")}
+         "credit": (PR, "references/credit.md"), "pr_demo": (PR, "**Visual:**"), "briefs": (FAST_RUN, "**Ports:**"),
+         "worth": (FAST_RUN, "**Findings:**"), "check_selection": (FAST_RUN, "Reasoned proof selection"),
+         "show_first": (FAST_RUN, "Look, Show, Prove, Ship"),
+         "suite_policy": (FAST_RUN, "One full suite per effective version")}
 
 
 def method_flags(bundle, project):
@@ -262,7 +272,7 @@ def method_flags(bundle, project):
         try:
             flags[flag] = phrase in (root / path).read_text(encoding="utf-8")
         except (OSError, ValueError):
-            flags[flag] = not bundle  # a product without a resolved bundle follows the current methods
+            flags[flag] = not bundle and flag not in ("show_first", "check_selection", "suite_policy")  # New proof contracts need resolved methods.
     return flags
 
 
@@ -290,18 +300,23 @@ def cmd_start(args):
     if registry_path(project).is_file():
         fail(f"Run '{home_run(project).get('key')}' is still open here; close it first (a lost one: "
              f"fast_gate.py close --project \"{project}\" --abandon \"<reason>\")")
-    archive_run(project)
-    forget_shown(project)
     product, bundle = args.kind == "product", bundle_receipt(project)
+    if getattr(args, "design_port", False) and args.ui is False:
+        fail("--design-port is UI work; remove --no-ui")
     run = {"version": VERSION, "key": args.key, "project": str(project), "mode": args.mode, "kind": args.kind,
            "ui": product if args.ui is None else args.ui, "data": product if args.data is None else args.data,
            "auth": args.auth, "request": request.strip(), "created": now(), "done": {}, "paused": None,
            "closed": False, "bundle": bundle, "pr_instance": os.urandom(16).hex(), **method_flags(bundle, project)}
     run.update(sibling("fast_pr_policy").start(HOME))
+    if getattr(args, "design_port", False):
+        run.update(design_port=True, ui=True)
+    run["show_first"] = bool(run.get("show_first") and run["ui"])
     if "analysis" not in steps_for(run):  # older hook copies still require it before build: mark it skipped
         run["done"]["analysis"] = {"at": now(), "skipped": "light lane"}
     if run.get("ux_rules") and not run["ui"]:  # only these runs later ask which UI files they changed
         run.update(sibling("fast_record").ui_start(project))
+    archive_run(project)
+    forget_shown(project)
     setup = sibling("fast_setup")
     git_note, hooks = setup.ignore_factory(project), setup.hook_status(project)
     scratch = setup.scratch_path(HOME, run)
@@ -313,7 +328,7 @@ def cmd_start(args):
     save(registry_path(project), store.new_registration(project, args.key))
     log("run.start", key=args.key, project=str(project), mode=args.mode, kind=args.kind, bundle=run["bundle"], hooks=hooks)
     bundle = (f"{run['bundle']['root']} @ {run['bundle']['revision'][:12]}" if run["bundle"] else
-              "no .factory/entry-bundle.json: run the entry's resolver first, except for factory maintenance")
+              "legacy start; latest unknown (resolve the entry first)")
     print(status_text(run) + f"\n{sibling('fast_release').card(run, HOME)}\nRecord: {record}\nBundle: {bundle}\n"
           f"Git: {git_note}\nHooks: {hooks}\n" + setup.TEXT.format(scratch))
 
@@ -336,8 +351,9 @@ def cmd_done(args):
         fail(f"Cannot read the work record: {error}")
     body = all_sections.get(TITLES[step].lower(), "")
     checked = sibling("fast_pr_policy").effective(HOME, run) if step == "handoff" else run
-    problems = (CHECKS[step](checked, body, project=project, offline=args.offline, all_sections=all_sections, runs=active_runs)
-                if body.strip() else [f"section '## {TITLES[step]}' is missing or empty"])
+    problems = [] if body.strip() else [f"section '## {TITLES[step]}' is missing or empty"]
+    problems += CHECKS[step](checked, body, project=project, offline=args.offline,
+                             all_sections=all_sections, runs=active_runs)
     if problems:
         log("step.refused", key=run["key"], step=step, problems=problems)
         fail(f"'{step}' not recorded:\n- " + "\n- ".join(problems))
@@ -348,6 +364,8 @@ def cmd_done(args):
         run.update(size=record.run_size(all_sections), size_at=step)  # frozen: editing the line later skips nothing
     if step == "plan":  # who owes the epic's integration todos is read from the plan as recorded here
         run["todos"] = list(dict.fromkeys(run.get("todos", []) + [f"T{n}" for n in record.todo_ids(all_sections)]))
+        if run.get("check_selection"):
+            sibling("fast_checks").freeze_ownership(run)
         run["ports"] = sibling("fast_briefs").ports(record.marker(body, "Ports"))  # later lanes' plans avoid them
     if step == "tickets":  # later ticket checks keep reading these even if the record drops one
         epic, subs = record.ticket_urls(body)
@@ -440,6 +458,11 @@ def cmd_close(args):
     if "handoff" not in run["done"] and not args.abandon:
         fail("Record the handoff first, or close --abandon \"<the owner's reason>\"")
     if not args.abandon:
+        problems = sibling("fast_design").problems(run, project, final=True)
+        problems += sibling("fast_show").completion_problems(run, project)
+        problems += sibling("fast_checks").problems(run, project, final=True)
+        if problems:
+            fail("\n".join(problems))
         sibling("fast_pr_policy").close(HOME, run)
     run.update(closed=True, closed_at=now(), abandoned=args.abandon, paused=None)
     put(project, run)
@@ -671,6 +694,11 @@ def pre_tool(event, runs, cwd, session):
         reason = guard(event["command"], runs, cwd, session, event.get("dialect"))
         if reason:
             return reason
+        item = owner(runs, cwd) or mentioned(runs, event["command"])
+        if item and item[2].get("show_first"):
+            reason = sibling("fast_show").suite_guard(event["command"], item[2], item[2]["project"], event.get("dialect"))
+            if reason:
+                return deny_reason(item[2], reason)
     if event["tool"] == "edit":
         targets = [norm(path, cwd) for path in event["paths"]]
     elif event["tool"] == "shell":
@@ -678,7 +706,7 @@ def pre_tool(event, runs, cwd, session):
         targets = [norm(name, where(cds, cwd)) for cds, name in shell.writes(event["command"])]
     else:
         return None
-    vault = (norm(ACTIVE), norm(HOME / "runs"), norm(HOME / "pr-proof")) if targets else ()
+    vault = (norm(ACTIVE), norm(HOME / "runs"), norm(HOME / "pr-proof"), norm(HOME / "waits")) if targets else ()
     for path in targets:
         if any(inside(path, folder) for folder in vault):  # the gate home's run files: only gate commands write them
             item = owner(runs, cwd) or next(iter(mine(runs, cwd, session)), None) or runs[0]
@@ -806,16 +834,13 @@ def stop(event, runs, cwd, session):
     """Reason to keep working when a run is unfinished; once per stop, never for paused runs or background waits."""
     if event["again"]:
         return None  # one reminder per stop; never trap the session
-    for _, _, run in mine(runs, cwd, session):
-        if not run.get("paused"):
-            step = next_step(run)
-            if event.get("waiting"):  # a background agent's result starts a new turn, whose stop is checked again
-                log("hook.wait_stop", key=run["key"], next=step)
-                return None
-            log("hook.block_stop", key=run["key"], next=step)
-            return (f"Factory {run['mode']} run '{run['key']}' unfinished. Next: {step or 'close'}. Continue it; waiting "
-                    "on the owner: `fast_gate.py pause --reason \"...\"`; owner stopped it: `fast_gate.py close --abandon "
-                    "\"<their reason>\"`.")
+    run = sibling("fast_wait").blocked(event, mine(runs, cwd, session), session, sys.modules[__name__])
+    if run:
+        step = next_step(run)
+        log("hook.block_stop", key=run["key"], next=step)
+        return (f"Factory {run['mode']} run '{run['key']}' unfinished. Next: {step or 'close'}. Continue it; waiting "
+                "on the owner: `fast_gate.py pause --reason \"...\"`; owner stopped it: `fast_gate.py close --abandon "
+                "\"<their reason>\"`.")
     return None
 
 
@@ -842,6 +867,9 @@ def cmd_hook(host="claude"):
         hosts = sibling("fast_hosts")
         raw = json.loads(sys.stdin.buffer.read().decode("utf-8-sig") or "{}")  # hosts send UTF-8
         event = hosts.read(host, raw if isinstance(raw, dict) else {})
+        routed = sibling("fast_entry").hook(host, raw, event, runs, sys.modules[__name__])
+        if routed is not None:
+            return routed
         cwd, session = norm(event["cwd"] or os.getcwd()), event["session"]
         out, code = None, 0
         if event["kind"] == "pre_tool":
@@ -856,6 +884,8 @@ def cmd_hook(host="claude"):
                 note_agents(runs, cwd, session, event["agents"])
             reason = stop(event, runs, cwd, session)
             out = hosts.keep_going(host, reason) if reason else None
+            if event.get("wait_message"):
+                out = hosts.with_message(out, event["wait_message"])
             if out:
                 log("hook.answer", host=host, hook_event=event["name"], answer="keep_going")
         elif event["kind"] in ("prompt", "session"):
@@ -863,7 +893,7 @@ def cmd_hook(host="claude"):
             out = hosts.context(host, event["name"], text) if text else None
         if event["kind"]:  # the view refreshes on every host; delegates' messages may not reach the owner
             show = hosts.notifies(host) and not event.get("delegate")
-            lines = news(runs, cwd, session, show)
+            lines = "\n".join(filter(None, (event.get("wait_message"), news(runs, cwd, session, show)))) or None
             if show and event["kind"] == "prompt":
                 lines = "\n".join(line for line in (lines, reminder(runs, cwd, session)) if line) or None
             out = hosts.with_message(out, lines) if show else out
@@ -880,71 +910,31 @@ def main():
         sys.exit("fast_gate.py needs Python 3.9+")  # non-zero: the hook launcher tries the next Python
     for stream in (sys.stdout, sys.stderr):
         stream.reconfigure(encoding="utf-8", errors="backslashreplace")  # the card's symbols survive any pipe
+    try:
+        routed = (sibling("fast_entry").route(sys.argv[1:], sys.modules[__name__])
+                  if sys.argv[1:2] != ["hook"] else None)
+        if routed is not None:
+            sys.exit(routed)
+    except (RuntimeError, OSError, ValueError) as error:
+        fail(str(error))
     if sys.argv[1:2] == ["hook"] and not {"-h", "--help"} & set(sys.argv):  # hot path: skip argparse
         flags = " ".join(sys.argv[2:]).replace("--host=", "--host ").split()
         host = flags[flags.index("--host") + 1] if "--host" in flags[:-1] else "claude"
         sys.exit(cmd_hook(host))
-    import argparse
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    common = argparse.ArgumentParser(add_help=False)
-    common.add_argument("--project", help="Run project; default: nearest folder with .factory/fast/run.json")
-    sub = parser.add_subparsers(dest="command", required=True)
-    sibling("fast_cleanup").parser(sub, common)
-    sibling("fast_shots").parser(sub, common)
-    sibling("fast_baseline").parser(sub, common)
-    sibling("fast_release").parser(sub)
-    start = sub.add_parser("start", parents=[common], help="Begin a run and register it for hooks")
-    start.add_argument("--key", required=True)
-    start.add_argument("--mode", choices=MODES, default="fast")
-    start.add_argument("--kind", choices=KINDS, required=True)
-    for flag in ("ui", "data"):
-        start.add_argument(f"--{flag}", dest=flag, action="store_true", default=None)
-        start.add_argument(f"--no-{flag}", dest=flag, action="store_false", default=None)
-    start.add_argument("--auth", action="store_true", help="The product has sign-in")
-    start.add_argument("--request")
-    start.add_argument("--request-file")
-    sub.add_parser("pr-proof-method", help="Read the owner-selected PR method for any mode")
-    adopt = sub.add_parser("adopt-pr-proof", help="Owner-authorized PR-only policy; preserves existing run state")
-    target = adopt.add_mutually_exclusive_group(required=True)
-    target.add_argument("--project")
-    target.add_argument("--new-runs", action="store_true")
-    adopt.add_argument("--method", required=True, help="Absolute canonical PR SKILL.md; preserve its whole folder")
-    adopt.add_argument("--reason", required=True, help="Owner instruction and source authorizing adoption")
-    done = sub.add_parser("done", parents=[common], help="Check and record one step")
-    done.add_argument("step", choices=list(TITLES))
-    done.add_argument("--offline", help="Record tickets, plan, handoff or a hidden-check done-run without reading tickets "
-                                         "through gh, with the reason")
-    sub.add_parser("status", parents=[common])
-    sub.add_parser("scratch", parents=[common], help="Print the open run's scratch folder for throwaway data")
-    pause = sub.add_parser("pause", parents=[common], help="Waiting on the owner; lets the session stop")
-    pause.add_argument("--reason", required=True)
-    sub.add_parser("resume", parents=[common])
-    tried = sub.add_parser("try", parents=[common], help="How the owner tries a finished todo: a command, link or file")
-    tried.add_argument("todo", help="The todo's ID, such as T3")
-    target = tried.add_mutually_exclusive_group(required=True)
-    for flag, what in (("cmd", "a command to run"), ("url", "an http(s) link"), ("file", "a path inside the project")):
-        target.add_argument(f"--{flag}", help=what)
-    shown = sub.add_parser("view", help="Serve this project's live progress on 127.0.0.1")
-    scope = shown.add_mutually_exclusive_group()
-    scope.add_argument("--project", help="Project folder; default: current folder and its repository worktrees")
-    scope.add_argument("--all-projects", action="store_true", help="Explicitly show every project's progress")
-    shown.add_argument("--port", type=int, default=8765, help="Default 8765; a busy port falls back to a free one")
-    shown.add_argument("--snapshot", help="Write one HTML file with the current state instead of serving")
-    close = sub.add_parser("close", parents=[common])
-    close.add_argument("--abandon", help="The owner stopped the run: their reason")
-    rehome = sub.add_parser("rehome", parents=[common],
-                            help="Owner only: bring in an open run from another machine or folder")
-    rehome.add_argument("--from", dest="source", required=True, help="The folder the run's run.json records")
-    sibling("fast_install").parser(sub)
-    orchestrate = sub.add_parser("orchestrate", help="Set up an orchestrator to start factory sessions")
-    sibling("fast_orchestrate").arguments(orchestrate)
-    hook = sub.add_parser("hook", help="Answer one host hook event from stdin")
-    hook.add_argument("--host", default="claude", help="claude, codex, cursor, or any other hook-capable agent")
-    args = parser.parse_args()
-    actions = {"start": cmd_start, "done": cmd_done, "status": cmd_status, "close": cmd_close, "rehome": cmd_rehome,
+    args = sibling("fast_cli").parse(sys.modules[__name__])
+    actions = {"start": lambda a: sibling("fast_entry").start(a, sys.modules[__name__]),
+               "wait": lambda a: sibling("fast_wait_command").run(a, sys.modules[__name__]),
+               "done": cmd_done, "status": cmd_status, "close": cmd_close, "rehome": cmd_rehome,
                "try": cmd_try, "view": cmd_view, "scratch": cmd_scratch,
+               "fix-round": lambda a: sibling("fast_round").run(a, sys.modules[__name__]),
+               "checks": lambda a: sibling("fast_checks_command").run(a, sys.modules[__name__]),
+               "report": lambda a: sibling("fast_report_command").run(a, sys.modules[__name__]),
+               "design": lambda a: sibling("fast_design_command").run(a, sys.modules[__name__]),
+               "show": lambda a: sibling("fast_show_command").run(a, sys.modules[__name__]),
+               "prove": lambda a: sibling("fast_show_command").run(a, sys.modules[__name__]),
                "cleanup-temp": lambda a: sibling("fast_cleanup").run(a, sys.modules[__name__]),
                "shots": lambda a: sibling("fast_shots").run(a, sys.modules[__name__]),
+               "lane": lambda a: sibling("fast_lane").run(a, sys.modules[__name__]),
                "recover-baseline": lambda a: sibling("fast_baseline").recover(a, sys.modules[__name__]),
                "adopt-pr-proof": lambda a: sibling("fast_pr_policy").adopt(a, sys.modules[__name__]),
                "pr-proof-method": lambda a: sibling("fast_pr_policy").method(HOME),
@@ -954,7 +944,10 @@ def main():
                "orchestrate": lambda a: sibling("fast_orchestrate").run(a),
                "version": lambda a: sibling("fast_release").version(HOME), "verify": lambda a: sibling("fast_release").verify(a.path),
                "pause": lambda a: cmd_pause(a, a.reason), "resume": lambda a: cmd_pause(a, None)}
-    actions[args.command](args)
+    try:
+        actions[args.command](args)
+    except (RuntimeError, OSError) as error:
+        fail(str(error))
 
 
 if __name__ == "__main__":

@@ -16,8 +16,8 @@ CREDIT = SKILLS / "how-to-make-a-pr/references/credit.md"  # the factory's credi
 # (fast_pr_policy.source_digest). Losing one silently turns its check off for new runs.
 PHRASES = {
     "ticketing/references/ticket-layout.md": ("Definition of done", "Every criterion has"),
-    "safe-engine/references/fast-run.md": ("Light lane", "what the owner can do once it is done", "**Hidden checks:**",
-                                           "**Secrets:**", "`**PR:**`", "**Ports:**"),
+    "safe-engine/references/fast-run.md": ("Light lane", "what the owner can do once it is done", "Reasoned proof selection", "**Hidden checks:**",
+                                           "**Secrets:**", "`**PR:**`", "**Ports:**", "**Findings:**", "Look, Show, Prove, Ship", "wait --add", "One full suite per effective version"),
     "ux-quality/SKILL.md": ("| U10 |",),
     "how-to-make-a-pr/SKILL.md": ("references/credit.md", "**Visual:**", "**Journey:**"),
 }

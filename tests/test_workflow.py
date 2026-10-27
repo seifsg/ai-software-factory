@@ -13,12 +13,14 @@ from safe_engine.project import EngineError, fingerprint, validate_profile, vali
 from safe_engine.runner import run_command
 from safe_engine.storage import atomic_json, locked, read_json
 from safe_engine.workflow import Workflow
+from suite_fixture import isolate_suite_queue
 
 
 class WorkflowTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.root = Path(self.temp.name).resolve()
+        isolate_suite_queue(self)
         self.git("init", "-q")
         (self.root / ".gitignore").write_text(".factory/\n.env\n__pycache__/\n", encoding="utf-8")
         (self.root / "app.py").write_text("value = 1\n", encoding="utf-8")
@@ -32,6 +34,7 @@ class WorkflowTests(unittest.TestCase):
         self.flow = Workflow(self.root)
 
     def tearDown(self):
+        self.doCleanups()
         self.temp.cleanup()
 
     def git(self, *args):
@@ -39,6 +42,9 @@ class WorkflowTests(unittest.TestCase):
 
     def start(self, historical_limit=None):
         self.flow.initialize(self.task, self.profile, historical_limit)
+        state = self.flow.load()
+        state.pop('suite_policy')  # This fixture exercises runs saved before suite reuse existed.
+        atomic_json(self.flow.directory / 'state.json', state)
 
     def artifact(self, kind):
         path = self.root / ".factory" / f"draft-{kind}.md"

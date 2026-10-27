@@ -1,10 +1,14 @@
 # Fast run: record and gate
 
-Every Fast or Lucky run records each step in one work record and passes the gate. Step ids: `research`, `kickoff`, `tickets`, `analysis`, `plan`, `design`, `schema`, `build`, `done-run`, `handoff`; the gate skips those a run's kind does not need. The gate proves a step was recorded, not that it was good; quality stays with each method and the done-run.
+Steps: `research`, `kickoff`, `tickets`, `analysis`, `plan`, `design`, `schema`, `build`, `show`, `done-run`, `handoff`. New UI runs use [Look, Show, Prove, Ship](show.md); others skip Show.
+
+Reasoned proof selection: [hidden checks](hidden-checks.md), new runs.
+
+Read record refusals: [complete diagnostics and verdict fields](record-diagnostics.md).
 
 ## Kickoff questions
 
-After research, `product` and `feature` only. A POC asks one round; an MVP or production slice asks rounds until its launch baseline choices are decided; unanswered suggestions follow [sizes](sizes.md). Use your agent's question tool when it has one (multiple choice, recommended option first, one-line tradeoff each), else one short message. Ask only what the request leaves open:
+After research, `product`/`feature` only: one round for POC; MVP/production until launch-baseline choices are decided. Unanswered suggestions: [sizes](sizes.md). Use the question tool (choices, recommended first, one-line tradeoffs), else one short message. Ask only gaps:
 
 1. **Size:** POC (it works and does exactly what was asked), MVP (it can go live with real test users) or production slice. Ask it first; features depend on it.
 2. **Features:** every requested item is fixed, never an option. POC: ask only what the requested items leave open; extra ideas go to the epic's follow-ups ticket. MVP: offer the researched launch gaps and extra features with their evidence, up to four per question.
@@ -17,7 +21,7 @@ More than four open: ask the rest in a second call of the same round. Pause the 
 
 ## Light lane
 
-A `change` (bug fix, small change, follow-up) records tickets, plan, build, done-run and handoff; design and schema only when started with `--ui` or `--data`.
+A `change` records tickets, plan, build, done-run and handoff; design/Show with `--ui`, schema with `--data`. Design ports start with `--design-port` (implies UI); follow `ux-quality` reference coverage before plan.
 
 - Tickets: `**Ticket:** <url>` names the ticket it follows up and updates. A new ticket only for a new outcome; `**Ticket:** none (<why>)` when trivial.
 - No analysis step. Plan: `**Success:**` and `### Todos`. Unknown cause or several consumers: run `analyze-start` first and keep its result in the plan.
@@ -25,6 +29,8 @@ A `change` (bug fix, small change, follow-up) records tickets, plan, build, done
 - An older installed gate refuses a light record: [gate details](gate-details.md#older-gate).
 
 ## Work record
+
+New runs record `**Findings:** none` or final scored JSON at done-run; use [fix rounds](worth-it.md) before repairs.
 
 `.factory/fast/work-record.md`, sections in step order; `start` writes the skeleton. The rows below and the skeleton's hints name every marker; a `change` writes the markers its rows name, with the light-lane forms. A `done` refusal its message does not explain: the [sample](work-record-sample.md) shows each section complete for an unrelated product; never copy its content. Labels end with the colon inside the bold: `**Epic:**`. The gate checks (listed tickets: the `**Epic:**` or `**Ticket:**` and `**Sub-issue:**` lines):
 
@@ -38,7 +44,7 @@ A `change` (bug fix, small change, follow-up) records tickets, plan, build, done
 | Design | ≥4 `#RRGGBB` hex colors, `**UI kit:**`, `**Font:**`, `**Logo:**`, `**Icons:**`, `**Layout:**`, `**Theme:**` naming light mode, `**Journeys:**` with counts and a minimum (`<journey>: 2 actions, 1 load, min 2`), `**Map:**`, `**Hierarchy:**` naming primary actions, `**Labels:**` |
 | Schema | a 3-option table, `**Chosen:**`, a fenced ERD or DDL |
 | Build log | one line per plan todo, starting with its ID: `- T1 pre: … do: … post: …`; `**Now:** T2 T3` names the todos in progress; `**Try:** T1 cmd\|url\|file <target>` lines come only from `try`, never by hand |
-| Done-run | ≥1 `PASS` line from using it (on UI runs, lines naming a rule and the judge line do not count), `**Logs:**`; UI runs and runs that create, edit or delete UI files in their project also ≥1 existing screenshot path under `.factory/fast/shots/`, one verdict line per rule `U1` to `U10` (`- U3 PASS <screens checked>: <evidence>`; N/A and UNKNOWN with the reason; no FAIL, FAILS or FAILED left in a verdict, the lines under it or any line naming the rule, except in a contested UNKNOWN) and `**UX judge:**` naming the fresh agent that wrote them; a run sized MVP or production also `**Secrets:**`, `**Dependencies:**`, `**Static:**` (tool, command, result; [product bar](product-bar.md#security)); product and feature runs a `**Hidden checks:**` block up to the next label, only entries `#2 A1: PASS`, on current methods also `#2 A1: DEFERRED (owner: <why>)` or `(hardware: <why>)` (a note only after it in parentheses), one per line or comma-separated; any other line or a FAIL is refused; online, every criterion of each listed ticket not Blocked, Backlog or not planned needs its PASS or DEFERRED (an epic another run owes: none); offline, ≥1 entry |
+| Done-run | ≥1 `PASS` line from using it (on UI runs, lines naming a rule and the judge line do not count), `**Logs:**`; UI runs and runs that create, edit or delete UI files in their project also ≥1 existing screenshot path under `.factory/fast/shots/`, one verdict line per rule `U1` to `U10` (`- U3 PASS <screens checked>: <evidence>`; N/A and UNKNOWN with the reason; no explicit FAIL verdict; quoted failure words do not change the verdict; one final verdict per rule) and `**UX judge:**` naming the fresh agent that wrote them; a run sized MVP or production also `**Secrets:**`, `**Dependencies:**`, `**Static:**` (tool, command, result; [product bar](product-bar.md#security)); legacy product/feature runs a `**Hidden checks:**` block up to the next label, only entries `#2 A1: PASS`, on current methods also `#2 A1: DEFERRED (owner: <why>)` or `(hardware: <why>)` (a note only after it in parentheses), one per line or comma-separated; any other line or a FAIL is refused; online, every criterion of each listed ticket not Blocked, Backlog or not planned needs its PASS or DEFERRED (an epic another run owes: none); offline, ≥1 entry |
 | Handoff | `**Run:**`, `**Statuses:**` (each owned ticket's final status), `**Unverified:**`, `**Follow-ups:**`; current methods also `**Deferred:**` (`none`, or every deferred item, naming each DEFERRED hidden check), and an unticked checklist item ending `DEFERRED (owner|hardware: <why>)` is not open; sign-in runs `**Dev sign-in:**`; online, each listed ticket not Blocked, Backlog or not planned (label or board status) is fully ticked (an epic another run owes: only the items this run's todos lead), with an item naming each criterion, every plan todo an item and every R-id not marked owner-deferred named by a criterion; `**PR:**` with the draft PR's URL; its body (`how-to-make-a-pr`) ends with the factory credit line and has a heading naming Before and after, under it one heading per outcome that is not a file or path, each with `**Before:**` then `**After:**` (each followed by an image, a recording or a fenced block; Before may say "did not exist") or one `**Before → After:**` or `\| Before \| After \|` table with a `diff` block (`-` or `+` lines beside other lines) or two images; image and video links `https`, not localhost; on current methods each outcome declares Visual and Journey (yes, or no with a reason): a visual needs distinct before/after screenshots, a journey a Video link, unless an explicitly scoped owner media waiver covers it; UI runs need a visual outcome. The gate checks declarations and link structure, not full coverage, playable media or waiver authority |
 
 An epic's checklist (a change: its ticket's) holds integration todos (`T<n>`-led items naming its criteria), each another run's: who owes it, [gate details](gate-details.md#owed-epic).
@@ -51,6 +57,7 @@ Agents work from recorded facts, never guesses; the plan fixes them once:
 
 - **Interface** (`### Interface`): the public names as written: exports, record shapes, UI labels and test ids, routes, commands and flags, and the committed files holding them. `none (<why>)` only when nothing is public. A light-lane plan writes it when it delegates.
 - **Ports** (`**Ports:**`): this checkout's dev port per server the run starts (app, API, hub, a spare). The main checkout (lane 0) keeps the project's defaults; lane n, an extra worktree, takes its own fixed block for its whole life: the project's lane rule, else the defaults plus 100 × n. Add two spare ports for `shots`. Never start, reuse or stop another lane's stack. `done plan` refuses a port another open run's plan holds. `none (<why>)` when the run serves nothing.
+- Own stacks with `fast_gate.py lane start` / `lane stop`; brief generation and resources. Verify cache writes; configure unsupported tools. Host limits: the factory's `docs/hosts.md`.
 - **UX rules** (UI runs, `**UX rules:**`): U1 to U10 (`ux-quality` step 3) plus the project's own UX rule files by path.
 
 Each brief (checker, builder, UX judge, reviewer) also carries the Interface and Ports verbatim and, for UI work, the UX rules line. A checker binds its checks to those names and reads the committed interface files they name, never the implementation. A name a brief lacks: read the named interface files; still missing, the agent returns `blocked: <name>` instead of inventing one, and the coordinator adds it to the Interface (committed code wins) and briefs again.
@@ -61,7 +68,7 @@ Each brief (checker, builder, UX judge, reviewer) also carries the Interface and
 
 `fast_gate.py` (debugging the gate: [modules](gate-details.md#modules)) sits in `scripts/` beside the installed launcher and in `skills/safe-engine/scripts/` of the factory bundle. Python 3.9+, standard library only.
 
-Before `start` on a product, select the factory bundle with the launcher's `resolve_bundle.py --project <abs>` (it writes `.factory/entry-bundle.json`); skip it when the run maintains the factory itself.
+Before product `start`, select with `resolve_bundle.py --project <abs>` (writes `.factory/entry-bundle.json`). Factory maintenance selection: `improve-factory`.
 Git-backed starts fetch their upstream first, keeping dirty work; the start commit anchors UI proof.
 
 ```text
@@ -78,7 +85,7 @@ python fast_gate.py shots --base <ref> --serve "<dev command, {port} for its por
 - `start` keeps the run's state in the gate home (`SAFE_ENGINE_HOME`, default `~/.safe-engine`), creates the record and keeps `.factory/` out of Git unless the project already tracks files there: in a Git repository only, so `git init` first. Run state missing or unreadable here: [run state](gate-details.md#run-state); a run from another machine or folder: [rehome](gate-details.md#rehome).
 - `.factory/fast/run.json` is a read-only mirror (or use `status`); the gate never reads it, so no change to it counts.
 - Product runs default to UI and persistence; pass `--no-ui` or `--no-data` only when true, `--auth` when anyone signs in or roles exist. Fixed at `start`: decide them from the request.
-- `start` makes the run's scratch folder in the gate home and prints it; `scratch` prints it again. Throwaway data the run makes outside the project goes there: test homes, browser profiles, spare servers, temp databases, downloads. Point `TMPDIR`, `TEMP` and `TMP` at it on each command whose tool makes its own temp folders; give browsers a profile folder there. To delete in it, stop the processes holding its files, then use a [form the guard passes](gate-details.md#scratch-deletes).
+- `start` creates scratch; `scratch` prints it. Put throwaway data there; set each tool's `TMPDIR`, `TEMP` and `TMP` to it. Profiles and caches use short lane resources. Stop owned processes before [cleanup](gate-details.md#scratch-deletes).
 - Steps run in order; `done` refuses a step while an earlier applicable one is open.
 - `done tickets`, `done plan`, `done handoff` and, on hidden-check runs, `done done-run` read the listed GitHub tickets online; `done handoff` also reads the PR body. Other trackers or no network: `--offline "<reason>"` records the step unverified, and the handoff's PR line names the body file, `**PR:** <url> (body: <file>)`; refused when the listed GitHub tickets are readable.
 - Runs started on older methods keep their recorded checks unless the owner explicitly adopts the PR-proof policy.
@@ -88,16 +95,20 @@ python fast_gate.py shots --base <ref> --serve "<dev command, {port} for its por
 
 ## Hooks
 
+**One full suite per effective version.** Before `done plan`, declare argv, file/environment inputs and browser clock via `show --plan` (UI) or `prove --plan`. After manual use, Build and UI Show, `prove --suite` queues the suite and reuses intact matching proof. Old runs keep their policy.
+
 - Until every step before `build` passes, source edits, shell writes (`>`, `>>`, `&>`, `>|`, piped `tee`) and scaffold or install commands in the run's project are denied. Quoted text, heredoc bodies and here-strings never count, so ticket bodies pass. `.factory/` stays writable, except `run.json`.
 - Destructive commands are denied in every step of an active run; the owner runs them or approves another approach: recursive deletes (`rm -r`, `Remove-Item -Recurse`, `find -delete`) outside the project (the run's scratch folder excepted), of the whole project, of `.factory` or `.factory/fast`; any delete, move or wildcard that can reach `.factory/fast/run.json`, or anything in `.git` except `index.lock`; `git clean -x`/`-X`, `git stash --all`; force, mirror, prune or `main`/`master`-delete pushes; `DROP` or `TRUNCATE` through a database client, and database wipes; deletes, moves and writes reaching the gate home's `active/` or `runs/`; migrations naming a production env value. A command you need matches one, or a deny came: [what passes, what hooks miss](gate-details.md#destructive-guard).
-- Stopping mid-run is blocked once with the next step; stopping again right after passes. A paused or closed run never blocks, nor does a stop while the host reports a background agent running (its result starts a new turn, whose stop is checked); other background work, such as a server, does not count. Waiting on background work is no reason to `pause`.
+- Stop reminds once for unfinished work; repeat, paused and closed stops pass. For finite helpers, `wait --add` records a supported completion wakeup: follow [quiet waits](waiting.md). Every owned run needs its own valid wait. Servers never qualify; do not `pause` for helpers.
 - Each prompt and session start gets one status line: run, next step, pause reason.
 - No active run anywhere: hooks exit at once. Without hooks the gate still records and checks steps; follow the order yourself.
 
 ## Progress
 
-- `start`, `done`, `status`, `pause`, `resume` and `close` print the run card first, a mini dashboard. Hooks show the owner each unseen card, built todo and new NOW once (debugging it: [progress internals](gate-details.md#progress-internals)); a delegate's hook calls show nothing, the next main-thread call does.
-- Never repeat a gate message your agent already showed. Where it shows no hook messages (the factory's `docs/hosts.md`), relay the card from the command output.
+Use [plain owner reports](owner-reports.md) for coordinator updates.
+
+- `start`, `done`, `status`, `pause`, `resume` and `close` print the card first. Hooks show unseen cards, built todos and new NOW once ([details](gate-details.md#progress-internals)); delegates emit nothing until the next main-thread call.
+- Relay unseen cards only; host display support: the factory's `docs/hosts.md`.
 
 ## Live view
 
@@ -107,5 +118,5 @@ python fast_gate.py shots --base <ref> --serve "<dev command, {port} for its por
 
 ## Keep it fast
 
-- One record; status moves at boundaries.
+- One record; boundary status only.
 - No controller capture/seal commands or routine independent code review in Fast or Lucky. PR screenshot and video capture still applies in full (`how-to-make-a-pr`). Exception: on UI work, a fresh agent writes the done-run's UX verdicts (`ux-quality` step 4). `verify` adds manual QA and tests; `promote` moves to Safe.

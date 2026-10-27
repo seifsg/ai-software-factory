@@ -61,10 +61,12 @@ staff  -> editor -> today -> check-in
 **Unknowns:** payment provider; cancellation window.
 
 ## Plan
+
+`checks --plan` first.
 ### Files
 `app/(app)/schedule/**`, `app/(staff)/**`, `lib/db/schema.ts`, `lib/booking.ts`, `lib/log.ts`, `scripts/seed.ts`
 ### Critique
-One `lib/booking.ts` transaction holds capacity, credits and promotion: no races. Mock checkout is one function.
+`lib/booking.ts` transaction holds capacity, credits and promotion: no races. One checkout mock.
 ### Phases
 1. Schema, seed, logging. 2. Booking. 3. Waitlist, packs. 4. Staff tools. 5. Header, footer. 6. Done-run.
 ### Todos
@@ -129,7 +131,7 @@ indexes: classes(starts_at), bookings(class_id, status), waitlist(class_id, posi
 - PASS member buys a 5-class pack in test mode, books Tuesday 7:00 Flow
 - PASS a full class waitlists member 2; a cancellation promotes them and spends a credit
 - PASS staff publish a class and check the member in
-- FAIL then fixed: Book stayed active while pending; now disabled. Fixes checked and pushed, fixtures reset, full demonstration restarted; After captures replaced on that candidate, Before kept.
+- FAIL then fixed: Book stayed active while pending; now disabled. Checked fix pushed; reset fixtures and demo; replaced After, kept Before.
 - Use log: book 2 actions, 1 load; cancel 2 with confirm; loading, empty, full, failed-retry seen; double click books once; keyboard booking; back keeps the week
 - Shots: .factory/fast/shots/schedule.png, roster.png, packs.png at 375 and 1280 (DEV badge and "Sample data" tags visible)
 - U1 PASS schedule, bookings, packs, editor, roster: reached from the role header, no dead ends
@@ -149,6 +151,7 @@ indexes: classes(starts_at), bookings(class_id, status), waitlist(class_id, posi
 - #3 A1: PASS, #3 A2: PASS (A2 FAIL first; fixed, all rerun)
 - #4 A1: PASS, #4 A2: PASS
 - #5 A1: PASS, #5 A2: PASS
+**Findings:** .factory/fast/final-findings.json
 **Logs:** logs/app.log: request IDs on booking, promotion, check-in; no errors
 
 ## Handoff

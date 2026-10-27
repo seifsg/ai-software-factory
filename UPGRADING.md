@@ -4,8 +4,33 @@ What installs and active runs must do for each release, newest first. What chang
 
 For every release:
 
-- **Pinned projects never change.** Each keeps the factory commit its `.factory/entry-bundle.json` names, including active runs. To move a project to a newer release, ask `improve-factory Switch [absolute project directory] to the newest factory.`; it checks the run is compatible first.
+- **Active and explicit pins never change automatically.** Ask `improve-factory` for a compatible pin change; never edit a selected bundle or receipt.
 - **Check what you run:** `fast_gate.py version` names the version, commit, channel and route; `fast_gate.py verify` lists every file that differs from the release manifest.
+
+## Next version
+
+- Existing Claude Code installs: after release, update the factory and rerun `python skills/safe-engine/scripts/fast_gate.py install --host claude` if `claude plugin list --json` lacks the enabled `safe-engine@ai-software-factory` entry. The installer now installs and verifies the plugin, not only its settings. Start a new Claude Code session afterward. Keep active factory bundle pins unchanged.
+
+- Record refusals now collect independent problems, and quoted FAIL text no longer overrides an explicit verdict. Existing runs keep their pins. See [record diagnostics](docs/record-diagnostics.md).
+
+After release, update launchers for `prove --plan` and `prove --suite --fresh`. New Fast plans declare their suite before plan completion; explicit `suite_inputs` enables reuse. New Safe states adopt the shared complete-suite queue automatically. Existing runs keep their saved policy and bundle. See [complete suites](docs/suite-checks.md).
+
+Journey checks should import the resolved bundle's fixed-clock helper, declare an explicit instant/timezone and list their files in the journey lint manifest. Update new plans with an affected-test command and mapping; complete suites still wait for Prove. Existing active pins stay unchanged. See [fixed browser time](docs/journey-clock.md).
+
+- New Fast/Lucky runs record `checks --plan` before plan and current check receipts before completion. Existing runs retain their prior checks. After release update launchers for `checks`; keep active bundles pinned. See [hidden checks](docs/hidden-checks.md).
+- New report publication checks picture content. Convert palette/interlaced/animated images to static 8-bit RGB/RGBA PNGs and inspect the result. Install updated launchers for `report`; supply honest per-ticket metrics or unavailable reasons. Existing saved reports are not fabricated from session totals.
+
+- Worth-it rounds: update the installed launchers to obtain `fix-round`; new Fast/Lucky runs record `**Findings:** none` or their final scored report path. New complete-cycle Safe runs require worth fields and explicit repair selections. Existing saved runs keep their prior checks/schema. Do not upgrade an active run's pinned bundle. See [worth-it rounds](docs/worth-it.md).
+
+New UI runs on the resolved current bundle freeze a Show plan and share current pictures before proof. Existing runs keep their recorded sequence; do not rewrite active ledgers. See [Show first](docs/show-first.md).
+
+- New design-port runs use `start --design-port` and record reference coverage before plan. Existing runs keep their selected methods and obligations; do not add the flag or rewrite their ledger mid-run.
+
+- Reinstall launchers/hooks for `wait` commands. New runs require explicit supported wait receipts; existing runs retain their prior host-list behavior until they register a wait. Completion callbacks must use the selected gate and the original gate home.
+
+- Reinstall the launchers/hooks to enable new-run selection and selected-gate routing. Existing active runs retain their bundle and recorded behavior.
+- New automatic receipts refresh at the next start, or with `resolve_bundle.py --project <dir> --new-run`. Resume omits `--new-run` and remains offline. Explicit selections and existing v1 receipts retain their pin; v1 has no trustworthy pin provenance and is never automatically migrated.
+- Latest-check failures name the version retained. An unknown latest is not a successful check. Read a newly selected entrypoint before continuing the run. Bare-gate starts without a receipt remain legacy use.
 
 ## 1.0.0
 

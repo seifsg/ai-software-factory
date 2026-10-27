@@ -14,6 +14,7 @@ if HERE not in sys.path:
 from fast_progress import built_ids, sections, subsection, todo_ids, without_result  # noqa: E402,F401 - shared parsers
 import fast_proof  # noqa: E402 - the PR body's Before & after check
 import fast_briefs  # noqa: E402 - Interface, Ports, UX rules and DEFERRED items
+from fast_diagnostics import once, validation  # noqa: E402 - bounded remote reads
 
 URL = re.compile(r"https?://[^\s)>\]|]+")
 ISSUE = re.compile(r"https://github\.com/([\w.-]+/[\w.-]+)/issues/(\d+)")
@@ -60,7 +61,7 @@ def fenced(body):
 
 
 def missing_markers(body, labels):
-    return [f"needs a '**{label}:**' line" for label in labels if not marker(body, label)]
+    return [f"needs a '**{label}:** <value or evidence>' line" for label in labels if not marker(body, label)]
 
 
 def check_research(run, body, **_):
@@ -131,6 +132,7 @@ def requested(body, deferred=False):
     return [rid for rid in dict.fromkeys(REQUESTED.findall(text)) if rid not in skip]
 
 
+@validation
 def check_tickets(run, body, offline=None, **_):
     epic, subs = ticket_urls(body)
     change, coverage, lane = run["kind"] == "change", run.get("coverage"), light(run)
@@ -145,20 +147,26 @@ def check_tickets(run, body, offline=None, **_):
         problems.append("needs >=1 '**Sub-issue:** <url>' line")
     if coverage and not change and not requested(body, deferred=True):
         problems.append("needs a '**Requested:**' line numbering every requested item: R1, R2, ...")
-    if problems or trivial:
+    if trivial:
         return problems
     if offline:
-        return readable(run, epic + subs)
+        return problems + readable(run, epic + subs)
     if not run.get("ticket_checks"):
-        return verify_tickets(epic[0], subs)
+        return problems + (verify_tickets(epic[0], subs) if epic else [])
     named = []  # requested items each listed ticket's criterion labels name, kept from its one read
+    read_urls = set()
 
     def read(ticket):
+        read_urls.add(ticket["url"])
         named.extend(labelled(ticket["body"]))
-        if run.get("light") and ticket["closed"]:  # a follow-up reopens the ticket it updates
-            return "is closed: reopen the ticket this run updates, or list the right one"
-        return needs_definition(ticket)
-    return verify_tickets(epic[0], subs) or ticket_problems(epic + subs, read) or unnamed(wanted, named)
+        closed = run.get("light") and ticket["closed"]
+        return "; ".join(filter(None, [needs_definition(ticket),
+            "is closed: reopen the ticket this run updates, or list the right one" if closed else None])) or None
+    problems += verify_tickets(epic[0], subs) if epic else []
+    problems += ticket_problems(epic + subs, read)
+    if read_urls == set(epic + subs) and read_urls:
+        problems += unnamed(wanted, named)
+    return list(dict.fromkeys(problems))
 
 
 def labelled(body):
@@ -169,7 +177,8 @@ def labelled(body):
 def unnamed(wanted, named):
     """The gap when a requested item has no criterion naming it."""
     gaps = [rid for rid in wanted if rid not in set(named)]
-    return [f"requested items no listed ticket's criteria name: {', '.join(gaps)}"] if gaps else []
+    return [f"requested items no listed ticket's criteria name: {', '.join(gaps)}; "
+            "write '- **A<n> (R<n>):** <done condition>' in the ticket"] if gaps else []
 
 
 def verify_tickets(epic, subs):
@@ -180,13 +189,13 @@ def verify_tickets(epic, subs):
         return [f"cannot check non-GitHub ticket {epic}; pass --offline '<tracker and reason>'"]
     repo, number = match.groups()
     try:
-        gh("api", f"repos/{repo}/issues/{number}", "--jq", ".number")
+        read_ticket(epic)
         if subs:
             linked = set(gh("api", f"repos/{repo}/issues/{number}/sub_issues", "--paginate", "--jq", ".[].html_url").split())
             stray = [url for url in subs if url not in linked]
             if stray:
                 return ["not linked as sub-issues of the epic: " + ", ".join(stray)]
-    except (OSError, RuntimeError, subprocess.TimeoutExpired) as error:
+    except (OSError, RuntimeError, subprocess.TimeoutExpired, ValueError, TypeError, AttributeError) as error:
         return [f"cannot verify tickets with gh ({error}); fix access or pass --offline '<reason>'"]
     return []
 
@@ -198,11 +207,12 @@ def online(run, kwargs, check, finish=False):
     this run owes; one that names its criteria off the layout is marked `layout` and owed whole."""
     if not run.get("ticket_checks"):
         return []
-    epic, subs = ticket_urls(kwargs["all_sections"].get("tickets", ""))
+    sections = kwargs.get("all_sections") or {}
+    epic, subs = ticket_urls(sections.get("tickets", ""))
     if kwargs.get("offline"):
         return readable(run, run.get("tickets", []) + epic + subs)
     if finish and epic:
-        own, whole = set(run.get("todos", [])) | {f"T{n}" for n in todo_ids(kwargs["all_sections"])}, check
+        own, whole = set(run.get("todos", [])) | {f"T{n}" for n in todo_ids(sections)}, check
 
         def check(ticket):
             if ticket["url"] != epic[0]:
@@ -279,17 +289,20 @@ def ticket_problems(urls, check):
     problems = []
     for url in dict.fromkeys(urls):
         if not ISSUE.match(url):
-            return [f"cannot check non-GitHub ticket {url}; pass --offline '<tracker and reason>'"]
+            problems.append(f"cannot check non-GitHub ticket {url}; pass --offline '<tracker and reason>'")
+            continue
         try:
             ticket = read_ticket(url)
         except (OSError, RuntimeError, subprocess.TimeoutExpired, ValueError, TypeError, AttributeError) as error:
-            return [f"cannot read {url} with gh ({error}); fix access or pass --offline '<reason>'"]
+            problems.append(f"cannot read {url} with gh ({error}); fix access or pass --offline '<reason>'")
+            continue
         problem = check(ticket)
         if problem:
             problems.append(f"{url}: {problem}")
     return problems
 
 
+@once
 def read_ticket(url):
     """Body without fenced examples, and its marks: closed as not planned, Blocked, Backlog (label or board)."""
     data = json.loads(gh("issue", "view", url, "--json", "body,state,stateReason,labels,projectItems"))
@@ -332,7 +345,9 @@ def covered(run, check):
     """`check`, then on coverage runs: every criterion of a ticket still in play is named by an item."""
     def both(ticket):
         gaps = [] if not run.get("coverage") or ticket["stopped"] or ticket["backlog"] else uncovered(ticket["body"])
-        return check(ticket) or (f"criteria no checklist item names: {', '.join(gaps)}" if gaps else None)
+        return "; ".join(filter(None, [check(ticket), (
+            f"criteria no checklist item names: {', '.join(gaps)}; write '- [ ] T<n> <outcome> (A1, A2)'"
+            if gaps else None)])) or None
     return both
 
 
@@ -401,7 +416,11 @@ def light(run):
     return run.get("kind") == "change" and bool(run.get("light"))
 
 
+@validation
 def check_plan(run, body, **kwargs):
+    import fast_design
+    import fast_show
+    import fast_checks
     titles = ("Todos",) if light(run) else ("Files", "Critique", "Phases", "Todos", "Whole plan")
     problems = [f"needs a '### {title}' subsection" for title in titles if subsection(body, title) is None]
     if not todo_ids(kwargs["all_sections"]):
@@ -411,26 +430,40 @@ def check_plan(run, body, **kwargs):
                      f"done> (#<ticket>, <criteria>)'" for n in without_result(kwargs["all_sections"])]
     labels = ["Success"] if light(run) else ["Logging", "Efficiency"]
     problems += fast_briefs.plan_problems(run, body, marker, subsection, kwargs.get("runs"), light(run))
-    return problems + missing_markers(body, labels) or held(run, kwargs, covered(run, needs_checklist))
+    problems += fast_design.problems(run, kwargs.get("project"))
+    problems += fast_show.problems(run, kwargs.get("project"))
+    problems += fast_checks.problems(run, kwargs.get("project"))
+    if fast_checks.enabled(run) and isinstance(run.get("checks", {}).get("plan"), dict):
+        problems += online(run, kwargs, lambda ticket: fast_checks.verify_plan(run, ticket))
+    if fast_show.enabled(run) and not all(re.search(rf"\b{phase}\b", body, re.I) for phase in ("Look", "Show", "Prove", "Ship")):
+        problems.append("UI plan needs Look, Show, Prove, Ship phases")
+    return list(dict.fromkeys(problems + missing_markers(body, labels)
+                             + held(run, kwargs, covered(run, needs_checklist))))
 
 
 def held(run, kwargs, check, finish=False):
     """`check` on every listed ticket; on coverage runs also: each plan todo is an item there and each
     requested item is still named by a criterion (no drift after the tickets step)."""
-    lists, named = [], []  # each listed ticket's items and labelled requested items, kept from its one read
+    sections = kwargs.get("all_sections") or {}
+    kwargs = {**kwargs, "all_sections": sections}
+    lists, named, read_urls = [], [], set()
 
     def read(ticket):
+        read_urls.add(ticket["url"])
         lists.append(items(ticket["body"]))
         named.extend(labelled(ticket["body"]))
         return check(ticket)
     problems = online(run, kwargs, read, finish)
-    if problems or not run.get("coverage") or not lists:
+    epic, subs = ticket_urls(sections.get("tickets", ""))
+    expected = set(run.get("tickets", []) + epic + subs)
+    if not run.get("coverage") or not lists or read_urls != expected:
         return problems
     ids = set(ID.findall("\n".join(lists)))
-    loose = [f"T{n}" for n in todo_ids(kwargs["all_sections"]) if f"T{n}" not in ids]
-    wanted = [] if run.get("kind") == "change" else requested(kwargs["all_sections"].get("tickets", ""))
-    todos = [f"plan todos no listed ticket's checklist holds: {', '.join(loose)}"] if loose else []
-    return todos + unnamed(wanted, named)
+    loose = [f"T{n}" for n in todo_ids(sections) if f"T{n}" not in ids]
+    wanted = [] if run.get("kind") == "change" else requested(sections.get("tickets", ""))
+    todos = [f"plan todos no listed ticket's checklist holds: {', '.join(loose)}; "
+             "write '- [ ] T<n> <outcome> (A1)' in its ticket checklist"] if loose else []
+    return problems + todos + unnamed(wanted, named)
 
 
 UX_BRIEF = ("Map", "Hierarchy", "Labels")  # ux-quality step 1: structure, priority and words, planned before UI code
@@ -451,7 +484,6 @@ DONE_MARKS = ("Logs", "UX judge", "Secrets", "Dependencies", "Static", "Hidden c
 MARK = rf"\*\*(?:{'|'.join(DONE_MARKS)}):\*\*"
 CONTINUES = re.compile(rf"(?:[ \t]+(?![ \t])(?!(?:[-*+]|\d+[.)])?[ \t]*(?:[*`]*{RULE_ID}\b|{MARK}))"
                        rf"|(?!(?:[-*+]|\d+[.)])[ \t]|[|#>]|{MARK}|[*`]*{RULE_ID}\b))\S", re.I)
-FAILED = re.compile(r"\bFAIL(?:S|ED)?\b")  # capitals only: "failed booking with retry" is evidence, not a verdict
 # views and styles, not tests or stories; mixed-code languages use --ui
 UI_FILE = re.compile(r"(?<!\.test)(?<!\.spec)(?<!\.stories)\.(?:tsx|jsx|vue|svelte|astro|html?|css|scss|sass|less|"
                      r"razor|cshtml|erb|hbs|ejs|pug|liquid|twig|njk|jinja2?|j2|mustache|haml|slim|xaml|axaml|"
@@ -488,8 +520,12 @@ def check_schema(run, body, **_):
 def check_build(run, body, **kwargs):
     """Each plan todo has its own 'pre: do: post:' line (fast_progress.built_ids)."""
     built = built_ids(body, strict=bool(run.get("coverage")))
-    return [f"T{number} needs its own 'T{number} pre: ... do: ... post: ...' line"
-            for number in todo_ids(kwargs["all_sections"]) if number not in built]
+    problems = [f"T{number} needs its own 'T{number} pre: ... do: ... post: ...' line"
+                for number in todo_ids(kwargs["all_sections"]) if number not in built]
+    if run.get("check_selection"):
+        import fast_checks
+        problems += fast_checks.syntax_problems(run, kwargs.get("project"))
+    return problems
 
 
 def scans(run, all_sections):
@@ -513,14 +549,18 @@ def placeholder_problems(body, labels):
             for label, value in values.items() if value and PLACEHOLDER.fullmatch(value)]
 
 
+@validation
 def check_done_run(run, body, project, **kwargs):
+    import fast_design
+    import fast_show
     sections = kwargs.get("all_sections") or {}
-    own = HIDDEN.sub("", body) if hidden(run) else body  # the builder's own done-run, apart from the checker's
+    own = HIDDEN.sub("", body) if hidden(run) or run.get("check_selection") else body
     touched = touched_ui(run, project)
     audited = run.get("ux_rules") and (run.get("ui") or touched)  # this run owes the UX audit
     parsed = audit_lines(own) if audited else None
     used = parsed[2] if parsed else own  # rule and judge lines never stand in for using it
     problems = [] if re.search(r"\bPASS\b", used) else ["needs >=1 PASS result"]
+    problems += fast_show.completion_problems(run, project)
     labels = scans(run, sections)
     cause = f" ({scan_cause(run, sections)})" if labels else ""
     problems += missing_markers(body, ["Logs"]) + [problem + cause for problem in missing_markers(body, labels)]
@@ -533,11 +573,18 @@ def check_done_run(run, body, project, **kwargs):
         missing += ux_audit(own, parsed) if run.get("ux_rules") else []
         problems += ([f"this run changed UI files ({', '.join(touched[:3])}): record the UX audit"]
                      if missing and touched else []) + missing
-    return problems + (hidden_checks(body, kwargs, run) if hidden(run) else [])
+    if run.get("worth"):
+        import fast_round
+        problems += fast_round.findings(body, project, marker, run)
+    if run.get("check_selection"):
+        import fast_checks
+        problems += fast_checks.problems(run, project, final=True) + fast_checks.verdict_problems(run, body, sys.modules[__name__])
+        problems += online(run, kwargs, lambda ticket: fast_checks.refreshed(run, ticket), finish=True)
+    return problems + fast_design.problems(run, project, final=True) + (hidden_checks(body, kwargs, run) if hidden(run) else [])
 
 def hidden(run):
     """Product and feature runs whose methods define hidden checks; change runs and older runs never."""
-    return bool(run.get("hidden_checks")) and run.get("kind") != "change"
+    return not run.get("check_selection") and bool(run.get("hidden_checks")) and run.get("kind") != "change"
 
 
 def verdicts(body, deferred=False):
@@ -561,17 +608,18 @@ def hidden_checks(body, kwargs, run):
     included unless another run owes it (`integration`), needs its own '#<n> <ID>: PASS' (or DEFERRED on briefs
     runs); offline, >=1 entry."""
     entries, unreadable = verdicts(body, run.get("briefs"))
+    problems = []
     if unreadable:
-        return [f"unreadable hidden-check entry: {line}" for line in unreadable] + [
+        problems += [f"unreadable hidden-check entry: {line}" for line in unreadable] + [
             "write each as '#<n> <ID>: PASS' or '#<n> <ID>: FAIL'" + (
                 " or '#<n> <ID>: DEFERRED (owner|hardware: <why>)'" if run.get("briefs") else "") +
             ", a note only after it in parentheses; the block ends at the next '**Label:**'"]
     failed = [f"#{number} {cid}" for number, cid, passed in entries if not passed]
     if failed:
-        return [f"hidden checks FAIL ({', '.join(dict.fromkeys(failed))}): back to build, then the checker runs them again"]
+        problems += [f"hidden checks FAIL ({', '.join(dict.fromkeys(failed))}): back to build, then the checker runs them again"]
     if not entries:
-        return ["needs a '**Hidden checks:**' block from the checker: '#<n> <ID>: PASS' for every criterion"]
-    gaps, notes, passed = [], [], {(number, cid) for number, cid, _ in entries}
+        problems += ["needs a '**Hidden checks:**' block from the checker: '#<n> <ID>: <verdict>' for every criterion"]
+    gaps, notes, passed = [], [], {(number, cid) for number, cid, passed in entries if passed}
 
     def read(ticket):
         if not (ticket["stopped"] or ticket["backlog"] or "later" in ticket):
@@ -580,17 +628,16 @@ def hidden_checks(body, kwargs, run):
             missing = [f"#{number} {cid}" for cid in criteria if (number, cid) not in passed]
             gaps.extend(missing)
             notes.append(off_layout(ticket) if missing else "")
-    problems = online(run, kwargs, read, finish=True)
-    return problems or ([f"{''.join(notes)}criteria without a hidden-check PASS: {', '.join(gaps)}"] if gaps else [])
+    problems += online(run, kwargs, read, finish=True)
+    return problems + ([f"{''.join(notes)}criteria without a hidden-check PASS: {', '.join(gaps)}; "
+                        "copy each checker's '#<n> <ID>: <verdict>' entry"] if gaps else [])
 
 
 def audit_lines(body):
-    """One pass over a done-run: each rule's verdicts with the word characters of their text, the rules a FAIL is
-    left about, and the lines about no rule and not the judge (only those can show the product was used). A contested
-    FAIL is an UNKNOWN, which may quote its own rule's FAIL in or under its line; a FAIL about another rule counts."""
+    """Parse verdict fields and keep rule/judge commentary separate from actual-use evidence."""
     # owner: (rule or "judge", verdict) the line belongs to; top: that owner's indent; gap: a blank line came before
     verdicts, failed, used, owner, gap, top = {}, set(), [], None, False, 0
-    for line in body.splitlines():
+    for line in audit_text_lines(body):
         if not line.strip():
             gap = True  # as in Markdown, indented lines after a blank line still belong to the item above
             continue
@@ -611,11 +658,59 @@ def audit_lines(body):
         named = set(re.findall(rf"\b{RULE_ID}\b", line)) | ({owner[0]} if owner and owner[0] != "judge" else set())
         if owner and owner[1] == "FAIL":
             failed.add(owner[0])
-        if FAILED.search(line):
-            failed |= {rule for rule in named if owner != (rule, "UNKNOWN")}
         if not owner and not named:
             used.append(line)
     return verdicts, failed, "\n".join(used)
+
+
+def audit_list_content(text, levels):
+    """Track list content columns, including marker width and its one-to-four-space padding."""
+    base = levels[-1]
+    while not re.fullmatch(r" {0,3}(?:(?:\* *){3,}|(?:- *){3,})", text[base:]):
+        item = re.match(r" {0,3}([-+*]|\d{1,9}[.)])( +|$)", text[base:])
+        if not item:
+            break
+        padding = len(item.group(2))
+        base += item.end(1) + (padding if 1 <= padding <= 4 else 1)
+        levels.append(base)
+    return base
+
+
+def audit_text_lines(body):
+    """Exclude code relative to its list container; preserve block boundaries for use evidence."""
+    fence, levels, paragraph = None, [0], False
+    for line in body.splitlines():
+        text = line.expandtabs(4)
+        if not text.strip():
+            paragraph = False
+            yield ""
+            continue
+        depth = len(text) - len(text.lstrip(" "))
+        block = re.match(r"(?:#{1,6}(?: |$)|>|[-+*](?: |$)|\d{1,9}[.)](?: |$)|`{3,}|~{3,})", text[depth:])
+        rule = re.fullmatch(r"(?:(?:\* *){3,}|(?:- *){3,}|(?:_ *){3,})", text[depth:])
+        lazy = paragraph and not (block or rule) and depth < levels[-1]
+        while not lazy and len(levels) > 1 and depth < levels[-1]:
+            levels.pop()
+        if fence and levels[-1] < fence[1]:
+            fence = None  # leaving the enclosing list also ends an unclosed fence
+        if fence:
+            mark, base = fence
+            if re.fullmatch(rf" {{0,3}}{re.escape(mark[0])}{{{len(mark)},}} *", text[base:]):
+                fence = None
+            yield ""
+            continue
+        previous = levels[-1]
+        base = depth if lazy else audit_list_content(text, levels)
+        if not lazy and base != previous:
+            paragraph = False  # a new list item starts a new leaf block
+        content = text[base:]
+        mark = re.match(r" {0,3}(`{3,}|~{3,})(.*)$", content)
+        if mark and (mark.group(1)[0] != "`" or "`" not in mark.group(2)):
+            fence = (mark.group(1), base)
+        code = fence or content.startswith("    ") and not paragraph
+        boundary = re.match(r" {0,3}(?:#{1,6}(?: |$)|>|(?:(?:\* *){3,}|(?:- *){3,}|(?:_ *){3,}|=+ *)$)", content)
+        paragraph = not code and bool(content.strip()) and not boundary
+        yield "" if code else line
 
 
 def ux_audit(body, parsed=None):
@@ -623,9 +718,13 @@ def ux_audit(body, parsed=None):
     verdicts, failed, _ = parsed or audit_lines(body)
     problems = [f"needs a '{rule} PASS|FAIL|UNKNOWN|N/A <screen>: <evidence or reason>' line"
                 for rule in UX_RULES if rule not in verdicts]
-    problems += [f"{rule} FAIL is open: fix it, recheck, then keep one final verdict line with no FAIL, FAILS or "
-                 f"FAILED in or under it and no other line naming {rule} with them; or record UNKNOWN with both reasons"
+    problems += [f"{rule} FAIL is open: fix it and recheck; write '{rule} <final verdict> <screen>: <evidence>'; "
+                 "a disputed finding uses UNKNOWN with both reasons"
                  for rule in sorted(failed, key=lambda rule: int(rule[1:]))]
+    problems += [f"{rule} has duplicate verdicts: keep one final '{rule} PASS|FAIL|UNKNOWN|N/A <screen>: <reason>' line"
+                 for rule, found in verdicts.items() if len(found) > 1]
+    problems += [f"unreadable rule verdict: {line.strip()}; write 'U<n> PASS|FAIL|UNKNOWN|N/A <screen>: <reason>'"
+                 for line in audit_text_lines(body) if re.match(rf"{LEAD}{RULE_ID}\b", line) and not VERDICT.match(line)]
     problems += [f"{rule} {verdict} needs its evidence or reason" for rule, found in verdicts.items()
                  if rule not in failed for verdict, words in found if words < 3]
     return problems + missing_markers(body, ["UX judge"])
@@ -687,13 +786,23 @@ def digest(path):
         return None
 
 
+@validation
 def check_handoff(run, body, **kwargs):
+    import fast_design
+    import fast_show
     labels = ["Run", "Statuses", "Unverified", "Follow-ups"] + (["Dev sign-in"] if run.get("auth") else []) + (
         ["PR"] if run.get("pr_proof") else [])
     checks = "\n".join(HIDDEN.findall((kwargs.get("all_sections") or {}).get("done-run") or ""))  # entries, not prose
     problems = missing_markers(body, labels) + fast_briefs.handoff_problems(run, body, marker, checks)
+    problems += fast_design.problems(run, kwargs.get("project"), final=True)
+    problems += fast_show.completion_problems(run, kwargs.get("project"))
+    if run.get("check_selection"):
+        import fast_checks
+        problems += fast_checks.problems(run, kwargs.get("project"), final=True)
+        problems += online(run, kwargs, lambda ticket: fast_checks.refreshed(run, ticket), finish=True)
     ticks = lambda ticket: needs_ticks(ticket, deferred=bool(run.get("briefs")))  # noqa: E731 - one call site
-    return problems or held(run, kwargs, covered(run, ticks), finish=True) + pr_proof(run, body, **kwargs)
+    return list(dict.fromkeys(problems + held(run, kwargs, covered(run, ticks), finish=True)
+                             + pr_proof(run, body, **kwargs)))
 
 
 def pr_proof(run, body, project=None, offline=None, **_):
@@ -730,6 +839,12 @@ def pr_body(value, project, offline):
                            "and name the PR body file") from error
 
 
+def check_show(run, body, project, **kwargs):
+    """Show is complete only when the actual shared candidate can proceed to proof."""
+    import fast_show
+    return fast_show.problems(run, project, final=True)
+
+
 CHECKS = {"research": check_research, "kickoff": check_kickoff, "tickets": check_tickets,
           "analysis": check_analysis, "plan": check_plan, "design": check_design, "schema": check_schema,
-          "build": check_build, "done-run": check_done_run, "handoff": check_handoff}
+          "build": check_build, "show": check_show, "done-run": check_done_run, "handoff": check_handoff}

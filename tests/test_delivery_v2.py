@@ -15,6 +15,7 @@ from safe_engine.project import EngineError, production_fingerprint, validate_pr
 from safe_engine.review_packet import method_paths, preflight, prompt_for
 from safe_engine.storage import atomic_json
 from safe_engine.workflow import Workflow
+from suite_fixture import isolate_suite_queue
 
 
 class DeliveryV2Tests(unittest.TestCase):
@@ -22,6 +23,7 @@ class DeliveryV2Tests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name).resolve()
+        isolate_suite_queue(self)
         self.git("init", "-q")
         (self.root / ".gitignore").write_text(".factory/\n.env\n", encoding="utf-8")
         (self.root / "README.md").write_text("Fixture document: preserve this sentence.\n", encoding="utf-8")
@@ -49,6 +51,17 @@ class DeliveryV2Tests(unittest.TestCase):
         self.flow.initialize(self.task, self.profile)
         self.artifact("analysis")
         self.artifact("plan")
+
+    def repair(self, reason):
+        """Supply explicit scored test-double findings to the new repair contract."""
+        from speed_fixtures import finding
+        state = self.flow.load()
+        review = state.get("review")
+        if review and json.loads(Path(review["report"]).read_text(encoding="utf-8"))["findings"]:
+            return self.flow.repair(reason, selected=["F1"])
+        path = self.root / ".factory/failure-double.json"
+        atomic_json(path, {"findings": [finding()]})
+        return self.flow.repair(reason, findings=path, selected=["F1"])
 
     def receipt(self):
         evidence = self.root / ".factory" / "manual-evidence.txt"
@@ -143,7 +156,7 @@ class DeliveryV2Tests(unittest.TestCase):
         (self.root / "README.md").write_text("Changed production document", encoding="utf-8")
         with self.assertRaisesRegex(EngineError, "Current final manual"):
             self.flow.require_manual(state)
-        self.flow.repair("Correct changed implementation")
+        self.repair("Correct changed implementation")
         self.assertIsNone(self.flow.load()["manual"])
         self.assertEqual(self.flow.status()["phase"], "build")
 

@@ -54,7 +54,8 @@ class RecordRepairTests(unittest.TestCase):
                 "findings": [{"severity": "LOW", "location": "private-map:1",
                     "description": "Synthetic clerical pointer to intact raw proof",
                     "disposition": "blocking", "exception": None, "layer": "report",
-                    "evidence_status": "valid", "evidence": DOUBLE, "action": "Correct pointer"}]}
+                    "evidence_status": "valid", "evidence": DOUBLE, "action": "Correct pointer",
+                    "worth": {"notice": 0, "harm": 0, "minutes": 5, "required": True, "reason": DOUBLE}}]}
 
     def install_review(self, f, report=None):
         report = self.report() if report is None else report
@@ -115,7 +116,7 @@ class RecordRepairTests(unittest.TestCase):
             with self.subTest(opt_in=opt_in):
                 f = self.fixture(opt_in)
                 self.reject_unchanged(f)
-                self.assertEqual(f.flow.repair("Ordinary correction")["phase"], "build")
+                self.assertEqual(f.repair("Ordinary correction")["phase"], "build")
                 self.assertIsNone(f.flow.load()["manual"])
         f = legacy.WorkflowTests(methodName="runTest")
         f.setUp()
@@ -204,7 +205,7 @@ class RecordRepairTests(unittest.TestCase):
         prior.write_text("Replaced prior report", encoding="utf-8")
         with self.assertRaises(EngineError):
             f.flow.require_checks(f.flow.load())
-        f.flow.repair("Provenance needs fresh full correction")
+        f.repair("Provenance needs fresh full correction")
         self.assertNotIn("record_correction", f.flow.load())
         self.assertIsNone(f.flow.load()["checks"])
         self.assertIsNone(f.flow.load()["manual"])
@@ -240,6 +241,9 @@ class RecordRepairTests(unittest.TestCase):
 
     def test_legacy_optional_review_fields_parse_but_do_not_enable_reuse(self):
         f = self.fixture()
+        state = f.flow.load()
+        state.pop("worth")  # Model a saved v2 run created before worth scoring.
+        atomic_json(f.flow.directory / "state.json", state)
         old = self.report()
         for field in ("layer", "evidence_status", "evidence", "action"):
             old["findings"][0].pop(field)

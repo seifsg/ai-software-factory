@@ -377,6 +377,8 @@ class ReleaseResolutionTests(FixtureCase):
         result = resolver.resolve_bundle(self.cache)
         self.assertEqual((result["release"], result["revision"], result["version"], result["channel"]),
                          ("v1.0.0", first, "1.0.0", "stable"))
+        self.assertEqual(result["latest_release"], "v1.1.0")
+        self.assertIn("v1.1.0 does not match its manifest", result["notice"])
         self.assertEqual(resolver.resolve_bundle(self.cache, "v1.0.0")["revision"], first)
         with self.assertRaisesRegex(RuntimeError, "No release verifies: v1.1.0 does not match its manifest"):
             resolver.resolve_bundle(self.cache, "v1.1.0")
@@ -387,6 +389,54 @@ class ReleaseResolutionTests(FixtureCase):
         self.release("1.0.0", tamper=True)
         with self.assertRaisesRegex(RuntimeError, "No release verifies"):
             resolver.resolve_bundle(self.cache)
+
+    def test_new_automatic_run_refreshes_but_active_state_and_offline_resume_do_not(self):
+        old = self.release("1.0.0")
+        project = self.new_project()
+        first = resolver.select_for_project(project, None, None, self.cache, "safe-engine")
+        receipt = Path(first["selection_record"])
+        original = receipt.read_bytes()
+        new = self.release("1.1.0")
+        with patch.object(resolver, "resolve_bundle", side_effect=RuntimeError("offline")):
+            resumed = resolver.select_for_project(project, None, None, self.cache, "safe-engine")
+            failed = resolver.select_for_project(project, None, None, self.cache, "safe-engine", True)
+        self.assertEqual(resumed["revision"], old)
+        self.assertIn("offline", failed["notice"])
+        self.assertIn(old, failed["notice"])
+        self.assertEqual(receipt.read_bytes(), original)
+        state = project / ".factory/fast/run.json"
+        state.parent.mkdir()
+        state.write_text('{"version":1,"closed":false}')
+        with patch.object(resolver, "resolve_bundle", side_effect=AssertionError("active must not fetch")):
+            self.assertEqual(resolver.select_for_project(project, None, None, self.cache, "safe-engine", True)["revision"], old)
+        state.write_text('{"version":1,"closed":true}')
+        selected = resolver.select_for_project(project, None, None, self.cache, "safe-engine", True)
+        self.assertEqual(selected["revision"], new)
+        self.assertEqual(json.loads(receipt.read_text())["policy"], "automatic")
+
+    def test_new_run_preserves_explicit_and_unknown_legacy_provenance(self):
+        old = self.release("1.0.0")
+        project = self.new_project()
+        selected = resolver.select_for_project(project, None, "v1.0.0", self.cache, "safe-engine")
+        receipt = Path(selected["selection_record"])
+        self.release("1.1.0")
+        for legacy in (False, True):
+            if legacy:
+                value = json.loads(receipt.read_text()); value["version"] = 1; value.pop("policy")
+                receipt.write_text(json.dumps(value))
+            before = receipt.read_bytes()
+            result = resolver.select_for_project(project, None, None, self.cache, "safe-engine", True)
+            self.assertEqual(result["revision"], old)
+            self.assertEqual(result["latest_release"], "v1.1.0")
+            self.assertEqual(receipt.read_bytes(), before)
+
+    def test_selection_lock_rejects_a_competing_process(self):
+        project = self.new_project()
+        with resolver.selection_lock(project):
+            result = subprocess.run([sys.executable, str(SCRIPT), "--project", str(project), "--new-run"],
+                                    capture_output=True, text=True)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("Another factory selection or start", result.stderr)
 
     def test_no_release_yet_pins_main_with_a_notice(self):
         result = resolver.resolve_bundle(self.cache)

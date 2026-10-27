@@ -33,6 +33,7 @@ KINDS = {
     "+on demand": (  # detail behind pointers that name its situation: read only when it occurs
         REF + "work-record-sample.md", REF + "gate-details.md", REF + "cases.md", REF + "run-cases.md", S + "ticketing/references/safe-contract.md",
         S + "ticketing/references/unmerged-pr.md", S + "ticketing/references/epic-cases.md",
+        REF + "worth-it.md", S + "ticketing/references/finishing-touches.md",
         S + "how-to-make-a-pr/references/pr-cases.md", S + "research-market/references/deep-research.md"),
     "all methods": (S, "skills/"),  # moved text still counts here: a move is not a cut
 }

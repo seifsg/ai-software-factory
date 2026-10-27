@@ -12,6 +12,8 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
+from bundle_fixtures import legacy_bundle, offline_gate
+
 SCRIPTS = Path(__file__).resolve().parents[1] / "skills/safe-engine/scripts"
 GATE = SCRIPTS / "fast_gate.py"
 sys.path.insert(0, str(SCRIPTS))
@@ -33,6 +35,7 @@ LIGHT = """# copy-fix
 ## Done-run
 - PASS: home page footer reads "Contact us"
 **Logs:** dev server log clean
+**Findings:** none
 ## Handoff
 **Run:** npm run dev
 **Statuses:** no ticket (trivial)
@@ -112,7 +115,8 @@ class GateHarness:
             self.assertNotIn("hook.error", log.read_text(encoding="utf-8"))  # have swallowed an exception
 
     def gate(self, *args, ok=True, project=None):
-        result = subprocess.run([sys.executable, str(GATE), *args, "--project", str(project or self.project)],
+        result = subprocess.run([*getattr(self, "gate_command", [sys.executable, str(GATE)]), *args,
+                                 "--project", str(project or self.project)],
                                 capture_output=True, text=True, encoding="utf-8", errors="replace", env=self.env)
         self.assertEqual(result.returncode == 0, ok, result.stdout + result.stderr)
         return result.stdout + result.stderr
@@ -138,6 +142,7 @@ class GateHarness:
         """The draft PR's body file the handoff's PR line names (read offline)."""
         (self.project / ".factory/fast").mkdir(parents=True, exist_ok=True)
         (self.project / ".factory/fast/pr-body.md").write_text(PR_BODY, encoding="utf-8")
+        (self.project / ".factory/fast/final-findings.json").write_text('{"findings": []}', encoding="utf-8")
 
     def finish_sample(self, text=None, until=None):
         """Record the sample (or `text`) and pass the steps before `until`, or all of them."""
@@ -145,7 +150,8 @@ class GateHarness:
         record.write_text(text or SAMPLE.read_text(encoding="utf-8"), encoding="utf-8")
         shot = self.project / ".factory/fast/shots/schedule.png"
         shot.parent.mkdir(parents=True, exist_ok=True)
-        shot.write_bytes(b"PNG")
+        from png_fixtures import png
+        png(shot)
         self.pr_body()
         for step in STEPS[:STEPS.index(until) if until else None]:
             self.gate("done", step, *(["--offline", "sample URLs"] if step in ONLINE else []))
@@ -161,17 +167,27 @@ class FastGateTests(GateHarness, unittest.TestCase):
         self.assertIn("missing or empty", self.gate("done", "research", ok=False))
         self.assertIn("still open", self.gate("start", "--key", "again", "--kind", "change", "--request", "x", ok=False))
 
-    def test_start_keeps_factory_out_of_git_and_notes_the_bundle(self):
+    def test_start_rejects_missing_bundle_and_preserves_legacy_methods(self):
         subprocess.run(["git", "init", "-q", str(self.project)], check=True)
         (self.project / ".factory").mkdir()
         receipt = {"version": 1, "bundle_root": str(self.root / "bundle"), "revision": "a" * 40}
         (self.project / ".factory/entry-bundle.json").write_text(json.dumps(receipt), encoding="utf-8")
-        output = self.gate("start", "--key", "portal-poc", "--kind", "change", "--request", "fix copy")
+        self.gate("start", "--key", "portal-poc", "--kind", "change", "--request", "fix copy", ok=False)
+        self.assertFalse((self.project / ".factory/fast/run.json").exists())
+        # A real older-shaped checkout retains its methods; nonexistent roots no longer stand in for one.
+        receipt = legacy_bundle(self.root / "bundle")
+        (self.project / ".factory/entry-bundle.json").write_text(json.dumps(receipt), encoding="utf-8")
+        result = subprocess.run([*offline_gate(), "start", "--project",
+                                 str(self.project), "--key", "portal-poc", "--kind", "change", "--request", "fix copy"],
+                                capture_output=True, text=True, encoding="utf-8", env=self.env)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        output = result.stdout + result.stderr
         self.assertIn("added .factory/ to", output)
         self.assertIn(".factory/\n", (self.project / ".git/info/exclude").read_text(encoding="utf-8"))
         self.assertFalse((self.project / ".gitignore").exists())  # no project file changes
         run = json.loads((self.project / ".factory/fast/run.json").read_text(encoding="utf-8"))
-        self.assertEqual(run["bundle"]["revision"], "a" * 40)
+        self.assertEqual(run["bundle"]["revision"], receipt["revision"])
+        self.assertIn("Latest factory check failed: offline fixture", output)
         self.assertIn("Hooks:", output)
         record = (self.project / ".factory/fast/work-record.md").read_text(encoding="utf-8")
         self.assertIn("## Analysis", record)  # methods without the light lane keep it, with their own hints
@@ -202,10 +218,10 @@ class FastGateTests(GateHarness, unittest.TestCase):
         run = json.loads((self.project / ".factory/fast/run.json").read_text(encoding="utf-8"))
         self.assertEqual((run["size"][:3], run["size_at"]), ("MVP", "kickoff"))  # frozen when the kickoff passed
         for label in ("Secrets", "Dependencies", "Static"):
-            self.assertIn(f"needs a '**{label}:**' line (Size MVP, frozen at kickoff)", self.gate("done", "done-run", "--offline", "sample URLs", ok=False))
+            self.assertIn(f"needs a '**{label}:** <value or evidence>' line (Size MVP, frozen at kickoff)", self.gate("done", "done-run", "--offline", "sample URLs", ok=False))
         record = self.project / ".factory/fast/work-record.md"
         record.write_text(bare.replace("**Size:** MVP", "**Size:** POC"), encoding="utf-8")  # edited after the kickoff
-        self.assertIn("'**Secrets:**' line (Size MVP, frozen at kickoff)", self.gate("done", "done-run", "--offline", "sample URLs", ok=False))
+        self.assertIn("'**Secrets:** <value or evidence>' line (Size MVP, frozen at kickoff)", self.gate("done", "done-run", "--offline", "sample URLs", ok=False))
         record.write_text(bare.replace("no errors\n", "no errors\n" + scans, 1), encoding="utf-8")
         self.gate("done", "done-run", "--offline", "sample URLs")  # sample tickets are not readable
 
@@ -213,7 +229,7 @@ class FastGateTests(GateHarness, unittest.TestCase):
         record = module("fast_record")
         body, flagged = "- PASS x\n**Logs:** ok\n", {"scans": True}
         recorded = body + "**Secrets:** s scan\n**Dependencies:** d audit\n**Static:** t lint\n"
-        needs = lambda cause: [f"needs a '**{label}:**' line ({cause})" for label in ("Secrets", "Dependencies", "Static")]
+        needs = lambda cause: [f"needs a '**{label}:** <value or evidence>' line ({cause})" for label in ("Secrets", "Dependencies", "Static")]
         sized = lambda size: {"kickoff": f"**Size:** {size}\n"}
         for size, word in (("MVP", "MVP"), ("`MVP` (it can go live)", "MVP"), ("Production slice", "PRODUCTION"),
                            ("POC→MVP", "MVP"), ("POC -> MVP (upgrade)", "MVP"), ("POC, production later", "PRODUCTION")):
@@ -236,7 +252,7 @@ class FastGateTests(GateHarness, unittest.TestCase):
     def test_the_size_frozen_in_the_ledger_outlives_the_record_line(self):
         record = module("fast_record")
         body = "- PASS x\n**Logs:** ok\n"
-        needs = lambda cause: [f"needs a '**{label}:**' line ({cause})" for label in ("Secrets", "Dependencies", "Static")]
+        needs = lambda cause: [f"needs a '**{label}:** <value or evidence>' line ({cause})" for label in ("Secrets", "Dependencies", "Static")]
         for step in ("kickoff", "tickets", None):  # the refusal names where the size was frozen
             frozen = {"scans": True, "size": "MVP", **({"size_at": step} if step else {})}
             cause = f"Size MVP, frozen at {step}" if step else "Size MVP, frozen in the ledger"
@@ -283,7 +299,7 @@ class FastGateTests(GateHarness, unittest.TestCase):
                    "**Sub-issue:** https://github.com/acme/portal/issues/2\n")
         check = lambda run, extra="": record.check_tickets(run, tickets + extra, offline="no network")
         lucky = {"scans": True, "mode": "lucky", "kind": "product"}
-        self.assertEqual(check(lucky), ["needs a '**Size:**' line"])
+        self.assertEqual(check(lucky), ["needs a '**Size:** <value or evidence>' line"])
         self.assertIn("Size must start with", check(lucky, "**Size:** small MVP\n")[0])
         self.assertIn("Size must start with", check(lucky, "**Size:** none (small)\n")[0])  # a product needs a real size
         for size in ("MVP", "POC (default)"):
@@ -306,7 +322,7 @@ class FastGateTests(GateHarness, unittest.TestCase):
         with patch.object(record, "gh", side_effect=AssertionError("older runs never read tickets offline")):
             self.assertEqual(record.online(older, {"offline": "x", "all_sections": sections}, record.needs_ticks), [])
         kickoff = "**Features:** a\n**Approach:** b\n**Answered by:** owner\n"
-        self.assertIn("'**Size:**' line", record.check_kickoff({"kind": "feature", "coverage": True}, kickoff)[0])
+        self.assertIn("'**Size:** <value or evidence>' line", record.check_kickoff({"kind": "feature", "coverage": True}, kickoff)[0])
         self.assertEqual(record.check_kickoff({"kind": "feature", "coverage": True},
                                               kickoff + "**Size:** none (small feature: one screen)\n"), [])
         self.assertEqual(record.check_kickoff({"kind": "feature"}, kickoff), [])  # older methods unchanged
@@ -342,12 +358,12 @@ class FastGateTests(GateHarness, unittest.TestCase):
         record.write_text(text.replace(journeys, "**Journeys:** book a class, cancel a booking"), encoding="utf-8")
         self.assertIn("counts and a minimum", self.gate("done", "design", ok=False))
         record.write_text(text.replace(journeys + "\n", ""), encoding="utf-8")
-        self.assertIn("'**Journeys:**' line", self.gate("done", "design", ok=False))
+        self.assertIn("'**Journeys:** <value or evidence>' line", self.gate("done", "design", ok=False))
         record.write_text(text.replace("**Dev sign-in:**", "Sign-in:"), encoding="utf-8")
         self.assertIn("Dev sign-in", self.gate("done", "handoff", ok=False))
         record.write_text(text.replace("**Backlog:**", "Backlog:").replace("**Statuses:**", "Statuses:"), encoding="utf-8")
-        self.assertIn("'**Backlog:**' line", self.gate("done", "tickets", "--offline", "sample", ok=False))
-        self.assertIn("'**Statuses:**' line", self.gate("done", "handoff", ok=False))
+        self.assertIn("'**Backlog:** <value or evidence>' line", self.gate("done", "tickets", "--offline", "sample", ok=False))
+        self.assertIn("'**Statuses:** <value or evidence>' line", self.gate("done", "handoff", ok=False))
 
     def test_hooks_deny_source_writes_until_the_gate_opens(self):
         self.start()
@@ -690,11 +706,11 @@ class FastGateTests(GateHarness, unittest.TestCase):
         agent = {"id": "a", "type": "subagent", "status": "running", "agent_type": "general-purpose"}
         server = {"id": "b", "type": "shell", "status": "running", "command": "npm run dev"}
         waiting = self.hook({**stop, "background_tasks": [server, agent]}) or {}  # progress may ride along
-        self.assertNotIn("decision", waiting)  # its result starts a new turn
+        self.assertEqual(waiting["decision"], "block")  # current methods require a registered wakeup
         self.assertEqual(self.hook({**stop, "background_tasks": [server]})["decision"], "block")  # may never end
         self.assertEqual(self.hook({**stop, "background_tasks": []})["decision"], "block")  # the work ends here
         log = (self.root / "home/logs/gate.log").read_text(encoding="utf-8")
-        self.assertEqual((log.count('"hook.wait_stop"'), log.count('"hook.block_stop"')), (1, 2))
+        self.assertEqual((log.count('"hook.wait_stop"'), log.count('"hook.block_stop"')), (0, 3))
 
     def test_reading_a_project_does_not_bind_a_session(self):
         self.start()
@@ -789,6 +805,7 @@ class FastGateTests(GateHarness, unittest.TestCase):
 
     def test_hidden_checks_gate_the_sample_done_run(self):
         self.start("--no-ui")
+        self.pr_body()
         text = SAMPLE.read_text(encoding="utf-8")
         record_file = self.project / ".factory/fast/work-record.md"
         self.assertIn("Hidden checks block", record_file.read_text(encoding="utf-8"))
@@ -815,7 +832,7 @@ class FastGateTests(GateHarness, unittest.TestCase):
         self.assertIn("'**Ticket:** <url, or none (why)>'", self.gate("done", "tickets", ok=False))
         record.write_text(LIGHT.replace("**Success:**", "Success:"), encoding="utf-8")
         self.gate("done", "tickets")
-        self.assertIn("'**Success:**' line", self.gate("done", "plan", ok=False))
+        self.assertIn("'**Success:** <value or evidence>' line", self.gate("done", "plan", ok=False))
         record.write_text(LIGHT, encoding="utf-8")
         self.pr_body()
         for step in ("plan", "build", "done-run", "handoff"):
@@ -826,9 +843,9 @@ class FastGateTests(GateHarness, unittest.TestCase):
         record = module("fast_record")
         epic = "https://github.com/acme/portal/issues/1"
         linked = "https://github.com/acme/portal/issues/2\n"
-        with patch.object(record, "gh", side_effect=["1", linked]):
+        with patch.object(record, "gh", side_effect=['{"body":"","state":"OPEN"}', linked]):
             self.assertEqual(record.verify_tickets(epic, ["https://github.com/acme/portal/issues/2"]), [])
-        with patch.object(record, "gh", side_effect=["1", linked]):
+        with patch.object(record, "gh", side_effect=['{"body":"","state":"OPEN"}', linked]):
             self.assertIn("not linked", record.verify_tickets(epic, ["https://github.com/acme/portal/issues/9"])[0])
         self.assertIn("--offline", record.verify_tickets("https://tracker.example/1", [])[0])
 
@@ -939,11 +956,11 @@ class FastGateTests(GateHarness, unittest.TestCase):
             return issue(ticket)
         with patch.object(record, "gh", side_effect=tracker):
             self.assertEqual(record.check_tickets({**on, "kind": "feature"}, listed),
-                             ["requested items no listed ticket's criteria name: R2"])
+                             ["requested items no listed ticket's criteria name: R2; write '- **A<n> (R<n>):** <done condition>' in the ticket"])
         legacy = ticket.replace("- **A2:**", "- **R2:**")  # an old criterion ID is no requested-item label
         with patch.object(record, "gh", side_effect=lambda *args: tracker(*args) if args[0] == "api" else issue(legacy)):
             self.assertEqual(record.check_tickets({**on, "kind": "feature"}, listed),
-                             ["requested items no listed ticket's criteria name: R2"])
+                             ["requested items no listed ticket's criteria name: R2; write '- **A<n> (R<n>):** <done condition>' in the ticket"])
         unnumbered = listed.replace("**Requested:**\n- R1 book\n- R2 waitlist\n", "")
         self.assertIn("'**Requested:**' line", record.check_tickets({**on, "kind": "feature"}, unnumbered, offline="x")[0])
         self.assertEqual(record.check_tickets({**older, "kind": "feature"}, unnumbered, offline="x"), [])
@@ -965,18 +982,18 @@ class FastGateTests(GateHarness, unittest.TestCase):
         plan = "**Success:** x\n### Todos\n- T3 refuse a full class\n"
         with patch.object(record, "gh", return_value=issue(ticket + "- [ ] T2 refuse (A2)\n")):
             self.assertEqual(record.check_plan(light, plan, offline=None, all_sections=follow_up),
-                             ["plan todos no listed ticket's checklist holds: T3"])
+                             ["plan todos no listed ticket's checklist holds: T3; write '- [ ] T<n> <outcome> (A1)' in its ticket checklist"])
         with patch.object(record, "gh", return_value=issue(ticket + "- [ ] T3 refuse (A2)\n")):
             self.assertEqual(record.check_plan(light, plan, offline=None, all_sections=follow_up), [])
         handoff = "**Run:** x\n**Statuses:** x\n**Unverified:** x\n**Follow-ups:** x\n"
         with patch.object(record, "gh", return_value=issue(ticket + "- [x] T2 refuse (A2). Proof: refused\n")):
             self.assertEqual(record.check_handoff(light, handoff, offline=None, all_sections=follow_up),
-                             ["plan todos no listed ticket's checklist holds: T3"])  # drift during build
+                             ["plan todos no listed ticket's checklist holds: T3; write '- [ ] T<n> <outcome> (A1)' in its ticket checklist"])  # drift during build
         finished = ticket + "- [x] T2 refuse (A2). Proof: refused\n"
         sections = {"tickets": listed, "plan": "### Todos\n- T1 book\n- T2 refuse\n"}
         with patch.object(record, "gh", return_value=issue(finished)):  # R2 lost its criterion label after tickets
             self.assertEqual(record.check_handoff({**on, "kind": "feature"}, handoff, offline=None, all_sections=sections),
-                             ["requested items no listed ticket's criteria name: R2"])
+                             ["requested items no listed ticket's criteria name: R2; write '- **A<n> (R<n>):** <done condition>' in the ticket"])
         with patch.object(record, "gh", return_value=issue(finished.replace("**A2:**", "**A2 (R2):**"))):
             self.assertEqual(record.check_handoff({**on, "kind": "feature"}, handoff, offline=None, all_sections=sections), [])
         deferred = listed.replace("- R2 waitlist", "- R2 waitlist (owner-deferred: https://github.com/acme/portal/issues/3)")
@@ -1005,24 +1022,27 @@ class FastGateTests(GateHarness, unittest.TestCase):
         spec.loader.exec_module(gate)
         layout, lane, ux, pr = Path(gate.LAYOUT), Path(gate.FAST_RUN), Path(gate.UX), Path(gate.PR)
         for name, texts in (("new", ("### ✅ Definition of done\nEvery criterion has an item.",
-                                     "## Light lane\nT1 <title> → <what the owner can do once it is done>\n**Hidden checks:**\n**Secrets:**\n`**PR:**`\n**Ports:**",
+                                     "## Light lane\nT1 <title> → <what the owner can do once it is done>\n**Hidden checks:**\n**Secrets:**\n`**PR:**`\n**Ports:**\n**Findings:**\nReasoned proof selection\nLook, Show, Prove, Ship\nOne full suite per effective version",
                                      "| U10 | Performance |", "**Visual:** yes; credit in `references/credit.md`")),
                             ("old", ("### ✅ Done when", "## Hooks", "| Performance |", "No AI or tool attribution"))):
             for path, text in zip((layout, lane, ux, pr), texts):
                 (self.root / name / path).parent.mkdir(parents=True, exist_ok=True)
                 (self.root / name / path).write_text(text, encoding="utf-8")
         on = {"ticket_checks": True, "coverage": True, "light": True, "outcomes": True, "hidden_checks": True, "scans": True,
-              "ux_rules": True, "pr_proof": True, "credit": True, "pr_demo": True, "briefs": True}
+              "ux_rules": True, "pr_proof": True, "credit": True, "pr_demo": True, "briefs": True, "worth": True,
+              "check_selection": True, "show_first": True, "wait_receipts": False, "suite_policy": True}
         off = dict.fromkeys(on, False)
         self.assertEqual(gate.method_flags({"root": str(self.root / "new")}, self.project), on)
         self.assertEqual(gate.method_flags({"root": str(self.root / "old")}, self.project), off)
         self.assertEqual(gate.method_flags({"root": str(self.root / "missing")}, self.project), off)
-        self.assertEqual(gate.method_flags(None, self.project), on)
-        self.assertEqual(gate.method_flags(None, SCRIPTS.parents[2]), on)  # this checkout's own methods define them
+        self.assertEqual(gate.method_flags(None, self.project), {**on, "check_selection": False, "show_first": False,
+                                                                 "wait_receipts": True, "suite_policy": False})  # unresolved older methods
+        self.assertEqual(gate.method_flags(None, SCRIPTS.parents[2]), {**on, "wait_receipts": True})
         (self.root / "new" / layout).write_bytes(b"\xff\xfe broken")
         self.assertEqual(gate.method_flags({"root": str(self.root / "new")}, self.project),
                          {**off, "light": True, "outcomes": True, "hidden_checks": True, "scans": True,
-                          "ux_rules": True, "pr_proof": True, "credit": True, "pr_demo": True, "briefs": True})  # fast-run.md, ux-quality, PR still read
+                          "ux_rules": True, "pr_proof": True, "credit": True, "pr_demo": True, "briefs": True,
+                          "worth": True, "check_selection": True, "show_first": True, "suite_policy": True})  # fast-run.md, ux-quality, PR still read
         lucky = {"mode": "lucky", "kind": "change"}
         self.assertNotIn("done-run", gate.steps_for(lucky))
         self.assertIn("done-run", gate.steps_for({**lucky, "ticket_checks": True}))
@@ -1040,7 +1060,7 @@ class FastGateTests(GateHarness, unittest.TestCase):
         design, done = sections["design"], sections["done-run"]
         on, old = {"ux_rules": True}, {}
         self.assertEqual(record.check_design(on, design), [])
-        self.assertIn("needs a '**Map:**' line", record.check_design(on, design.replace("**Map:**", "Map:")))
+        self.assertIn("needs a '**Map:** <value or evidence>' line", record.check_design(on, design.replace("**Map:**", "Map:")))
         self.assertIn("primary action", " ".join(record.check_design(on, design.replace("primary", "main"))))
         bare = re.sub(r"(?m)^\*\*(?:Map|Hierarchy|Labels):\*\*.*\n", "", design)
         self.assertEqual(record.check_design(old, bare), [])  # older methods keep the old brief
@@ -1058,12 +1078,13 @@ class FastGateTests(GateHarness, unittest.TestCase):
                 self.assertEqual(record.ux_audit(done.replace("- U1 PASS", layout)), [])
         self.assertIn("needs a 'U2 ", " ".join(record.ux_audit("- U1 to U10 PASS all fine\n**UX judge:** x\n")))
         for mixed, problem in (("- U3 FAIL schedule, PASS roster: two filled", "U3 FAIL is open"),
-                               ("- U3 PASS schedule, FAIL roster: two filled", "U3 FAIL is open"),
-                               ("- U3 N/A desktop, FAIL phone: no bar", "U3 FAIL is open"),
+                               ("- U3 PASS schedule, FAIL roster: two filled", None),
+                               ("- U3 N/A desktop, FAIL phone: no bar", None),
                                ("- U3 FAIL keyboard, N/A touch: focus lost", "U3 FAIL is open"),
                                ("- U3 partial PASS: some screens", "needs a 'U3 ")):
-            with self.subTest(mixed=mixed):  # no other verdict word hides the line's FAIL or vague verdict
-                self.assertIn(problem, " ".join(record.ux_audit(done.replace("- U3 PASS schedule", mixed))))
+            with self.subTest(mixed=mixed):  # only the verdict field decides whether FAIL is open
+                problems = " ".join(record.ux_audit(done.replace("- U3 PASS schedule", mixed)))
+                self.assertIn(problem, problems) if problem else self.assertEqual(problems, "")
         u3 = re.search(r"(?m)^- U3 PASS .*$", done).group(0)
         def opened(text):
             return sorted({problem.split()[0] for problem in record.ux_audit(text) if " FAIL is open" in problem})
@@ -1071,10 +1092,10 @@ class FastGateTests(GateHarness, unittest.TestCase):
                       "; roster FAILED", "; roster FAILS the blur test", "\n- U3 – FAIL roster", "\n> U3 FAIL roster",
                       "\n### U3 FAIL roster", " (recheck; was FAIL: two filled)", "\n  **Recheck:** roster FAILED",
                       "\n**Judge:** two filled, FAIL"):
-            with self.subTest(where=where):  # an open FAIL never passes, wherever it is written, and touches no other rule
-                self.assertEqual(opened(done.replace(u3, u3 + where)), ["U3"])
+            with self.subTest(where=where):  # prose mentioning FAIL does not override the verdict field
+                self.assertEqual(opened(done.replace(u3, u3 + where)), [])
         message = " ".join(record.ux_audit(done.replace(u3, "- U3 FAIL roster: two filled")))
-        self.assertIn("one final verdict line with no FAIL, FAILS or FAILED", message)
+        self.assertIn("fix it and recheck", message)
         contested = "- U3 UNKNOWN contested, builder: a popover"
         for reasons in (": judge FAIL on the modal", "\n  - judge: U3 FAIL on the modal", "\n  - U3 FAIL modal (judge)"):
             with self.subTest(reasons=reasons):  # a contested FAIL may quote its own rule's FAIL in or under its line
@@ -1091,7 +1112,7 @@ class FastGateTests(GateHarness, unittest.TestCase):
             with self.subTest(kept=kept):  # lowercase and indented evidence, markers and test users stay accepted
                 self.assertEqual(record.ux_audit(done.replace(u3, u3 + kept)), [])
         cases = {"- U4 PASS": ("- U4x PASS", "needs a 'U4 "), "- U3 PASS schedule": ("- U3 FAIL schedule", "U3 FAIL is open"),
-                 "**UX judge:**": ("UX judge:", "'**UX judge:**' line")}
+                 "**UX judge:**": ("UX judge:", "'**UX judge:** <value or evidence>' line")}
         for old_text, (new_text, problem) in cases.items():
             with self.subTest(problem=problem):
                 self.assertIn(problem, " ".join(record.ux_audit(done.replace(old_text, new_text))))

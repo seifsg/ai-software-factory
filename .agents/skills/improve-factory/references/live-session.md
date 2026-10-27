@@ -2,7 +2,7 @@
 
 Contents: quiesce, checkpoint, separate versions and writers, delegate, adopt, entry receipt, resume.
 
-Read before touching any workspace while app work is active. The app coordinator owns the project and user updates. The repairer returns factory evidence only. A product bug goes to the coordinator, through the owner when sessions cannot message each other; the coordinator records it and decides on any session.
+Read before touching workspaces during active app work. The app coordinator owns the project and updates; the repairer returns factory evidence. Send product bugs to the coordinator through the owner if needed.
 
 ```text
 App coordinator ── checkpoint ─────────────────── revalidate → resume
@@ -44,7 +44,7 @@ Save one unique Git-ignored record. Read it back.
 ## 3. Separate versions and writers
 
 - Preserve the exact selected bundle, including dirty changes that HEAD omits. Rebuild that state in the candidate from a reviewed patch plus the needed untracked inputs. Record and verify both.
-- Create the repair worktree from the bundle's actual revision. Keep the original bundle path, global settings and symlinks.
+- Create the candidate from the recorded maintenance base. Record both revisions and any unmerged status. Keep the original bundle path, settings and symlinks.
 - Isolate or serialize shared ports, databases, caches, credentials and services.
 - Hold affected app work. Parallel app work needs all three:
   - Independent files, runtime effects, acceptance and decisions.

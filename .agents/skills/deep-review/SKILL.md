@@ -5,11 +5,8 @@ description: Ruthless review of a code change, a finished feature or a pull requ
 
 # Deep Review
 
-Ruthless code review. No mercy, no shortcuts. Find every damn problem.
-
-Use for a change, a finished feature or a PR.
 Read-only. Do not fix unless told to.
-Do not factor development time. Focus purely on impact to the application.
+Judge severity by impact; effort only prioritizes optional polish.
 
 Review the complete iteration and affected consumers. Does the journey work? Separate blockers from polish; keep the overall requirements open. Size/style prompts inspection; prove impact before blocking.
 
@@ -131,6 +128,8 @@ Our own work. Someone else's project: judge by its rules instead.
 
 ## Findings
 
+Score every review/check finding with [worth-it](references/worth-it.md). Keep severity, disposition and proof.
+
 | # | Severity | Category / layer | File:Line | Finding / impact | Evidence | Fix | Confidence |
 |---|----------|------------------|-----------|------------------|----------|-----|------------|
 | 1 | HIGH | Bug / product | file.ts:42 | What breaks, for whom | Raw proof: code, log, observation | Clear fix | HIGH |
@@ -161,7 +160,7 @@ Severity is impact. Disposition decides the gate: `blocking`, `before-exposure` 
 
 - When told to fix: smallest change that removes the cause, affected layer only, intent unchanged. Then a fresh independent reviewer, not the one who fixed, assesses the result. A clean review needs no edits.
 - After any repair, rerun all configured checks. Reuse proof only when its inputs are exactly unchanged.
-- One round = independent review, fixes, fresh review. After round 3, only open CRITICAL or HIGH keep the loop going. At most 6 failed rounds per review loop. The cap covers review rounds only.
+- One round = independent review, selected fixes, fresh review. Mandatory findings keep it open; optional fixes follow worth-it. At most 6 failed rounds per review loop.
 - After the sixth failed round, stop that loop. Give the owner one short packet: findings per round (new vs repeated), the shared cause, options (extend 1-3 rounds, defer with an owner record, amend scope, cancel).
 - Keep independent work moving while you wait.
 

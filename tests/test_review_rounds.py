@@ -11,7 +11,7 @@ from unittest.mock import patch
 from safe_engine.project import EngineError, file_hash
 from safe_engine.storage import atomic_json, read_json
 from safe_engine.workflow import EXTERNAL, REVIEW_ROUNDS
-from speed_fixtures import BUNDLE, DOUBLE, REVIEWER_BINARIES, Base, report, finding, codex, command
+from speed_fixtures import BUNDLE, DOUBLE, REVIEWER_BINARIES, Base, report, finding, codex, command, reconcile_double
 
 
 class ReviewRoundCapTests(Base):
@@ -77,6 +77,7 @@ class ExternalReviewerTests(Base):
 
     def external(self, f, body, reviewer="host/agent-1/model-x", present=False, nonce=True):
         """Submit body as a host subagent's report; nonce=True adds the current packet's nonce to its summary."""
+        body = reconcile_double(body, f.flow.load())
         if nonce and isinstance(body, dict) and f.flow.load().get("review_packet"):
             body = {**body, "summary": f"{f.flow.load()['review_packet']['nonce']} {body.get('summary', DOUBLE)}"}
         path = f.flow.directory / "external-report.json"
@@ -92,7 +93,7 @@ class ExternalReviewerTests(Base):
         status = self.packet(f)
         packet = (f.flow.directory / "packet.md").read_text(encoding="utf-8")
         nonce = f.flow.load()["review_packet"]["nonce"]
-        for expected in ("Return only JSON matching the schema", "review-schema-v2.json", nonce,
+        for expected in ("Return only JSON matching the schema", "review-schema-worth.json", nonce,
                          "Carried manual PASSes must be justified"):
             self.assertIn(expected, packet)
         self.assertEqual(status["review_packet"]["sha256"], file_hash(f.flow.directory / "packet.md"))
@@ -355,7 +356,7 @@ class ExternalReviewerTests(Base):
     def test_repair_discards_the_packet(self):
         f = self.to_review()
         self.packet(f)
-        f.flow.repair("Synthetic correction")
+        f.repair("Synthetic correction")
         self.assertNotIn("review_packet", f.flow.load())
 
     def test_failed_external_reviews_count_toward_the_cap_and_packets_stop(self):

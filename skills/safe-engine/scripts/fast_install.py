@@ -1,8 +1,9 @@
 """Per-host installer: put the factory's entry skills where the host finds them and wire the Fast gate hooks.
 
 fast_gate.py install --host claude|codex|cursor|other [--project DIR] [--codex-home DIR] [--no-auto-update] [--channel stable|edge]
-- claude: declares this repository's marketplace and enables the safe-engine plugin in ~/.claude/settings.json;
-  the plugin carries the skills and hooks and follows release tags.
+- claude: declares this repository's marketplace and enables the safe-engine plugin in ~/.claude/settings.json,
+  then installs it with Claude Code's own CLI and checks `claude plugin list`; exits 1 with the fix when it cannot.
+  The plugin carries the skills and hooks and follows release tags.
 - codex, cursor: copies skills/safe-engine and skills/improve-factory into ~/.agents/skills (the Agent Skills
   folder both read; <DIR>/.agents/skills with --project), then merges the gate hooks into ~/.codex/hooks.json or
   ~/.cursor/hooks.json (<DIR>/.codex, <DIR>/.cursor). --codex-home writes the Codex hooks into that CODEX_HOME
@@ -21,7 +22,10 @@ import sys
 
 CHANNELS = ("stable", "edge")  # the first is the default
 MARKETPLACE = "ai-software-factory"
+PLUGIN = f"safe-engine@{MARKETPLACE}"
 REPOSITORY = "https://github.com/seifsg/ai-software-factory.git"
+FIX = (f"Run `claude plugin install {PLUGIN} --scope user` (or /plugin in Claude Code), then start a new session. "
+       "Claude Code CLI not on PATH: set SAFE_ENGINE_CLAUDE to its path and install again")
 ENTRIES = ("safe-engine", "improve-factory")
 MARKER = ".safe-engine-install"  # marks copies this installer owns; anything else is never overwritten
 CODEX_EVENTS = {"PreToolUse": "Bash|apply_patch", "Stop": None, "UserPromptSubmit": None, "SessionStart": None}
@@ -62,6 +66,8 @@ def install(host, project=None, home=None, log=print, auto=True, channel=None, c
     written.append(remember(host, project, home, auto, channel, codex_home))
     for path in filter(None, written):
         log(f"wrote {path}")
+    if host == "claude":
+        install_plugin(home, log)
     return written
 
 
@@ -74,9 +80,74 @@ def enable_plugin(settings):
             shutil.copyfile(settings, backup)
     data.setdefault("extraKnownMarketplaces", {})[MARKETPLACE] = {
         "source": {"source": "git", "url": REPOSITORY}, "autoUpdate": True}
-    data.setdefault("enabledPlugins", {})[f"safe-engine@{MARKETPLACE}"] = True
+    data.setdefault("enabledPlugins", {})[PLUGIN] = True
     write_json(settings, data)
     return settings
+
+
+def install_plugin(home, log):
+    """Enabling in settings does not install: Claude Code may register the marketplace and never fetch the plugin.
+    Install it with Claude Code's CLI at user scope, then confirm `claude plugin list` shows it installed and
+    enabled. Anything short of that exits 1 with the fix; the settings written above stay."""
+    cli = find_claude()
+    if not cli:
+        raise SystemExit(f"{PLUGIN} is enabled but not installed: no Claude Code CLI found (PATH, ~/.local/bin, "
+                         f"the desktop app's claude-code folder). {FIX}")
+    env = dict(os.environ)
+    if Path(home).resolve() != Path.home().resolve():  # a test or other home: never touch this user's Claude Code
+        env["CLAUDE_CONFIG_DIR"] = str(Path(home) / ".claude")
+
+    def claude(*args):
+        try:
+            done = subprocess.run([*cli, *args], capture_output=True, text=True, encoding="utf-8", errors="replace",
+                                  timeout=300, stdin=subprocess.DEVNULL, env=env)
+        except (OSError, subprocess.SubprocessError) as error:
+            return False, str(error)
+        return done.returncode == 0, (done.stdout + done.stderr).strip()
+
+    def fail(step, output):
+        tail = "\n".join(output.splitlines()[-5:])
+        raise SystemExit(f"{PLUGIN} is enabled but not installed: `claude {step}` failed"
+                         f"{': ' + tail if tail else ''}\n{FIX}")
+
+    if not claude("plugin", "marketplace", "update", MARKETPLACE)[0]:  # unknown yet: add it
+        ok, output = claude("plugin", "marketplace", "add", REPOSITORY)
+        if not ok:
+            fail(f"plugin marketplace add {REPOSITORY}", output)
+    ok, output = claude("plugin", "install", PLUGIN, "--scope", "user")
+    if not ok:
+        fail(f"plugin install {PLUGIN} --scope user", output)
+    ok, output = claude("plugin", "list", "--json")
+    try:
+        listed = [item for item in json.loads(output) if item.get("id") == PLUGIN and item.get("enabled")] if ok else []
+    except (ValueError, AttributeError, TypeError):
+        listed = []
+    if not listed:
+        fail("plugin list --json", output if not ok else f"{PLUGIN} is not listed as installed and enabled")
+    log(f"installed {PLUGIN} {listed[0].get('version', '')} ({listed[0].get('scope', 'user')} scope), checked with "
+        "`claude plugin list`; start a new session or run /reload-plugins")
+
+
+def find_claude():
+    """Claude Code's CLI as an argv prefix: SAFE_ENGINE_CLAUDE, then PATH, then the native installer's
+    ~/.local/bin, then the newest copy the Windows desktop app keeps in %APPDATA%/Claude/claude-code. None when
+    absent."""
+    named = os.environ.get("SAFE_ENGINE_CLAUDE")
+    if named:
+        return [named]
+    found = shutil.which("claude")
+    if found:
+        return [found]
+    for name in ("claude", "claude.exe"):
+        local = Path.home() / ".local" / "bin" / name
+        if local.is_file():
+            return [str(local)]
+    root = Path(os.environ.get("APPDATA") or Path.home() / "AppData" / "Roaming") / "Claude" / "claude-code"
+    bundled = [path for path in root.glob("*/*/claude.exe") if path.is_file()]  # Windows desktop app
+
+    def version(path):
+        return tuple(int(part) if part.isdigit() else 0 for part in path.parent.parent.name.split("."))
+    return [str(max(bundled, key=version))] if bundled else None
 
 
 def copy_entries(target):
