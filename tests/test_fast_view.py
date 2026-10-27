@@ -43,6 +43,9 @@ class LiveViewTests(unittest.TestCase):
         temp = tempfile.TemporaryDirectory(prefix="live view ")
         self.addCleanup(temp.cleanup)
         self.root = Path(temp.name).resolve()
+        cache_home = patch.dict(os.environ, SAFE_ENGINE_HOME=str(self.root / "home"))
+        cache_home.start()
+        self.addCleanup(cache_home.stop)
         self.project = self.root / "app ü"
         (self.project / ".factory/fast/shots").mkdir(parents=True)
         self.env = dict(os.environ, SAFE_ENGINE_HOME=str(self.root / "home"), GH_CONFIG_DIR=str(self.root / "gh"))
@@ -112,6 +115,11 @@ class LiveViewTests(unittest.TestCase):
             self.assertIn(why, result.stderr)
             self.assertIn("Form: fast_gate.py try T3", result.stderr)
         png(self.project / ".factory/fast/shots/shell.png")
+        wrong_type = self.project / ".factory/fast/shots/shell.jpg"
+        wrong_type.write_bytes((self.project / ".factory/fast/shots/shell.png").read_bytes())
+        rejected = self.run_gate("try", "T1", "--file", ".factory/fast/shots/shell.jpg")
+        self.assertNotEqual(rejected.returncode, 0)
+        self.assertIn("supported PNG screenshot", rejected.stderr)
         self.gate("try", "T1", "--url", "http://localhost:5173/cockpit")
         self.gate("try", "t1", "--file", ".factory/fast/shots/shell.png")
         self.assertIn("**Try:** T1 file .factory/fast/shots/shell.png\n", self.record.read_text(encoding="utf-8"))
@@ -148,6 +156,23 @@ class LiveViewTests(unittest.TestCase):
         self.assertIn("error", changed["ownerReport"]["items"][0]["picture"])
         self.assertEqual(changed["pictures"], [])
         self.assertFalse(changed["ready"][0].get("thumb"))
+
+    def test_try_thumbnail_tracks_changed_bytes_without_newer_mtime(self):
+        self.plan("- T1 pre: use a current picture do: check the preview post: current bytes are shown\n")
+        source = self.project / ".factory/fast/shots/current.png"
+        png(source)
+        self.gate("try", "T1", "--file", ".factory/fast/shots/current.png")
+        thumb = self.view / self.state()["ready"][0]["thumb"]
+        original = source.stat()
+        png(source, color=21)
+        os.utime(source, ns=(original.st_atime_ns, original.st_mtime_ns))
+
+        self.gate("try", "T1", "--file", ".factory/fast/shots/current.png")
+
+        self.assertEqual(hashlib.sha256(thumb.read_bytes()).digest(), hashlib.sha256(source.read_bytes()).digest())
+        stamp = thumb.stat().st_mtime_ns
+        self.gate("try", "T1", "--file", ".factory/fast/shots/current.png")
+        self.assertEqual(thumb.stat().st_mtime_ns, stamp)
 
     def test_current_show_picture_fills_empty_report_and_expires_with_candidate(self):
         self.plan()

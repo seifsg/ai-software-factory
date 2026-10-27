@@ -1,11 +1,13 @@
 """Design evidence cannot shrink scope or survive a changed candidate/capture."""
 import copy
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 from png_fixtures import png
 
 SCRIPTS = Path(__file__).resolve().parents[1] / "skills/safe-engine/scripts"
@@ -18,6 +20,9 @@ class DesignTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
+        cache_home = patch.dict(os.environ, SAFE_ENGINE_HOME=str(self.root / "cache-home"))
+        cache_home.start()
+        self.addCleanup(cache_home.stop)
         subprocess.run(["git", "init", "-q", str(self.root)], check=True)
         (self.root / ".gitignore").write_text(".factory/\n")
         (self.root / "source.txt").write_text("original\n")

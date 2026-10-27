@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 from png_fixtures import png
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -24,6 +25,9 @@ class ShowFixture(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.home = Path(self.temp.name)
+        cache_home = patch.dict(os.environ, SAFE_ENGINE_HOME=str(self.home / "cache-home"))
+        cache_home.start()
+        self.addCleanup(cache_home.stop)
         self.project = self.home / "project"
         subprocess.run(["git", "init", "-q", str(self.project)], check=True)
         (self.project / ".gitignore").write_text(".factory/\n")

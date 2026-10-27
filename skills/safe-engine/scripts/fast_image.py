@@ -2,10 +2,18 @@
 from collections import Counter
 from functools import lru_cache
 from pathlib import Path
+import hashlib
+import hmac
+import json
+import os
 import struct
+import sys
 import zlib
 
+import fast_ledger
+
 MAX_BYTES, MAX_PIXELS = 16 * 1024 * 1024, 8_000_000
+CACHE_LIMIT, CACHE_BYTES = 32, 32768
 
 
 def require(ok, message):
@@ -88,8 +96,92 @@ def inspect_bytes(data):
     return width, height
 
 
-def check(path):
-    """Validate current bytes; the small cache never trusts timestamps or filenames."""
+@lru_cache(maxsize=1)
+def validator_id():
+    """Change cache identity when the running validator or its runtime changes."""
+    return hashlib.sha256(Path(__file__).read_bytes() + sys.version.encode() + zlib.ZLIB_RUNTIME_VERSION.encode()).hexdigest()
+
+
+def cache_key(home):
+    """Keep cache authentication outside editable project evidence."""
+    home.mkdir(parents=True, exist_ok=True)
+    path = home / "image-cache.key"
+    try:
+        with os.fdopen(os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), "wb") as target:
+            target.write(os.urandom(32))
+    except FileExistsError:
+        pass
+    with path.open("rb") as source:
+        value = source.read(33)
+    return value if len(value) == 32 else None
+
+
+def signature(key, entries):
+    """Authenticate the whole bounded record, including its entry order."""
+    payload = json.dumps(entries, sort_keys=True, separators=(",", ":")).encode()
+    return hmac.new(key, payload, hashlib.sha256).hexdigest()
+
+
+def cache_entries(path, key):
+    """Discard oversized, malformed or altered cache claims."""
+    if not path.is_file() or path.stat().st_size > CACHE_BYTES:
+        return []
+    try:
+        with path.open("rb") as source:
+            raw = source.read(CACHE_BYTES + 1)
+        if len(raw) > CACHE_BYTES:
+            return []
+        record = json.loads(raw)
+    except (OSError, ValueError, RecursionError):
+        return []
+    if not isinstance(record, dict):
+        return []
+    entries = record.get("entries")
+    if record.get("version") != 1 or not isinstance(entries, list) or len(entries) > CACHE_LIMIT:
+        return []
+    if not hmac.compare_digest(str(record.get("mac")), signature(key, entries)):
+        return []
+    return entries
+
+
+def check(path, project=None, expected=None, with_digest=False):
+    """Validate current bytes; reuse authenticated success when project-scoped."""
+    require(expected is None or isinstance(expected, (list, tuple)) and len(expected) == 2 and
+            all(type(n) is int and n > 0 for n in expected), "expected dimensions need [width, height]")
     path = Path(path)
     require(path.stat().st_size <= MAX_BYTES, "PNG exceeds 16 MiB")
-    return inspect_bytes(path.read_bytes())
+    data = path.read_bytes()
+    require(len(data) <= MAX_BYTES, "PNG exceeds 16 MiB")
+    data_hash = hashlib.sha256(data).hexdigest() if project is not None or with_digest else None
+    cache, key, entries, hit = None, None, [], None
+    if project is not None:
+        try:
+            home = Path(os.environ.get("SAFE_ENGINE_HOME") or Path.home() / ".safe-engine")
+            key = cache_key(home)
+            cache = home / "image-cache.json"
+            identity = (hashlib.sha256(fast_ledger.norm(project).encode()).hexdigest(),
+                        data_hash, validator_id())
+            entries = cache_entries(cache, key) if key else []
+            match = next((entry for entry in entries if isinstance(entry, dict) and
+                          tuple(entry.get(name) for name in ("project", "digest", "validator")) == identity), None)
+            if match and type(match.get("width")) is int and type(match.get("height")) is int and \
+                    0 < match["width"] * match["height"] <= MAX_PIXELS:
+                hit = match["width"], match["height"]
+        except (OSError, ValueError, TypeError, AttributeError, RecursionError):
+            cache = None
+    if hit is not None:
+        require(expected is None or tuple(expected) == hit, "screenshot size differs from viewport")
+        return (*hit, data_hash) if with_digest else hit
+    size = inspect_bytes(data)
+    require(expected is None or tuple(expected) == size, "screenshot size differs from viewport")
+    if cache is not None and key:
+        try:
+            entry = {"project": identity[0], "digest": identity[1], "validator": identity[2],
+                     "width": size[0], "height": size[1]}
+            entries = [entry] + [item for item in entries if item != entry]
+            entries = entries[:CACHE_LIMIT]
+            fast_ledger.save(cache, {"version": 1, "entries": entries,
+                                     "mac": signature(key, entries)})
+        except (OSError, ValueError, TypeError):
+            pass  # Cache failure never changes image acceptance.
+    return (*size, data_hash) if with_digest else size

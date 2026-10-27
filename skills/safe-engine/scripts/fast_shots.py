@@ -85,7 +85,7 @@ def run(args, gate):
     retained = False
     try:
         git(project, "worktree", "add", "--detach", str(base), args.base)
-        pairs = capture(args, [(base, ports[0], "before"), (project, ports[1], "after")], browser, size, work, out)
+        pairs = capture(args, [(base, ports[0], "before"), (project, ports[1], "after")], browser, size, work, out, project)
     except CleanupError as error:
         retained = True
         error.paths.append(base)
@@ -101,7 +101,7 @@ def run(args, gate):
         print(f"{path}: {before} -> {after}")
 
 
-def capture(args, trees, browser, size, work, out):
+def capture(args, trees, browser, size, work, out, project):
     """Set up and serve each tree, shoot each path in both, stop both servers whatever happens."""
     servers = []
     try:
@@ -112,7 +112,7 @@ def capture(args, trees, browser, size, work, out):
         for server, (_, port, label) in zip(servers, trees):
             wait_up(server, port, args.wait, work / f"{label}-server.log")
         return [(path, *(shoot(browser, f"http://127.0.0.1:{port}{route(path)}", size, work,
-                               out / f"{slug(path)}-{label}.png") for _, port, label in trees)) for path in args.path]
+                               out / f"{slug(path)}-{label}.png", project) for _, port, label in trees)) for path in args.path]
     finally:
         cleanup(servers, sys.exc_info()[1])
 
@@ -203,7 +203,7 @@ def wait_up(process, port, seconds, log):
     raise RuntimeError(f"nothing answered on port {port} within {seconds}s; see {log}")
 
 
-def shoot(browser, url, size, work, target):
+def shoot(browser, url, size, work, target, project):
     """One headless screenshot; its own profile folder keeps the owner's browser untouched."""
     user_data = runtime("resources").profile(work)
     ProcessTree = runtime("processes").ProcessTree
@@ -229,7 +229,7 @@ def shoot(browser, url, size, work, target):
     if not target.is_file() or not target.stat().st_size:
         raise RuntimeError(f"no screenshot of {url}")
     import fast_image
-    fast_image.check(target)
+    fast_image.check(target, project=project)
     return target
 
 

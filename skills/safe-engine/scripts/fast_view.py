@@ -24,7 +24,8 @@ from fast_view_scope import scope_for, project_state, route, identity_stamp, VER
 
 PAGE = HERE / "view" / "index.html"
 OPEN_TILES, EVENTS, READY = 7, 12, 20  # belt tiles per run, events kept per run, Ready to try cards sent
-SHOT = re.compile(r"\.(?:png|jpe?g|gif|webp)$", re.I)
+SHOT = re.compile(r"\.png$", re.I)
+UNSUPPORTED_IMAGE = re.compile(r"\.(?:jpe?g|gif|webp|svg|bmp|tiff?|avif)$", re.I)
 ICON = {"research": "search", "kickoff": "forum", "tickets": "confirmation_number", "analysis": "psychology",
         "plan": "map", "design": "palette", "schema": "database", "build": "construction", "done-run": "science",
         "handoff": "inventory_2"}  # Material Symbols names for the chat card's step icons
@@ -126,10 +127,10 @@ def shot(folder, project, vid, n, value, accepted=None):
             import fast_design
             digest, thumb = accepted[str(source)]
             return thumb if thumb and fast_design.file_hash(source) == digest else None
-        import fast_image
-        fast_image.check(source)
+        import fast_design, fast_image
+        _, _, digest = fast_image.check(source, project=project, with_digest=True)
         target = folder / "shots" / name
-        if not target.exists() or target.stat().st_mtime_ns < source.stat().st_mtime_ns:  # a retaken screenshot
+        if not target.exists() or fast_design.file_hash(target) != digest:
             target.parent.mkdir(exist_ok=True)
             shutil.copyfile(source, target)
         return f"shots/{name}"
@@ -365,10 +366,12 @@ def try_problem(project, sections, n, kind, value):
         target = Path(project, value).resolve()
         if not str(target).startswith(str(Path(project).resolve()) + os.sep) or not target.is_file():
             return f"{value} is not a file inside {project}"
+        if UNSUPPORTED_IMAGE.search(value):
+            return "Picture: use a supported PNG screenshot (.png); convert this image first"
         if SHOT.search(value):
             try:
                 import fast_image
-                fast_image.check(target)
+                fast_image.check(target, project=project)
             except (OSError, ValueError) as error:
                 return str(error)
     return None
