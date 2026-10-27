@@ -81,6 +81,23 @@ class SuitePolicyTests(unittest.TestCase):
         self.assertEqual(len(calls), 4)
         self.assertEqual(first['results'][0]['exit_code'], 0)
 
+    def test_non_object_cache_receipts_queue_fresh_suite(self):
+        argv = [sys.executable, '-c', 'print("ok")']
+        calls = []
+        identity = lambda: {'commit': 'fixture', 'fingerprint': 'same'}
+        def run(slot):
+            log = self.root / '.factory' / f'log-{len(calls)}.txt'
+            calls.append(slot.generation)
+            return [run_command(argv, self.root, 8, log, owned_lease=slot.lease())]
+        execute(self.root, identity, run)
+        receipt = next((self.root / '.factory' / 'suite-cache').glob('*.json'))
+        for index, payload in enumerate(('42', 'null', '[]', '"bad"'), start=2):
+            with self.subTest(payload=payload):
+                receipt.write_text(payload)
+                row = execute(self.root, identity, run)
+                self.assertFalse(row['reused'])
+                self.assertEqual(len(calls), index)
+
     def test_valid_hit_skips_held_admission_without_launching(self):
         argv = [sys.executable, '-c', 'print("ok")']
         calls = []

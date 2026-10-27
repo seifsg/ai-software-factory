@@ -86,6 +86,8 @@ def cached(project, path, identity, validate):
             return None
         reject_path_aliases(path, project)
         row = json.loads(path.read_text(encoding='utf-8'))
+        if not isinstance(row, dict):
+            return None
         checksum = row.pop('checksum')
         if (checksum == digest(row) and row.get('identity') == identity and row.get('unchanged') is True
                 and evidence(project, row['results']) and validate(row['results'])):
