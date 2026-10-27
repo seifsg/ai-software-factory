@@ -96,12 +96,23 @@ def cached(project, path, identity, validate):
 
 
 def execute(project, identity, run, *, cache=True, stop=None, validate=lambda results: True):
-    """Recheck after queue admission, then run once and preserve truthful terminal evidence."""
+    """Reuse verified proof early; queue misses and preserve truthful terminal evidence."""
     project = Path(project).resolve(strict=True)
     before = identity()
     directory = inside(project, '.factory/suite-cache')
     directory.mkdir(parents=True, exist_ok=True)
     path = directory / (digest(before) + '.json')
+    if cache and before is not None:
+        prior = cached(project, path, before, validate)
+        if prior:
+            if identity() != before:
+                raise EngineError('Suite inputs changed during cache reuse; request current proof')
+            prior = cached(project, path, before, validate)
+        if prior:
+            if stop is not None and stop.is_set():
+                raise EngineError('Suite reuse cancelled before return')
+            print('Reused unchanged full-suite result: ' + before['commit'], flush=True)
+            return {**prior, 'reused': True}
     with admission(stop=stop) as slot:
         current = identity()
         if current != before:

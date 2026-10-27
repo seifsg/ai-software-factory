@@ -24,13 +24,15 @@ diagnosis; it still joins the queue.
 
 The project-local `.factory/suite-cache` retains up to 256 completed results.
 Reuse requires the same commit and effective inputs plus intact logs and output
-hashes. Dirty source, changed arguments, environment, clock or declared files
+hashes. An intact hit returns before queue admission after another input check.
+Dirty source, changed arguments, environment, clock or declared files
 invalidate reuse. A completed failure stays a failure when reused. Interrupted,
-timed-out, truncated or tampered evidence cannot supply a passing result. Inputs
-are checked again after queue admission and execution. Environment values are
-hashed, never stored as plaintext.
+timed-out, truncated or tampered evidence cannot supply a passing result. Misses
+enter the queue and recheck inputs and the cache after admission; executed
+suites check inputs again afterward. Environment values are hashed, never stored
+as plaintext.
 
-New Safe states also queue and reuse complete-profile `check` batches;
+New Safe states also reuse complete-profile `check` batches and queue misses;
 `check --fresh` explicitly reruns them. Per-command IDs, artifacts, manual QA,
 contract integrity and required checks still apply. Existing states retain their
 saved policy. A partial test never replaces complete version acceptance.
@@ -56,8 +58,8 @@ does not supply final manual acceptance, seal a contract or satisfy full checks.
 Failed feedback must be repaired before finishing implementation. Existing v2
 states retain their prior prohibition on early feature checks.
 
-All complete suites share one FIFO queue per machine, across worktrees and gate
-homes. The queue uses `ProgramData` on Windows and `/tmp` on POSIX under
+Complete suites needing execution share one FIFO queue per machine, across
+worktrees and gate homes. The queue uses `ProgramData` on Windows and `/tmp` on POSIX under
 `ai-software-factory-suite-v1`; it has no per-run override. Permission failures
 stop admission. At most 256 requests wait; cancellation removes only its own
 request. A crashed worker's owned processes must be drained before replacement
