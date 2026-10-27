@@ -6,9 +6,11 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 
 ## [Unreleased]
 
+Retains the delivery improvements listed under 1.1.0 below. That immutable tag passed its merged-tree checks, but GitHub publication stopped on the eval cleanup regression; this release fixes that path forward.
+
 ### Fixed
 
-- Eval process cleanup requires ownership before execution and confirms descendant exit through the canonical job helper; isolated rubric checks receive its snapshotted source (#186).
+- Eval process cleanup requires ownership before execution and confirms descendant exit through the canonical job helper; isolated rubric checks receive its snapshotted source. Failed stops retain ownership for reconciliation without skipping other trees or losing partial reports (#186).
 
 ## [1.1.0] - 2026-10-27
 

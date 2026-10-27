@@ -23,6 +23,7 @@ class Watch:
         self.folders = [isolation.EVALS] + ([] if isolation.EVALS in catalog.ROOT.parents else [catalog.ROOT])
         self.modules = catalog.loaded_modules(samples, sources)  # what real checks load, recorded once
         self.checkout, self.interpreter, self.tainted = self.digests(), interpreter.state(*self.modules), None
+        self.cleanup = []
 
     def digests(self):
         return [isolation.digest(folder) for folder in self.folders]
@@ -30,7 +31,7 @@ class Watch:
     def taint(self, reason):
         """Record why the eval stops, stop every run, and return the reason."""
         self.tainted = self.tainted or reason
-        proc.stop_all()
+        self.cleanup.extend(proc.stop_all())
         return reason
 
     def after_agent(self):
@@ -112,8 +113,9 @@ def run_one(sample, arm, base, ctx):
     return result
 
 
-def execute(tasks, jobs):
-    """Run callables `jobs` at a time. Ctrl-C cancels queued ones and kills running ones: (rows, interrupted)."""
+def execute(tasks, jobs, cleanup=None):
+    """Return (rows, interrupted); append stop failures to `cleanup` without losing finished rows."""
+    cleanup = cleanup if cleanup is not None else []
     pool, futures = ThreadPoolExecutor(max_workers=jobs), []
     try:
         futures = [pool.submit(task) for task in tasks]
@@ -122,8 +124,12 @@ def execute(tasks, jobs):
             _, pending = wait(pending, timeout=0.5)  # short waits keep Ctrl-C responsive on Windows
     except KeyboardInterrupt:
         pool.shutdown(wait=False, cancel_futures=True)
-        proc.stop_all()
-        pool.shutdown(wait=True)  # stopped runs clean their temp copies
+        cleanup.extend(proc.stop_all())
+        deadline = time.monotonic() + 10
+        while any(not f.done() for f in futures) and time.monotonic() < deadline:
+            time.sleep(.01)
+        if any(not f.done() for f in futures):
+            cleanup.append("eval workers did not finish within 10 seconds")
         finished = [f for f in futures if f.done() and not f.cancelled() and not f.exception()]
         return [f.result() for f in finished if f.result()], True
     pool.shutdown(wait=True)
@@ -154,11 +160,21 @@ def run_all(template, out, names=None, minutes=30.0, jobs=1, keep=False, factory
            "bundle": isolation.read_bundle(), "watch": Watch(samples, sources)}
     logs.mkdir(parents=True, exist_ok=True)
     base = Path(tempfile.mkdtemp(prefix="eval-runs-"))
+    failures = []
     try:
-        runs, interrupted = execute([lambda s=s, a=a: run_one(s, a, base, ctx) for s in samples for a in ARMS], jobs)
+        runs, interrupted = execute([lambda s=s, a=a: run_one(s, a, base, ctx) for s in samples for a in ARMS],
+                                    jobs, failures)
     finally:
-        proc.STOPPING.clear()  # an interrupt or taint stops this eval only
-        cleanup = None if keep else isolation.remove(base)
+        unresolved = proc.stop_all()
+        failures.extend(ctx["watch"].cleanup + unresolved)
+        if unresolved or "eval workers did not finish within 10 seconds" in failures:
+            ctx["watch"].tainted = ctx["watch"].tainted or "owned process cleanup remains unconfirmed; the eval stopped"
+            failures.append(f"retained workspace: {base}")
+        else:
+            proc.STOPPING.clear()  # only confirmed cleanup permits another eval
+            cleanup = None if keep else isolation.remove(base)
+            if cleanup:
+                failures.append(cleanup)
     extra = {"tainted": ctx["watch"].tainted} if ctx["watch"].tainted else {}
     return {"timeout_minutes": minutes, "interrupted": interrupted, "runs": runs, **extra,
-            **({"cleanup": cleanup} if cleanup else {})}
+            **({"cleanup": "; ".join(dict.fromkeys(failures))} if failures else {})}

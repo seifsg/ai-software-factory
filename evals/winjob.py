@@ -42,7 +42,7 @@ def adopt(process):
 
 def close(job):
     """Stop exact owned members and confirm exit before releasing their handles."""
-    try:
+    if job.handle:
         job.begin_stop()
         job.terminate()
         deadline = time.monotonic() + 10
@@ -50,5 +50,7 @@ def close(job):
             if time.monotonic() >= deadline:
                 raise TimeoutError("eval job did not drain within 10 seconds")
             time.sleep(.01)
-    finally:
-        job.close()
+    for pid, handle in list(job.waiting.items()):
+        job.check(job.api.CloseHandle(handle))
+        del job.waiting[pid]  # a retry must never close an already released member
+    job.close()

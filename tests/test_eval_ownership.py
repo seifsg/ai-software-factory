@@ -9,7 +9,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 from eval_fixtures import EvalCase
-from evals import catalog, isolation, proc
+from evals import catalog, isolation, proc, report, runner
 
 if os.name == "nt":
     from evals import winjob
@@ -124,6 +124,7 @@ class EvalOwnershipTests(EvalCase):
 
     def test_close_waits_for_drain_and_preserves_native_failures(self):
         job = Mock()
+        job.waiting = {}
         job.drained.side_effect = [False, True]
         with patch.object(winjob.time, "sleep"):
             winjob.close(job)
@@ -132,28 +133,162 @@ class EvalOwnershipTests(EvalCase):
         for operation in ("begin_stop", "terminate", "drained", "close"):
             with self.subTest(operation=operation):
                 job = Mock()
+                job.waiting = {}
                 getattr(job, operation).side_effect = OSError("native cleanup refused")
                 with self.assertRaisesRegex(OSError, "native cleanup refused"):
                     winjob.close(job)
-                job.close.assert_called_once()
+                self.assertEqual(job.close.call_count, int(operation == "close"))
         job = Mock()
+        job.waiting = {}
         job.drained.return_value = False
         with patch.object(winjob.time, "monotonic", side_effect=[0, 11]):
             with self.assertRaisesRegex(TimeoutError, "did not drain"):
                 winjob.close(job)
-        job.close.assert_called_once()
+        job.close.assert_not_called()
 
     def test_tree_does_not_hide_cleanup_failure_or_mark_stopped(self):
         tree = proc.Tree([sys.executable, "-c", "import time; time.sleep(60)"], self.tmp, None, False,
                          subprocess.DEVNULL, subprocess.DEVNULL)
         try:
-            with patch.object(winjob, "close", side_effect=OSError("cleanup refused")), patch.object(
-                    proc.subprocess, "run", side_effect=AssertionError("PID fallback used")):
-                with self.assertRaisesRegex(OSError, "cleanup refused"):
-                    tree.stop()
-            self.assertFalse(tree._stopped)
+            for operation in ("terminate", "drained"):
+                with self.subTest(operation=operation), patch.object(
+                        tree.job, operation, side_effect=OSError("cleanup refused")), patch.object(
+                        proc.subprocess, "run", side_effect=AssertionError("PID fallback used")):
+                    with self.assertRaisesRegex(OSError, "cleanup refused"):
+                        tree.stop()
+                    self.assertFalse(tree._stopped)
+                    self.assertIsNotNone(tree.process.returncode, "root was not reaped after a job error")
+                    self.assertIsNotNone(tree.job.handle, "unconfirmed ownership was released")
+            tree.stop()
+            self.assertTrue(tree._stopped)
         finally:
             tree.stop()
+
+    def test_limited_failure_stays_registered_until_global_retry(self):
+        with patch.object(proc, "_LIVE", set()), patch.object(proc, "STOPPING", proc.threading.Event()):
+            try:
+                with patch.object(winjob.Job, "terminate", side_effect=OSError("controlled stop refusal")):
+                    with self.assertRaisesRegex(OSError, "controlled stop refusal"):
+                        proc.run_limited([sys.executable, "-c", "pass"], self.tmp, 5, log=self.tmp / "run.log")
+                self.assertEqual(len(proc._LIVE), 1)
+                tree = next(iter(proc._LIVE))
+                self.assertIsNotNone(tree.process.returncode)
+                self.assertIsNotNone(tree.job.handle)
+                self.assertEqual(proc.stop_all(), [])
+                self.assertTrue(tree._stopped)
+                self.assertFalse(proc._LIVE)
+            finally:
+                proc.stop_all()
+
+    def test_member_release_failure_never_recloses_released_handles(self):
+        job = Mock()
+        job.waiting = {1: 101, 2: 102}
+        job.check = winjob.Job.check
+        job.api.CloseHandle.side_effect = [True, False]
+        with self.assertRaises(OSError):
+            winjob.close(job)
+        self.assertEqual(job.waiting, {2: 102})
+        job.close.assert_not_called()
+        job.api.CloseHandle.side_effect = None
+        job.api.CloseHandle.return_value = True
+        winjob.close(job)
+        self.assertEqual([call.args[0] for call in job.api.CloseHandle.call_args_list], [101, 102, 102])
+        self.assertEqual(job.waiting, {})
+        job.close.assert_called_once()
+
+
+class EvalCleanupConsumerTests(EvalCase):
+    def setUp(self):
+        super().setUp()
+        stopping = patch.object(proc, "STOPPING", proc.threading.Event())
+        stopping.start()
+        self.addCleanup(stopping.stop)
+
+    def test_stop_all_attempts_every_tree_and_aggregates_failures(self):
+        trees = [Mock() for _ in range(3)]
+        for index, tree in enumerate(trees):
+            tree.process.pid = index + 1
+        trees[0].stop.side_effect = OSError("first refused")
+        trees[1].stop.side_effect = TimeoutError("second refused")
+        with patch.object(proc, "_LIVE", set(trees)):
+            failure, errors = None, []
+            try:
+                errors = proc.stop_all()
+            except Exception as error:
+                failure = error
+            for tree in trees:
+                self.assertEqual(tree.stop.call_count, 1, f"process {tree.process.pid} was skipped")
+            self.assertIsNone(failure, "cleanup must aggregate errors after attempting every tree")
+            self.assertEqual(len(errors), 2)
+            self.assertTrue(any("first refused" in error for error in errors))
+            self.assertTrue(any("second refused" in error for error in errors))
+            self.assertEqual(proc._LIVE, set(trees[:2]))
+            for tree in trees:
+                tree.stop.side_effect = None
+            self.assertEqual(proc.stop_all(), [])
+            self.assertFalse(proc._LIVE)
+
+    def test_interrupt_preserves_rows_and_cleanup_diagnostic(self):
+        completed, failures = {"sample": "finished"}, []
+        real_wait = runner.wait
+
+        def interrupt(pending, timeout):
+            real_wait(pending, timeout=5)
+            raise KeyboardInterrupt
+
+        with patch.object(runner, "wait", interrupt), patch.object(
+                proc, "stop_all", return_value=["controlled stop refusal"]):
+            rows, interrupted = runner.execute([lambda: completed], 1, failures)
+        self.assertEqual((rows, interrupted), ([completed], True))
+        self.assertEqual(failures, ["controlled stop refusal"])
+
+    def test_interrupt_bounds_wait_for_an_unfinished_worker(self):
+        started, release, failures = proc.threading.Event(), proc.threading.Event(), []
+
+        def task():
+            started.set()
+            release.wait(5)
+
+        def interrupt(pending, timeout):
+            self.assertTrue(started.wait(5))
+            raise KeyboardInterrupt
+
+        try:
+            with patch.object(runner, "wait", interrupt), patch.object(proc, "stop_all", return_value=[]), patch.object(
+                    runner.time, "monotonic", side_effect=[0, 11]):
+                self.assertEqual(runner.execute([task], 1, failures), ([], True))
+            self.assertEqual(failures, ["eval workers did not finish within 10 seconds"])
+        finally:
+            release.set()
+
+    def test_taint_preserves_reason_and_cleanup_diagnostic(self):
+        with patch.object(catalog, "loaded_modules", return_value=()), patch.object(
+                runner.interpreter, "state", return_value={}), patch.object(runner.Watch, "digests", return_value=[]):
+            watch = runner.Watch([], {})
+        with patch.object(proc, "stop_all", return_value=["controlled taint cleanup refusal"]):
+            self.assertEqual(watch.taint("interpreter tainted"), "interpreter tainted")
+        self.assertEqual(watch.tainted, "interpreter tainted")
+        self.assertEqual(watch.cleanup, ["controlled taint cleanup refusal"])
+
+    def test_final_cleanup_failure_keeps_partial_report_unusable_as_baseline(self):
+        sample = catalog.load(["bug-fix"])[0]
+        completed = runner.row(sample, "factory", {}, exit=0)
+        base = self.tmp / "retained"
+        base.mkdir()
+        proc.STOPPING.set()
+        with patch.object(runner, "execute", return_value=([completed], False)), patch.object(
+                runner.tempfile, "mkdtemp", return_value=str(base)), patch.object(
+                proc, "stop_all", return_value=["controlled final stop refusal"]), patch.object(
+                runner, "Watch", return_value=Mock(tainted=None, cleanup=[])):
+            result = runner.run_all("local-unused", self.tmp / "out", names=["bug-fix"])
+        self.assertEqual(result["runs"], [completed])
+        self.assertIn("unconfirmed", result["tainted"])
+        self.assertIn("controlled final stop refusal", result["cleanup"])
+        self.assertTrue(base.exists())
+        self.assertTrue(proc.STOPPING.is_set())
+        paths = report.write(result, self.tmp / "out")
+        with self.assertRaisesRegex(ValueError, "partial"):
+            report.load(paths[0], baseline=True)
 
 
 class EvalSnapshotTests(EvalCase):
