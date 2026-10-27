@@ -37,7 +37,7 @@ def run(args, gate):
                 state["key"],
                 "invalidate",
                 reason="fix_round",
-                findings=list(args.finding),
+                finding_ids=[str(item)[:32] for item in args.finding],
             )
         except Exception:
             pass

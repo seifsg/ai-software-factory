@@ -57,27 +57,34 @@ def on_done(project, run, step, steps):
         )
 
 
-def on_pause(project, run, reason):
+def on_pause(project, run, reason, prior_pause=None):
     if reason:
+        stamp = (run.get("paused") or {}).get("at") or "open"
+        wait_id = f"{run['key']}-owner-wait-{stamp}"
         safe(
             "emit_wait",
             project,
             run["key"],
             "start",
             "owner",
-            event_id=f"{run['key']}-owner-wait",
+            event_id=wait_id,
             detail=str(reason)[:200],
         )
-    else:
-        safe(
-            "emit_wait",
-            project,
-            run["key"],
-            "finish",
-            "owner",
-            event_id=f"{run['key']}-owner-wait-end",
-            parent_id=f"{run['key']}-owner-wait",
-        )
+        return
+    stamp = (prior_pause or {}).get("at") or "unknown"
+    wait_id = f"{run['key']}-owner-wait-{stamp}"
+    duration = None
+    try:
+        from datetime import datetime
+        start = datetime.fromisoformat(str(stamp).replace("Z", "+00:00"))
+        end = datetime.fromisoformat(module().utc_now().replace("Z", "+00:00"))
+        duration = max(0.0, (end - start).total_seconds())
+    except Exception:
+        duration = None
+    fields = {"event_id": f"{wait_id}-end", "parent_id": wait_id}
+    if duration is not None:
+        fields["duration_seconds"] = round(duration, 3)
+    safe("emit_wait", project, run["key"], "finish", "owner", **fields)
 
 
 def on_close(project, run, abandoned):

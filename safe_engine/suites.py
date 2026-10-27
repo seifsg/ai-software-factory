@@ -141,7 +141,8 @@ def execute(project, identity, run, *, cache=True, stop=None, validate=lambda re
         op_id = f'suite-exec-{slot.generation}'
         try:
             from . import run_metrics
-            run_metrics.emit_current('operation.start', name='full_suite', event_id=op_id)
+            # container=True: wraps per-command ops; excluded from summed/overlap aggregation
+            run_metrics.emit_current('operation.start', name='full_suite', event_id=op_id, container=True)
         except Exception:
             pass
         results = run(slot)
@@ -158,7 +159,8 @@ def execute(project, identity, run, *, cache=True, stop=None, validate=lambda re
             from . import run_metrics
             duration = sum(float(item.get('duration_seconds') or 0) for item in results)
             run_metrics.emit_current('operation.finish', name='full_suite', event_id=op_id + '-end',
-                                     parent_id=op_id, duration_seconds=round(duration, 3), reused=False)
+                                     parent_id=op_id, duration_seconds=round(duration, 3), reused=False,
+                                     container=True)
             if not unchanged:
                 run_metrics.emit_current('invalidate', reason='suite_inputs_changed_after_execution')
         except Exception:

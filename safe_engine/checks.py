@@ -34,19 +34,26 @@ class CheckMixin:
         state["pending_operation"] = "checks"
         self.persist(state, "Started check batch; previous acceptance invalidated")
         reused, stable = False, True
-        if state.get('suite_policy'):
-            from .suites import describe, execute
-            profile = state['profile']
-            configured = profile['checks']
-            def identify():
-                return describe(self.project, [command_argv(c, self.project, self.directory) for c in configured],
-                                {'files': profile['input_files'], 'environment': profile['environment_inputs']},
-                                {'profile': profile, 'contract': self.current(state)})
-            batch = execute(self.project, identify, lambda slot: self.execute_checks(state, configured, slot),
-                            cache=not fresh, validate=lambda rows: self.complete_results(configured, rows))
-            results, reused, stable = batch['results'], batch['reused'], batch['unchanged']
-        else:
-            results = self.execute_checks(state, state["profile"]["checks"])
+        from contextlib import nullcontext
+        binder = nullcontext()
+        try:
+            binder = self.metrics_bound(state)
+        except Exception:
+            binder = nullcontext()
+        with binder if binder is not None else nullcontext():
+            if state.get('suite_policy'):
+                from .suites import describe, execute
+                profile = state['profile']
+                configured = profile['checks']
+                def identify():
+                    return describe(self.project, [command_argv(c, self.project, self.directory) for c in configured],
+                                    {'files': profile['input_files'], 'environment': profile['environment_inputs']},
+                                    {'profile': profile, 'contract': self.current(state)})
+                batch = execute(self.project, identify, lambda slot: self.execute_checks(state, configured, slot),
+                                cache=not fresh, validate=lambda rows: self.complete_results(configured, rows))
+                results, reused, stable = batch['results'], batch['reused'], batch['unchanged']
+            else:
+                results = self.execute_checks(state, state["profile"]["checks"])
         unchanged = stable and self.current(state) == current
         self.integrity(state)
         passed = unchanged and all(result["passed"] for result in results)

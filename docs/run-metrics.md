@@ -65,8 +65,10 @@ failure.
 
 Agreed before implementation:
 
-- Event append pair p99 ≤ 10 ms (revised from 5 ms after measured Windows NTFS p99 with O(1) id dedupe)
+Agreed budget (plan + measured Windows NTFS revision recorded in the #175 plan):
+
+- Event append pair p99 ≤ 10 ms
 - Report generation ≤ 200 ms at ≤ 10_000 events
 - Whole-run collection + reporting ≤ 1% of wall clock, or ≤ 2 s when wall < 200 s
 
-Measure with `metrics overhead` and publish the workload result in the run report.
+`metrics overhead` is a single-shot measurement (with warm-up); `within_budget` checks all three rules. Approval waits are a reserved category and stay uncovered until an owner emits them. Container operations such as `full_suite` wrap per-command ops and are excluded from summed/overlap totals.

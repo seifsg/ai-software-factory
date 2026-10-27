@@ -44,6 +44,39 @@ class ContractTests(unittest.TestCase):
         self.assertNotIn("cpu_time", json.dumps(report).lower().replace(" ", ""))
         self.assertIn("not CPU time", report["duration_notes"]["elapsed"])
 
+    def test_container_ops_excluded_from_sum_and_overlap(self):
+        metrics.ensure_run(self.project, self.key)
+        base = 2_000_000_000
+        path = metrics.run_dir(self.project, self.key) / metrics.EVENTS_NAME
+        rows = [
+            {"metrics_schema": 1, "event_id": "s0", "type": "operation.start", "t": "2026-01-01T00:00:00+00:00",
+             "mono_ns": base, "run_key": self.key, "name": "full_suite", "container": True},
+            {"metrics_schema": 1, "event_id": "c0", "type": "operation.start", "t": "2026-01-01T00:00:00+00:00",
+             "mono_ns": base, "run_key": self.key, "name": "python"},
+            {"metrics_schema": 1, "event_id": "c1", "type": "operation.finish", "t": "2026-01-01T00:00:01+00:00",
+             "mono_ns": base + 1_000_000_000, "run_key": self.key, "name": "python", "parent_id": "c0"},
+            {"metrics_schema": 1, "event_id": "s1", "type": "operation.finish", "t": "2026-01-01T00:00:01+00:00",
+             "mono_ns": base + 1_000_000_000, "run_key": self.key, "name": "full_suite",
+             "parent_id": "s0", "container": True, "duration_seconds": 1.0},
+        ]
+        path.write_text("\n".join(json.dumps(r) for r in rows) + "\n", encoding="utf-8")
+        report = metrics.aggregate(metrics.read_events(self.project, self.key))
+        self.assertEqual(report["summed_operation_seconds"], 1.0)
+        self.assertEqual(report["overlap_seconds"], 0.0)
+
+    def test_wait_uses_utc_not_cross_process_mono(self):
+        metrics.ensure_run(self.project, self.key)
+        path = metrics.run_dir(self.project, self.key) / metrics.EVENTS_NAME
+        rows = [
+            {"metrics_schema": 1, "event_id": "w0", "type": "wait.start", "t": "2026-01-01T00:00:00+00:00",
+             "mono_ns": 10, "run_key": self.key, "category": "helper"},
+            {"metrics_schema": 1, "event_id": "w1", "type": "wait.finish", "t": "2026-01-01T00:00:02+00:00",
+             "mono_ns": 11, "run_key": self.key, "category": "helper", "parent_id": "w0"},
+        ]
+        path.write_text("\n".join(json.dumps(r) for r in rows) + "\n", encoding="utf-8")
+        report = metrics.aggregate(metrics.read_events(self.project, self.key))
+        self.assertEqual(report["waits"]["helper"], 2.0)
+
     def test_incomplete_span_not_invented(self):
         metrics.ensure_run(self.project, self.key)
         metrics.emit(self.project, self.key, "operation.start", name="hang", event_id="hang-1")
@@ -135,16 +168,12 @@ class ContractTests(unittest.TestCase):
         self.assertIn("failed_retry", report["invalidation_reasons"])
         self.assertGreaterEqual(report["waits"]["suite_queue"], 0.2)
         self.assertGreaterEqual(report["waits"]["owner"], 0.1)
-        best = None
-        for attempt in range(3):  # machine contention from parallel suite workers can inflate p99
-            key = f"overhead-a8-{attempt}"
-            result = metrics.measure_overhead(self.project, key, event_count=80)
-            if best is None or result["event_append_pair_p99_ms"] < best["event_append_pair_p99_ms"]:
-                best = result
-            if best["within_budget"]:
-                break
-        self.assertTrue(best["within_budget"], best)
-        self.assertLessEqual(best["event_append_pair_p99_ms"], metrics.OVERHEAD_BUDGET["event_append_p99_ms"])
+        # Single-shot (SERIAL ContractTests); within_budget includes whole-run cap.
+        overhead = metrics.measure_overhead(self.project, "overhead-a8", event_count=80)
+        self.assertTrue(overhead["workload"].get("single_shot"))
+        self.assertTrue(overhead["within_budget"], overhead)
+        self.assertLessEqual(overhead["event_append_pair_p99_ms"], metrics.OVERHEAD_BUDGET["event_append_p99_ms"])
+        self.assertLessEqual(overhead["collection_seconds"], overhead["whole_run_cap_seconds"])
 
 
 if __name__ == "__main__":

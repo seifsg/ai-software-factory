@@ -395,10 +395,11 @@ def cmd_status(args):
 
 def cmd_pause(args, reason):
     project, run = open_run(args.project)
+    prior = run.get("paused")
     run["paused"] = {"reason": reason, "at": now()} if reason else None
     put(project, run)
     log("run.pause" if reason else "run.resume", key=run["key"], reason=reason)
-    sibling("fast_metrics").on_pause(project, run, reason)
+    sibling("fast_metrics").on_pause(project, run, reason, prior_pause=prior)
     print(status_text(run))
 
 

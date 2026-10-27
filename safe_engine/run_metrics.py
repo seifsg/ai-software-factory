@@ -275,12 +275,15 @@ def aggregate(events, *, meta=None, outcome=None):
             end_mono = mono
             if duration is None and start_mono is not None and end_mono is not None:
                 duration = round((end_mono - start_mono) / 1e9, 3)
-            if start_mono is not None:
+            # Container ops (e.g. full_suite wrapping per-command ops) stay in longest; skip sum/overlap.
+            container = bool(event.get("container") or (start or {}).get("container"))
+            if start_mono is not None and not container:
                 op_intervals.append((start_mono, end_mono if end_mono is not None else start_mono))
             longest.append({
                 "name": event.get("name") or (start or {}).get("name"),
                 "duration_seconds": duration,
                 "reused": bool(event.get("reused")),
+                "container": container,
             })
         elif kind == "wait.start":
             open_waits[event["event_id"]] = event
@@ -291,10 +294,13 @@ def aggregate(events, *, meta=None, outcome=None):
             if category not in waits:
                 category = "unknown"
             duration = event.get("duration_seconds")
-            if duration is None and start and start.get("mono_ns") is not None and mono is not None:
-                duration = (mono - start["mono_ns"]) / 1e9
-            if duration is not None:
+            if duration is None and start and start.get("t") and event.get("t"):
+                duration = _utc_delta_seconds(start["t"], event["t"])
+            # Never subtract mono_ns across processes; that yields near-zero/negative waits.
+            if duration is not None and duration >= 0:
                 waits[category] = round(waits[category] + float(duration), 3)
+            elif start is not None:
+                gaps.append({"gap": "wait_duration_unknown", "detail": category, "t": event.get("t")})
         elif kind == "reuse":
             reuse_count += 1
         elif kind == "invalidate":
@@ -346,9 +352,11 @@ def aggregate(events, *, meta=None, outcome=None):
         "overhead_budget": OVERHEAD_BUDGET,
         "duration_notes": {
             "elapsed": "end-to-end wall from first to last event timestamp (UTC); not CPU time",
-            "summed_operation_seconds": "sum of finished operation intervals (monotonic when both ends known)",
-            "overlap_seconds": "overlapping finished operation time; do not add to elapsed for delivery time",
+            "summed_operation_seconds": "sum of finished non-container operation intervals (monotonic when both ends known)",
+            "overlap_seconds": "overlapping finished non-container operation time; do not add to elapsed for delivery time",
+            "waits": "wall duration_seconds or UTC start/finish delta; mono_ns is not used across processes",
             "cross_process_utc": "UTC alignment across processes may skew; prefer mono_ns within one process",
+            "approval_waits": "approval category reserved; uncovered until an owner emits wait.approval events",
         },
     }
     if meta:
@@ -356,6 +364,15 @@ def aggregate(events, *, meta=None, outcome=None):
     if costs:
         report["costs"] = costs
     return report
+
+
+def _utc_delta_seconds(start, end):
+    try:
+        a = datetime.fromisoformat(str(start).replace("Z", "+00:00"))
+        b = datetime.fromisoformat(str(end).replace("Z", "+00:00"))
+        return (b - a).total_seconds()
+    except ValueError:
+        return None
 
 
 def _elapsed_seconds(events, finished_intervals):
@@ -396,21 +413,33 @@ def _overlap_seconds(intervals):
     return overlapped / 1e9
 
 
-def finalize(project, run_key, *, outcome="finish", overhead=None):
-    """Write report.json and report.md. outcome: finish|abort|fail. Returns report or None."""
+def finalize(project, run_key, *, outcome=None, overhead=None):
+    """Write report.json and report.md. outcome: finish|abort|fail|partial. Returns report or None.
+
+    When outcome is omitted, keep a prior report's outcome if present; else finish.
+    """
     try:
         folder = run_dir(project, run_key)
         meta = {}
         meta_path = folder / META_NAME
+        report_path = folder / REPORT_JSON
         if meta_path.is_file():
             meta = json.loads(meta_path.read_text(encoding="utf-8"))
-        terminal = {"finish": "run.finish", "abort": "run.abort", "fail": "run.fail"}.get(outcome, "run.finish")
-        emit(project, run_key, terminal, event_id=f"run-{outcome}-{_safe_key(run_key)}")
+        prior_outcome = None
+        if report_path.is_file():
+            try:
+                prior_outcome = json.loads(report_path.read_text(encoding="utf-8")).get("outcome")
+            except (OSError, ValueError):
+                prior_outcome = None
+        chosen = outcome or prior_outcome or "finish"
+        terminal = {"finish": "run.finish", "abort": "run.abort", "fail": "run.fail"}.get(chosen)
+        if terminal:
+            emit(project, run_key, terminal, event_id=f"run-{chosen}-{_safe_key(run_key)}")
         events = read_events(project, run_key)
-        report = aggregate(events, meta=meta, outcome=outcome)
+        report = aggregate(events, meta=meta, outcome=chosen)
         if overhead:
             report["overhead"] = overhead
-        (folder / REPORT_JSON).write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        report_path.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         (folder / REPORT_MD).write_text(markdown(report), encoding="utf-8")
         return report
     except Exception as exc:
@@ -568,16 +597,33 @@ def measure_overhead(project, run_key, event_count=200):
         samples.append((time.perf_counter() - start) * 1000.0)
     samples.sort()
     p99 = samples[min(len(samples) - 1, int(len(samples) * 0.99))]
-    start = time.perf_counter()
+    wall_start = time.perf_counter()
     report = finalize(project, run_key, outcome="finish")
-    generate_ms = (time.perf_counter() - start) * 1000.0
+    generate_ms = (time.perf_counter() - wall_start) * 1000.0
+    wall_seconds = time.perf_counter() - wall_start + sum(s / 1000.0 for s in samples)
+    whole_cap = max(
+        OVERHEAD_BUDGET["whole_run_floor_seconds"],
+        OVERHEAD_BUDGET["whole_run_fraction"] * max(wall_seconds, 0.001),
+    )
+    if wall_seconds < OVERHEAD_BUDGET["whole_run_short_wall_seconds"]:
+        whole_cap = max(whole_cap, OVERHEAD_BUDGET["whole_run_floor_seconds"])
+    collection_seconds = sum(s / 1000.0 for s in samples) + generate_ms / 1000.0
     result = {
-        "workload": {"paired_operation_events": event_count * 2, "machine": platform.platform()},
+        "workload": {
+            "paired_operation_events": event_count * 2,
+            "warmup_pairs": 20,
+            "machine": platform.platform(),
+            "single_shot": True,
+        },
         "event_append_pair_p99_ms": round(p99, 3),
         "report_generate_ms": round(generate_ms, 3),
+        "collection_seconds": round(collection_seconds, 3),
+        "wall_seconds": round(wall_seconds, 3),
+        "whole_run_cap_seconds": round(whole_cap, 3),
         "budget": OVERHEAD_BUDGET,
         "within_budget": p99 <= OVERHEAD_BUDGET["event_append_p99_ms"]
-        and generate_ms <= OVERHEAD_BUDGET["report_generate_ms_at_10k"],
+        and generate_ms <= OVERHEAD_BUDGET["report_generate_ms_at_10k"]
+        and collection_seconds <= whole_cap,
         "event_count": report.get("event_count") if report else None,
     }
     if report is not None:

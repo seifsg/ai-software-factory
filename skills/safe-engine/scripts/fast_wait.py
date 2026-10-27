@@ -154,12 +154,16 @@ def finish(home, run, data):
     item = pending(directory / (token + ".pending.json"), run)
     value = completion(data, item)
     path = directory / (token + ".terminal.json")
+    finished_at = datetime.now(timezone.utc).isoformat()
     try:
-        ledger.save(path, storable({**value, "at": datetime.now(timezone.utc).isoformat()}), new=True)
+        ledger.save(path, storable({**value, "at": finished_at}), new=True)
     except FileExistsError:
         require(terminal(directory, item) == value, "Conflicting completion; original terminal result retained")
     try:
         import fast_metrics
+        created = instant(item["created"])
+        ended = instant(finished_at)
+        duration = max(0.0, (ended - created).total_seconds())
         fast_metrics.safe(
             "emit_wait",
             run["project"],
@@ -169,6 +173,7 @@ def finish(home, run, data):
             event_id=f"wait-{token}-end",
             parent_id=f"wait-{token}",
             status=value["status"],
+            duration_seconds=round(duration, 3),
         )
     except Exception:
         pass

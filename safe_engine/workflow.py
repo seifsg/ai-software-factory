@@ -76,6 +76,18 @@ class Workflow(ContractMixin, CheckMixin, ReviewMixin):
         except Exception:
             pass
 
+    def metrics_bound(self, state):
+        """Bind suite/runner emit_current for Safe check/prove paths."""
+        from . import run_metrics
+        key = state.get("run_id") or self.ticket_key or "safe-run"
+        return run_metrics.bound(
+            self.project,
+            key,
+            factory_revision=state.get("bundle_revision"),
+            mode="safe",
+            kind=state.get("kind") or "change",
+        )
+
     @staticmethod
     def launch(*args, **kwargs):
         return run_command(*args, **kwargs)
@@ -439,6 +451,12 @@ class Workflow(ContractMixin, CheckMixin, ReviewMixin):
                       "Local handoff is not remote review, integrated dependency acceptance, or ticket closure."]
         path.write_text("\n".join(lines) + "\n", encoding="utf-8")
         self.persist(state, "Prepared checked local handoff")
+        try:
+            from . import run_metrics
+            key = state.get("run_id") or self.ticket_key or "safe-run"
+            run_metrics.finalize(self.project, key, outcome="finish")
+        except Exception:
+            pass
         if self.ticket_key:
             self.store.release(self.ticket_key, state["run_id"])
         return {"handoff": str(path), **self.status(state)}
@@ -455,6 +473,12 @@ class Workflow(ContractMixin, CheckMixin, ReviewMixin):
         state["review"] = None
         state["pending_operation"] = None
         self.persist(state, f"Cancelled: {reason}")
+        try:
+            from . import run_metrics
+            key = state.get("run_id") or self.ticket_key or "safe-run"
+            run_metrics.finalize(self.project, key, outcome="abort")
+        except Exception:
+            pass
         if self.ticket_key:
             self.store.release(self.ticket_key, state["run_id"])
         return self.status(state)

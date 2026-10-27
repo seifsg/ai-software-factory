@@ -20,8 +20,13 @@ def run(args, gate):
         project = Path(gate.find_project(args.project)).resolve()
         mod = metrics.module()
         if args.action == "report":
-            key = args.key or gate.open_run(project)[1]["key"]
-            report = mod.finalize(project, key, outcome="finish")
+            key = args.key
+            if not key:
+                project, state = gate.open_run(project)
+                key = state["key"]
+            evidence.require(key, "report needs --key or an open run")
+            # Preserve prior abort/fail; omit outcome so finalize does not relabel.
+            report = mod.finalize(project, key)
             evidence.require(report is not None, "Could not write metrics report")
             print(mod.markdown(report))
             return
