@@ -269,7 +269,9 @@ def aggregate(events, *, meta=None, outcome=None):
             open_ops[event["event_id"]] = event
         elif kind == "operation.finish":
             parent = event.get("parent_id")
-            start = by_id.get(parent) or open_ops.pop(parent, None)
+            start = by_id.get(parent) if parent else None
+            if parent:
+                open_ops.pop(parent, None)
             duration = event.get("duration_seconds")
             start_mono = start.get("mono_ns") if start else None
             end_mono = mono
@@ -289,7 +291,9 @@ def aggregate(events, *, meta=None, outcome=None):
             open_waits[event["event_id"]] = event
         elif kind == "wait.finish":
             parent = event.get("parent_id")
-            start = by_id.get(parent) or open_waits.pop(parent, None)
+            start = by_id.get(parent) if parent else None
+            if parent:
+                open_waits.pop(parent, None)
             category = event.get("category") or (start or {}).get("category") or "unknown"
             if category not in waits:
                 category = "unknown"
@@ -376,14 +380,16 @@ def _utc_delta_seconds(start, end):
 
 
 def _elapsed_seconds(events, finished_intervals):
-    times = [e.get("t") for e in events if e.get("t")]
-    if len(times) >= 2:
+    stamps = []
+    for event in events:
+        if not event.get("t"):
+            continue
         try:
-            start = datetime.fromisoformat(times[0].replace("Z", "+00:00"))
-            end = datetime.fromisoformat(times[-1].replace("Z", "+00:00"))
-            return max(0.0, (end - start).total_seconds())
+            stamps.append(datetime.fromisoformat(str(event["t"]).replace("Z", "+00:00")))
         except ValueError:
-            pass
+            continue
+    if len(stamps) >= 2:
+        return max(0.0, (max(stamps) - min(stamps)).total_seconds())
     if finished_intervals:
         lows = [a for a, _ in finished_intervals]
         highs = [b for _, b in finished_intervals]
@@ -458,9 +464,19 @@ def markdown(report):
         f"- Overlap seconds: {report.get('overlap_seconds')}",
         f"- Reuse count: {report.get('reuse_count')}",
         "",
-        "## Waits",
+        "## Phases",
     ]
-    for name, value in sorted((report.get("waits") or {}).items()):
+    phases = report.get("phases") or {}
+    if not phases:
+        lines.append("- none")
+    for name, span in phases.items():
+        status = span.get("status") or "open"
+        lines.append(f"- {name}: {span.get('duration_seconds')}s ({status})")
+    lines.extend(["", "## Waits"])
+    shown = {name: value for name, value in (report.get("waits") or {}).items() if value}
+    if not shown:
+        lines.append("- none")
+    for name, value in sorted(shown.items()):
         lines.append(f"- {name}: {value}s")
     lines.extend(["", "## Invalidation"])
     reasons = report.get("invalidation_reasons") or {}
@@ -470,7 +486,8 @@ def markdown(report):
         lines.append(f"- {reason}: {count}")
     lines.extend(["", "## Longest operations"])
     for row in report.get("longest_operations") or []:
-        lines.append(f"- {row.get('name')}: {row.get('duration_seconds')}s reused={row.get('reused')}")
+        mark = " container" if row.get("container") else ""
+        lines.append(f"- {row.get('name')}: {row.get('duration_seconds')}s{mark}")
     lines.extend(["", "## Coverage gaps"])
     gaps = report.get("coverage_gaps") or []
     if not gaps:
