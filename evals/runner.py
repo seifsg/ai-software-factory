@@ -1,6 +1,7 @@
 """Run every sample in both arms, each in a fresh temp copy with a time limit, scored from in-memory sources."""
 from concurrent.futures import ThreadPoolExecutor, wait
 from pathlib import Path
+from threading import Thread
 import subprocess
 import tempfile
 import time
@@ -118,17 +119,18 @@ def execute(tasks, jobs, cleanup=None):
     cleanup = cleanup if cleanup is not None else []
     pool, futures = ThreadPoolExecutor(max_workers=jobs), []
     try:
-        futures = [pool.submit(task) for task in tasks]
+        for task in tasks:
+            futures.append(pool.submit(task))
         pending = set(futures)
         while pending:
             _, pending = wait(pending, timeout=0.5)  # short waits keep Ctrl-C responsive on Windows
     except KeyboardInterrupt:
         pool.shutdown(wait=False, cancel_futures=True)
         cleanup.extend(proc.stop_all())
-        deadline = time.monotonic() + 10
-        while any(not f.done() for f in futures) and time.monotonic() < deadline:
-            time.sleep(.01)
-        if any(not f.done() for f in futures):
+        joined = Thread(target=pool.shutdown, kwargs={"wait": True}, daemon=True)
+        joined.start()
+        joined.join(10)
+        if joined.is_alive():
             cleanup.append("eval workers did not finish within 10 seconds")
         finished = [f for f in futures if f.done() and not f.cancelled() and not f.exception()]
         return [f.result() for f in finished if f.result()], True

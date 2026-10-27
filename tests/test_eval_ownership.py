@@ -244,6 +244,15 @@ class EvalCleanupConsumerTests(EvalCase):
 
     def test_interrupt_bounds_wait_for_an_unfinished_worker(self):
         started, release, failures = proc.threading.Event(), proc.threading.Event(), []
+        joiners = []
+
+        class ShortJoin(runner.Thread):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+                joiners.append(self)
+
+            def join(self, timeout=None):
+                super().join(.01)
 
         def task():
             started.set()
@@ -255,11 +264,46 @@ class EvalCleanupConsumerTests(EvalCase):
 
         try:
             with patch.object(runner, "wait", interrupt), patch.object(proc, "stop_all", return_value=[]), patch.object(
-                    runner.time, "monotonic", side_effect=[0, 11]):
+                    runner, "Thread", ShortJoin):
                 self.assertEqual(runner.execute([task], 1, failures), ([], True))
             self.assertEqual(failures, ["eval workers did not finish within 10 seconds"])
         finally:
             release.set()
+            for joined in joiners:
+                runner.Thread.join(joined, timeout=5)
+
+    def test_interrupt_during_submission_retains_accepted_work(self):
+        started, release = proc.threading.Event(), proc.threading.Event()
+        completed, timers = {"sample": "accepted"}, []
+
+        class InterruptedPool(runner.ThreadPoolExecutor):
+            calls = 0
+
+            def submit(self, task):
+                self.calls += 1
+                if self.calls == 2:
+                    self_test.assertTrue(started.wait(5))
+                    timer = proc.threading.Timer(.05, release.set)
+                    timers.append(timer)
+                    timer.start()
+                    raise KeyboardInterrupt
+                return super().submit(task)
+
+        def task():
+            started.set()
+            release.wait(5)
+            return completed
+
+        self_test, failures = self, []
+        try:
+            with patch.object(runner, "ThreadPoolExecutor", InterruptedPool):
+                rows, interrupted = runner.execute([task, lambda: None], 1, failures)
+            self.assertEqual((rows, interrupted), ([completed], True), "accepted work was lost at submission")
+            self.assertEqual(failures, [])
+        finally:
+            release.set()
+            for timer in timers:
+                timer.join(5)
 
     def test_taint_preserves_reason_and_cleanup_diagnostic(self):
         with patch.object(catalog, "loaded_modules", return_value=()), patch.object(
