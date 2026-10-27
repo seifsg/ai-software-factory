@@ -127,10 +127,10 @@ def shot(folder, project, vid, n, value, accepted=None):
             import fast_design
             digest, thumb = accepted[str(source)]
             return thumb if thumb and fast_design.file_hash(source) == digest else None
-        import fast_image
-        fast_image.check(source, project=project)
+        import fast_design, fast_image
+        _, _, digest = fast_image.check(source, project=project, with_digest=True)
         target = folder / "shots" / name
-        if not target.exists() or target.stat().st_mtime_ns < source.stat().st_mtime_ns:  # a retaken screenshot
+        if not target.exists() or fast_design.file_hash(target) != digest:
             target.parent.mkdir(exist_ok=True)
             shutil.copyfile(source, target)
         return f"shots/{name}"
