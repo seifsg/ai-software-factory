@@ -49,8 +49,9 @@ class ParserRegistrationTests(unittest.TestCase):
         self.gate.sibling.assert_called_once_with("fast_release")
 
     def test_help_and_errors_match_full_registration(self):
-        for args in ([], ["--h"], ["--he"], ["--hel"], ["--help"], ["status", "--he"],
-                     ["status", "--help"], ["status", "--project"], ["unknown"]):
+        for args in ([], ["-hh"], ["-hhh"], ["-help"], ["-hx"], ["--h"], ["--he"], ["--hel"],
+                     ["--help"], ["status", "-hh"], ["status", "--he"], ["status", "--help"],
+                     ["status", "--project"], ["unknown"]):
             observations = []
             for parse in (lambda: self.parse(*args),
                           lambda: self.cli._parser(self.gate).parse_args(args)):

@@ -8,7 +8,7 @@ First-class hosts get an installer route, gate hooks and a Safe reviewer preset.
 
 Run `python tests/run.py` from the factory checkout. On Windows its setup prefers an installed Git's `bin/sh.exe` and `bin/bash.exe` over the WSL launcher, inside the test process and its workers only. No installation or global PATH change occurs; without those Git shells the inherited PATH remains. Mocked Codex-protocol review tests name a synthetic Cursor builder so the real host's builder identity cannot change their mock's protocol. Production reviewer selection and assertions are unchanged.
 
-Common gate commands load only their requested optional argument module. Help, unknown commands and invalid arguments retry complete registration with the original diagnostics. The selected bundle and state checks are never cached or skipped.
+Common gate commands load only their requested optional argument module, including their own complete command help. Leading-option input, unknown commands and parse errors use complete registration with the original diagnostics. The selected bundle and state checks are never cached or skipped.
 
 ## First-class hosts
 
