@@ -184,6 +184,30 @@ class DraftBodyTests(GateHarness, unittest.TestCase):
         self.assertIn("STRUCTURE ONLY", self.gate("report", "--pr-body", "draft.md"))
         self.assertEqual(self.inventory(), before)
 
+    def test_draft_discovery_never_recovers_registration_for_implicit_or_abbreviated_paths(self):
+        self.start("--no-ui", "--no-data", kind="change")
+        entry = next((self.root / "home/active").glob("*.json"))
+        nested = self.project / "nested"
+        nested.mkdir()
+        command = getattr(self, "gate_command", [sys.executable, str(SCRIPTS / "fast_gate.py")])
+        for text in (self.BODY, "invalid draft"):
+            (self.project / "draft.md").write_text(text, encoding="utf-8")
+            for cwd, flags in ((self.project, []), (nested, []), (nested, ["--project", str(self.project)]),
+                               (nested, ["--project=" + str(self.project)]), (nested, ["--proj", str(self.project)]),
+                               (nested, ["--proj=" + str(self.project)])):
+                with self.subTest(cwd=cwd, flags=flags, valid=text == self.BODY):
+                    entry.unlink(missing_ok=True)
+                    before = self.inventory()
+                    result = subprocess.run([*command, "report", "--pr-b", "draft.md", *flags], cwd=cwd,
+                                            env=self.env, capture_output=True, text=True, encoding="utf-8")
+                    self.assertEqual(result.returncode, 0 if text == self.BODY else 1, result.stdout + result.stderr)
+                    self.assertEqual(self.inventory(), before)
+                    self.assertFalse(entry.exists())
+        result = subprocess.run([*command, "status"], cwd=nested, env=self.env,
+                                capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertTrue(entry.exists())  # Normal commands retain recovery after pure routing discovery.
+
     def test_draft_matches_handoff_rules_and_never_records_progress(self):
         self.start("--no-ui", "--no-data", kind="change")
         path = self.project / "draft.md"

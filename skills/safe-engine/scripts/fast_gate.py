@@ -235,12 +235,12 @@ def open_before_build(run):
 
 # ---- commands ---------------------------------------------------------------
 
-def find_project(given):
+def find_project(given, recover=True):
     """The given project, else the registered one holding cwd, else the nearest folder above cwd with a home state."""
     if given:
         return Path(native(given)).resolve()
     here = Path.cwd().resolve()
-    found = store.registered(ACTIVE, here)
+    found = store.registered(ACTIVE, here, recover=recover)
     if found:
         return Path(found)
     for folder in (here, *here.parents):

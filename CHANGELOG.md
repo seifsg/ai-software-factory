@@ -8,7 +8,7 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 
 ### Changed
 
-- Preflight local PR draft structure through the real handoff validator, expose canonical repair identities, review frozen source before the final suite and retain bulky tool evidence outside model context.
+- Preflight local PR draft structure through the real handoff validator, expose canonical repair identities, review source before the final suite, retain the independent reviewer for author repair deltas and keep bulky tool evidence outside model context.
 
 ### Fixed
 

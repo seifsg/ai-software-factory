@@ -90,7 +90,7 @@ Do not code before the plan is recorded.
 - A fresh agent, never the writer, runs `deep-review` on the exact candidate from raw evidence. Give it no verdict.
 - A reviewer who repairs needs a different fresh review.
 - A changed gate needs its old rule, a reproduction and independent review. Its own pass proves too little.
-- One round: review, fixes, fresh review. After round 3, only open high or critical findings keep it going; medium and below are appended to the epic's one open follow-ups ticket in Backlog, never one ticket per finding. At most 6 failed rounds. Then stop that loop and ask the owner once: findings per round, shared cause, options (extend, defer, amend scope, cancel). Keep independent work moving.
+- One round: review, author fixes, same reviewer checks the delta; replace it if it repaired or lost context. After round 3, only high or critical findings continue; lower findings join the epic's open follow-ups ticket in Backlog. At most 6 failed rounds; then ask once with findings, shared cause and options: extend, defer, amend scope, cancel. Keep independent work moving.
 - No reviewer available: name the blocker. Never self-approve.
 
 ## 7. Deliver

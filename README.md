@@ -59,7 +59,7 @@ New runs use `fast_gate.py checks` to record reasoned hidden-check selection, ac
 
 Record refusals collect independent problems with repair examples; explicit verdict fields distinguish a failed check from explanatory wording. See [record diagnostics](docs/record-diagnostics.md).
 
-Check a local PR draft before publishing with `fast_gate.py report --pr-body <file> --project <abs>`; it uses handoff's proof structure checks without completing work. Required source review precedes the final full suite, then the same reviewer inspects its current receipt. Store complete tool evidence locally and send only needed fields/diagnostics to model context; [details](docs/record-diagnostics.md).
+Check a local PR draft before publishing with `fast_gate.py report --pr-body <file> --project <abs>`; it uses handoff's proof structure checks without completing work. Required source review precedes the final full suite; the same reviewer checks author repairs and its final receipt. Combine related checks, retain unchanged observations and refresh affected proof. Store complete tool evidence locally and send only needed fields/diagnostics to model context; [details](docs/record-diagnostics.md).
 
 Browser journeys use a fixed instant and timezone before navigation. Each declared source calls `fixedBrowserPage` or `fixedBrowserClock`; run `node skills/safe-engine/scripts/journey_clock_lint.mjs <manifest.json>`. See [fixed browser time and affected tests](docs/journey-clock.md).
 

@@ -40,7 +40,7 @@ G3 MANUAL <outcome>: <what the reviewer judges>
 
 ## Size
 
-- One job per agent: an item or related findings. Separate useful independent jobs.
+- One coherent job per agent. Combine related checks; separate only useful independent jobs.
 - Split briefs with over three outcomes, multiple commits or a whole unrelated document; one change across files counts once.
 - Large spec: an analyst returns focused briefs with required rules and affected paths.
 - Changes smaller than their brief stay local.
@@ -56,5 +56,5 @@ G3 MANUAL <outcome>: <what the reviewer judges>
 
 ## Rounds
 
-- Keep one focused maker through a coherent repair batch; start fresh when its context is stale or unrelated. Independent reviewers are fresh and never approve their own repairs.
+- Keep one maker and one independent reviewer through a repair batch. Review deltas; restart for lost context or reviewer-written repairs.
 - A review goes to a fresh reviewer with the baseline its method names (requirements, plan, rules, the diff and raw evidence such as logs, transcripts and QA notes), never the builder's reasoning or a verdict.

@@ -43,7 +43,7 @@ def route(args, gate):
     project = next((arg.split("=", 1)[1] for arg in options if arg.startswith("--project=")), None)
     if "--project" in options and options.index("--project") + 1 < len(options):
         project = options[options.index("--project") + 1]
-    project = Path(gate.native(project)).resolve() if project else gate.find_project(None)
+    project = Path(gate.native(project)).resolve() if project else gate.find_project(None, recover=False)
     target = selected_command(gate, project)
     return subprocess.call([sys.executable, str(target), *args]) if target else None
 

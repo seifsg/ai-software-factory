@@ -62,7 +62,7 @@ Every PR shows observed Before/After for each outcome; prose or illustrative dia
 
 ## 7. Review
 
-- When independent review is required, inspect frozen source, manual use and affected checks before the expensive complete suite. Resolve source findings first; source-only review leaves final acceptance pending and advances no controller phase. Keep the controller's saved phase order. After the suite, that reviewer inspects the exact-candidate receipt and log before its final verdict. Reuse that review context only while source is unchanged; failures or changed inputs still need diagnosis and fresh affected proof.
+- When independent review is required, inspect frozen source, manual use and affected checks before the complete suite. Resolve source findings first; source-only review leaves acceptance pending and advances no controller phase. Keep saved phase order. The same reviewer checks author repairs and affected consumers, carrying unresolved findings and unchanged observations; changed inputs need fresh affected proof. After the suite, it inspects the exact-candidate receipt and log before its final verdict.
 - Own draft: `deep-review` it in Safe; in Fast and Lucky, the optional Safe check covers it. Skip when this exact head already passed an independent review. Pushing fixes to that PR's own branch and posting its comments are pre-authorized; open questions go in a PR comment, not a stop. Someone else's PR keeps every checkpoint.
 - Project has a remote or cloud review: `references/pr-cases.md`.
 - A reviewer that changes code needs a fresh independent assessment of the new head.

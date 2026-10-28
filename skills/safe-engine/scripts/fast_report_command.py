@@ -17,7 +17,7 @@ def parser(sub, common):
 def run(args, gate):
     """Validate all inputs before replacing the accepted report; identifiers stay in References."""
     try:
-        project = gate.find_project(args.project)
+        project = gate.find_project(args.project, recover=not args.pr_body)
         if args.picture:
             import fast_image
             width, height = fast_image.check(evidence.local(project, args.picture), project=project)
