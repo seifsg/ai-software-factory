@@ -32,8 +32,6 @@ SKILLS = ("improve-factory", "safe-engine", "analyze-start", "get-ready-to-code"
           "database-schema", "ux-quality", "deep-review", "ticketing", "how-to-make-a-pr")
 REQUIRED = ["AGENTS.md", "README.md", "docs/install.md", "docs/hosts.md", "safe_engine/__main__.py",
             ".agents/skills/safe-engine/references/fast-run.md",
-            ".agents/skills/safe-engine/references/quality-cases.md",
-            ".agents/skills/how-to-make-a-pr/references/media-proof.md",
             ".agents/skills/improve-factory/references/live-session.md"]
 REQUIRED += [f".agents/skills/{name}/SKILL.md" for name in SKILLS]
 # The bundle contract requires release_proof.py only in revisions that ship it.

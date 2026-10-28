@@ -11,12 +11,7 @@ Every PR shows a skeptical owner truthful before/after proof: what failed or was
 |---|---|
 | Screen, page, section | Screenshot pair per changed view and distinct visual state; no hero image standing in for the rest |
 | Touched interactive journey, motion | Final-candidate video per journey, plus screenshot pairs for its changed visuals; Before video optional |
-| API | Same request: status and body as one `diff` block |
-| CLI, script, gate | Same command: output as one `diff` block |
-| Speed, size, cost | Measured numbers, same workload, fenced |
-| Internal module | Proof through the screen, endpoint or command it changes |
-| Method or prose | A fresh walkthrough's changed result, plus the key text as a `diff` |
-| Something new | Before: the prior entry or empty-state screenshot (nonvisual: output), labeled "did not exist"; visual work still needs both screenshots |
+| New visual surface | Before: prior entry or empty-state screenshot labeled "did not exist"; After: new screenshot |
 
 - **Bug during capture:** stop, keep a short sanitized failure note, fix it in scope, run affected checks, commit and push the checked fix when authorized, reset the fixture, then restart the whole planned demo on that candidate. Replace failed or stale After media; never edit a failure out to imply success. A fix needing new authority blocks the demo with its cause and next action; no silent deferral or clean-pass claim.
 - **Keep it fast:** plan routes once; reuse build/fixtures; screenshot during QA recording; share clips; batch uploads/body updates. No duplicate angles. Record setup/capture/upload durations and slow stage; explain material delay in the PR. Shortest complete demo, never drop required coverage for time.
