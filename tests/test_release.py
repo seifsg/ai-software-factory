@@ -331,7 +331,7 @@ class ReleaseProofTests(FixtureRepository):
         self.assertTrue(self.prove()['reused'])
         self.assertEqual((self.repo / '.factory/count').read_text(), '1')
         release_proof.current(self.repo, "v9.9.9", first)
-        receipt = self.repo / '.factory/suite-cache' / (release_proof.digest(first['identity']) + '.json')
+        receipt = self.repo / release_proof.RECEIPT
         saved = receipt.read_bytes()
         receipt.write_text('corrupt receipt', encoding='utf-8')
         with self.assertRaises(EngineError):
@@ -348,6 +348,17 @@ class ReleaseProofTests(FixtureRepository):
         with mock.patch.object(release_proof.platform, 'platform', return_value='different-runtime'):
             self.assertFalse(self.prove()['reused'])
         self.assertEqual((self.repo / '.factory/count').read_text(), '4')
+
+    def test_full_shared_cache_keeps_release_proof_in_one_slot(self):
+        directory = self.repo / '.factory/suite-cache'
+        directory.mkdir(parents=True, exist_ok=True)
+        for index in range(256):
+            (directory / f'{index}.json').write_text('{}', encoding='utf-8')
+        self.assertFalse(self.prove()['reused'])
+        self.assertTrue(self.prove()['reused'])
+        self.assertEqual((self.repo / '.factory/count').read_text(), '1')
+        self.assertEqual(len(list(directory.glob('*.json'))), 256)
+        self.assertEqual(len(list((self.repo / '.factory/release-proof').glob('*.json'))), 1)
 
     def test_dirty_source_pending_operation_and_wrong_tag_rejected(self):
         release_proof.tag_target(self.repo, 'v9.9.9')

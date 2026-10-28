@@ -7,10 +7,12 @@ import sys
 import uuid
 
 from . import distribution
-from .project import EngineError, digest
+from .project import EngineError
 from .runner import run_command
 from .storage import locked
 from .suites import cached, describe, evidence, execute
+
+RECEIPT = '.factory/release-proof/suite.json'  # One replaceable slot, independent of shared cache capacity.
 
 
 def session(root):
@@ -34,7 +36,7 @@ def identity(root, tag):
 def current(root, tag, proof):
     """Reject drift or altered output immediately before release publication."""
     root = Path(root).resolve()
-    receipt = cached(root, root / '.factory/suite-cache' / (digest(proof['identity']) + '.json'),
+    receipt = cached(root, root / RECEIPT,
                      proof['identity'], lambda rows: all(row['passed'] for row in rows))
     if (proof['identity'] != identity(root, tag) or not proof['unchanged']
             or receipt is None or receipt['execution'] != proof['execution']
@@ -49,7 +51,7 @@ def run(root, tag):
     log = Path(root, '.factory/release-proof/logs', uuid.uuid4().hex + '.log')
     proof = execute(root, lambda: identity(root, tag),
                     lambda slot: [run_command(command, root, 1800, log, owned_lease=slot.lease())],
-                    validate=lambda rows: all(row['passed'] for row in rows))
+                    validate=lambda rows: all(row['passed'] for row in rows), cache_path=RECEIPT)
     for result in proof['results']:
         print(Path(result['log']).read_text(encoding='utf-8', errors='replace'))
     current(root, tag, proof)

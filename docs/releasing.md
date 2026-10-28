@@ -30,6 +30,8 @@ Humans release. Never move or delete a published tag and never re-publish a vers
 
 `prove` and `publish` serialize release operations in this checkout. The shared suite queue still serializes execution across projects. Receipts bind the exact commit, all tracked/nonignored source, declared command, Python executable/version, Git executable, platform and hashed environment values; no raw environment is stored. Logs under ignored `.factory/release-proof/logs/` are unique per execution. Missing, failed, interrupted, changed or altered proof cannot satisfy publication; source/manifest/tag failures refuse, other cache misses run the suite. Keep the same runtime and environment between commands. Undeclared mutable external services or tool dependencies are not supported inputs to release-suite reuse; use a controlled local test environment. These receipts establish observed local execution, not cryptographic authorship or approval to publish.
 
+The release receipt uses one replaceable `.factory/release-proof/suite.json` slot, so a full shared suite cache cannot discard a successful release proof. Its identity, checksum and outputs are rechecked immediately before publication.
+
 ## What follows a release
 
 - Codex, Cursor and other installs on the stable channel move to the new tag at their next daily update, after the release check ([hosts](hosts.md#updates)). Claude Code installs take it at their next plugin update.
