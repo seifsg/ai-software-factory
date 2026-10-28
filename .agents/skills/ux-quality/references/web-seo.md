@@ -37,7 +37,7 @@ Add domain-specific markup only where real: products, articles, local business, 
 ## Verify and hand off
 
 1. Finish implementation.
-2. Open representative pages on mobile and desktop. Follow navigation. Inspect served HTML, headers, assets, redirects, sitemap, robots, `llms.txt`, private exclusions. Compare source with rendered output.
+2. Open representative pages on scoped devices. Follow navigation. Inspect served HTML, headers, assets, redirects, sitemap, robots, `llms.txt`, private exclusions. Compare source with rendered output.
 3. Fix observed defects. Recheck affected paths.
 4. Then run automated checks: metadata, links, sitemap and schema validation, rich-result eligibility, performance audits. None earlier.
 5. Record `check → URL/environment → evidence → PASS / FAIL / UNKNOWN / N/A with reason`.
