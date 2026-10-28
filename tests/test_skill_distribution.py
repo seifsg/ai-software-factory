@@ -92,6 +92,23 @@ class DistributionTests(FixtureCase):
         self.assertFalse((self.source / '.agents/skills/safe-engine/references/product-bar.md').exists())
         self.assertFalse((self.source / '.agents/skills/safe-engine/references/controller.md').exists())
 
+    def test_new_method_references_follow_the_bundle_contract(self):
+        self.assertEqual(resolver.inspect_bundle(self.source)['revision'], self.revision)
+        names = ('.agents/skills/safe-engine/references/quality-cases.md',
+                 '.agents/skills/how-to-make-a-pr/references/media-proof.md')
+        for name in names:
+            path = self.source / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text('New method fixture.\n', encoding='utf-8')
+        self.add_contract(required=list(names))
+        self.assertTrue(resolver.inspect_bundle(self.source)['dirty'])
+        for name in names:
+            path = self.source / name
+            path.unlink()
+            with self.assertRaisesRegex(RuntimeError, 'Incomplete factory bundle:.*' + name.split('/')[-1]):
+                resolver.inspect_bundle(self.source)
+            path.write_text('New method fixture.\n', encoding='utf-8')
+
     def test_subdirectory_wrong_origin_and_missing_dependency_are_rejected(self):
         with self.assertRaisesRegex(RuntimeError, "checkout root"):
             resolver.inspect_bundle(self.source / ".agents")
