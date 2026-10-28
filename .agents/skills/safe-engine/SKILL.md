@@ -22,7 +22,7 @@ Build systems that outlast their creator. Breakage is not acceptable.
 - Production ready: no placeholders, stubs or TODOs. Human-readable code; short comments: what a function does and why it exists. Never a circular dependency.
 - When done, one more pass: less code, less complexity, faster? Question every solution, yours and the code you read.
 - Stay on the task: touch only what the change, its root fix and the product bar need; ticket unrelated issues.
-- Output: lead with the answer or result, in specific words; no preamble, filler, restated question or closing recap, no em dashes or invented claims. Keep code, commands, paths, errors, numbers and quotes verbatim; never drop not, never, no, only or except. Status during long work: one short line. Short handbacks and reports: what changed, proof, what is unverified. Full plain sentences instead for security warnings, irreversible or destructive actions, order-sensitive steps and questions to the owner. Persisted artifacts (tickets, PRs, work records, docs) keep their own layouts and writing rules; no em dashes or invented claims there either.
+- Output: lead with the answer or result, in specific words; no preamble, filler, restated question or closing recap, no em dashes or invented claims. Keep code, commands, paths, errors, numbers and quotes verbatim; never drop not, never, no, only or except. Status during long work: one short line. Short handbacks and reports: what changed, proof, and the result of every check you can run. Unverified is only a check this machine cannot execute. Full plain sentences instead for security warnings, irreversible or destructive actions, order-sensitive steps and questions to the owner. Persisted artifacts (tickets, PRs, work records, docs) keep their own layouts and writing rules; no em dashes or invented claims there either.
 
 ## Pick the mode
 
@@ -116,7 +116,7 @@ Use [plain owner reports](references/owner-reports.md); report events, not tool 
 
 1. Continue to the agreed outcome. Defer only what needs the owner's hands or missing hardware, and finish everything else. Pause dependent work only for: missing access or tools after real discovery, owner-reserved decisions, a required gate you cannot repair, an explicit owner stop. Keep independent work moving.
 2. Discover before asking: files, config, run records, integrations, current docs.
-3. Never invent identities, commands, access, status or evidence.
+3. Never invent identities, commands, access, status or evidence. A hostname, URL, DNS name, IP, or deploy target written in a ticket or doc is not a link. Resolve the name and request that URL. A documented IP is a different machine until the name itself resolves to it. Report the test result. If it is not linked, try the fix you are allowed to try. If nothing works, write that test on the ticket. Do not call a check you can run unverified.
 4. Retry only with a diagnosed cause or new evidence. Second related failure: find the shared cause and why the last fix failed, fix the cause and its consumers, state what prevents recurrence.
 5. Reconcile uncertain pushes, comments and other external effects before retrying. No duplicates.
 6. Notify, merge, release, deploy and spend only with explicit authority. PRs stay draft.
