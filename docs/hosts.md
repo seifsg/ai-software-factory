@@ -4,6 +4,12 @@ The methods live in `.agents/skills/` (the open Agent Skills folder) and `AGENTS
 
 First-class hosts get an installer route, gate hooks and a Safe reviewer preset. Other agents run the same methods and call the gate by hand.
 
+## Local test hosts
+
+Run `python tests/run.py` from the factory checkout. On Windows its setup prefers an installed Git's `bin/sh.exe` and `bin/bash.exe` over the WSL launcher, inside the test process and its workers only. No installation or global PATH change occurs; without those Git shells the inherited PATH remains. Mocked Codex-protocol review tests name a synthetic Cursor builder so the real host's builder identity cannot change their mock's protocol. Production reviewer selection and assertions are unchanged.
+
+Common gate commands load only their requested optional argument module, including their own complete command help. Leading-option input, unknown commands and parse errors use complete registration with the original diagnostics. The selected bundle and state checks are never cached or skipped.
+
 ## First-class hosts
 
 | | Claude Code | Codex | Cursor |
@@ -50,6 +56,8 @@ Command argument registration lives in the gate's sibling `fast_cli.py`; install
 ## Delegation
 
 The roles (runner, analyst, maker, builder, reviewer), their tiers and the brief, gate and handback rules live in `.agents/skills/safe-engine/references/delegate.md`. Hosts differ only in how a role gets its model, effort and edit limits, and how the owner overrides them. The owner's own session model and effort never change.
+
+Use each host's fresh-context option for focused helper packets; for Codex native delegation, `fork_turns="none"` omits inherited history. Pass the request, current decisions, interfaces, stops and relevant artifact paths explicitly. Full history is an exception with a recorded reason, not a substitute for a brief. Keep short jobs local and use native completion/wait events instead of coordinator polling. This changes no installed model, permissions or global settings.
 
 | | Claude Code | Codex | Cursor | Other agents |
 |---|---|---|---|---|

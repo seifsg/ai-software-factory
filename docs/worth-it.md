@@ -12,6 +12,8 @@ Each review or check finding carries `location` (source), a plain `description`,
 
 Mandatory findings go first regardless of score. Optional score 5+ goes now; 3–4 goes now under an hour, otherwise waits; 0–2 waits. Unknown optional cost needs an estimate before selecting a repair. Severity and authority are still independently checked.
 
+Choose all known required/worthwhile findings from one report as a coherent batch before final QA/media, not one fresh reviewer/capture cycle per line. New observed failures still need diagnosis and selection; two related failures need a shared-cause investigation. When required criteria and checks pass, deliver rather than invent more review lenses, media variants or negative-control quotas. An effort envelope changes scheduling, never acceptance or the authority needed to park findings. Independent checking and review remain independent; matching complete-suite receipts may be reused only under their existing identity/integrity checks.
+
 ## Fast and Lucky
 
 Save a JSON object with a `findings` array. Finding IDs are `F1`, `F2`, etc. in that report's order. Keep all findings, not only the selected ones.
