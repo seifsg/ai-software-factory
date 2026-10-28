@@ -1,6 +1,8 @@
 """Run explicitly configured checks without a shell; retain bounded output."""
 
 import os
+import hashlib
+import json
 import subprocess
 import tempfile
 import time
@@ -53,8 +55,9 @@ def run_command(argv, cwd, timeout, log_path, stdin=None, stop=None, owned_lease
         from . import run_metrics
         if run_metrics.current():
             op_id = f"cmd-{int(clock * 1e9)}"
+            command_id = hashlib.sha256(json.dumps({"argv": argv, "stdin": stdin}, default=str).encode()).hexdigest()[:24]
             run_metrics.emit_current("operation.start", name=str(argv[0]), event_id=op_id,
-                                     argv0=str(argv[0]))
+                                     argv0=str(argv[0]), command_id=command_id)
     except Exception:
         op_id = None
     log_path.parent.mkdir(parents=True, exist_ok=True)
@@ -111,7 +114,7 @@ def run_command(argv, cwd, timeout, log_path, stdin=None, stop=None, owned_lease
             from . import run_metrics
             run_metrics.emit_current("operation.finish", name=str(argv[0]), event_id=op_id + "-end",
                                      parent_id=op_id, duration_seconds=duration,
-                                     passed=result["passed"], timed_out=timed_out)
+                                     passed=result["passed"], timed_out=timed_out, command_id=command_id)
         except Exception:
             pass
     return result

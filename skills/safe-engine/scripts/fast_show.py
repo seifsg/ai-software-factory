@@ -201,6 +201,12 @@ def ready_for_prove(project, run, at=None):
     deadline = datetime.fromisoformat(shared["at"]) + timedelta(minutes=show_plan(run)["wait_minutes"])
     clock = datetime.fromisoformat(at) if at else datetime.now(timezone.utc)
     evidence.require(clock >= deadline, f"Waiting for owner reply until {deadline.isoformat()}; no proof yet")
+    if at is None:
+        try:
+            import fast_metrics
+            fast_metrics.on_show(project, run, "finish", status="deadline_elapsed")
+        except Exception:
+            pass
     return "No owner reply by the configured deadline; continue to Prove. This is not approval or merge authority."
 
 

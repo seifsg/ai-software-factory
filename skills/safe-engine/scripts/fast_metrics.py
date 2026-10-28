@@ -104,6 +104,19 @@ def on_pause(project, run, reason, prior_pause=None):
     safe("emit_wait", project, key, "finish", "owner", **fields)
 
 
+def on_show(project, run, action, shared=None, status=None):
+    """Measure the observed owner response window without implying approval."""
+    shared = shared or (run.get("show") or {}).get("shared")
+    if not isinstance(shared, dict) or not shared.get("at"):
+        return
+    key = identity(run)
+    wait_id = f"{key}-show-wait-{shared['at']}"
+    fields = {"event_id": wait_id if action == "start" else wait_id + "-end"}
+    if action != "start":
+        fields.update(parent_id=wait_id, status=status or action)
+    safe("emit_wait", project, key, action, "approval", **fields)
+
+
 def on_close(project, run, abandoned):
     outcome = "abort" if abandoned else "finish"
     safe("finalize", project, identity(run), outcome=outcome)

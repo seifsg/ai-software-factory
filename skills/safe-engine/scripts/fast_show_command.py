@@ -128,6 +128,7 @@ def run(args, gate):
             report = show.prepare(project, state, data)
             path = Path(project, ".factory/fast/show.md")
             path.write_text(show.markdown(project, report), encoding="utf-8")
+            prior_shared = state["show"].get("shared")
             invalidate(state)
             state["show"]["report"] = {**report, "path": ".factory/fast/show.md", "sha256": evidence.file_hash(path)}
             print(path.read_text(encoding="utf-8"))
@@ -142,6 +143,17 @@ def run(args, gate):
                 state["show"]["reply"] = {**show.reply(data, state), "at": gate.now()}
         gate.put(project, state)
         gate.log(f"show.{action}", key=state["key"])
+        if action in ("prepare", "shared", "reply"):
+            try:
+                import fast_metrics
+                if action == "prepare" and prior_shared:
+                    fast_metrics.on_show(project, state, "finish", shared=prior_shared, status="invalidated")
+                elif action == "shared":
+                    fast_metrics.on_show(project, state, "start")
+                elif action == "reply":
+                    fast_metrics.on_show(project, state, "finish", status=state["show"]["reply"]["action"])
+            except Exception:
+                pass
         if action in ("shared", "reply"):
             print(show.notice(project, state))
     except Exception as error:

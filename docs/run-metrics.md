@@ -61,6 +61,10 @@ runs retained are capped.
   positioned commands and waits. Unknown when an interval cannot be placed.
 - **Task/phase spans**: sum observed segments through cancel and resume. These
   boundary spans can include waits; they are not CPU or active effort.
+- **Repeated commands**: group the same opaque hash of argv and supplied stdin
+  within one known task. The executable label remains readable; raw arguments
+  and stdin are not stored. Extra observed command time alone does not prove
+  avoidable rework.
 - Never label an elapsed field as CPU time without CPU measurement.
 - Cross-process UTC alignment may skew; incomplete spans stay incomplete.
 
@@ -126,7 +130,7 @@ Agreed budget (plan + measured Windows NTFS revision recorded in the #175 plan):
 - Report generation ≤ 200 ms at ≤ 10_000 events
 - Whole-run collection + reporting ≤ 1% of wall clock, or ≤ 2 s when wall < 200 s
 
-`metrics overhead` is a single-shot measurement (with warm-up); `within_budget` checks all three rules. Approval waits are a reserved category and stay uncovered until an owner emits them. Container operations such as `full_suite` wrap per-command ops and are excluded from summed/overlap totals.
+`metrics overhead` is a single-shot measurement (with warm-up); `within_budget` checks all three rules. Show sharing starts an observed owner response wait; reply, replacement or the first post-deadline check closes it. A deadline is labeled `deadline_elapsed`, never approval. Other unobserved approval waits stay unknown. Container operations such as `full_suite` wrap per-command ops and are excluded from summed/overlap totals.
 
 On an earlier Windows 11 NTFS candidate, a single 100-pair CLI sample with 20 warm-up pairs measured
 2.001 ms append-pair p99, 23.721 ms report generation for 242 events, and

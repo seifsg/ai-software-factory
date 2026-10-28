@@ -365,6 +365,22 @@ class ContractTests(unittest.TestCase):
         self.assertEqual(len(finished), 2)
         self.assertEqual({row["task_id"] for row in finished}, {"ticket"})
 
+    def test_distinct_commands_are_not_false_retries(self):
+        from safe_engine.runner import run_command
+        for task, value, label in (("T1", 1, "one"), ("T1", 2, "other"),
+                                   ("T1", 1, "retry"), ("T2", 1, "other-task")):
+            with metrics.bound(self.project, "commands", task_id=task):
+                result = run_command([sys.executable, "-c", f"print({value})"], self.project, 5,
+                                     self.project / f"{label}.log")
+                self.assertTrue(result["passed"])
+        report = metrics.finalize(self.project, "commands", outcome="finish")
+        self.assertEqual(len(report["repeated"]), 1)
+        self.assertEqual(report["repeated"][0]["task_id"], "T1")
+        self.assertEqual(report["repeated"][0]["runs"], 2)
+        self.assertEqual(len({row["command_id"] for row in report["longest_operations"]}), 2)
+        raw = (metrics.run_dir(self.project, "commands") / "events.jsonl").read_text(encoding="utf-8")
+        self.assertNotIn("print(1)", raw)
+
     def test_fixture_timeline_and_overhead_budget(self):
         key = "fixture-a8"
         metrics.ensure_run(self.project, key, factory_revision="fix", mode="fast", kind="change")

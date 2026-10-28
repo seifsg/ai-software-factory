@@ -351,6 +351,7 @@ def aggregate(events, *, meta=None, outcome=None):
             operation = {
                 "name": event.get("name") or (start or {}).get("name"),
                 "task_id": event.get("task_id") or (start or {}).get("task_id"),
+                "command_id": event.get("command_id") or (start or {}).get("command_id"),
                 "duration_seconds": round(duration, 3) if duration is not None else None,
                 "reused": bool(event.get("reused")),
                 "container": container,
@@ -494,7 +495,7 @@ def aggregate(events, *, meta=None, outcome=None):
             "unaccounted_seconds": "UTC run wall outside the union of placed non-container commands and waits; unknown if placement fails",
             "tasks": "only explicitly observed boundaries; an active span can include waits and is not CPU or active effort",
             "cross_process_utc": "UTC alignment across processes may skew; prefer mono_ns within one process",
-            "approval_waits": "approval category reserved; uncovered until an owner emits wait.approval events",
+            "approval_waits": "Show owner-response window is observed; deadline_elapsed is not approval",
         },
     }
     if meta:
@@ -624,7 +625,8 @@ def markdown(report):
     if not ranked:
         lines.append("- none")
     for index, row in enumerate(ranked, 1):
-        lines.append(f"{index}. {row['kind']} {row['name']} — {row['clock']} — {row['share']} of wall")
+        label = row['name'] + (f" [{row['task_id']}]" if row.get('task_id') else "")
+        lines.append(f"{index}. {row['kind']} {label} — {row['clock']} — {row['share']} of wall")
     lines.extend(["", "## Tasks (observed boundary spans)"])
     tasks = report.get("tasks") or {}
     lines.extend(f"- {task_id}: {clock(span.get('duration_seconds'))}, "
@@ -644,14 +646,15 @@ def markdown(report):
                  for row in failed)
     if not failed:
         lines.append("- none observed")
-    lines.extend(["", "## Repeated work"])
+    lines.extend(["", "## Repeated command execution"])
     repeated = report.get("repeated") or []
     reasons = report.get("invalidation_reasons") or {}
     if not repeated and not reasons:
         lines.append("- none")
     for row in repeated:
         lines.append(
-            f"- {row['name']} ran {row['runs']} times; {clock(row['extra_seconds'])} is repeat work beyond the longest run"
+            f"- {row['name']} [{row.get('task_id') or 'task unknown'}] ran {row['runs']} times; "
+            f"{clock(row['extra_seconds'])} beyond its longest observed run"
         )
     for reason, count in sorted(reasons.items()):
         lines.append(f"- invalidated: {reason} × {count}")

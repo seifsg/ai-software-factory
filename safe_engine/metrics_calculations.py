@@ -150,9 +150,11 @@ def ranked(elapsed, phases, waits, operations):
     for row in operations:
         if row.get("container") or not row.get("duration_seconds"):
             continue
-        name = row.get("name")
-        commands[name] = max(commands.get(name, 0), row["duration_seconds"])
-    rows += [{"kind": "command", "name": name, "seconds": duration} for name, duration in commands.items()]
+        key = (row.get("command_id") or row.get("name"), row.get("task_id"))
+        if key not in commands or row["duration_seconds"] > commands[key]["seconds"]:
+            commands[key] = {"kind": "command", "name": row.get("name"), "task_id": row.get("task_id"),
+                             "seconds": row["duration_seconds"]}
+    rows += list(commands.values())
     rows.sort(key=lambda row: -float(row["seconds"]))
     for row in rows:
         row.update(share=share(row["seconds"], elapsed), clock=clock(row["seconds"]))
@@ -160,11 +162,14 @@ def ranked(elapsed, phases, waits, operations):
 
 
 def repeated(operations):
-    """Report command time beyond each command name's longest observed run."""
-    groups = {}
+    """Group exact command identities inside one known task, never argv0 alone."""
+    groups, names = {}, {}
     for row in operations:
         if not row.get("container") and row.get("duration_seconds") is not None:
-            groups.setdefault(row.get("name") or "command", []).append(float(row["duration_seconds"]))
-    rows = [{"name": name, "runs": len(values), "extra_seconds": round(sum(values) - max(values), 3),
-             "each_seconds": values} for name, values in groups.items() if len(values) > 1]
+            key = (row.get("command_id") or row.get("name") or "command", row.get("task_id"))
+            names[key] = row.get("name") or "command"
+            groups.setdefault(key, []).append(float(row["duration_seconds"]))
+    rows = [{"name": names[key], "command_id": key[0], "task_id": key[1], "runs": len(values),
+             "extra_seconds": round(sum(values) - max(values), 3), "each_seconds": values}
+            for key, values in groups.items() if len(values) > 1]
     return sorted(rows, key=lambda row: -row["extra_seconds"])
