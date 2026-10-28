@@ -332,7 +332,7 @@ class WorkflowTests(unittest.TestCase):
             log.write_text("explicit test double")
             return {"passed": True, "exit_code": 0}
         with patch("safe_engine.workflow.shutil.which", return_value=sys.executable), patch("safe_engine.workflow.run_command", side_effect=review_double):
-            self.assertEqual(self.flow.review(10)["phase"], "ready")
+            self.assertEqual(self.flow.review(10, builder="cursor")["phase"], "ready")
         self.assertTrue(Path(self.flow.handoff()["handoff"]).is_file())
         (self.root / "app.py").write_text("value = 2\n")
         with self.assertRaises(EngineError):
@@ -391,9 +391,9 @@ class WorkflowTests(unittest.TestCase):
             log.write_text("explicit rejection test double")
             return {"passed": True, "exit_code": 0}
         with patch("safe_engine.workflow.shutil.which", return_value=sys.executable), patch("safe_engine.workflow.run_command", side_effect=review_double) as reviewer:
-            self.assertEqual(self.flow.review(10)["phase"], "review")
+            self.assertEqual(self.flow.review(10, builder="cursor")["phase"], "review")
             with self.assertRaisesRegex(EngineError, "use repair"):
-                self.flow.review(10)
+                self.flow.review(10, builder="cursor")
             self.assertEqual(reviewer.call_count, 1)
         self.flow.repair("Address the recorded finding")
         self.assertEqual(self.flow.status()["repairs_used"], 1)

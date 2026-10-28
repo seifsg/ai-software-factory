@@ -4,6 +4,12 @@ The methods live in `.agents/skills/` (the open Agent Skills folder) and `AGENTS
 
 First-class hosts get an installer route, gate hooks and a Safe reviewer preset. Other agents run the same methods and call the gate by hand.
 
+## Local test hosts
+
+Run `python tests/run.py` from the factory checkout. On Windows its setup prefers an installed Git's `bin/sh.exe` and `bin/bash.exe` over the WSL launcher, inside the test process and its workers only. No installation or global PATH change occurs; without those Git shells the inherited PATH remains. Mocked Codex-protocol review tests name a synthetic Cursor builder so the real host's builder identity cannot change their mock's protocol. Production reviewer selection and assertions are unchanged.
+
+Common gate commands load only their requested optional argument module. Help, unknown commands and invalid arguments retry complete registration with the original diagnostics. The selected bundle and state checks are never cached or skipped.
+
 ## First-class hosts
 
 | | Claude Code | Codex | Cursor |

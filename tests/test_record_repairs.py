@@ -106,7 +106,7 @@ class RecordRepairTests(unittest.TestCase):
             return {"passed": True, "synthetic": DOUBLE}
         with patch("safe_engine.workflow.shutil.which", return_value=sys.executable), \
                 patch("safe_engine.workflow.run_command", side_effect=review_double) as reviewer:
-            self.assertEqual(f.flow.review(10)["phase"], "ready")
+            self.assertEqual(f.flow.review(10, builder="cursor")["phase"], "ready")
         self.assertEqual(reviewer.call_count, 1)
         self.assertEqual((f.root / ".factory/check-count").read_text(), "1")
         self.assertEqual(f.flow.handoff()["phase"], "ready")

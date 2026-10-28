@@ -10,6 +10,7 @@ For every release:
 ## Next release
 
 - Fast methods now bound delegation and proof work; no command, record schema or frozen plan migration is required. Existing runs retain their pinned methods, coverage and stops. Use the revised methods after a human release/update or explicit compatible adoption; this change never resumes a paused project or installs itself. Cross-candidate Show reuse remains unsupported.
+- Selective CLI loading needs the updated bundle after release; no flags or schemas change. For local Windows factory tests, use `python tests/run.py` to select installed Git shells inside its processes. No global shell or host setting needs changing.
 
 ## 1.1.1
 
