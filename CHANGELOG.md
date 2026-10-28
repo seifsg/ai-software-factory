@@ -6,6 +6,8 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-10-28
+
 ### Fixed
 
 - Run metrics: Fast runs start their timeline at the first applicable step, Safe runs record the factory revision and never share a metrics folder, and analytics hooks are plain calls instead of repeated guards (#175).
@@ -94,7 +96,8 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 - Leaner runs (#137): product, feature and change runs each read 24% less method text, every gate message is shorter with the same facts, `scripts/token_report.py` measures both, and tests hold every method file and the gate's fixture messages to a byte budget and the product and change loads to 80% of their earlier size.
 - Self-update (#139): a clone install moves only to a release tag on `main` whose files match its manifest, records the previous revision, rolls back a failed install and shows a one-time notice naming both versions.
 
-[Unreleased]: https://github.com/seifsg/ai-software-factory/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/seifsg/ai-software-factory/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/seifsg/ai-software-factory/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/seifsg/ai-software-factory/compare/v1.1.2...v1.2.0
 [1.1.2]: https://github.com/seifsg/ai-software-factory/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/seifsg/ai-software-factory/compare/v1.1.0...v1.1.1
