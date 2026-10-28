@@ -345,6 +345,26 @@ class ContractTests(unittest.TestCase):
         report = metrics.finalize(self.project, "scoped", outcome="finish")
         self.assertEqual(report["longest_operations"][0]["task_id"], "T1")
 
+    def test_parallel_safe_checks_keep_bound_task_context(self):
+        from safe_engine.checks import CheckMixin
+
+        class Probe(CheckMixin):
+            def prepare_outputs(self, check):
+                return []
+
+            def run_check(self, state, check, outputs, stop=None, slot=None):
+                metrics.emit_current("operation.start", name=check["id"], event_id=check["id"])
+                metrics.emit_current("operation.finish", name=check["id"], parent_id=check["id"])
+                return {"passed": True}
+
+        with metrics.bound(self.project, "parallel", task_id="ticket"):
+            self.assertEqual(len(Probe().execute_checks({"profile": {"parallel_checks": True}},
+                                                       [{"id": "a"}, {"id": "b"}])), 2)
+        finished = [row for row in metrics.read_events(self.project, "parallel")
+                    if row["type"] == "operation.finish"]
+        self.assertEqual(len(finished), 2)
+        self.assertEqual({row["task_id"] for row in finished}, {"ticket"})
+
     def test_fixture_timeline_and_overhead_budget(self):
         key = "fixture-a8"
         metrics.ensure_run(self.project, key, factory_revision="fix", mode="fast", kind="change")

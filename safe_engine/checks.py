@@ -1,6 +1,7 @@
 """Version and feature check batches plus their stale-evidence gate."""
 
 from concurrent.futures import ThreadPoolExecutor, wait
+from contextvars import copy_context
 from pathlib import Path
 import threading
 
@@ -87,7 +88,8 @@ class CheckMixin:
             prepared = [(check, self.prepare_outputs(check)) for check in configured]
             stop = threading.Event()
             with ThreadPoolExecutor(min(len(prepared), 32)) as pool:
-                futures = [pool.submit(self.run_check, state, check, outputs, stop, slot) for check, outputs in prepared]
+                futures = [pool.submit(copy_context().run, self.run_check, state, check, outputs, stop, slot)
+                           for check, outputs in prepared]
                 try:
                     pending = set(futures)
                     while pending:  # Timed waits keep Ctrl+C responsive on Windows.
