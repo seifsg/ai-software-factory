@@ -334,11 +334,13 @@ class ContractTests(unittest.TestCase):
         for instance in ("1" * 32, "2" * 32):
             run = {"key": "reused", "pr_instance": instance, "mode": "fast", "kind": "change",
                    "bundle": {"revision": "r"}}
-            fast_metrics.on_start(self.project, run)
+            fast_metrics.on_start(self.project, run, ["research", "tickets"])
             fast_metrics.on_close(self.project, run, False)
             keys.append(fast_metrics.identity(run))
         self.assertNotEqual(*keys)
         self.assertTrue(all(metrics.run_dir(self.project, key).is_dir() for key in keys))
+        started = [e for e in metrics.read_events(self.project, keys[0]) if e["type"] == "phase.start"]
+        self.assertEqual([e["phase"] for e in started], ["research"])  # first applicable step, not tickets
         with metrics.bound(self.project, "scoped", task_id="T1"):
             metrics.emit_current("operation.start", name="command", event_id="op")
             metrics.emit_current("operation.finish", name="command", parent_id="op")

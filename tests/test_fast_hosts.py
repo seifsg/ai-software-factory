@@ -321,8 +321,6 @@ class LauncherAndInstallerTests(unittest.TestCase):
         write = {"hook_event_name": "PreToolUse", "session_id": "s", "cwd": str(self.project), "tool_name": "Write",
                  "tool_input": {"file_path": str(self.project / "src" / "a.ts")}}
         code, out = self.plugin_hook(SCRIPTS.parents[1], self.root / "gate", write)
-        if out is None:
-            self.skipTest("claude plugin bash hook returned no JSON on this host")
         self.assertEqual((code, out["hookSpecificOutput"]["permissionDecision"]), (0, "deny"))
         self.assertEqual(self.plugin_hook(SCRIPTS.parents[1], self.root / "idle", write), (0, None))  # no run: no process
         self.assertEqual(self.plugin_hook(self.root / "nowhere", self.root / "gate", write), (0, None))  # no launcher
@@ -335,8 +333,6 @@ class LauncherAndInstallerTests(unittest.TestCase):
                  "tool_input": {"file_path": str(self.project / "src" / "a.ts")}}
         if shutil.which("bash"):
             code, out = self.plugin_hook(SCRIPTS.parents[1], self.root / "gate", write)
-            if out is None:
-                self.skipTest("claude plugin bash hook returned no JSON on this host")
             self.assertEqual(out["hookSpecificOutput"]["permissionDecision"], "deny")
         windows = subprocess.run([sys.executable, "-c", installer.HOME_PY + installer.GUARD_PY + installer.RUN_PY,
                                   str(SCRIPTS), "codex"], input=json.dumps(write).encode(), capture_output=True,

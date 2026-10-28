@@ -5,6 +5,7 @@ import threading
 import time
 import uuid
 
+from . import run_metrics
 from .project import EngineError, reject_path_aliases
 from .storage import atomic_json, read_json
 from .suite_lease import recover
@@ -97,11 +98,7 @@ def admission(stop=None, timeout=86400):
     request = root / (generation + '.request.json')
     acquired = registered = owns_lock = False
     wait_id = f'suite-queue-{generation}'
-    try:
-        from . import run_metrics
-        run_metrics.emit_current('wait.start', category='suite_queue', event_id=wait_id, generation=generation)
-    except Exception:
-        pass
+    run_metrics.emit_current('wait.start', category='suite_queue', event_id=wait_id, generation=generation)
     try:
         with locked(root / 'queue.lock'):
             pending = sweep(root)
@@ -131,23 +128,15 @@ def admission(stop=None, timeout=86400):
             if time.monotonic() >= deadline:
                 raise EngineError('Suite queue wait expired; no suite started')
             time.sleep(.1)
-        try:
-            from . import run_metrics
-            run_metrics.emit_current('wait.finish', category='suite_queue', event_id=wait_id + '-end',
-                                     parent_id=wait_id, generation=generation)
-        except Exception:
-            pass
+        run_metrics.emit_current('wait.finish', category='suite_queue', event_id=wait_id + '-end',
+                                 parent_id=wait_id, generation=generation)
         yield Admission(root, generation)
     finally:
         # Normal and cancelled commands are drained before deleting admission.
         # A cleanup failure keeps the record so the next owner must recover it.
         if not acquired:
-            try:
-                from . import run_metrics
-                run_metrics.emit_current('wait.finish', category='suite_queue', event_id=wait_id + '-cancel',
-                                         parent_id=wait_id, generation=generation, status='cancelled')
-            except Exception:
-                pass
+            run_metrics.emit_current('wait.finish', category='suite_queue', event_id=wait_id + '-cancel',
+                                     parent_id=wait_id, generation=generation, status='cancelled')
         try:
             if acquired:
                 for lease in (root / generation).glob('lease-*'):

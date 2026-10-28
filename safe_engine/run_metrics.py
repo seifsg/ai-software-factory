@@ -46,7 +46,7 @@ _KEY = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}")
 _DEVICE = frozenset({"CON", "PRN", "AUX", "NUL", *(f"COM{i}" for i in range(1, 10)),
                      *(f"LPT{i}" for i in range(1, 10))})
 
-# Overhead budget agreed in #175 plan (A8); publish measured values against these.
+# Overhead budget; `metrics overhead` measures against these.
 OVERHEAD_BUDGET = {
     # Paired start+finish append; 10 ms reflects measured Windows NTFS p99 after O(1) id dedupe.
     "event_append_p99_ms": 10.0,
@@ -624,7 +624,7 @@ def markdown(report):
         lines.append("- none")
     for index, row in enumerate(ranked, 1):
         label = row['name'] + (f" [{row['task_id']}]" if row.get('task_id') else "")
-        lines.append(f"{index}. {row['kind']} {label} — {row['clock']} — {row['share']} of wall")
+        lines.append(f"{index}. {row['kind']} {label}, {row['clock']}, {row['share']} of wall")
     lines.extend(["", "## Tasks (observed boundary spans)"])
     tasks = report.get("tasks") or {}
     lines.extend(f"- {task_id}: {clock(span.get('duration_seconds'))}, "
@@ -655,7 +655,7 @@ def markdown(report):
             f"{clock(row['extra_seconds'])} beyond its longest observed run"
         )
     for reason, count in sorted(reasons.items()):
-        lines.append(f"- invalidated: {reason} × {count}")
+        lines.append(f"- invalidated: {reason} x {count}")
     if report.get("reuse_count"):
         lines.append(f"- reused an earlier result {report['reuse_count']} time(s)")
     lines.extend(["", "## Tokens and cost"])
@@ -939,18 +939,6 @@ def _prune_retention(project):
     runs = sorted((p for p in root.iterdir() if p.is_dir()), key=lambda p: p.stat().st_mtime, reverse=True)
     for stale in runs[MAX_RUNS_RETAINED:]:
         shutil.rmtree(stale, ignore_errors=True)
-
-
-def safe_call(fn, *args, **kwargs):
-    """Wrap instrumentation sites so delivery never fails on analytics."""
-    try:
-        return fn(*args, **kwargs)
-    except Exception as exc:
-        try:
-            sys.stderr.write(f"run_metrics: {exc}\n")
-        except Exception:
-            pass
-        return None
 
 
 @contextmanager
