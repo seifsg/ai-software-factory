@@ -58,6 +58,7 @@
     "safe_engine/review_packet.py",
     "safe_engine/reviewers.py",
     "safe_engine/runner.py",
+    "safe_engine/release_proof.py",
     "safe_engine/storage.py",
     "safe_engine/tickets.py",
     "safe_engine/workflow.py",

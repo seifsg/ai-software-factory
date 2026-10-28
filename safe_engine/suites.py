@@ -97,13 +97,15 @@ def cached(project, path, identity, validate):
     return None
 
 
-def execute(project, identity, run, *, cache=True, stop=None, validate=lambda results: True):
+def execute(project, identity, run, *, cache=True, stop=None, validate=lambda results: True, cache_path=None):
     """Reuse verified proof early; queue misses and preserve truthful terminal evidence."""
     project = Path(project).resolve(strict=True)
     before = identity()
-    directory = inside(project, '.factory/suite-cache')
+    # A caller-owned fixed slot stays bounded even when the shared cache is full.
+    path = inside(project, cache_path) if cache_path else None
+    directory = path.parent if path else inside(project, '.factory/suite-cache')
     directory.mkdir(parents=True, exist_ok=True)
-    path = directory / (digest(before) + '.json')
+    path = path or directory / (digest(before) + '.json')
     if cache and before is not None:
         prior = cached(project, path, before, validate)
         if prior:
@@ -131,6 +133,6 @@ def execute(project, identity, run, *, cache=True, stop=None, validate=lambda re
         row = {'version': 1, 'identity': before, 'execution': slot.generation,
                'completed_at': now(), 'unchanged': unchanged, 'results': results}
         if (before is not None and unchanged and evidence(project, results) and validate(results)
-                and (path.exists() or sum(1 for _ in directory.glob('*.json')) < 256)):
+                and (cache_path or path.exists() or sum(1 for _ in directory.glob('*.json')) < 256)):
             atomic_json(path, {**row, 'checksum': digest(row)})
         return {**row, 'reused': False}

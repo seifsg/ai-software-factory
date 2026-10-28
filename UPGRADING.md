@@ -12,6 +12,7 @@ For every release:
 - Fast methods now bound delegation and proof work; no command, record schema or frozen plan migration is required. Existing runs retain their pinned methods, coverage and stops. Use the revised methods after a human release/update or explicit compatible adoption; this change never resumes a paused project or installs itself. Cross-candidate Show reuse remains unsupported.
 - Selective CLI loading needs the updated bundle after release; no flags or schemas change. For local Windows factory tests, use `python tests/run.py` to select installed Git shells inside its processes. No global shell or host setting needs changing.
 - New runs read detailed logging/security and visual proof cases through explicit pointers. Existing pins and frozen plans keep their methods; no record migration is required. `token_report.py` now labels phase/condition rows as non-additive file-text proxies.
+- Release maintainers: replace the merged-commit `python tests/run.py` step with `python scripts/release.py prove vX.Y.Z`. Publication reuses its matching proof or runs the suite; normal installs and active pins need no migration.
 
 ## 1.1.2
 

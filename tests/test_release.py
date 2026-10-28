@@ -18,6 +18,9 @@ import safe_engine
 from safe_engine import distribution as release
 from safe_engine.workflow import resumable
 from bundle_fixtures import legacy_bundle, offline_gate
+from suite_fixture import isolate_suite_queue
+from safe_engine import release_proof
+from safe_engine.project import EngineError
 
 ROOT = Path(__file__).resolve().parents[1]
 GATE = ROOT / "skills/safe-engine/scripts/fast_gate.py"
@@ -267,9 +270,19 @@ class PublishTests(unittest.TestCase):
         spec.loader.exec_module(self.script)
         self.calls = []
         self.script.check = lambda tag, out: self.calls.append(("check", tag))
+        self.script.release_proof = mock.Mock()
+        self.script.release_proof.session.return_value = mock.MagicMock()
+        self.script.release_proof.tag_target.side_effect = lambda *a: self.calls.append(("tag", a[1]))
+        self.script.release_proof.current.side_effect = lambda *a: self.calls.append(("current", a[1]))
 
     def publish(self, codes):
         codes = iter(codes)
+        def suite(*args):
+            self.calls.append((sys.executable, str(ROOT / "tests/run.py")))
+            if next(codes):
+                raise RuntimeError("suite failed; nothing published")
+            return {"passed": True}
+        self.script.release_proof.run.side_effect = suite
         self.script.subprocess = mock.Mock(run=lambda cmd, cwd: (self.calls.append(tuple(cmd[:3])),
                                                                  mock.Mock(returncode=next(codes)))[1])
         self.script.publish("v9.9.9")
@@ -277,12 +290,97 @@ class PublishTests(unittest.TestCase):
     def test_check_then_suite_then_release(self):
         self.publish([0, 0])
         self.assertEqual([call[:2] for call in self.calls],
-                         [("check", "v9.9.9"), (sys.executable, str(ROOT / "tests/run.py")), ("gh", "release")])
+                         [("check", "v9.9.9"), ("tag", "v9.9.9"), (sys.executable, str(ROOT / "tests/run.py")),
+                          ("check", "v9.9.9"), ("tag", "v9.9.9"), ("current", "v9.9.9"), ("gh", "release")])
 
     def test_a_red_suite_publishes_nothing(self):
         with self.assertRaisesRegex(RuntimeError, "failed; nothing published"):
             self.publish([1])
         self.assertNotIn("gh", [call[0] for call in self.calls])
+
+    def test_final_tag_or_proof_drift_never_publishes(self):
+        for guard in ("tag_target", "current"):
+            with self.subTest(guard=guard):
+                getattr(self.script.release_proof, guard).side_effect = RuntimeError("changed")
+                with self.assertRaisesRegex(RuntimeError, "changed"):
+                    self.publish([0, 0])
+                self.assertNotIn("gh", [call[0] for call in self.calls])
+                getattr(self.script.release_proof, guard).side_effect = None
+
+
+class ReleaseProofTests(FixtureRepository):
+    """Real local suite executions, receipts and remote tags; no GitHub publication."""
+
+    def setUp(self):
+        super().setUp()
+        isolate_suite_queue(self)
+        self.repo = self.repository({release.VERSION_FILE: "9.9.9\n", ".gitignore": ".factory/\n",
+            "tests/run.py": "from pathlib import Path\np=Path('.factory/count');p.parent.mkdir(exist_ok=True);"
+                            "p.write_text(str(int(p.read_text())+1) if p.exists() else '1');print('suite pass')\n"})
+        self.commit(self.repo, "release")
+        git(self.repo, "tag", "v9.9.9")
+        git(self.repo, "push", "-q", "origin", "v9.9.9")
+
+    def prove(self):
+        with release_proof.session(self.repo):
+            return release_proof.run(self.repo, "v9.9.9")
+
+    def test_reuse_tamper_environment_and_runtime(self):
+        first = self.prove()
+        self.assertFalse(first['reused'])
+        self.assertTrue(self.prove()['reused'])
+        self.assertEqual((self.repo / '.factory/count').read_text(), '1')
+        release_proof.current(self.repo, "v9.9.9", first)
+        receipt = self.repo / release_proof.RECEIPT
+        saved = receipt.read_bytes()
+        receipt.write_text('corrupt receipt', encoding='utf-8')
+        with self.assertRaises(EngineError):
+            release_proof.current(self.repo, "v9.9.9", first)
+        receipt.write_bytes(saved)
+        Path(first['results'][0]['log']).write_text('tampered', encoding='utf-8')
+        with self.assertRaises(EngineError):
+            release_proof.current(self.repo, "v9.9.9", first)
+        second = self.prove()
+        self.assertFalse(second['reused'])
+        self.assertNotEqual(first['results'][0]['log'], second['results'][0]['log'])
+        with mock.patch.dict(os.environ, {'FACTORY_RELEASE_TEST': 'changed'}):
+            self.assertFalse(self.prove()['reused'])
+        with mock.patch.object(release_proof.platform, 'platform', return_value='different-runtime'):
+            self.assertFalse(self.prove()['reused'])
+        self.assertEqual((self.repo / '.factory/count').read_text(), '4')
+
+    def test_full_shared_cache_keeps_release_proof_in_one_slot(self):
+        directory = self.repo / '.factory/suite-cache'
+        directory.mkdir(parents=True, exist_ok=True)
+        for index in range(256):
+            (directory / f'{index}.json').write_text('{}', encoding='utf-8')
+        self.assertFalse(self.prove()['reused'])
+        self.assertTrue(self.prove()['reused'])
+        self.assertEqual((self.repo / '.factory/count').read_text(), '1')
+        self.assertEqual(len(list(directory.glob('*.json'))), 256)
+        self.assertEqual(len(list((self.repo / '.factory/release-proof').glob('*.json'))), 1)
+
+    def test_dirty_source_pending_operation_and_wrong_tag_rejected(self):
+        release_proof.tag_target(self.repo, 'v9.9.9')
+        with release_proof.session(self.repo), self.assertRaises(EngineError):
+            self.prove()
+        (self.repo / 'other.txt').write_text('untracked', encoding='utf-8')
+        with self.assertRaisesRegex(EngineError, 'clean'):
+            self.prove()
+        self.commit(self.repo, 'different commit')
+        with self.assertRaisesRegex(EngineError, 'tag'):
+            release_proof.tag_target(self.repo, 'v9.9.9')
+
+    def test_failed_or_interrupted_result_cannot_be_reused(self):
+        with mock.patch.object(release_proof, 'run_command', side_effect=KeyboardInterrupt):
+            with self.assertRaises(KeyboardInterrupt):
+                self.prove()
+        self.assertFalse(self.prove()['reused'])
+        (self.repo / 'tests/run.py').write_text('raise SystemExit(1)\n', encoding='utf-8')
+        self.commit(self.repo, 'failing suite')
+        for _ in range(2):
+            with self.assertRaises(EngineError):
+                self.prove()
 
 
 class GateTests(unittest.TestCase):
