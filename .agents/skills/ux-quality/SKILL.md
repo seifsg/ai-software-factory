@@ -5,8 +5,7 @@ description: "Plans and audits the user experience of any UI or interaction chan
 
 # UX Quality
 
-Make the user's job easy. Simple. Familiar. Fast. Accessible.
-No confusing or needless steps. No unfinished graphics or sounds sold as finished work.
+Easy, familiar, fast, accessible. No needless steps or unfinished assets.
 
 Covers every UI or interaction change: games, web, mobile, desktop, tools a person operates. Tiny fix, tiny pass. Headless internals need no invented UI or audio.
 Review and design requests stay read-only. Do not code unless told.
@@ -14,11 +13,12 @@ Review and design requests stay read-only. Do not code unless told.
 ## 1. Understand the job
 
 - Read the request, design system, UI and decisions. Design ports: [coverage](references/coverage.md).
-- Record audience, goal, devices and inputs, accessibility needs, success and failure states.
+- Record audience, goal, devices, inputs, access needs, success/failure states.
+- POC/MVP: light desktop; mobile apps: light mobile. Extra theme/device/responsiveness work needs a cited request/requirement. Preserve frozen designs. Scope build, brief and audit alike.
 - Map each core journey: `intent → entry → actions/decisions/waits → outcome → recovery/exit`. For the most common case, count its actions from entry (each click, tap, submit or filled field) and its loads (new pages or screens; dialogs, tabs and expands are not loads). The minimum is the fewest actions the job itself needs, whatever the design. Above it needs a reason, such as deliberate friction. Find repeated entry, confusion, dead ends, lost work.
 - Remove accidental effort. Keep intended game challenge, consent, safety and comprehension. No deceptive defaults, no hidden costs.
 - New UI or new look: fix the design brief before UI code. Use the project's visual defaults when it has them. A change records only what it touches.
-  - Look: `**UI kit:**`, palette as hex tokens (≥4, AA contrast), `**Font:**`, `**Logo:**`, `**Icons:**`, `**Layout:**` (header, content, footer, phone to desktop), `**Theme:**` (light by default).
+  - Look: `**UI kit:**`, palette as hex tokens (≥4, AA contrast), `**Font:**`, `**Logo:**`, `**Icons:**`, `**Layout:**` (header, content, footer, scoped devices), `**Theme:**` (light by default).
   - `**Journeys:**` per core journey: `<journey>: <n> actions, <n> loads, min <n> actions`, plus the reason for any gap.
   - `**Map:**` every screen per audience and sign-in state, its parent, the nav pattern per width (U1, U2). Tree test it first: `references/basics.md`.
   - `**Hierarchy:**` per key screen and state: the primary action, then secondary ones, then what is deferred (U3, U4).
@@ -54,16 +54,16 @@ Every audit gives each ID a verdict. U1 to U5 state the goal; their checks live 
 | U5 | Labels | Plain language from one glossary, the same everywhere. Every control and field says what it is. |
 | U6 | Interaction cost | Fewest actions and loads from entry to outcome. Primary content and the next action show where the user lands. No page whose only job is one link. Useful defaults. No duplicate entry. Design collections for 0, 1, few and many: one item shows in place (no list of one), a few stay in place too (tabs, sections, cards with their actions), many (more than one screen) get search, sort or filter, and list and detail side by side on wide screens. Deliberate friction stays: consent, destructive confirms, intended challenge. |
 | U7 | States and feedback | Loading. Empty, with the next action. Error, with retry. Success. Plus validation, offline, permission where they apply. Explain disabled actions. Block double submit. Keep input. Cancel, back, undo reachable. Immediate, truthful feedback. Predictable focus. Motion explains, never delays. Saves and drafts survive interruption. Games and browsers: focus loss, tab hide, resize, rotation, pause, resume, audio focus. Games: controls, HUD, remapping. |
-| U8 | Access and devices | Semantic controls, labels, logical focus order, keyboard and assistive access, contrast, scaling and reflow, usable targets. Never rely on color, sound, hover or gesture alone. Reduced motion. Alternative to dragging. WCAG 2.2 AA for web, or the project's stricter rule. Phone to desktop: no horizontal scroll, clipped labels or unreachable controls. Every supported input works: keyboard, pointer, touch, controller. |
+| U8 | Access and devices | Semantic controls, labels, logical focus order, keyboard and assistive access, contrast, scaling and reflow, usable targets. Never rely on color, sound, hover or gesture alone. Reduced motion. Alternative to dragging. WCAG 2.2 AA for web, or the project's stricter rule. On scoped devices: no horizontal scroll, clipped labels or unreachable controls. Every supported input works. |
 | U9 | Look and consistency | Coherent type, spacing, alignment, color, density. One icon family. Light mode default. No blurry scaling, mismatched styles, unexplained symbols or placeholders. The same component, place and label for the same job on every screen. Platform and design-system selection, editing and symbols; depart only for evidenced benefit. |
 | U10 | Performance | Set response, load and animation targets for the weakest supported device. Check asset, decode, memory and network cost. No polish-induced stalls. |
 
 ## 4. Use it. Audit it.
 
 1. Finish Look and share Show before auditing. Use each item before affected tests, type checks and rendering.
-2. Use it by hand through the real browser, native app, game or CLI. Complete the journey, its failure and recovery states, each supported input and display variant. Recount each core journey; above its recorded minimum without the reason is a FAIL. Record what you did and saw: journeys with their counts, states, inputs, devices. That record is the judge's use log.
+2. Use the real browser, app, game or CLI: journeys, failure/recovery, supported inputs and display variants. Recount journeys; exceeding the recorded minimum without a reason is FAIL. Log actions, observations, journey counts, states, inputs and devices for the judge.
 3. Read logs; inspect assets at real size/theme; listen in context. Screenshots prove no interaction; filenames/waveforms prove no sound quality.
-4. Capture each core screen in each of its states at the main width, plus once at the other width (phone and desktop). First viewport and full page. Web: run the page outline and the scan from `references/basics.md` on each.
+4. Capture scoped changed views/states as matched Before/After: same viewport, theme, state, data and framing; focus on the change with context. Full-page/extra widths need a coverage reason. Web: inspect the affected outline and run `references/basics.md`'s scan.
 5. A fresh agent that did not build it judges from the shots, outlines, scan and use log, as `references/basics.md` sets out. One line per ID: `U3 PASS <screens checked>: <evidence>`, `U3 FAIL <screen, state>: <element, quoted text>`, or N/A or UNKNOWN with the reason. A FAIL names its rule, an in-scope screen and the visible evidence.
 6. Score findings with `deep-review`; keep required UX/accessibility. Fix in-scope FAILs, rerun affected paths, recapture; the judge rechecks IDs once. Contested FAILs become UNKNOWN with both reasons for the owner. Outside-scope findings go to follow-ups.
 7. Missing hearing, device, assistive tool or runtime: UNKNOWN; name the check. Instruction walkthroughs prove no real-user usability.

@@ -49,20 +49,39 @@ def plan(data):
     surfaces = evidence.rows(data.get("surfaces"), "surfaces")
     suite = data.get("full_suite")
     evidence.require(isinstance(suite, list) and 0 < len(suite) <= 100, "full_suite needs an argv list")
+    variants = selected_variants(data.get("variants", [{"theme": "light", "device": "desktop"}]))
+    comparison = data.get("comparison", "before")
+    evidence.require(comparison in ("before", "design"), "comparison must be before or design")
     sizes = data.get("viewports", VIEWPORTS)
-    evidence.require(isinstance(sizes, dict) and set(sizes) == set(VIEWPORTS), "viewports needs desktop and phone")
+    evidence.require(isinstance(sizes, dict) and set(sizes) <= set(VIEWPORTS)
+                     and {device for _, device in variants} <= set(sizes), "viewports needs every selected device")
     for size in sizes.values():
         evidence.require(isinstance(size, list) and len(size) == 2
                          and all(type(n) is int and 0 < n <= 32768 for n in size), "Invalid planned viewport")
-    evidence.require(sizes["desktop"][0] > sizes["phone"][0], "Phone viewport must be narrower than desktop")
+    if set(sizes) == set(VIEWPORTS):
+        evidence.require(sizes["desktop"][0] > sizes["phone"][0], "Phone viewport must be narrower than desktop")
     result = {"surfaces": [{"id": key, "name": evidence.text(row.get("name"), "surface name")}
                          for key, row in surfaces.items()],
             "full_suite": [evidence.text(arg, "suite argument") for arg in suite], "viewports": sizes,
+            "variants": [{"theme": theme, "device": device} for theme, device in variants], "comparison": comparison,
             "wait_minutes": integer(data.get("wait_minutes", 30), "wait_minutes", 0, 1440),
             "timeout_seconds": integer(data.get("timeout_seconds", 1800), "timeout_seconds", 1, 86400)}
     if 'suite_inputs' in data:
         result['suite_inputs'] = suite_inputs(data['suite_inputs'])
     return result
+
+
+def selected_variants(value):
+    """Bound explicit coverage to unique supported pairs before freezing it."""
+    evidence.require(isinstance(value, list) and 0 < len(value) <= len(VARIANTS), "variants needs 1..4 pairs")
+    pairs = []
+    for row in value:
+        evidence.require(isinstance(row, dict) and set(row) == {"theme", "device"}, "variant needs theme and device")
+        pair = (row["theme"], row["device"])
+        evidence.require(all(isinstance(part, str) for part in pair) and pair in VARIANTS and pair not in pairs,
+                         "Unknown or duplicate planned variant")
+        pairs.append(pair)
+    return pairs
 
 
 def show_plan(run):
@@ -79,11 +98,16 @@ def prepare(project, run, data):
     candidate = evidence.candidate(project)
     evidence.require(data.get("candidate") == candidate, "Show candidate changed; capture the current source")
     screens = evidence.rows(data.get("screens"), "Show screens")
-    expected = {(s["id"], *variant) for s in planned["surfaces"] for variant in VARIANTS}
+    variants = selected_variants(planned["variants"]) if "variants" in planned else VARIANTS
+    comparison = planned.get("comparison", "design")
+    if run.get("design_port"):
+        evidence.require(comparison == "design", "Design port needs design comparison")
+    expected = {(s["id"], *variant) for s in planned["surfaces"] for variant in variants}
     actual, captures = set(), []
     for key, row in screens.items():
         case = (row.get("surface"), row.get("theme"), row.get("device"))
-        evidence.require(case in expected and case not in actual, f"{key}: unknown or duplicate surface variant")
+        evidence.require(all(isinstance(part, str) for part in case) and case in expected and case not in actual,
+                         f"{key}: unknown or duplicate surface variant")
         actual.add(case)
         evidence.require(row.get("viewport") == planned.get("viewports", VIEWPORTS)[case[2]],
                          f"{key}: use the planned device viewport")
@@ -96,7 +120,7 @@ def prepare(project, run, data):
                          "viewport": row.get("viewport"), "state": state, "description": description,
                          **{kind: evidence.image(project, row.get(kind), row.get("viewport"))
                             for kind in ("reference", "capture")}})
-    evidence.require(actual == expected, "Show needs light/dark desktop/phone pairs for every planned surface")
+    evidence.require(actual == expected, "Show needs every planned surface variant pair")
     if run.get("design_port"):
         evidence.load(project, run)
         by_id = {s["id"]: s for s in captures}
@@ -104,16 +128,17 @@ def prepare(project, run, data):
             current = by_id.get(reference["id"], {})
             evidence.require(all(current.get(k) == reference[k] for k in ("reference", "viewport", "theme", "state")),
                              f"{reference['id']}: Show must include the frozen design reference")
-    return {"candidate": candidate, "screens": captures}
+    return {"candidate": candidate, "comparison": comparison, "screens": captures}
 
 
 def markdown(project, report):
     """Produce a shareable side-by-side report; generating it is not delivery."""
     escape = lambda value: str(value).replace("|", "\\|").replace("<", "&lt;").replace(">", "&gt;")
     lines = ["# Look: ready for your feedback", "", "These pictures are ready to inspect; final checks come next.", ""]
+    heading = "| Before | After |" if report.get("comparison", "design") == "before" else "| Design | Current |"
     for row in report["screens"]:
         label = escape(f"{row['surface']} · {row['theme']} · {row['device']}")
-        lines += [f"## {label}", "", escape(row["description"]), "", "| Design | Current |", "|---|---|"]
+        lines += [f"## {label}", "", escape(row["description"]), "", heading, "|---|---|"]
         images = [f"![{kind}: {label}](<{(Path(project) / row[kind]['path']).resolve().as_posix()}>)"
                   for kind in ("reference", "capture")]
         lines += ["| " + " | ".join(images) + " |", ""]

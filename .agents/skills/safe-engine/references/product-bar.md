@@ -27,8 +27,9 @@ Fill the design brief before UI code; run `ux-quality` on every UI change. Defau
 - Palette: brand primary, accent, neutrals, success/warning/danger as tokens; at least 4 hex values; WCAG AA contrast.
 - Font: one modern readable sans (Geist or Inter class), 16px base, clear type scale.
 - Logo: own small SVG mark and wordmark; favicon from the mark.
-- Layout: header (logo, navigation, account), content, footer (product, links, ©); signed-in screens drop sign-in and marketing links; responsive phone to desktop.
-- Theme: light; dark mode optional later, never the default. Motion: subtle, respects reduced motion.
+- Layout: header (logo, navigation, account), content, footer (product, links, ©). Signed-in screens omit marketing/sign-in links.
+- POC/MVP: light desktop; mobile apps: light mobile. Extra theme/device/responsiveness work needs a cited request/requirement. Preserve production support and frozen designs.
+- Light; reduced motion.
 
 ## States and forms
 
