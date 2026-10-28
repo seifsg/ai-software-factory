@@ -7,10 +7,10 @@ import sys
 import uuid
 
 from . import distribution
-from .project import EngineError
+from .project import EngineError, digest
 from .runner import run_command
 from .storage import locked
-from .suites import describe, evidence, execute
+from .suites import cached, describe, evidence, execute
 
 
 def session(root):
@@ -33,8 +33,12 @@ def identity(root, tag):
 
 def current(root, tag, proof):
     """Reject drift or altered output immediately before release publication."""
+    root = Path(root).resolve()
+    receipt = cached(root, root / '.factory/suite-cache' / (digest(proof['identity']) + '.json'),
+                     proof['identity'], lambda rows: all(row['passed'] for row in rows))
     if (proof['identity'] != identity(root, tag) or not proof['unchanged']
-            or not evidence(Path(root).resolve(), proof['results'])
+            or receipt is None or receipt['execution'] != proof['execution']
+            or receipt['results'] != proof['results'] or not evidence(root, proof['results'])
             or not all(row['passed'] for row in proof['results'])):
         raise EngineError('Release suite proof is no longer current; nothing published')
 

@@ -331,6 +331,12 @@ class ReleaseProofTests(FixtureRepository):
         self.assertTrue(self.prove()['reused'])
         self.assertEqual((self.repo / '.factory/count').read_text(), '1')
         release_proof.current(self.repo, "v9.9.9", first)
+        receipt = self.repo / '.factory/suite-cache' / (release_proof.digest(first['identity']) + '.json')
+        saved = receipt.read_bytes()
+        receipt.write_text('corrupt receipt', encoding='utf-8')
+        with self.assertRaises(EngineError):
+            release_proof.current(self.repo, "v9.9.9", first)
+        receipt.write_bytes(saved)
         Path(first['results'][0]['log']).write_text('tampered', encoding='utf-8')
         with self.assertRaises(EngineError):
             release_proof.current(self.repo, "v9.9.9", first)
