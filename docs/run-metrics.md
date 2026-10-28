@@ -51,11 +51,17 @@ python skills/safe-engine/scripts/fast_gate.py metrics compare --keys <a> <b>
 python skills/safe-engine/scripts/fast_gate.py metrics export --key <run> --dest <dir>
 python skills/safe-engine/scripts/fast_gate.py metrics delete --key <run>
 python skills/safe-engine/scripts/fast_gate.py metrics overhead [--key <run>] [--events N]
+python skills/safe-engine/scripts/fast_gate.py metrics usage --key <run> --file <record> [--rates <card.json>]
 ```
 
-Reports: `report.json` and `report.md` in the run folder. Token/model/cost fields
-appear only when a host adapter supplies attributable measurements with
-provenance and units. Shared-session totals are never copied onto every ticket.
+Reports: `report.json` and `report.md` in the run folder. Token and dollar lines
+appear only after `metrics usage --key <run> --file <host record>`. The file is
+a record the host already wrote (Claude Code `cost-state` in the session jsonl).
+The command does not call a model and does not scan other sessions. Host
+`costUSD` is shown as host-reported. A `--rates` card prices tokens only when
+every model and every counted field has a rate; that figure is labeled
+estimated, not a bill. Anything else stays `unavailable`. Shared-session totals
+are never copied onto every ticket.
 
 Analytics I/O faults become `coverage_gap` events (`analytics_unwritable` /
 `analytics_corrupt`) and never turn a successful delivery operation into a

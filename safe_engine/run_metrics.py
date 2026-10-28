@@ -19,6 +19,8 @@ from contextvars import ContextVar
 from datetime import datetime, timezone
 from pathlib import Path
 
+from safe_engine.host_usage import detail as usage_detail
+
 _CURRENT = ContextVar("run_metrics_current", default=None)
 _SEEN_IDS = {}
 
@@ -319,6 +321,9 @@ def aggregate(events, *, meta=None, outcome=None):
                     "units": event.get("units"),
                     "provenance": event.get("provenance"),
                     "scope": event.get("scope"),
+                    "model": event.get("model"),
+                    "kind": event.get("kind"),
+                    "detail": event.get("detail"),
                 })
 
     incomplete = []
@@ -338,6 +343,8 @@ def aggregate(events, *, meta=None, outcome=None):
     elapsed = round(_elapsed_seconds(events, finished_intervals), 3)
 
     longest.sort(key=lambda row: (row.get("duration_seconds") is None, -(row.get("duration_seconds") or 0)))
+    wait_total = round(sum(waits.values()), 3)
+    unaccounted = round(max(0.0, elapsed - summed - wait_total), 3)
     report = {
         "metrics_schema": METRICS_SCHEMA,
         "outcome": outcome or "partial",
@@ -350,6 +357,10 @@ def aggregate(events, *, meta=None, outcome=None):
         "reuse_count": reuse_count,
         "invalidation_reasons": invalidate_reasons,
         "longest_operations": longest[:20],
+        "wait_total_seconds": wait_total,
+        "unaccounted_seconds": unaccounted,
+        "ranked": _ranked(elapsed, phase_spans, waits, longest),
+        "repeated": _repeated(longest),
         "incomplete_spans": incomplete,
         "coverage_gaps": gaps,
         "event_count": len(events),
@@ -368,6 +379,82 @@ def aggregate(events, *, meta=None, outcome=None):
     if costs:
         report["costs"] = costs
     return report
+
+
+def within_budget(append_p99_ms, report_ms, collection_seconds, whole_cap_seconds):
+    """True only when append, report, and whole-run caps all hold."""
+    return (append_p99_ms <= OVERHEAD_BUDGET["event_append_p99_ms"]
+            and report_ms <= OVERHEAD_BUDGET["report_generate_ms_at_10k"]
+            and collection_seconds <= whole_cap_seconds)
+
+
+def clock(seconds):
+    """Short wall duration. None stays unknown. Not CPU time."""
+    if seconds is None:
+        return "unknown"
+    seconds = float(seconds)
+    if seconds < 60:
+        text = f"{seconds:.1f}".rstrip("0").rstrip(".")
+        return f"{text}s"
+    minutes, sec = divmod(int(round(seconds)), 60)
+    hours, minutes = divmod(minutes, 60)
+    if hours:
+        return f"{hours}h {minutes}m {sec}s"
+    return f"{minutes}m {sec}s"
+
+
+def _share(part, whole):
+    if not whole:
+        return "n/a"
+    return f"{round(100 * float(part) / float(whole))}%"
+
+
+def _ranked(elapsed, phases, waits, operations):
+    """Biggest measured slices. Containers stay out so a suite is not counted twice."""
+    rows = []
+    for name, span in phases.items():
+        duration = span.get("duration_seconds")
+        if duration:
+            rows.append({"kind": "phase", "name": name, "seconds": duration})
+    for name, duration in waits.items():
+        if duration:
+            rows.append({"kind": "wait", "name": name, "seconds": duration})
+    longest_command = {}
+    for row in operations:
+        if row.get("container") or not row.get("duration_seconds"):
+            continue
+        name = row.get("name")
+        previous = longest_command.get(name)
+        if previous is None or row["duration_seconds"] > previous:
+            longest_command[name] = row["duration_seconds"]
+    for name, duration in longest_command.items():
+        rows.append({"kind": "command", "name": name, "seconds": duration})
+    rows.sort(key=lambda row: -float(row["seconds"]))
+    for row in rows:
+        row["share"] = _share(row["seconds"], elapsed)
+        row["clock"] = clock(row["seconds"])
+    return rows[:8]
+
+
+def _repeated(operations):
+    """Same command name more than once: the later runs are repeated work, not delivery time."""
+    grouped = {}
+    for row in operations:
+        if row.get("container") or row.get("duration_seconds") is None:
+            continue
+        grouped.setdefault(row.get("name") or "command", []).append(float(row["duration_seconds"]))
+    repeated = []
+    for name, durations in grouped.items():
+        if len(durations) < 2:
+            continue
+        repeated.append({
+            "name": name,
+            "runs": len(durations),
+            "extra_seconds": round(sum(durations) - max(durations), 3),
+            "each_seconds": durations,
+        })
+    repeated.sort(key=lambda row: -row["extra_seconds"])
+    return repeated
 
 
 def _utc_delta_seconds(start, end):
@@ -453,45 +540,96 @@ def finalize(project, run_key, *, outcome=None, overhead=None):
         return None
 
 
+def _token_lines(costs):
+    """One block. Host dollars and rate-card estimates stay labeled. Silence is unavailable."""
+    token_rows = [row for row in costs if row.get("units") == "tokens"]
+    usd_rows = [row for row in costs if row.get("units") == "usd"]
+    if not token_rows and not usd_rows:
+        return ["- unavailable: no host usage record was attached to this run"]
+    lines = []
+    for row in token_rows:
+        lines.append(f"- {row.get('model')}: {row.get('detail')} ({row.get('amount')} tokens)")
+    counted = sum(row.get("amount") or 0 for row in token_rows)
+    if token_rows:
+        lines.append(f"- tokens counted: {counted}")
+    for row in usd_rows:
+        kind = row.get("kind")
+        if kind == "host":
+            lines.append(f"- cost: ${row.get('amount')} host-reported")
+        elif kind == "estimated":
+            lines.append(f"- cost: about ${row.get('amount')} estimated from the rate card, not a bill")
+        else:
+            lines.append(f"- cost: {row.get('amount')} {row.get('units')} ({kind})")
+    if token_rows and not usd_rows:
+        lines.append("- cost: unavailable (tokens are known; no host price and no complete rate card)")
+    return lines
+
+
+def attach_usage(project, run_key, summary):
+    """Record one already-parsed host summary. Does not read a session or call a model."""
+    if not isinstance(summary, dict) or not summary.get("models"):
+        return False
+    provenance = summary.get("provenance") or "host-usage"
+    ok = True
+    for item in summary["models"]:
+        ok = emit(
+            project, run_key, "cost",
+            amount=item.get("tokens"), units="tokens", provenance=provenance,
+            scope="run", model=item.get("model"), kind="host",
+            detail=usage_detail(item.get("counts") or {}),
+            event_id=f"{run_key}-tokens-{item.get('model')}",
+        ) and ok
+    if summary.get("cost_kind") in ("host", "estimated") and summary.get("cost_usd") is not None:
+        ok = emit(
+            project, run_key, "cost",
+            amount=summary["cost_usd"], units="usd", provenance=provenance,
+            scope="run", kind=summary["cost_kind"],
+            event_id=f"{run_key}-usd",
+        ) and ok
+    return ok
+
+
 def markdown(report):
+    elapsed = report.get("elapsed_seconds") or 0
+    commands = report.get("summed_operation_seconds") or 0
+    waits = report.get("wait_total_seconds") or 0
     lines = [
-        f"# Factory run metrics ({report.get('outcome', 'partial')})",
+        f"# Where this run went ({report.get('outcome', 'partial')})",
         "",
-        f"- Schema: {report.get('metrics_schema')}",
-        f"- Events: {report.get('event_count')}",
-        f"- Elapsed seconds (wall): {report.get('elapsed_seconds')}",
-        f"- Summed operation seconds: {report.get('summed_operation_seconds')}",
-        f"- Overlap seconds: {report.get('overlap_seconds')}",
-        f"- Reuse count: {report.get('reuse_count')}",
+        f"Wall clock: {clock(elapsed)}.",
+        f"Recorded commands: {clock(commands)} ({_share(commands, elapsed)} of wall).",
+        f"Recorded waits: {clock(waits)} ({_share(waits, elapsed)} of wall).",
+        "Do not add commands and waits into the wall clock. Overlap is not delivery time.",
+        f"Command overlap: {clock(report.get('overlap_seconds') or 0)}.",
+        f"At least {clock(report.get('unaccounted_seconds'))} is neither a recorded command nor a recorded wait.",
         "",
-        "## Phases",
+        "## Largest measured slices",
+        "Each share is versus wall clock. Slices overlap, so the shares are not a pie.",
     ]
-    phases = report.get("phases") or {}
-    if not phases:
+    ranked = report.get("ranked") or []
+    if not ranked:
         lines.append("- none")
-    for name, span in phases.items():
-        status = span.get("status") or "open"
-        lines.append(f"- {name}: {span.get('duration_seconds')}s ({status})")
-    lines.extend(["", "## Waits"])
-    shown = {name: value for name, value in (report.get("waits") or {}).items() if value}
-    if not shown:
-        lines.append("- none")
-    for name, value in sorted(shown.items()):
-        lines.append(f"- {name}: {value}s")
-    lines.extend(["", "## Invalidation"])
+    for index, row in enumerate(ranked, 1):
+        lines.append(f"{index}. {row['kind']} {row['name']} — {row['clock']} — {row['share']} of wall")
+    lines.extend(["", "## Repeated work"])
+    repeated = report.get("repeated") or []
     reasons = report.get("invalidation_reasons") or {}
-    if not reasons:
+    if not repeated and not reasons:
         lines.append("- none")
+    for row in repeated:
+        lines.append(
+            f"- {row['name']} ran {row['runs']} times; {clock(row['extra_seconds'])} is repeat work beyond the longest run"
+        )
     for reason, count in sorted(reasons.items()):
-        lines.append(f"- {reason}: {count}")
-    lines.extend(["", "## Longest operations"])
-    for row in report.get("longest_operations") or []:
-        mark = " container" if row.get("container") else ""
-        lines.append(f"- {row.get('name')}: {row.get('duration_seconds')}s{mark}")
-    lines.extend(["", "## Coverage gaps"])
+        lines.append(f"- invalidated: {reason} × {count}")
+    if report.get("reuse_count"):
+        lines.append(f"- reused an earlier result {report['reuse_count']} time(s)")
+    lines.extend(["", "## Tokens and cost"])
+    lines.extend(_token_lines(report.get("costs") or []))
+    lines.extend(["", "## Not measured"])
     gaps = report.get("coverage_gaps") or []
     if not gaps:
-        lines.append("- none")
+        lines.append("- none recorded")
     for gap in gaps:
         lines.append(f"- {gap.get('gap')}: {gap.get('detail')}")
     lines.extend(["", "## Incomplete spans"])
@@ -500,13 +638,6 @@ def markdown(report):
         lines.append("- none")
     for row in incomplete:
         lines.append(f"- {row}")
-    if report.get("costs"):
-        lines.extend(["", "## Costs (host-attributed only)"])
-        for cost in report["costs"]:
-            lines.append(
-                f"- {cost.get('amount')} {cost.get('units')} "
-                f"provenance={cost.get('provenance')} scope={cost.get('scope')}"
-            )
     lines.extend(["", "## Overhead budget", json.dumps(report.get("overhead_budget") or {}, indent=2)])
     if report.get("overhead"):
         lines.extend(["", "## Measured overhead", json.dumps(report["overhead"], indent=2)])
@@ -638,9 +769,7 @@ def measure_overhead(project, run_key, event_count=200):
         "wall_seconds": round(wall_seconds, 3),
         "whole_run_cap_seconds": round(whole_cap, 3),
         "budget": OVERHEAD_BUDGET,
-        "within_budget": p99 <= OVERHEAD_BUDGET["event_append_p99_ms"]
-        and generate_ms <= OVERHEAD_BUDGET["report_generate_ms_at_10k"]
-        and collection_seconds <= whole_cap,
+        "within_budget": within_budget(p99, generate_ms, collection_seconds, whole_cap),
         "event_count": report.get("event_count") if report else None,
     }
     if report is not None:

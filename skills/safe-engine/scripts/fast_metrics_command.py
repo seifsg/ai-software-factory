@@ -8,11 +8,13 @@ import fast_metrics as metrics
 
 def parser(sub, common):
     command = sub.add_parser("metrics", parents=[common], help="Local run metrics report, compare, export or delete")
-    command.add_argument("action", choices=("report", "compare", "export", "delete", "overhead"))
+    command.add_argument("action", choices=("report", "compare", "export", "delete", "overhead", "usage"))
     command.add_argument("--key", help="Run key under .factory/metrics/")
     command.add_argument("--keys", nargs="+", help="Run keys for compare")
     command.add_argument("--dest", help="Export destination directory")
     command.add_argument("--events", type=int, default=200, help="Paired operations for overhead fixture")
+    command.add_argument("--file", help="Host usage jsonl or cost-state JSON already on disk")
+    command.add_argument("--rates", help="Optional rate card JSON. Prices tokens only when every field is listed")
 
 
 def run(args, gate):
@@ -45,6 +47,19 @@ def run(args, gate):
             evidence.require(args.key, "delete needs --key")
             evidence.require(mod.delete(project, args.key), "Delete failed")
             print(f"Deleted metrics for {args.key}")
+            return
+        if args.action == "usage":
+            evidence.require(args.key and args.file, "usage needs --key and --file")
+            from safe_engine.host_usage import load, summarize
+            record = load(Path(args.file).read_text(encoding="utf-8"))
+            rates = json.loads(Path(args.rates).read_text(encoding="utf-8")) if args.rates else None
+            summary = summarize(record, rates)
+            evidence.require(mod.attach_usage(project, args.key, summary), "Could not record usage")
+            print(json.dumps({
+                "tokens": summary["tokens"],
+                "cost_usd": summary["cost_usd"],
+                "cost_kind": summary["cost_kind"],
+            }, indent=2))
             return
         if args.action == "overhead":
             key = args.key or "overhead-fixture"

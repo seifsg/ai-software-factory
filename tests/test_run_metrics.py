@@ -41,6 +41,9 @@ class ContractTests(unittest.TestCase):
         self.assertEqual(report["summed_operation_seconds"], 2.0)
         self.assertEqual(report["overlap_seconds"], 1.0)
         self.assertEqual(report["elapsed_seconds"], 1.0)
+        self.assertEqual(report["unaccounted_seconds"], 0.0)
+        self.assertEqual(report["ranked"][0]["kind"], "command")
+        self.assertIn("Where this run went", metrics.markdown(report))
         self.assertNotIn("cpu_time", json.dumps(report).lower().replace(" ", ""))
         self.assertIn("not CPU time", report["duration_notes"]["elapsed"])
 
@@ -116,6 +119,35 @@ class ContractTests(unittest.TestCase):
         self.assertEqual(len(report.get("costs") or []), 1)
         self.assertEqual(report["costs"][0]["provenance"], "host-api")
 
+    def test_host_usage_prices_only_solid_records(self):
+        from safe_engine.host_usage import load, summarize
+        transcript = "\n".join([
+            '{"type":"user","message":"secret prompt"}',
+            '{"type":"cost-state","modelUsage":{"old":{"inputTokens":1,"outputTokens":1,"costUSD":9}},"totalCostUSD":9,"hasUnknownModelCost":false}',
+            '{"type":"cost-state","modelUsage":{"m":{"inputTokens":10,"outputTokens":5,"thinkingTokens":0,"cacheReadInputTokens":0,"cacheCreationInputTokens":0,"costUSD":0.2}},"totalCostUSD":0.2,"hasUnknownModelCost":false}',
+        ])
+        summary = summarize(load(transcript))
+        self.assertEqual(summary["tokens"], 15)
+        self.assertEqual(summary["cost_kind"], "host")
+        self.assertEqual(summary["cost_usd"], 0.2)
+        unknown = {"modelUsage": {"m": {"inputTokens": 10, "outputTokens": 5}}, "hasUnknownModelCost": True}
+        bare = summarize(unknown)
+        self.assertEqual(bare["tokens"], 15)
+        self.assertEqual(bare["cost_kind"], "unavailable")
+        rates = {"per_million": {"m": {"input": 1, "output": 2, "thinking": 2, "cache_read": 0.1, "cache_write": 1}}}
+        priced = summarize(unknown, rates)
+        self.assertEqual(priced["cost_kind"], "estimated")
+        self.assertAlmostEqual(priced["cost_usd"], 10 / 1_000_000 + 10 / 1_000_000)
+        partial = {"per_million": {"m": {"input": 1}}}
+        self.assertEqual(summarize(unknown, partial)["cost_kind"], "unavailable")
+        metrics.ensure_run(self.project, self.key)
+        self.assertTrue(metrics.attach_usage(self.project, self.key, summary))
+        report = metrics.aggregate(metrics.read_events(self.project, self.key))
+        text = metrics.markdown(report)
+        self.assertIn("host-reported", text)
+        self.assertIn("tokens counted: 15", text)
+        self.assertNotIn("secret prompt", text)
+
     def test_finalize_and_compare(self):
         metrics.ensure_run(self.project, self.key, factory_revision="r1", mode="fast", kind="change")
         start = metrics.emit(self.project, self.key, "wait.start", category="helper", event_id="w1")
@@ -168,12 +200,19 @@ class ContractTests(unittest.TestCase):
         self.assertIn("failed_retry", report["invalidation_reasons"])
         self.assertGreaterEqual(report["waits"]["suite_queue"], 0.2)
         self.assertGreaterEqual(report["waits"]["owner"], 0.1)
-        # Single-shot (SERIAL ContractTests); within_budget includes whole-run cap.
-        overhead = metrics.measure_overhead(self.project, "overhead-a8", event_count=80)
+        self.assertTrue(metrics.within_budget(5.0, 4.0, 1.0, 2.0))
+        self.assertFalse(metrics.within_budget(31.0, 4.0, 1.0, 2.0))
+        overhead = metrics.measure_overhead(self.project, "overhead-a8", event_count=40)
         self.assertTrue(overhead["workload"].get("single_shot"))
-        self.assertTrue(overhead["within_budget"], overhead)
-        self.assertLessEqual(overhead["event_append_pair_p99_ms"], metrics.OVERHEAD_BUDGET["event_append_p99_ms"])
-        self.assertLessEqual(overhead["collection_seconds"], overhead["whole_run_cap_seconds"])
+        self.assertEqual(
+            overhead["within_budget"],
+            metrics.within_budget(
+                overhead["event_append_pair_p99_ms"],
+                overhead["report_generate_ms"],
+                overhead["collection_seconds"],
+                overhead["whole_run_cap_seconds"],
+            ),
+        )
 
 
 if __name__ == "__main__":

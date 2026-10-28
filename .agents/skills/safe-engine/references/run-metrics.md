@@ -22,7 +22,10 @@ Gitignored. Export and delete via `fast_gate.py metrics`.
 
 `elapsed_seconds`, `summed_operation_seconds`, `overlap_seconds`, wait totals,
 reuse/invalidation, `coverage_gaps`, `incomplete_spans`, optional host `costs`
-with provenance. Never name a field CPU time without CPU measurement.
+with provenance. `metrics usage --file` reads a host record already on disk
+(Claude `cost-state`). Dollars are host-reported, or estimated only from a
+complete `--rates` card. No record: unavailable. Never name a field CPU time
+without CPU measurement.
 
 ## Budget
 
