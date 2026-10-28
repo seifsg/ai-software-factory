@@ -4,6 +4,8 @@ New UI runs on the resolved current bundle plan Look, Show, Prove and Ship. Logi
 
 Before `done plan`, freeze changed surfaces, selected variants, exact full-suite argv and response wait with `show --plan <json>`. POC/MVP defaults are light desktop, or light phone for a mobile app. Build, inspect, screenshot and test extra themes/devices or responsiveness only when explicitly requested or already required; record the source. After the visual build and quick render, record `done build`. Missing required evidence remains a blocker. The full schema is in the [Show method](../.agents/skills/safe-engine/references/show.md).
 
+Keep elegant visuals and polished motion; honor reduced-motion preferences.
+
 New plan example: `{"version":1,"surfaces":[{"id":"summary","name":"Summary"}],"variants":[{"theme":"light","device":"desktop"}],"comparison":"before","full_suite":["npm","test"]}`. Omitting `variants` or `comparison` in new input selects these defaults. A mobile app sets `variants:[{"theme":"light","device":"phone"}]`; an explicit light/dark desktop request lists both theme/desktop pairs. Only listed pairs are required; missing, duplicate or unplanned captures fail preparation.
 
 For ordinary changes, `reference` is an actual prior-state screenshot and `capture` the current candidate. Match viewport, theme, state, data and framing; focus on what changed with enough context. Use extra full-page shots only to prove required coverage. New UI uses the prior entry/empty state, labeled "did not exist". Design ports select `comparison:"design"` to show Design/Current and retain every frozen reference; their PR still includes actual Before/After.

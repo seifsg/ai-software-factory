@@ -9,6 +9,7 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 ### Changed
 
 - POC/MVP visual work uses light mode on its target device by default. New Show plans freeze selected variants and ordinary Before/After comparisons; UX and PR proof focus on changed areas, while explicit requirements and frozen design coverage remain (#192).
+- Clarify polished motion with respect for reduced-motion preferences; keep visual quality while narrowing optional device/theme scope (#192).
 
 ## [1.1.1] - 2026-10-27
 
