@@ -12,6 +12,10 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 - Load only requested CLI argument modules on ordinary commands, preserving full help, errors and bundle routing; isolate mocked review protocols and prefer installed Git shells in Windows test processes.
 - Load detailed quality and visual proof methods only for their named situations; report method-file exposure as overlapping text proxies and retain complete preflight receipts.
 
+### Fixed
+
+- Preserve concurrent Fast check observations and owner control state when a long suite or check finishes, reject stale/conflicting run-state writes, and retain one log per suite execution so intact A→B→A proof can be reused (#195).
+
 ## [1.1.2] - 2026-10-28
 
 ### Changed

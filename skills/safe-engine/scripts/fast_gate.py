@@ -84,10 +84,67 @@ def fail(message):
     sys.exit(1)
 
 
-def put(project, run):
-    """Write the run state to the gate home, then its mirror for agents to read; a failed mirror never fails."""
-    save(state_path(project), run)
-    mirror(project, run)
+def run_instance(current, incoming):
+    """Bind each write to one start; give a legacy run its nonce on its first write."""
+    value = incoming.get('pr_instance')
+    if current is None:
+        if 'pr_instance' not in incoming:
+            value = os.urandom(16).hex()
+    elif 'pr_instance' not in current and 'pr_instance' not in incoming:
+        value = os.urandom(16).hex()
+    elif current.get('pr_instance') != value:
+        raise RuntimeError('Run instance changed concurrently; reload the command')
+    if not isinstance(value, str) or not re.fullmatch(r'[0-9a-f]{32}', value):
+        raise RuntimeError('Run instance is invalid; reload the command')
+    return value
+
+
+def put(project, run, *, create=False):
+    """Reject a stale whole-record writer before it can erase another command's state."""
+    path = state_path(project)
+    with store.state_lock(path):
+        try:
+            current = load(path)
+        except FileNotFoundError:
+            current = None
+        if current is not None and not isinstance(current, dict):
+            raise RuntimeError('Run state is malformed; reload the run')
+        if ((current is None and (not create or run.get('_revision', 0))) or
+                (current is not None and create) or
+                (current is not None and (current.get('_revision', 0) != run.get('_revision', 0)
+                                          or current.get('key') != run.get('key')
+                                          or current.get('created') != run.get('created')))):
+            raise RuntimeError('Run state changed concurrently; reload and retry the command')
+        run['pr_instance'] = run_instance(current, run)
+        run['_revision'] = run.get('_revision', 0) + 1
+        save(path, run)
+        mirror(project, run)
+        published(project, run)
+
+
+def mutate(project, base, update):
+    """Commit one long command's owned fields onto the current open run."""
+    path = state_path(project)
+    with store.state_lock(path):
+        try:
+            current = load(path)
+        except FileNotFoundError as error:
+            raise RuntimeError('Run closed or state moved during command') from error
+        if (not isinstance(current, dict) or current.get('key') != base.get('key')
+                or current.get('created') != base.get('created')
+                or current.get('closed')):
+            raise RuntimeError('Run closed or replaced during command')
+        current['pr_instance'] = run_instance(current, base)
+        update(current)
+        current['_revision'] = current.get('_revision', 0) + 1
+        save(path, current)
+        mirror(project, current)
+        published(project, current)
+    return current
+
+
+def published(project, run):
+    """Refresh courtesy progress only after the canonical state is saved."""
     found = unseen(project, state_path(project))
     if view(project, run) and found:
         mark(project, VIEWED, found[0])  # the next hook need not write it again
@@ -320,7 +377,7 @@ def cmd_start(args):
     setup = sibling("fast_setup")
     git_note, hooks = setup.ignore_factory(project), setup.hook_status(project)
     scratch = setup.scratch_path(HOME, run)
-    put(project, run)
+    put(project, run, create=True)
     scratch.mkdir(parents=True, exist_ok=True)  # after the state: a failed start leaves no folder behind
     record = record_path(project)
     if not record.exists():

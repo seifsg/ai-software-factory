@@ -1,6 +1,7 @@
 """Show publication/reply commands and the declared, gated proof-suite entry point."""
 from pathlib import Path
 import sys
+from uuid import uuid4
 
 import fast_design as evidence
 import fast_show as show
@@ -47,7 +48,8 @@ def prove(project, state, gate, fresh=False):
     candidate = evidence.candidate(project)
     if holder.get('proof') is not None:
         gate.log("show.proof_replaced", key=state["key"], proof=holder['proof'])
-    holder['proof'] = {"passed": False, "status": "running"}
+    receipt = uuid4().hex
+    holder['proof'] = {"passed": False, "status": "running", "receipt": receipt}
     gate.put(project, state)
     if state.get('suite_policy') or 'suite_inputs' in plan:
         from safe_engine.suites import describe, execute
@@ -55,18 +57,34 @@ def prove(project, state, gate, fresh=False):
             return describe(project, [plan['full_suite']], plan.get('suite_inputs'), plan)
         def launch(slot):
             return [run_command(plan['full_suite'], project, plan['timeout_seconds'],
-                                Path(project, '.factory/fast/prove-suite.log'), owned_lease=slot.lease())]
+                                Path(project, '.factory/fast/prove', slot.generation + '.log'), owned_lease=slot.lease())]
         batch = execute(project, identify, launch, cache=not fresh)
         result = {**batch['results'][0], 'reused': batch['reused'], 'suite_execution': batch['execution'],
                   'suite_identity': batch['identity']}
         result['passed'] = result['passed'] and batch['unchanged']
     else:
         result = run_command(plan["full_suite"], project, plan["timeout_seconds"],
-                             Path(project, ".factory/fast/prove-suite.log"))
+                             Path(project, ".factory/fast/prove", uuid4().hex + ".log"))
     result["candidate"] = evidence.candidate(project)
     result["passed"] = result["passed"] and result["candidate"] == candidate
-    holder['proof'] = result
-    gate.put(project, state)
+    def finish(current):
+        """Keep unrelated check and owner writes, but refuse a changed proof owner or plan."""
+        latest = current.get('show' if show.enabled(current) else 'suite')
+        evidence.require(isinstance(latest, dict) and latest.get('plan') == plan
+                         and isinstance(latest.get('proof'), dict) and latest['proof'].get('receipt') == receipt,
+                         'Suite proof changed concurrently; rerun for the current plan')
+        if ('build' not in current['done'] or (show.enabled(current) and 'show' not in current['done'])):
+            result.update(passed=False, status='run-reopened')
+        if show.enabled(current):
+            try:
+                show.ready_for_prove(project, current)
+            except (ValueError, KeyError, TypeError):
+                result.update(passed=False, status='owner-stopped')
+        result['passed'] = result['passed'] and evidence.candidate(project) == candidate
+        if 'suite_identity' in result:
+            result['passed'] = result['passed'] and identify() == result['suite_identity']
+        latest['proof'] = result
+    gate.mutate(project, state, finish)
     gate.log("show.prove", key=state["key"], passed=result["passed"])
     print(Path(result["log"]).read_text(encoding="utf-8", errors="replace"))
     evidence.require(result["passed"], "Suite failed, timed out or source changed; inspect the log")

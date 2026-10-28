@@ -7,6 +7,7 @@ import json
 import os
 import re
 from pathlib import Path
+from contextlib import contextmanager
 
 VERSION = 1
 FAST, LEDGER, RECORD = (".factory", "fast"), "run.json", "work-record.md"  # a project's run files
@@ -70,6 +71,43 @@ def save(path, data, new=False):
     except BaseException:
         Path(temp).unlink(missing_ok=True)
         raise
+
+
+@contextmanager
+def state_lock(path):
+    """Serialize short run-state writes; the OS releases the byte lock after a crash."""
+    import time
+    lock = Path(str(path) + ".lock")
+    lock.parent.mkdir(parents=True, exist_ok=True)
+    with lock.open("a+b") as stream:
+        if not os.fstat(stream.fileno()).st_size:
+            stream.write(b"0")
+            stream.flush()
+        deadline = time.monotonic() + 10
+        while True:
+            stream.seek(0)
+            try:
+                if os.name == "nt":
+                    import msvcrt
+                    msvcrt.locking(stream.fileno(), msvcrt.LK_NBLCK, 1)
+                else:
+                    import fcntl
+                    fcntl.flock(stream, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break
+            except OSError as error:
+                if error.errno not in (11, 13, 36):
+                    raise
+                if time.monotonic() >= deadline:
+                    raise RuntimeError("Run state is busy; retry the command")
+                time.sleep(.05)
+        try:
+            yield
+        finally:
+            stream.seek(0)
+            if os.name == "nt":
+                msvcrt.locking(stream.fileno(), msvcrt.LK_UNLCK, 1)
+            else:
+                fcntl.flock(stream, fcntl.LOCK_UN)
 
 
 def ledger_path(project):
