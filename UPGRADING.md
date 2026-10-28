@@ -7,6 +7,10 @@ For every release:
 - **Active and explicit pins never change automatically.** Ask `improve-factory` for a compatible pin change; never edit a selected bundle or receipt.
 - **Check what you run:** `fast_gate.py version` names the version, commit, channel and route; `fast_gate.py verify` lists every file that differs from the release manifest.
 
+## 1.2.1
+
+- No action. Update the factory to get run metrics that start at a run's first step and record the factory revision for Safe runs. No flags, record schema or pin change; existing runs and pins keep their bundle.
+
 ## 1.2.0
 
 - After release, update launchers for `metrics` (`report`, `compare`, `export`, `delete`, `overhead`, `usage`, `task`). New Fast/Lucky/Safe runs write local analytics under `.factory/metrics/` (gitignored). Mark task boundaries only when observed; existing active pins stay unchanged and need no metrics migration. See [run metrics](docs/run-metrics.md).
