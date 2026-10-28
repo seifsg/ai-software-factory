@@ -1,4 +1,5 @@
 """Fast gate run state lives in the gate home: no project write opens the gate or silences a guard (fast-run.md#the-gate)."""
+import copy
 import json
 import os
 import shutil
@@ -45,6 +46,32 @@ class RunStateTests(harness.GateHarness, unittest.TestCase):
             gate.put(project, latest)
             with self.assertRaisesRegex(RuntimeError, 'closed or replaced'):
                 gate.mutate(project, current, lambda run: run.update(closed=False))
+
+    def test_restart_instance_rejects_same_key_second_and_revision(self):
+        self.begin()
+        with patch.dict(os.environ, SAFE_ENGINE_HOME=str(self.root / 'home')):
+            gate = harness.module('fast_gate')
+            project, old = gate.open_run(self.project)
+            fresh = {**old, 'pr_instance': 'b' * 32 if old['pr_instance'] != 'b' * 32 else 'a' * 32}
+            gate.save(self.state, fresh)  # Simulate close/restart inside the same second with a reset revision.
+            stale = copy.deepcopy(old)
+            stale['old_writer'] = True
+            with self.assertRaisesRegex(RuntimeError, 'instance changed'):
+                gate.put(project, stale)
+            with self.assertRaisesRegex(RuntimeError, 'instance changed'):
+                gate.mutate(project, old, lambda state: state.update(old_writer=True))
+            self.assertEqual(gate.load(self.state)['pr_instance'], fresh['pr_instance'])
+
+            legacy = gate.load(self.state)
+            legacy.pop('pr_instance')
+            gate.save(self.state, legacy)
+            stale_legacy = copy.deepcopy(legacy)
+            gate.put(project, legacy)
+            self.assertRegex(legacy['pr_instance'], r'^[0-9a-f]{32}$')
+            with self.assertRaisesRegex(RuntimeError, 'changed concurrently'):
+                gate.put(project, stale_legacy)
+            with self.assertRaisesRegex(RuntimeError, 'instance changed'):
+                gate.mutate(project, stale_legacy, lambda state: state.update(old_writer=True))
 
     def test_no_project_write_opens_the_gate(self):
         self.begin()

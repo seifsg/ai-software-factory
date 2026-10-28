@@ -84,6 +84,21 @@ def fail(message):
     sys.exit(1)
 
 
+def run_instance(current, incoming):
+    """Bind each write to one start; give a legacy run its nonce on its first write."""
+    value = incoming.get('pr_instance')
+    if current is None:
+        if 'pr_instance' not in incoming:
+            value = os.urandom(16).hex()
+    elif 'pr_instance' not in current and 'pr_instance' not in incoming:
+        value = os.urandom(16).hex()
+    elif current.get('pr_instance') != value:
+        raise RuntimeError('Run instance changed concurrently; reload the command')
+    if not isinstance(value, str) or not re.fullmatch(r'[0-9a-f]{32}', value):
+        raise RuntimeError('Run instance is invalid; reload the command')
+    return value
+
+
 def put(project, run, *, create=False):
     """Reject a stale whole-record writer before it can erase another command's state."""
     path = state_path(project)
@@ -100,6 +115,7 @@ def put(project, run, *, create=False):
                                           or current.get('key') != run.get('key')
                                           or current.get('created') != run.get('created')))):
             raise RuntimeError('Run state changed concurrently; reload and retry the command')
+        run['pr_instance'] = run_instance(current, run)
         run['_revision'] = run.get('_revision', 0) + 1
         save(path, run)
         mirror(project, run)
@@ -118,6 +134,7 @@ def mutate(project, base, update):
                 or current.get('created') != base.get('created')
                 or current.get('closed')):
             raise RuntimeError('Run closed or replaced during command')
+        current['pr_instance'] = run_instance(current, base)
         update(current)
         current['_revision'] = current.get('_revision', 0) + 1
         save(path, current)
