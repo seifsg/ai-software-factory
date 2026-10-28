@@ -21,6 +21,7 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 ### Fixed
 
 - Preserve concurrent Fast check observations and owner control state when a long suite or check finishes, reject stale/conflicting run-state writes, and retain one log per suite execution so intact A→B→A proof can be reused (#195).
+- Keep metrics separate when a Fast run key is reused; reject path aliases on local deletion and keep open reports partial and completed wall time stable after usage imports (#175).
 
 ## [1.1.2] - 2026-10-28
 

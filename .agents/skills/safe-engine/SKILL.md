@@ -62,6 +62,7 @@ Record every step in one work record and pass the gate: [fast-run](references/fa
 7. **Design** (UI): plan with `get-ready-to-code`. Use the product bar and `ux-quality` step 1, including Map, Hierarchy and Labels; design ports follow its reference coverage. At done-run, a fresh agent judges every UX rule (`ux-quality` step 4).
 8. **Schema** (persistence): `database-schema`, only if needed.
 9. **Build:** each item through 0–4; spike unknown capabilities first, tick after use. UI: [Look, Show, Prove, Ship](references/show.md).
+   - Mark each frozen todo's observed start/finish/fail/cancel/resume with `fast_gate.py metrics task --key <run> --task-id Tn --state <state> --project <abs>`. `try` alone never proves completion; missed boundaries stay unknown.
    - On each tick, write that todo's one log line, `T3 pre: … do: … post: …`, and in the same edit set `**Now:**` to the todos in progress.
    - After actual item use, run only mapped affected tests for feedback during build and fixes. In the plan, declare the project's command and changed-input mapping; an unknown mapping needs a manual choice and reason. A command that runs the complete suite, including `tests/run.py --changed` when its mapping falls back to all, is never a narrow check. Final tests follow manual use; UI also completes Show first. A POC waits for `verify` or Safe.
 10. **Done-run:** prove each ticket's definition of done.

@@ -63,7 +63,7 @@ def execute(project, state, gate, syntax_only=False):
         gate.log("checks.receipt_replaced", key=state["key"], receipt=saved[target])
         try:
             import fast_metrics
-            fast_metrics.safe("emit", project, state["key"], "invalidate",
+            fast_metrics.safe("emit", project, fast_metrics.identity(state), "invalidate",
                               reason="checks_receipt_replaced", receipt=target)
         except Exception:
             pass

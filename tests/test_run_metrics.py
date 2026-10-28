@@ -300,6 +300,51 @@ class ContractTests(unittest.TestCase):
         self.assertTrue(metrics.delete(self.project, self.key))
         self.assertFalse(metrics.run_dir(self.project, self.key).exists())
 
+    def test_delete_rejects_root_aliases_and_preserves_sibling(self):
+        metrics.ensure_run(self.project, "one")
+        metrics.ensure_run(self.project, "two")
+        for key in (".", "..", "C:", "C:/x", "/tmp/x", "a/b", "a\\b", "x ", "x.", "CON", "nul.txt"):
+            with self.subTest(key=key):
+                self.assertFalse(metrics.delete(self.project, key))
+                self.assertTrue(metrics.run_dir(self.project, "one").is_dir())
+                self.assertTrue(metrics.run_dir(self.project, "two").is_dir())
+        self.assertTrue(metrics.delete(self.project, "one"))
+        self.assertTrue(metrics.run_dir(self.project, "two").is_dir())
+
+    def test_open_report_and_late_usage_do_not_change_delivery_wall(self):
+        from safe_engine.host_usage import summarize
+        metrics.ensure_run(self.project, self.key, factory_revision="r", mode="fast", kind="change")
+        partial = metrics.finalize(self.project, self.key)
+        self.assertEqual(partial["outcome"], "partial")
+        self.assertFalse(any(row["type"] == "run.finish" for row in metrics.read_events(self.project, self.key)))
+        finished = metrics.finalize(self.project, self.key, outcome="finish")
+        usage = summarize({"sessionId": "later", "modelUsage": {"same": {"inputTokens": 12}}})
+        self.assertTrue(metrics.attach_usage(self.project, self.key, usage))
+        metrics.emit(self.project, self.key, "coverage_gap", gap="analytics_corrupt", detail="later")
+        later = metrics.finalize(self.project, self.key)
+        self.assertEqual(later["outcome"], "finish")
+        self.assertEqual(later["elapsed_seconds"], finished["elapsed_seconds"])
+        self.assertGreater(later["event_count"], finished["event_count"])
+
+    def test_fast_instances_and_explicit_task_context(self):
+        scripts = Path(__file__).resolve().parents[1] / "skills/safe-engine/scripts"
+        sys.path.insert(0, str(scripts))
+        import fast_metrics
+        keys = []
+        for instance in ("1" * 32, "2" * 32):
+            run = {"key": "reused", "pr_instance": instance, "mode": "fast", "kind": "change",
+                   "bundle": {"revision": "r"}}
+            fast_metrics.on_start(self.project, run)
+            fast_metrics.on_close(self.project, run, False)
+            keys.append(fast_metrics.identity(run))
+        self.assertNotEqual(*keys)
+        self.assertTrue(all(metrics.run_dir(self.project, key).is_dir() for key in keys))
+        with metrics.bound(self.project, "scoped", task_id="T1"):
+            metrics.emit_current("operation.start", name="command", event_id="op")
+            metrics.emit_current("operation.finish", name="command", parent_id="op")
+        report = metrics.finalize(self.project, "scoped", outcome="finish")
+        self.assertEqual(report["longest_operations"][0]["task_id"], "T1")
+
     def test_fixture_timeline_and_overhead_budget(self):
         key = "fixture-a8"
         metrics.ensure_run(self.project, key, factory_revision="fix", mode="fast", kind="change")

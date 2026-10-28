@@ -7,6 +7,15 @@ import fast_design as evidence
 import fast_metrics as metrics
 
 
+def selected_key(project, supplied, gate):
+    """Resolve an open gate slug; historical runs require their instance key."""
+    if not supplied or gate.registry_path(project).is_file():
+        _, run = gate.open_run(project)
+        if not supplied or supplied == run["key"]:
+            return metrics.identity(run)
+    return supplied
+
+
 def parser(sub, common):
     command = sub.add_parser("metrics", parents=[common], help="Local run metrics report, compare, export or delete")
     command.add_argument("action", choices=("report", "compare", "export", "delete", "overhead", "usage", "task"))
@@ -29,15 +38,12 @@ def run(args, gate):
             project, run = gate.open_run(project)
             evidence.require(not run.get("closed") and args.key == run["key"] and args.task_id in run.get("todos", []),
                              "Task boundary needs an open run and its frozen T-number")
-            evidence.require(mod.emit_task(project, args.key, args.task_id, args.state),
+            evidence.require(mod.emit_task(project, metrics.identity(run), args.task_id, args.state),
                              "Could not record task boundary")
             print(f"Observed task {args.task_id}: {args.state}")
             return
         if args.action == "report":
-            key = args.key
-            if not key:
-                project, state = gate.open_run(project)
-                key = state["key"]
+            key = selected_key(project, args.key, gate)
             evidence.require(key, "report needs --key or an open run")
             # Preserve prior abort/fail; omit outcome so finalize does not relabel.
             report = mod.finalize(project, key)
@@ -47,29 +53,29 @@ def run(args, gate):
         if args.action == "compare":
             keys = args.keys or []
             evidence.require(keys, "Pass --keys for compare")
-            print(json.dumps(mod.compare(project, keys), indent=2))
+            print(json.dumps(mod.compare(project, [selected_key(project, key, gate) for key in keys]), indent=2))
             return
         if args.action == "export":
             evidence.require(args.key and args.dest, "export needs --key and --dest")
-            path = mod.export(project, args.key, args.dest)
+            path = mod.export(project, selected_key(project, args.key, gate), args.dest)
             evidence.require(path, "Export failed")
             print(path)
             return
         if args.action == "delete":
             evidence.require(args.key, "delete needs --key")
-            evidence.require(mod.delete(project, args.key), "Delete failed")
+            evidence.require(mod.delete(project, selected_key(project, args.key, gate)), "Delete failed")
             print(f"Deleted metrics for {args.key}")
             return
         if args.action == "usage":
             evidence.require(args.key and args.file, "usage needs --key and --file")
+            key = selected_key(project, args.key, gate)
             from safe_engine.host_usage import load, summarize
             source = Path(args.file).resolve()
             record = load(source.read_text(encoding="utf-8"))
             rates = json.loads(Path(args.rates).read_text(encoding="utf-8")) if args.rates else None
             summary = summarize(record, rates, source_id=hashlib.sha256(str(source).encode()).hexdigest())
-            evidence.require(mod.attach_usage(project, args.key, summary), "Could not record usage")
-            existing = (mod.run_dir(project, args.key) / mod.REPORT_JSON).is_file()
-            evidence.require(mod.finalize(project, args.key, outcome=None if existing else "partial"),
+            evidence.require(mod.attach_usage(project, key, summary), "Could not record usage")
+            evidence.require(mod.finalize(project, key),
                              "Could not refresh metrics report")
             print(json.dumps({
                 "tokens": summary["tokens"],

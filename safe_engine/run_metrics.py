@@ -11,6 +11,7 @@ import json
 import hashlib
 import os
 import platform
+import re
 import shutil
 import sys
 import time
@@ -25,7 +26,8 @@ from safe_engine.metrics_calculations import (clock, share as _share, ranked as 
                                               utc_delta_seconds as _utc_delta_seconds,
                                               elapsed_seconds as _elapsed_seconds,
                                               overlap_seconds as _overlap_seconds,
-                                              uncovered_seconds, wall_interval, duration_seconds, record_activity)
+                                              uncovered_seconds, wall_interval, duration_seconds, record_activity,
+                                              delivery_events)
 
 _CURRENT = ContextVar("run_metrics_current", default=None)
 _SEEN_IDS = {}
@@ -40,6 +42,9 @@ MAX_EVENT_BYTES = 4096
 MAX_EVENTS_PER_RUN = 50_000
 MAX_RUNS_RETAINED = 64
 MAX_FIELD_CHARS = 500
+_KEY = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}")
+_DEVICE = frozenset({"CON", "PRN", "AUX", "NUL", *(f"COM{i}" for i in range(1, 10)),
+                     *(f"LPT{i}" for i in range(1, 10))})
 
 # Overhead budget agreed in #175 plan (A8); publish measured values against these.
 OVERHEAD_BUDGET = {
@@ -80,8 +85,10 @@ def run_dir(project, run_key):
 
 
 def _safe_key(run_key):
-    text = str(run_key or "").strip()
-    if not text or len(text) > 64 or "/" in text or "\\" in text or ".." in text:
+    text = str(run_key or "")
+    root = text.split(".", 1)[0].upper()
+    if (text != text.strip() or not _KEY.fullmatch(text)
+            or text.endswith(".") or ".." in text or root in _DEVICE):
         raise ValueError("run_key must be a short path-safe slug")
     return text
 
@@ -343,6 +350,7 @@ def aggregate(events, *, meta=None, outcome=None):
                       "passed" if event.get("passed") is True else "unknown")
             operation = {
                 "name": event.get("name") or (start or {}).get("name"),
+                "task_id": event.get("task_id") or (start or {}).get("task_id"),
                 "duration_seconds": round(duration, 3) if duration is not None else None,
                 "reused": bool(event.get("reused")),
                 "container": container,
@@ -381,7 +389,8 @@ def aggregate(events, *, meta=None, outcome=None):
             helper_id = event.get("helper_id") or (start or {}).get("helper_id")
             if category == "helper" and helper_id:
                 helpers[helper_id] = {"helper_id": helper_id, "wait_seconds": duration,
-                                      "status": event.get("status") or "unknown"}
+                                      "status": event.get("status") or "unknown",
+                                      "task_id": event.get("task_id") or (start or {}).get("task_id")}
         elif kind == "reuse":
             reuse_count += 1
         elif kind == "invalidate":
@@ -445,13 +454,14 @@ def aggregate(events, *, meta=None, outcome=None):
                        if not row["container"] and row["duration_seconds"] is not None), 3)
     overlap = round(_overlap_seconds([(int(a * 1e9), int(b * 1e9)) for a, b in command_wall_intervals
                                       if a < b]), 3)
-    elapsed = round(_elapsed_seconds(events, finished_intervals), 3)
+    clock_events = delivery_events(events)
+    elapsed = round(_elapsed_seconds(clock_events, finished_intervals), 3)
 
     longest.sort(key=lambda row: (row.get("duration_seconds") is None, -(row.get("duration_seconds") or 0)))
     wait_total = round(sum(waits.values()), 3)
     if placement_unknown:
         gaps.append({"gap": "wall_placement_unknown", "detail": "operation_or_wait", "t": None})
-    unaccounted = None if placement_unknown else uncovered_seconds(events, wall_intervals)
+    unaccounted = None if placement_unknown else uncovered_seconds(clock_events, wall_intervals)
     report = {
         "metrics_schema": METRICS_SCHEMA,
         "outcome": outcome or "partial",
@@ -504,30 +514,28 @@ def within_budget(append_p99_ms, report_ms, collection_seconds, whole_cap_second
 def finalize(project, run_key, *, outcome=None, overhead=None):
     """Write report.json and report.md. outcome: finish|abort|fail|partial. Returns report or None.
 
-    When outcome is omitted, keep a prior report's outcome if present; else finish.
+    Only an explicit lifecycle terminal event completes a run.
     """
     try:
         folder = run_dir(project, run_key)
         meta = {}
         meta_path = folder / META_NAME
-        report_path = folder / REPORT_JSON
         if meta_path.is_file():
             meta = json.loads(meta_path.read_text(encoding="utf-8"))
-        prior_outcome = None
-        if report_path.is_file():
-            try:
-                prior_outcome = json.loads(report_path.read_text(encoding="utf-8")).get("outcome")
-            except (OSError, ValueError):
-                prior_outcome = None
-        chosen = outcome or prior_outcome or "finish"
-        terminal = {"finish": "run.finish", "abort": "run.abort", "fail": "run.fail"}.get(chosen)
-        if terminal:
-            emit(project, run_key, terminal, event_id=f"run-{chosen}-{_safe_key(run_key)}")
         events = read_events(project, run_key)
+        prior_terminal = next((event["type"].split(".")[1] for event in reversed(events)
+                               if event.get("type") in ("run.finish", "run.abort", "run.fail")), None)
+        if outcome not in (None, "finish", "abort", "fail", "partial"):
+            raise ValueError("Invalid metrics outcome")
+        chosen = outcome if outcome in ("finish", "abort", "fail") else prior_terminal or "partial"
+        terminal = {"finish": "run.finish", "abort": "run.abort", "fail": "run.fail"}.get(chosen)
+        if outcome and terminal:
+            emit(project, run_key, terminal, event_id=f"run-{chosen}-{_safe_key(run_key)}")
+            events = read_events(project, run_key)
         report = aggregate(events, meta=meta, outcome=chosen)
         if overhead:
             report["overhead"] = overhead
-        report_path.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        (folder / REPORT_JSON).write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         (folder / REPORT_MD).write_text(markdown(report), encoding="utf-8")
         return report
     except Exception as exc:
@@ -632,7 +640,7 @@ def markdown(report):
         lines.append("- none observed")
     lines.extend(["", "## Failed commands"])
     failed = report.get("failed_operations") or []
-    lines.extend(f"- {row.get('name')}: {clock(row.get('duration_seconds'))}"
+    lines.extend(f"- {row.get('name')} [{row.get('task_id') or 'task unknown'}]: {clock(row.get('duration_seconds'))}"
                  for row in failed)
     if not failed:
         lines.append("- none observed")
@@ -767,6 +775,12 @@ def delete(project, run_key):
     """Delete one run's metrics folder. Returns True on success."""
     try:
         folder = run_dir(project, run_key)
+        root = metrics_root(project)
+        junction = lambda path: getattr(path, "is_junction", lambda: False)()
+        if (folder.parent != root or folder.resolve().parent != root.resolve()
+                or root.is_symlink() or junction(root)
+                or folder.is_symlink() or getattr(folder, "is_junction", lambda: False)()):
+            raise ValueError("Metrics deletion needs one direct run folder")
         _SEEN_IDS.pop(str(folder / EVENTS_NAME), None)
         if folder.is_dir():
             shutil.rmtree(folder)
@@ -941,7 +955,8 @@ def safe_call(fn, *args, **kwargs):
 @contextmanager
 def bound(project, run_key, **meta):
     """Bind project/run for nested helpers (suite queue) without threading args through every API."""
-    token = _CURRENT.set({"project": str(Path(project).resolve()), "run_key": run_key, "meta": meta})
+    token = _CURRENT.set({"project": str(Path(project).resolve()), "run_key": run_key,
+                          "task_id": meta.get("task_id"), "meta": meta})
     try:
         ensure_run(project, run_key, **{k: meta.get(k) for k in ("factory_revision", "mode", "kind") if k in meta})
         yield
@@ -957,4 +972,6 @@ def emit_current(event_type, **fields):
     ctx = current()
     if not ctx:
         return False
+    if ctx.get("task_id"):
+        fields.setdefault("task_id", ctx["task_id"])
     return emit(ctx["project"], ctx["run_key"], event_type, **fields)

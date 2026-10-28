@@ -95,6 +95,7 @@ class Workflow(ContractMixin, CheckMixin, ReviewMixin):
             factory_revision=state.get("bundle_revision"),
             mode="safe",
             kind=state.get("kind") or "change",
+            task_id=self.ticket_key or key,
         )
 
     @staticmethod
@@ -463,6 +464,8 @@ class Workflow(ContractMixin, CheckMixin, ReviewMixin):
         try:
             from . import run_metrics
             key = state.get("run_id") or self.ticket_key or "safe-run"
+            run_metrics.emit_phase(self.project, key, state["phase"], "finish",
+                                   event_id=f"{key}-phase-{state['phase']}-handoff-finish")
             run_metrics.emit_task(self.project, key, self.ticket_key or key, "finish",
                                   event_id=f"{key}-task-finish")
             run_metrics.finalize(self.project, key, outcome="finish")

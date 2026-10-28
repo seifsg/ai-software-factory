@@ -334,6 +334,10 @@ class WorkflowTests(unittest.TestCase):
         with patch("safe_engine.workflow.shutil.which", return_value=sys.executable), patch("safe_engine.workflow.run_command", side_effect=review_double):
             self.assertEqual(self.flow.review(10, builder="cursor")["phase"], "ready")
         self.assertTrue(Path(self.flow.handoff()["handoff"]).is_file())
+        from safe_engine import run_metrics
+        report = run_metrics.finalize(self.root, self.flow.load()["run_id"])
+        self.assertEqual(report["phases"]["ready"]["status"], "finish")
+        self.assertFalse(any(item.get("phase") == "ready" for item in report["incomplete_spans"]))
         (self.root / "app.py").write_text("value = 2\n")
         with self.assertRaises(EngineError):
             self.flow.handoff()

@@ -22,33 +22,44 @@ def safe(name, *args, **kwargs):
         return None
 
 
+def identity(run):
+    """Separate repeated gate keys by their immutable run instance."""
+    instance = run.get("pr_instance")
+    if isinstance(instance, str) and len(instance) == 32 and all(char in "0123456789abcdef" for char in instance):
+        return f"{run['key'][:31]}-{instance}"
+    return run["key"]  # legacy run without an instance
+
+
 def on_start(project, run):
+    key = identity(run)
     revision = (run.get("bundle") or {}).get("revision")
     safe(
         "ensure_run",
         project,
-        run["key"],
+        key,
         factory_revision=revision,
         mode=run.get("mode"),
         kind=run.get("kind"),
+        extra={"gate_key": run["key"]},
     )
-    safe("emit_phase", project, run["key"], "tickets", "start", event_id=f"{run['key']}-phase-tickets-start")
+    safe("emit_phase", project, key, "tickets", "start", event_id=f"{key}-phase-tickets-start")
 
 
 def on_done(project, run, step, steps):
+    key = identity(run)
     if step == "tickets":
-        safe("set_scope", project, run["key"], run.get("tickets"))
+        safe("set_scope", project, key, run.get("tickets"))
     elif step == "plan":
         for task_id in run.get("todos", []):
-            safe("emit_task", project, run["key"], task_id, "declare",
-                 event_id=f"{run['key']}-task-{task_id}-declare")
+            safe("emit_task", project, key, task_id, "declare",
+                 event_id=f"{key}-task-{task_id}-declare")
     safe(
         "emit_phase",
         project,
-        run["key"],
+        key,
         step,
         "finish",
-        event_id=f"{run['key']}-phase-{step}-finish",
+        event_id=f"{key}-phase-{step}-finish",
     )
     remaining = [name for name in steps if name not in run.get("done", {}) and name != step]
     if remaining:
@@ -56,28 +67,29 @@ def on_done(project, run, step, steps):
         safe(
             "emit_phase",
             project,
-            run["key"],
+            key,
             nxt,
             "start",
-            event_id=f"{run['key']}-phase-{nxt}-start",
+            event_id=f"{key}-phase-{nxt}-start",
         )
 
 
 def on_pause(project, run, reason, prior_pause=None):
+    key = identity(run)
     if reason:
         stamp = (run.get("paused") or {}).get("at") or "open"
-        wait_id = f"{run['key']}-owner-wait-{stamp}"
+        wait_id = f"{key}-owner-wait-{stamp}"
         safe(
             "emit_wait",
             project,
-            run["key"],
+            key,
             "start",
             "owner",
             event_id=wait_id,
         )
         return
     stamp = (prior_pause or {}).get("at") or "unknown"
-    wait_id = f"{run['key']}-owner-wait-{stamp}"
+    wait_id = f"{key}-owner-wait-{stamp}"
     duration = None
     try:
         from datetime import datetime
@@ -89,21 +101,22 @@ def on_pause(project, run, reason, prior_pause=None):
     fields = {"event_id": f"{wait_id}-end", "parent_id": wait_id}
     if duration is not None:
         fields["duration_seconds"] = round(duration, 3)
-    safe("emit_wait", project, run["key"], "finish", "owner", **fields)
+    safe("emit_wait", project, key, "finish", "owner", **fields)
 
 
 def on_close(project, run, abandoned):
     outcome = "abort" if abandoned else "finish"
-    safe("finalize", project, run["key"], outcome=outcome)
+    safe("finalize", project, identity(run), outcome=outcome)
 
 
-def bind(project, run):
+def bind(project, run, task_id=None):
     revision = (run.get("bundle") or {}).get("revision")
     return safe(
         "bound",
         project,
-        run["key"],
+        identity(run),
         factory_revision=revision,
         mode=run.get("mode"),
         kind=run.get("kind"),
+        task_id=task_id,
     )

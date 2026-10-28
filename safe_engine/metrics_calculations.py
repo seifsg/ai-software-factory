@@ -31,6 +31,15 @@ def wall_interval(start, end):
     return (a, b) if a is not None and b is not None and b >= a else None
 
 
+def delivery_events(events):
+    """Keep later analytics imports and corruption notices outside delivery wall time."""
+    ends = [value for event in events if event.get("type") in ("run.finish", "run.abort", "run.fail")
+            if (value := stamp(event.get("t"))) is not None]
+    terminal = min(ends) if ends else None
+    return [event for event in events if event.get("type") not in ("cost", "coverage_gap")
+            and (terminal is None or (value := stamp(event.get("t"))) is not None and value <= terminal)]
+
+
 def record_activity(spans, key, event, action, gaps, label):
     """Accumulate only observed active task/phase segments across resume."""
     span = spans.setdefault(key, {"start": None, "end": None, "duration_seconds": None, "segments": []})

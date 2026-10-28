@@ -34,7 +34,7 @@ def run(args, gate):
             fast_metrics.safe(
                 "emit",
                 project,
-                state["key"],
+                fast_metrics.identity(state),
                 "invalidate",
                 reason="fix_round",
                 finding_ids=[str(item)[:32] for item in args.finding],

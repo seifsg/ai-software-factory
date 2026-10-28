@@ -134,7 +134,7 @@ def add(home, run, data):
         fast_metrics.safe(
             "emit_wait",
             run["project"],
-            run["key"],
+            fast_metrics.identity(run),
             "start",
             "helper",
             event_id=f"wait-{value['generation']}",
@@ -166,7 +166,7 @@ def finish(home, run, data):
         fast_metrics.safe(
             "emit_wait",
             run["project"],
-            run["key"],
+            fast_metrics.identity(run),
             "finish",
             "helper",
             event_id=f"wait-{token}-end",

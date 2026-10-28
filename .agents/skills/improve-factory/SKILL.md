@@ -56,7 +56,7 @@ Do not code before the plan is recorded.
 
 ## 4. Repair
 
-- Every todo is a checklist item in the maintenance ticket: the full 0–4 loop with pre, change and post notes, ticked after its check.
+- For each todo, run 0–4; log pre/do/post, then tick. Record observed `metrics task` start and finish/fail/cancel/resume. `try` alone is not completion.
 - Keep the owner posted:
   - the gate's card after each step (relay it where your agent does not show it);
   - one line per wave of delegates;

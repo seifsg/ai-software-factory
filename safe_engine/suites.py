@@ -1,6 +1,8 @@
 """Reuse complete-suite evidence only for identical effective inputs and intact outputs."""
 import json
 import os
+import time
+import uuid
 from pathlib import Path
 
 from .project import EngineError, digest, executable_path, file_hash, git, inside, reject_path_aliases, rescan
@@ -57,6 +59,27 @@ def describe(project, commands, declared, context):
 
 
 def evidence(project, results):
+    """Measure an actual proof check while preserving its Boolean contract."""
+    try:
+        from . import run_metrics
+    except Exception:
+        run_metrics = None
+    op_id = f'evidence-{uuid.uuid4().hex}'
+    if run_metrics:
+        run_metrics.safe_call(run_metrics.emit_current, 'operation.start', name='evidence_validation', event_id=op_id)
+    started = time.monotonic()
+    passed = False
+    try:
+        passed = _evidence(project, results)
+        return passed
+    finally:
+        if run_metrics:
+            run_metrics.safe_call(run_metrics.emit_current, 'operation.finish', name='evidence_validation',
+                                  event_id=op_id + '-end', parent_id=op_id,
+                                  duration_seconds=round(time.monotonic() - started, 3), passed=passed)
+
+
+def _evidence(project, results):
     """Verify every retained command result and its local outputs before any reuse."""
     if not isinstance(results, list) or not 0 < len(results) <= 1000:
         return False
@@ -157,9 +180,8 @@ def execute(project, identity, run, *, cache=True, stop=None, validate=lambda re
             atomic_json(path, {**row, 'checksum': digest(row)})
         try:
             from . import run_metrics
-            duration = sum(float(item.get('duration_seconds') or 0) for item in results)
             run_metrics.emit_current('operation.finish', name='full_suite', event_id=op_id + '-end',
-                                     parent_id=op_id, duration_seconds=round(duration, 3), reused=False,
+                                     parent_id=op_id, reused=False,
                                      container=True)
             if not unchanged:
                 run_metrics.emit_current('invalidate', reason='suite_inputs_changed_after_execution')

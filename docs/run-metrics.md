@@ -6,7 +6,11 @@ factory-versus-agent evaluation. Data stays under ignored `.factory/metrics/`.
 
 ## Event model (`metrics_schema` 1)
 
-Each line in `.factory/metrics/<run-key>/events.jsonl` is one event. Correlate
+Each line in `.factory/metrics/<metrics-instance-key>/events.jsonl` is one event. Fast
+uses its gate key plus its immutable run instance, so reusing a closed gate key
+keeps the old analytics separate. The current gate key resolves to its instance
+while open; after close, supply the folder's full instance key for historical
+report, compare, export, usage or delete. Correlate
 run, task and operation ids with optional parent links. Duplicate `event_id`
 values do not double-count.
 Writers hold a per-run file lock and refresh an in-memory count/ID index from
@@ -33,9 +37,11 @@ agent activity stays unknown rather than inferred from silence. Fast declares
 frozen T-numbers at planning. Explicit `metrics task` boundaries are needed for
 task spans; a successful `try Tn` alone does not establish task completion.
 Helper IDs identify waits, not all helper activity. Safe records its ticket
-boundary from persisted lifecycle transitions.
+boundary from persisted lifecycle transitions. A caller may bind an explicitly
+known `task_id` to nested commands and waits; operations with no reliable task
+identity stay unassigned, including shared Fast checks.
 
-Run meta (`.factory/metrics/<run-key>/meta.json`) stores factory revision, mode,
+Run meta (`.factory/metrics/<metrics-instance-key>/meta.json`) stores factory revision, mode,
 kind, platform, runtime and a hash of the observed ticket set when known.
 Structured operational metadata only: no prompts,
 source trees, credentials or raw environment values. Event lines are size-capped;
@@ -43,7 +49,10 @@ runs retained are capped.
 
 ### Duration semantics
 
-- **Elapsed** (`elapsed_seconds`): end-to-end wall from first to last event UTC time.
+- **Elapsed** (`elapsed_seconds`): delivery wall from first operational event to
+  the terminal lifecycle event, or the latest operational event while open.
+- Terminal lifecycle events bound delivery wall time. Later usage imports and
+  corruption notices cannot add time to a finished run; open reports are partial.
 - **Summed operations** (`summed_operation_seconds`): sum of finished operation
   durations (prefer `mono_ns` only when both ends share a process).
 - **Overlap** (`overlap_seconds`): time covered by more than one finished
@@ -73,7 +82,8 @@ python skills/safe-engine/scripts/fast_gate.py metrics task --key <run> --task-i
 
 `metrics task` requires an open Fast run and one of its frozen T-numbers.
 Mark boundaries when they are actually observed. Reports keep incomplete spans
-and coverage gaps when boundaries were not observed.
+and coverage gaps when boundaries were not observed. Project metrics commands
+route to the active run's pinned gate; an older pin does not gain new commands.
 
 `metrics compare --keys ...` uses completed runs with the same revision,
 platform, mode, kind and observed ticket-set scope. It reports cohort sizes,
@@ -118,7 +128,7 @@ Agreed budget (plan + measured Windows NTFS revision recorded in the #175 plan):
 
 `metrics overhead` is a single-shot measurement (with warm-up); `within_budget` checks all three rules. Approval waits are a reserved category and stay uncovered until an owner emits them. Container operations such as `full_suite` wrap per-command ops and are excluded from summed/overlap totals.
 
-On Windows 11 NTFS, a single 100-pair CLI sample with 20 warm-up pairs measured
+On an earlier Windows 11 NTFS candidate, a single 100-pair CLI sample with 20 warm-up pairs measured
 2.001 ms append-pair p99, 23.721 ms report generation for 242 events, and
 0.167 s combined collection/report time. A separate 10,000-event local sample
 measured 69.453 ms report generation. These are workload measurements, not
