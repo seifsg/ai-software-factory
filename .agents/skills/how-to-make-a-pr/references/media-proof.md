@@ -23,5 +23,3 @@ Every PR shows a skeptical owner truthful before/after proof: what failed or was
 - Inspect every screenshot/play every clip: readable, correct, no unexplained errors/secrets. Reuse same-candidate/state/input observations and URLs with provenance/access checked. Changed/unknown inputs invalidate affected After; source drift still needs fresh gated Show, including docs/tests. Never restamp stale media. Keep Before and unmatched conditions; a demo cannot rule out bugs.
 - Upload first (`github.md`); verify every image renders/video plays for reviewers in the PR. No localhost/local links; inaccessible media is missing proof.
 - Each outcome declares **Visual:**/**Journey:** (`pr-layout.md`). **Media waiver:** needs explicit scoped owner authority; tools/access/time imply none. Missing media stays a visible gap with recovery action and blocks evidence completion. An incomplete draft preserves progress, not a completed handoff.
-
-
