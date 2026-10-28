@@ -21,17 +21,23 @@ API serialize through the lock; external writes that ignore it are unsupported.
 | `metrics_schema` | Integer schema version |
 | `event_id` | Stable id; duplicates do not double-count |
 | `parent_id` | Optional parent event |
-| `type` | `run.*`, `phase.*`, `operation.*`, `wait.*`, `reuse`, `invalidate`, `coverage_gap`, `cost` |
-| `t` | UTC timestamp |
-| `mono_ns` | Process monotonic stamp for in-process intervals |
+| `type` | `run.*`, `phase.*`, `task.*`, `operation.*`, `wait.*`, `reuse`, `invalidate`, `coverage_gap`, `cost` |
+| `t` | Microsecond UTC timestamp |
+| `mono_ns`, `pid` | Process monotonic stamp and process ID for in-process intervals |
+| `task_id`, `helper_id` | Observed frozen task ID or opaque helper wait ID, where available |
 
 Track phase start, finish, failure, cancellation and resume. Record command and
 check durations, full-suite queue versus execution, helper/owner/approval waits,
 fresh versus reused work, retry and proof invalidation reasons. Unobservable
-agent activity stays unknown rather than inferred from silence.
+agent activity stays unknown rather than inferred from silence. Fast declares
+frozen T-numbers at planning. Explicit `metrics task` boundaries are needed for
+task spans; a successful `try Tn` alone does not establish task completion.
+Helper IDs identify waits, not all helper activity. Safe records its ticket
+boundary from persisted lifecycle transitions.
 
 Run meta (`.factory/metrics/<run-key>/meta.json`) stores factory revision, mode,
-kind, platform and runtime. Structured operational metadata only: no prompts,
+kind, platform, runtime and a hash of the observed ticket set when known.
+Structured operational metadata only: no prompts,
 source trees, credentials or raw environment values. Event lines are size-capped;
 runs retained are capped.
 
@@ -39,9 +45,13 @@ runs retained are capped.
 
 - **Elapsed** (`elapsed_seconds`): end-to-end wall from first to last event UTC time.
 - **Summed operations** (`summed_operation_seconds`): sum of finished operation
-  intervals (prefer `mono_ns` when both ends exist).
+  durations (prefer `mono_ns` only when both ends share a process).
 - **Overlap** (`overlap_seconds`): time covered by more than one finished
-  operation. Do not add overlap into delivery time.
+  command, aligned by UTC. Do not add overlap into delivery time.
+- **Unaccounted** (`unaccounted_seconds`): UTC wall outside the union of
+  positioned commands and waits. Unknown when an interval cannot be placed.
+- **Task/phase spans**: sum observed segments through cancel and resume. These
+  boundary spans can include waits; they are not CPU or active effort.
 - Never label an elapsed field as CPU time without CPU measurement.
 - Cross-process UTC alignment may skew; incomplete spans stay incomplete.
 
@@ -58,7 +68,19 @@ python skills/safe-engine/scripts/fast_gate.py metrics export --key <run> --dest
 python skills/safe-engine/scripts/fast_gate.py metrics delete --key <run>
 python skills/safe-engine/scripts/fast_gate.py metrics overhead [--key <run>] [--events N]
 python skills/safe-engine/scripts/fast_gate.py metrics usage --key <run> --file <record> [--rates <card.json>]
+python skills/safe-engine/scripts/fast_gate.py metrics task --key <run> --task-id T1 --state start|finish|fail|cancel|resume
 ```
+
+`metrics task` requires an open Fast run and one of its frozen T-numbers.
+Mark boundaries when they are actually observed. Reports keep incomplete spans
+and coverage gaps when boundaries were not observed.
+
+`metrics compare --keys ...` uses completed runs with the same revision,
+platform, mode, kind and observed ticket-set scope. It reports cohort sizes,
+exclusions, and timing, reuse, failure and coverage deltas relative to the
+first eligible run in each cohort. Historical runs without a ticket set use a
+coarse kind-only scope, explicitly labeled in the output. Deltas show
+association, not causation.
 
 Reports: `report.json` and `report.md` in the run folder. Token and dollar lines
 appear only after `metrics usage --key <run> --file <host record>`. The command
@@ -66,7 +88,8 @@ refreshes the report, calls no model and scans no other sessions. It accepts
 Claude Code `cost-state` records and Codex JSONL with `session_meta`,
 `turn_context` and cumulative `event_msg.token_count` rows. Codex cached input
 is a subset of input; reasoning output is a subset of output. Those categories
-are counted once. A session with multiple models is labeled `mixed/unknown`
+are counted once. Reasoning output appears as a separate nonadditive detail
+when the host reports it. A session with multiple models is labeled `mixed/unknown`
 because its cumulative total cannot be split by model. Importing the same
 snapshot twice is idempotent; a newer cumulative snapshot supersedes the older
 one for that session. Separate sessions using the same model remain separate.

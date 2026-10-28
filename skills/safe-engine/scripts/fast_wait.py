@@ -138,8 +138,7 @@ def add(home, run, data):
             "start",
             "helper",
             event_id=f"wait-{value['generation']}",
-            job=value.get("job"),
-            name=value.get("name"),
+            helper_id=value["generation"],
         )
     except Exception:
         pass
@@ -163,7 +162,7 @@ def finish(home, run, data):
         import fast_metrics
         created = instant(item["created"])
         ended = instant(finished_at)
-        duration = max(0.0, (ended - created).total_seconds())
+        duration = max(0.0, ended - created)
         fast_metrics.safe(
             "emit_wait",
             run["project"],
@@ -172,6 +171,7 @@ def finish(home, run, data):
             "helper",
             event_id=f"wait-{token}-end",
             parent_id=f"wait-{token}",
+            helper_id=token,
             status=value["status"],
             duration_seconds=round(duration, 3),
         )

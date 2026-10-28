@@ -63,15 +63,24 @@ class Workflow(ContractMixin, CheckMixin, ReviewMixin):
                 mode="safe",
                 kind=state.get("kind") or "change",
             )
+            if len(state.get("history", [])) == 1:
+                run_metrics.emit_task(self.project, key, self.ticket_key or key, "start",
+                                      event_id=f"{key}-task-start")
+                if self.ticket_key:
+                    run_metrics.set_scope(self.project, key, [self.ticket_key])
             phase = state.get("phase")
-            if phase:
+            previous = state["history"][-2]["phase"] if len(state.get("history", [])) > 1 else None
+            if previous and previous != phase:
+                run_metrics.emit_phase(self.project, key, previous,
+                                       "cancel" if phase == "cancelled" else "finish",
+                                       event_id=f"{key}-phase-{previous}-end-{state.get('updated_at', '')}")
+            if phase and phase != previous and phase != "cancelled":
                 run_metrics.emit_phase(
                     self.project,
                     key,
                     phase,
-                    "start" if event in ("start", "resume") else "finish",
-                    event_id=f"{key}-{phase}-{event}-{state.get('updated_at', '')}",
-                    workflow_event=event,
+                    "start",
+                    event_id=f"{key}-phase-{phase}-start-{state.get('updated_at', '')}",
                 )
         except Exception:
             pass
@@ -454,6 +463,8 @@ class Workflow(ContractMixin, CheckMixin, ReviewMixin):
         try:
             from . import run_metrics
             key = state.get("run_id") or self.ticket_key or "safe-run"
+            run_metrics.emit_task(self.project, key, self.ticket_key or key, "finish",
+                                  event_id=f"{key}-task-finish")
             run_metrics.finalize(self.project, key, outcome="finish")
         except Exception:
             pass
@@ -476,6 +487,8 @@ class Workflow(ContractMixin, CheckMixin, ReviewMixin):
         try:
             from . import run_metrics
             key = state.get("run_id") or self.ticket_key or "safe-run"
+            run_metrics.emit_task(self.project, key, self.ticket_key or key, "cancel",
+                                  event_id=f"{key}-task-cancel")
             run_metrics.finalize(self.project, key, outcome="abort")
         except Exception:
             pass

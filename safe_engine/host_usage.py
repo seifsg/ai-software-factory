@@ -70,8 +70,11 @@ def summarize(record, rates=None, source_id=None):
         cached = _count(counts.get("cached_input_tokens"))
         written = _count(counts.get("cache_write_input_tokens"))
         output = _count(counts.get("output_tokens"))
+        reasoning = _count(counts.get("reasoning_output_tokens"))
         if cached + written > input_tokens:
             raise ValueError("Codex cached input exceeds total input")
+        if reasoning > output:
+            raise ValueError("Codex reasoning output exceeds total output")
         if counts.get("total_tokens") is not None and _count(counts["total_tokens"]) != input_tokens + output:
             raise ValueError("Codex total tokens disagree with input plus output")
         usage = {record.get("model") or "unknown": {
@@ -90,7 +93,11 @@ def summarize(record, rates=None, source_id=None):
         if not isinstance(row, dict):
             continue
         counts = {label: _count(row.get(key)) for key, label in TOKEN_FIELDS}
+        if provenance == "codex-token-count":
+            counts.pop("thinking")  # reasoning is already included in Codex output
         item = {"model": str(name), "counts": counts, "tokens": sum(counts.values())}
+        if provenance == "codex-token-count":
+            item["reasoning_output_tokens"] = reasoning
         model_cost = _money(row.get("costUSD"))
         if model_cost is not None and record.get("hasUnknownModelCost") is False:
             item["cost_usd"] = model_cost
@@ -161,5 +168,8 @@ def _estimate(models, rates):
     return round(total, 6)
 
 
-def detail(counts):
-    return ", ".join(f"{label} {count}" for label, count in counts.items())
+def detail(counts, reasoning_output_tokens=None):
+    parts = [f"{label} {count}" for label, count in counts.items()]
+    if reasoning_output_tokens is not None:
+        parts.append(f"reasoning_output {reasoning_output_tokens} (included in output)")
+    return ", ".join(parts)

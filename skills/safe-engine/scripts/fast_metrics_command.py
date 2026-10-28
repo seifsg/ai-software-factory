@@ -9,19 +9,30 @@ import fast_metrics as metrics
 
 def parser(sub, common):
     command = sub.add_parser("metrics", parents=[common], help="Local run metrics report, compare, export or delete")
-    command.add_argument("action", choices=("report", "compare", "export", "delete", "overhead", "usage"))
+    command.add_argument("action", choices=("report", "compare", "export", "delete", "overhead", "usage", "task"))
     command.add_argument("--key", help="Run key under .factory/metrics/")
     command.add_argument("--keys", nargs="+", help="Run keys for compare")
     command.add_argument("--dest", help="Export destination directory")
     command.add_argument("--events", type=int, default=200, help="Paired operations for overhead fixture")
     command.add_argument("--file", help="Host usage jsonl or cost-state JSON already on disk")
     command.add_argument("--rates", help="Optional rate card JSON. Prices tokens only when every field is listed")
+    command.add_argument("--task-id", help="Frozen T-number to mark an observed task boundary")
+    command.add_argument("--state", choices=("start", "finish", "fail", "cancel", "resume"))
 
 
 def run(args, gate):
     try:
         project = Path(gate.find_project(args.project)).resolve()
         mod = metrics.module()
+        if args.action == "task":
+            evidence.require(args.key and args.task_id and args.state, "task needs --key, --task-id and --state")
+            project, run = gate.open_run(project)
+            evidence.require(not run.get("closed") and args.key == run["key"] and args.task_id in run.get("todos", []),
+                             "Task boundary needs an open run and its frozen T-number")
+            evidence.require(mod.emit_task(project, args.key, args.task_id, args.state),
+                             "Could not record task boundary")
+            print(f"Observed task {args.task_id}: {args.state}")
+            return
         if args.action == "report":
             key = args.key
             if not key:

@@ -175,6 +175,9 @@ class ContractTests(unittest.TestCase):
         self.assertEqual(len({row["session_id"] for row in costs}), 3)
         self.assertTrue(all(row["scope"] == "shared_session" for row in costs))
         self.assertIn("cache_read 40", next(row["detail"] for row in costs if row["amount"] == 120))
+        self.assertIn("reasoning_output 5 (included in output)",
+                      next(row["detail"] for row in costs if row["amount"] == 120))
+        self.assertNotIn("thinking 0", next(row["detail"] for row in costs if row["amount"] == 120))
         with self.assertRaises(ValueError):
             summarize({"type": "codex-usage", "total_token_usage": {
                 "input_tokens": 10, "cached_input_tokens": 11, "output_tokens": 1}})
@@ -229,6 +232,64 @@ class ContractTests(unittest.TestCase):
         compared = metrics.compare(self.project, [self.key, other])
         self.assertEqual(compared["sample_size"], 2)
         self.assertIn("does not claim causation", compared["note"])
+
+    def test_observed_tasks_helpers_resume_and_failed_commands(self):
+        rows = [
+            ("t0", "task.declare", 0, {"task_id": "T1"}),
+            ("t1", "task.start", 0, {"task_id": "T1"}),
+            ("p0", "phase.start", 0, {"phase": "build"}),
+            ("c0", "operation.start", 1, {"name": "check"}),
+            ("w0", "wait.start", 1, {"category": "helper", "helper_id": "opaque"}),
+            ("w1", "wait.finish", 4, {"category": "helper", "helper_id": "opaque",
+                                           "parent_id": "w0", "status": "completed"}),
+            ("c1", "operation.finish", 5, {"name": "check", "parent_id": "c0", "passed": False}),
+            ("p1", "phase.cancel", 5, {"phase": "build"}),
+            ("t2", "task.cancel", 5, {"task_id": "T1"}),
+            ("p2", "phase.resume", 6, {"phase": "build"}),
+            ("t3", "task.resume", 6, {"task_id": "T1"}),
+            ("p3", "phase.finish", 8, {"phase": "build"}),
+            ("t4", "task.finish", 8, {"task_id": "T1"}),
+        ]
+        events = [{"event_id": name, "type": kind, "t": f"2026-01-01T00:00:{second:02d}+00:00",
+                   "pid": 10, "mono_ns": second * 1_000_000_000, **fields}
+                  for name, kind, second, fields in rows]
+        report = metrics.aggregate(events, outcome="finish")
+        self.assertEqual(report["phases"]["build"]["duration_seconds"], 7.0)
+        self.assertEqual(report["tasks"]["T1"]["duration_seconds"], 7.0)
+        self.assertEqual(report["helpers"][0]["helper_id"], "opaque")
+        self.assertEqual(report["helpers"][0]["status"], "completed")
+        self.assertEqual(report["failed_operation_count"], 1)
+        self.assertEqual(report["failed_operations"][0]["status"], "failed")
+        self.assertEqual(report["unaccounted_seconds"], 4.0)
+        self.assertIn("Failed commands", metrics.markdown(report))
+
+    def test_compare_excludes_incomplete_and_unmatched_scope(self):
+        for key, scope, outcome in (("first", "same", "finish"), ("second", "same", "finish"),
+                                     ("partial", "same", "partial"), ("other", "different", "finish")):
+            metrics.ensure_run(self.project, key, factory_revision="r1", mode="fast", kind="change")
+            metrics.set_scope(self.project, key, [scope])
+            metrics.finalize(self.project, key, outcome=outcome)
+        result = metrics.compare(self.project, ["first", "second", "partial", "other"])
+        self.assertEqual(result["requested"], 4)
+        self.assertEqual(result["eligible_completed"], 3)
+        self.assertEqual(result["sample_size"], 2)
+        self.assertEqual(result["groups"][0]["pair_count"], 1)
+        self.assertIsNotNone(result["groups"][0]["deltas"][0]["elapsed_seconds_delta"])
+        self.assertEqual({row["reason"] for row in result["excluded"]}, {"not_completed", "no_matching_run"})
+
+    def test_interrupted_resume_keeps_unknown_prior_segment(self):
+        events = [
+            {"event_id": "start", "type": "task.start", "task_id": "T1",
+             "t": "2026-01-01T00:00:00+00:00", "pid": 1, "mono_ns": 10},
+            {"event_id": "resume", "type": "task.resume", "task_id": "T1",
+             "t": "2026-01-01T00:00:05+00:00", "pid": 2, "mono_ns": 10},
+            {"event_id": "finish", "type": "task.finish", "task_id": "T1",
+             "t": "2026-01-01T00:00:07+00:00", "pid": 2, "mono_ns": 2_000_000_010},
+        ]
+        report = metrics.aggregate(events)
+        self.assertIsNone(report["tasks"]["T1"]["duration_seconds"])
+        self.assertEqual(report["tasks"]["T1"]["segments"][0]["duration_seconds"], 2.0)
+        self.assertTrue(any(gap["gap"] == "task_interrupted_segment_unknown" for gap in report["coverage_gaps"]))
 
     def test_export_and_delete(self):
         metrics.ensure_run(self.project, self.key)

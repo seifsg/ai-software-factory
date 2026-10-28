@@ -36,6 +36,12 @@ def on_start(project, run):
 
 
 def on_done(project, run, step, steps):
+    if step == "tickets":
+        safe("set_scope", project, run["key"], run.get("tickets"))
+    elif step == "plan":
+        for task_id in run.get("todos", []):
+            safe("emit_task", project, run["key"], task_id, "declare",
+                 event_id=f"{run['key']}-task-{task_id}-declare")
     safe(
         "emit_phase",
         project,
@@ -68,7 +74,6 @@ def on_pause(project, run, reason, prior_pause=None):
             "start",
             "owner",
             event_id=wait_id,
-            detail=str(reason)[:200],
         )
         return
     stamp = (prior_pause or {}).get("at") or "unknown"

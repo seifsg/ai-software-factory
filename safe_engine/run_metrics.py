@@ -21,6 +21,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from safe_engine.host_usage import detail as usage_detail
+from safe_engine.metrics_calculations import (clock, share as _share, ranked as _ranked, repeated as _repeated,
+                                              utc_delta_seconds as _utc_delta_seconds,
+                                              elapsed_seconds as _elapsed_seconds,
+                                              overlap_seconds as _overlap_seconds,
+                                              uncovered_seconds, wall_interval, duration_seconds, record_activity)
 
 _CURRENT = ContextVar("run_metrics_current", default=None)
 _SEEN_IDS = {}
@@ -49,6 +54,7 @@ OVERHEAD_BUDGET = {
 EVENT_TYPES = frozenset({
     "run.start", "run.finish", "run.abort", "run.fail",
     "phase.start", "phase.finish", "phase.fail", "phase.cancel", "phase.resume",
+    "task.declare", "task.start", "task.finish", "task.fail", "task.cancel", "task.resume",
     "operation.start", "operation.finish",
     "wait.start", "wait.finish",
     "reuse", "invalidate",
@@ -61,7 +67,7 @@ WAIT_CATEGORIES = frozenset({
 
 
 def utc_now():
-    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+    return datetime.now(timezone.utc).isoformat(timespec="microseconds")
 
 
 def metrics_root(project):
@@ -94,7 +100,7 @@ def _fault(project, run_key, kind, detail):
             run_key,
             "coverage_gap",
             gap=kind,
-            detail=str(detail)[:MAX_FIELD_CHARS],
+            detail=type(detail).__name__ if isinstance(detail, Exception) else kind,
             event_id=f"metrics-gap-{kind}-{_safe_key(run_key)}",
             _internal=True,
         )
@@ -143,6 +149,24 @@ def ensure_run(project, run_key, *, factory_revision=None, mode=None, kind=None,
         return None
 
 
+def set_scope(project, run_key, tickets):
+    """Store only a digest of observed ticket identity for matched comparisons."""
+    if not tickets:
+        return False
+    try:
+        path = run_dir(project, run_key) / META_NAME
+        meta = json.loads(path.read_text(encoding="utf-8"))
+        meta["scope"] = hashlib.sha256(json.dumps(sorted(tickets)).encode()).hexdigest()[:24]
+        meta["scope_basis"] = "ticket_set"
+        temporary = path.with_name(f".meta-{uuid.uuid4().hex}.tmp")
+        temporary.write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
+        temporary.replace(path)
+        return True
+    except (OSError, ValueError, TypeError) as exc:
+        _fault(project, run_key, "analytics_unwritable", exc)
+        return False
+
+
 def emit(project, run_key, event_type, **fields):
     """Append one structured event. Returns True on success, False on fault. Never raises."""
     internal = fields.pop("_internal", False)
@@ -159,6 +183,7 @@ def emit(project, run_key, event_type, **fields):
             "type": event_type,
             "t": utc_now(),
             "mono_ns": time.monotonic_ns(),
+            "pid": os.getpid(),
             "run_key": _safe_key(run_key),
         }
         parent = fields.pop("parent_id", None)
@@ -204,6 +229,13 @@ def emit(project, run_key, event_type, **fields):
 def emit_phase(project, run_key, phase, action, **fields):
     """action: start|finish|fail|cancel|resume"""
     return emit(project, run_key, f"phase.{action}", phase=phase, **fields)
+
+
+def emit_task(project, run_key, task_id, action, **fields):
+    """Record only an explicitly observed task boundary or declaration."""
+    if not isinstance(task_id, str) or not task_id or len(task_id) > 64:
+        return False
+    return emit(project, run_key, f"task.{action}", task_id=task_id, **fields)
 
 
 def emit_operation(project, run_key, action, name, **fields):
@@ -258,32 +290,31 @@ def aggregate(events, *, meta=None, outcome=None):
         by_id[event["event_id"]] = event
     events = list(by_id.values())
 
-    phase_spans = {}
+    phase_spans, task_spans = {}, {}
     op_intervals = []  # (start_mono, end_mono or None)
+    wall_intervals, command_wall_intervals = [], []
+    placement_unknown = False
     open_ops = {}
     waits = {name: 0.0 for name in WAIT_CATEGORIES}
     open_waits = {}
+    helpers = {}
     reuse_count = 0
     invalidate_reasons = {}
     gaps = []
     costs, snapshots = [], {}
-    longest = []
+    longest, failed = [], []
 
     for event in events:
         kind = event.get("type")
         mono = event.get("mono_ns")
-        if kind == "phase.start":
-            phase_spans[event.get("phase")] = {"start": event.get("t"), "start_mono": mono, "end": None}
-        elif kind in ("phase.finish", "phase.fail", "phase.cancel"):
-            span = phase_spans.get(event.get("phase")) or {}
-            span.update(end=event.get("t"), end_mono=mono, status=kind.split(".")[-1])
-            if span.get("start_mono") is not None and mono is not None:
-                span["duration_seconds"] = round((mono - span["start_mono"]) / 1e9, 3)
-            phase_spans[event.get("phase")] = span
-        elif kind == "phase.resume":
-            phase_spans[event.get("phase")] = {
-                "start": event.get("t"), "start_mono": mono, "end": None, "resumed": True,
-            }
+        if kind and kind.startswith("phase."):
+            record_activity(phase_spans, event.get("phase"), event, kind.split(".")[-1], gaps, "phase")
+        elif kind and kind.startswith("task."):
+            task_id = event.get("task_id")
+            if task_id:
+                span = record_activity(task_spans, task_id, event, kind.split(".")[-1], gaps, "task")
+                if event.get("ticket_id"):
+                    span["ticket_id"] = event["ticket_id"]
         elif kind == "operation.start":
             open_ops[event["event_id"]] = event
         elif kind == "operation.finish":
@@ -294,20 +325,38 @@ def aggregate(events, *, meta=None, outcome=None):
             duration = event.get("duration_seconds")
             start_mono = start.get("mono_ns") if start else None
             end_mono = mono
-            if duration is None and start_mono is not None and end_mono is not None:
-                duration = round((end_mono - start_mono) / 1e9, 3)
+            if duration is None and start:
+                duration = duration_seconds(start, event)
             # Container ops (e.g. full_suite wrapping per-command ops) stay in longest; skip sum/overlap.
             container = bool(event.get("container") or (start or {}).get("container"))
-            if start_mono is not None and not container:
+            if start_mono is not None and end_mono is not None and not container and (
+                    start.get("pid") == event.get("pid") or not (start.get("pid") and event.get("pid"))):
                 op_intervals.append((start_mono, end_mono if end_mono is not None else start_mono))
-            longest.append({
+            if not container:
+                interval = wall_interval(start, event) if start else None
+                if interval is None:
+                    placement_unknown = True
+                else:
+                    wall_intervals.append(interval)
+                    command_wall_intervals.append(interval)
+            status = ("failed" if event.get("passed") is False or event.get("timed_out") is True else
+                      "passed" if event.get("passed") is True else "unknown")
+            operation = {
                 "name": event.get("name") or (start or {}).get("name"),
-                "duration_seconds": duration,
+                "duration_seconds": round(duration, 3) if duration is not None else None,
                 "reused": bool(event.get("reused")),
                 "container": container,
-            })
+                "status": status,
+                "timed_out": bool(event.get("timed_out")),
+            }
+            longest.append(operation)
+            if status == "failed":
+                failed.append(operation)
         elif kind == "wait.start":
             open_waits[event["event_id"]] = event
+            if event.get("category") == "helper" and event.get("helper_id"):
+                helpers[event["helper_id"]] = {"helper_id": event["helper_id"],
+                                               "wait_seconds": None, "status": "open"}
         elif kind == "wait.finish":
             parent = event.get("parent_id")
             start = by_id.get(parent) if parent else None
@@ -324,6 +373,15 @@ def aggregate(events, *, meta=None, outcome=None):
                 waits[category] = round(waits[category] + float(duration), 3)
             elif start is not None:
                 gaps.append({"gap": "wait_duration_unknown", "detail": category, "t": event.get("t")})
+            interval = wall_interval(start, event) if start else None
+            if interval is None:
+                placement_unknown = True
+            else:
+                wall_intervals.append(interval)
+            helper_id = event.get("helper_id") or (start or {}).get("helper_id")
+            if category == "helper" and helper_id:
+                helpers[helper_id] = {"helper_id": helper_id, "wait_seconds": duration,
+                                      "status": event.get("status") or "unknown"}
         elif kind == "reuse":
             reuse_count += 1
         elif kind == "invalidate":
@@ -370,17 +428,30 @@ def aggregate(events, *, meta=None, outcome=None):
     for event_id, start in open_waits.items():
         incomplete.append({"kind": "wait", "category": start.get("category"), "event_id": event_id})
     for phase, span in phase_spans.items():
+        span.pop("_active", None)
+        span.pop("_unknown", None)
         if span.get("end") is None:
             incomplete.append({"kind": "phase", "phase": phase})
+    for task_id, span in task_spans.items():
+        active = span.pop("_active", None)
+        span.pop("_unknown", None)
+        if active:
+            incomplete.append({"kind": "task", "task_id": task_id, "event_id": active.get("event_id")})
+        elif span.get("start") is None:
+            gaps.append({"gap": "task_boundary_unobserved", "detail": task_id, "t": None})
 
     finished_intervals = [(a, b) for a, b in op_intervals if b is not None]
-    summed = round(sum((b - a) / 1e9 for a, b in finished_intervals), 3)
-    overlap = round(_overlap_seconds(finished_intervals), 3)
+    summed = round(sum(row["duration_seconds"] for row in longest
+                       if not row["container"] and row["duration_seconds"] is not None), 3)
+    overlap = round(_overlap_seconds([(int(a * 1e9), int(b * 1e9)) for a, b in command_wall_intervals
+                                      if a < b]), 3)
     elapsed = round(_elapsed_seconds(events, finished_intervals), 3)
 
     longest.sort(key=lambda row: (row.get("duration_seconds") is None, -(row.get("duration_seconds") or 0)))
     wait_total = round(sum(waits.values()), 3)
-    unaccounted = round(max(0.0, elapsed - summed - wait_total), 3)
+    if placement_unknown:
+        gaps.append({"gap": "wall_placement_unknown", "detail": "operation_or_wait", "t": None})
+    unaccounted = None if placement_unknown else uncovered_seconds(events, wall_intervals)
     report = {
         "metrics_schema": METRICS_SCHEMA,
         "outcome": outcome or "partial",
@@ -389,10 +460,14 @@ def aggregate(events, *, meta=None, outcome=None):
         "summed_operation_seconds": summed,
         "overlap_seconds": overlap,
         "phases": phase_spans,
+        "tasks": task_spans,
+        "helpers": list(helpers.values()),
         "waits": waits,
         "reuse_count": reuse_count,
         "invalidation_reasons": invalidate_reasons,
         "longest_operations": longest[:20],
+        "failed_operation_count": len(failed),
+        "failed_operations": failed[:20],
         "wait_total_seconds": wait_total,
         "unaccounted_seconds": unaccounted,
         "ranked": _ranked(elapsed, phase_spans, waits, longest),
@@ -404,8 +479,10 @@ def aggregate(events, *, meta=None, outcome=None):
         "duration_notes": {
             "elapsed": "end-to-end wall from first to last event timestamp (UTC); not CPU time",
             "summed_operation_seconds": "sum of finished non-container operation intervals (monotonic when both ends known)",
-            "overlap_seconds": "overlapping finished non-container operation time; do not add to elapsed for delivery time",
+            "overlap_seconds": "overlapping finished non-container command time aligned by UTC; do not add to elapsed for delivery time",
             "waits": "wall duration_seconds or UTC start/finish delta; mono_ns is not used across processes",
+            "unaccounted_seconds": "UTC run wall outside the union of placed non-container commands and waits; unknown if placement fails",
+            "tasks": "only explicitly observed boundaries; an active span can include waits and is not CPU or active effort",
             "cross_process_utc": "UTC alignment across processes may skew; prefer mono_ns within one process",
             "approval_waits": "approval category reserved; uncovered until an owner emits wait.approval events",
         },
@@ -422,124 +499,6 @@ def within_budget(append_p99_ms, report_ms, collection_seconds, whole_cap_second
     return (append_p99_ms <= OVERHEAD_BUDGET["event_append_p99_ms"]
             and report_ms <= OVERHEAD_BUDGET["report_generate_ms_at_10k"]
             and collection_seconds <= whole_cap_seconds)
-
-
-def clock(seconds):
-    """Short wall duration. None stays unknown. Not CPU time."""
-    if seconds is None:
-        return "unknown"
-    seconds = float(seconds)
-    if seconds < 60:
-        text = f"{seconds:.1f}".rstrip("0").rstrip(".")
-        return f"{text}s"
-    minutes, sec = divmod(int(round(seconds)), 60)
-    hours, minutes = divmod(minutes, 60)
-    if hours:
-        return f"{hours}h {minutes}m {sec}s"
-    return f"{minutes}m {sec}s"
-
-
-def _share(part, whole):
-    if not whole:
-        return "n/a"
-    return f"{round(100 * float(part) / float(whole))}%"
-
-
-def _ranked(elapsed, phases, waits, operations):
-    """Biggest measured slices. Containers stay out so a suite is not counted twice."""
-    rows = []
-    for name, span in phases.items():
-        duration = span.get("duration_seconds")
-        if duration:
-            rows.append({"kind": "phase", "name": name, "seconds": duration})
-    for name, duration in waits.items():
-        if duration:
-            rows.append({"kind": "wait", "name": name, "seconds": duration})
-    longest_command = {}
-    for row in operations:
-        if row.get("container") or not row.get("duration_seconds"):
-            continue
-        name = row.get("name")
-        previous = longest_command.get(name)
-        if previous is None or row["duration_seconds"] > previous:
-            longest_command[name] = row["duration_seconds"]
-    for name, duration in longest_command.items():
-        rows.append({"kind": "command", "name": name, "seconds": duration})
-    rows.sort(key=lambda row: -float(row["seconds"]))
-    for row in rows:
-        row["share"] = _share(row["seconds"], elapsed)
-        row["clock"] = clock(row["seconds"])
-    return rows[:8]
-
-
-def _repeated(operations):
-    """Same command name more than once: the later runs are repeated work, not delivery time."""
-    grouped = {}
-    for row in operations:
-        if row.get("container") or row.get("duration_seconds") is None:
-            continue
-        grouped.setdefault(row.get("name") or "command", []).append(float(row["duration_seconds"]))
-    repeated = []
-    for name, durations in grouped.items():
-        if len(durations) < 2:
-            continue
-        repeated.append({
-            "name": name,
-            "runs": len(durations),
-            "extra_seconds": round(sum(durations) - max(durations), 3),
-            "each_seconds": durations,
-        })
-    repeated.sort(key=lambda row: -row["extra_seconds"])
-    return repeated
-
-
-def _utc_delta_seconds(start, end):
-    try:
-        a = datetime.fromisoformat(str(start).replace("Z", "+00:00"))
-        b = datetime.fromisoformat(str(end).replace("Z", "+00:00"))
-        return (b - a).total_seconds()
-    except ValueError:
-        return None
-
-
-def _elapsed_seconds(events, finished_intervals):
-    stamps = []
-    for event in events:
-        if not event.get("t"):
-            continue
-        try:
-            stamps.append(datetime.fromisoformat(str(event["t"]).replace("Z", "+00:00")))
-        except ValueError:
-            continue
-    if len(stamps) >= 2:
-        return max(0.0, (max(stamps) - min(stamps)).total_seconds())
-    if finished_intervals:
-        lows = [a for a, _ in finished_intervals]
-        highs = [b for _, b in finished_intervals]
-        return max(0.0, (max(highs) - min(lows)) / 1e9)
-    return 0.0
-
-
-def _overlap_seconds(intervals):
-    """Sum of pairwise overlaps is wrong for delivery; return total overlapped coverage depth>1."""
-    if not intervals:
-        return 0.0
-    points = []
-    for start, end in intervals:
-        if end is None or end < start:
-            continue
-        points.append((start, 1))
-        points.append((end, -1))
-    points.sort()
-    depth = 0
-    last = None
-    overlapped = 0
-    for stamp, delta in points:
-        if last is not None and depth > 1:
-            overlapped += stamp - last
-        depth += delta
-        last = stamp
-    return overlapped / 1e9
 
 
 def finalize(project, run_key, *, outcome=None, overhead=None):
@@ -621,7 +580,7 @@ def attach_usage(project, run_key, summary):
             project, run_key, "cost",
             amount=item.get("tokens"), units="tokens", provenance=provenance,
             model=item.get("model"), kind="host", **common,
-            detail=usage_detail(item.get("counts") or {}),
+            detail=usage_detail(item.get("counts") or {}, item.get("reasoning_output_tokens")),
             event_id=f"{run_key}-tokens-{snapshot_id}-{hashlib.sha256(str(item.get('model')).encode()).hexdigest()[:12]}",
         ) and ok
     if has_usd:
@@ -646,7 +605,9 @@ def markdown(report):
         f"Recorded waits: {clock(waits)} ({_share(waits, elapsed)} of wall).",
         "Do not add commands and waits into the wall clock. Overlap is not delivery time.",
         f"Command overlap: {clock(report.get('overlap_seconds') or 0)}.",
-        f"At least {clock(report.get('unaccounted_seconds'))} is neither a recorded command nor a recorded wait.",
+        (f"{clock(report['unaccounted_seconds'])} of wall has neither a recorded command nor wait."
+         if report.get("unaccounted_seconds") is not None else
+         "Unaccounted wall is unknown because a command or wait could not be placed in UTC."),
         "",
         "## Largest measured slices",
         "Each share is versus wall clock. Slices overlap, so the shares are not a pie.",
@@ -656,6 +617,25 @@ def markdown(report):
         lines.append("- none")
     for index, row in enumerate(ranked, 1):
         lines.append(f"{index}. {row['kind']} {row['name']} — {row['clock']} — {row['share']} of wall")
+    lines.extend(["", "## Tasks (observed boundary spans)"])
+    tasks = report.get("tasks") or {}
+    lines.extend(f"- {task_id}: {clock(span.get('duration_seconds'))}, "
+                 f"{span.get('status') or 'boundary unknown'}"
+                 for task_id, span in sorted(tasks.items()))
+    if not tasks:
+        lines.append("- no task boundary observed")
+    lines.extend(["", "## Helper waits"])
+    helpers = report.get("helpers") or []
+    lines.extend(f"- {row['helper_id']}: {clock(row.get('wait_seconds'))}, {row['status']}"
+                 for row in helpers)
+    if not helpers:
+        lines.append("- none observed")
+    lines.extend(["", "## Failed commands"])
+    failed = report.get("failed_operations") or []
+    lines.extend(f"- {row.get('name')}: {clock(row.get('duration_seconds'))}"
+                 for row in failed)
+    if not failed:
+        lines.append("- none observed")
     lines.extend(["", "## Repeated work"])
     repeated = report.get("repeated") or []
     reasons = report.get("invalidation_reasons") or {}
@@ -694,7 +674,7 @@ def markdown(report):
 
 
 def compare(project, run_keys):
-    """Compare completed runs with matching meta context. No causation claims."""
+    """Compare only completed runs inside matching observed context cohorts."""
     rows = []
     for key in run_keys:
         folder = run_dir(project, key)
@@ -703,8 +683,13 @@ def compare(project, run_keys):
         if not report_path.is_file():
             rows.append({"run_key": key, "status": "missing_report"})
             continue
-        report = json.loads(report_path.read_text(encoding="utf-8"))
-        meta = json.loads(meta_path.read_text(encoding="utf-8")) if meta_path.is_file() else {}
+        try:
+            report = json.loads(report_path.read_text(encoding="utf-8"))
+            meta = json.loads(meta_path.read_text(encoding="utf-8")) if meta_path.is_file() else {}
+        except (OSError, ValueError):
+            rows.append({"run_key": key, "status": "invalid_report"})
+            continue
+        scope = meta.get("scope") or meta.get("kind")
         rows.append({
             "run_key": key,
             "status": report.get("outcome"),
@@ -712,26 +697,52 @@ def compare(project, run_keys):
             "platform": meta.get("platform"),
             "kind": meta.get("kind"),
             "mode": meta.get("mode"),
+            "scope": scope,
+            "scope_basis": meta.get("scope_basis") or "kind_only_legacy",
             "elapsed_seconds": report.get("elapsed_seconds"),
             "summed_operation_seconds": report.get("summed_operation_seconds"),
             "overlap_seconds": report.get("overlap_seconds"),
             "reuse_count": report.get("reuse_count"),
+            "failed_operation_count": report.get("failed_operation_count", 0),
             "invalidation_reasons": report.get("invalidation_reasons"),
             "coverage_gap_count": len(report.get("coverage_gaps") or []),
             "event_count": report.get("event_count"),
             "incomplete": len(report.get("incomplete_spans") or []),
         })
-    contexts = {
-        (row.get("factory_revision"), row.get("platform"), row.get("kind"), row.get("mode"))
-        for row in rows if row.get("status") not in (None, "missing_report")
-    }
+    cohorts = {}
+    excluded = []
+    for row in rows:
+        context = tuple(row.get(name) for name in ("factory_revision", "platform", "kind", "mode", "scope"))
+        if row.get("status") != "finish" or not all(context):
+            excluded.append({"run_key": row["run_key"], "reason": "not_completed" if row.get("status") != "finish"
+                             else "context_unknown"})
+        else:
+            cohorts.setdefault(context, []).append(row)
+    groups = []
+    for context, cohort in cohorts.items():
+        if len(cohort) < 2:
+            excluded.append({"run_key": cohort[0]["run_key"], "reason": "no_matching_run"})
+            continue
+        baseline = cohort[0]
+        fields = ("elapsed_seconds", "summed_operation_seconds", "reuse_count",
+                  "failed_operation_count", "coverage_gap_count", "incomplete")
+        deltas = [{"run_key": row["run_key"], "against": baseline["run_key"],
+                   **{name + "_delta": round(row[name] - baseline[name], 3)
+                      if isinstance(row.get(name), (int, float)) and isinstance(baseline.get(name), (int, float))
+                      else None for name in fields}} for row in cohort[1:]]
+        groups.append({"context": dict(zip(("factory_revision", "platform", "kind", "mode", "scope"), context)),
+                       "scope_basis": baseline["scope_basis"], "sample_size": len(cohort),
+                       "pair_count": len(deltas), "baseline": baseline["run_key"], "deltas": deltas})
     return {
         "metrics_schema": METRICS_SCHEMA,
-        "sample_size": len([r for r in rows if r.get("status") != "missing_report"]),
+        "sample_size": sum(group["sample_size"] for group in groups),
         "requested": len(run_keys),
-        "matching_context_groups": len(contexts),
+        "eligible_completed": sum(row.get("status") == "finish" for row in rows),
+        "matching_context_groups": len(groups),
+        "groups": groups,
+        "excluded": excluded,
         "note": "Highlights timing/rework/quality deltas; does not claim causation; "
-                "do not sum overlapping work into delivery time.",
+                "do not sum overlapping work into delivery time. Legacy kind-only scope is coarse.",
         "runs": rows,
     }
 
