@@ -2,7 +2,7 @@
 
 Contents: Stack, Visual system, States and forms, Public pages, Data, Logging, Speed, Security, Dev sign-in, Environment and sample labels, Games and browser lifecycle, External effects, Release.
 
-Quality floor for every app, game, service, tool and library, in every mode; the [size](sizes.md) sets which parts apply. A POC or MVP is never thrown away: record its stack, design brief and budgets in the plan.
+Quality floor for every product and mode; [size](sizes.md) sets scope. POC/MVPs are never disposable: record stack, design brief and budgets in the plan.
 
 - Minimal code means no waste, never a weaker stack, missing states or a bare UI.
 - New products meet all of it except what their size skips. Changes cover affected paths and their consumers; record wider gaps, no unrelated restructuring.
@@ -27,8 +27,9 @@ Fill the design brief before UI code; run `ux-quality` on every UI change. Defau
 - Palette: brand primary, accent, neutrals, success/warning/danger as tokens; at least 4 hex values; WCAG AA contrast.
 - Font: one modern readable sans (Geist or Inter class), 16px base, clear type scale.
 - Logo: own small SVG mark and wordmark; favicon from the mark.
-- Layout: header (logo, navigation, account), content, footer (product, links, ©); signed-in screens drop sign-in and marketing links; responsive phone to desktop.
-- Theme: light; dark mode optional later, never the default. Motion: subtle, respects reduced motion.
+- Layout: header (logo, navigation, account), content, footer (product, links, ©). Signed-in screens omit marketing/sign-in links.
+- POC/MVP: light desktop; mobile apps: light mobile. Extra theme/device/responsiveness work needs a cited request/requirement. Preserve production support and frozen designs.
+- Light theme; polished motion. Honor reduced-motion preferences.
 
 ## States and forms
 

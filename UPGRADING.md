@@ -12,6 +12,10 @@ For every release:
 - Fast methods now bound delegation and proof work; no command, record schema or frozen plan migration is required. Existing runs retain their pinned methods, coverage and stops. Use the revised methods after a human release/update or explicit compatible adoption; this change never resumes a paused project or installs itself. Cross-candidate Show reuse remains unsupported.
 - Selective CLI loading needs the updated bundle after release; no flags or schemas change. For local Windows factory tests, use `python tests/run.py` to select installed Git shells inside its processes. No global shell or host setting needs changing.
 
+## 1.1.2
+
+- After release, update the factory for scoped Show plans. New input defaults to light desktop and Before/After; mobile apps select light phone, and required extra variants are explicit. Existing stored plans and active pins retain their coverage. Design ports select design comparison and keep every frozen reference. No active-run migration is required; see [Show](docs/show-first.md).
+
 ## 1.1.1
 
 - Update the full factory repository before eval runs. Ownership setup/resume failures now refuse execution, and unconfirmed cleanup reports an error. The isolated checker snapshots the canonical ownership helper; no saved-run or active-pin migration is needed. The immutable 1.1.0 tag remains, but its GitHub publication stopped on a cleanup regression; use this fix-forward release.

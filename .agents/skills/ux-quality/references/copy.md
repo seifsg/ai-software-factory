@@ -41,6 +41,6 @@ Keep the reader's language and the project's voice. Shortest clear wording. Keep
 2. Check every claim and detail.
 3. Tighten.
 4. Read it naturally.
-5. Inspect it in the real layout, mobile and desktop.
+5. Inspect it in the real layout on scoped devices.
 
 Stop when accurate, clear and complete.
