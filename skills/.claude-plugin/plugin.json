@@ -1,6 +1,6 @@
 {
   "name": "safe-engine",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Agent-agnostic AI Software Factory: Fast (default), Lucky and Safe delivery with tickets, research, owner questions, a product bar and hook-enforced steps.",
   "homepage": "https://github.com/seifsg/ai-software-factory",
   "repository": "https://github.com/seifsg/ai-software-factory",
