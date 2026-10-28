@@ -162,6 +162,28 @@ class DraftBodyTests(GateHarness, unittest.TestCase):
         return {str(path.relative_to(self.root)): path.read_bytes() for path in self.root.rglob("*")
                 if path.is_file() and not {"pycache", "__pycache__"}.intersection(path.parts)}
 
+    def test_legacy_draft_refuses_without_migration_until_normal_status_recovers(self):
+        self.start("--no-ui", "--no-data", kind="change")
+        state = next((self.root / "home/runs").glob("*.json"))
+        entry = self.root / "home/active" / state.name
+        state.unlink()  # Legacy installations have only the mirror and an unmarked registration.
+        registration = json.loads(entry.read_text(encoding="utf-8"))
+        registration.pop("home")
+        entry.write_text(json.dumps(registration), encoding="utf-8")
+        path = self.project / "draft.md"
+        path.write_text("invalid draft", encoding="utf-8")
+        before = self.inventory()
+        self.gate("report", "--pr-body", "draft.md", ok=False)
+        self.assertEqual(self.inventory(), before)
+        self.assertFalse(state.exists())
+        self.gate("status")
+        self.assertTrue(state.exists())
+        self.assertIn("run.migrate", (self.root / "home/logs/gate.log").read_text(encoding="utf-8"))
+        path.write_text(self.BODY, encoding="utf-8")
+        before = self.inventory()
+        self.assertIn("STRUCTURE ONLY", self.gate("report", "--pr-body", "draft.md"))
+        self.assertEqual(self.inventory(), before)
+
     def test_draft_matches_handoff_rules_and_never_records_progress(self):
         self.start("--no-ui", "--no-data", kind="change")
         path = self.project / "draft.md"

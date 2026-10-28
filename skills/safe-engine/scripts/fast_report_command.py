@@ -29,11 +29,11 @@ def run(args, gate):
             report.lint(path.read_text(encoding='utf-8'))
             print('Report body contains no recognized internal codes.')
             return
-        project, state = gate.open_run(project)
         if args.pr_body:
             import fast_pr_policy
             import fast_record
-            evidence.require(not state.get('closed'), 'Check PR bodies on an open run')
+            state = gate.store.current(gate.load(gate.state_path(project)))  # Read without legacy migration.
+            evidence.require(gate.well_formed(state), 'Check PR bodies on a readable open run')
             path = evidence.local(project, args.pr_body)
             evidence.require(path.stat().st_size <= 100000, 'PR body exceeds 100000 bytes')
             checked = fast_pr_policy.effective(gate.HOME, state)
@@ -41,6 +41,7 @@ def run(args, gate):
             evidence.require(not problems, '\n- '.join(['PR body structure failed:'] + problems))
             print('STRUCTURE ONLY: PR body passed. Handoff, current proofs and review remain required.')
             return
+        project, state = gate.open_run(project)
         evidence.require(not state.get('closed'), 'Publish reports on an open run')
         import fast_progress
         sections = fast_progress.read(gate.record_path(project))
