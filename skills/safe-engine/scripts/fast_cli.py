@@ -9,7 +9,7 @@ def parse(gate):
     """Load requested command options; help and errors keep the complete public CLI."""
     import sys
     argv = sys.argv[1:]
-    if argv and not any(arg in ("-h", "--help") for arg in argv):
+    if argv and not any(arg == "-h" or arg.startswith("--h") and "--help".startswith(arg) for arg in argv):
         try:
             return _parser(gate, argv[0]).parse_args(argv)
         except _FullParserNeeded:
