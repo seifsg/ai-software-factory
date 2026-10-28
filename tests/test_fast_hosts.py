@@ -1,5 +1,7 @@
 """Host adapters for the Fast gate: hook dialects, the launcher's host argument and the per-host installer."""
 import importlib.util
+import contextlib
+import io
 import json
 import os
 from pathlib import Path
@@ -8,6 +10,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from types import SimpleNamespace
 from unittest import mock
 
 SCRIPTS = Path(__file__).resolve().parents[1] / "skills/safe-engine/scripts"
@@ -21,6 +24,63 @@ def module(name):
 
 
 hosts, installer = module("fast_hosts"), module("fast_install")
+
+
+class ParserRegistrationTests(unittest.TestCase):
+    """Keep startup lean without changing the public parser's fallback behavior."""
+
+    def setUp(self):
+        self.cli = module("fast_cli")
+        self.gate = SimpleNamespace(__doc__="Factory CLI.", MODES=("fast",), KINDS=("change",),
+                                    TITLES={"plan": "Plan"}, sibling=mock.Mock(side_effect=module))
+
+    def parse(self, *args):
+        with mock.patch.object(sys, "argv", ["fast_gate.py", *args]):
+            return self.cli.parse(self.gate)
+
+    def test_core_commands_do_not_load_optional_commands(self):
+        for args in (("status",), ("hook", "--host=cursor")):
+            self.gate.sibling.reset_mock()
+            self.assertEqual(self.parse(*args).command, args[0])
+            self.gate.sibling.assert_not_called()
+
+    def test_external_command_loads_only_its_own_parser(self):
+        self.assertEqual(self.parse("version").command, "version")
+        self.gate.sibling.assert_called_once_with("fast_release")
+
+    def test_help_and_errors_match_full_registration(self):
+        for args in ([], ["-hh"], ["-hhh"], ["-help"], ["-hx"], ["--h"], ["--he"], ["--hel"],
+                     ["--help"], ["status", "-hh"], ["status", "--he"], ["status", "--help"],
+                     ["status", "--project"], ["unknown"]):
+            observations = []
+            for parse in (lambda: self.parse(*args),
+                          lambda: self.cli._parser(self.gate).parse_args(args)):
+                out, err = io.StringIO(), io.StringIO()
+                with mock.patch.object(sys, "argv", ["fast_gate.py"]), \
+                        contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+                    with self.assertRaises(SystemExit) as ended:
+                        parse()
+                observations.append((ended.exception.code, out.getvalue(), err.getvalue()))
+            self.assertEqual(*observations)
+
+    def test_new_command_from_existing_module_uses_full_fallback(self):
+        original = self.gate.sibling.side_effect
+
+        def sibling(name):
+            if name != "fast_cleanup":
+                return original(name)
+
+            def register(sub, common):
+                sub.add_parser("cleanup-temp", parents=[common])
+                sub.add_parser("future", parents=[common]).add_argument("--value")
+
+            return SimpleNamespace(parser=register)
+
+        self.gate.sibling.side_effect = sibling
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            parsed = self.parse("future", "--value", "ok")
+        self.assertEqual((parsed.command, parsed.value, err.getvalue()), ("future", "ok", ""))
 
 
 class DialectTests(unittest.TestCase):

@@ -6,6 +6,12 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 
 ## [Unreleased]
 
+### Changed
+
+- Bound Fast delegation and proof work: compact helper context, capability preflight, batched repairs and valid same-candidate evidence reuse. Required checks, conservative freshness, owner stops and active pins are unchanged.
+- Load only requested CLI argument modules on ordinary commands, preserving full help, errors and bundle routing; isolate mocked review protocols and prefer installed Git shells in Windows test processes.
+- Load detailed quality and visual proof methods only for their named situations; report method-file exposure as overlapping text proxies and retain complete preflight receipts.
+
 ## [1.1.2] - 2026-10-28
 
 ### Changed
