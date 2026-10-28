@@ -51,6 +51,8 @@ Command argument registration lives in the gate's sibling `fast_cli.py`; install
 
 The roles (runner, analyst, maker, builder, reviewer), their tiers and the brief, gate and handback rules live in `.agents/skills/safe-engine/references/delegate.md`. Hosts differ only in how a role gets its model, effort and edit limits, and how the owner overrides them. The owner's own session model and effort never change.
 
+Use each host's fresh-context option for focused helper packets; for Codex native delegation, `fork_turns="none"` omits inherited history. Pass the request, current decisions, interfaces, stops and relevant artifact paths explicitly. Full history is an exception with a recorded reason, not a substitute for a brief. Keep short jobs local and use native completion/wait events instead of coordinator polling. This changes no installed model, permissions or global settings.
+
 | | Claude Code | Codex | Cursor | Other agents |
 |---|---|---|---|---|
 | Roles | plugin agents `safe-engine:runner`, `analyst`, `maker`, `builder`, `reviewer` from `skills/agents/`; when they are missing (plugin off or older), a general-purpose agent with the tier's `model` and `effort` per call, told in its brief to stay read-only (read-only roles) and never to spawn | none shipped: the brief names its role | none shipped: the brief names its role | the brief names its role |

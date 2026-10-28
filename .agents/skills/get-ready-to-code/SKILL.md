@@ -4,7 +4,7 @@ description: "Plans the build from a finished analysis: summary of files to chan
 ---
 
 Prepare to build from our plan and analysis.
-Keep required quality. Use `deep-review` worth-it scores to schedule optional polish; retain scope, owner authority and unknown cost.
+Keep required quality. Minimize total execution, context and repeated proof; use `deep-review` worth-it scores for optional polish. Retain scope, owner authority and unknown cost.
 
 Build in complete working iterations. Tiny bug or full product, same logic.
 
@@ -22,28 +22,19 @@ Prepare:
 
 Keep these five outputs in one compact work record. Full depth, the file-summary stop and every 0–4 step stay. Reuse source/decisions; link proof. Within step 3, finish affected callers, counts and links before recording completion. No extra finishing gate.
 
+Fast plans bound journeys/checks, helpers, proof reuse and unexpected repetition. Overruns change the approach and report remaining work, never waive requirements or invent token limits. Preflight uncertain interpreters, wrapper guards and capture/publication in the actual environment with harmless probes, not an early full suite.
+
 Light plan, when your instructions ask for one (a small change or follow-up): the to do list and one success line; the 0–4 loop stays. Otherwise all five outputs.
 
-## ULTRA EXTRA IMPORTANT
+## 0–4 loop
 
 Every plan executes this loop:
 
-0- gather the full context and all important details for the task.
-1- analyze where we will change and prepare the changes
-2- apply our code changes
-3- analyze the applied changes:
-- never ever a circular dependency
-- double check: applied correctly?
-- any extra bs code?
-- over engineered?
-- edge cases: root fixed, guaranteed; improbable ones asserted once; no silent default or copied guard?
-- more optimal? Less code? Less functions?
-- o(1) or as close?
-- any critical gaps?
-- Check and double check. Extremely and highly important: NO CIRCULAR DEPs!!!
-- Does this satisfy our user journey? EXTREMELY IMPORTANT!!
-- Use it: run the item's real effect (screen, endpoint, command, logs) and see it work. Only then tick it in its ticket, with the proof.
-4- issues found in step 3: start over from step 1.
+0- Read relevant context and facts.
+1- Analyze the change and affected consumers.
+2- Apply it.
+3- Review correctness, root-cause edge cases, complexity and required journeys. Remove overengineering; forbid circular dependencies and silent defaults. Assert impossible states once. Use the real screen, endpoint, command or logs before ticking its ticket with proof.
+4- Findings return to step 1.
 
 Second related failure or edge case? Find the shared cause. Why did the previous fix fail? Fix the cause and affected consumers. State what prevents recurrence. Preserve failures; no endless symptom patches or retry cap.
 
@@ -51,7 +42,7 @@ To do steps:
 - Each to do has a pre-step, the step and a post-step, so the loop applies. The loop is absolute for every step.
 - Each to do is a checklist item in its ticket. Automated test suites still come last.
 - Each to do reads as an outcome the owner understands: what it is → what they can do once it is done, then its ticket and criteria. Example: `T4 Download button → click it and the PDF saves (#12, A2)`. Not `T4 add store_true option`.
-- The plan groups independent to dos into waves by files and dependencies. Each wave runs at once, as many as capacity allows; each to do is ticked after its own check.
+- Group useful parallel jobs by files and dependencies; keep tasks shorter than their delegation overhead local. Required independent checking stays separate. Tick each todo after its own use-check.
 - Each to do names its model tier, the lowest that can pass its checks: light (commands with a pass/fail, search, inventory, comparison; no edits), standard (planned or mechanical edits, research, one-lens reviews, walkthroughs) or deep (design calls: architecture, schema, security, unclear bugs; final review). Its delegate's role follows from the tier and whether it edits.
 - A ticket is finished when every item is ticked and its definition of done is proven. Until then the loop continues.
 - A to do that depends on an unproven capability (platform API, device, third-party access) goes first as a bounded spike: one question, one stop condition. A failed spike blocks only that item; the rest continues.

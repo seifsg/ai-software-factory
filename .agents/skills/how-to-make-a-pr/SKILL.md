@@ -5,7 +5,7 @@ description: "Prepares and opens a draft pull request for human review, linked t
 
 # How to make a PR
 
-Open a small, clear **draft PR** for human review. Humans decide ready, merge and release.
+Open a **draft PR**. Humans decide ready, merge and release.
 
 Analysis or review-only requests: do not open, push or comment.
 
@@ -40,9 +40,9 @@ git switch -c <scope>/<short-name> origin/<base>
 
 Every PR shows a skeptical owner truthful before/after proof: what failed or was missing, what now works, the observed benefit. Required in every mode. A short schema, diagram, table or labeled emoji may explain nonvisual proof; prose or illustrative diagrams never replace observed results. Shared backend changes that affect a UI journey still demonstrate that journey.
 
-1. **Inventory now:** map the ticket and diff to every changed or new view, distinct visual state and touched user journey, with affected entry points and results even when only shared logic changed. One outcome per journey; shared views may link the same screenshot pair. Reconcile it again against the final diff.
+1. **Inventory now:** map ticket/diff to changed views, states and journeys, including shared-logic effects. One outcome per journey; share pairs/clips with chapters across outcomes. Reconcile the final diff. Same-rendered-state input variants need behavioral checks, not duplicate pictures. Unchanged views/speculative cases need no media unless required.
 2. **Capture each Before now**, with minimum safe navigation. Exercise or side effects needed: an isolated fixture or existing evidence, conditions stated. Missed: capture from the base commit in a separate checkout and say so. Web views: the gate's `shots` serves base and head on their own ports and shoots the same views at one size. Never fabricate it or reset dirty work to recreate it.
-3. **Prepare the demo:** a fresh isolated slot, profile or test workspace by default; data needed: seed only deterministic, non-sensitive fixtures and record their reset recipe. Preserve the owner's workspace and data. Match before/after viewport, state, sample data and workload; explain unavoidable differences.
+3. **Prepare the demo:** isolated slot/profile/workspace, permitted deterministic non-sensitive fixtures and reset recipe. Preserve owner data; match viewport/state/data/workload or explain differences. Preflight capture/playback and authorized upload using the first planned artifact. Missing tools block dependent proof, never justify a fake upload, public fallback or unsolicited install.
 4. **Capture each After during final manual QA**, per the table: each journey from entry, single-step flows included, through real controls to its confirmed result, plus relevant changed validation, failure, edge and recovery paths. A success toast alone does not prove an external result. Use authorized test destinations; recording grants no sending permission.
 
 | Surface | Proof, Before and After |
@@ -57,10 +57,10 @@ Every PR shows a skeptical owner truthful before/after proof: what failed or was
 | Something new | Before: the prior entry or empty-state screenshot (nonvisual: output), labeled "did not exist"; visual work still needs both screenshots |
 
 - **Bug during capture:** stop, keep a short sanitized failure note, fix it in scope, run affected checks, commit and push the checked fix when authorized, reset the fixture, then restart the whole planned demo on that candidate. Replace failed or stale After media; never edit a failure out to imply success. A fix needing new authority blocks the demo with its cause and next action; no silent deferral or clean-pass claim.
-- **Keep it fast:** plan shots and routes once, reuse one running build and fixture setup, screenshot while recording QA, share clips across outcomes, batch uploads and body updates; no duplicate angles or footage. Record setup, capture and upload durations and the slow stage in the work record; summarize material delay in the PR; improve actual repeated work. Shortest complete demo, never a time limit that drops coverage.
-- Look at every screenshot and play every clip before use: readable, correct result, no unexplained errors, credentials or private data. Bind the inventory and After media to the demonstrated candidate; later code changes invalidate its After. Keep the base evidence; record conditions you could not match. A passing demo never proves no bugs remain.
-- Upload media first (`references/github.md`); once the PR is open, check each image renders and each video plays for reviewers. No localhost or local-path links. Broken or inaccessible media is missing proof.
-- Under every outcome declare **Visual:** and **Journey:** (`references/pr-layout.md`). A **Media waiver:** needs the owner's explicit request; missing tools, upload access or time never implies consent. Until media is supplied or waived, keep the gap and recovery action visible and evidence completion blocked. An incomplete draft may preserve progress but is not a completed handoff.
+- **Keep it fast:** plan routes once; reuse build/fixtures; screenshot during QA recording; share clips; batch uploads/body updates. No duplicate angles. Record setup/capture/upload durations and slow stage; explain material delay in the PR. Shortest complete demo, never drop required coverage for time.
+- Inspect every screenshot/play every clip: readable, correct, no unexplained errors/secrets. Reuse same-candidate/state/input observations and URLs with provenance/access checked. Changed/unknown inputs invalidate affected After; source drift still needs fresh gated Show, including docs/tests. Never restamp stale media. Keep Before and unmatched conditions; a demo cannot rule out bugs.
+- Upload first (`references/github.md`); verify every image renders/video plays for reviewers in the PR. No localhost/local links; inaccessible media is missing proof.
+- Each outcome declares **Visual:**/**Journey:** (`references/pr-layout.md`). **Media waiver:** needs explicit scoped owner authority; tools/access/time imply none. Missing media stays a visible gap with recovery action and blocks evidence completion. An incomplete draft preserves progress, not a completed handoff.
 
 ## 5. Make the change
 

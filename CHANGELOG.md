@@ -6,6 +6,10 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 
 ## [Unreleased]
 
+### Changed
+
+- Bound Fast delegation and proof work: compact helper context, capability preflight, batched repairs and valid same-candidate evidence reuse. Required checks, conservative freshness, owner stops and active pins are unchanged.
+
 ## [1.1.1] - 2026-10-27
 
 Retains the delivery improvements listed under 1.1.0 below. That immutable tag passed its merged-tree checks, but GitHub publication stopped on the eval cleanup regression; this release fixes that path forward.
