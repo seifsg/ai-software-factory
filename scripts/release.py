@@ -4,7 +4,8 @@ python scripts/release.py cut X.Y.Z               bump every version copy, fold 
                                                   changelog section, require its upgrade notes, write the manifest
 python scripts/release.py check vX.Y.Z [--out DIR]  the release check plus a dated changelog section; writes
                                                     notes.md, SHA256SUMS and the manifest to DIR
-python scripts/release.py publish vX.Y.Z           check, the full suite, then the GitHub release with those files;
+python scripts/release.py prove vX.Y.Z             check and record complete-suite proof for the merged commit
+python scripts/release.py publish vX.Y.Z           check, reuse matching proof or run the full suite, then publish;
                                                     runs on the owner's machine, no CI
 """
 import argparse
@@ -20,6 +21,7 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from safe_engine import distribution as release  # noqa: E402 - the manifest and release check launchers carry
+from safe_engine import release_proof  # noqa: E402
 
 PLUGIN = ROOT / "skills/.claude-plugin/plugin.json"
 MARKETPLACE = ROOT / ".claude-plugin/marketplace.json"
@@ -142,14 +144,25 @@ def check(tag, out=None):
           f"release files in {out}")
 
 
+def prove(tag):
+    """Create reusable full-suite proof before the owner pushes the release tag."""
+    with release_proof.session(ROOT):
+        check(tag)
+        return release_proof.run(ROOT, tag)
+
+
 def publish(tag):
-    """Publish a pushed tag's GitHub release from this checkout: the check, the full suite, then `gh release create`.
-    Why: releases never wait on CI; the same gate runs locally."""
-    out = Path(tempfile.mkdtemp(prefix=f"factory-{tag}-"))
-    check(tag, out)
-    for cmd in ([sys.executable, str(ROOT / "tests/run.py")],
-                ["gh", "release", "create", tag, "--verify-tag", "--title", tag, "--notes-file", str(out / "notes.md"),
-                 str(out / "release-manifest.json"), str(out / "SHA256SUMS")]):
+    """Publish only current full-suite proof and assets for the exact remote tag."""
+    with release_proof.session(ROOT):
+        out = Path(tempfile.mkdtemp(prefix=f"factory-{tag}-"))
+        check(tag, out)
+        release_proof.tag_target(ROOT, tag)
+        proof = release_proof.run(ROOT, tag)
+        check(tag, out)
+        release_proof.tag_target(ROOT, tag)
+        release_proof.current(ROOT, tag, proof)
+        cmd = ["gh", "release", "create", tag, "--verify-tag", "--title", tag, "--notes-file", str(out / "notes.md"),
+               str(out / "release-manifest.json"), str(out / "SHA256SUMS")]
         try:
             failed = subprocess.run(cmd, cwd=ROOT).returncode
         except OSError as error:  # gh or Python missing
@@ -167,7 +180,8 @@ def main():
     checked.add_argument("tag", help="vX.Y.Z")
     checked.add_argument("--out", type=Path, help="Folder for the release files; default: a new temporary folder "
                                                   "(never inside the checkout, which must stay clean)")
-    sub.add_parser("publish", help="Check a pushed tag, run the suite and publish its GitHub release").add_argument(
+    sub.add_parser("prove", help="Check and retain full-suite proof before tagging").add_argument("tag", help="vX.Y.Z")
+    sub.add_parser("publish", help="Check a pushed tag, reuse or run the suite and publish its GitHub release").add_argument(
         "tag", help="vX.Y.Z")
     args = parser.parse_args()
     try:
@@ -175,9 +189,11 @@ def main():
             cut(args.version)
         elif args.command == "check":
             check(args.tag, args.out)
+        elif args.command == "prove":
+            prove(args.tag)
         else:
             publish(args.tag)
-    except RuntimeError as error:
+    except (RuntimeError, release_proof.EngineError, OSError) as error:
         sys.exit(f"Release refused: {error}")
 
 

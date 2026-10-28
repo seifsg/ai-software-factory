@@ -6,6 +6,10 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 
 ## [Unreleased]
 
+### Changed
+
+- Release publication reuses intact full-suite proof for the exact merged source and environment, retaining manifest checks and verifying the remote tag target.
+
 ## [1.1.2] - 2026-10-28
 
 ### Changed
