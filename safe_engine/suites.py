@@ -1,6 +1,8 @@
 """Reuse complete-suite evidence only for identical effective inputs and intact outputs."""
 import json
 import os
+import time
+import uuid
 from pathlib import Path
 
 from .project import EngineError, digest, executable_path, file_hash, git, inside, reject_path_aliases, rescan
@@ -57,6 +59,27 @@ def describe(project, commands, declared, context):
 
 
 def evidence(project, results):
+    """Measure an actual proof check while preserving its Boolean contract."""
+    try:
+        from . import run_metrics
+    except Exception:
+        run_metrics = None
+    op_id = f'evidence-{uuid.uuid4().hex}'
+    if run_metrics:
+        run_metrics.safe_call(run_metrics.emit_current, 'operation.start', name='evidence_validation', event_id=op_id)
+    started = time.monotonic()
+    passed = False
+    try:
+        passed = _evidence(project, results)
+        return passed
+    finally:
+        if run_metrics:
+            run_metrics.safe_call(run_metrics.emit_current, 'operation.finish', name='evidence_validation',
+                                  event_id=op_id + '-end', parent_id=op_id,
+                                  duration_seconds=round(time.monotonic() - started, 3), passed=passed)
+
+
+def _evidence(project, results):
     """Verify every retained command result and its local outputs before any reuse."""
     if not isinstance(results, list) or not 0 < len(results) <= 1000:
         return False
@@ -116,15 +139,37 @@ def execute(project, identity, run, *, cache=True, stop=None, validate=lambda re
             if stop is not None and stop.is_set():
                 raise EngineError('Suite reuse cancelled before return')
             print('Reused unchanged full-suite result: ' + before['commit'], flush=True)
+            try:
+                from . import run_metrics
+                run_metrics.emit_current('reuse', name='full_suite', commit=before.get('commit'))
+            except Exception:
+                pass
             return {**prior, 'reused': True}
     with admission(stop=stop) as slot:
         current = identity()
         if current != before:
+            try:
+                from . import run_metrics
+                run_metrics.emit_current('invalidate', reason='suite_inputs_changed_while_queued')
+            except Exception:
+                pass
             raise EngineError('Suite inputs changed while queued; request proof for the current candidate')
         prior = cached(project, path, before, validate) if cache and before is not None else None
         if prior:
             print('Reused unchanged full-suite result: ' + before['commit'], flush=True)
+            try:
+                from . import run_metrics
+                run_metrics.emit_current('reuse', name='full_suite', commit=before.get('commit'), after_queue=True)
+            except Exception:
+                pass
             return {**prior, 'reused': True}
+        op_id = f'suite-exec-{slot.generation}'
+        try:
+            from . import run_metrics
+            # container=True: wraps per-command ops; excluded from summed/overlap aggregation
+            run_metrics.emit_current('operation.start', name='full_suite', event_id=op_id, container=True)
+        except Exception:
+            pass
         results = run(slot)
         after = identity()
         for result in results:
@@ -135,4 +180,13 @@ def execute(project, identity, run, *, cache=True, stop=None, validate=lambda re
         if (before is not None and unchanged and evidence(project, results) and validate(results)
                 and (cache_path or path.exists() or sum(1 for _ in directory.glob('*.json')) < 256)):
             atomic_json(path, {**row, 'checksum': digest(row)})
+        try:
+            from . import run_metrics
+            run_metrics.emit_current('operation.finish', name='full_suite', event_id=op_id + '-end',
+                                     parent_id=op_id, reused=False,
+                                     container=True)
+            if not unchanged:
+                run_metrics.emit_current('invalidate', reason='suite_inputs_changed_after_execution')
+        except Exception:
+            pass
         return {**row, 'reused': False}

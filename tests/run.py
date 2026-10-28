@@ -18,7 +18,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 TESTS = ROOT / "tests"
-SERIAL = {"ParallelChecksTests", "HardeningTests", "CheckpointRepairs"}  # concurrency, locks, timeouts
+SERIAL = {"ParallelChecksTests", "HardeningTests", "CheckpointRepairs", "ContractTests"}  # concurrency, locks, timeouts, timing
 SKILL_FILES = re.compile(r"\.agents|SKILL\.md|references/")  # tests that read the skill files themselves
 PACKAGED = {"test_skill_distribution", "test_bundle_inputs"}  # bundle contents and resolvers
 SOURCE_TREES = {"safe_engine", ".agents", "skills", "docs", "scripts"}  # safe_engine/bundle-inputs.json

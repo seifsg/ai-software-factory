@@ -1,4 +1,5 @@
 """Execute syntax and candidate checks with the existing bounded runner."""
+from contextlib import nullcontext
 import json
 from pathlib import Path
 import shutil
@@ -60,6 +61,12 @@ def execute(project, state, gate, syntax_only=False):
     target = "syntax" if syntax_only else "result"
     if saved.get(target):
         gate.log("checks.receipt_replaced", key=state["key"], receipt=saved[target])
+        try:
+            import fast_metrics
+            fast_metrics.safe("emit", project, fast_metrics.identity(state), "invalidate",
+                              reason="checks_receipt_replaced", receipt=target)
+        except Exception:
+            pass
     receipt = uuid.uuid4().hex
     result = {"passed": False, "status": "running", "receipt": receipt,
               "inputs": before, "candidate": candidate, "logs": []}
@@ -76,19 +83,22 @@ def execute(project, state, gate, syntax_only=False):
         if not outcome["passed"]:
             result["status"] = "harness-invalid" if kind == "syntax" else "failed-unclassified"
         return outcome["passed"]
-    parsed = all(run(command, 60, "syntax") for command in parse_commands(project, prepared))
-    passed = parsed
-    if parsed and not syntax_only:
-        observations = saved.get("observations", {})
-        for key, row in prepared["checks"].items():
-            if row.get("manual"):
-                observation = observations.get(key, {})
-                valid = observation.get("candidate") == candidate and observation.get("verdict") in ("PASS", "DEFERRED")
-                passed = passed and valid
-                if not valid:
-                    result["status"] = "manual-observation-missing-or-failed"
-            else:
-                passed = run(row["argv"], row["timeout_seconds"], "run") and passed
+    import fast_metrics
+    binder = fast_metrics.bind(project, state)
+    with binder if binder is not None else nullcontext():
+        parsed = all(run(command, 60, "syntax") for command in parse_commands(project, prepared))
+        passed = parsed
+        if parsed and not syntax_only:
+            observations = saved.get("observations", {})
+            for key, row in prepared["checks"].items():
+                if row.get("manual"):
+                    observation = observations.get(key, {})
+                    valid = observation.get("candidate") == candidate and observation.get("verdict") in ("PASS", "DEFERRED")
+                    passed = passed and valid
+                    if not valid:
+                        result["status"] = "manual-observation-missing-or-failed"
+                else:
+                    passed = run(row["argv"], row["timeout_seconds"], "run") and passed
     result["outcomes"] = outcomes
     result["passed"] = passed and before == checks.identity(project, prepared) and candidate == evidence.candidate(project)
     if result["passed"]:

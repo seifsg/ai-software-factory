@@ -63,6 +63,7 @@
     ".agents/skills/safe-engine/references/playwright.md": 1900,
     ".agents/skills/safe-engine/references/waiting.md": 2200,
     ".agents/skills/safe-engine/references/owner-reports.md": 2100,
+    ".agents/skills/safe-engine/references/run-metrics.md": 2000,
     ".agents/skills/safe-engine/references/affected-checks.md": 1000
   },
   "gate": {

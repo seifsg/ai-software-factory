@@ -1,5 +1,6 @@
 """Show gates real proof on current, complete pictures and retains candidate-bound passes."""
 import copy
+from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
@@ -8,7 +9,8 @@ import sys
 import tempfile
 import time
 import unittest
-from unittest.mock import patch
+from types import SimpleNamespace
+from unittest.mock import Mock, patch
 from png_fixtures import png
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -99,6 +101,45 @@ class ShowFixture(unittest.TestCase):
 
 
 class ShowTests(ShowFixture):
+    def test_observed_owner_wait_records_reply_without_quote_or_timeout_approval(self):
+        from safe_engine import run_metrics
+        import fast_metrics
+
+        self.state["pr_instance"] = "b" * 32
+        self.plan["wait_minutes"] = 1
+        self.state["show"]["plan"] = show.plan(self.plan)
+        self.prepare()
+        gate = Mock()
+        gate.open_run.return_value = (self.project, self.state)
+        gate.now.side_effect = lambda: datetime.now(timezone.utc).isoformat()
+        gate.fail.side_effect = AssertionError
+        for action, data in (("shared", {"channel": "chat", "source": "Fixture", "sent": True,
+                                     "images_accessible": True}),
+                             ("reply", {"action": "proceed", "source": "Fixture",
+                                        "quote": "SECRET_REPLY", "leave": []})):
+            path = self.project / f".factory/{action}.json"
+            path.write_text(json.dumps(data), encoding="utf-8")
+            args = SimpleNamespace(command="show", project=str(self.project), candidate=False,
+                                   plan=None, prepare=None, shared=str(path) if action == "shared" else None,
+                                   reply=str(path) if action == "reply" else None)
+            show_command.run(args, gate)
+            if action == "shared":
+                time.sleep(.01)
+        key = fast_metrics.identity(self.state)
+        report = run_metrics.finalize(self.project, key)
+        self.assertGreater(report["waits"]["approval"], 0)
+        self.assertNotIn("SECRET_REPLY", (run_metrics.run_dir(self.project, key) / "events.jsonl").read_text())
+        timeout = copy.deepcopy(self.state)
+        timeout["key"], timeout["pr_instance"] = "timeout", "c" * 32
+        timeout["show"]["plan"]["wait_minutes"] = 0
+        timeout["show"].pop("reply")
+        timeout["show"]["shared"] = {**timeout["show"]["shared"], "at": gate.now()}
+        fast_metrics.on_show(self.project, timeout, "start")
+        self.assertIn("not approval", show.ready_for_prove(self.project, timeout))
+        events = run_metrics.read_events(self.project, fast_metrics.identity(timeout))
+        self.assertEqual(next(row["status"] for row in events if row["type"] == "wait.finish"),
+                         "deadline_elapsed")
+
     def test_complete_pairs_and_inspection_are_required(self):
         changes = (lambda d: d["screens"].pop(),
                    lambda d: d["screens"][0].update(viewport=[1, 1]),

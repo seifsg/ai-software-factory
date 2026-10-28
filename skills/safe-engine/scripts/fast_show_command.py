@@ -51,20 +51,24 @@ def prove(project, state, gate, fresh=False):
     receipt = uuid4().hex
     holder['proof'] = {"passed": False, "status": "running", "receipt": receipt}
     gate.put(project, state)
-    if state.get('suite_policy') or 'suite_inputs' in plan:
-        from safe_engine.suites import describe, execute
-        def identify():
-            return describe(project, [plan['full_suite']], plan.get('suite_inputs'), plan)
-        def launch(slot):
-            return [run_command(plan['full_suite'], project, plan['timeout_seconds'],
-                                Path(project, '.factory/fast/prove', slot.generation + '.log'), owned_lease=slot.lease())]
-        batch = execute(project, identify, launch, cache=not fresh)
-        result = {**batch['results'][0], 'reused': batch['reused'], 'suite_execution': batch['execution'],
-                  'suite_identity': batch['identity']}
-        result['passed'] = result['passed'] and batch['unchanged']
-    else:
-        result = run_command(plan["full_suite"], project, plan["timeout_seconds"],
-                             Path(project, ".factory/fast/prove", uuid4().hex + ".log"))
+    import fast_metrics
+    binder = fast_metrics.bind(project, state)
+    from contextlib import nullcontext
+    with binder if binder is not None else nullcontext():
+        if state.get('suite_policy') or 'suite_inputs' in plan:
+            from safe_engine.suites import describe, execute
+            def identify():
+                return describe(project, [plan['full_suite']], plan.get('suite_inputs'), plan)
+            def launch(slot):
+                return [run_command(plan['full_suite'], project, plan['timeout_seconds'],
+                                    Path(project, '.factory/fast/prove', slot.generation + '.log'), owned_lease=slot.lease())]
+            batch = execute(project, identify, launch, cache=not fresh)
+            result = {**batch['results'][0], 'reused': batch['reused'], 'suite_execution': batch['execution'],
+                      'suite_identity': batch['identity']}
+            result['passed'] = result['passed'] and batch['unchanged']
+        else:
+            result = run_command(plan["full_suite"], project, plan["timeout_seconds"],
+                                 Path(project, ".factory/fast/prove", uuid4().hex + ".log"))
     result["candidate"] = evidence.candidate(project)
     result["passed"] = result["passed"] and result["candidate"] == candidate
     def finish(current):
@@ -124,6 +128,7 @@ def run(args, gate):
             report = show.prepare(project, state, data)
             path = Path(project, ".factory/fast/show.md")
             path.write_text(show.markdown(project, report), encoding="utf-8")
+            prior_shared = state["show"].get("shared")
             invalidate(state)
             state["show"]["report"] = {**report, "path": ".factory/fast/show.md", "sha256": evidence.file_hash(path)}
             print(path.read_text(encoding="utf-8"))
@@ -138,6 +143,17 @@ def run(args, gate):
                 state["show"]["reply"] = {**show.reply(data, state), "at": gate.now()}
         gate.put(project, state)
         gate.log(f"show.{action}", key=state["key"])
+        if action in ("prepare", "shared", "reply"):
+            try:
+                import fast_metrics
+                if action == "prepare" and prior_shared:
+                    fast_metrics.on_show(project, state, "finish", shared=prior_shared, status="invalidated")
+                elif action == "shared":
+                    fast_metrics.on_show(project, state, "start")
+                elif action == "reply":
+                    fast_metrics.on_show(project, state, "finish", status=state["show"]["reply"]["action"])
+            except Exception:
+                pass
         if action in ("shared", "reply"):
             print(show.notice(project, state))
     except Exception as error:

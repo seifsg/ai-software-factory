@@ -36,7 +36,7 @@ def selected_command(gate, project):
 def route(args, gate):
     """Forward project commands to the pinned gate before installed argument validation."""
     commands = {"done", "status", "close", "try", "scratch", "pause", "resume", "shots", "lane", "wait", "cleanup-temp", "recover-baseline",
-                "design", "show", "prove", "fix-round", "checks", "report"}
+                "design", "show", "prove", "fix-round", "checks", "report", "metrics"}
     options = args[:args.index("--")] if "--" in args else args
     if not options or options[0] not in commands or {"-h", "--help"} & set(options):
         return None

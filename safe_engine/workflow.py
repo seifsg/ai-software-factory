@@ -53,6 +53,50 @@ class Workflow(ContractMixin, CheckMixin, ReviewMixin):
     # One seam per side effect: mixins resolve save/run_command here, so patching this module still applies.
     def persist(self, state, event):
         save(self.directory, state, event)
+        try:
+            from . import run_metrics
+            key = state.get("run_id") or self.ticket_key or "safe-run"
+            run_metrics.ensure_run(
+                self.project,
+                key,
+                factory_revision=state.get("bundle_revision"),
+                mode="safe",
+                kind=state.get("kind") or "change",
+            )
+            if len(state.get("history", [])) == 1:
+                run_metrics.emit_task(self.project, key, self.ticket_key or key, "start",
+                                      event_id=f"{key}-task-start")
+                if self.ticket_key:
+                    run_metrics.set_scope(self.project, key, [self.ticket_key])
+            phase = state.get("phase")
+            previous = state["history"][-2]["phase"] if len(state.get("history", [])) > 1 else None
+            if previous and previous != phase:
+                run_metrics.emit_phase(self.project, key, previous,
+                                       "cancel" if phase == "cancelled" else "finish",
+                                       event_id=f"{key}-phase-{previous}-end-{state.get('updated_at', '')}")
+            if phase and phase != previous and phase != "cancelled":
+                run_metrics.emit_phase(
+                    self.project,
+                    key,
+                    phase,
+                    "start",
+                    event_id=f"{key}-phase-{phase}-start-{state.get('updated_at', '')}",
+                )
+        except Exception:
+            pass
+
+    def metrics_bound(self, state):
+        """Bind suite/runner emit_current for Safe check/prove paths."""
+        from . import run_metrics
+        key = state.get("run_id") or self.ticket_key or "safe-run"
+        return run_metrics.bound(
+            self.project,
+            key,
+            factory_revision=state.get("bundle_revision"),
+            mode="safe",
+            kind=state.get("kind") or "change",
+            task_id=self.ticket_key or key,
+        )
 
     @staticmethod
     def launch(*args, **kwargs):
@@ -417,6 +461,16 @@ class Workflow(ContractMixin, CheckMixin, ReviewMixin):
                       "Local handoff is not remote review, integrated dependency acceptance, or ticket closure."]
         path.write_text("\n".join(lines) + "\n", encoding="utf-8")
         self.persist(state, "Prepared checked local handoff")
+        try:
+            from . import run_metrics
+            key = state.get("run_id") or self.ticket_key or "safe-run"
+            run_metrics.emit_phase(self.project, key, state["phase"], "finish",
+                                   event_id=f"{key}-phase-{state['phase']}-handoff-finish")
+            run_metrics.emit_task(self.project, key, self.ticket_key or key, "finish",
+                                  event_id=f"{key}-task-finish")
+            run_metrics.finalize(self.project, key, outcome="finish")
+        except Exception:
+            pass
         if self.ticket_key:
             self.store.release(self.ticket_key, state["run_id"])
         return {"handoff": str(path), **self.status(state)}
@@ -433,6 +487,14 @@ class Workflow(ContractMixin, CheckMixin, ReviewMixin):
         state["review"] = None
         state["pending_operation"] = None
         self.persist(state, f"Cancelled: {reason}")
+        try:
+            from . import run_metrics
+            key = state.get("run_id") or self.ticket_key or "safe-run"
+            run_metrics.emit_task(self.project, key, self.ticket_key or key, "cancel",
+                                  event_id=f"{key}-task-cancel")
+            run_metrics.finalize(self.project, key, outcome="abort")
+        except Exception:
+            pass
         if self.ticket_key:
             self.store.release(self.ticket_key, state["run_id"])
         return self.status(state)

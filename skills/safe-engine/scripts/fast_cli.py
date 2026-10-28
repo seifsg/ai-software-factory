@@ -97,4 +97,5 @@ def _parser(gate, selected=None):
     register("fast_show_command", "show", "prove")
     register("fast_checks_command", "checks")
     register("fast_report_command", "report")
+    register("fast_metrics_command", "metrics")
     return parser
