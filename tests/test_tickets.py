@@ -209,7 +209,7 @@ class TicketTests(unittest.TestCase):
 
         with patch("safe_engine.workflow.shutil.which", return_value=sys.executable), \
                 patch("safe_engine.workflow.run_command", side_effect=synthetic_reviewer) as reviewer:
-            result = self.flow.review(10)
+            result = self.flow.review(10, builder="cursor")
         self.assertEqual(reviewer.call_count, 1)
         return result
 

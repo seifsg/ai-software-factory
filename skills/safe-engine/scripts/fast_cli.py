@@ -1,21 +1,49 @@
 """Lazy command argument registration; hook dispatch stays in the gate."""
 
 
+class _FullParserNeeded(Exception):
+    """Retry invalid input with the complete parser for identical diagnostics."""
+
+
 def parse(gate):
+    """Load requested command options; help and errors keep the complete public CLI."""
+    import sys
+    argv = sys.argv[1:]
+    if argv and not argv[0].startswith("-"):
+        try:
+            return _parser(gate, argv[0]).parse_args(argv)
+        except _FullParserNeeded:
+            pass  # Full registration also admits commands added by newer modules.
+    return _parser(gate).parse_args(argv)
+
+
+def _parser(gate, selected=None):
     """Build the public CLI from the executing gate and its selected sibling modules."""
     sibling = gate.sibling
     import argparse
-    parser = argparse.ArgumentParser(description=gate.__doc__.splitlines()[0])
+
+    class CommandParser(argparse.ArgumentParser):
+        def error(self, message):
+            if selected is not None:
+                raise _FullParserNeeded
+            super().error(message)
+
+    parser = CommandParser(description=gate.__doc__.splitlines()[0])
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--project", help="Run project; default: nearest folder with .factory/fast/run.json")
     sub = parser.add_subparsers(dest="command", required=True)
-    sibling("fast_cleanup").parser(sub, common)
-    sibling("fast_shots").parser(sub, common)
-    sibling("fast_lane").parser(sub, common)
-    sibling("fast_wait_command").parser(sub, common)
-    sibling("fast_baseline").parser(sub, common)
-    sibling("fast_release").parser(sub)
-    sibling("fast_design_command").parser(sub, common)
+
+    def register(module, *commands, shared=True):
+        if selected is None or selected in commands:
+            sibling(module).parser(sub, *([common] if shared else []))
+
+    register("fast_cleanup", "cleanup-temp")
+    register("fast_shots", "shots")
+    register("fast_lane", "lane")
+    register("fast_wait_command", "wait")
+    register("fast_baseline", "recover-baseline")
+    register("fast_release", "version", "verify", shared=False)
+    register("fast_design_command", "design")
     start = sub.add_parser("start", parents=[common], help="Begin a run and register it for hooks")
     start.add_argument("--key", required=True)
     start.add_argument("--mode", choices=gate.MODES, default="fast")
@@ -59,13 +87,14 @@ def parse(gate):
     rehome = sub.add_parser("rehome", parents=[common],
                             help="Owner only: bring in an open run from another machine or folder")
     rehome.add_argument("--from", dest="source", required=True, help="The folder the run's run.json records")
-    sibling("fast_round").parser(sub, common)
-    sibling("fast_install").parser(sub)
+    register("fast_round", "fix-round")
+    register("fast_install", "install", shared=False)
     orchestrate = sub.add_parser("orchestrate", help="Set up an orchestrator to start factory sessions")
-    sibling("fast_orchestrate").arguments(orchestrate)
+    if selected is None or selected == "orchestrate":
+        sibling("fast_orchestrate").arguments(orchestrate)
     hook = sub.add_parser("hook", help="Answer one host hook event from stdin")
     hook.add_argument("--host", default="claude", help="claude, codex, cursor, or any other hook-capable agent")
-    sibling("fast_show_command").parser(sub, common)
-    sibling("fast_checks_command").parser(sub, common)
-    sibling("fast_report_command").parser(sub, common)
-    return parser.parse_args()
+    register("fast_show_command", "show", "prove")
+    register("fast_checks_command", "checks")
+    register("fast_report_command", "report")
+    return parser

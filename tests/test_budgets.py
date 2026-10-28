@@ -4,6 +4,8 @@ Every run re-sends its method text and gate output each turn, so growth costs ev
 on purpose, with the reason in the PR; `python scripts/token_report.py [--gate] --against <base>` shows the change.
 """
 import json
+from contextlib import redirect_stdout
+from io import StringIO
 from pathlib import Path
 import sys
 import unittest
@@ -30,6 +32,21 @@ class BudgetTests(unittest.TestCase):
             if kind in BUDGETS["loads"]:
                 with self.subTest(kind=kind):
                     self.assertLessEqual(total, BUDGETS["loads"][kind])
+
+    def test_conditional_text_proxy_is_honest(self):
+        rows = {kind: {path for path, size in files if isinstance(size, int)}
+                for kind, files, _ in token_report.report()}
+        quality = ".agents/skills/safe-engine/references/quality-cases.md"
+        media = ".agents/skills/how-to-make-a-pr/references/media-proof.md"
+        self.assertNotIn(quality, rows["change"])
+        self.assertIn(quality, rows["+quality case"])
+        self.assertNotIn(media, rows["change"])
+        self.assertIn(media, rows["+ui"])
+        output = StringIO()
+        with redirect_stdout(output):
+            token_report.main(["--totals"])
+        self.assertIn("not billed tokens", output.getvalue())
+        self.assertIn("Phase/condition rows overlap", output.getvalue())
 
     def test_every_gate_message_stays_within_its_byte_budget(self):
         found = gate_output.measure(ROOT)
