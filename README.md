@@ -238,6 +238,7 @@ Factory maintenance uses an immutable selected runner and a separate editable ca
 | The agent's `gh` commands break in PowerShell | Have it run them in Git Bash: PowerShell 5.1 breaks `{owner}/{repo}` placeholders and nested quotes |
 | Missing on another machine or in a cloud session | Install there too; cloud sessions load the skills committed to their repository |
 | A run started on another machine reads as lost here | Bring the project with its `.factory/` and the run's bundle, then ask the agent to bring the run in, naming the folder it lived in (`fast_gate.py rehome --project <here> --from <old folder>`). Check the card against `status` on the old machine, then retire the copy there with `close --abandon` |
+| A fresh worktree inherits tracked foreign run files | On explicit owner instruction, `fast_gate.py enroll-worktree --project <new-worktree> --source <original-worktree> --bundle <reviewed-factory> --reason "<authority>"` archives the inherited bytes and retains source lineage. Then start a distinct run; the original stays active. See [first use](docs/install.md#what-first-use-does). |
 | The factory itself misbehaved | `improve-factory The factory did [observed]; expected [result].`, or [open an issue](https://github.com/seifsg/ai-software-factory/issues) |
 
 ## 🧰 Skills

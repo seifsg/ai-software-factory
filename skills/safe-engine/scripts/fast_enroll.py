@@ -3,6 +3,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import stat
 import subprocess
 from uuid import uuid4
@@ -47,6 +48,13 @@ def validate(project, source, gate, release):
         raise RuntimeError('Invalid enrollment lineage; preserve evidence and diagnose it') from error
 
 
+def supported(run, gate):
+    """Use the gate's supported shape and reject falsey malformed lifecycle containers."""
+    return (isinstance(run, dict) and gate.well_formed(run) and run.get('closed') is False
+            and isinstance(run.get('moves', []), list)
+            and (run.get('paused') is None or isinstance(run['paused'], dict)))
+
+
 def inherited_snapshot(project, source, gate, release):
     """Prove an unregistered sibling worktree inherited exactly this source run."""
     for root in (project, source):
@@ -86,16 +94,14 @@ def inherited_snapshot(project, source, gate, release):
         plain(path)
     canonical = gate.store.current(gate.load(gate.store.state_path(source_entry)))
     registration = gate.load(source_entry)
-    if (not canonical or canonical.get('closed') is not False or canonical.get('lost')
-            or not isinstance(canonical.get('moves', []), list)
-            or not gate.KEY.fullmatch(str(canonical.get('key')))
+    if (not supported(canonical, gate) or canonical.get('lost')
             or not isinstance(canonical.get('created'), str) or not canonical['created']
             or not isinstance(canonical.get('request'), str) or not canonical['request'].strip()
             or not isinstance(registration, dict) or registration.get('key') != canonical.get('key')
             or gate.norm(registration.get('project', '')) != gate.norm(source)
             or gate.norm(canonical.get('project', '')) != gate.norm(source)):
         raise RuntimeError('Source must have an intact, registered open run')
-    if (not isinstance(inherited, dict) or inherited.get('version') != 1 or inherited.get('closed') is not False
+    if (not supported(inherited, gate) or inherited.get('version') != 1
             or (inherited.get('pr_instance') and inherited['pr_instance'] != canonical.get('pr_instance'))
             or not all(inherited.get(field) and inherited.get(field) == canonical.get(field)
                        for field in ('key', 'created', 'request', 'bundle'))):
@@ -110,6 +116,33 @@ def inherited_snapshot(project, source, gate, release):
     return snapshot, inherited, canonical
 
 
+def inheritance(project, bundle, gate):
+    """Bind a new run to complete archived enrollment evidence, never inherited acceptance."""
+    marker = project / '.factory/worktree-enrollment.json'
+    if not os.path.lexists(marker):
+        return {}
+    plain(marker)
+    try:
+        lineage = gate.load(marker)
+        archive = lineage['archive']
+        if (lineage['version'] != 1 or gate.norm(lineage['project']) != gate.norm(project)
+                or lineage['bundle'] != bundle
+                or not re.fullmatch(r'\.factory/fast/archive/inherited-[0-9a-f]{32}', archive)
+                or set(lineage['files']) != {Path(name).name for name in FILES}):
+            raise ValueError('enrollment identity mismatch')
+        folder = project / archive
+        plain(folder / 'lineage.json')
+        if gate.load(folder / 'lineage.json') != lineage:
+            raise ValueError('archive lineage changed')
+        for name, digest in lineage['files'].items():
+            plain(folder / name)
+            if hashlib.sha256((folder / name).read_bytes()).hexdigest() != digest:
+                raise ValueError('archive bytes changed')
+        return {'inherited': lineage}
+    except (OSError, ValueError, TypeError, KeyError) as error:
+        raise RuntimeError('Enrollment lineage changed or is incomplete; preserve evidence and diagnose it') from error
+
+
 def run(args, gate):
     """Archive all bytes before publishing the new selection; never write the source or its state."""
     import resolve_bundle as release
@@ -121,6 +154,8 @@ def run(args, gate):
     with release.selection_lock(project):
         snapshot, inherited, canonical = validate(project, source, gate, release)
         selected = release.inspect_bundle(args.bundle, entrypoint='safe-engine')
+        if not (Path(selected['bundle_root']) / 'skills/safe-engine/scripts/fast_enroll.py').is_file():
+            raise RuntimeError('Selected factory does not support worktree enrollment; choose a reviewed current bundle')
         archive = project / '.factory/fast/archive' / ('inherited-' + uuid4().hex)
         plain(archive)
         archive.mkdir(parents=True)
