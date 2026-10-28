@@ -8,6 +8,7 @@ a file no rule maps runs everything. Python 3.9+, standard library only.
 import argparse
 import os
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -27,6 +28,17 @@ def setup():
     """What `python -m unittest discover -s tests` gives each process: repo cwd, repo and tests importable."""
     os.chdir(ROOT)
     sys.path[:0] = [str(ROOT), str(TESTS)]
+    if os.name == "nt":
+        git = shutil.which("git")
+        shells = next((parent / "bin" for parent in Path(git).resolve().parents
+                       if all((parent / "bin" / name).is_file() for name in ("sh.exe", "bash.exe"))), None) if git else None
+        if shells:
+            # Prefer the installed Git shell over Windows' WSL launcher, only in test processes.
+            paths = [str(shells), *os.environ.get("PATH", "").split(os.pathsep)]
+            unique = {}
+            for path in paths:
+                unique.setdefault(os.path.normcase(os.path.normpath(path)), path)
+            os.environ["PATH"] = os.pathsep.join(unique.values())
 
 
 def flatten(suite):

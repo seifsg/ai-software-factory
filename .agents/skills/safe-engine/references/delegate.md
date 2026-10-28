@@ -1,6 +1,6 @@
 # Delegate: roles, briefs and gates
 
-Use the cheapest role that can pass its gates. Host models and overrides: the factory's `docs/hosts.md`.
+Use the cheapest capable role; host models/overrides: `docs/hosts.md`.
 
 ## Roles
 
@@ -12,19 +12,21 @@ Use the cheapest role that can pass its gates. Host models and overrides: the fa
 | builder | deep | yes | edits that need design calls: architecture, schema, security, unclear bugs | `<path:lines>: <change>` per change, then `decision: <choice> because <reason>` per call made and `T<n> pre: <before> do: <change> post: <check>` per todo |
 | reviewer | deep | no | final and independent review (`deep-review`), judgement calls that change no file: unclear bugs, architecture | `<path:line or URL> <severity>: <problem>. <fix>.` most severe first, then `verdict: ready`, `ready after fixes` or `not ready: <why>`; with no diff, `decision: <choice> because <reason>` instead |
 
-A todo runs on the role its tier and edit access give. A method that names its own report (hidden checks, UX verdicts, `deep-review`) keeps it. Every handback then adds:
+Use the role's tier/edit access; keep method reports (hidden checks, UX, `deep-review`). Every handback then adds:
 
 - `G<n> PASS <evidence>` or `G<n> FAIL <evidence>` per gate in the brief;
 - `left: <item>: <what it learned>` per unfinished item, when it stops early;
 - at most one refusal, as its last line: `too-big. split: <one-line jobs>`, `needs-confirm. op: <command>` or `ambiguous. ask: <one question>`.
 
-Read the last line first. A refusal is not done: split, confirm or ask, then brief again. Owner handbacks follow [plain reports](owner-reports.md).
+Read refusals first: split, confirm or clarify before briefing again. Owner handbacks use [plain reports](owner-reports.md).
 
 ## Brief
 
-Carry the goal, role, absolute paths, edit limits, conventions, owned branch, handback shape and, in Fast and Lucky, [scratch folder](fast-run.md#the-gate). Quote only needed rules; whole documents only for walkthroughs or reviews. End with one gate per required outcome:
+Carry goal, role, absolute paths, edit limits, branch, handback and [scratch folder](fast-run.md#the-gate). Quote needed rules; whole methods only for walkthroughs/reviews. End with a gate per required outcome:
 
-Set workdir to the lane, per call if needed. Verify cwd before writes; stop on mismatch. Pass lane resources to commands and browsers. Awaiting results: use [quiet waits](waiting.md).
+Default to fresh context: request, decisions, interface, stops and artifact paths. Full chat needs a reason a compact packet cannot suffice. Read targeted ranges/log tails; never resend unchanged methods, transcripts or full outputs each turn. Host controls live in its adapter.
+
+Verify lane cwd before writes; stop on mismatch. Pass its resources to commands/browsers. Use [quiet waits](waiting.md).
 
 ```text
 G1 <outcome> CHECK: <command> EXPECT: <text its output must show>
@@ -34,16 +36,16 @@ G3 MANUAL <outcome>: <what the reviewer judges>
 
 - Every fix a test is said to pin gets a NEG gate. Set it aside with a patch file, never a stash. A gate that cannot fail proves nothing.
 - A maker's last gate is the narrow test for its change. Slow checks (the full suite, long builds) run once on a runner after the wave, on files nobody edits until they end, writing the command and its output to a file in the scratch folder; a red run goes to a fresh maker with the failures.
-- On handback, re-run every runnable gate yourself before accepting; for a slow check, read the end of its output file instead. MANUAL gates go to the reviewer.
+- Keep the full tool return, command, session ID and exit result. Pending or missing exit is no PASS. Reuse PASS only with matching source, command, runtime/environment and intact evidence; changed, failed or untrusted receipts need execution. A delegate verdict is not independent acceptance. Read slow-check logs; MANUAL goes to the reviewer.
 
 ## Size
 
-- One job per agent: one item, or one cluster of findings in one area. Independent items get separate agents.
-- Split a brief with more than three deliverables (separate outcomes; one change repeated across many files is one), more than one commit, or a whole document to read beyond the job's own.
-- A large spec: an analyst scouts it first and returns one brief per job, with the rules it needs quoted and the files and lines it touches.
-- Below the overhead line, do it yourself: a change smaller than its brief.
-- Only you spawn delegates. A job that needs more agents comes back as `too-big. split:`.
-- A delegate that stops early hands back groundwork (`left:`); the next brief quotes it.
+- One job per agent: an item or related findings. Separate useful independent jobs.
+- Split briefs with over three outcomes, multiple commits or a whole unrelated document; one change across files counts once.
+- Large spec: an analyst returns focused briefs with required rules and affected paths.
+- Changes smaller than their brief stay local.
+- Only the coordinator spawns; extra agents need `too-big. split:`.
+- Preserve early groundwork (`left:`) in the next brief.
 
 ## Tier
 
@@ -54,5 +56,5 @@ G3 MANUAL <outcome>: <what the reviewer judges>
 
 ## Rounds
 
-- A fresh delegate per review or fix round. Never resume one across rounds: it re-sends its whole history. Resume only for a quick follow-up while its context is small.
+- Keep one focused maker through a coherent repair batch; start fresh when its context is stale or unrelated. Independent reviewers are fresh and never approve their own repairs.
 - A review goes to a fresh reviewer with the baseline its method names (requirements, plan, rules, the diff and raw evidence such as logs, transcripts and QA notes), never the builder's reasoning or a verdict.

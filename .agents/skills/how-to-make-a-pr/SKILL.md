@@ -5,7 +5,7 @@ description: "Prepares and opens a draft pull request for human review, linked t
 
 # How to make a PR
 
-Open a small, clear **draft PR** for human review. Humans decide ready, merge and release.
+Open a **draft PR**. Humans decide ready, merge and release.
 
 Analysis or review-only requests: do not open, push or comment.
 
@@ -38,29 +38,7 @@ git switch -c <scope>/<short-name> origin/<base>
 
 ## 4. Plan the proof before editing
 
-Every PR shows a skeptical owner truthful before/after proof: what failed or was missing, what now works, the observed benefit. Required in every mode. A short schema, diagram, table or labeled emoji may explain nonvisual proof; prose or illustrative diagrams never replace observed results. Shared backend changes that affect a UI journey still demonstrate that journey.
-
-1. **Inventory now:** map ticket/diff to changed views, states and journeys, including shared-logic effects. POC/MVP: light desktop; mobile apps: light mobile. Extra themes/devices/responsive checks need an explicit request or existing requirement; cite it. Keep design coverage. One outcome per journey; reuse pairs. Reconcile against final diff.
-2. **Capture each Before now**, with minimum safe navigation. Exercise or side effects needed: an isolated fixture or existing evidence, conditions stated. Missed: capture from the base commit in a separate checkout and say so. Web views: the gate's `shots` serves base and head on their own ports and shoots the same views at one size. Never fabricate it or reset dirty work to recreate it.
-3. **Prepare the demo:** isolate the workspace; seed deterministic, non-sensitive fixtures and record reset steps. Preserve owner data. Match viewport, theme, state, data, workload and framing. Focus on the change with context; extra full-page shots need a coverage reason. Explain differences. Design likeness supplements actual Before/After.
-4. **Capture each After during final manual QA**, per the table: each journey from entry, single-step flows included, through real controls to its confirmed result, plus relevant changed validation, failure, edge and recovery paths. A success toast alone does not prove an external result. Use authorized test destinations; recording grants no sending permission.
-
-| Surface | Proof, Before and After |
-|---|---|
-| Screen, page, section | Screenshot pair per changed view and distinct visual state; no hero image standing in for the rest |
-| Touched interactive journey, motion | Final-candidate video per journey, plus screenshot pairs for its changed visuals; Before video optional |
-| API | Same request: status and body as one `diff` block |
-| CLI, script, gate | Same command: output as one `diff` block |
-| Speed, size, cost | Measured numbers, same workload, fenced |
-| Internal module | Proof through the screen, endpoint or command it changes |
-| Method or prose | A fresh walkthrough's changed result, plus the key text as a `diff` |
-| Something new | Before: the prior entry or empty-state screenshot (nonvisual: output), labeled "did not exist"; visual work still needs both screenshots |
-
-- **Bug during capture:** stop, keep a short sanitized failure note, fix it in scope, run affected checks, commit and push the checked fix when authorized, reset the fixture, then restart the whole planned demo on that candidate. Replace failed or stale After media; never edit a failure out to imply success. A fix needing new authority blocks the demo with its cause and next action; no silent deferral or clean-pass claim.
-- **Keep it fast:** plan shots/routes once, reuse the build/fixtures, capture during QA, share clips across outcomes and batch uploads/body updates; no duplicate footage. Record setup/capture/upload durations and the slow stage; summarize material delay in the PR. Never drop coverage to meet a time limit.
-- Look at every screenshot and play every clip before use: readable, correct result, no unexplained errors, credentials or private data. Bind the inventory and After media to the demonstrated candidate; later code changes invalidate its After. Keep the base evidence; record conditions you could not match. A passing demo never proves no bugs remain.
-- Upload media first (`references/github.md`); once the PR is open, check each image renders and each video plays for reviewers. No localhost or local-path links. Broken or inaccessible media is missing proof.
-- Under every outcome declare **Visual:** and **Journey:** (`references/pr-layout.md`). A **Media waiver:** needs the owner's explicit request; missing tools, upload access or time never implies consent. Until media is supplied or waived, keep the gap and recovery action visible and evidence completion blocked. An incomplete draft may preserve progress but is not a completed handoff.
+Every PR shows observed Before/After for each outcome; prose or illustrative diagrams never replace results. Nonvisual methods, CLI, API and speed changes show the same input or workload with a fenced diff or measured numbers. Name `**Visual:**` and `**Journey:**` under each outcome (`references/pr-layout.md`), with a reason when no. Map shared backend effects to UI journeys. For changed views, states, motion, interactions or affected UI journeys, read [visual and journey proof](references/media-proof.md) before editing; its capture, preflight, freshness and waiver rules apply in full.
 
 ## 5. Make the change
 

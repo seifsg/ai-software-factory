@@ -11,6 +11,10 @@ For every release:
 
 - After release, update launchers for `metrics` (`report`, `compare`, `export`, `delete`, `overhead`). New Fast/Lucky/Safe runs write local analytics under `.factory/metrics/` (gitignored). Existing active pins stay unchanged; no migration of prior runs. See [run metrics](docs/run-metrics.md).
 
+- Fast methods now bound delegation and proof work; no command, record schema or frozen plan migration is required. Existing runs retain their pinned methods, coverage and stops. Use the revised methods after a human release/update or explicit compatible adoption; this change never resumes a paused project or installs itself. Cross-candidate Show reuse remains unsupported.
+- Selective CLI loading needs the updated bundle after release; no flags or schemas change. For local Windows factory tests, use `python tests/run.py` to select installed Git shells inside its processes. No global shell or host setting needs changing.
+- New runs read detailed logging/security and visual proof cases through explicit pointers. Existing pins and frozen plans keep their methods; no record migration is required. `token_report.py` now labels phase/condition rows as non-additive file-text proxies.
+
 ## 1.1.2
 
 - After release, update the factory for scoped Show plans. New input defaults to light desktop and Before/After; mobile apps select light phone, and required extra variants are explicit. Existing stored plans and active pins retain their coverage. Design ports select design comparison and keep every frozen reference. No active-run migration is required; see [Show](docs/show-first.md).

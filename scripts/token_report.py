@@ -1,7 +1,7 @@
-"""Print the method text each Fast run kind loads (bytes, estimated tokens), or the gate's output per message.
+"""Estimate selected method file text by run, phase and condition, or measure gate output.
 
-Why: input is the bill. One command measures it, so a trim is kept only when the count drops.
-`--rev` measures any commit, `--against <rev>` compares it with the working tree, `--gate` measures gate output.
+File bytes proxy potential reading, not actual context, model tokens or billing.
+`--rev` measures a commit, `--against` compares it, `--gate` measures gate output.
 """
 import argparse
 import subprocess
@@ -13,7 +13,7 @@ import gate_output
 ROOT = Path(__file__).resolve().parents[1]
 S = ".agents/skills/"
 REF = S + "safe-engine/references/"
-# Files a run reads by following its methods; conditional detail stays out.
+# Whole-run file selection is an upper-bound proxy; phase rows overlap and are not additive.
 BASE = (
     "skills/safe-engine/SKILL.md", S + "safe-engine/SKILL.md", REF + "fast-run.md",
     REF + "product-bar.md", REF + "sizes.md", REF + "work-record-sample.md",
@@ -24,14 +24,26 @@ BASE = (
     REF + "delegate.md",  # every todo names a tier (get-ready-to-code); this maps it to a role, brief and gates
 )
 NEW = (S + "research-market/SKILL.md", S + "analyze-start/SKILL.md")
+PLAN = ("skills/safe-engine/SKILL.md", S + "safe-engine/SKILL.md", REF + "fast-run.md",
+        REF + "product-bar.md", REF + "sizes.md", S + "ticketing/SKILL.md",
+        S + "get-ready-to-code/SKILL.md", REF + "delegate.md")
+BUILD = (S + "safe-engine/SKILL.md", REF + "fast-run.md", REF + "product-bar.md",
+         S + "get-ready-to-code/SKILL.md", REF + "delegate.md")
+HANDOFF = (S + "safe-engine/SKILL.md", REF + "fast-run.md", S + "ticketing/SKILL.md",
+           S + "how-to-make-a-pr/SKILL.md", S + "how-to-make-a-pr/references/pr-layout.md",
+           S + "how-to-make-a-pr/references/github.md", S + "how-to-make-a-pr/references/credit.md")
 KINDS = {
     "product, feature": BASE + NEW,
     "change": BASE,
-    "+ui": (S + "ux-quality/",),
+    "phase: plan": PLAN,
+    "phase: build": BUILD,
+    "phase: handoff": HANDOFF,
+    "+quality case": (REF + "quality-cases.md",),  # full-file upper bound; read only matching section
+    "+ui": (S + "ux-quality/", S + "how-to-make-a-pr/references/media-proof.md"),
     "+data": (S + "database-schema/",),
     "+safe-check": (S + "deep-review/",),
     "+on demand": (  # detail behind pointers that name its situation: read only when it occurs
-        REF + "work-record-sample.md", REF + "gate-details.md", REF + "cases.md", REF + "run-cases.md", S + "ticketing/references/safe-contract.md",
+        REF + "work-record-sample.md", REF + "gate-details.md", REF + "cases.md", REF + "quality-cases.md", REF + "run-cases.md", S + "ticketing/references/safe-contract.md",
         S + "ticketing/references/unmerged-pr.md", S + "ticketing/references/epic-cases.md",
         REF + "worth-it.md", S + "ticketing/references/finishing-touches.md",
         S + "how-to-make-a-pr/references/pr-cases.md", S + "research-market/references/deep-research.md"),
@@ -72,7 +84,7 @@ def sizes(paths, rev):
 
 
 def tok(n):
-    """Estimated tokens: about 4 bytes each for English prose."""
+    """Rough English-prose text units; not tokenizer or billed tokens."""
     return (n + 3) // 4
 
 
@@ -117,10 +129,12 @@ def main(argv=None):
             git("rev-parse", "--verify", rev + "^{commit}")
         except subprocess.CalledProcessError:
             ap.error(f"not a commit: {rev}")
-    what, at = "Gate output" if a.gate else "Method load", a.rev or "working tree"
+    what, at = "Gate output" if a.gate else "Selected method file text proxy", a.rev or "working tree"
     if a.against:
         old, new = totals(a.against, a.gate), totals(a.rev, a.gate)
         print(f"{what} bytes: {a.against} -> {at}")
+        if not a.gate:
+            print("Phase/condition rows overlap; file bytes are not observed reads or billed tokens.")
         for row, n in new.items():
             print(f"{row:16} {old.get(row, 0):>8,} -> {n:>8,}  {change(old.get(row), n)}")
     elif a.gate:
@@ -128,9 +142,10 @@ def main(argv=None):
         for row, n in totals(a.rev, True).items():
             print(f"{row:16} {n:>8,}")
     else:
-        print(f"{what} at {at} (bytes, ~tokens = bytes/4)")
+        print(f"{what} at {at} (LF bytes; ~text units = bytes/4, not billed tokens)")
+        print("Phase/condition rows overlap; selections proxy potential reads, not observed agent context.")
         for kind, files, total in report(a.rev):
-            print(f"{kind:16} {total:>8,} B ~{tok(total):>6,} tok")
+            print(f"{kind:16} {total:>8,} B ~{tok(total):>6,} units")
             for p, n in [] if a.totals or kind in TOTAL_ONLY else files:
                 print(f"  {'missing' if n is None else n if isinstance(n, str) else format(n, ','):>8}  {p}")
     return 0
