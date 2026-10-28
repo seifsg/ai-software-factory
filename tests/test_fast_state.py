@@ -1,8 +1,10 @@
 """Fast gate run state lives in the gate home: no project write opens the gate or silences a guard (fast-run.md#the-gate)."""
 import json
+import os
 import shutil
 import subprocess
 import unittest
+from unittest.mock import patch
 
 import test_fast_gate as harness
 
@@ -23,6 +25,26 @@ class RunStateTests(harness.GateHarness, unittest.TestCase):
         reason = out["hookSpecificOutput"]["permissionDecisionReason"]
         self.assertEqual("run state in the gate home is missing" in reason, lost, reason)
         self.assertEqual(self.pre("Bash", command=PUSH), "deny")
+
+    def test_stale_writer_is_rejected_and_scoped_completion_keeps_owner_state(self):
+        self.begin()
+        with patch.dict(os.environ, SAFE_ENGINE_HOME=str(self.root / 'home')):
+            gate = harness.module('fast_gate')
+            project, stale = gate.open_run(self.project)
+            _, current = gate.open_run(self.project)
+            current['paused'] = {'reason': 'owner checkpoint', 'at': gate.now()}
+            gate.put(project, current)
+            stale['checks'] = {'observations': {'A1': 'stale'}}
+            with self.assertRaisesRegex(RuntimeError, 'changed concurrently'):
+                gate.put(project, stale)
+            gate.mutate(project, current, lambda latest: latest.setdefault('checks', {}).update(proof='passed'))
+            latest = gate.open_run(project)[1]
+            self.assertEqual(latest['paused']['reason'], 'owner checkpoint')
+            self.assertEqual(latest['checks']['proof'], 'passed')
+            latest['closed'] = True
+            gate.put(project, latest)
+            with self.assertRaisesRegex(RuntimeError, 'closed or replaced'):
+                gate.mutate(project, current, lambda run: run.update(closed=False))
 
     def test_no_project_write_opens_the_gate(self):
         self.begin()

@@ -6,6 +6,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from unittest.mock import patch
 from png_fixtures import png
@@ -18,6 +19,8 @@ import fast_install
 import fast_ledger as ledger
 import fast_record
 import fast_show as show
+import fast_show_command as show_command
+from safe_engine import suite_queue
 
 
 class ShowPlanTests(unittest.TestCase):
@@ -317,6 +320,90 @@ class ShowCommandTests(ShowFixture):
         self.json_action("reply", {"action": "proceed", "source": "Controlled fixture", "quote": "Proceed"})
         self.cli("done", "show")
         self.cli("prove", "--suite")
+
+    def test_concurrent_observation_pause_and_owner_stop_keep_current_state(self):
+        self.shown()
+        state = ledger.load(ledger.state_path(self.entry))
+        state['show']['plan']['full_suite'] = [sys.executable, '-c', 'import time; time.sleep(1); print("done")']
+        state['checks'] = {'prepared': {'checks': {'A1': {'manual': 'Observe the result'}}}}
+        state['check_selection'] = True
+        ledger.save(ledger.state_path(self.entry), state)
+
+        def start():
+            process = subprocess.Popen([sys.executable, str(self.installed), 'prove', '--suite', '--fresh',
+                                        '--project', str(self.project)], cwd=self.home, env=self.env,
+                                       stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8')
+            deadline = time.monotonic() + 8
+            while time.monotonic() < deadline:
+                proof = ledger.load(ledger.state_path(self.entry))['show'].get('proof', {})
+                if proof.get('status') == 'running':
+                    return process
+                time.sleep(.02)
+            process.kill()
+            self.fail('Suite did not start')
+
+        process = start()
+        observation = self.project / '.factory/observation.json'
+        observation.write_text(json.dumps({'criterion': 'A1', 'candidate': evidence.candidate(self.project),
+                                           'source': 'controlled fixture', 'observation': 'PASS during suite',
+                                           'verdict': 'PASS'}))
+        self.cli('checks', '--observe', str(observation))
+        self.cli('pause', '--reason', 'owner checkpoint')
+        output, error = process.communicate(timeout=20)
+        self.assertEqual(process.returncode, 0, output + error)
+        current = ledger.load(ledger.state_path(self.entry))
+        self.assertTrue(current['show']['proof']['passed'])
+        self.assertEqual(current['checks']['observations']['A1']['verdict'], 'PASS')
+        self.assertEqual(current['paused']['reason'], 'owner checkpoint')
+
+        self.cli('resume')
+        process = start()
+        self.json_action('reply', {'action': 'stop', 'source': 'controlled fixture', 'quote': 'Stop'})
+        output, error = process.communicate(timeout=20)
+        self.assertNotEqual(process.returncode, 0, output + error)
+        current = ledger.load(ledger.state_path(self.entry))
+        self.assertEqual(current['show']['reply']['action'], 'stop')
+        self.assertFalse(current['show']['proof']['passed'])
+
+    def test_a_b_a_reuses_original_log_and_tamper_reruns(self):
+        subprocess.run(['git', 'add', '.gitignore', 'source.txt'], cwd=self.project, check=True)
+        subprocess.run(['git', '-c', 'user.name=Fixture', '-c', 'user.email=fixture@invalid',
+                        'commit', '-qm', 'fixture'], cwd=self.project, check=True)
+        command = [sys.executable, '-c', 'import os; print(os.environ["PROOF_MODE"])']
+        state = {'key': 'cache-fixture', 'ui': False, 'done': {'build': {}}, 'suite_policy': True,
+                 'suite': {'plan': {'full_suite': command, 'timeout_seconds': 10,
+                                    'suite_inputs': {'files': [], 'environment': ['PROOF_MODE']}}},
+                 'bundle': self.state['bundle']}
+        class Gate:
+            def __init__(self):
+                self.state = copy.deepcopy(state)
+            def put(self, project, value):
+                self.state = copy.deepcopy(value)
+            def mutate(self, project, base, update):
+                current = copy.deepcopy(self.state)
+                update(current)
+                self.state = current
+            def log(self, *args, **kwargs):
+                pass
+        gate = Gate()
+        queue = self.home / 'isolated-queue'
+        queue.mkdir()
+        receipts = []
+        with patch.object(suite_queue, 'machine_directory', return_value=queue):
+            for mode in ('A', 'B', 'A'):
+                with patch.dict(os.environ, PROOF_MODE=mode):
+                    show_command.prove(self.project, copy.deepcopy(gate.state), gate)
+                receipts.append(copy.deepcopy(gate.state['suite']['proof']))
+            first, second, third = receipts
+            self.assertEqual([row['reused'] for row in receipts], [False, False, True])
+            self.assertNotEqual(first['log'], second['log'])
+            self.assertEqual(first['log'], third['log'])
+            self.assertEqual(Path(first['log']).read_text().strip(), 'A')
+            self.assertEqual(Path(second['log']).read_text().strip(), 'B')
+            Path(first['log']).write_text('tampered')
+            with patch.dict(os.environ, PROOF_MODE='A'):
+                show_command.prove(self.project, copy.deepcopy(gate.state), gate)
+            self.assertFalse(gate.state['suite']['proof']['reused'])
 
     def shown_without_completion(self):
         self.json_action("prepare", self.data)

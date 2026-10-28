@@ -84,10 +84,50 @@ def fail(message):
     sys.exit(1)
 
 
-def put(project, run):
-    """Write the run state to the gate home, then its mirror for agents to read; a failed mirror never fails."""
-    save(state_path(project), run)
-    mirror(project, run)
+def put(project, run, *, create=False):
+    """Reject a stale whole-record writer before it can erase another command's state."""
+    path = state_path(project)
+    with store.state_lock(path):
+        try:
+            current = load(path)
+        except FileNotFoundError:
+            current = None
+        if current is not None and not isinstance(current, dict):
+            raise RuntimeError('Run state is malformed; reload the run')
+        if ((current is None and (not create or run.get('_revision', 0))) or
+                (current is not None and create) or
+                (current is not None and (current.get('_revision', 0) != run.get('_revision', 0)
+                                          or current.get('key') != run.get('key')
+                                          or current.get('created') != run.get('created')))):
+            raise RuntimeError('Run state changed concurrently; reload and retry the command')
+        run['_revision'] = run.get('_revision', 0) + 1
+        save(path, run)
+        mirror(project, run)
+        published(project, run)
+
+
+def mutate(project, base, update):
+    """Commit one long command's owned fields onto the current open run."""
+    path = state_path(project)
+    with store.state_lock(path):
+        try:
+            current = load(path)
+        except FileNotFoundError as error:
+            raise RuntimeError('Run closed or state moved during command') from error
+        if (not isinstance(current, dict) or current.get('key') != base.get('key')
+                or current.get('created') != base.get('created')
+                or current.get('closed')):
+            raise RuntimeError('Run closed or replaced during command')
+        update(current)
+        current['_revision'] = current.get('_revision', 0) + 1
+        save(path, current)
+        mirror(project, current)
+        published(project, current)
+    return current
+
+
+def published(project, run):
+    """Refresh courtesy progress only after the canonical state is saved."""
     found = unseen(project, state_path(project))
     if view(project, run) and found:
         mark(project, VIEWED, found[0])  # the next hook need not write it again
@@ -320,7 +360,7 @@ def cmd_start(args):
     setup = sibling("fast_setup")
     git_note, hooks = setup.ignore_factory(project), setup.hook_status(project)
     scratch = setup.scratch_path(HOME, run)
-    put(project, run)
+    put(project, run, create=True)
     scratch.mkdir(parents=True, exist_ok=True)  # after the state: a failed start leaves no folder behind
     record = record_path(project)
     if not record.exists():
