@@ -19,7 +19,7 @@ Planning may research reference samples and rights. Testing our own visuals and 
 
 ## Graphics
 
-- Inspect at actual size and density, crop, transparency, color, light and dark backgrounds.
+- Inspect at actual size and density, crop, transparency, color and the scoped theme's backgrounds.
 - Check compression, legibility, artifacts, style.
 - Stay inside measured load, decode and memory budgets. Maximum resolution is not the goal.
 
