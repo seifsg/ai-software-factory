@@ -53,6 +53,7 @@ class BaselineTests(GateHarness, unittest.TestCase):
         self.recover("--expect", preview["sha256"])
         after = self.state()
         receipt = after.pop("baseline_recovery")
+        self.assertEqual(after.pop("_revision"), before.pop("_revision") + 1)
         self.assertEqual(after, before)
         self.assertEqual(receipt["original_base"], self.old)
         self.assertEqual(record.ui_files(self.state(), self.project), [])

@@ -23,6 +23,8 @@ declared suite to this command. `prove --suite --fresh` explicitly reruns it for
 diagnosis; it still joins the queue.
 
 The project-local `.factory/suite-cache` retains up to 256 completed results.
+Fast executions keep separate logs under `.factory/fast/prove/`, so running B
+does not alter A's log and a later A can reuse its intact receipt.
 Reuse requires the same commit and effective inputs plus intact logs and output
 hashes. An intact hit returns before queue admission after another input check.
 Dirty source, changed arguments, environment, clock or declared files
@@ -31,6 +33,10 @@ timed-out, truncated or tampered evidence cannot supply a passing result. Misses
 enter the queue and recheck inputs and the cache after admission; executed
 suites check inputs again afterward. Environment values are hashed, never stored
 as plaintext.
+Fast run-state writes reject stale whole-record updates. Suite and check
+completion update only their owned receipts on the current open run; concurrent
+observations and owner controls remain. A changed receipt or closed run refuses
+completion, while changed source or suite inputs leave proof failed.
 
 New Safe states also reuse complete-profile `check` batches and queue misses;
 `check --fresh` explicitly reruns them. Per-command IDs, artifacts, manual QA,
