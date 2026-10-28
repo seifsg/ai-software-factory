@@ -6,6 +6,8 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 
 ## [Unreleased]
 
+## [1.1.2] - 2026-10-28
+
 ### Changed
 
 - POC/MVP visual work uses light mode on its target device by default. New Show plans freeze selected variants and ordinary Before/After comparisons; UX and PR proof focus on changed areas, while explicit requirements and frozen design coverage remain (#192).
@@ -67,7 +69,8 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 - Leaner runs (#137): product, feature and change runs each read 24% less method text, every gate message is shorter with the same facts, `scripts/token_report.py` measures both, and tests hold every method file and the gate's fixture messages to a byte budget and the product and change loads to 80% of their earlier size.
 - Self-update (#139): a clone install moves only to a release tag on `main` whose files match its manifest, records the previous revision, rolls back a failed install and shows a one-time notice naming both versions.
 
-[Unreleased]: https://github.com/seifsg/ai-software-factory/compare/v1.1.1...HEAD
+[Unreleased]: https://github.com/seifsg/ai-software-factory/compare/v1.1.2...HEAD
+[1.1.2]: https://github.com/seifsg/ai-software-factory/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/seifsg/ai-software-factory/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/seifsg/ai-software-factory/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/seifsg/ai-software-factory/releases/tag/v1.0.0
