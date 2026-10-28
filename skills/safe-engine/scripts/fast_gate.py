@@ -384,7 +384,7 @@ def cmd_start(args):
         record.write_text(skeleton(run), encoding="utf-8")
     save(registry_path(project), store.new_registration(project, args.key))
     log("run.start", key=args.key, project=str(project), mode=args.mode, kind=args.kind, bundle=run["bundle"], hooks=hooks)
-    sibling("fast_metrics").on_start(project, run)
+    sibling("fast_metrics").on_start(project, run, steps_for(run))
     bundle = (f"{run['bundle']['root']} @ {run['bundle']['revision'][:12]}" if run["bundle"] else
               "legacy start; latest unknown (resolve the entry first)")
     print(status_text(run) + f"\n{sibling('fast_release').card(run, HOME)}\nRecord: {record}\nBundle: {bundle}\n"

@@ -3,6 +3,7 @@ import hashlib
 import json
 from pathlib import Path
 
+import fast_metrics
 import fast_worth as worth
 
 
@@ -29,18 +30,14 @@ def run(args, gate):
             state["done"].pop(step, None)
         gate.put(project, state)
         gate.log("run.fix_round", key=state["key"], findings=args.finding, sha256=receipt["sha256"])
-        try:
-            import fast_metrics
-            fast_metrics.safe(
-                "emit",
-                project,
-                fast_metrics.identity(state),
-                "invalidate",
-                reason="fix_round",
-                finding_ids=[str(item)[:32] for item in args.finding],
-            )
-        except Exception:
-            pass
+        fast_metrics.safe(
+            "emit",
+            project,
+            fast_metrics.identity(state),
+            "invalidate",
+            reason="fix_round",
+            finding_ids=[str(item)[:32] for item in args.finding],
+        )
         print(json.dumps(decision, indent=2))
         for line in worth.parked_lines(report):
             print(line)

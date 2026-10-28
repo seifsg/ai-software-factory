@@ -7,6 +7,7 @@ import subprocess
 import tempfile
 import time
 
+from . import run_metrics
 from .storage import now
 from .processes import ProcessTree
 from .project import executable_path
@@ -51,15 +52,11 @@ def run_command(argv, cwd, timeout, log_path, stdin=None, stop=None, owned_lease
     started = now()
     clock = time.monotonic()
     op_id = None
-    try:
-        from . import run_metrics
-        if run_metrics.current():
-            op_id = f"cmd-{int(clock * 1e9)}"
-            command_id = hashlib.sha256(json.dumps({"argv": argv, "stdin": stdin}, default=str).encode()).hexdigest()[:24]
-            run_metrics.emit_current("operation.start", name=str(argv[0]), event_id=op_id,
-                                     argv0=str(argv[0]), command_id=command_id)
-    except Exception:
-        op_id = None
+    if run_metrics.current():
+        op_id = f"cmd-{int(clock * 1e9)}"
+        command_id = hashlib.sha256(json.dumps({"argv": argv, "stdin": stdin}, default=str).encode()).hexdigest()[:24]
+        run_metrics.emit_current("operation.start", name=str(argv[0]), event_id=op_id,
+                                 argv0=str(argv[0]), command_id=command_id)
     log_path.parent.mkdir(parents=True, exist_ok=True)
     # A file avoids Windows' blocking communicate(input=...) pipe write.
     with tempfile.TemporaryFile() as input_file:
@@ -110,11 +107,7 @@ def run_command(argv, cwd, timeout, log_path, stdin=None, stop=None, owned_lease
               "passed": process.returncode == 0 and not timed_out,
               "log": str(log_path), "log_truncated": size > LOG_LIMIT}
     if op_id:
-        try:
-            from . import run_metrics
-            run_metrics.emit_current("operation.finish", name=str(argv[0]), event_id=op_id + "-end",
-                                     parent_id=op_id, duration_seconds=duration,
-                                     passed=result["passed"], timed_out=timed_out, command_id=command_id)
-        except Exception:
-            pass
+        run_metrics.emit_current("operation.finish", name=str(argv[0]), event_id=op_id + "-end",
+                                 parent_id=op_id, duration_seconds=duration,
+                                 passed=result["passed"], timed_out=timed_out, command_id=command_id)
     return result

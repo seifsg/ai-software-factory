@@ -1,5 +1,6 @@
 """Explicit delivery transitions around the analysis and execution methods."""
 
+from contextlib import nullcontext
 from pathlib import Path
 import re
 import shutil  # noqa: F401 - patch seam: tests patch safe_engine.workflow.shutil.which
@@ -9,6 +10,7 @@ from . import __version__
 from .acceptance import validate_manual_receipt
 from .checks import CheckMixin
 from .contract import ContractMixin
+from . import run_metrics
 from .project import (EngineError, bundle_revision, digest, file_hash, fingerprint, git, inside,
                       production_fingerprint, protected_inputs, reject_path_aliases, validate_profile, validate_task)
 from .proof import deferred_findings, handoff_table
@@ -54,8 +56,7 @@ class Workflow(ContractMixin, CheckMixin, ReviewMixin):
     def persist(self, state, event):
         save(self.directory, state, event)
         try:
-            from . import run_metrics
-            key = state.get("run_id") or self.ticket_key or "safe-run"
+            key = self.metrics_key(state)
             run_metrics.ensure_run(
                 self.project,
                 key,
@@ -85,10 +86,15 @@ class Workflow(ContractMixin, CheckMixin, ReviewMixin):
         except Exception:
             pass
 
+    def metrics_key(self, state):
+        """Per-run metrics folder; never a shared name, so a legacy state without an id gets its ticket or none."""
+        return state.get("run_id") or self.ticket_key
+
     def metrics_bound(self, state):
         """Bind suite/runner emit_current for Safe check/prove paths."""
-        from . import run_metrics
-        key = state.get("run_id") or self.ticket_key or "safe-run"
+        key = self.metrics_key(state)
+        if not key:
+            return nullcontext()  # legacy state with neither run id nor ticket: nothing to measure
         return run_metrics.bound(
             self.project,
             key,
@@ -168,6 +174,7 @@ class Workflow(ContractMixin, CheckMixin, ReviewMixin):
                  "project": str(self.project), "task": task, "profile": profile,
                  "contract_digest": self.contract_digest(task, profile, ticket),
                  "base_commit": git(self.project, "rev-parse", "HEAD"), "phase": "analyze",
+                 "bundle_revision": bundle_revision(Path(__file__).resolve().parent.parent),
                  "max_repairs": max_repairs, "repairs_used": 0, "sequence": 0, "history": [],
                  "artifacts": {}, "checks": None, "review": None, "pending_operation": None,
                  "protected": protected_inputs(self.project, profile), "created_at": now()}
@@ -461,16 +468,12 @@ class Workflow(ContractMixin, CheckMixin, ReviewMixin):
                       "Local handoff is not remote review, integrated dependency acceptance, or ticket closure."]
         path.write_text("\n".join(lines) + "\n", encoding="utf-8")
         self.persist(state, "Prepared checked local handoff")
-        try:
-            from . import run_metrics
-            key = state.get("run_id") or self.ticket_key or "safe-run"
-            run_metrics.emit_phase(self.project, key, state["phase"], "finish",
-                                   event_id=f"{key}-phase-{state['phase']}-handoff-finish")
-            run_metrics.emit_task(self.project, key, self.ticket_key or key, "finish",
-                                  event_id=f"{key}-task-finish")
-            run_metrics.finalize(self.project, key, outcome="finish")
-        except Exception:
-            pass
+        key = self.metrics_key(state)
+        run_metrics.emit_phase(self.project, key, state["phase"], "finish",
+                               event_id=f"{key}-phase-{state['phase']}-handoff-finish")
+        run_metrics.emit_task(self.project, key, self.ticket_key or key, "finish",
+                              event_id=f"{key}-task-finish")
+        run_metrics.finalize(self.project, key, outcome="finish")
         if self.ticket_key:
             self.store.release(self.ticket_key, state["run_id"])
         return {"handoff": str(path), **self.status(state)}
@@ -487,14 +490,10 @@ class Workflow(ContractMixin, CheckMixin, ReviewMixin):
         state["review"] = None
         state["pending_operation"] = None
         self.persist(state, f"Cancelled: {reason}")
-        try:
-            from . import run_metrics
-            key = state.get("run_id") or self.ticket_key or "safe-run"
-            run_metrics.emit_task(self.project, key, self.ticket_key or key, "cancel",
-                                  event_id=f"{key}-task-cancel")
-            run_metrics.finalize(self.project, key, outcome="abort")
-        except Exception:
-            pass
+        key = self.metrics_key(state)
+        run_metrics.emit_task(self.project, key, self.ticket_key or key, "cancel",
+                              event_id=f"{key}-task-cancel")
+        run_metrics.finalize(self.project, key, outcome="abort")
         if self.ticket_key:
             self.store.release(self.ticket_key, state["run_id"])
         return self.status(state)

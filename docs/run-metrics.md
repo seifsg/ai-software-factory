@@ -124,7 +124,7 @@ failure.
 
 ## Overhead budget
 
-Agreed budget (plan + measured Windows NTFS revision recorded in the #175 plan):
+Budget:
 
 - Event append pair p99 ≤ 10 ms
 - Report generation ≤ 200 ms at ≤ 10_000 events
@@ -132,9 +132,4 @@ Agreed budget (plan + measured Windows NTFS revision recorded in the #175 plan):
 
 `metrics overhead` is a single-shot measurement (with warm-up); `within_budget` checks all three rules. Show sharing starts an observed owner response wait; reply, replacement or the first post-deadline check closes it. A deadline is labeled `deadline_elapsed`, never approval. Other unobserved approval waits stay unknown. Container operations such as `full_suite` wrap per-command ops and are excluded from summed/overlap totals.
 
-On an earlier Windows 11 NTFS candidate, a single 100-pair CLI sample with 20 warm-up pairs measured
-2.001 ms append-pair p99, 23.721 ms report generation for 242 events, and
-0.167 s combined collection/report time. A separate 10,000-event local sample
-measured 69.453 ms report generation. These are workload measurements, not
-whole-delivery savings or CPU measurements; rerun on the target machine before
-comparing performance.
+These are workload measurements, not whole-delivery savings or CPU measurements. Run `metrics overhead` on the target machine before comparing performance.
