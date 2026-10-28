@@ -523,16 +523,14 @@ def finalize(project, run_key, *, outcome=None, overhead=None):
         meta_path = folder / META_NAME
         if meta_path.is_file():
             meta = json.loads(meta_path.read_text(encoding="utf-8"))
+        if outcome not in (None, "finish", "abort", "fail", "partial"):
+            raise ValueError("Invalid metrics outcome")
+        if outcome in ("finish", "abort", "fail"):
+            emit(project, run_key, f"run.{outcome}", event_id=f"run-{outcome}-{_safe_key(run_key)}")
         events = read_events(project, run_key)
         prior_terminal = next((event["type"].split(".")[1] for event in reversed(events)
                                if event.get("type") in ("run.finish", "run.abort", "run.fail")), None)
-        if outcome not in (None, "finish", "abort", "fail", "partial"):
-            raise ValueError("Invalid metrics outcome")
         chosen = outcome if outcome in ("finish", "abort", "fail") else prior_terminal or "partial"
-        terminal = {"finish": "run.finish", "abort": "run.abort", "fail": "run.fail"}.get(chosen)
-        if outcome and terminal:
-            emit(project, run_key, terminal, event_id=f"run-{chosen}-{_safe_key(run_key)}")
-            events = read_events(project, run_key)
         report = aggregate(events, meta=meta, outcome=chosen)
         if overhead:
             report["overhead"] = overhead
