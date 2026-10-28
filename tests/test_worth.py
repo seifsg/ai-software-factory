@@ -1,5 +1,6 @@
 """Scored repair boundaries; reviewer/owner claims are explicit fixture doubles, never acceptance proof."""
 from copy import deepcopy
+import hashlib
 import json
 from pathlib import Path
 import sys
@@ -166,8 +167,13 @@ class FastWorthTests(GateHarness, unittest.TestCase):
         path = self.project / ".factory/findings.json"
         atomic_json(path, {"findings": [finding(), finding(True)]})
         self.assertIn("optional score", self.gate("fix-round", "--file", str(path), "--finding", "F1", ok=False))
-        self.gate("fix-round", "--file", str(path), "--finding", "F2")
+        accepted = self.gate("fix-round", "--file", str(path), "--finding", "F2")
+        decision, _ = json.JSONDecoder().raw_decode(accepted)
         state = json.loads((self.project / ".factory/fast/run.json").read_text(encoding="utf-8"))
+        canonical = hashlib.sha256(json.dumps(json.loads(path.read_text(encoding="utf-8")), sort_keys=True).encode()).hexdigest()
+        self.assertEqual(decision["report_sha256"], state["fix_rounds"][0]["sha256"])
+        self.assertEqual(decision["report_sha256"], canonical)
+        self.assertNotEqual(decision["report_sha256"], hashlib.sha256(path.read_bytes()).hexdigest())
         self.assertNotIn("done-run", state["done"])
         self.assertTrue(fast_round.findings("**Findings:** none", self.project, fast_record.marker, state))
         final = {"findings": [], "resolved": [{"report_sha256": state["fix_rounds"][0]["sha256"],

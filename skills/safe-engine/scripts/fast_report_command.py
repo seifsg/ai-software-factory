@@ -10,7 +10,7 @@ import fast_report as report
 def parser(sub, common):
     command = sub.add_parser('report', parents=[common], help='Publish a plain report or check a body or picture')
     actions = command.add_mutually_exclusive_group(required=True)
-    for name in ('file', 'lint', 'picture'):
+    for name in ('file', 'lint', 'picture', 'pr-body'):
         actions.add_argument('--' + name, help='Project-local ' + name)
 
 
@@ -30,6 +30,17 @@ def run(args, gate):
             print('Report body contains no recognized internal codes.')
             return
         project, state = gate.open_run(project)
+        if args.pr_body:
+            import fast_pr_policy
+            import fast_record
+            evidence.require(not state.get('closed'), 'Check PR bodies on an open run')
+            path = evidence.local(project, args.pr_body)
+            evidence.require(path.stat().st_size <= 100000, 'PR body exceeds 100000 bytes')
+            checked = fast_pr_policy.effective(gate.HOME, state)
+            problems = fast_record.pr_body_problems(checked, path.read_text(encoding='utf-8'), project)
+            evidence.require(not problems, '\n- '.join(['PR body structure failed:'] + problems))
+            print('STRUCTURE ONLY: PR body passed. Handoff, current proofs and review remain required.')
+            return
         evidence.require(not state.get('closed'), 'Publish reports on an open run')
         import fast_progress
         sections = fast_progress.read(gate.record_path(project))

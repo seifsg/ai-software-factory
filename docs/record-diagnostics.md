@@ -1,5 +1,11 @@
 # Record diagnostics
 
+## Local PR draft preflight
+
+Before publishing a Fast/Lucky draft, run `python skills/safe-engine/scripts/fast_gate.py report --pr-body <project-local.md> --project <absolute-project>`. It applies the same proof, credit, effective PR policy and UI/journey structure checks as handoff to a local UTF-8 file (maximum 100,000 bytes). It changes no phase, proof receipt, ticket or PR. Success proves structure only; actual media access, observed behavior, current checks and the real published PR remain required at handoff. Invalid drafts fail locally before a network write.
+
+## Completion diagnostics
+
 `fast_diagnostics.py` shares ticket reads only during one validation, including read failures. Every new invocation refreshes sources. A refusal collects independently knowable local, ticket, checklist, coverage and PR errors with repair examples; inaccessible data remains explicitly unverified.
 
 UX audits read explicit verdict fields. A PASS explanation can quote FAIL. Actual FAIL fields block, UNKNOWN/N/A need reasons, duplicate verdicts are refused, and rule/judge commentary cannot fake an actual-use PASS. Fix the finding and record its real result; examples never authorize inventing evidence.

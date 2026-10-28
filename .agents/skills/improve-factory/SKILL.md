@@ -81,7 +81,7 @@ Do not code before the plan is recorded.
    - Evidence reuse: both reuse and rejection (changed inputs, tampered proof, pending operations).
 3. Isolate fixtures from real project work and secrets. No product pilot or simulation unless the owner asks.
 4. Check every changed skill stays self-contained: links only inside its own folder; no names, dates or host specifics.
-5. After manual use, run affected checks. Commit planned source, docs, tests and packaging edits. Run `python tests/run.py` on that commit via the selected runner's Prove if available; else directly under its recorded gate workflow. Retain runner receipt, commit, inputs, command, log and result. After edits, repeat affected checks and final proof. Write tests only after step 1.
+5. After manual use, write/adjust tests and run affected checks, then commit source/docs/tests/packaging. Before the complete suite, do the required source review (`how-to-make-a-pr`). Run `python tests/run.py` on that commit through the selected Prove, else its recorded gate. Keep receipt, commit, inputs, command, log and result. Edits require affected checks and fresh final proof.
 6. Each check proves only itself. A walkthrough does not prove a code repair; a passing suite does not prove a walkthrough.
 
 ## 6. Independent review

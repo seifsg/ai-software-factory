@@ -24,7 +24,7 @@ Read refusals first: split, confirm or clarify before briefing again. Owner hand
 
 Carry goal, role, absolute paths, edit limits, branch, handback and [scratch folder](fast-run.md#the-gate). Quote needed rules; whole methods only for walkthroughs/reviews. End with a gate per required outcome:
 
-Default to fresh context: request, decisions, interface, stops and artifact paths. Full chat needs a reason a compact packet cannot suffice. Read targeted ranges/log tails; never resend unchanged methods, transcripts or full outputs each turn. Host controls live in its adapter.
+Fresh context: request, decisions, interface, stops, evidence paths. Full chat needs a reason. Store bulky returns locally; emit needed fields/diagnostics and paths. Never dump nested results or resend unchanged methods/transcripts. Read needed ranges/log tails. Host controls: adapter.
 
 Verify lane cwd before writes; stop on mismatch. Pass its resources to commands/browsers. Use [quiet waits](waiting.md).
 

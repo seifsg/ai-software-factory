@@ -815,6 +815,13 @@ def pr_proof(run, body, project=None, offline=None, **_):
         text = pr_body(value, project, offline)
     except (OSError, RuntimeError, subprocess.TimeoutExpired, ValueError) as error:
         return [str(error)]
+    return pr_body_problems(run, text, project)
+
+
+def pr_body_problems(run, text, project):
+    """Share the handoff's body rules with local drafts; no completion proof is recorded."""
+    if not run.get("pr_proof"):
+        return []
     ui = bool(run.get("ui") or touched_ui(run, project))
     found = fast_proof.problems(text, ui, demo=bool(run.get("pr_demo"))) + (fast_proof.credit(text) if run.get("credit") else [])
     return [f"PR body: {problem}" for problem in found]
