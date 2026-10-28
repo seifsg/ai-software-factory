@@ -138,6 +138,9 @@ class ReceiptTests(unittest.TestCase):
         class Gate:
             def put(self, *_):
                 pass
+            def mutate(self, project, state, update):
+                update(state)
+                return state
             def log(self, *_ , **__):
                 pass
         with patch.object(command, "runner", return_value=run_command):

@@ -67,7 +67,9 @@ def execute(project, state, gate, syntax_only=False):
                               reason="checks_receipt_replaced", receipt=target)
         except Exception:
             pass
-    result = {"passed": False, "status": "running", "inputs": before, "candidate": candidate, "logs": []}
+    receipt = uuid.uuid4().hex
+    result = {"passed": False, "status": "running", "receipt": receipt,
+              "inputs": before, "candidate": candidate, "logs": []}
     saved[target] = result
     gate.put(project, state)
     run_command = runner(state)
@@ -103,7 +105,18 @@ def execute(project, state, gate, syntax_only=False):
         result["status"] = "syntax-ready" if syntax_only else "executed"
     elif result["status"] == "running":
         result["status"] = "inputs-changed"
-    gate.put(project, state)
+    def finish(current):
+        """Save this execution only if no checker replaced or invalidated its receipt."""
+        latest = current.get('checks', {})
+        checks.require(isinstance(latest, dict) and latest.get('prepared') == prepared and
+                       isinstance(latest.get(target), dict) and latest[target].get('receipt') == receipt,
+                       'Check receipt changed concurrently; run checks again')
+        result['passed'] = (result['passed'] and before == checks.identity(project, prepared)
+                            and candidate == evidence.candidate(project))
+        if not result['passed'] and result['status'] == 'executed':
+            result['status'] = 'inputs-changed'
+        latest[target] = result
+    gate.mutate(project, state, finish)
     gate.log("checks.executed", key=state["key"], syntax_only=syntax_only, passed=result["passed"])
     print(json.dumps(result, indent=2))
     checks.require(result["passed"], "Checks did not pass; inspect retained logs, never relabel a failure")
