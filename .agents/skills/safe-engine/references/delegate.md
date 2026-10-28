@@ -12,7 +12,7 @@ Use the cheapest capable role; host models/overrides: `docs/hosts.md`.
 | builder | deep | yes | edits that need design calls: architecture, schema, security, unclear bugs | `<path:lines>: <change>` per change, then `decision: <choice> because <reason>` per call made and `T<n> pre: <before> do: <change> post: <check>` per todo |
 | reviewer | deep | no | final and independent review (`deep-review`), judgement calls that change no file: unclear bugs, architecture | `<path:line or URL> <severity>: <problem>. <fix>.` most severe first, then `verdict: ready`, `ready after fixes` or `not ready: <why>`; with no diff, `decision: <choice> because <reason>` instead |
 
-Use the role's tier/edit access; keep method-specific reports (hidden checks, UX, `deep-review`). Handbacks add:
+Use the role's tier/edit access; keep method reports (hidden checks, UX, `deep-review`). Every handback then adds:
 
 - `G<n> PASS <evidence>` or `G<n> FAIL <evidence>` per gate in the brief;
 - `left: <item>: <what it learned>` per unfinished item, when it stops early;
