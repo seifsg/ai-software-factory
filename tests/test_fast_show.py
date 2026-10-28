@@ -324,32 +324,60 @@ class ShowCommandTests(ShowFixture):
     def test_concurrent_observation_pause_and_owner_stop_keep_current_state(self):
         self.shown()
         state = ledger.load(ledger.state_path(self.entry))
-        state['show']['plan']['full_suite'] = [sys.executable, '-c', 'import time; time.sleep(1); print("done")']
+        state['show']['plan']['full_suite'] = [sys.executable, '-c',
+            'from pathlib import Path\nimport time\n'
+            'Path(".factory/suite-start").touch()\n'
+            'end = time.monotonic() + 60\n'
+            'while not Path(".factory/suite-release").exists() and time.monotonic() < end: time.sleep(.02)\n'
+            'raise SystemExit(0 if Path(".factory/suite-release").exists() else 2)']
+        state['show']['plan']['timeout_seconds'] = 90
         state['checks'] = {'prepared': {'checks': {'A1': {'manual': 'Observe the result'}}}}
         state['check_selection'] = True
         ledger.save(ledger.state_path(self.entry), state)
 
         def start():
+            started = self.project / '.factory/suite-start'
+            release = self.project / '.factory/suite-release'
+            started.unlink(missing_ok=True)
+            release.unlink(missing_ok=True)
             process = subprocess.Popen([sys.executable, str(self.installed), 'prove', '--suite', '--fresh',
                                         '--project', str(self.project)], cwd=self.home, env=self.env,
                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8')
-            deadline = time.monotonic() + 8
+            deadline = time.monotonic() + 30
             while time.monotonic() < deadline:
                 proof = ledger.load(ledger.state_path(self.entry))['show'].get('proof', {})
-                if proof.get('status') == 'running':
+                if proof.get('status') == 'running' and started.exists():
                     return process
+                if process.poll() is not None:
+                    break
                 time.sleep(.02)
-            process.kill()
+            release.touch()
+            try:
+                process.communicate(timeout=10)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.communicate(timeout=5)
             self.fail('Suite did not start')
 
+        def finish(process):
+            (self.project / '.factory/suite-release').touch()
+            try:
+                return process.communicate(timeout=10)
+            finally:
+                if process.poll() is None:
+                    process.kill()
+                    process.communicate()
+
         process = start()
-        observation = self.project / '.factory/observation.json'
-        observation.write_text(json.dumps({'criterion': 'A1', 'candidate': evidence.candidate(self.project),
-                                           'source': 'controlled fixture', 'observation': 'PASS during suite',
-                                           'verdict': 'PASS'}))
-        self.cli('checks', '--observe', str(observation))
-        self.cli('pause', '--reason', 'owner checkpoint')
-        output, error = process.communicate(timeout=20)
+        try:
+            observation = self.project / '.factory/observation.json'
+            observation.write_text(json.dumps({'criterion': 'A1', 'candidate': evidence.candidate(self.project),
+                                               'source': 'controlled fixture', 'observation': 'PASS during suite',
+                                               'verdict': 'PASS'}))
+            self.cli('checks', '--observe', str(observation))
+            self.cli('pause', '--reason', 'owner checkpoint')
+        finally:
+            output, error = finish(process)
         self.assertEqual(process.returncode, 0, output + error)
         current = ledger.load(ledger.state_path(self.entry))
         self.assertTrue(current['show']['proof']['passed'])
@@ -358,8 +386,10 @@ class ShowCommandTests(ShowFixture):
 
         self.cli('resume')
         process = start()
-        self.json_action('reply', {'action': 'stop', 'source': 'controlled fixture', 'quote': 'Stop'})
-        output, error = process.communicate(timeout=20)
+        try:
+            self.json_action('reply', {'action': 'stop', 'source': 'controlled fixture', 'quote': 'Stop'})
+        finally:
+            output, error = finish(process)
         self.assertNotEqual(process.returncode, 0, output + error)
         current = ledger.load(ledger.state_path(self.entry))
         self.assertEqual(current['show']['reply']['action'], 'stop')
