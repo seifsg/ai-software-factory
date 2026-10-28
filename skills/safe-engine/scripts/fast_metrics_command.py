@@ -1,5 +1,6 @@
 """CLI for local factory-run metrics: report, compare, export, delete."""
 import json
+import hashlib
 from pathlib import Path
 
 import fast_design as evidence
@@ -51,14 +52,20 @@ def run(args, gate):
         if args.action == "usage":
             evidence.require(args.key and args.file, "usage needs --key and --file")
             from safe_engine.host_usage import load, summarize
-            record = load(Path(args.file).read_text(encoding="utf-8"))
+            source = Path(args.file).resolve()
+            record = load(source.read_text(encoding="utf-8"))
             rates = json.loads(Path(args.rates).read_text(encoding="utf-8")) if args.rates else None
-            summary = summarize(record, rates)
+            summary = summarize(record, rates, source_id=hashlib.sha256(str(source).encode()).hexdigest())
             evidence.require(mod.attach_usage(project, args.key, summary), "Could not record usage")
+            existing = (mod.run_dir(project, args.key) / mod.REPORT_JSON).is_file()
+            evidence.require(mod.finalize(project, args.key, outcome=None if existing else "partial"),
+                             "Could not refresh metrics report")
             print(json.dumps({
                 "tokens": summary["tokens"],
                 "cost_usd": summary["cost_usd"],
                 "cost_kind": summary["cost_kind"],
+                "scope": summary["scope"],
+                "provenance": summary["provenance"],
             }, indent=2))
             return
         if args.action == "overhead":

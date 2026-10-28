@@ -1,5 +1,7 @@
 """Factory run metrics: contract, aggregation, privacy, overhead and fixture timeline."""
 import json
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -147,6 +149,67 @@ class ContractTests(unittest.TestCase):
         self.assertIn("host-reported", text)
         self.assertIn("tokens counted: 15", text)
         self.assertNotIn("secret prompt", text)
+
+    def test_cumulative_sessions_and_codex_counts(self):
+        from safe_engine.host_usage import load, summarize
+        metrics.ensure_run(self.project, self.key)
+        for session, count in (("helper-a", 100), ("helper-a", 150), ("helper-a", 150),
+                               ("helper-b", 70), ("helper-a", 100)):
+            summary = summarize({"sessionId": session, "modelUsage": {"same": {"inputTokens": count}},
+                                 "hasUnknownModelCost": True})
+            self.assertTrue(metrics.attach_usage(self.project, self.key, summary))
+        transcript = "\n".join(json.dumps(row) for row in (
+            {"type": "session_meta", "payload": {"id": "codex-helper"}},
+            {"type": "turn_context", "payload": {"model": "gpt-test"}},
+            {"type": "event_msg", "payload": {"type": "token_count", "info": {
+                "total_token_usage": {"input_tokens": 100, "cached_input_tokens": 40,
+                                      "output_tokens": 20, "reasoning_output_tokens": 5,
+                                      "total_tokens": 120}}}},
+        ))
+        codex = summarize(load(transcript))
+        self.assertEqual(codex["tokens"], 120)
+        self.assertEqual(codex["provenance"], "codex-token-count")
+        self.assertTrue(metrics.attach_usage(self.project, self.key, codex))
+        costs = metrics.aggregate(metrics.read_events(self.project, self.key))["costs"]
+        self.assertEqual(sorted(row["amount"] for row in costs), [70, 120, 150])
+        self.assertEqual(len({row["session_id"] for row in costs}), 3)
+        self.assertTrue(all(row["scope"] == "shared_session" for row in costs))
+        self.assertIn("cache_read 40", next(row["detail"] for row in costs if row["amount"] == 120))
+        with self.assertRaises(ValueError):
+            summarize({"type": "codex-usage", "total_token_usage": {
+                "input_tokens": 10, "cached_input_tokens": 11, "output_tokens": 1}})
+
+    def test_incomplete_usage_snapshot_is_not_reported_as_a_total(self):
+        summary = {"provenance": "host-cost-state", "session_id": "fixture",
+                   "tokens": 30, "models": [{"model": "a", "tokens": 10, "counts": {"input": 10}},
+                                            {"model": "b", "tokens": 20, "counts": {"input": 20}}],
+                   "cost_kind": "unavailable", "cost_usd": None}
+        old_cap = metrics.MAX_EVENTS_PER_RUN
+        self.addCleanup(setattr, metrics, "MAX_EVENTS_PER_RUN", old_cap)
+        metrics.MAX_EVENTS_PER_RUN = 1
+        self.assertFalse(metrics.attach_usage(self.project, self.key, summary))
+        report = metrics.aggregate(metrics.read_events(self.project, self.key))
+        self.assertFalse(report.get("costs"))
+        self.assertTrue(any(gap["gap"] == "usage_snapshot_incomplete" for gap in report["coverage_gaps"]))
+
+    def test_event_index_survives_processes_and_rewrite(self):
+        root = Path(__file__).resolve().parents[1]
+        script = ("from safe_engine import run_metrics as m; import sys; "
+                  "[m.emit(sys.argv[1], 'run', 'reuse', event_id=f'{sys.argv[2]}-{i}') "
+                  "for i in range(30)]")
+        workers = [subprocess.Popen([sys.executable, "-c", script, str(self.project), str(i)], cwd=root)
+                   for i in range(3)]
+        self.assertTrue(all(worker.wait() == 0 for worker in workers))
+        self.assertEqual(len(metrics.read_events(self.project, "run")), 90)
+        self.assertTrue(metrics.emit(self.project, "run", "reuse", event_id="0-0"))
+        path = metrics.run_dir(self.project, "run") / metrics.EVENTS_NAME
+        path.write_text('{"event_id":"reset","type":"reuse","t":"2026-01-01T00:00:00Z"}\n'
+                        '{bad json\n', encoding="utf-8")
+        self.assertTrue(metrics.emit(self.project, "run", "reuse", event_id="after-reset"))
+        events = metrics.read_events(self.project, "run")
+        self.assertEqual({row["event_id"] for row in events if row["type"] == "reuse"},
+                         {"reset", "after-reset"})
+        self.assertTrue(any(row.get("gap") == "analytics_corrupt" for row in events))
 
     def test_finalize_and_compare(self):
         metrics.ensure_run(self.project, self.key, factory_revision="r1", mode="fast", kind="change")

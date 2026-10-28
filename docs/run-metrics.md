@@ -9,6 +9,12 @@ factory-versus-agent evaluation. Data stays under ignored `.factory/metrics/`.
 Each line in `.factory/metrics/<run-key>/events.jsonl` is one event. Correlate
 run, task and operation ids with optional parent links. Duplicate `event_id`
 values do not double-count.
+Writers hold a per-run file lock and refresh an in-memory count/ID index from
+only newly appended bytes. A process restart or detected rewrite rebuilds the
+index once from `events.jsonl`; the JSONL remains the source of truth. The
+50,000-line cap counts corrupt lines too. A corrupt line produces a coverage
+gap, and a later valid append remains readable. Concurrent writers using this
+API serialize through the lock; external writes that ignore it are unsupported.
 
 | Field | Meaning |
 |---|---|
@@ -55,21 +61,31 @@ python skills/safe-engine/scripts/fast_gate.py metrics usage --key <run> --file 
 ```
 
 Reports: `report.json` and `report.md` in the run folder. Token and dollar lines
-appear only after `metrics usage --key <run> --file <host record>`. The file is
-a record the host already wrote (Claude Code `cost-state` in the session jsonl).
-The command does not call a model and does not scan other sessions. Host
-`costUSD` is shown as host-reported. A `--rates` card prices tokens only when
-every model and every counted field has a rate; that figure is labeled
-estimated, not a bill. Anything else stays `unavailable`. Shared-session totals
-are never copied onto every ticket.
+appear only after `metrics usage --key <run> --file <host record>`. The command
+refreshes the report, calls no model and scans no other sessions. It accepts
+Claude Code `cost-state` records and Codex JSONL with `session_meta`,
+`turn_context` and cumulative `event_msg.token_count` rows. Codex cached input
+is a subset of input; reasoning output is a subset of output. Those categories
+are counted once. A session with multiple models is labeled `mixed/unknown`
+because its cumulative total cannot be split by model. Importing the same
+snapshot twice is idempotent; a newer cumulative snapshot supersedes the older
+one for that session. Separate sessions using the same model remain separate.
+
+The host session ID is stored as a hash. When the host record lacks one, the
+usage command hashes the explicitly supplied file path as a stable fallback;
+moving or copying that file changes this fallback identity. Direct Python
+summaries without an identity are labeled `unattributed` and are not added as
+separate sessions. All imported usage is labeled `shared_session` or
+`unattributed`, never assigned to individual tickets. Host `costUSD` is shown
+as host-reported. A `--rates` card prices tokens only when every model and every
+counted field has a rate; that figure is labeled estimated, not a bill.
+Anything else stays `unavailable`.
 
 Analytics I/O faults become `coverage_gap` events (`analytics_unwritable` /
 `analytics_corrupt`) and never turn a successful delivery operation into a
 failure.
 
 ## Overhead budget
-
-Agreed before implementation:
 
 Agreed budget (plan + measured Windows NTFS revision recorded in the #175 plan):
 
@@ -78,3 +94,10 @@ Agreed budget (plan + measured Windows NTFS revision recorded in the #175 plan):
 - Whole-run collection + reporting ≤ 1% of wall clock, or ≤ 2 s when wall < 200 s
 
 `metrics overhead` is a single-shot measurement (with warm-up); `within_budget` checks all three rules. Approval waits are a reserved category and stay uncovered until an owner emits them. Container operations such as `full_suite` wrap per-command ops and are excluded from summed/overlap totals.
+
+On Windows 11 NTFS, a single 100-pair CLI sample with 20 warm-up pairs measured
+2.001 ms append-pair p99, 23.721 ms report generation for 242 events, and
+0.167 s combined collection/report time. A separate 10,000-event local sample
+measured 69.453 ms report generation. These are workload measurements, not
+whole-delivery savings or CPU measurements; rerun on the target machine before
+comparing performance.

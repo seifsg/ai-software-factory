@@ -8,6 +8,7 @@ intervals; never labelled CPU time unless CPU is measured.
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import platform
 import shutil
@@ -23,6 +24,7 @@ from safe_engine.host_usage import detail as usage_detail
 
 _CURRENT = ContextVar("run_metrics_current", default=None)
 _SEEN_IDS = {}
+MAX_CACHED_RUNS = 8
 
 METRICS_SCHEMA = 1
 EVENTS_NAME = "events.jsonl"
@@ -93,6 +95,7 @@ def _fault(project, run_key, kind, detail):
             "coverage_gap",
             gap=kind,
             detail=str(detail)[:MAX_FIELD_CHARS],
+            event_id=f"metrics-gap-{kind}-{_safe_key(run_key)}",
             _internal=True,
         )
     except Exception:
@@ -149,12 +152,7 @@ def emit(project, run_key, event_type, **fields):
         folder = run_dir(project, run_key)
         folder.mkdir(parents=True, exist_ok=True)
         path = folder / EVENTS_NAME
-        if path.is_file() and _line_count(path) >= MAX_EVENTS_PER_RUN:
-            raise OSError("event cap reached")
         event_id = fields.pop("event_id", None) or str(uuid.uuid4())
-        seen = _seen_ids(path)
-        if event_id in seen:
-            return True  # duplicate: do not double-count
         payload = {
             "metrics_schema": METRICS_SCHEMA,
             "event_id": event_id,
@@ -177,9 +175,20 @@ def emit(project, run_key, event_type, **fields):
         line = json.dumps(payload, ensure_ascii=False, default=str) + "\n"
         if len(line.encode("utf-8")) > MAX_EVENT_BYTES:
             raise OSError("event too large")
-        with path.open("a", encoding="utf-8") as out:
-            out.write(line)
-        seen.add(event_id)
+        with _event_lock(folder):
+            index = _event_index(path)
+            if event_id in index["ids"]:
+                return True
+            if index["count"] >= MAX_EVENTS_PER_RUN:
+                raise OSError("event cap reached")
+            data = (b"" if index["ends_newline"] else b"\n") + line.encode("utf-8")
+            with path.open("ab") as out:
+                out.write(data)
+            index["ids"].add(event_id)
+            index["count"] += 1
+            stat = path.stat()
+            index.update(size=stat.st_size, mtime_ns=stat.st_mtime_ns, inode=stat.st_ino,
+                         tail=(index["tail"] + data)[-128:], ends_newline=True)
         return True
     except Exception as exc:
         if not internal:
@@ -214,7 +223,7 @@ def read_events(project, run_key):
     if not path.is_file():
         return events
     try:
-        text = path.read_text(encoding="utf-8")
+        text = path.read_text(encoding="utf-8", errors="replace")
     except OSError as exc:
         _fault(project, run_key, "analytics_corrupt", exc)
         return events
@@ -231,6 +240,13 @@ def read_events(project, run_key):
         except ValueError:
             corrupt += 1
     if corrupt:
+        gap_id = f"metrics-gap-analytics_corrupt-{_safe_key(run_key)}"
+        stored = next((row for row in events if row["event_id"] == gap_id), None)
+        if stored:
+            stored["detail"] = f"{corrupt} bad lines"
+        else:
+            events.append({"event_id": gap_id, "type": "coverage_gap", "gap": "analytics_corrupt",
+                           "detail": f"{corrupt} bad lines", "t": utc_now()})
         _fault(project, run_key, "analytics_corrupt", f"{corrupt} bad lines")
     return events
 
@@ -240,6 +256,7 @@ def aggregate(events, *, meta=None, outcome=None):
     by_id = {}
     for event in events:
         by_id[event["event_id"]] = event
+    events = list(by_id.values())
 
     phase_spans = {}
     op_intervals = []  # (start_mono, end_mono or None)
@@ -249,7 +266,7 @@ def aggregate(events, *, meta=None, outcome=None):
     reuse_count = 0
     invalidate_reasons = {}
     gaps = []
-    costs = []
+    costs, snapshots = [], {}
     longest = []
 
     for event in events:
@@ -316,15 +333,34 @@ def aggregate(events, *, meta=None, outcome=None):
             gaps.append({"gap": event.get("gap"), "detail": event.get("detail"), "t": event.get("t")})
         elif kind == "cost":
             if event.get("provenance") and event.get("units"):
-                costs.append({
+                cost = {
                     "amount": event.get("amount"),
                     "units": event.get("units"),
                     "provenance": event.get("provenance"),
                     "scope": event.get("scope"),
+                    "session_id": event.get("session_id"),
                     "model": event.get("model"),
                     "kind": event.get("kind"),
                     "detail": event.get("detail"),
-                })
+                }
+                if event.get("session_id") and event.get("snapshot_id"):
+                    key = (event["session_id"], event["snapshot_id"])
+                    group = snapshots.setdefault(key, {"rank": event.get("snapshot_total") or 0,
+                                                       "order": len(snapshots), "expected": event.get("snapshot_rows"),
+                                                       "costs": []})
+                    group["costs"].append(cost)
+                else:
+                    costs.append(cost)
+
+    latest = {}
+    for (session_id, _), group in snapshots.items():
+        if group["expected"] and len(group["costs"]) != group["expected"]:
+            gaps.append({"gap": "usage_snapshot_incomplete", "detail": session_id, "t": utc_now()})
+            continue
+        if session_id not in latest or (group["rank"], group["order"]) > (latest[session_id]["rank"], latest[session_id]["order"]):
+            latest[session_id] = group
+    for group in latest.values():
+        costs.extend(group["costs"])
 
     incomplete = []
     for event_id, start in open_ops.items():
@@ -548,7 +584,10 @@ def _token_lines(costs):
         return ["- unavailable: no host usage record was attached to this run"]
     lines = []
     for row in token_rows:
-        lines.append(f"- {row.get('model')}: {row.get('detail')} ({row.get('amount')} tokens)")
+        scope = row.get("scope") or "unknown scope"
+        session = row.get("session_id") or "unknown"
+        lines.append(f"- {row.get('model')} [{scope}, session {session[:8]}, {row.get('provenance')}]: "
+                     f"{row.get('detail')} ({row.get('amount')} tokens)")
     counted = sum(row.get("amount") or 0 for row in token_rows)
     if token_rows:
         lines.append(f"- tokens counted: {counted}")
@@ -570,21 +609,27 @@ def attach_usage(project, run_key, summary):
     if not isinstance(summary, dict) or not summary.get("models"):
         return False
     provenance = summary.get("provenance") or "host-usage"
+    session_id = summary.get("session_id")
+    snapshot_id = hashlib.sha256(json.dumps(summary, sort_keys=True, default=str).encode("utf-8")).hexdigest()[:24]
+    has_usd = summary.get("cost_kind") in ("host", "estimated") and summary.get("cost_usd") is not None
+    common = {"session_id": session_id, "snapshot_id": snapshot_id,
+              "snapshot_total": summary.get("tokens"), "snapshot_rows": len(summary["models"]) + int(has_usd),
+              "scope": summary.get("scope") or "shared_session"}
     ok = True
     for item in summary["models"]:
         ok = emit(
             project, run_key, "cost",
             amount=item.get("tokens"), units="tokens", provenance=provenance,
-            scope="run", model=item.get("model"), kind="host",
+            model=item.get("model"), kind="host", **common,
             detail=usage_detail(item.get("counts") or {}),
-            event_id=f"{run_key}-tokens-{item.get('model')}",
+            event_id=f"{run_key}-tokens-{snapshot_id}-{hashlib.sha256(str(item.get('model')).encode()).hexdigest()[:12]}",
         ) and ok
-    if summary.get("cost_kind") in ("host", "estimated") and summary.get("cost_usd") is not None:
+    if has_usd:
         ok = emit(
             project, run_key, "cost",
             amount=summary["cost_usd"], units="usd", provenance=provenance,
-            scope="run", kind=summary["cost_kind"],
-            event_id=f"{run_key}-usd",
+            kind=summary["cost_kind"], **common,
+            event_id=f"{run_key}-usd-{snapshot_id}",
         ) and ok
     return ok
 
@@ -780,38 +825,85 @@ def measure_overhead(project, run_key, event_count=200):
     return result
 
 
-def _seen_ids(path):
+@contextmanager
+def _event_lock(folder):
+    """Serialize event writers so an index refresh and append form one operation."""
+    with (folder / "events.lock").open("a+b") as handle:
+        if os.name == "nt":
+            import msvcrt
+            handle.seek(0)
+            msvcrt.locking(handle.fileno(), msvcrt.LK_LOCK, 1)
+        else:
+            import fcntl
+            fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            if os.name == "nt":
+                handle.seek(0)
+                msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+            else:
+                fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+
+
+def _index_stamp(path, index):
+    """Remember file identity and a short tail check for the next append."""
+    if not path.is_file():
+        index.update(size=0, mtime_ns=0, inode=None, tail=b"", ends_newline=True)
+        return
+    stat = path.stat()
+    with path.open("rb") as handle:
+        handle.seek(max(0, stat.st_size - 128))
+        tail = handle.read()
+    index.update(size=stat.st_size, mtime_ns=stat.st_mtime_ns, inode=stat.st_ino,
+                 tail=tail, ends_newline=not tail or tail.endswith(b"\n"))
+
+
+def _event_index(path):
+    """Read only unseen bytes; rebuild after restart, truncate or external rewrite."""
     key = str(path)
     cached = _SEEN_IDS.get(key)
-    if cached is not None:
+    if not path.is_file():
+        index = {"ids": set(), "count": 0}
+        _index_stamp(path, index)
+        _cache_index(key, index)
+        return index
+    stat = path.stat()
+    offset = cached["size"] if cached else 0
+    reset = not cached or stat.st_ino != cached["inode"] or stat.st_size < offset
+    if not reset and stat.st_size == offset and stat.st_mtime_ns != cached["mtime_ns"]:
+        reset = True
+    if not reset and stat.st_size == offset:
+        _cache_index(key, cached)
         return cached
-    found = set()
-    if path.is_file():
-        try:
-            with path.open("r", encoding="utf-8") as handle:
-                for line in handle:
-                    try:
-                        row = json.loads(line)
-                    except ValueError:
-                        continue
-                    if isinstance(row, dict) and row.get("event_id"):
-                        found.add(row["event_id"])
-        except OSError:
-            pass
-    _SEEN_IDS[key] = found
-    return found
+    if not reset and offset:
+        with path.open("rb") as handle:
+            handle.seek(max(0, offset - 128))
+            reset = handle.read(len(cached["tail"])) != cached["tail"]
+    if not reset and not cached["ends_newline"] and stat.st_size > offset:
+        reset = True
+    index = {"ids": set(), "count": 0} if reset else cached
+    with path.open("rb") as handle:
+        handle.seek(0 if reset else offset)
+        for line in handle:
+            index["count"] += 1
+            try:
+                row = json.loads(line)
+            except (ValueError, UnicodeDecodeError):
+                continue
+            if isinstance(row, dict) and row.get("event_id"):
+                index["ids"].add(row["event_id"])
+    _index_stamp(path, index)
+    _cache_index(key, index)
+    return index
 
 
-def _has_event_id(path, event_id):
-    return event_id in _seen_ids(path)
-
-
-def _line_count(path):
-    count = 0
-    with path.open("r", encoding="utf-8") as handle:
-        for _ in handle:
-            count += 1
-    return count
+def _cache_index(key, index):
+    """Bound remembered IDs to active runs; evicted runs rebuild from JSONL."""
+    _SEEN_IDS.pop(key, None)
+    _SEEN_IDS[key] = index
+    if len(_SEEN_IDS) > MAX_CACHED_RUNS:
+        _SEEN_IDS.pop(next(iter(_SEEN_IDS)))
 
 
 def _prune_retention(project):

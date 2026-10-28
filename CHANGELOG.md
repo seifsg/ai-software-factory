@@ -9,6 +9,7 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 ### Added
 
 - Local factory-run metrics: versioned event store under `.factory/metrics/`, lifecycle instrumentation, JSON/Markdown reports, cross-run compare, export/delete, and `fast_gate.py metrics` (#175). `metrics usage --file` records tokens and dollars only from a host usage file already on disk.
+- Correct cumulative usage imports per session, accept Codex token-count records, and replace per-append full-log counting with a locked incremental index (#175).
 
 ## [1.1.2] - 2026-10-28
 
