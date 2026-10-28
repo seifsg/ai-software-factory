@@ -22,7 +22,7 @@ Prepare:
 
 Keep these five outputs in one compact work record. Full depth, the file-summary stop and every 0–4 step stay. Reuse source/decisions; link proof. Within step 3, finish affected callers, counts and links before recording completion. No extra finishing gate.
 
-Fast plans bound journeys/checks, helpers, proof reuse and unexpected repetition. Overruns change the approach and report remaining work, never waive requirements or invent token limits. Preflight uncertain interpreters, wrapper guards and capture/publication in the actual environment with harmless probes, not an early full suite.
+Fast plans bound journeys/checks, helpers, proof reuse and unexpected repetition. Overruns change the approach and report remaining work, never waive requirements or invent token limits. Preflight uncertain interpreters, wrapper guards and capture/publication with harmless actual probes, not an early full suite. Keep each complete tool return with command, session and exit result; pending or missing results never pass.
 
 Light plan, when your instructions ask for one (a small change or follow-up): the to do list and one success line; the 0–4 loop stays. Otherwise all five outputs.
 

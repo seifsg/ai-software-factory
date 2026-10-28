@@ -36,7 +36,7 @@ G3 MANUAL <outcome>: <what the reviewer judges>
 
 - Every fix a test is said to pin gets a NEG gate. Set it aside with a patch file, never a stash. A gate that cannot fail proves nothing.
 - A maker's last gate is the narrow test for its change. Slow checks (the full suite, long builds) run once on a runner after the wave, on files nobody edits until they end, writing the command and its output to a file in the scratch folder; a red run goes to a fresh maker with the failures.
-- Inspect output and identity. Reuse PASS only with matching source, command, runtime/environment and intact evidence; missing, changed, failed or untrusted receipts need execution. A delegate verdict is not independent acceptance. Read slow-check logs; MANUAL goes to the reviewer.
+- Keep the full tool return, command, session ID and exit result. Pending or missing exit is no PASS. Reuse PASS only with matching source, command, runtime/environment and intact evidence; changed, failed or untrusted receipts need execution. A delegate verdict is not independent acceptance. Read slow-check logs; MANUAL goes to the reviewer.
 
 ## Size
 
