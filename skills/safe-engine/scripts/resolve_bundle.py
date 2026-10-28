@@ -34,6 +34,7 @@ REQUIRED = ["AGENTS.md", "README.md", "docs/install.md", "docs/hosts.md", "safe_
             ".agents/skills/safe-engine/references/fast-run.md",
             ".agents/skills/improve-factory/references/live-session.md"]
 REQUIRED += [f".agents/skills/{name}/SKILL.md" for name in SKILLS]
+# Enrollment is revision-scoped through bundle-inputs.json; older pinned gates need no new helper.
 # The bundle contract requires release_proof.py only in revisions that ship it.
 # Revision-specific helpers and method references use each bundle's contract, preserving older pins.
 NEWER = ("This factory revision uses a newer layout than this launcher knows ({}). Update the installed factory from "

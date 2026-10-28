@@ -1,8 +1,8 @@
 # Fast gate details
 
-Contents: modules · run state · older gate · owed epic · scratch deletes · destructive guard · rehome · adopt PR proof · cleanup temp · install · progress internals · live view internals
+Contents: modules · run state · older gate · owed epic · scratch deletes · destructive guard · rehome · enroll worktree · adopt PR proof · cleanup temp · install · progress internals · live view internals
 
-Read only the section your situation needs. The rest of the gate is in [fast-run](fast-run.md).
+See [fast-run](fast-run.md) for the gate.
 
 ## Modules
 
@@ -65,6 +65,10 @@ The owner's step, run only on their instruction. It brings in an open run from a
 3. One machine at a time: check the card against `status` on the old machine, then the owner retires the copy there with `close --abandon`.
 
 It refuses, writing nothing, when the run is closed, malformed or records another folder, or when this gate home holds a run for either folder or one around or inside it. A run this gate home holds as lost or closed never comes back through it.
+
+## Enroll worktree
+
+[Enrollment](worktree-enrollment.md).
 
 ## Adopt PR proof
 

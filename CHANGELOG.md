@@ -6,6 +6,10 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 
 ## [Unreleased]
 
+### Added
+
+- Explicit `enroll-worktree` validates tracked foreign-run lineage, archives inherited evidence and selects a factory for an independent worktree run without changing its source run (#209).
+
 ## [1.2.0] - 2026-10-28
 
 ### Added

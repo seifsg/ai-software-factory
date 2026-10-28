@@ -1,5 +1,6 @@
 {
   "methods": {
+    ".agents/skills/safe-engine/references/worktree-enrollment.md": 1200,
     ".agents/skills/safe-engine/references/record-diagnostics.md": 5400,
     ".agents/skills/analyze-start/SKILL.md": 1400,
     ".agents/skills/database-schema/SKILL.md": 6500,

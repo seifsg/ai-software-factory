@@ -985,6 +985,7 @@ def main():
         sys.exit(cmd_hook(host))
     args = sibling("fast_cli").parse(sys.modules[__name__])
     actions = {"start": lambda a: sibling("fast_entry").start(a, sys.modules[__name__]),
+               "enroll-worktree": lambda a: sibling("fast_enroll").run(a, sys.modules[__name__]),
                "wait": lambda a: sibling("fast_wait_command").run(a, sys.modules[__name__]),
                "done": cmd_done, "status": cmd_status, "close": cmd_close, "rehome": cmd_rehome,
                "try": cmd_try, "view": cmd_view, "scratch": cmd_scratch,

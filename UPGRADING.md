@@ -7,6 +7,10 @@ For every release:
 - **Active and explicit pins never change automatically.** Ask `improve-factory` for a compatible pin change; never edit a selected bundle or receipt.
 - **Check what you run:** `fast_gate.py version` names the version, commit, channel and route; `fast_gate.py verify` lists every file that differs from the release manifest.
 
+## Next release
+
+- After updating, use `fast_gate.py enroll-worktree --project <new-worktree> --source <original-worktree> --bundle <reviewed-factory> --reason "<owner authority>"` only for an unregistered Git worktree inheriting unchanged tracked legacy run files. Read its archived lineage, then start a distinct run normally. The source must retain its registered open run. Enrollment keeps the source and inherited evidence intact; it does not resume, move or upgrade that run. Existing installs and pins need no migration.
+
 ## 1.2.0
 
 - After release, update launchers for `metrics` (`report`, `compare`, `export`, `delete`, `overhead`, `usage`, `task`). New Fast/Lucky/Safe runs write local analytics under `.factory/metrics/` (gitignored). Mark task boundaries only when observed; existing active pins stay unchanged and need no metrics migration. See [run metrics](docs/run-metrics.md).
