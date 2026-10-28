@@ -79,6 +79,20 @@ class OwnershipTests(unittest.TestCase):
         self.assertEqual(checks.verdict_problems(run, f"**Hidden checks:** {url}#A1: PASS", record), [])
         self.assertIn("FAIL", " ".join(checks.verdict_problems(run, f"**Hidden checks:** {url}#A1: FAIL", record)))
 
+    def test_observed_check_without_record_verdict_reports_all_independent_errors(self):
+        row = {**ticket(CHILD, "T1"), "category": "logic", "reason": "CLI behavior"}
+        run = selected({"kind": "change", "tickets": [CHILD]}, row)
+        run["checks"]["observations"] = {CHILD + "#A1": {"verdict": "PASS"}}
+        missing = checks.verdict_problems(run, "", record)
+        self.assertTrue(any("Hidden criteria missing or failed" in item for item in missing))
+        malformed = checks.verdict_problems(run, f"**Hidden checks:** {CHILD}#A1: MAYBE", record)
+        self.assertTrue(any("unreadable hidden-check entry" in item for item in malformed))
+        self.assertTrue(any("Hidden criteria missing or failed" in item for item in malformed))
+        self.assertEqual(checks.verdict_problems(run, f"**Hidden checks:** {CHILD}#A1: PASS", record), [])
+        disagree = checks.verdict_problems(run, f"**Hidden checks:** {CHILD}#A1: FAIL", record)
+        self.assertTrue(any("Hidden checks contain FAIL" in item for item in disagree))
+        self.assertTrue(any("Manual verdict differs" in item for item in disagree))
+
     def test_preparation_rejects_missing_criterion_and_unlisted_command_source(self):
         with tempfile.TemporaryDirectory(prefix="fast-check-prepare-") as folder:
             project = Path(folder)

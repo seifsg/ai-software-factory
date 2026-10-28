@@ -26,6 +26,8 @@ def parse(gate):
     start.add_argument("--auth", action="store_true", help="The product has sign-in")
     start.add_argument("--request")
     start.add_argument("--request-file")
+    start.add_argument("--from-plan", help="Reuse the approved plan at this source link after current-input validation")
+    start.add_argument("--plan-record", help="Project-local JSON binding approved planning, scope and current inputs")
     sub.add_parser("pr-proof-method", help="Read the owner-selected PR method for any mode")
     adopt = sub.add_parser("adopt-pr-proof", help="Owner-authorized PR-only policy; preserves existing run state")
     target = adopt.add_mutually_exclusive_group(required=True)
