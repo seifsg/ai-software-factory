@@ -61,6 +61,7 @@
     "safe_engine/run_metrics.py",
     "safe_engine/metrics_calculations.py",
     "safe_engine/host_usage.py",
+    "safe_engine/release_proof.py",
     "safe_engine/storage.py",
     "safe_engine/tickets.py",
     "safe_engine/workflow.py",
