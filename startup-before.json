@@ -1,0 +1,10 @@
+{
+  "exit": 0,
+  "receipt_created": false,
+  "selection_calls": 0,
+  "bundle_recorded": false,
+  "check_selection": false,
+  "suite_policy": false,
+  "explicit_remote_calls": 1,
+  "explicit_notice": "Latest factory check failed: remote discovery probe. Keeping factory 1.2.0 at 0425f8e508dc010c6541d0f1f261c1577e4386c1."
+}

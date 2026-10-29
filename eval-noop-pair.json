@@ -1,0 +1,54 @@
+{
+  "timeout_minutes": 1.0,
+  "interrupted": false,
+  "runs": [
+    {
+      "sample": "bug-fix",
+      "arm": "factory",
+      "delivered": 1,
+      "total": 4,
+      "failing": {
+        "R1": "AssertionError: 10% off 1000: got ['ok', 800]",
+        "R2": "AssertionError: subtotal of an empty invoice: got ['error', 'TypeError: reduce() of empty iterable with no initial value']",
+        "R3": "AssertionError: 4.5 cents: got ['ok', 4]"
+      },
+      "minutes": 0.0,
+      "exit": 0,
+      "timed_out": false,
+      "void": null,
+      "possible_escapes": [],
+      "setup_seconds": 3.077,
+      "factory_setup": {
+        "snapshot_revision": "cfd09c3316d5950098297d9382f89974faaf7fa8",
+        "source": {
+          "checkout_revision": "a8d7310a80fab59ae377c7ba34e6a5cfb3c03f16",
+          "checkout_dirty": false,
+          "bundle_sha256": "5d9406693baa3533df59b4a82a3094848b4502c58a88182ef9af2952818b2bf4"
+        },
+        "selection_policy": "explicit"
+      },
+      "factory_run": {
+        "status": "not_observed"
+      },
+      "workdir": "<user>\\AppData\\Local\\Temp\\eval-runs-5gjdn08y\\bug-fix-factory-_tys7t4v\\work"
+    },
+    {
+      "sample": "bug-fix",
+      "arm": "plain",
+      "delivered": 1,
+      "total": 4,
+      "failing": {
+        "R1": "AssertionError: 10% off 1000: got ['ok', 800]",
+        "R2": "AssertionError: subtotal of an empty invoice: got ['error', 'TypeError: reduce() of empty iterable with no initial value']",
+        "R3": "AssertionError: 4.5 cents: got ['ok', 4]"
+      },
+      "minutes": 0.0,
+      "exit": 0,
+      "timed_out": false,
+      "void": null,
+      "possible_escapes": [],
+      "setup_seconds": 0.339,
+      "workdir": "<user>\\AppData\\Local\\Temp\\eval-runs-5gjdn08y\\bug-fix-plain-m4cbtz87\\work"
+    }
+  ]
+}

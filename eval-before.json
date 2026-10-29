@@ -1,0 +1,5 @@
+{
+  "resolved": false,
+  "error": "Bundle path must be the Git checkout root, not a subdirectory",
+  "receipt_exists": false
+}

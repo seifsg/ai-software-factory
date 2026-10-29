@@ -1,0 +1,14 @@
+{
+  "commit": "a8d7310a80fab59ae377c7ba34e6a5cfb3c03f16",
+  "argv": [
+    "python",
+    "tests/run.py"
+  ],
+  "passed": true,
+  "log_sha256": "6a31241284a530f64f2cba32e307b3dc4609cb9638241e0c09f5c4b17705997f",
+  "duration_seconds": 273.867,
+  "summary": [
+    "Ran 658 tests in 272.5s (616 pooled on 16 workers, 42 serial)",
+    "OK (skipped=1)"
+  ]
+}

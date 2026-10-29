@@ -1,0 +1,11 @@
+Gate output bytes: origin/main -> working tree
+start                 859 ->      759  -11.6%
+record hints        1,591 ->    1,371  -13.8%
+hook context          138 ->      138  +0.0%
+deny edit             186 ->      186  +0.0%
+deny destructive      230 ->      230  +0.0%
+stop                  192 ->      192  +0.0%
+done                  237 ->      220  -7.2%
+status                279 ->      262  -6.1%
+product hints       2,733 ->    2,361  -13.6%
+total               6,445 ->    5,719  -11.3%

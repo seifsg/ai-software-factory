@@ -1,0 +1,10 @@
+{
+  "exit": 0,
+  "receipt_created": true,
+  "selection_calls": 1,
+  "bundle_recorded": true,
+  "check_selection": true,
+  "suite_policy": true,
+  "explicit_remote_calls": 0,
+  "explicit_notice": "Keeping explicit pin; latest factory not checked."
+}

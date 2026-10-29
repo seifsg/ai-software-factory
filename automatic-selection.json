@@ -1,0 +1,70 @@
+[
+  {
+    "args": [
+      "start",
+      "--key",
+      "first-auto",
+      "--kind",
+      "change",
+      "--no-ui",
+      "--no-data",
+      "--request",
+      "Independent automatic selection fixture"
+    ],
+    "exit": 0,
+    "output": "Factory selected: 1.2.0 at 0425f8e508dc010c6541d0f1f261c1577e4386c1\nLatest release: unknown (not checked or unavailable)\n\ud83c\udfed first-auto \u00b7 \ud83c\udfab tickets \u00b7 step 1/5 \u00b7 \u23f1\ufe0f 1s total, 1s in step\n\ud83c\udfab tickets   \u2b1c plan \u00b7 build \u00b7 done-run \u00b7 handoff\nfast change run 'first-auto' at <factory-checkout>\\.factory\\checker213\\automatic\\app (ui=False, data=False, auth=False)\nGate: closed until tickets, plan\nNext: tickets\nVersion: 1.2.0 (stable); run bundle 1.2.0\nRecord: <factory-checkout>\\.factory\\checker213\\automatic\\app\\.factory\\fast\\work-record.md\nBundle: <baseline-checkout> @ 0425f8e508dc\nGit: .factory/ already excluded in G:\\Projects\\ai-software-factory\\.git\\info\\exclude\nHooks: Claude Code, Codex, Cursor\nScratch: <factory-checkout>\\.factory\\checker213\\automatic\\home\\scratch\\first-auto-547afc71-20261029084736 (the run's throwaway data: point TMPDIR, TEMP and TMP here; deletes inside pass by this literal path with rm -r (Bash, / separators) or rd /s, alone in the command; close removes it)\n",
+    "remote_calls": 1
+  },
+  {
+    "args": [
+      "status"
+    ],
+    "exit": 0,
+    "output": "\ud83c\udfed first-auto \u00b7 \ud83c\udfab tickets \u00b7 step 1/5 \u00b7 \u23f1\ufe0f 1s total, 1s in step\n\ud83c\udfab tickets   \u2b1c plan \u00b7 build \u00b7 done-run \u00b7 handoff\nfast change run 'first-auto' at <factory-checkout>\\.factory\\checker213\\automatic\\app (ui=False, data=False, auth=False)\nGate: closed until tickets, plan\nNext: tickets\nVersion: 1.2.0 (stable); run bundle 1.2.0\n",
+    "remote_calls": 1
+  },
+  {
+    "args": [
+      "close",
+      "--abandon",
+      "Independent disposable fixture complete"
+    ],
+    "exit": 0,
+    "output": "\ud83c\udfed first-auto \u00b7 \ud83c\udfab tickets \u00b7 step 1/5 \u00b7 \u23f1\ufe0f 1s total, 1s in step \u00b7 \ud83c\udfc1 abandoned\n\ud83c\udfab tickets   \u2b1c plan \u00b7 build \u00b7 done-run \u00b7 handoff\nfast change run 'first-auto' at <factory-checkout>\\.factory\\checker213\\automatic\\app (ui=False, data=False, auth=False)\nGate: closed until tickets, plan\nNext: closed\n",
+    "remote_calls": 1
+  },
+  {
+    "args": [
+      "start",
+      "--key",
+      "second-auto",
+      "--kind",
+      "change",
+      "--no-ui",
+      "--no-data",
+      "--request",
+      "Independent automatic selection fixture"
+    ],
+    "exit": 0,
+    "output": "Factory selected: 1.2.0 at 0425f8e508dc010c6541d0f1f261c1577e4386c1\nLatest release: unknown (not checked or unavailable)\n\ud83c\udfed second-auto \u00b7 \ud83c\udfab tickets \u00b7 step 1/5 \u00b7 \u23f1\ufe0f 0s total, 0s in step\n\ud83c\udfab tickets   \u2b1c plan \u00b7 build \u00b7 done-run \u00b7 handoff\nfast change run 'second-auto' at <factory-checkout>\\.factory\\checker213\\automatic\\app (ui=False, data=False, auth=False)\nGate: closed until tickets, plan\nNext: tickets\nVersion: 1.2.0 (stable); run bundle 1.2.0\nRecord: <factory-checkout>\\.factory\\checker213\\automatic\\app\\.factory\\fast\\work-record.md\nBundle: <baseline-checkout> @ 0425f8e508dc\nGit: .factory/ already excluded in G:\\Projects\\ai-software-factory\\.git\\info\\exclude\nHooks: Claude Code, Codex, Cursor\nScratch: <factory-checkout>\\.factory\\checker213\\automatic\\home\\scratch\\second-auto-547afc71-20261029084739 (the run's throwaway data: point TMPDIR, TEMP and TMP here; deletes inside pass by this literal path with rm -r (Bash, / separators) or rd /s, alone in the command; close removes it)\n",
+    "remote_calls": 2
+  },
+  {
+    "args": [
+      "status"
+    ],
+    "exit": 0,
+    "output": "\ud83c\udfed second-auto \u00b7 \ud83c\udfab tickets \u00b7 step 1/5 \u00b7 \u23f1\ufe0f 1s total, 1s in step\n\ud83c\udfab tickets   \u2b1c plan \u00b7 build \u00b7 done-run \u00b7 handoff\nfast change run 'second-auto' at <factory-checkout>\\.factory\\checker213\\automatic\\app (ui=False, data=False, auth=False)\nGate: closed until tickets, plan\nNext: tickets\nVersion: 1.2.0 (stable); run bundle 1.2.0\n",
+    "remote_calls": 2
+  },
+  {
+    "args": [
+      "close",
+      "--abandon",
+      "Independent disposable fixture complete"
+    ],
+    "exit": 0,
+    "output": "\ud83c\udfed second-auto \u00b7 \ud83c\udfab tickets \u00b7 step 1/5 \u00b7 \u23f1\ufe0f 1s total, 1s in step \u00b7 \ud83c\udfc1 abandoned\n\ud83c\udfab tickets   \u2b1c plan \u00b7 build \u00b7 done-run \u00b7 handoff\nfast change run 'second-auto' at <factory-checkout>\\.factory\\checker213\\automatic\\app (ui=False, data=False, auth=False)\nGate: closed until tickets, plan\nNext: closed\n",
+    "remote_calls": 2
+  }
+]

@@ -1,0 +1,21 @@
+{
+  "factory_setup": {
+    "snapshot_revision": "80b5fb0db5b165e1008138f508a4fedbe2e7c29a",
+    "source": {
+      "checkout_revision": "a8d7310a80fab59ae377c7ba34e6a5cfb3c03f16",
+      "checkout_dirty": false,
+      "bundle_sha256": "5d9406693baa3533df59b4a82a3094848b4502c58a88182ef9af2952818b2bf4"
+    },
+    "selection_policy": "explicit"
+  },
+  "factory_run": {
+    "status": "observed",
+    "revision": "80b5fb0db5b165e1008138f508a4fedbe2e7c29a",
+    "policies": {
+      "check_selection": true,
+      "show_first": false,
+      "suite_policy": true
+    },
+    "closed": false
+  }
+}

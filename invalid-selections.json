@@ -1,0 +1,16 @@
+[
+  {
+    "case": "corrupt",
+    "exit": 1,
+    "run_created": false,
+    "receipt_unchanged": true,
+    "output": "Cannot read existing bundle selection: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)\n"
+  },
+  {
+    "case": "mismatch",
+    "exit": 1,
+    "run_created": false,
+    "receipt_unchanged": true,
+    "output": "Cached checkout does not match the requested commit\n"
+  }
+]
