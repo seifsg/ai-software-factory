@@ -1,0 +1,11 @@
+{
+  "process_environment": {
+    "PYTHON_CPU_COUNT": "10"
+  },
+  "effective_default_workers": 8,
+  "plan_argv": [
+    "python",
+    "tests/run.py"
+  ],
+  "reason": "Default16-worker full run had sole2.172s timing failure versus2s; unchanged timing module8tests passed alone. Lower process-local concurrency, same complete test set/assertions. Runtime override is explicitly recorded but was not in frozen suite_inputs; no proof reuse claimed."
+}

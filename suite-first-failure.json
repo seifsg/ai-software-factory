@@ -1,0 +1,10 @@
+{
+  "commit": "c068e8134d2a16a30e5c19a418f0e63be644999a",
+  "argv": [
+    "python",
+    "tests/run.py"
+  ],
+  "passed": false,
+  "log_sha256": "f7085987c246a0d43214d27dc4353c60db6a490e4fe38b4e7d7873f223905d75",
+  "result": "645 tests, one skipped; sole inherited-stdout timing failure2.172s against unchanged2s limit"
+}

@@ -1,0 +1,15 @@
+{
+  "base": "0425f8e508dc010c6541d0f1f261c1577e4386c1",
+  "head": "c068e8134d2a16a30e5c19a418f0e63be644999a",
+  "files": {
+    ".agents/skills/safe-engine/SKILL.md": {
+      "before": 15536,
+      "after": 15554
+    },
+    ".agents/skills/safe-engine/references/owner-reports.md": {
+      "before": 2030,
+      "after": 2002
+    }
+  },
+  "net_bytes": -10
+}
