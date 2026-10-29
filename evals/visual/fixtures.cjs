@@ -1,5 +1,5 @@
 // Synthetic candidates isolate omissions, geometry and interaction defects.
-const variants = ['reference', 'alternative', 'missing-section', 'hidden-section', 'hidden-content', 'missing-content',
+const variants = ['reference', 'alternative', 'missing-section', 'hidden-section', 'hidden-content', 'missing-content', 'offscreen-content',
   'mobile-overflow', 'lost-progress', 'dead-button'];
 
 function html(variant) {
@@ -20,6 +20,7 @@ h2{margin:0 0 16px}button{font:inherit;padding:12px;cursor:pointer}
 ${variant === 'alternative' ? 'main{max-width:880px;gap:28px}section{border-radius:16px;background:#fffef9}' : ''}
 ${variant === 'hidden-section' ? '#learn{opacity:0}' : ''}
 ${variant === 'hidden-content' ? '#learn h2,#learn div{opacity:0}' : ''}
+${variant === 'offscreen-content' ? '#learn div{position:relative;left:-10000px}' : ''}
 ${variant === 'mobile-overflow' ? '@media(max-width:600px){main{width:1000px}}' : ''}
 </style><main>${sections.map(([id, title, text]) =>
     `<section id="${id}"><h2>${title}</h2><div>${variant === 'missing-content' && id === 'learn' ? '' : text}</div></section>`).join('')}</main>
