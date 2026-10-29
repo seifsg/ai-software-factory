@@ -21,11 +21,12 @@ async function observe(page) {
       if (!element) return {title, visible: false, box: null};
       const box = element.getBoundingClientRect();
       const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
-      const content = [];
+      const content = [], headingContent = [];
       for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-        if (node.textContent.trim() && !heading.contains(node)) content.push({text: node.textContent.trim(), visible: visible(node)});
+        if (node.textContent.trim()) (heading.contains(node) ? headingContent : content)
+          .push({text: node.textContent.trim(), visible: visible(node)});
       }
-      const headingVisible = visible(heading);
+      const headingVisible = headingContent.length > 0 && headingContent.every(row => row.visible);
       return {title, visible: headingVisible && content.length > 0 && content.every(row => row.visible),
         headingVisible, content, box: {x: box.x, y: box.y, width: box.width, height: box.height}};
     });
