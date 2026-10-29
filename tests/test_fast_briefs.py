@@ -8,6 +8,8 @@ import sys
 import tempfile
 import unittest
 
+from bundle_fixtures import historical_gate
+
 SCRIPTS = Path(__file__).resolve().parents[1] / "skills/safe-engine/scripts"
 GATE = SCRIPTS / "fast_gate.py"
 PLAN = """## Tickets
@@ -95,7 +97,7 @@ class BriefsTests(unittest.TestCase):
 
 
 class LaneTests(unittest.TestCase):
-    """Two worktree lanes through the real gate: the second may not take the first one's ports."""
+    """Historical lane setup; real commands prevent one lane taking another's ports."""
 
     def setUp(self):
         temp = tempfile.TemporaryDirectory(prefix="lanes ")
@@ -104,7 +106,7 @@ class LaneTests(unittest.TestCase):
         self.env = dict(os.environ, SAFE_ENGINE_HOME=str(self.root / "home"), GH_CONFIG_DIR=str(self.root / "gh"))
 
     def gate(self, project, *args, ok=True):
-        result = subprocess.run([sys.executable, str(GATE), *args, "--project", str(project)], capture_output=True,
+        result = subprocess.run([*historical_gate(), *args, "--project", str(project)], capture_output=True,
                                 text=True, encoding="utf-8", env=self.env)
         self.assertEqual(result.returncode == 0, ok, result.stdout + result.stderr)
         return result.stdout + result.stderr
