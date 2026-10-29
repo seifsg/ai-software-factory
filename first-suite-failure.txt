@@ -1,0 +1,34 @@
+======================================================================
+ERROR: test_agents.AgentTests.test_handbacks_follow_the_method
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<factory>\tests\test_agents.py", line 78, in test_handbacks_follow_the_method
+    shared = shared_lines()
+  File "<factory>\tests\test_agents.py", line 33, in shared_lines
+    text = METHOD.read_text(encoding="utf-8").split("Every handback then adds:", 1)[1]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^
+IndexError: list index out of range
+
+
+======================================================================
+FAIL: test_docs_sync.DocsSyncTests.test_every_gate_command_is_documented
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<factory>\tests\test_docs_sync.py", line 45, in test_every_gate_command_is_documented
+    self.assertTrue(found, f"fast_gate.py {command} is not documented in README, docs or methods")
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : fast_gate.py show is not documented in README, docs or methods
+
+
+======================================================================
+ERROR: test_fast_view.LiveViewTests.test_current_show_picture_fills_empty_report_and_expires_with_candidate
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<factory>\tests\test_fast_view.py", line 194, in test_current_show_picture_fills_empty_report_and_expires_with_candidate
+    self.assertEqual(current["pictures"][0]["caption"], "Home page \xb7 light \xb7 desktop")
+                     ~~~~~~~~~~~~~~~~~~~^^^
+IndexError: list index out of range
+
+
+Ran 656 tests in 390.7s (614 pooled on 8 workers, 42 serial)
+FAILED (3 problems, skipped=1)

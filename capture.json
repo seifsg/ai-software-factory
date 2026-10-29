@@ -1,0 +1,38 @@
+{
+  "actual_browser_exit": 0,
+  "original_observation": {
+    "candidate": "80679a0d3620f61976300fb7e4b5d53df6dcb2df3b598bc65b18ac53ffeac994",
+    "comparison": "before",
+    "screens": [
+      {
+        "id": "home",
+        "surface": "home",
+        "theme": "light",
+        "device": "desktop",
+        "viewport": [
+          640,
+          240
+        ],
+        "state": "ready",
+        "description": "Static fixture, unchanged rendering",
+        "reference": {
+          "path": ".factory/fast/shots/home-before.png",
+          "sha256": "d9dd250b8afb87952186da3b0dfbae516e99d63df4a877f2c8adc33e2437c2b2"
+        },
+        "capture": {
+          "path": ".factory/fast/shots/home-after.png",
+          "sha256": "d9dd250b8afb87952186da3b0dfbae516e99d63df4a877f2c8adc33e2437c2b2"
+        }
+      }
+    ],
+    "visual": "0da70e3b901290cdafb873b10af5c3f762e1c400e6c8a38d2ef9eec208b72bdb",
+    "recorded_at": "2026-10-29T18:49:25.749659+00:00"
+  },
+  "carried_original": true,
+  "full_candidate_changed": true,
+  "owner_deadline_retained": true,
+  "runtime-input": "Source changed; capture and share a fresh Show",
+  "relevant-source": "Source changed; capture and share a fresh Show",
+  "unknown-closure": "Dependency evidence must establish complete rendering sources",
+  "stop_preserved": "Owner requested a stop/change; resolve it and share again"
+}

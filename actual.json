@@ -1,0 +1,51 @@
+{
+  "carry_cli": "Retained original observation and owner response.",
+  "original_identity_time_owner_retained": true,
+  "full_source_proof_stale": [
+    "Show: declared suite proof is stale; run prove --suite for the current source before handoff"
+  ],
+  "viewer_carried_picture_count": 1,
+  "reject_source": "Source changed; capture and share a fresh Show",
+  "reject_runtime": "Source changed; capture and share a fresh Show",
+  "reject_closure": "Dependency evidence must establish complete rendering sources",
+  "reject_media": "Picture: use a PNG screenshot",
+  "owner_stop": "Owner requested a stop/change; resolve it and share again",
+  "owner_change": "Owner requested a stop/change; resolve it and share again",
+  "pr_invalid": "Report: PR body structure failed:\n- PR body: needs a '## \ud83c\udfac Before & after' section: one heading per outcome (feature, fix, page, module), each with Before and After proof (how-to-make-a-pr)\n- PR body: end it with the factory credit line, as its last line: \ud83c\udfed Built with [AI Software Factory](https://softwarefactory.company/) by Seif\n",
+  "pr_valid": "STRUCTURE ONLY: PR body passed. Handoff, current proofs and review remain required.\n",
+  "likeness_preserved": true,
+  "likeness_relevant_refusal": [
+    "Design coverage: Review candidate changed; capture and review the current source"
+  ],
+  "ports": {
+    "sentence": [
+      5180
+    ],
+    "none_reference": []
+  },
+  "collision": [
+    "ports 5180 belong to open run 'other' at other: give this lane its own block (fast-run.md#briefs)"
+  ],
+  "ports_contradiction": "Ports: none contradicts allocations; put preview references outside this field",
+  "findings_none": [],
+  "findings_prose": [
+    "Findings report: expected an existing JSON report path; clean checks without repairs may use none"
+  ],
+  "current_A3": {
+    "compact_journey": [],
+    "missing_minimum": [
+      "Journeys must give counts and a minimum: '<journey>: 2 actions, 1 load, min 2 actions'"
+    ],
+    "missing_hierarchy": [
+      "Hierarchy must name each key screen's primary action: '<screen>: primary <action>; ...'"
+    ],
+    "punctuated_proof": [],
+    "missing_visual_media": [
+      "'Result': needs '**Before:**' then '**After:**', or a Before | After image table"
+    ],
+    "missing_journey_video": [
+      "'Result': Journey: yes needs a '**Video:**' video link (.mp4/.webm/.mov or explicit HTML video)"
+    ],
+    "valid_findings_path": []
+  }
+}

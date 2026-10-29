@@ -1,0 +1,21 @@
+{
+  "argv": [
+    "python",
+    "tests/run.py"
+  ],
+  "started_at": "2026-10-29T19:14:57.811967+00:00",
+  "duration_seconds": 392.071,
+  "exit_code": 1,
+  "timed_out": false,
+  "passed": false,
+  "log": "G:\\.codex\\worktrees\\answer-first-215\\ai-software-factory\\.factory\\fast\\prove\\f6620bee243441e3bccc3401d656cd49.log",
+  "log_truncated": false,
+  "log_sha256": "65da2017db6d3fe55b3c227109243cef7e9fdc460ac4619259e2fd9468ca6e40",
+  "reused": false,
+  "suite_execution": "f6620bee243441e3bccc3401d656cd49",
+  "suite_identity": {
+    "commit": "3e0d698ec3a2dbdcb71704c31784b42ccfad13fa",
+    "fingerprint": "704654ad4ea82764e7d8d769a4a2e7d137cc0f88a37866fd71b135771e06ce7b"
+  },
+  "candidate": "10835326d2291c9002dbb76d51dc38e1357c3d24b5c4f265072877fca0a582c0"
+}

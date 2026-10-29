@@ -1,0 +1,39 @@
+{
+  "base": "22887fff6dd8d41ca66b2399ef27760c9ba77c9f",
+  "commit": "b509417b8a126f849f8561999547930eb3e197ea",
+  "measurement": "Tracked UTF-8 text, LF normalized; includes205 and tests/docs; binaries/ignored run records excluded. Skills subset .agents/skills.",
+  "before": {
+    "repository": {
+      "files": 268,
+      "bytes": 2317155,
+      "lines": 38877
+    },
+    "skills": {
+      "files": 58,
+      "bytes": 305352,
+      "lines": 3576
+    }
+  },
+  "after": {
+    "repository": {
+      "files": 268,
+      "bytes": 2310549,
+      "lines": 38871
+    },
+    "skills": {
+      "files": 58,
+      "bytes": 284124,
+      "lines": 3300
+    }
+  },
+  "delta": {
+    "repository": {
+      "bytes": -6606,
+      "lines": -6
+    },
+    "skills": {
+      "bytes": -21228,
+      "lines": -276
+    }
+  }
+}

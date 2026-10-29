@@ -1,0 +1,80 @@
+{
+  "candidate": "7b751c04be364fcd233561bda488346884259dfd3ec3fb40097fe1f1242aa197",
+  "commit": "b509417b8a126f849f8561999547930eb3e197ea",
+  "state": "Source/delta review PASS; current final suite/draft acceptance pending",
+  "scope": "32-file composed205/218 delta, owning parsers and Show/design/view callers, condensed methods; no product audit",
+  "open_findings": [],
+  "positive_evidence": {
+    "actual": "actual.json",
+    "methods": "walkthrough.md",
+    "baseline_size": "baseline-size.json",
+    "current_size": "size-current.json",
+    "policy_flags": "all16 method flag phrases true",
+    "final_size": "final-size.json",
+    "viewer_delta": "viewer-delta.json"
+  },
+  "pending": [
+    "Final exact-commit suite receipt/log/hash and declared environment",
+    "Current draft/ticket/published proof bindings and final checks --run"
+  ],
+  "hashes": {
+    ".agents/skills/how-to-make-a-pr/SKILL.md": "f320c31efbdc3299e84f627a116d2f8cdf52b360f19723024542a8d2aa0dc825",
+    ".agents/skills/how-to-make-a-pr/references/media-proof.md": "0fef4012f7f532309a0ac85b8fecc30b35f143f04419d5f83aff7232022f9803",
+    ".agents/skills/how-to-make-a-pr/references/pr-layout.md": "14ad7d8b7db3e2004718878e474d5a7a8ff5bb72ddf3a34e544edc29ed797a26",
+    ".agents/skills/improve-factory/SKILL.md": "8a13634822803d88be670dd802e6b7a0c5daf137c807e68495a94d0a3beb2880",
+    ".agents/skills/safe-engine/references/delegate.md": "ee581d9b4241da585a495f7cad4ab14c5b3c52af8c5a49af222da9cbec6b647f",
+    ".agents/skills/safe-engine/references/fast-run.md": "9a60e48cbcae4211144274be0ec4fd188637859a92de356dafa6501d08f40227",
+    ".agents/skills/safe-engine/references/gate-details.md": "5068d9e4c3106ee4ccaf31fdde6e4b85bb49d0ee9be56263196439da66f2d424",
+    ".agents/skills/safe-engine/references/show.md": "a256e665f17740b3525a3229f71a69233320cafd9ea942fb1f9a6fdbb36956fa",
+    ".agents/skills/safe-engine/references/work-record-sample.md": "715a9d0611c686a2a494a6c1a5232a5c98b0351a23143cb12ee6067080ed9daa",
+    "CHANGELOG.md": "5c594694af1be4db0e6e279f971a42114a5a3cb525b508dabb7af60ffa141bef",
+    "README.md": "372178989bf14da984d03cf08dc585771b858fca22dfebe9526f09b8da02e357",
+    "UPGRADING.md": "4ffb300f715b4ea91eea41aa4f0cdcb76133606d204f09d575b8ac96c77ddfae",
+    "docs/record-diagnostics.md": "575ced16b858ed22479c1adacb0311c92f010e49be7bc06651907db60bba855a",
+    "docs/show-first.md": "d373146b5d9bcf72d2f8b440c10cab0c160505226f8168bd7d4703f76a6f3f32",
+    "docs/worth-it.md": "4aeacc79fad467b7e1d105de296c947b443ed200cb766177bd50be226de0f524",
+    "skills/safe-engine/scripts/fast_briefs.py": "0308f316b90afd0a767032650d6ace19db6cb94f516ab3f3bbf81824f6376b04",
+    "skills/safe-engine/scripts/fast_design.py": "42072eeb1c32cfff94bb751d07dc9beeeb08c8a74f4a9a7ea208e2546b857261",
+    "skills/safe-engine/scripts/fast_entry.py": "8593a9c3e933ed8b0d594fa74c27ca22f3bd24d7599e6bc9c09eb4e5687cf0e9",
+    "skills/safe-engine/scripts/fast_gate.py": "dd20ef8e05f98af99a8ed4873624862aefce29c2149f004400be3febdda21091",
+    "skills/safe-engine/scripts/fast_ledger.py": "d0e3e6b2b230aa3a656d93ed5d60a7615838208b7271166cc9f496403e8630c6",
+    "skills/safe-engine/scripts/fast_proof.py": "4da15d2e19dfc95e601b1e0f93c88e98b7bba14ab73f8e40a47e3c7de99d77de",
+    "skills/safe-engine/scripts/fast_record.py": "927cb501dee97582ad9754da8ab5fd2edc61fb3feda92c407659f9aa9fbbafdd",
+    "skills/safe-engine/scripts/fast_report_command.py": "595c302cb043d195beb7f6ca37e3ef5761938bff5e55f3e18800ce6e2d892dcd",
+    "skills/safe-engine/scripts/fast_round.py": "3864356865b7988b6ddc3e8a3b08bceaf60e124bbf7602607ae874f5530b92cf",
+    "skills/safe-engine/scripts/fast_show.py": "78610ad994a5becf1a3074fec124124a7e735d33dd9bbadfc72de274eab97e21",
+    "skills/safe-engine/scripts/fast_show_command.py": "3a569fa4c692601bd713e725b632e3b294403d48a15a9e94368b05567b86e63e",
+    "skills/safe-engine/scripts/fast_view.py": "3de35a105c970cb1652ae75c90152dd2099de26d8efbe3a2d4a602914865c917",
+    "tests/test_fast_briefs.py": "3ded4ed1da25b650768eb55104fd595750b216f7b82babe69202772a16130038",
+    "tests/test_fast_proof.py": "a5fe1e7edcdf32021da8e2d17e72fdfd6a35df10ce9c291089818181bab576e9",
+    "tests/test_fast_report.py": "620f57f4c91d0654cef6e38c7b41ac6c599abed497fdb99ba971ee8bd4238479",
+    "tests/test_fast_show.py": "773818f40a1331ec7368536cdc7e3814c6c74f39b24f20d4c4d85693075372ae",
+    "tests/test_worth.py": "c595947784a67197f495cbe8b959890c7f0106329d3730e9663c73faed39c251"
+  },
+  "limits": [
+    "Actual local fixture/parser results are not live product/model-speed evidence",
+    "Dependency completeness and owner authority remain inspected declarations, not authenticated by byte hashes",
+    "No source edit, full-suite execution, product mutation or extra agent by reviewer"
+  ],
+  "resolved_findings": [
+    {
+      "priority": 2,
+      "file": "skills/safe-engine/scripts/fast_briefs.py",
+      "cause": "reference prefix masked later allocations",
+      "fix": "each semicolon/comma clause checked",
+      "evidence": "actual repro refused for both delimiters; simple reference/terminal punctuation/real collision preserved",
+      "original_failure": ".factory/checks218/observe-A2-original-fail.json"
+    }
+  ],
+  "compatibility_delta": {
+    "from": "3e0d698",
+    "files": 3,
+    "review": "Exact adapter handback markers restored, explicit docs command examples restored, viewer central matches plus original displayed report/capture checks retains legacy minimal rows. No prior gate weakening. Actual viewer-delta.json preserves carry and relevant/capture/report refusal."
+  },
+  "first_suite_failure": {
+    "commit": "3e0d698",
+    "result": "656tests,3problems,1skip; rawfailure retained and three compatibility repairs reviewed, never counted as passed",
+    "receipt": ".factory/suite218-first-failure.json"
+  },
+  "hash_format": "UTF-8/LF normalized source text; source hashes are not raw worktree-byte hashes"
+}

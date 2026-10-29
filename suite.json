@@ -1,0 +1,19 @@
+{
+  "commit": "b509417b8a126f849f8561999547930eb3e197ea",
+  "argv": [
+    "python",
+    "tests/run.py"
+  ],
+  "passed": true,
+  "duration_seconds": 391.654,
+  "log_sha256": "40eb46b82c083f3536d390284d784fa7e75db0922e42c037f4d0c78db38ab1d9",
+  "runtime": {
+    "PYTHON_CPU_COUNT": 10,
+    "workers": 8,
+    "declared_input": true
+  },
+  "summary": [
+    "Ran 656 tests in 390.3s (614 pooled on 8 workers, 42 serial)",
+    "OK (skipped=1)"
+  ]
+}
