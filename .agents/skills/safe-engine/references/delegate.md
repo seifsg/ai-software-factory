@@ -4,13 +4,17 @@ Delegate only worthwhile jobs; use the cheapest capable role. Host models/overri
 
 | Role | Tier | Edits | Work | Handback |
 |---|---|---|---|---|
-| runner | light | no | commands, search, inventories, comparisons/logs | step/path:line result; PASS, FAIL step or n hits |
-| analyst | standard | no | research, area analysis, single-lens/UX reviews, method walkthroughs, spec scouting | path:line/URL finding; n findings |
-| maker | standard | yes | planned/mechanical edits, specified fixes, executable walkthroughs/checker | path:line change; Tn pre/do/post |
-| builder | deep | yes | architecture, schema, security, unclear bugs | maker format plus decision and reason |
-| reviewer | deep | no | final/independent deep-review and read-only design decisions | path:line severity/problem/fix, worst first; ready / ready after fixes / not ready:why; no diff: decision/reason |
+| runner | light | no | commands, search, inventories, comparisons/logs | `<step or path:line>: <result>` per step or hit, then `PASS`, `FAIL <step>` or `<n> hits` |
+| analyst | standard | no | research, area analysis, single-lens/UX reviews, method walkthroughs, spec scouting | `<path:line or URL>: <finding>` per finding, then `<n> findings` |
+| maker | standard | yes | planned/mechanical edits, specified fixes, executable walkthroughs/checker | `<path:lines>: <change>` per change, then `T<n> pre: <before> do: <change> post: <check>` per todo |
+| builder | deep | yes | architecture, schema, security, unclear bugs | `<path:lines>: <change>` per change, then `decision: <choice> because <reason>` per call made and `T<n> pre: <before> do: <change> post: <check>` per todo |
+| reviewer | deep | no | final/independent deep-review and read-only design decisions | `<path:line or URL> <severity>: <problem>. <fix>.` most severe first, then `verdict: ready`, `ready after fixes` or `not ready: <why>`; with no diff, `decision: <choice> because <reason>` instead |
 
-Keep the role's tier/access and method-specific reports. Every handback adds gate PASS/FAIL evidence and left:item/learning if unfinished. At most one refusal, last: too-big. split:jobs, needs-confirm. op:command, or ambiguous. ask:question. Resolve refusals before rebriefing; owner-facing text uses [plain reports](owner-reports.md).
+Keep the role's tier/access and method reports. Every handback then adds:
+
+- `G<n> PASS <evidence>` or `G<n> FAIL <evidence>` per gate in the brief;
+- `left: <item>: <what it learned>` per unfinished item, when it stops early;
+- at most one refusal, as its last line: `too-big. split: <one-line jobs>`, `needs-confirm. op: <command>` or `ambiguous. ask: <one question>`.
 
 ## Brief
 Carry goal, role, absolute paths, edit bounds, branch, handback and [scratch](fast-run.md#the-gate). Quote relevant rules; whole methods only for walkthrough/review. End with verifiable gates per required outcome:

@@ -172,7 +172,9 @@ def show_pictures(folder, project, key, run):
         return []
     try:
         import fast_show
-        fast_show.current(project, run)
+        fast_design.require(fast_show.matches(project, run, report), "Show source changed")
+        artifact = fast_design.local(project, report["path"])
+        fast_design.require(fast_design.file_hash(artifact) == report["sha256"], "Show report changed")
         sources = []
         for screen in report["screens"]:
             capture = screen["capture"]
