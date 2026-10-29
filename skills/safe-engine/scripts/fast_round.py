@@ -38,7 +38,7 @@ def run(args, gate):
             reason="fix_round",
             finding_ids=[str(item)[:32] for item in args.finding],
         )
-        print(json.dumps(decision, indent=2))
+        print(json.dumps({**decision, "report_sha256": receipt["sha256"]}, indent=2))
         for line in worth.parked_lines(report):
             print(line)
     except (OSError, ValueError, TypeError, KeyError) as error:

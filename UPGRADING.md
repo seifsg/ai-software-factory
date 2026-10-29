@@ -7,9 +7,11 @@ For every release:
 - **Active and explicit pins never change automatically.** Ask `improve-factory` for a compatible pin change; never edit a selected bundle or receipt.
 - **Check what you run:** `fast_gate.py version` names the version, commit, channel and route; `fast_gate.py verify` lists every file that differs from the release manifest.
 
-## Next
+## Next release
 
-- After a human release/update, capture web Before with `shots --phase before` and After with `--phase after` using the same output folder. New Before-comparison Show plans include `before` image records. Existing stored plans and active pins are unchanged; disclose reconstructed baselines. `--base` still creates explicitly reconstructed pairs.
+- After release/update, use early `shots --phase before`, final `--phase after` with the same output folder, and `before` image rows for new Show plans. Existing pins/plans stay intact; disclose reconstructed baselines.
+- Update launchers for `report --pr-body`, a local structure check; final published-PR checks remain. Accepted `fix-round` output includes its canonical `report_sha256`.
+
 
 ## 1.2.0
 

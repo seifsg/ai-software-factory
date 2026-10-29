@@ -54,7 +54,7 @@ Every PR shows observed Before/After for each outcome; prose or illustrative dia
 
 ## 6. Open the draft
 
-1. Write the body to a file with `references/pr-layout.md`.
+1. Write the body to a file with `references/pr-layout.md`. Fast/Lucky: preflight it with `fast_gate.py report --pr-body <file> --project <abs>` before publishing. Structure-only success never replaces observed proof or final handoff checks.
 2. Push, then open as **draft** against the base. Commands: `references/github.md`.
 3. Closing keyword only on each sub-issue or change ticket this PR finishes; the epic always gets a plain reference (intake closes it once its in-scope sub-issues are Done and its checklist is ticked).
 4. Request review from the project's actual review owner through the supported mechanism, at draft time. Notify only the authorized recipient or channel. Reminders only when asked.
@@ -62,6 +62,7 @@ Every PR shows observed Before/After for each outcome; prose or illustrative dia
 
 ## 7. Review
 
+- When independent review is required, inspect frozen source, manual use and affected checks before the complete suite. Resolve source findings first; source-only review leaves acceptance pending and advances no controller phase. Keep saved phase order. The same reviewer checks author repairs and affected consumers, carrying unresolved findings and unchanged observations; changed inputs need fresh affected proof. After the suite, it inspects the exact-candidate receipt and log before its final verdict.
 - Own draft: `deep-review` it in Safe; in Fast and Lucky, the optional Safe check covers it. Skip when this exact head already passed an independent review. Pushing fixes to that PR's own branch and posting its comments are pre-authorized; open questions go in a PR comment, not a stop. Someone else's PR keeps every checkpoint.
 - Project has a remote or cloud review: `references/pr-cases.md`.
 - A reviewer that changes code needs a fresh independent assessment of the new head.
