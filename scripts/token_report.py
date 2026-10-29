@@ -42,6 +42,8 @@ KINDS = {
     "+ui": (S + "ux-quality/", S + "how-to-make-a-pr/references/media-proof.md"),
     "+data": (S + "database-schema/",),
     "+safe-check": (S + "deep-review/",),
+    "+released app": (REF + "app-releases.md",),
+    "+GitHub release": (REF + "github.md",),
     "+on demand": (  # detail behind pointers that name its situation: read only when it occurs
         REF + "work-record-sample.md", REF + "gate-details.md", REF + "cases.md", REF + "quality-cases.md", REF + "run-cases.md", S + "ticketing/references/safe-contract.md",
         S + "ticketing/references/unmerged-pr.md", S + "ticketing/references/epic-cases.md",

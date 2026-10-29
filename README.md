@@ -51,6 +51,8 @@ Local run timing, observed task/helper spans, rework and attributable host-sessi
 
 Already have code? Point it at that directory. Feature runs analyze the existing code and every consumer before planning (`analyze-start`).
 
+Already released an app? Normal fixes retain its existing changelog, versioning, release-note and publication steps across sessions. Existing tools and formats stay authoritative; real publication needs explicit authority. See [app releases](docs/app-releases.md).
+
 Optional polish is scored and collected in the epic's existing **Finishing touches** follow-ups. `fast_gate.py fix-round --file <report.json> --finding F1` selects worthwhile repairs; `--finishing-authority` records an explicit batch request. Selected work needs resolution evidence or owner cancellation before completion. Required quality stays mandatory. See [worth-it rounds](docs/worth-it.md) for the shared Fast/Safe report and commands.
 
 ## 🎬 What a run looks like

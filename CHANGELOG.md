@@ -6,6 +6,10 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 
 ## [Unreleased]
 
+### Added
+
+- App release-process continuity during ordinary changes: retain existing changelog/version/note conventions and project tools across plans, PRs and sessions, with authorized publication, verification and recovery (#221).
+
 ### Fixed
 
 - Run metrics: Fast runs start their timeline at the first applicable step, Safe runs record the factory revision and never share a metrics folder, and analytics hooks are plain calls instead of repeated guards (#175).

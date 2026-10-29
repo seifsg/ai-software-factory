@@ -20,8 +20,8 @@ An orchestrator started this session and handed it one task. No person watches t
 
 1. Take the one TASK the wake names. One task per wake, one open run per workspace.
 2. An open run in this workspace: resume it first (`status`, then its resume step). Never open a second.
-3. No open run and work to do: start one on the TASK in the workspace the orchestrator gave you. Mode and kind as the TASK says, else Fast and the kind table. Keep the TASK's words verbatim for the ticket.
-4. Nothing to build (a comment that is only evidence, thanks or a question you can answer): REPORT if a reply helps, keep the waiting status, start no run.
+3. Release-only TASK: [app releases](app-releases.md); start a build run only for source edits.
+4. Other work: start one run on TASK in the supplied workspace, with TASK mode/kind or Fast and the kind table. Keep TASK verbatim. Non-build input: REPORT if useful; keep waiting, no run.
 5. Commits and PR text follow `how-to-make-a-pr` and the product's rules, never the orchestrator's attribution lines.
 
 ## Tickets
@@ -31,8 +31,8 @@ An orchestrator started this session and handed it one task. No person watches t
 
 ## People
 
-1. Kickoff questions, owner-reserved choices and any wait on a person: finish the work that does not depend on the answer, then ASK, `pause` and end the wake.
-2. On the answer: check it came from the OWNER, record it (work record, and the ticket once it exists), `resume`, continue. A partial answer: ASK again for what is still open.
+1. Person wait: finish independent work, ASK, pause an open build run, end the wake.
+2. Accept answers only from OWNER; record them in the work record and ticket when it exists. Resume a paused open build run; never reopen a closed run. Continue; ASK again for remaining gaps.
 3. New scope from anyone: REPORT that it is noted, record a follow-ups entry in the next run. It joins the ticket only on the OWNER's yes.
 4. Optional offers (a Safe check): REPORT once, take the no-answer path, never wait.
 5. A missing tool, access or credential: ASK the OWNER for the exact action. BLOCK only on another task.
@@ -46,4 +46,4 @@ An orchestrator started this session and handed it one task. No person watches t
 
 1. Draft PR opened: HANDOFF it, REPORT the proof summary and what is unverified, WATCH it, ASK the OWNER to review and merge.
 2. Woken on CI red or a review comment: that is work now. Run a `change` on the same ticket and branch, push, REPORT what changed, WATCH again.
-3. Never mark the PR ready, merge or release. FINISH only after a person merged it.
+3. Build-only TASK: FINISH after human merge; never mark ready, merge or release. Requested releases follow the app method under OWNER authority; FINISH at the verified stage with no required step open.

@@ -60,6 +60,8 @@ class BundleInputTests(unittest.TestCase):
         before = self.fixture.flow.current(self.fixture.flow.load())
         for name in ('.agents/skills/safe-engine/references/fast-run.md', 'README.md', 'docs/install.md',
                      '.agents/skills/safe-engine/references/controller.md',
+                     '.agents/skills/safe-engine/references/app-releases.md',
+                     '.agents/skills/safe-engine/references/github.md', 'docs/app-releases.md',
                      '.agents/skills/deep-review/references/security.md',
                      '.agents/skills/ux-quality/SKILL.md',
                      '.agents/skills/ux-quality/references/assets.md',
@@ -86,6 +88,8 @@ class BundleInputTests(unittest.TestCase):
                      '.agents/skills/safe-engine/references/fast-run.md',
                      '.agents/skills/safe-engine/references/product-bar.md',
                      '.agents/skills/safe-engine/references/controller.md',
+                     '.agents/skills/safe-engine/references/app-releases.md',
+                     '.agents/skills/safe-engine/references/github.md', 'docs/app-releases.md',
                      '.agents/skills/safe-engine/references/work-record-sample.md',
                      '.agents/skills/ux-quality/SKILL.md',
                      '.agents/skills/database-schema/SKILL.md',

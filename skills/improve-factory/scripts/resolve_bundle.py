@@ -35,7 +35,8 @@ REQUIRED = ["AGENTS.md", "README.md", "docs/install.md", "docs/hosts.md", "safe_
             ".agents/skills/improve-factory/references/live-session.md"]
 REQUIRED += [f".agents/skills/{name}/SKILL.md" for name in SKILLS]
 # The bundle contract requires release_proof.py only in revisions that ship it.
-# Revision-specific helpers and method references use each bundle's contract, preserving older pins.
+# Revision-specific methods, including app-release references, belong in the bundle contract, not REQUIRED.
+# Its required_files are checked below, preserving older pins without those methods.
 NEWER = ("This factory revision uses a newer layout than this launcher knows ({}). Update the installed factory from "
          "a current checkout (skills/safe-engine/scripts/fast_gate.py install --host <your agent>, or update the "
          "plugin), then retry.")

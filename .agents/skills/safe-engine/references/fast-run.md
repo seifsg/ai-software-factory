@@ -53,14 +53,14 @@ Delegates return their log lines; the coordinator writes the record. During buil
 
 ## Briefs
 
-Agents work from recorded facts, never guesses; the plan fixes them once:
+Plans/briefs carry facts, including canonical app release-process sources/revisions and change-time steps. Handoff retains remaining steps:
 
 - **Interface** (`### Interface`): the public names as written: exports, record shapes, UI labels and test ids, routes, commands and flags, and the committed files holding them. `none (<why>)` only when nothing is public. A light-lane plan writes it when it delegates.
 - **Ports** (`**Ports:**`): this checkout's dev port per server the run starts (app, API, hub, a spare). The main checkout (lane 0) keeps the project's defaults; lane n, an extra worktree, takes its own fixed block for its whole life: the project's lane rule, else the defaults plus 100 × n. Add two spare ports for `shots`. Never start, reuse or stop another lane's stack. `done plan` refuses a port another open run's plan holds. `none (<why>)` when the run serves nothing.
 - Own stacks with `fast_gate.py lane start` / `lane stop`; brief generation and resources. Verify cache writes; configure unsupported tools. Host limits: the factory's `docs/hosts.md`.
 - **UX rules** (UI runs, `**UX rules:**`): U1 to U10 (`ux-quality` step 3) plus the project's own UX rule files by path.
 
-Each brief (checker, builder, UX judge, reviewer) also carries the Interface and Ports verbatim and, for UI work, the UX rules line. A checker binds its checks to those names and reads the committed interface files they name, never the implementation. A name a brief lacks: read the named interface files; still missing, the agent returns `blocked: <name>` instead of inventing one, and the coordinator adds it to the Interface (committed code wins) and briefs again.
+Each brief carries Interface and Ports verbatim; UI also carries UX rules. Checkers read named committed interface files, never implementation. Missing name: read those files; still missing, return `blocked: <name>`. The coordinator adds the verified name (committed code wins) and briefs again.
 
 **Deferred (owner/hardware):** an item only the owner's hands or hardware this machine lacks can finish (another OS, a physical device, an owner sign-off or account) ends `DEFERRED (hardware: <what is needed>)` or `DEFERRED (owner: <what is needed>)` on its unticked checklist item and its hidden-check entry, and is listed once on the handoff's `**Deferred:**` line. Everything else gets done first. Never defer what the run can do, a FAIL, or access not yet sought. Its criterion still gets the checker's written manual check, for the owner to run. A run whose only open items are deferred closes as done; its tickets go to Ready for QA naming them.
 

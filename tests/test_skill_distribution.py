@@ -91,11 +91,15 @@ class DistributionTests(FixtureCase):
         self.assertEqual(receipt.read_bytes(), before)
         self.assertFalse((self.source / '.agents/skills/safe-engine/references/product-bar.md').exists())
         self.assertFalse((self.source / '.agents/skills/safe-engine/references/controller.md').exists())
+        self.assertFalse((self.source / '.agents/skills/safe-engine/references/app-releases.md').exists())
+        self.assertFalse((self.source / '.agents/skills/safe-engine/references/github.md').exists())
 
     def test_new_method_references_follow_the_bundle_contract(self):
         self.assertEqual(resolver.inspect_bundle(self.source)['revision'], self.revision)
         names = ('.agents/skills/safe-engine/references/quality-cases.md',
-                 '.agents/skills/how-to-make-a-pr/references/media-proof.md')
+                 '.agents/skills/how-to-make-a-pr/references/media-proof.md',
+                 '.agents/skills/safe-engine/references/app-releases.md',
+                 '.agents/skills/safe-engine/references/github.md', 'docs/app-releases.md')
         for name in names:
             path = self.source / name
             path.parent.mkdir(parents=True, exist_ok=True)

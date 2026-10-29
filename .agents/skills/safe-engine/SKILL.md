@@ -24,6 +24,10 @@ Build systems that outlast their creator. Breakage is not acceptable.
 - Stay on the task: touch only what the change, its root fix and the product bar need; ticket unrelated issues.
 - Output: lead with the answer or result, in specific words; no preamble, filler, restated question or closing recap, no em dashes or invented claims. Keep code, commands, paths, errors, numbers and quotes verbatim; never drop not, never, no, only or except. Status during long work: one short line. Short handbacks and reports: what changed, proof, what is unverified. Full plain sentences instead for security warnings, irreversible or destructive actions, order-sensitive steps and questions to the owner. Persisted artifacts (tickets, PRs, work records, docs) keep their own layouts and writing rules; no em dashes or invented claims there either.
 
+## Existing app releases
+
+At entry/resume, check for prior releases or a declared app process. When present, follow [app releases](references/app-releases.md) during ordinary changes, planning and handoff. Release-only work uses that method without a new build run; source edits still use delivery below. Publication needs explicit authority.
+
 ## Pick the mode
 
 No mode named: **Fast**.

@@ -12,7 +12,7 @@ Verbs for the [orchestrated run](orchestrated-run.md) when Paperclip woke you. I
 | WATCH | An issue monitor rechecking CI and review every 30 minutes, status `in_review`. A monitor wake with no change reschedules it and ends. |
 | SPAWN | A new issue in this issue's project, no `parentId` (a child shares its parent's workspace), assigned to your own agent id, the session prompt as its description, an idempotency key. REPORT its link here. |
 | BLOCK | Status `blocked` with `blockedByIssueIds`. Never a person as the unblock owner. |
-| FINISH | Status `done` after the merge. |
+| FINISH | `done` after human merge for build-only tasks; requested releases follow the generic method's verified stage. |
 
 - An answer that came as a comment: withdraw the pending interaction it covers.
 - Skip Paperclip's commit attribution trailer; the run's commit rules apply.

@@ -13,6 +13,8 @@ Analysis or review-only requests: do not open, push or comment.
 
 Find the real repository, branches, release policy, PR template, signing rule, check commands, tracker and review owner from rules, manifests, CI and remote metadata; never copy accounts, branches or tools from another project. Ask only consequential gaps. A missing binding blocks its dependent step; keep local work going.
 
+For released apps, carry the canonical process sources and required change-time steps into PR checks. Verify changelog/version/note updates follow existing formats and timing; preserve generator ownership. Record completed and remaining release steps with source pointers for the next session. Merge grants no publication authority.
+
 ## 2. Ticket first
 
 - Every PR belongs to a ticket. Search by symptom, feature, area, files, PR title and branch slug; none found: run `ticketing`.

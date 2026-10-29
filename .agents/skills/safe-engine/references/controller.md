@@ -2,7 +2,9 @@
 
 Contents: setup, task and profile, phases, ticket commands, repair, review, evidence, status and resume.
 
-Records stages, checks and reviews; never builds, pushes, merges, deploys, provisions sessions/worktrees or runs as a daemon.
+Records proof; never builds, pushes, merges, deploys, provisions sessions/worktrees or runs a daemon.
+
+Keep app release-process sources/steps in existing analysis, plan, brief and handoff artifacts, not new profile/state fields.
 
 ## Setup
 

@@ -35,7 +35,7 @@ Before a new run, run `python scripts/fast_gate.py pr-proof-method` beside this 
 
 1. Read the returned `entrypoint` (`.agents/skills/safe-engine/SKILL.md`) fully; follow it from the bundle against the target.
 2. Fast and Lucky: `scripts/fast_gate.py start` checks freshness and runs the selected gate. If selection changed, read that entrypoint before proceeding. Project commands and hooks keep the active gate. Receipt-less bare starts are legacy use, with no freshness guarantee.
-3. Read each method the entrypoint names when its step starts.
+3. Read named methods when needed; retain canonical app release-process pointers and remaining steps on resume.
 4. Safe runs the controller from the bundle root, as the entrypoint's controller reference describes.
 
 ## Invoke

@@ -117,6 +117,8 @@ Payments, messages, webhooks, remote jobs and any other state-changing call to a
 
 ## Release
 
+Existing app release processes: [discover, retain and follow](app-releases.md) throughout ordinary changes and release work.
+
 Proof before any ready claim:
 
 - Before dependent work, record actual capabilities: build tools, browser or native control, audio inspection, devices, safe accounts and data, integration access. Verify each route exists; surface blockers early and keep independent work moving. No purchases, installs or new credentials implied.

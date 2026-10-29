@@ -2,6 +2,8 @@
 
 An orchestrator wakes agents, hands each one a task and wakes it again when something changes. With the factory behind it, every task ends in a proven draft PR and no person starts a session or writes a prompt.
 
+Build-only tasks keep that draft/merge handoff. Normal app work also carries its canonical release process and remaining steps across wakes. Requested releases follow [app releases](app-releases.md), finishing at the requested verified stage under owner authority; a task that also requires source edits continues after their human merge. Never publish beside existing automation or start a build run unless source edits need one.
+
 ```text
 task assigned ─► wake ─► safe-engine run in a fresh worktree ─┬─► question: ASK, wait, answer wakes the same task
                                                                ├─► draft PR: HANDOFF + WATCH

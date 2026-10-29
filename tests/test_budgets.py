@@ -42,6 +42,11 @@ class BudgetTests(unittest.TestCase):
         self.assertIn(quality, rows["+quality case"])
         self.assertNotIn(media, rows["change"])
         self.assertIn(media, rows["+ui"])
+        for path, kind in ((".agents/skills/safe-engine/references/app-releases.md", "+released app"),
+                           (".agents/skills/safe-engine/references/github.md", "+GitHub release")):
+            self.assertNotIn(path, rows["change"])
+            self.assertNotIn(path, rows["product, feature"])
+            self.assertIn(path, rows[kind])
         output = StringIO()
         with redirect_stdout(output):
             token_report.main(["--totals"])
