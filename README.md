@@ -113,7 +113,7 @@ The gate loads optional command parsers only for the requested command; help and
 - 🧪 **Proof, not promises.** Every requested item traces to a criterion, a checklist item and proof. In product and feature runs, a fresh agent writes a check for every criterion before the build, from the tickets and plan alone; the builder never sees them, and any FAIL sends the work back. Then a done-run with real controls and logs, and a PR showing before and after for every outcome, which the gate reads before the run can finish. MVPs and production slices also record a secret scan, a dependency audit and static analysis. Safe adds manual QA, tests and an independent reviewer.
 - 🩹 **Root causes, not patches.** A bug or edge case is fixed where it starts: impossible by design, or rejected loudly where data enters. No silent defaults. A big or risky refactor waits for your yes.
 - 🎨 **A product bar.** Accessible, responsive UI, clear copy, public-page SEO and a designed schema. Every UI run gets a fresh agent's check against ten UX rules before the gate lets it finish. Non-production builds show their environment and label sample data.
-- 🧑‍⚖️ **Humans stay in charge.** Draft PRs only. It never merges, releases or deploys.
+- 🧑‍⚖️ **Humans stay in charge.** Draft PRs only; humans merge. App releases follow the existing process with explicit owner authority; deployment needs separate authority.
 - 🌍 **Any agent, any OS, any codebase.** Games, web, mobile and desktop apps, services, tools and libraries.
 
 ## ⚖️ Instructions alone vs the factory
@@ -269,7 +269,7 @@ Details per agent: [hosts](docs/hosts.md).
 ## ❓ FAQ
 
 **Does it push to main, merge or deploy?**
-No. It opens draft PRs. Humans mark them ready, merge and release.
+It opens draft PRs; humans mark them ready and merge. Requested app releases follow the app's existing process under explicit owner authority. Deployment needs separate authority.
 
 **Does the gate judge quality?**
 No. It proves each step was recorded, not that it was good. Quality comes from the methods, the hidden checks and the done-run; Safe adds tests and an independent review.
