@@ -111,7 +111,8 @@ def selected(base):
             return None  # nothing claims this file: run everything
         modules |= hits | (PACKAGED if file.parts[0] in SOURCE_TREES else set())
     affected = importers(modules, texts)
-    return None if affected is None else {m for m in affected if m.startswith("test_")}
+    chosen = None if affected is None else {m for m in affected if m.startswith("test_")}
+    return chosen if chosen or not files else None
 
 
 def main():
