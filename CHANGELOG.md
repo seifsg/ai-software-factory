@@ -12,6 +12,8 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 
 ### Fixed
 
+- Reuse unchanged visual observations with explicit dependency evidence; preserve owner waits and strict final proof. Parse compact records/resources clearly; reuse local draft preflight.
+
 - Capture Before before edits and retain it through Show/QA; run locally unless delegation provides useful parallelism or independent judgment.
 
 - Coordinator interruptions: prioritize new requests, including replacement objectives, before broad checking/reporting; resume only compatible work, preserve previews and disclose tool-delivery limits.

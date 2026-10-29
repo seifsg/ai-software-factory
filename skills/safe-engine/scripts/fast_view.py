@@ -171,10 +171,8 @@ def show_pictures(folder, project, key, run):
     if not report.get("screens"):
         return []
     try:
-        if report.get("candidate") != fast_design.candidate(project):
-            return []
-        artifact = fast_design.local(project, report["path"])
-        fast_design.require(fast_design.file_hash(artifact) == report["sha256"], "Show report changed")
+        import fast_show
+        fast_show.current(project, run)
         sources = []
         for screen in report["screens"]:
             capture = screen["capture"]

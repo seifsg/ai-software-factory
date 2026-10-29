@@ -61,7 +61,10 @@ class ProofTests(unittest.TestCase):
                       '[pay](https://example.com/clip.mp4#t=3,12)'):
             self.assertEqual(fast_proof.problems(HEAD + table + "**Video:** " + video, ui=True, demo=True), [])
         cli = HEAD + DIFF.replace("**Before", "**Visual:** no (CLI only)\n**Journey:** no (internal parser)\n**Before")
-        self.assertEqual(fast_proof.problems(cli, demo=True), [])
+        for end in ("", ".", ";"):
+            punctuated = cli.replace("no (CLI only)", "no (CLI only)" + end).replace("no (internal parser)", "no (internal parser)" + end)
+            self.assertEqual(fast_proof.problems(punctuated, demo=True), [])
+            self.assertTrue(fast_proof.problems(punctuated.replace("no (CLI only)" + end, "yes" + end), demo=True))
         self.assertIn("declare >=1 Visual", " ".join(fast_proof.problems(cli, ui=True, demo=True)))
         self.assertTrue(fast_proof.problems(HEAD + "<!--" + table + "-->", demo=True))
 

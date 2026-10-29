@@ -5,29 +5,21 @@ description: "Prepares and opens a draft pull request for human review, linked t
 
 # How to make a PR
 
-Open a **draft PR**. Humans decide ready, merge and release.
+Open drafts; humans decide ready, merge and release. Analysis/review-only grants no push, PR or comment.
 
-Analysis or review-only requests: do not open, push or comment.
+## 1. Bind project and ticket
 
-## 1. Bind the project
+Find repository, branches, release/template/signing rules, checks, tracker and review owner from actual rules, manifests, CI and remote metadata. Ask consequential gaps only; a missing binding blocks its dependent step.
 
-Find the real repository, branches, release policy, PR template, signing rule, check commands, tracker and review owner from rules, manifests, CI and remote metadata; never copy accounts, branches or tools from another project. Ask only consequential gaps. A missing binding blocks its dependent step; keep local work going.
+- Search existing tickets by symptom, area, files and branch/title; none: `ticketing`. No ticket only under a whole-diff exemption or a retained trivial change with the reason in the body.
+- Refresh confirmed scope before opening/updating; drift, pending scope or failed refresh blocks acceptance. A draft/pass cannot replace current owner intent.
+- Link both ways: ticket in PR, PR in ticket activity. Open finished work is Ready for QA; Done follows merge.
 
-## 2. Ticket first
+## 2. Branch
 
-- Every PR belongs to a ticket. Search by symptom, feature, area, files, PR title and branch slug; none found: run `ticketing`.
-- No ticket only when a project exemption covers the whole diff, or for a trivial change the run kept without one: the PR body says why.
-- Link both ways: on open, the PR link in the ticket's activity; a clickable ticket link in the PR body.
-- A finished ticket is Ready for QA while the PR is open, Done on merge; status follows `ticketing`.
-- Ticket with a confirmed contract: refresh it before opening or updating. Pending scope, drift or a failed refresh is an open dependent step. A draft or local pass never replaces the owner's current expectation.
-
-## 3. Branch from the right base
-
-- Work on your own branch; never commit to the base. Protect dirty and foreign work: new branch or isolated checkout.
-- Base = the project's integration branch, else the default branch. Say so in the PR when it differs.
-- **Epic waves:** share an integration branch and draft PR. Finished lanes incorporate it, resolve/recheck, then integrate and push without force. Exception: an independently complete UI ticket ships its own draft after Show and Prove; dependencies must be included and checked. Humans alone authorize merge; do not wait for unrelated wave tickets.
-- Dependent Safe ticket, wrong base or hotfix: `references/pr-cases.md`.
-- Check the remote, not the local list: shallow and single-branch clones hide branches.
+- Own branch, never base; protect dirty/foreign work with isolation. Base is integration branch, else default; explain exceptions.
+- Epic wave: share integration branch/draft, incorporate finished lanes, resolve/recheck and push without force. Independently complete UI tickets may ship after Show/Prove with checked dependencies; never wait for unrelated tickets or merge without human authority.
+- Check remote branches; shallow clones hide them. Dependent Safe tickets, wrong base and hotfixes: [cases](references/pr-cases.md).
 
 ```text
 git ls-remote --heads origin
@@ -36,47 +28,28 @@ git fetch origin
 git switch -c <scope>/<short-name> origin/<base>
 ```
 
-## 4. Plan the proof before editing
+## 3. Plan proof before edits
 
-Every PR shows observed Before/After for each outcome; prose or illustrative diagrams never replace results. API proof shows one request's status and body in a `diff`; CLI/script/gate proof shows one command's output in a `diff`; method/prose proof shows a walkthrough's changed result and key text in a `diff`. Speed/size/cost proof measures the same workload. An internal module proves its changed screen, endpoint or command. A new nonvisual result shows the prior output as "did not exist". Name `**Visual:**` and `**Journey:**` under each outcome (`references/pr-layout.md`), with a reason when no. Map shared backend effects to UI journeys. For changed views, states, motion, interactions or affected UI journeys, read [visual and journey proof](references/media-proof.md) before editing; its capture, preflight, freshness and waiver rules apply in full.
+Every outcome needs observed Before/After. API: matched status/body; CLI/gate: command output; method/prose: walkthrough result plus key text. Use diff blocks; speed/size/cost compares the same workload. Prove internal changes through their screen/endpoint/command; new output says "did not exist". Declare **Visual:** and **Journey:** per [layout](references/pr-layout.md). Changed visuals, states, motion or UI journeys require [media proof](references/media-proof.md) before editing, including shared-backend effects.
 
-## 5. Make the change
+## 4. Change and check
 
-- One thing per PR. Unrelated finds become follow-ups.
-- Stage your own files by name. Never `git add .` or `git add -A`.
-- Commit as `<type>(<scope>): <imperative subject>`; body = why, not the lines changed.
-- Branch `<scope>/<short-name>` (`fix`, `feat`, `docs`, `chore`), or the project's convention.
-- Honor required signing with the existing authorized identity; never invent one or bypass signing, permissions or protected gates.
-- **No AI or tool attribution lines** in commits. The PR body ends with the factory credit line in `references/credit.md`.
-- Required gates (step 1) pass before push. A check not run is **unverified**, not passed.
-- CI is never required: the local runs of the required checks are the gate, and the PR names their commands and results. Never wait on or rerun CI; a CI result that arrives is extra evidence.
-- Tests come last: implementation, manual QA on the real behavior, then write or adjust and run tests. A production fix found by tests goes back through manual QA, then tests rerun. No tests that restate the implementation.
+- One outcome per PR; unrelated finds become follow-ups. Stage owned filenames, never `git add .` or `git add -A`.
+- Branch follows project convention, else `<scope>/<short-name>`. Commit `<type>(<scope>): <imperative subject>`; explain why in body. Honor signing; never invent identity or bypass permission/gates.
+- No AI/tool attribution in commits. PR ends exactly with [credit](references/credit.md).
+- Use real behavior before writing/adjusting tests. Test-discovered production fixes return through use and affected tests; no tests that restate code.
+- Required local checks pass before push; unrun checks stay unverified. CI is extra evidence, never required, waited on or rerun; list local commands/results.
 
-## 6. Open the draft
+## 5. Draft
 
-1. Write the body to a file with `references/pr-layout.md`. Fast/Lucky: preflight it with `fast_gate.py report --pr-body <file> --project <abs>` before publishing. Structure-only success never replaces observed proof or final handoff checks.
-2. Push, then open as **draft** against the base. Commands: `references/github.md`.
-3. Closing keyword only on each sub-issue or change ticket this PR finishes; the epic always gets a plain reference (intake closes it once its in-scope sub-issues are Done and its checklist is ticked).
-4. Request review from the project's actual review owner through the supported mechanism, at draft time. Notify only the authorized recipient or channel. Reminders only when asked.
-5. Link observation evidence (logs, traces, screenshots, measurements) only when authorized to share; state source and limits. No foreign session IDs, secrets or private data.
+1. Write [layout](references/pr-layout.md) to a file. Fast/Lucky: `fast_gate.py report --pr-body <file> --project <abs>` before publication; structure-only success replaces no observed proof or handoff check.
+2. Push and open draft against the actual base ([commands](references/github.md)). Closing keyword only for completed sub-issues/change tickets; epic gets a plain link.
+3. Request review from the actual configured owner through the supported route. Notify only authorized recipients/channels; reminders only when asked.
+4. Share authorized, sanitized observations with source/limits; no foreign session IDs or secrets.
 
-## 7. Review
+## 6. Review and handoff
 
-- When independent review is required, inspect frozen source, manual use and affected checks before the complete suite. Resolve source findings first; source-only review leaves acceptance pending and advances no controller phase. Keep saved phase order. The same reviewer checks author repairs and affected consumers, carrying unresolved findings and unchanged observations; changed inputs need fresh affected proof. After the suite, it inspects the exact-candidate receipt and log before its final verdict.
-- Own draft: `deep-review` it in Safe; in Fast and Lucky, the optional Safe check covers it. Skip when this exact head already passed an independent review. Pushing fixes to that PR's own branch and posting its comments are pre-authorized; open questions go in a PR comment, not a stop. Someone else's PR keeps every checkpoint.
-- Project has a remote or cloud review: `references/pr-cases.md`.
-- A reviewer that changes code needs a fresh independent assessment of the new head.
-- The PR stays draft. Review is not merge or release approval.
-
-## 8. Fast and Lucky PRs
-
-Open one for every run, unasked, unless its wave's draft PR is open: then push to that branch and update that PR, appending the run's outcomes, criteria verification and remaining steps and refreshing the summary. Before creating or updating it, offer once per PR (a wave's shared PR: its first run): **"Run a Safe check first? (optional)"** (final manual QA, relevant tests, one independent review of the finished work). Yes: run it, fix, then open. No or no answer: open the draft as is.
-
-- Variations requested: one branch and draft PR per variation, each following these rules with its own proof.
-- List missing tests, review and baseline as unverified. Link the run's epic.
-
-## Stops
-
-- After a merge, start new work on a fresh branch from the current base.
-- No force-push, history rewrite or unrequested merge, release or notification.
-- No invented results, tests, authorship or accounts.
+- Required independent review: frozen source/manual/affected checks first; resolve source findings before the complete suite. Source-only review advances no controller phase. Same reviewer checks author deltas and carried findings/observations; changed inputs need fresh affected proof. After the suite, inspect exact-candidate receipt/log before verdict. Reviewer-written repairs require a fresh independent assessment.
+- Own draft: `deep-review` in Safe; Fast/Lucky's optional Safe check covers it. Skip an already independently reviewed exact head. Own-branch fixes/comments are authorized; post open questions in the PR instead of stopping. Another author's PR keeps every checkpoint. Remote/cloud review: [cases](references/pr-cases.md).
+- Fast/Lucky opens one draft per run, or updates its wave draft with outcomes, criteria, remaining work and refreshed summary. Offer once per PR: **"Run a Safe check first? (optional)"** (manual QA, relevant tests, one independent review). Yes: complete it; no/no answer: continue drafting. Variations get separate branches/drafts.
+- Name missing baseline/tests/review and link the epic. Draft/review grants no merge/release. After merge, new work branches from current base. No force push, rewrite or unrequested notification.

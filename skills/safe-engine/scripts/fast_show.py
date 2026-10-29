@@ -45,10 +45,8 @@ def suite_plan(data):
 
 def plan(data):
     """Freeze changed surfaces, the exact suite and the configured owner-response window."""
-    evidence.require(type(data.get("version")) is int and data["version"] == 1, "Show plan version must be 1")
+    suite = suite_plan(data)
     surfaces = evidence.rows(data.get("surfaces"), "surfaces")
-    suite = data.get("full_suite")
-    evidence.require(isinstance(suite, list) and 0 < len(suite) <= 100, "full_suite needs an argv list")
     variants = selected_variants(data.get("variants", [{"theme": "light", "device": "desktop"}]))
     comparison = data.get("comparison", "before")
     evidence.require(comparison in ("before", "design"), "comparison must be before or design")
@@ -62,12 +60,9 @@ def plan(data):
         evidence.require(sizes["desktop"][0] > sizes["phone"][0], "Phone viewport must be narrower than desktop")
     result = {"surfaces": [{"id": key, "name": evidence.text(row.get("name"), "surface name")}
                          for key, row in surfaces.items()],
-            "full_suite": [evidence.text(arg, "suite argument") for arg in suite], "viewports": sizes,
+            **suite, "viewports": sizes,
             "variants": [{"theme": theme, "device": device} for theme, device in variants], "comparison": comparison,
-            "wait_minutes": integer(data.get("wait_minutes", 30), "wait_minutes", 0, 1440),
-            "timeout_seconds": integer(data.get("timeout_seconds", 1800), "timeout_seconds", 1, 86400)}
-    if 'suite_inputs' in data:
-        result['suite_inputs'] = suite_inputs(data['suite_inputs'])
+            "wait_minutes": integer(data.get("wait_minutes", 30), "wait_minutes", 0, 1440)}
     return result
 
 
@@ -86,6 +81,43 @@ def baseline(project, planned, rows):
                        "reference": evidence.image(project, row.get("reference"), viewport)})
     evidence.require(not expected, "Before needs every planned surface variant")
     return result
+
+
+def visual_identity(project, run):
+    """Reuse is opt-in: bind all source except evidenced nonvisual files, plus runtime inputs."""
+    import os
+    declared = run["show"]["plan"]["visual_inputs"]
+    evidence.require(isinstance(declared, dict) and set(declared) <= {"nonvisual", "evidence", "files", "environment", "clock"},
+                     "visual_inputs needs explicit nonvisual evidence and runtime inputs")
+    scope = evidence.read(evidence.local(project, declared.get("evidence")))
+    excluded = declared.get("nonvisual")
+    evidence.require(isinstance(excluded, dict) and bool(excluded), "Name exact nonvisual files and reasons")
+    sources = scope.get("sources")
+    evidence.require(scope.get("complete") is True and isinstance(sources, list) and bool(sources)
+                     and all(isinstance(n, str) for n in sources), "Dependency evidence must establish complete rendering sources")
+    for name in [*excluded, *sources]:
+        evidence.require(evidence.local(project, name).relative_to(Path(project).resolve()).as_posix() == name,
+                         "Use exact project-relative source paths")
+    evidence.require(not set(excluded) & set(sources), "A rendering dependency cannot be excluded")
+    for reason in excluded.values():
+        evidence.text(reason, "nonvisual reason")
+    runtime = suite_inputs({k: declared[k] for k in ("files", "environment", "clock") if k in declared})
+    files = {name: evidence.file_hash(Path(name) if Path(name).is_absolute() else evidence.local(project, name))
+             for name in runtime["files"]}
+    return evidence.digest({"source": evidence.candidate(project, excluded), "declaration": declared,
+                            "evidence": scope, "files": files,
+                            "environment": {name: evidence.digest(os.environ.get(name)) for name in runtime["environment"]}})
+
+
+def matches(project, run, observation):
+    """Keep whole-candidate proof strict; only visual observations use the optional narrower identity."""
+    same_source = observation.get("candidate") == evidence.candidate(project)
+    if not observation.get("visual"):
+        return same_source
+    proof = run.get("show", {}).get("proof")
+    return bool((same_source or not proof or proof.get("passed") is True)
+                and observation["visual"] == visual_identity(project, run))
+
 
 
 def selected_variants(value):
@@ -139,17 +171,24 @@ def prepare(project, run, data):
                             for kind in ("reference", "capture")}})
     evidence.require(actual == expected, "Show needs every planned surface variant pair")
     for before in planned.get("before", []):
-        current = next(row for row in captures if all(row[k] == before[k] for k in ("surface", "theme", "device")))
-        evidence.require(all(current[k] == before[k] for k in ("state", "reference")),
+        matched = next(row for row in captures if all(row[k] == before[k] for k in ("surface", "theme", "device")))
+        evidence.require(all(matched[k] == before[k] for k in ("state", "reference")),
                          "Show must retain the Before image and state frozen during plan")
     if run.get("design_port"):
         evidence.load(project, run)
         by_id = {s["id"]: s for s in captures}
         for reference in run["design"]["inventory"]["screens"]:
-            current = by_id.get(reference["id"], {})
-            evidence.require(all(current.get(k) == reference[k] for k in ("reference", "viewport", "theme", "state")),
+            matched = by_id.get(reference["id"], {})
+            evidence.require(all(matched.get(k) == reference[k] for k in ("reference", "viewport", "theme", "state")),
                              f"{reference['id']}: Show must include the frozen design reference")
-    return {"candidate": candidate, "comparison": comparison, "screens": captures}
+    result = {"candidate": candidate, "comparison": comparison, "screens": captures}
+    if planned.get("visual_inputs"):
+        result.update(visual=visual_identity(project, run), recorded_at=datetime.now(timezone.utc).isoformat())
+        prior = run.get("show", {}).get("report")
+        if prior and matches(project, run, prior) and all(prior.get(k) == result[k] for k in ("visual", "comparison", "screens")):
+            current(project, run)
+            return {k: v for k, v in prior.items() if k not in ("path", "sha256")}
+    return result
 
 
 def markdown(project, report):
@@ -170,7 +209,7 @@ def current(project, run):
     """Recheck source, all images and generated report before using a sharing claim."""
     report = run.get("show", {}).get("report")
     evidence.require(isinstance(report, dict), "Prepare the current Show report first")
-    evidence.require(report["candidate"] == evidence.candidate(project), "Source changed; capture and share a fresh Show")
+    evidence.require(matches(project, run, report), "Source changed; capture and share a fresh Show")
     for row in report["screens"]:
         for kind in ("reference", "capture"):
             evidence.require(evidence.image(project, row[kind]["path"], row["viewport"]) == row[kind],

@@ -50,14 +50,27 @@ class BriefsTests(unittest.TestCase):
 
     def test_ports_are_read_from_the_line(self):
         self.assertEqual(briefs.ports("app http://localhost:5281, hub 8791; spare 8792, app again 5281"), [5281, 8791, 8792])
-        self.assertEqual(briefs.ports("none (no server)"), [])
+        for line, wanted in (("none (no server)", []), ("none; existing preview 8877", []),
+                             ("none (no server); references: 8877", []), ("app 5281.", [5281]),
+                             ("app 5281.5", [])):
+            with self.subTest(line=line):
+                self.assertEqual(briefs.ports(line), wanted)
+        for tail in ("app 5281", "existing preview 8877; app 5180", "existing preview 8877, app 5180"):
+            self.assertIn("contradicts", " ".join(self.plan("**Ports:** none; " + tail, light=True)))
         self.assertEqual(briefs.ports("v1.2.3000 and 80 and 70000"), [])
+
+    def test_compact_journey_still_requires_a_minimum(self):
+        body = "\n".join(f"**{key}:** {value}" for key, value in {
+            "UI kit": "existing #112233 #223344 #334455 #445566", "Font": "existing", "Logo": "existing",
+            "Icons": "existing", "Layout": "existing", "Theme": "light", "Journeys": "Inspect:2actions,0loads,min2"}.items())
+        self.assertEqual(record.check_design({}, body), [])
+        self.assertIn("counts and a minimum", " ".join(record.check_design({}, body.replace("min2", "unknown"))))
 
     def test_another_lanes_ports_are_refused(self):
         run = {"project": "/w/lane-b"}
         others = [(None, None, {"key": "lane-a", "project": "/w/lane-a", "ports": [5281, 8791]}),
                   (None, None, {"key": "lane-b", "project": "/w/lane-b", "ports": [5281]})]  # itself
-        found = briefs.clashes(run, [5281, 8891], others)
+        found = briefs.clashes(run, briefs.ports("app 5281. spare 8891."), others)
         self.assertEqual(len(found), 1)
         self.assertIn("5281", found[0])
         self.assertIn("lane-a", found[0])

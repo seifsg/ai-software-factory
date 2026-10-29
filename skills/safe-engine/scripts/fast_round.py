@@ -55,7 +55,10 @@ def findings(body, project, marker, run):
         return ["needs '**Findings:** none' for clean checks, or a JSON report path with every scored finding"]
     path = Path(value)
     try:
-        report = json.loads((path if path.is_absolute() else Path(project) / path).read_text(encoding="utf-8-sig"))
+        path = path if path.is_absolute() else Path(project) / path
+        if not path.is_file():
+            raise ValueError("expected an existing JSON report path; clean checks without repairs may use none")
+        report = json.loads(path.read_text(encoding="utf-8-sig"))
         assessed = worth.rows(report)
         worth.reconcile(report, rounds)
         return [f"{row['id']}: resolve this finding or record an authorized accepted-deferral"

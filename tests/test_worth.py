@@ -4,6 +4,7 @@ import hashlib
 import json
 from pathlib import Path
 import sys
+import tempfile
 import unittest
 
 from safe_engine import worth
@@ -31,6 +32,16 @@ def finding(required=False, disposition=None):
 
 
 class WorthTests(unittest.TestCase):
+    def test_findings_diagnoses_missing_report_without_rejecting_spaced_paths(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder, "report with spaces")
+            path.write_text('{"findings": []}', encoding="utf-8")
+            read = lambda value: fast_round.findings("**Findings:** " + value, Path(folder), fast_record.marker, {})
+            self.assertEqual(read(str(path)), [])
+            self.assertEqual(read("none"), [])
+            self.assertIn("existing JSON report path", " ".join(read("No introduced defects")))
+            self.assertIn("existing JSON report path", " ".join(read("missing.json")))
+
     def test_boundaries_unknown_and_invalid_values(self):
         item = finding()
         for minutes, cost in ((0, 2), (14, 2), (15, 1), (59, 1), (60, 0), (120, 0), (None, None)):

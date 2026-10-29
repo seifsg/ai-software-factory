@@ -125,6 +125,9 @@ def run(args, gate):
             planned = show.plan(data)
             if planned["comparison"] == "before":
                 planned["before"] = show.baseline(project, planned, data.get("before"))
+            if "visual_inputs" in data:
+                planned["visual_inputs"] = data["visual_inputs"]
+                show.visual_identity(project, {"show": {"plan": planned}})
             state["show"] = {"plan": planned}
         elif action == "prepare":
             evidence.require("build" in state["done"], "Finish Look with done build before preparing Show")
@@ -132,10 +135,14 @@ def run(args, gate):
             path = Path(project, ".factory/fast/show.md")
             path.write_text(show.markdown(project, report), encoding="utf-8")
             prior_shared = state["show"].get("shared")
-            invalidate(state)
+            carried = report.get("visual") and report == {k: v for k, v in state["show"].get("report", {}).items()
+                                                       if k not in ("path", "sha256")}
+            if not carried:
+                invalidate(state)
             state["show"]["report"] = {**report, "path": ".factory/fast/show.md", "sha256": evidence.file_hash(path)}
             print(path.read_text(encoding="utf-8"))
-            print("Prepared only. Share these pictures, check access, then record show --shared.")
+            print("Retained original observation and owner response." if carried else
+                  "Prepared only. Share these pictures, check access, then record show --shared.")
         else:
             show.current(project, state)
             if action == "shared":
@@ -149,7 +156,7 @@ def run(args, gate):
         if action in ("prepare", "shared", "reply"):
             try:
                 import fast_metrics
-                if action == "prepare" and prior_shared:
+                if action == "prepare" and prior_shared and not carried:
                     fast_metrics.on_show(project, state, "finish", shared=prior_shared, status="invalidated")
                 elif action == "shared":
                     fast_metrics.on_show(project, state, "start")

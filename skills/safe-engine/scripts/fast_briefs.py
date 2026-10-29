@@ -3,7 +3,7 @@ dev ports no other open run holds, and DEFERRED (owner|hardware) items. Spec: fa
 """
 import re
 
-PORT = re.compile(r"(?<![\w.-])([1-9]\d{3,4})(?![\w.-])")  # '5180', 'localhost:5180'; kept when 1024..65535
+PORT = re.compile(r"(?<![\w.-])([1-9]\d{3,4})(?![\w-]|\.\d)")  # '5180', 'localhost:5180'; kept when 1024..65535
 # 'DEFERRED (hardware: needs a macOS device)', 'DEFERRED (owner: sign-off on pricing copy)'
 MARK = r"DEFERRED[ \t]+\((?:owner|hardware):[ \t]*[^()\n]*\S[^()\n]*\)"
 DEFER = re.compile(MARK)
@@ -11,7 +11,14 @@ DEFER = re.compile(MARK)
 
 def ports(line):
     """The dev ports a Ports line names, in order; none for 'none (<why>)'."""
-    return list(dict.fromkeys(int(n) for n in PORT.findall(line or "") if 1024 <= int(n) <= 65535))
+    line = (line or "").strip()
+    if re.match(r"none\b", line, re.I):
+        tail = re.sub(r"^none\b(?:\s*\([^)]*\))?[.;]?\s*", "", line, flags=re.I)
+        if any(PORT.search(part) and not re.match(r"\s*(?:existing|references?|reuse|preview)\b", part, re.I)
+               for part in re.split(r"[;,]", tail)):
+            raise ValueError("Ports: none contradicts allocations; put preview references outside this field")
+        return []
+    return list(dict.fromkeys(int(n) for n in PORT.findall(line) if 1024 <= int(n) <= 65535))
 
 
 def plan_problems(run, body, marker, subsection, runs=None, light=False):
@@ -28,7 +35,10 @@ def plan_problems(run, body, marker, subsection, runs=None, light=False):
     if run.get("ui") and not (re.search(r"\bU1\b", rules) and re.search(r"\bU10\b", rules)):
         problems.append("needs a '**UX rules:**' line naming U1 to U10 (ux-quality) and the project's own rule "
                         "files, or 'none' for them: every UI builder brief carries it")
-    return problems + clashes(run, ports(line), runs() if runs and line else [])
+    try:
+        return problems + clashes(run, ports(line), runs() if runs and line else [])
+    except ValueError as error:
+        return problems + [str(error)]
 
 
 def clashes(run, mine, runs):

@@ -5,111 +5,72 @@ description: "Repairs factory skills, gates, controllers and adapters when facto
 
 # Improve Factory
 
-Fix the factory, never the product.
-Keep any active app run safe. The repair never writes the app's source; pausing its gate is allowed.
+Repair the factory, never app source. Preserve any active app run; its gate may pause. Analysis/planning stops in that phase.
 
 ## Mode
 
-- Fast by default: a light-lane `change` run on its maintenance ticket, gated by `skills/safe-engine/scripts/fast_gate.py` after the worktree exists. Pause a blocking run's gate first. Its done-run is step 5.
-  - A small repair (wording, one rule) uses the light lane as is: step 3 keeps the cause, a success line and the todos.
-  - A method, gate or controller change runs step 3 in full and records it in the Plan section, since the light lane has no Analysis section.
-- Safe on request: the full `ticketing` cycle in its own builder session, the file-summary stop and the review in step 6.
-- An analysis or planning request stops at that phase. Do not code.
+Fast default: light-lane change on its maintenance ticket, gated by `skills/safe-engine/scripts/fast_gate.py` after isolation; pause a blocking app gate first. Small wording repair records cause, success and todos. Method/gate/controller changes run full step3 in Plan. Safe on request: full `ticketing`, separate builder, file-summary stop and step6 review.
 
-## 1. Understand the report
+## 1. Diagnose
 
-1. Record in the ticket: observed behavior, expected result, example, artifacts, commands and factory revision.
-2. Resolve the factory root and the target project root separately. Read both projects' rules and working status.
-3. Ask only the gaps that change the outcome.
-4. Classify the cause:
+1. Record observed/expected behavior, example, artifacts, commands and factory revision in the ticket.
+2. Resolve factory/app roots separately; read both rules/status. Ask only consequential gaps.
+3. Classify before changing rules:
 
-| Cause | Action |
+| Cause | Correction |
 |---|---|
-| Instruction skipped | Recover the step. Check how the method was invoked and handed off before adding rules. |
-| Skill unclear or incomplete | Fix the skill that owns the rule, then its callers. |
-| Gate, controller or adapter fault | Diagnose from source and existing evidence. Fix that layer. Reproduction tests wait for step 5. |
-| Missing tool, access or decision | Record the blocker. Invent nothing. |
-| Product bug | Back to delivery, unless evidence also shows a factory defect. |
-| Working as designed | Explain the rule that applied and where it lives. Change it only on the owner's request. |
+| Skipped instruction | Recover it; inspect invocation/handoff before adding rules |
+| Unclear skill | Owning rule, callers and links |
+| Gate/controller/adapter | Source/evidence diagnosis; reproduction tests after manual use |
+| Missing tool/access/decision | Record real blocker; invent nothing |
+| Product defect | Delivery, unless a factory defect is also demonstrated |
+| Intended behavior | Explain owning rule; change only on owner request |
 
 ## 2. Isolate
 
-- Repair in its own branch or worktree. One writer per file in the candidate.
-- Keep runner, candidate and target app distinct. For a new run, pin the immutable runner via `resolve_bundle.py --project <candidate> --bundle <runner>`; use its gate with `--project <candidate>`. Never select the editable candidate as runner or change an active pin.
-- Base the candidate on the runner revision or an owner-approved unmerged commit. Record the base and unmerged status; neither choice releases or adopts it.
-- Active app run: follow `references/live-session.md` before any workspace change or delegation. Checkpoint → isolated repair → independent review → compatible resume.
-- Never silently stash, reset, switch or upgrade a target, its bundle or global settings.
-- Factory repair grants no product scope change. Keep the app ticket and the maintenance ticket separate.
-- Run independent tickets in parallel, each in its own worktree: a checkout holds one open gate run.
-- Other-session work follows `safe-engine` Delegate. A product bug uses its ticket; active app work reads `references/live-session.md` first. Factory work invokes `improve-factory` with a maintenance ticket, factory checkout and report. Name runner, base and app; fetch before candidate creation. Use `origin/main` only when intended; state if the base is unmerged.
-- Worktrees separate files only. Give delegates absolute paths; route, brief and accept them by the `safe-engine` delegate rules. Isolate shared ports, databases, caches and services.
+- Own branch/worktree, one writer per file. Distinct runner/candidate/app. Pin immutable runner with `resolve_bundle.py --project <candidate> --bundle <runner>` and run its gate with `--project <candidate>`; never edit active pins or select editable candidate as runner.
+- Base on runner or owner-approved unmerged commit; record base/unmerged status. No implied release/adoption.
+- Active app: [live-session](references/live-session.md) before workspace changes/delegation: checkpoint, isolated repair, independent review, compatible resume. Never silently stash/reset/switch/upgrade app, bundle or global settings.
+- Separate maintenance and product scope/tickets. Independent tickets may run in separate worktrees; one open gate per checkout. Worktrees isolate files only: also isolate ports, databases, caches and services.
+- Other-session work follows `safe-engine` Delegate. Factory handoff invokes this method with ticket, checkout/report, runner/base/app; fetch before candidate creation, name unmerged base, use intended upstream. Product defects use delivery; active apps read live-session first. Absolute paths, lane resources and verifiable briefs follow Delegate.
 
 ## 3. Analyze and plan
 
-1. Run `analyze-start`: source, consumers, flow, evidence versus claims, unknowns and the final reproduction you plan. An unobserved failure stays unverified.
-2. Record the invariants: project goal, selected decisions, complete methods, owner stops, human release. Changing one needs the owner. Never weaken a failed check. A proposal is not approval.
-3. Plan the smallest complete correction. Exclude unrelated improvements. A new skill, gate, helper or report needs a demonstrated gap. No universal rule for an isolated complaint.
-4. Run `get-ready-to-code`: all five outputs. Include reproduction, behavioral checks, consumers, before/after evidence, compatibility and the resume step.
-5. Choose the proof now. Instruction change: walk through the changed method; delegate when useful. Code or config change: run the affected behavior. Mixed: both.
+1. `analyze-start`: actual source/consumers/flow, claims versus evidence, unknowns, final reproduction. Unobserved failure stays unverified.
+2. Record invariants: goal, decisions, complete methods, owner stops, human release. Only owner changes them; failed checks are not weakened and proposals are not approval.
+3. Smallest complete root repair, no unrelated improvements or universal rule for an isolated complaint. New skill/gate/helper/report needs a demonstrated gap.
+4. `get-ready-to-code`: all five outputs including reproduction, consumers, behavior/proof, compatibility and resume. Choose proof: walkthrough for instructions, actual flow for code/config, both for mixed; delegate when useful.
 
-Do not code before the plan is recorded.
+Record plan before code.
 
 ## 4. Repair
 
-- For each todo, run 0–4; log pre/do/post, then tick. Record observed `metrics task` start and finish/fail/cancel/resume. `try` alone is not completion.
-- Keep the owner posted:
-  - the gate's card after each step (relay it where your agent does not show it);
-  - one line per wave of delegates;
-  - the question first when waiting.
-- Fix the owning cause and every affected caller and link. Remove stale or duplicate prose.
-- Write lasting rules into the skill that owns them.
-- Edit skills with your agent's skill-authoring tool when it has one.
-- Research unfamiliar platform or API behavior from current primary sources. Keep scope.
-- Factory files added, moved or deleted:
-  1. Update `safe_engine/bundle-inputs.json`. Required files catch deletion; source trees catch additions.
-  2. Update the required paths in `safe_engine/distribution.py`.
-  3. Run `python scripts/package_skill_entries.py` to refresh the launcher resolvers.
-  4. Fix tests that name old paths.
-- Never run `improve-factory` on its own repair.
+- Todo0–4: pre/do/post then tick after use; observed `metrics task` start/finish/fail/cancel/resume. `try` is not completion.
+- Relay gate cards where needed, one line per delegation wave, waiting question first. Fix owning cause and affected callers/links; delete duplicate/stale prose. Lasting rules belong in their owning skill; use an available skill-authoring tool.
+- Research unfamiliar platforms/APIs in current primary sources, within scope. Never run this method on its own repair.
+- Added/moved/deleted factory files: update `safe_engine/bundle-inputs.json` and `safe_engine/distribution.py`, regenerate launchers with `python scripts/package_skill_entries.py`, repair path-dependent tests.
 
-## 5. Check: manual first, tests last
+## 5. Manual first, tests last
 
-1. Use it first. Instructions: use the changed skill on realistic raw fixtures. Judge decisions and artifacts; seek independent judgment when needed. Code: run the changed command or flow on a realistic case.
-2. Pick the cases the change touches:
-   - Domain rule: exercise that domain (game, mobile, desktop, server, CLI) with its real tooling. Never import another project's bindings.
-   - Live-session or adoption rule: dirty bundle, running operation, inputs changed during plan, change after QA, owner stop, cancellation, lost context.
-   - Evidence reuse: both reuse and rejection (changed inputs, tampered proof, pending operations).
-3. Isolate fixtures from real project work and secrets. No product pilot or simulation unless the owner asks.
-4. Check every changed skill stays self-contained: links only inside its own folder; no names, dates or host specifics.
-5. After manual use, write/adjust tests and run affected checks, then commit source/docs/tests/packaging. Before the complete suite, do the required source review (`how-to-make-a-pr`). Run `python tests/run.py` on that commit through the selected Prove, else its recorded gate. Keep receipt, commit, inputs, command, log and result. Edits require affected checks and fresh final proof.
-6. Each check proves only itself. A walkthrough does not prove a code repair; a passing suite does not prove a walkthrough.
+1. Use realistic raw fixtures: instruction decisions/artifacts, or actual changed commands/flows. Seek independent judgment where needed. No product pilot/simulation without owner request; isolate secrets and project resources.
+2. Exercise touched boundaries: real domain tooling; live/adoption dirty bundle, running/pending work, drift before/after QA, stop/cancel/lost context; reuse and rejection for changed/tampered/pending proof.
+3. Check skill self-containment, names/dates/host exclusions and budgets. Await producer exit0 before dependent consumers; a yielded session is pending. Sample data/mode/resources never share a live preview root.
+4. Then write/adjust affected tests, run them, commit source/docs/tests/packaging and do required source review (`how-to-make-a-pr`). Run `python tests/run.py` on that commit through selected Prove, else its recorded gate. Retain receipt/commit/inputs/command/log/result; edits need affected checks and fresh final proof.
+5. Each check proves itself: walkthrough is not code repair; suite is not walkthrough.
 
 ## 6. Independent review
 
-- Safe runs this locally. Fast skips it. In every mode, no factory change reaches the main branch without an independent PR review.
-- A human or separate reviewer runs `deep-review` on the exact candidate from raw evidence, independently of the writer.
-- A reviewer who repairs needs a different fresh review.
-- A changed gate needs its old rule, a reproduction and independent review. Its own pass proves too little.
-- One round: review, author fixes, same reviewer checks the delta; replace it if it repaired or lost context. After round 3, only high or critical findings continue; lower findings join the epic's open follow-ups ticket in Backlog. At most 6 failed rounds; then ask once with findings, shared cause and options: extend, defer, amend scope, cancel. Keep independent work moving.
-- No reviewer available: name the blocker. Never self-approve.
+- Safe runs locally; Fast skips local review. Every main-branch factory change still needs independent PR review by a human/separate reviewer using `deep-review` on exact candidate/raw evidence. Never self-approve; unavailable reviewer is a named blocker.
+- A changed gate needs old rule, reproduction and independent review. Reviewer repairs require a different reviewer.
+- Review, author fixes, same reviewer checks delta; replace for lost context/own repairs. After round3 only high/critical continue; lower findings join the epic's one open Backlog follow-ups ticket. At most6 failed rounds, then ask once: findings, shared cause, extend/defer/amend/cancel. Keep independent work moving.
 
 ## 7. Deliver
 
-1. Refresh the maintenance ticket. Compare its confirmed criteria with the change, preserved behavior, proof and limits. Drift or a failed refresh blocks acceptance.
-2. PRs always, as drafts, through `how-to-make-a-pr`. Missing PR bindings block the PR, not local repair or checks.
-3. Humans mark ready, merge and release. Active runs never auto-upgrade: they keep their pinned bundle. A launcher, gate or hook fix reaches agents only after publishing, then the install's own update or a fresh `fast_gate.py install`.
-4. Active app run: adopt and resume per `references/live-session.md`.
-5. Report separately: structure, manual use, tests, review, adoption, PR. Brief before/after. Name what is unverified.
+1. Refresh ticket; compare confirmed criteria, change, preserved behavior, proof/limits. Drift or failed refresh blocks acceptance.
+2. Draft through `how-to-make-a-pr`; missing bindings block PR, not local repair/checks. Humans ready/merge/release.
+3. Active pins never auto-upgrade. Publishing plus the install's update or fresh `fast_gate.py install` delivers launcher/gate/hook changes. Active app adoption/resume follows live-session.
+4. Report structure, manual use, tests, review, adoption and PR separately; brief observed Before/After and unverified work.
 
 ## Record
 
-One Git-ignored record: the Fast work record, or `.factory/maintenance/<id>/` in Safe. Keep:
-
-- Report, expected result, cause or unknown.
-- Ticket, confirmed scope, owner source, latest refresh.
-- Invariants, choices, analysis, plan, 0–4 notes.
-- Checkpoint, old and new commits, dirty manifest.
-- Checks, limits, reviewer identity, PR links.
-- Adoption, rollback target, exact resume step.
-
-No secrets. Share only sanitized evidence.
+One ignored Fast work record, or `.factory/maintenance/<id>/` in Safe: report/cause; ticket/scope/authority/refresh; invariants/plan/0–4; checkpoint/commits/dirty manifest; proof/limits/reviewer/PR; adoption/rollback/resume. No secrets; share sanitized evidence only.

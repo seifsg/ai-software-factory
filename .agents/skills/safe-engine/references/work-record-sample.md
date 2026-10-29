@@ -8,14 +8,10 @@ Contents: request, research, kickoff, tickets, analysis, plan, design, schema, b
 > Build a POC for a yoga studio: members see the schedule, book a spot, buy class packs, join a waitlist when full; staff manage the schedule and check people in.
 
 ## Research
-Summary shown to the owner: all three match on features; gaps: price transparency, direct-booking fees.
 ### Mindbody
-- Booking by app, widgets or branded app; packs in one checkout. https://www.mindbodyonline.com/business/client-experience
-- Full class: waitlist; a cancellation promotes the next client. https://www.mindbodyonline.com/business/scheduling
-- From $79/month; branded app add-on; fee on a new client's first app purchase. https://www.mindbodyonline.com/business/pricing
+- Booking/packs, waitlist promotion; paid branded app and first-purchase fees. https://www.mindbodyonline.com/business/client-experience https://www.mindbodyonline.com/business/scheduling https://www.mindbodyonline.com/business/pricing
 ### Momence
-- One booking calendar, auto waitlists, packs, optional branded app. https://www.momence.com/yoga-studio-software/
-- Pricing unpublished (demo or quote). https://www.momence.com/pricing/
+- Booking, waitlists, packs, branded app; unpublished pricing. https://www.momence.com/yoga-studio-software/ https://www.momence.com/pricing/
 ### Glofox
 - Booking calendar, auto waitlists, credit packs, branded app. https://www.glofox.com/features/
 
@@ -24,7 +20,6 @@ Summary shown to the owner: all three match on features; gaps: price transparenc
 | Class booking | ✅ | ✅ | ✅ |
 | Waitlist | ✅ | ✅ | ✅ |
 | Packs | ✅ | ✅ | ✅ |
-| Branded app | ✅ add-on | ✅ | ✅ |
 
 **Opportunities:** (inference) commission-free direct booking, branded site included, against first-purchase fees and paid app add-ons; flat published pricing (two of three hide it).
 ### Stack options
@@ -52,17 +47,14 @@ Summary shown to the owner: all three match on features; gaps: price transparenc
 
 ## Analysis
 **Success:** a member books with a pack credit; a full class waitlists the next; a cancellation promotes them; staff check them in.
-**Consumers:** members, front desk, owner.
 ```text
 member -> schedule -> class -+- free -> book (-1 credit)
                              +- full -> waitlist -> promoted on cancellation
 staff  -> editor -> today -> check-in
 ```
-**Unknowns:** payment provider; cancellation window.
 
 ## Plan
 
-`checks --plan` first.
 ### Files
 `app/(app)/schedule/**`, `app/(staff)/**`, `lib/db/schema.ts`, `lib/booking.ts`, `lib/log.ts`, `scripts/seed.ts`
 ### Critique
@@ -70,7 +62,6 @@ staff  -> editor -> today -> check-in
 ### Phases
 1. Schema, seed, logging. 2. Booking. 3. Waitlist, packs. 4. Staff tools. 5. Header, footer. 6. Done-run.
 ### Todos
-In sub-issue checklists; the epic's lists #2 to #5 and the done-run. Tier per todo. Waves: 1 = T1, T2, T8; 2 = T3, T4; 3 = T5, T6, T7.
 - T1 (deep) Schema, seed → app opens with seeded data (#2, A1)
 - T2 (standard) Logger → one redacted log of requests and errors (#2, A1)
 - T3 (standard) Role switcher, env badge → switch member or staff in one click (#2, A2)
@@ -132,7 +123,7 @@ indexes: classes(starts_at), bookings(class_id, status), waitlist(class_id, posi
 - PASS a full class waitlists member 2; a cancellation promotes them and spends a credit
 - PASS staff publish a class and check the member in
 - FAIL then fixed: Book stayed active while pending; now disabled. Checked fix pushed; reset fixtures and demo; replaced After, kept Before.
-- Use log: book 2 actions, 1 load; cancel 2 with confirm; loading, empty, full, failed-retry seen; double click books once; keyboard booking; back keeps the week
+- Use log: book 2 actions/1 load, cancel 2 with confirm; loading/empty/full/failure-retry, keyboard/back, double-click refusal observed
 - Shots: .factory/fast/shots/schedule.png, roster.png, packs.png at 375 and 1280 (DEV badge and "Sample data" tags visible)
 - U1 PASS schedule, bookings, packs, editor, roster: reached from the role header, no dead ends
 - U2 PASS schedule, roster, packs (375, 1280): nav marks the page; title and H1 match the nav label; back keeps the week
@@ -164,8 +155,7 @@ indexes: classes(starts_at), bookings(class_id, status), waitlist(class_id, posi
 **Follow-ups:** real payments (#6, revisit at MVP kickoff); POC skips (sign-in, hardening, deployment, landing page) in epic #1
 
 ## MVP done-run example
-An MVP or production slice adds these to its Done-run; a POC has none:
-
+MVP/production adds these fields; this POC does not:
 **Secrets:** `gitleaks git .` and `gitleaks dir .`: 0 findings
 **Dependencies:** `pnpm audit --prod`: 1 high in `qs`, bumped; rerun 0
 **Static:** `pnpm exec eslint .` with security rules: 0 high or critical

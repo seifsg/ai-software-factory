@@ -122,7 +122,7 @@ def load(project, run, verify_images=True):
     return data
 
 
-def candidate(project):
+def candidate(project, nonvisual=()):
     """Hash source bytes, including dirty/untracked files; ignored runtime evidence is separate."""
     result = fast_setup.git(project, "ls-files", "-z", "--cached", "--others", "--exclude-standard")
     require(result is not None and result.returncode == 0, "Cannot identify the candidate: Git unavailable")
@@ -132,7 +132,7 @@ def candidate(project):
         path = Path(project) / name
         require(not path.is_symlink(), f"Candidate symlink needs explicit review: {name}")
         require(not path.is_dir(), f"Candidate directory needs explicit review: {name}")
-        values[name] = file_hash(path) if path.is_file() else None
+        values[name] = ("nonvisual" if name in nonvisual else file_hash(path)) if path.is_file() else None
     return digest(values)
 
 
@@ -145,13 +145,21 @@ def summary(data):
                     f"{counts['partial']} partial; {counts['missing']} missing; {counts['cut']} owner-approved cuts"}
 
 
-def review_evidence(project, run, data, review):
+def review_evidence(project, run, data, review, observed=None):
     """Validate a fresh judge's matched captures and one explicit observation per element."""
     require(type(review.get("version")) is int and review["version"] == 1, "Review version must be 1")
     who = text(review.get("reviewer"), "reviewer")
     require(who != run["design"]["inventory"]["builder"] and review.get("independent") is True,
             "Likeness reviewer must be independent of the builder")
-    require(review.get("candidate") == candidate(project), "Review candidate changed; capture and review the current source")
+    import fast_show
+    identity = {"candidate": review.get("candidate")}
+    if observed is not None:
+        require(observed["candidate"] == identity["candidate"], "Likeness observation changed")
+        identity.update({k: observed[k] for k in ("visual",) if k in observed})
+    elif run.get("show", {}).get("plan", {}).get("visual_inputs"):
+        require(identity["candidate"] == candidate(project), "Review candidate changed")
+        identity["visual"] = fast_show.visual_identity(project, run)
+    require(fast_show.matches(project, run, identity), "Review candidate changed; capture and review the current source")
     screens = rows(review.get("screens"), "review screens")
     reference = {s["id"]: s for s in run["design"]["inventory"]["screens"]}
     require(set(screens) == set(reference), "Review must cover every reference screen")
@@ -173,7 +181,7 @@ def review_evidence(project, run, data, review):
         else:
             require(bool(differences), f"{key}: describe the missing element, layout, density or colour difference")
         text(finding.get("evidence"), f"{key} visual evidence")
-    return {"reviewer": who, "candidate": review["candidate"], "coverage": digest(data), "captures": captures}
+    return {"reviewer": who, **identity, "coverage": digest(data), "captures": captures}
 
 
 def final_problems(project, run):
@@ -186,7 +194,7 @@ def final_problems(project, run):
         require(isinstance(receipt, dict), "Needs an independent likeness review: design --review")
         source = local(project, receipt["path"])
         require(file_hash(source) == receipt["sha256"], "Likeness review file changed; review again")
-        evidence = review_evidence(project, run, data, read(source))
+        evidence = review_evidence(project, run, data, read(source), receipt["evidence"])
         require(evidence == receipt["evidence"], "Coverage or captures changed; review again")
         return []
     except (OSError, ValueError, KeyError, TypeError) as error:

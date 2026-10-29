@@ -9,6 +9,8 @@ For every release:
 
 ## Next release
 
+- Scoped visual reuse is opt-in through new Show plans; existing pins/plans keep their behavior. Supply explicit dependency evidence/runtime inputs only when carrying an observation. Full-source final proof is unchanged.
+
 - After release/update, use early `shots --phase before`, final `--phase after` with the same output folder, and `before` image rows for new Show plans. Existing pins/plans stay intact; disclose reconstructed baselines.
 - Update launchers for `report --pr-body`, a local structure check; final published-PR checks remain. Accepted `fix-round` output includes its canonical `report_sha256`.
 

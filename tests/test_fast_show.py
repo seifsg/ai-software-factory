@@ -287,6 +287,41 @@ class ShowTests(ShowFixture):
         self.assertEqual(show.completion_problems(self.state, self.project), [])
 
 
+class VisualReuseTests(ShowFixture):
+    def setUp(self):
+        super().setUp()
+        (self.project / "unit.py").write_text("assert True")
+        (self.project / ".factory/deps.json").write_text(json.dumps({"complete": True, "sources": ["source.txt"]}))
+        self.state["show"]["plan"]["visual_inputs"] = {"nonvisual": {"unit.py": "Not imported"},
+            "evidence": ".factory/deps.json", "files": [], "environment": []}
+        self.prepare()
+
+    def test_nonvisual_change_keeps_original_observation_but_not_suite_proof(self):
+        original = copy.deepcopy(self.state["show"]["report"])
+        self.share()
+        self.state["show"]["reply"] = {"action": "proceed"}
+        self.state["show"]["proof"] = {"passed": True, "candidate": self.data["candidate"]}
+        (self.project / "unit.py").write_text("assert 1 == 1")
+        self.prepare()
+        self.assertEqual(self.state["show"]["report"], original)
+        self.assertIn("Owner reply", show.ready_for_prove(self.project, self.state))
+        self.assertIn("suite proof is stale", " ".join(show.completion_problems(self.state, self.project)))
+
+    def test_relevant_unknown_and_tampered_inputs_do_not_carry(self):
+        for path, replacement in (("source.txt", "changed UI"), (".factory/deps.json", "{}"),
+                                  (".factory/desktop.png", "tampered")):
+            target = self.project / path
+            before = target.read_bytes()
+            with self.subTest(path=path):
+                target.write_text(replacement)
+                with self.assertRaises((ValueError, OSError)):
+                    show.current(self.project, self.state)
+                target.write_bytes(before)
+        self.state["show"]["plan"]["visual_inputs"]["nonvisual"]["source.txt"] = "Unsafe exception"
+        with self.assertRaisesRegex(ValueError, "cannot be excluded"):
+            show.visual_identity(self.project, self.state)
+
+
 class ShowCommandTests(ShowFixture):
     def setUp(self):
         super().setUp()
