@@ -109,6 +109,13 @@ An orchestrator starts agent sessions and hands each one a task: [orchestrators.
 
 ## Evals
 
+The repository-only rendered pilot is opt-in: `node evals/visual/run.cjs --repeat 3`.
+It needs an existing resolvable Playwright installation and compatible Chromium;
+`--browser <executable>` selects an existing browser explicitly. It installs nothing
+and adds no factory startup, hook or completion step. Browser calibration is outside
+the normal suite; three browser-free failure tests remain developer-suite work.
+See [setup, output and limits](../evals/README.md#rendered-acceptance-pilot).
+
 `python -m evals run` lives in the factory repository only (`evals/README.md`); installed copies leave `evals/` out. It takes each agent's non-interactive command as a template. The prompt arrives on stdin and also sits at `../prompt.md` from the workspace. In the factory arm, `{factory}` is a fresh export of the factory bundle. Real runs cost model tokens; check each flag against the installed version before one. Windows eval commands require job ownership before execution and confirmed descendant exit at cleanup; failures remain explicit, all registered stops are attempted, and unconfirmed ownership remains retryable. Isolated rubric children receive the canonical ownership helper from the pre-run source snapshot, without importing repository paths or site packages.
 
 | Agent | `--agent` (plain arm, and factory arm unless overridden) | `--factory-agent` (factory arm) | Gate hooks in the factory arm |

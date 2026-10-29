@@ -294,6 +294,7 @@ python tests/run.py
 - Releases are local, no CI: `python scripts/release.py cut X.Y.Z`, merge the release PR, `python scripts/release.py prove vX.Y.Z`, tag, then `python scripts/release.py publish vX.Y.Z`. Publish reuses intact matching suite proof or runs the complete suite ([releasing](docs/releasing.md)).
 - Method byte budgets: `python scripts/token_report.py --against origin/main` compares file-text proxies for whole runs, overlapping phases and optional conditions. These are neither observed context nor billed model tokens.
 - `python -m evals run` scores the factory against a plain agent ([evals](evals/README.md)). Windows evals require confirmed job ownership and descendant cleanup; isolated checks receive the same snapshotted ownership helper.
+- Optional research only: `node evals/visual/run.cjs --repeat 3` calibrates specified rendered checks against synthetic pages ([setup and limits](evals/README.md#rendered-acceptance-pilot)). It adds no normal-run step or skill text and is excluded from installed bundles; three browser-free failure tests run in the repository suite.
 
 The gate loads command arguments from `fast_cli.py` only for CLI calls; tool hooks retain their direct fast path.
 
