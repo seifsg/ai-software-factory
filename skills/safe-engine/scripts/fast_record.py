@@ -714,7 +714,7 @@ def audit_text_lines(body):
 
 
 def ux_audit(body, parsed=None):
-    """A fresh judge's verdict per rule ID (ux-quality step 4), each with evidence or a reason; no FAIL left."""
+    """The recorded judge's verdict per rule ID (ux-quality step 4), each with evidence or a reason; no FAIL left."""
     verdicts, failed, _ = parsed or audit_lines(body)
     problems = [f"needs a '{rule} PASS|FAIL|UNKNOWN|N/A <screen>: <evidence or reason>' line"
                 for rule in UX_RULES if rule not in verdicts]

@@ -101,6 +101,19 @@ class ShowFixture(unittest.TestCase):
 
 
 class ShowTests(ShowFixture):
+    def test_planning_baseline_is_retained_through_show(self):
+        self.state["show"]["plan"]["before"] = show.baseline(self.project, self.state["show"]["plan"],
+                                                            [self.all_screens[0]])
+        self.prepare()
+        png(self.project / ".factory/desktop.png", 64, color=20)
+        with self.assertRaisesRegex(ValueError, "retain the Before"):
+            self.prepare()
+
+    def test_planning_baseline_requires_complete_unique_coverage(self):
+        for rows in ([], [self.all_screens[0], self.all_screens[0]]):
+            with self.subTest(rows=rows), self.assertRaises(ValueError):
+                show.baseline(self.project, self.state["show"]["plan"], rows)
+
     def test_observed_owner_wait_records_reply_without_quote_or_timeout_approval(self):
         from safe_engine import run_metrics
         import fast_metrics
@@ -310,7 +323,7 @@ class ShowCommandTests(ShowFixture):
         self.state.pop("show")
         self.state["done"].pop("plan")
         ledger.save(ledger.state_path(self.entry), self.state)
-        self.json_action("plan", self.plan)
+        self.json_action("plan", {**self.plan, "before": [self.all_screens[0]]})
         planned = ledger.load(ledger.state_path(self.entry))["show"]["plan"]
         self.assertEqual(planned["variants"], [{"theme": "light", "device": "desktop"}])
         self.assertEqual(planned["comparison"], "before")

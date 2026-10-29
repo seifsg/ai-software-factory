@@ -134,6 +134,32 @@ class ShotsTests(unittest.TestCase):
         self.assertEqual(len(set(shots.parse_ports(None))), 2)
         self.assertEqual(shots.find_browser(sys.executable), sys.executable)
 
+    def test_phase_keeps_early_baseline_and_rejects_drift(self):
+        from types import SimpleNamespace
+        from unittest.mock import patch
+        import json
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            args = SimpleNamespace(phase="after", path=["/"], size="640x240", serve="serve", setup=None)
+            with self.assertRaises(FileNotFoundError):
+                shots.phased(args, root, "browser", None, root, root, [5281, 5282])
+            args.phase = "before"
+            image = root / "home-before.png"
+            image.write_bytes(b"early")
+            with patch.object(shots, "capture", return_value=[("/", str(image))]):
+                shots.phased(args, root, "browser", None, root, root, [5281, 5282])
+                with self.assertRaisesRegex(ValueError, "already exists"):
+                    shots.phased(args, root, "browser", None, root, root, [5281, 5282])
+                args.phase = "after"
+                shots.phased(args, root, "browser", None, root, root, [5281, 5282])
+                args.size = "800x600"
+                with self.assertRaisesRegex(ValueError, "conditions changed"):
+                    shots.phased(args, root, "browser", None, root, root, [5281, 5282])
+                args.size = "640x240"
+                image.write_bytes(b"replacement")
+                with self.assertRaisesRegex(ValueError, "Before image changed"):
+                    shots.phased(args, root, "browser", None, root, root, [5281, 5282])
+
     @unittest.skipUnless(shots.find_browser(None), "no Chromium-family browser on this machine")
     def test_base_and_head_are_shot_on_their_own_ports(self):
         temp = tempfile.TemporaryDirectory(prefix="shots ")

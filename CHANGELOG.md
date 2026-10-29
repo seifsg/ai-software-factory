@@ -8,6 +8,8 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 
 ### Fixed
 
+- Capture Before before edits and retain it through Show/QA; run locally unless delegation provides useful parallelism or independent judgment.
+
 - Coordinator interruptions: prioritize new requests, including replacement objectives, before broad checking/reporting; resume only compatible work, preserve previews and disclose tool-delivery limits.
 - Run metrics: Fast runs start their timeline at the first applicable step, Safe runs record the factory revision and never share a metrics folder, and analytics hooks are plain calls instead of repeated guards (#175).
 

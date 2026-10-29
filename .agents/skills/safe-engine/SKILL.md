@@ -58,8 +58,8 @@ Record every step in one work record and pass the gate: [fast-run](references/fa
 3. **Kickoff** (product, feature): the kickoff questions for its size.
 4. **Tickets:** `ticketing`: read the backlog, then epic(s) + 1 or many outcome sub-issues in To do.
 5. **Analysis** (product, feature): `analyze-start` in full. No code yet: analyze the requirements, platform and intended consumers, and say so.
-6. **Plan:** `get-ready-to-code`: five outputs, todos `T1..Tn` in each ticket's checklist, logging map, efficiency budget, and the [briefs](references/fast-run.md#briefs): Interface, Ports and, for UI work, UX rules. This request authorizes going past its file-summary stop. Select proof and start the required independent checker.
-7. **Design** (UI): plan with `get-ready-to-code`. Use the product bar and `ux-quality` step 1, including Map, Hierarchy and Labels; design ports follow its reference coverage. At done-run, a fresh agent judges every UX rule (`ux-quality` step 4).
+6. **Plan:** `get-ready-to-code`: five outputs, todos `T1..Tn` in each ticket's checklist, logging map, efficiency budget, and the [briefs](references/fast-run.md#briefs): Interface, Ports and, for UI work, UX rules. This request authorizes going past its file-summary stop. Select proof; arrange independent checking where required.
+7. **Design** (UI): plan with `get-ready-to-code`. Use the product bar and `ux-quality` step 1, including Map, Hierarchy and Labels; design ports follow its reference coverage. At done-run, judge every UX rule (`ux-quality`).
 8. **Schema** (persistence): `database-schema`, only if needed.
 9. **Build:** each item through 0–4; spike unknown capabilities first, tick after use. UI: [Look, Show, Prove, Ship](references/show.md).
    - Mark each frozen todo's observed start/finish/fail/cancel/resume with `fast_gate.py metrics task --key <run> --task-id Tn --state <state> --project <abs>`. `try` alone never proves completion; missed boundaries stay unknown.
@@ -67,7 +67,7 @@ Record every step in one work record and pass the gate: [fast-run](references/fa
    - After actual item use, run only mapped affected tests for feedback during build and fixes. In the plan, declare the project's command and changed-input mapping; an unknown mapping needs a manual choice and reason. A command that runs the complete suite, including `tests/run.py --changed` when its mapping falls back to all, is never a narrow check. Final tests follow manual use; UI also completes Show first. A POC waits for `verify` or Safe.
 10. **Done-run:** prove each ticket's definition of done.
     - Start it once. Use every requested journey and the most likely failure through real controls (simulated input proves no requested integration). Read the logs; fix blockers.
-    - Capture the planned view/journey inventory once for Show and the PR (`how-to-make-a-pr`). Batch known repairs before final capture; a demo bug still needs checked recovery and fresh proof.
+    - Reuse early Before; capture final After/video once for Show and the PR (`how-to-make-a-pr`). Batch known repairs before final capture; a demo bug still needs checked recovery and fresh proof.
     - No browser: drive its HTTP or CLI interface and say so; required UI media still apply.
     - MVP, production slice: also the [product bar](references/product-bar.md#security) scans.
     - Run selected hidden checks; visual-only ports keep current likeness and the declared suite.
@@ -127,7 +127,7 @@ Timing and comparisons: [run metrics](references/run-metrics.md).
 
 ## Delegate
 
-- Delegate only jobs whose independence or parallel benefit exceeds briefing, context and acceptance cost. Keep short searches, mechanical edits and log reads local; parallelize useful disjoint jobs, not every todo or review lens. Required independent checks and reviews stay independent.
+- Work locally by default. Delegate only when independence or parallel benefit exceeds briefing, context and acceptance cost. Keep short searches, mechanical edits and log reads local; parallelize useful disjoint jobs, not every todo or review lens. Required independent checks and reviews stay independent.
 - Keep in the main agent: choices needing the whole context, talking with the owner, final synthesis.
 - One writer per file. Parallel writers need separate files or worktrees; each worktree runs its own dev stack on its own fixed ports.
 - Route, brief and accept by [delegate](references/delegate.md): focused context, role tier and verifiable gates. Fast and Lucky add the plan's [briefs](references/fast-run.md#briefs) lines. Delegates read only relevant methods; no guessed names, routes or ports.

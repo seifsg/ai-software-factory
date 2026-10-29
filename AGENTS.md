@@ -23,7 +23,7 @@ The `## Work rules` section of `.agents/skills/safe-engine/SKILL.md` applies to 
 
 - Moving, adding or deleting a factory file: update `safe_engine/bundle-inputs.json`, `safe_engine/distribution.py`, then `python scripts/package_skill_entries.py` (it regenerates both launcher resolvers; `--check` before pushing).
 - Changing a command, flag, host, install or update step, release step, skill or top-level folder: update `README.md` and `docs/` in the same PR. `tests/test_docs_sync.py` fails on anything undocumented; keep what it cannot read (behavior, defaults, paths) true by hand.
-- Manual use first, tests last. For method changes, manual use means a fresh agent walking through the changed skill.
+- Manual use first, tests last. For method changes, walk through the changed skill; delegate when independence or parallel work justifies its cost.
 - Tests run in parallel: `python tests/run.py` (the same tests as `python -m unittest discover -s tests`). While iterating, `python tests/run.py --changed` runs only the modules your diff touches. Before any PR or push, run the full `python tests/run.py`, prose-only changes included (about 40 s). The hygiene and budget tests enforce rules 1, 3, 4 and 6.
 - Keep secrets, client data, transcripts and `.factory/` run records out of Git.
 

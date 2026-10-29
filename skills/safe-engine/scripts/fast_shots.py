@@ -1,6 +1,6 @@
-"""Before/after screenshots in one command: boot the base commit and the head on their own ports, shoot the same
-views at the same size with a headless Chromium browser, stop both. Spec: fast-run.md#the-gate (`shots`).
-"""
+"""Capture Before early and After later; retain the same scoped baseline."""
+import json
+import hashlib
 import os
 from pathlib import Path
 import re
@@ -60,8 +60,9 @@ def cleanup(processes, pending=None):
 
 def parser(sub, common):
     """Register `shots` without growing the gate's argument wiring."""
-    cmd = sub.add_parser("shots", parents=[common], help="Screenshot the same views on the base commit and the head")
-    cmd.add_argument("--base", required=True, help="Base commit or branch for Before, such as origin/main")
+    cmd = sub.add_parser("shots", parents=[common], help="Capture Before before edits and After during final QA")
+    cmd.add_argument("--phase", choices=("before", "after"), help="Capture current views before edits or after QA")
+    cmd.add_argument("--base", help="Base commit or branch for Before, such as origin/main")
     cmd.add_argument("--serve", required=True, help="Dev server command run in each tree; {port} becomes its port")
     cmd.add_argument("--path", action="append", required=True, help="View to shoot, such as / or /settings; repeat")
     cmd.add_argument("--setup", help="Command run once in each tree before serving, such as 'npm ci'")
@@ -73,8 +74,10 @@ def parser(sub, common):
 
 
 def run(args, gate):
-    """Capture every --path on base and head; print each pair. Any failure stops both servers and exits non-zero."""
+    """Capture one phase; legacy --base pairs are explicitly reconstructed evidence."""
     project = Path(args.project or os.getcwd()).resolve()
+    if bool(args.phase) == bool(args.base):
+        gate.fail("Choose --phase before|after, or --base for a disclosed reconstructed pair")
     size = re.fullmatch(r"(\d{2,5})x(\d{2,5})", args.size) or gate.fail("--size: WIDTHxHEIGHT, such as 1280x800")
     browser = find_browser(args.browser) or gate.fail("No Chromium-family browser found: pass --browser <executable>")
     ports = parse_ports(args.ports) or gate.fail("--ports: two different ports, such as 5281,5282")
@@ -82,6 +85,13 @@ def run(args, gate):
     out.mkdir(parents=True, exist_ok=True)
     work = Path(tempfile.mkdtemp(prefix="shots-", dir=scratch(project, gate)))
     base = work / "base"
+    if args.phase:
+        try:
+            phased(args, project, browser, size, work, out, ports)
+        except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
+            gate.fail(f"shots: {error}")
+        return
+    print("Reconstructed Before from base after edits; not a pre-edit capture.")
     retained = False
     try:
         git(project, "worktree", "add", "--detach", str(base), args.base)
@@ -99,6 +109,28 @@ def run(args, gate):
             git(project, "worktree", "remove", "--force", str(base), check=False)
     for path, before, after in pairs:
         print(f"{path}: {before} -> {after}")
+
+
+def phased(args, project, browser, size, work, out, ports):
+    """Keep the early image bytes and capture conditions immutable across phases."""
+    manifest = out / "baseline.json"
+    inputs = {"project": str(project), "paths": args.path, "size": args.size, "serve": args.serve, "setup": args.setup, "browser": browser}
+    if args.phase == "before":
+        if manifest.exists():
+            raise ValueError("Baseline already exists; retain it or choose a new --out")
+    else:
+        saved = json.loads(manifest.read_text(encoding="utf-8"))
+        if saved["inputs"] != inputs:
+            raise ValueError("Baseline capture conditions changed")
+        for path, digest in saved["images"].items():
+            if hashlib.sha256((out / path).read_bytes()).hexdigest() != digest:
+                raise ValueError("Before image changed")
+    rows = capture(args, [(project, ports[0], args.phase)], browser, size, work, out, project)
+    if args.phase == "before":
+        images = {Path(row[1]).name: hashlib.sha256(Path(row[1]).read_bytes()).hexdigest() for row in rows}
+        manifest.write_text(json.dumps({"inputs": inputs, "images": images}), encoding="utf-8")
+    for row in rows:
+        print(f"{row[0]}: {row[1]}")
 
 
 def capture(args, trees, browser, size, work, out, project):

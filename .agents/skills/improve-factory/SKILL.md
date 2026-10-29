@@ -50,7 +50,7 @@ Keep any active app run safe. The repair never writes the app's source; pausing 
 2. Record the invariants: project goal, selected decisions, complete methods, owner stops, human release. Changing one needs the owner. Never weaken a failed check. A proposal is not approval.
 3. Plan the smallest complete correction. Exclude unrelated improvements. A new skill, gate, helper or report needs a demonstrated gap. No universal rule for an isolated complaint.
 4. Run `get-ready-to-code`: all five outputs. Include reproduction, behavioral checks, consumers, before/after evidence, compatibility and the resume step.
-5. Choose the proof now. Instruction change: a fresh agent walks through the changed method. Code or config change: run the affected behavior. Mixed: both.
+5. Choose the proof now. Instruction change: walk through the changed method; delegate when useful. Code or config change: run the affected behavior. Mixed: both.
 
 Do not code before the plan is recorded.
 
@@ -74,7 +74,7 @@ Do not code before the plan is recorded.
 
 ## 5. Check: manual first, tests last
 
-1. Use it first. Instructions: give a fresh agent the changed skill, a realistic request and raw fixtures, without the expected outcome. Judge its decisions and artifacts, not word matches. Code: run the changed command or flow on a realistic case.
+1. Use it first. Instructions: use the changed skill on realistic raw fixtures. Judge decisions and artifacts; seek independent judgment when needed. Code: run the changed command or flow on a realistic case.
 2. Pick the cases the change touches:
    - Domain rule: exercise that domain (game, mobile, desktop, server, CLI) with its real tooling. Never import another project's bindings.
    - Live-session or adoption rule: dirty bundle, running operation, inputs changed during plan, change after QA, owner stop, cancellation, lost context.
@@ -87,7 +87,7 @@ Do not code before the plan is recorded.
 ## 6. Independent review
 
 - Safe runs this locally. Fast skips it. In every mode, no factory change reaches the main branch without an independent PR review.
-- A fresh agent, never the writer, runs `deep-review` on the exact candidate from raw evidence. Give it no verdict.
+- A human or separate reviewer runs `deep-review` on the exact candidate from raw evidence, independently of the writer.
 - A reviewer who repairs needs a different fresh review.
 - A changed gate needs its old rule, a reproduction and independent review. Its own pass proves too little.
 - One round: review, fixes, fresh review. After round 3, only open high or critical findings keep it going; medium and below are appended to the epic's one open follow-ups ticket in Backlog, never one ticket per finding. At most 6 failed rounds. Then stop that loop and ask the owner once: findings per round, shared cause, options (extend, defer, amend scope, cancel). Keep independent work moving.
