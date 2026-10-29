@@ -1,0 +1,21 @@
+<!doctype html><html lang="en"><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Learning page</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font:18px system-ui;background:#f4f1eb;color:#202020}
+main{width:min(92%,960px);margin:24px auto;display:grid;gap:20px}
+section{min-height:160px;padding:24px;border:2px solid #202020;background:white}
+h2{margin:0 0 16px}button{font:inherit;padding:12px;cursor:pointer}
+main{max-width:880px;gap:28px}section{border-radius:16px;background:#fffef9}
+
+
+
+
+</style><main><section id="hero"><h2>Welcome</h2><div>Learn one useful thing every day.</div></section><section id="learn"><h2>Learn</h2><div>Choose a short lesson and try it.</div></section><section id="progress"><h2>Progress</h2><div><button id="complete">Complete lesson</button><p id="result">Not completed</p></div></section><section id="contact"><h2>Contact</h2><div>Find the next lesson here.</div></section></main>
+<script>
+const result=document.querySelector('#result');
+if(localStorage.getItem('complete')==='yes') result.textContent='Completed';
+document.querySelector('#complete').onclick=()=>{
+result.textContent='Completed';
+localStorage.setItem('complete','yes');
+};
+</script></html>
