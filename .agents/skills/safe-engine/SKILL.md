@@ -95,21 +95,21 @@ The owner names `lucky`, `verify` or `promote`: [run cases](references/run-cases
 
 ## Keep the owner posted
 
-Use [plain owner reports](references/owner-reports.md); report events, not tool calls.
+Updates and interruptions: [plain owner reports](references/owner-reports.md). Report events, not tool calls.
 
-To explain where a run's time went or compare runs, read [run metrics](references/run-metrics.md).
+Timing and comparisons: [run metrics](references/run-metrics.md).
 
 - Fast and Lucky: the gate shows [progress](references/fast-run.md#progress); give the [live view](references/fast-run.md#live-view) link once per run; `fast_gate.py try` for each usable result.
 - Before slow work: who does what; report its result.
 - Waiting on the owner: the question first, then the options.
-- Asked for status: the `fast_gate.py status` card; in Safe, the same card from the controller's `status`.
-- Mirror steps and todos in the agent task list once per wave.
-- The final report carries the `close` card. The owner's call for more or fewer updates binds the run.
+- Questions/status: answer at first supported boundary before optional work/report tools, then resume authorized work without approval, including after ticket-only requests.
+- Mirror steps/todos in the task list once per wave.
+- Final report: `close` card; honor owner update frequency.
 - Orchestrator-started: no one watches the chat; follow the [orchestrated run](references/orchestrated-run.md).
 
 ## Decide
 
-- Owner-reserved choices and changed requirements: ask.
+- Unresolved owner choices or scope: ask. Apply explicit corrections.
 - Delegated in-scope choices: recommend, pick, record the reason. Plans and updates are not approval gates.
 - New substantive choice: compare three options, recommend one.
 - Answers bind the run. Later changes go to the ticket's activity.

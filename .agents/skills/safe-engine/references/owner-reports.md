@@ -1,11 +1,17 @@
 # Plain owner reports
 
-Use for every coordinator progress update and delegate handback to the owner. Records and tickets retain their identifiers.
+Use for scheduled progress and delegate handbacks, not direct interruption replies. Records/tickets keep identifiers.
 
-1. Name the page or feature, what changed in user words, the next action, worth-it score, estimated time left and who waits on whom. No ticket/criterion codes, lane or branch names, hashes or unexplained abbreviations in the body. Put reference links last.
-2. For every reported ticket, show elapsed time, active work and tokens used against planned time/tokens. Label measured, estimated or unavailable with the source. Never allocate a shared session total to individual tickets or invent missing telemetry. Unknown estimates stay unknown.
-3. Visual change: include the current picture. Run `report --picture <png>` before sharing any picture, then inspect it. A content check rejects blank/near-blank or corrupt pixels; it cannot judge whether this is the right screen. Convert unsupported images to a supported PNG; never bypass the check with a different extension.
-4. Publish through `report --file <json>`. It refuses codes and invalid pictures before replacing the last accepted report. `report --lint <body-file>` checks standalone prose. Validate before sending through the owner's channel; command output alone is not proof of delivery.
-5. Exact code-like product names may use a narrow `literal_exceptions` entry with exact text and reason. Never exempt internal references or whole paragraphs. Current pause or terminal state takes priority over the last published report. Reuse pictures only while their current bytes match the accepted identity; changed pictures need a new capture and report. The live view can show current accepted Show captures when no report or Try picture exists.
+Interruptions:
+- Stop/redirect: halt stale dependent dispatch. Do only necessary owned in-flight cleanup; preserve previews, unrelated processes, worktrees, data and proof. Frustration alone is not a stop.
+- Run/test request: bounded real-runtime smoke first; report concrete failures and pending checks. Required integrity/security/acceptance checks still govern completion/release.
+- Long tool: disclose delivery limits, never promise preemption; apply the message when delivered, not after a phase.
 
-Input and measurement shapes: the factory's report command documentation. Use `deep-review` worth inputs; no duplicate score formula. Missing worth inputs show unavailable with a reason. Keep raw measurement IDs and provenance in the record; reference links end the owner report.
+Scheduled reports:
+1. Name page/feature, change, next action, worth-it score, time left and who waits on whom. No ticket/criterion codes, lane/branch names, hashes or unexplained abbreviations. Links last.
+2. Per ticket: elapsed/active time and tokens versus planned time/tokens, with source and measured/estimated/unavailable labels. Never apportion shared session totals or invent telemetry or estimates.
+3. Visual change: include the current picture. Run `report --picture <png>`, then inspect before sharing. It rejects blank/near-blank/corrupt pixels, not wrong screens. Convert unsupported images to PNG; never bypass checks by renaming.
+4. Validate/publish with `report --file <json>` before delivery. It rejects codes/invalid pictures without replacing the accepted report. `report --lint <body-file>` checks standalone prose. Command output never proves delivery.
+5. `literal_exceptions`: exact product name/reason only, never internal references/paragraphs. Pause/terminal state outranks prior reports. Reuse only matching picture bytes/identity; changes need fresh capture/report. Without report/Try pictures, the live view can show current accepted Show captures.
+
+Shapes: report command documentation. Use `deep-review` worth inputs; no duplicate formula. Missing inputs: unavailable and why. Raw measurement IDs/provenance stay in the record.

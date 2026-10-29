@@ -1,5 +1,7 @@
 # Plain progress reports
 
+This pipeline serves scheduled progress and delegate handbacks. Direct interruption replies do not wait for report validation, spend/worth collection or publication. Answer known facts and pending checks first, then resume authorized work. A run/test request gets a bounded runtime smoke test before optional bookkeeping; this does not waive required completion or release checks.
+
 `python skills/safe-engine/scripts/fast_gate.py report --project <folder> --file <json>` validates and publishes the latest owner report. Use `--lint <body-file>` for standalone body prose or `--picture <png>` before sharing an image. Files must stay inside the project. Reports require an open run and tickets already recorded in its Tickets section. Invalid input preserves the last accepted report.
 
 Each report has `version: 1` and `items` (1 to 100). An item has its HTTPS `ticket` URL, plain `feature`, `changed`, `next`, `waiting`, `time_left` (a stated estimate), boolean `visual`, `worth`, and `spend`. A visual item requires `picture: {"path":".factory/fast/shots/result.png","caption":"Shipment states are labelled"}`. The gate checks current bytes and copies scoped immutable previews for the view.

@@ -10,6 +10,10 @@ Run `python tests/run.py` from the factory checkout. On Windows its setup prefer
 
 Common gate commands load only their requested optional argument module, including their own complete command help. Leading-option input, unknown commands and parse errors use complete registration with the original diagnostics. The selected bundle and state checks are never cached or skipped.
 
+## Message delivery
+
+The coordinator handles interruptions when the host delivers them at a supported message boundary. A method cannot preempt a blocking tool or guarantee immediate delivery. After delivery, answer direct questions before optional tools/reporting and resume authorized work; a stop or scope correction blocks stale dependent dispatch. Preserve the running preview and unrelated resources; cancel owned in-flight work only when needed and report an unfinished check as unfinished. No controller, hook event or adapter cancellation protocol changes here.
+
 ## First-class hosts
 
 | | Claude Code | Codex | Cursor |
