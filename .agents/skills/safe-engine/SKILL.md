@@ -102,14 +102,14 @@ Timing and comparisons: [run metrics](references/run-metrics.md).
 - Fast and Lucky: the gate shows [progress](references/fast-run.md#progress); give the [live view](references/fast-run.md#live-view) link once per run; `fast_gate.py try` for each usable result.
 - Before slow work: who does what; report its result.
 - Waiting on the owner: the question first, then the options.
-- Questions/status: answer at first supported boundary before optional work/report tools, then resume authorized work without approval, including after ticket-only requests.
+- At first supported boundary: answer questions; prioritize and deliver new requests, including a replacement objective. Resume only compatible work without reapproval.
 - Mirror steps/todos in the task list once per wave.
 - Final report: `close` card; honor owner update frequency.
 - Orchestrator-started: no one watches the chat; follow the [orchestrated run](references/orchestrated-run.md).
 
 ## Decide
 
-- Unresolved owner choices or scope: ask. Apply explicit corrections.
+- Ask only unresolved owner choices/scope.
 - Delegated in-scope choices: recommend, pick, record the reason. Plans and updates are not approval gates.
 - New substantive choice: compare three options, recommend one.
 - Answers bind the run. Later changes go to the ticket's activity.

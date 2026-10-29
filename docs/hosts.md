@@ -12,7 +12,7 @@ Common gate commands load only their requested optional argument module, includi
 
 ## Message delivery
 
-The coordinator handles interruptions when the host delivers them at a supported message boundary. A method cannot preempt a blocking tool or guarantee immediate delivery. After delivery, answer direct questions before optional tools/reporting and resume authorized work; a stop or scope correction blocks stale dependent dispatch. Preserve the running preview and unrelated resources; cancel owned in-flight work only when needed and report an unfinished check as unfinished. No controller, hook event or adapter cancellation protocol changes here.
+The coordinator handles interruptions when the host delivers them at a supported boundary; methods cannot preempt blocking tools or guarantee immediate delivery. The latest request takes priority and may replace the whole objective. Answer or act with only necessary action checks before optional tools/reporting; resume only compatible earlier work. Stop stale dependent dispatch. Preserve previews and unrelated resources unless directed otherwise; clean up owned in-flight work only as needed and report pending checks honestly. No controller, hook or adapter protocol changes here.
 
 ## First-class hosts
 

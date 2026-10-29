@@ -1,6 +1,6 @@
 # Plain progress reports
 
-This pipeline serves scheduled progress and delegate handbacks. Direct interruption replies do not wait for report validation, spend/worth collection or publication. Answer known facts and pending checks first, then resume authorized work. A run/test request gets a bounded runtime smoke test before optional bookkeeping; this does not waive required completion or release checks.
+This pipeline serves scheduled progress and delegate handbacks. A new request takes priority and may replace the whole objective. Answer or deliver with only checks needed for that action, before broad planning, repeated proof or report bookkeeping. Resume earlier work only if compatible. Run/test requests get a bounded real smoke; required completion/release checks still apply before those claims.
 
 `python skills/safe-engine/scripts/fast_gate.py report --project <folder> --file <json>` validates and publishes the latest owner report. Use `--lint <body-file>` for standalone body prose or `--picture <png>` before sharing an image. Files must stay inside the project. Reports require an open run and tickets already recorded in its Tickets section. Invalid input preserves the last accepted report.
 

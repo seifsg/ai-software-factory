@@ -1,10 +1,10 @@
 # Plain owner reports
 
-Use for scheduled progress and delegate handbacks, not direct interruption replies. Records/tickets keep identifiers.
+Scheduled reports/handbacks only; direct replies skip this pipeline. Records keep identifiers.
 
 Interruptions:
 - Stop/redirect: halt stale dependent dispatch. Do only necessary owned in-flight cleanup; preserve previews, unrelated processes, worktrees, data and proof. Frustration alone is not a stop.
-- Run/test request: bounded real-runtime smoke first; report concrete failures and pending checks. Required integrity/security/acceptance checks still govern completion/release.
+- Requests: only the action's safety/correctness checks, not broad plans, proof rounds or paperwork first. Run/test: bounded real smoke; report failures/pending checks. Completion/release checks govern those claims.
 - Long tool: disclose delivery limits, never promise preemption; apply the message when delivered, not after a phase.
 
 Scheduled reports:

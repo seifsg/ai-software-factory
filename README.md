@@ -20,7 +20,7 @@ Coding agents jump straight to code. They skip the research, forget the ticket, 
 The factory **enforces** the process. Hooks block source edits until the ticket, analysis and plan are recorded. Every run ends in a draft pull request with before/after proof and a list of what is still unverified. You merge.
 
 Plain progress reports show per-ticket spend, worth and checked PNG pictures: [report command](docs/owner-reports.md).
-Direct questions get an answer before report bookkeeping, then authorized work resumes. Stops and scope changes affect dependent work; previews stay open. [Delivery limits](docs/hosts.md#message-delivery).
+New requests take priority and may replace the objective. Answer or deliver with only the action's necessary checks; resume earlier work only if compatible. Preserve previews unless asked otherwise. [Delivery limits](docs/hosts.md#message-delivery).
 Local run timing, observed task/helper spans, rework and attributable host-session usage analytics (distinct from owner reports): [run metrics](docs/run-metrics.md). Fast runs mark observed T-number boundaries with `fast_gate.py metrics task --key <run> --task-id T1 --state start|finish|fail|cancel|resume`; reused gate keys keep separate metrics instances.
 
 ## ⚡ Quick start
