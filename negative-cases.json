@@ -1,0 +1,34 @@
+[
+  {
+    "case": "missing-baseline",
+    "exit": 1,
+    "output": "shots: [Errno 2] No such file or directory: 'G:\\\\.codex\\\\worktrees\\\\answer-first-215\\\\ai-software-factory\\\\.factory\\\\checks219\\\\negative\\\\baseline.json'\n"
+  },
+  {
+    "case": "mismatched-viewport",
+    "exit": 1,
+    "output": "shots: Baseline capture conditions changed\n"
+  },
+  {
+    "case": "mismatched-setup",
+    "exit": 1,
+    "output": "shots: Baseline capture conditions changed\n"
+  },
+  {
+    "case": "changed-before-bytes",
+    "exit": 1,
+    "output": "shots: Before image changed\n"
+  },
+  {
+    "case": "bound-show-reference",
+    "pass": true,
+    "reference": {
+      "path": ".factory/checks219/current-pair/home-before.png",
+      "sha256": "a1e4d8ac868e9b2718fadc09a927be6a88ee846cbf6fc278bced67c57a2793fd"
+    }
+  },
+  {
+    "case": "substituted-show-reference",
+    "output": "Show must retain the Before image and state frozen during plan"
+  }
+]

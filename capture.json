@@ -1,0 +1,53 @@
+{
+  "order": [
+    {
+      "phase": "before",
+      "command": [
+        "C:\\Users\\seifs\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+        "<factory>\\skills\\safe-engine\\scripts\\fast_gate.py",
+        "shots",
+        "--project",
+        "<factory>\\.factory\\checks219\\site",
+        "--phase",
+        "before",
+        "--serve",
+        "\"C:\\Users\\seifs\\AppData\\Local\\Programs\\Python\\Python313\\python.exe\" -m http.server {port} --bind 127.0.0.1",
+        "--path=/",
+        "--size",
+        "640x240",
+        "--out",
+        "<factory>\\.factory\\checks219\\current-pair"
+      ],
+      "exit": 0,
+      "output": "/: <factory>\\.factory\\checks219\\current-pair\\home-before.png\n"
+    },
+    {
+      "operation": "edit isolated fixture"
+    },
+    {
+      "phase": "after",
+      "command": [
+        "C:\\Users\\seifs\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+        "<factory>\\skills\\safe-engine\\scripts\\fast_gate.py",
+        "shots",
+        "--project",
+        "<factory>\\.factory\\checks219\\site",
+        "--phase",
+        "after",
+        "--serve",
+        "\"C:\\Users\\seifs\\AppData\\Local\\Programs\\Python\\Python313\\python.exe\" -m http.server {port} --bind 127.0.0.1",
+        "--path=/",
+        "--size",
+        "640x240",
+        "--out",
+        "<factory>\\.factory\\checks219\\current-pair"
+      ],
+      "exit": 0,
+      "output": "/: <factory>\\.factory\\checks219\\current-pair\\home-after.png\n"
+    }
+  ],
+  "before_sha256": "a1e4d8ac868e9b2718fadc09a927be6a88ee846cbf6fc278bced67c57a2793fd",
+  "after_sha256": "a8efccff26811adba52647f0a6805faf6471a7abb0a4045ddcfad77e740e118d",
+  "before_retained": true,
+  "live_project": false
+}
