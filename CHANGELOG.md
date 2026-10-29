@@ -6,6 +6,10 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 
 ## [Unreleased]
 
+### Added
+
+- Optional rendered acceptance calibration against synthetic complete and defective pages, including responsive coverage and persisted interaction. Existing Python evaluations and skills are unchanged (#211).
+
 ### Fixed
 
 - Run metrics: Fast runs start their timeline at the first applicable step, Safe runs record the factory revision and never share a metrics folder, and analytics hooks are plain calls instead of repeated guards (#175).

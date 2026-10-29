@@ -73,6 +73,37 @@ After a run the owner trusts, copy its `report.json` to a stable path, for examp
 
 Every check runs its fixed regression cases plus fresh random inputs drawn from `rubric_tools.RANDOM` (operating system randomness), so a candidate passes only by computing the right answers. Expected answers for random inputs come from the reference solution, run inside the check process from memory and never written to disk: `agree` runs the same operations on both and compares type-strictly, and `run_program` runs a reference program in process. Also in `evals.rubric_tools`: `call` with `op`, `request` or `tests` (a unittest source) runs operations against the candidate module in the harness, `expect` and `same` compare type-strictly, `run_python` runs a candidate program, `scratch` gives a temp folder. Keep checks to a few seconds, without network.
 
-## Real runs
+## Rendered acceptance pilot
+
+`visual/` is a separate optional calibration command. It uses synthetic pages,
+not agent calls, and leaves the Python rubric protocol unchanged. With Node,
+Playwright and a compatible Chromium already available:
+
+```text
+node evals/visual/run.cjs --out .factory/evals/visual --repeat 3
+```
+
+Use `--browser <executable>` when the installed browser is outside Playwright's
+default cache. Playwright must resolve from the local Node environment (or
+`NODE_PATH`). No installation or browser download occurs. Missing tooling fails.
+
+The command opens only its own loopback server and fresh browser contexts. It
+checks visible sections, responsive bounds/order, button effect and progress
+after reload at 1280x800 and 390x844. `visual/requirements.md` states the target;
+`expected.json` labels the seeded cases separately from the observer.
+
+`report.json` retains candidate/checker/label hashes, browser configuration,
+screenshots, observations and each candidate's `accepted` verdict. Its top-level
+`passed` means observed criteria matched the expected labels, so calibration can
+pass while defective candidates are correctly rejected. Exit 0 means calibration
+matched; setup/capture errors or mismatches return nonzero.
+
+This small development set does not establish aesthetic fidelity, independent
+judge reliability, production readiness or better model performance. Holdouts,
+host continuation and paired model trials remain separate experiments. Browser
+calibration is outside `python tests/run.py`; ordinary tests cover failure paths
+without a browser. Existing `python -m evals check` needs no browser dependency.
+
+## Paid agent runs
 
 Real runs call a paid model, take minutes per run and need the owner's approval of the cost. They never run in `python tests/run.py`; the tests drive the runner with a fake agent. Start with one sample and a short `--timeout`, read the logs, then run the set.

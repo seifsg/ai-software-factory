@@ -1,0 +1,11 @@
+{
+  "reference": [],
+  "alternative": [],
+  "missing-section": ["R1"],
+  "hidden-section": ["R1"],
+  "hidden-content": ["R1"],
+  "missing-content": ["R1"],
+  "mobile-overflow": ["R2"],
+  "lost-progress": ["R4"],
+  "dead-button": ["R3", "R4"]
+}
