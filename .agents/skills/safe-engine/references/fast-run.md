@@ -75,7 +75,7 @@ python fast_gate.py view --all-projects [--port 8765] [--snapshot <file>]
 
 ## Hooks
 
-**One full suite per effective version.** Declare argv/file/environment/clock before done plan via show --plan(UI) or prove --plan. After use/Build/UI Show, prove --suite queues and reuses intact matching proof. Old runs keep policy.
+**One full suite per effective version** when broad/shared risk or unknown impact requires it; otherwise one affected pass. Declare argv/file/environment/clock before done plan via show --plan(UI) or prove --plan. After use/Build/UI Show, prove --suite queues and reuses intact matching proof. Old runs keep policy.
 - Before build prerequisites pass, deny source edits, shell writes/redirections/tee and scaffold/install commands. Quoted/heredoc/here-string text is not executable; .factory stays writable except run.json.
 - Active-run destructive denial covers recursive deletes outside project except scratch, entire project, .factory/fast, protected run.json/.git paths; clean -x/-X, stash --all; force/mirror/prune/default-branch-deletion pushes; database DROP/TRUNCATE/wipes; writes to gate-home active/runs; production-env migrations. Owner chooses an authorized alternative. [Exact exceptions/limits](gate-details.md#destructive-guard).
 - Stop reminds once; repeated/paused/closed stops pass. Finite helpers use wait --add with a valid wakeup per owned run([waiting](waiting.md)); servers never qualify; helpers do not pause the gate.

@@ -55,7 +55,7 @@ Record plan before code.
 1. Use realistic raw fixtures: instruction decisions/artifacts, or actual changed commands/flows. Seek independent judgment where needed. No product pilot/simulation without owner request; isolate secrets and project resources.
 2. Exercise touched boundaries: real domain tooling; live/adoption dirty bundle, running/pending work, drift before/after QA, stop/cancel/lost context; reuse and rejection for changed/tampered/pending proof.
 3. Check skill self-containment, names/dates/host exclusions and budgets. Await producer exit0 before dependent consumers; a yielded session is pending. Sample data/mode/resources never share a live preview root.
-4. Then write/adjust affected tests, run them, commit source/docs/tests/packaging and do required source review (`how-to-make-a-pr`). Run `python tests/run.py` on that commit through selected Prove, else its recorded gate. Retain receipt/commit/inputs/command/log/result; edits need affected checks and fresh final proof.
+4. After use, adjust tests and commit. Run one affected pass through selected Prove; shared machinery, unknown impact or release risk needs full coverage. No blanket suite for prose/push. Review source before costly validation (`how-to-make-a-pr`); retain receipt/commit/inputs/log. Repeat only changed/failed affected checks.
 5. Each check proves itself: walkthrough is not code repair; suite is not walkthrough.
 
 ## 6. Independent review

@@ -3,12 +3,12 @@
 Look, Show, Prove, Ship. Existing pins keep their order.
 
 1. Before edits, capture affected existing views. Before `done plan`, freeze surfaces, variants, suite and wait with `show --plan <json>`; bind actual `before` rows. Design ports retain their frozen design references; PRs still need actual Before/After.
-2. **Look:** implement, use it, then affected tests/type checks and a quick render. Record build start and `done build`. No full suite, accessibility audit or deep review yet.
-3. **Show:** batch known repairs and freeze source. Preflight capture/playback/publication with one planned frame; reuse it. Inspect matched viewport/theme/state/data/framing pairs through real controls. Record `show --candidate`, then `show --prepare <json>`; share Before/After or Design/Current with plain descriptions.
+2. **Look:** implement, use it and quick-render. Test feedback is optional; planned validation follows Show once. Record build start and `done build`. No full suite, accessibility audit or deep review yet.
+3. **Show:** batch known repairs and freeze source. Preflight capture/playback/publication with one planned frame; reuse it. Inspect matched viewport/theme/state/data/framing pairs through real controls. Record `show --candidate`, then `show --prepare <json>`; share Before/After or Design/Current.
 4. Verify owner access and record `show --shared <json>`. Share within one hour of Look; record misses/causes. A local report is not delivery.
 5. Record the actual answer with `show --reply <json>`. Stop/change binds. “Leave that” needs exact item/answer and the existing Finishing touches URL; scope cuts need owner authority. Safety/required quality are not polish.
 6. No reply: after the wait (default30minutes from delivery), continue authorized Prove. Use an authorized wake-up/resume, never blocking sleep. Timeout grants no merge approval.
-7. **Prove:** manual use and UX/likeness review, then `prove --suite`. Reuse intact observations/uploads only with verified inputs, provenance and access. Default source drift, including docs/tests, needs fresh Show; optional scoped reuse below retains original observations. Changed images/report need sharing, not an unchanged suite rerun. Unknown impact, failure or stop never grants reuse.
+7. **Prove:** manual use and UX/likeness review, then `prove --suite` once for the planned scope. Reuse intact proof only with verified inputs/provenance/access. Source drift needs fresh Show unless scoped reuse below proves unchanged inputs. Changed images/report need sharing, not an unchanged suite rerun. Unknown impact, failure or stop never grants reuse.
 8. **Ship:** live `ticketing` refresh, criteria/proof, `how-to-make-a-pr`, draft, `done handoff`. Human ready/merge/release.
 
 ## Inputs
@@ -21,7 +21,7 @@ JSON stays project-local, normally ignored `.factory/`. Plan example:
 - New defaults: light/desktop; mobile selects light/phone. Extra themes/devices need a request or existing requirement. Unique theme/device pairs only; legacy plans without variants retain all four. Design ports use `comparison:design`; old plans without comparison retain Design/Current.
 - `before`: one actual image row per planned pair, including manual/native captures. Final Show retains its bytes/state. New UI uses the prior entry/empty state, labeled “did not exist”. Disclose missing early captures in legacy runs.
 - `viewports`: desktop `[1280,800]`, phone `[390,844]`; custom maps cover selected devices, phone narrower when both exist. Images match sizes, including crops.
-- `full_suite`: argv; optional `suite_inputs` names files/environment/clock; `timeout_seconds` defaults1800.
+- `full_suite`: planned affected/full argv (legacy name); `suite_inputs`: files/environment/clock; `timeout_seconds` defaults1800.
 - Prepare: `version:1`, current `candidate`, `screens` per planned pair: unique `id`, `surface`, `theme`, `device`, `viewport`, `state`, matching `reference_state`, PNG `reference`/`capture`, one-line `description`, `inspected:true`. Design ports include every original screen/reference. Pixel checks detect blank/corrupt content, not wrong screens.
 - Shared: `channel:chat|tool|url`, actual `source`, `sent:true`, `images_accessible:true`; URLs HTTPS. Reply: `action:proceed|change|stop`, `source`, exact `quote`; optional `leave:[{surface,description,followup}]`.
 

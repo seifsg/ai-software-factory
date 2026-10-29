@@ -64,7 +64,7 @@ Record every step in one work record and pass the gate: [fast-run](references/fa
 9. **Build:** each item through 0–4; spike unknown capabilities first, tick after use. UI: [Look, Show, Prove, Ship](references/show.md).
    - Mark each frozen todo's observed start/finish/fail/cancel/resume with `fast_gate.py metrics task --key <run> --task-id Tn --state <state> --project <abs>`. `try` alone never proves completion; missed boundaries stay unknown.
    - On each tick, write that todo's one log line, `T3 pre: … do: … post: …`, and in the same edit set `**Now:**` to the todos in progress.
-   - After actual item use, run only mapped affected tests for feedback during build and fixes. In the plan, declare the project's command and changed-input mapping; an unknown mapping needs a manual choice and reason. A command that runs the complete suite, including `tests/run.py --changed` when its mapping falls back to all, is never a narrow check. Final tests follow manual use; UI also completes Show first. A POC waits for `verify` or Safe.
+   - Use each item, then run affected tests once per coherent batch, not every todo. Freeze command/scope in the existing plan; full coverage needs broad risk or unknown impact. Never call a full fallback narrow. Reuse intact passes; repeat changed/failed checks only. UI completes Show first; a POC waits for `verify` or Safe.
 10. **Done-run:** prove each ticket's definition of done.
     - Start it once. Use every requested journey and the most likely failure through real controls (simulated input proves no requested integration). Read the logs; fix blockers.
     - Reuse early Before; capture final After/video once for Show and the PR (`how-to-make-a-pr`). Batch known repairs before final capture; a demo bug still needs checked recovery and fresh proof.
@@ -73,7 +73,7 @@ Record every step in one work record and pass the gate: [fast-run](references/fa
     - Run selected hidden checks; visual-only ports keep current likeness and the declared suite.
 11. **Handoff:** open the draft PR (`how-to-make-a-pr`); report how to run, dev sign-in, each requested item (delivered, open for a later iteration, blocked with reason, owner-deferred, or deferred to the owner or hardware), verified, unverified, the `**Deferred:**` list, the follow-ups ticket and each owned ticket's final status (Ready for QA with its PR, naming items deferred to the owner or hardware; Blocked; or Backlog when owner-deferred); `close`. Any requested item not delivered, owner-deferred or deferred to the owner or hardware: the overall outcome is unfinished. Deferred items never hold the run open.
 
-Hidden checks: follow [proof selection](references/hidden-checks.md). Record each ticket's route and reason during plan. Visual-only ports default to likeness plus the required suite; logic, data, safety and mixed tickets keep independent checks. Prepare syntax before build, actual runtime names and execution after manual use/Show. The builder never reads hidden checks. Safe retains its sealed-check controller.
+Hidden checks: follow [proof selection](references/hidden-checks.md). Record each ticket's route and reason during plan. Visual-only ports default to likeness plus the required suite; covered simple logic may reuse existing tests; data, safety, mixed and uncovered behavior keep independent checks. Prepare syntax before build, actual runtime names and execution after manual use/Show. The builder never reads hidden checks. Safe retains its sealed-check controller.
 
 The owner names `lucky`, `verify` or `promote`: [run cases](references/run-cases.md#lucky-verify-promote).
 
@@ -84,11 +84,11 @@ The owner names `lucky`, `verify` or `promote`: [run cases](references/run-cases
 
 ## Every mode
 
-- Tests follow actual use: affected feedback checks after each item use; final tests after all work and, for UI, Show. In Safe, `verify` or a Safe check, complete every requested journey, failure and recovery before final tests.
+- Tests follow actual use and a coherent batch; UI completes Show first. Run the planned affected/full command once; feedback reruns need changed inputs or a diagnosed failure. In Safe, `verify` or a Safe check, complete every requested journey, failure and recovery before final tests.
 - Repair findings: [worth-it rounds](references/worth-it.md).
 - Every UI change: `ux-quality`. New or changed persistence: `database-schema`. Material unknowns: `research-market`.
 - Every PR: all of `how-to-make-a-pr`, including its mandatory visual and journey demonstration, scoped owner waivers and capture recovery. Plan its inventory and capture Before before editing; reuse final QA for After. One branch and draft PR per variation; an epic's wave: one integration branch and one draft PR its runs update, never a PR per run.
-- Before a Fast or Lucky PR, offer once: "Run a Safe check first? (optional)". A Safe check is manual QA, relevant tests and one independent `deep-review`; media stay mandatory.
+- Run a Safe check only when requested: manual QA, relevant tests and independent review; media stays required.
 - Never claim tested, reviewed or production ready without that evidence.
 - Backlog: `ticketing` moves each ticket through its statuses, logs every ticket change in its activity and leaves untasked items alone. Deferred work appends to the epic's one open follow-ups ticket in Backlog, never one ticket per item.
 - Every ticket has a definition of done and a checklist (`ticketing`); a change of intent updates both before the code. A ticket is finished only when every item is ticked and every criterion proven; otherwise it loops or is Blocked. Done comes with the PR merge.

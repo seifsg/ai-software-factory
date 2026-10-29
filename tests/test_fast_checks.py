@@ -49,6 +49,16 @@ class OwnershipTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "owner request"):
             selected({**run, "checks": {}}, {**visual, "hidden": True}, mixed)
 
+    def test_covered_logic_skips_duplicate_hidden_checks_but_needs_current_proof(self):
+        row = {**ticket(CHILD, "T1"), "category": "logic", "hidden": False,
+               "reason": "A1 covered by existing signed-addition regression"}
+        run = selected({"kind": "change", "check_selection": True, "tickets": [CHILD]}, row)
+        self.assertEqual(checks.wanted(run), set())
+        self.assertIn("current passing", " ".join(checks.problems(run, ".", final=True)))
+        for category in ("data", "safety", "mixed"):
+            with self.subTest(category=category), self.assertRaisesRegex(ValueError, "keep hidden"):
+                selected({"tickets": [CHILD]}, {**row, "category": category})
+
     def test_public_derived_fields_cannot_waive_child_and_live_owner_drifts(self):
         run = {"kind": "feature", "check_selection": True, "tickets": [EPIC, CHILD], "todos": ["T1"]}
         rows = [{**ticket(EPIC, "T9"), "category": "logic", "reason": "Other integration run"},

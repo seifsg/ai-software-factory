@@ -9,6 +9,8 @@ For every release:
 
 ## Next release
 
+- New Fast plans may select affected validation in the existing full_suite field; covered logic can set hidden:false with existing-test coverage reasons. Old plans/pins retain their recorded duties. Test selection follows named dependencies and reports full fallbacks.
+
 - Scoped visual reuse is opt-in through new Show plans; existing pins/plans keep their behavior. Supply explicit dependency evidence/runtime inputs only when carrying an observation. Full-source final proof is unchanged.
 
 - After release/update, use early `shots --phase before`, final `--phase after` with the same output folder, and `before` image rows for new Show plans. Existing pins/plans stay intact; disclose reconstructed baselines.

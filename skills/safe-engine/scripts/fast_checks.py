@@ -50,8 +50,8 @@ def selection(data, run):
         require(category in ("visual-port", "logic", "data", "safety", "mixed"), "Unknown proof category")
         hidden = row.get("hidden", category != "visual-port")
         require(type(hidden) is bool, "hidden must be boolean")
-        require(hidden or category == "visual-port", "Logic, data, safety and mixed tickets keep hidden checks")
-        if not hidden:
+        require(hidden or category in ("visual-port", "logic"), "Data, safety and mixed tickets keep hidden checks")
+        if not hidden and category == "visual-port":
             require(run.get("design_port") and run.get("show_first"), "Visual-only proof needs design-port coverage and Show")
         if hidden and category == "visual-port":
             text(row.get("owner_request"), "owner request adding visual hidden checks")
@@ -188,11 +188,17 @@ def problems(run, project, final=False):
             for log in result["logs"]:
                 require(evidence.file_hash(evidence.local(project, log["path"])) == log["sha256"], "Check log changed")
             runtime(project, run, state["runtime"])
-        if any(not row["hidden"] for row in state["plan"]["tickets"].values()):
+        if any(not row["hidden"] and row["category"] == "visual-port" for row in state["plan"]["tickets"].values()):
             require(not evidence.problems(run, project, final=True), "Visual proof needs current complete independent likeness")
             import fast_show
             require(not fast_show.completion_problems(run, project), "Visual proof needs current Show")
             require(run.get("show", {}).get("proof", {}).get("passed") is True, "Visual proof needs the declared suite pass")
+        if any(not row["hidden"] and row["category"] == "logic" for row in state["plan"]["tickets"].values()):
+            import fast_show
+            holder = run.get("show" if fast_show.enabled(run) else "suite", {})
+            require(run.get("suite_policy") and holder.get("proof", {}).get("passed") is True
+                    and not fast_show.completion_problems(run, project),
+                    "Covered logic needs current passing planned validation")
         return []
     except (OSError, ValueError, KeyError, TypeError) as error:
         return [f"Checks: {error}"]

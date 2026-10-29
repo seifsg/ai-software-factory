@@ -6,6 +6,7 @@ processes. Timing-sensitive classes run one at a time in their own process besid
 a file no rule maps runs everything. Python 3.9+, standard library only.
 """
 import argparse
+import ast
 import os
 import re
 import shutil
@@ -61,13 +62,23 @@ def sources():
 
 def importers(names, texts):
     """`names` plus every test helper or module that imports one of them, transitively."""
-    found, grew = set(names), True
-    while grew:
-        grew = False
+    dependencies = {}
+    try:
         for stem, text in texts.items():
-            if stem not in found and any(re.search(rf"^(?:import|from) {n}\b", text, re.M) for n in found):
-                found.add(stem)
-                grew = True
+            refs = set()
+            for node in ast.walk(ast.parse(text)):
+                if isinstance(node, (ast.Import, ast.ImportFrom)):
+                    refs.update(alias.name.split(".")[-1] for alias in node.names)
+                    if isinstance(node, ast.ImportFrom):
+                        refs.add((node.module or "").split(".")[-1])
+                elif isinstance(node, ast.Constant) and isinstance(node.value, str):
+                    refs.update((node.value, "fast_" + node.value))  # Named dynamic loaders.
+            dependencies[stem] = refs
+    except SyntaxError:
+        return None  # An unknown graph needs full validation.
+    found = set(names)
+    while any(stem not in found and refs & found for stem, refs in dependencies.items()):
+        found.update(stem for stem, refs in dependencies.items() if refs & found)
     return found
 
 
@@ -84,19 +95,23 @@ def selected(base):
     for path in files:
         file = Path(path)
         if path.startswith("tests/"):
-            hits = {file.stem} if file.stem in texts else set()  # the runner itself, or an unknown helper: all
+            hits = importers({file.stem}, texts) if file.stem in texts else set()  # Changed helpers affect their callers.
         elif path.startswith((".agents/", "docs/", "skills/agents/")) or "/" not in path and path.endswith(".md"):
             hits = {stem for stem, text in texts.items() if SKILL_FILES.search(text)}
         elif path.startswith("safe_engine/"):
             hits = {stem for stem, text in texts.items() if "safe_engine" in text}
         else:  # modules naming this file or a sibling it may load (the gate loads its scripts by name)
-            names = {file.stem} | ({p.stem for p in (ROOT / file.parent).glob("*.py")} if "/" in path else set())
+            names = importers({file.stem}, {p.stem: p.read_text(encoding="utf-8")
+                                          for p in (ROOT / file.parent).glob("*.py")})
+            if names is None:
+                return None
             hits = {stem for stem, text in texts.items()
                     if any(re.search(rf"\b{re.escape(n)}\b", text) for n in names)}
-        if not hits:
+        if hits is None or not hits:
             return None  # nothing claims this file: run everything
         modules |= hits | (PACKAGED if file.parts[0] in SOURCE_TREES else set())
-    return {m for m in importers(modules, texts) if m.startswith("test_")}
+    affected = importers(modules, texts)
+    return None if affected is None else {m for m in affected if m.startswith("test_")}
 
 
 def main():
@@ -110,6 +125,7 @@ def main():
     if modules is not None and not modules:
         print("No test module covers the changed files.")
         return 0
+    print("Selection: full suite" if modules is None else f"Selection: {len(modules)} affected modules from {args.changed}")
     tests = list(flatten(unittest.defaultTestLoader.discover(str(TESTS), top_level_dir=str(TESTS))))
     broken = [t for t in tests if t.id().startswith("unittest.loader.")]  # modules that failed to import
     tests = [t for t in tests if t not in broken and (modules is None or t.id().split(".")[0] in modules)]

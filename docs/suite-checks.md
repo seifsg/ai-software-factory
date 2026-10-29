@@ -1,77 +1,25 @@
-# Complete suites
+# Planned validation and reuse
 
-New Fast runs declare a complete suite before `done plan`. UI runs include the
-declaration in `show --plan`; other runs use `prove --plan <project-local.json>`:
+Choose one affected validation command per coherent change. Full coverage is for shared boundaries, unknown impact or release/integration risk; a push or prose edit alone does not justify it. Report the actual scope, never call a partial pass a full-suite pass.
 
+New Fast plans freeze argv/inputs before done plan: UI uses show --plan; others prove --plan <project-local.json>. The legacy full_suite field names the selected command:
 ```json
-{"version":1,"full_suite":["python","tests/run.py"],"timeout_seconds":1800,
- "suite_inputs":{"files":[],"environment":[],
-   "clock":{"instant":"2026-01-01T00:00:00Z","timezoneId":"UTC"}}}
+{"version":1,"full_suite":["python","tests/run.py","--changed","<run-base>"],"timeout_seconds":1800,"suite_inputs":{"files":[],"environment":[],"clock":{"instant":"2026-01-01T00:00:00Z","timezoneId":"UTC"}}}
 ```
+Run prove --suite after real use/Build and UI Show. Old plans/pins keep their recorded requirements. Factory --changed follows named imports/loaders transitively; changed test helpers include consumers, unrelated sibling modules do not join merely by folder. Unknown/unmapped graphs fall back to all, explicitly reported. Use the actual run base; select named tests when finer coverage is established.
 
-List external input files and environment variable names explicitly. Empty arrays
-assert there are no additional inputs. Source, executable bytes, arguments,
-factory identity and relevant process paths are always included. Missing
-`suite_inputs`, an unresolved executable/input, or an unborn Git HEAD means
-unknown identity: the suite still queues and runs, but cannot reuse evidence.
-The clock fields identify inputs; use the [browser helper](journey-clock.md) to
-actually fix browser time.
+Receipts bind commit, source/factory files, argv, executable, declared files/environment and clock. Values are hashed. Intact same-input passes can be reused; no duplicate suite after an affected pass already satisfies the plan. Changed or unknown inputs, interrupted/timed-out/truncated/tampered proof cannot supply a pass. Failures remain failures. Each Fast execution has its own .factory/fast/prove/ log; the project .factory/suite-cache retains up to256 completed results.
 
-Use the completed change manually, finish Build and, for UI work, complete Show.
-Then run `prove --suite`. The current-policy hook directs raw invocations of the
-declared suite to this command. `prove --suite --fresh` explicitly reruns it for
-diagnosis; it still joins the queue.
+Cache hits return before queue admission; misses recheck after admission and executions recheck inputs afterward. One machine FIFO spans worktrees/gate homes, using ai-software-factory-suite-v1 under ProgramData on Windows or /tmp on POSIX. No per-run override; permissions stop admission, maximum256 requests. Cancellation removes only its request; crashed owned processes drain before replacement. Internal parallel tests stay within one admission. OS waiting promises no host-native wakeup.
 
-The project-local `.factory/suite-cache` retains up to 256 completed results.
-Fast executions keep separate logs under `.factory/fast/prove/`, so running B
-does not alter A's log and a later A can reuse its intact receipt.
-Reuse requires the same commit and effective inputs plus intact logs and output
-hashes. An intact hit returns before queue admission after another input check.
-Dirty source, changed arguments, environment, clock or declared files
-invalidate reuse. A completed failure stays a failure when reused. Interrupted,
-timed-out, truncated or tampered evidence cannot supply a passing result. Misses
-enter the queue and recheck inputs and the cache after admission; executed
-suites check inputs again afterward. Environment values are hashed, never stored
-as plaintext.
-Fast run-state writes reject stale whole-record updates. Suite and check
-completion update only their owned receipts on the current open run; concurrent
-observations and owner controls remain. A changed receipt or closed run refuses
-completion, while changed source or suite inputs leave proof failed.
+Completion updates only its own current receipt; preserve concurrent observations/owner controls. A conflicting receipt, closed run, changed source or changed inputs cannot complete as passed.
 
-New Safe states also reuse complete-profile `check` batches and queue misses;
-`check --fresh` explicitly reruns them. Per-command IDs, artifacts, manual QA,
-contract integrity and required checks still apply. Existing states retain their
-saved policy. A partial test never replaces complete version acceptance.
+Safe keeps required complete-profile check/manual QA/contract integrity and per-command artifacts. check --fresh explicitly reruns; existing states retain their policy. Partial feedback cannot replace complete acceptance.
 
-New complete-cycle Safe runs allow `feature-check --checks <ids> --file <json>`
-during Build after using the completed item. Select fewer than all configured
-checks and record the changed-file mapping. The receipt uses the existing manual
-observation shape, with these additional fields:
-
+New complete-cycle Safe runs may feature-check --checks <ids> --file <json> during Build after actual completed-item use. Select fewer than all checks with a changed-file mapping:
 ```json
-{"version":1,"item":"T1","completed":true,
- "mapping":"changed parser -> parser-check",
- "candidate":"<status.feature_candidate>",
- "observations":[{"criterion":"A1","device":"local CLI",
-   "action":"read a valid record","result":"the expected values appeared",
-   "status":"PASS","evidence":[".factory/evidence/item.txt"]}]}
+{"version":1,"item":"T1","completed":true,"mapping":"parser -> parser-check","candidate":"<status.feature_candidate>","observations":[{"criterion":"A1","device":"local CLI","action":"read valid record","result":"expected values","status":"PASS","evidence":[".factory/evidence/item.txt"]}]}
 ```
+Use actual observations/evidence. The gate validates current inputs, criterion identity and hashes, not authenticity. Carried final-QA receipts refuse; feedback remains Build, seals no contract and satisfies no final manual/full check. Fix failed feedback before finishing. Existing v2 states still prohibit early feature checks.
 
-Supply actual observations and existing evidence. The gate checks current inputs,
-criterion identity and evidence hashes; it cannot authenticate the observation.
-Carried final-QA receipts are refused here. Partial feedback stays in Build and
-does not supply final manual acceptance, seal a contract or satisfy full checks.
-Failed feedback must be repaired before finishing implementation. Existing v2
-states retain their prior prohibition on early feature checks.
-
-Complete suites needing execution share one FIFO queue per machine, across
-worktrees and gate homes. The queue uses `ProgramData` on Windows and `/tmp` on POSIX under
-`ai-software-factory-suite-v1`; it has no per-run override. Permission failures
-stop admission. At most 256 requests wait; cancellation removes only its own
-request. A crashed worker's owned processes must be drained before replacement
-admission. Internal test parallelism stays inside that one admission. Waiting
-uses an OS-backed process wait; it does not promise a host-native agent wakeup.
-
-Existing active bundles remain pinned. New Fast receipts adopt this behavior
-from their selected methods; new Safe `init` states record it explicitly. Never
-edit an active receipt to upgrade its policy.
+Active bundles never auto-upgrade; new Fast methods and Safe init states select their policy. Never edit a receipt to change it.

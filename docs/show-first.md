@@ -13,3 +13,5 @@ The evidence JSON declares complete:true and sources:["index.html"]. Establish c
 Reuse preserves original candidate/record time and compatible delivery/deadline/proceed response. Stop/change remains binding. Changed visual meaning needs the normal sharing process. Show, viewer and likeness share this identity; the final suite and hidden acceptance still bind the whole candidate. The gate validates declared bytes/identities, not dependency completeness or owner authenticity.
 
 Commands: `python skills/safe-engine/scripts/fast_gate.py show --plan .factory/show-plan.json` (also --candidate, --prepare, --shared, --reply). `python skills/safe-engine/scripts/fast_gate.py prove --suite` follows manual use and owner reply/deadline; timeout is not merge authority. Legacy plans without optional reuse remain conservative. No new stage, extra default form or mandatory helper.
+
+The legacy full_suite field holds the planned validation command, which may be affected tests. Record scope once; preserve exact proof identity. Full suites are justified by shared risk, unknown impact or release, not every edit/push.

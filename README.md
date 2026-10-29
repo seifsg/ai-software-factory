@@ -60,7 +60,7 @@ New runs use `fast_gate.py checks` to record reasoned hidden-check selection, ac
 
 Record refusals collect independent problems with repair examples; explicit verdict fields distinguish a failed check from explanatory wording. See [record diagnostics](docs/record-diagnostics.md).
 
-Check a local PR draft before publishing with `fast_gate.py report --pr-body <file> --project <abs>`; it uses handoff's proof structure checks without completing work. Required source review precedes the final full suite; the same reviewer checks author repairs and its final receipt. Combine related checks, retain unchanged observations and refresh affected proof. Store complete tool evidence locally and send only needed fields/diagnostics to model context; [details](docs/record-diagnostics.md).
+Check a local PR draft before publishing with `fast_gate.py report --pr-body <file> --project <abs>`; it uses handoff's proof structure checks without completing work. Required source review precedes planned validation; the same reviewer checks author repairs and its final receipt. Combine related checks, retain unchanged observations and refresh affected proof. Store complete tool evidence locally and send only needed fields/diagnostics to model context; [details](docs/record-diagnostics.md).
 
 Browser journeys use a fixed instant and timezone before navigation. Each declared source calls `fixedBrowserPage` or `fixedBrowserClock`; run `node skills/safe-engine/scripts/journey_clock_lint.mjs <manifest.json>`. See [fixed browser time and affected tests](docs/journey-clock.md).
 
@@ -73,10 +73,10 @@ safe-engine Build a habit tracker in /home/me/habits. Success means a signed-in 
 1. Researches three competitors and writes a feature matrix with opportunities.
 2. Asks you about size, features, approach and stack: one round for a POC, more for an MVP.
 3. Reads the backlog, then opens an epic and outcome sub-issues in To do, each with a definition of done.
-4. Analyzes requirements and consumers, then writes a plan whose todos become each ticket's checklist. Before each build wave, an independent checker writes the hidden checks for the criteria that wave builds.
+4. Analyzes requirements and consumers, then writes a plan whose todos become each ticket's checklist. Before a build wave, select uncovered or high-risk criteria for independent checks; reuse existing coverage for simple logic.
 5. Writes the design brief and the schema decision.
 6. Builds every checklist item through a check-change-check loop and ticks it once it works.
-7. Runs the app through every requested journey and its most likely failure; the hidden checks decide each criterion.
+7. Runs the app through every requested journey and its most likely failure; planned proof covers each criterion.
 8. Opens a draft PR with before and after for every outcome and what is unverified. Tickets wait in Ready for QA until you merge.
 
 While it works, the gate shows a card after every step and finished todo (illustrative):
@@ -111,7 +111,7 @@ flowchart LR
 - 📖 **Conditional detail.** The common product bar remains in every run. Logging/security implementation detail and visual PR capture instructions load when their named situation applies; the pointers in the owning methods keep those obligations visible. Preflight and delegate handbacks retain complete command, session and exit receipts.
 
 The gate loads optional command parsers only for the requested command; help and invalid input retain the complete CLI. State checks and pinned routing still run. Host test setup is documented in [hosts](docs/hosts.md#local-test-hosts).
-- 🧪 **Proof, not promises.** Every requested item traces to a criterion, a checklist item and proof. In product and feature runs, an independent checker writes a check for every criterion before the build, from the tickets and plan alone; the builder never sees them, and any FAIL sends the work back. Then a done-run with real controls and logs, and a PR showing before and after for every outcome, which the gate reads before the run can finish. MVPs and production slices also record a secret scan, a dependency audit and static analysis. Safe adds manual QA, tests and an independent reviewer.
+- 🧪 **Proof, not promises.** Every requested item traces to a criterion, a checklist item and proof. Existing tests may cover simple logic; uncovered or high-risk criteria get independent hidden checks from tickets/interfaces, unseen by the builder. Any failed required proof returns to repair. Then a done-run with real controls and logs, and a PR showing before and after for every outcome, which the gate reads before the run can finish. MVPs and production slices also record a secret scan, a dependency audit and static analysis. Safe adds manual QA, tests and an independent reviewer.
 - 🩹 **Root causes, not patches.** A bug or edge case is fixed where it starts: impossible by design, or rejected loudly where data enters. No silent defaults. A big or risky refactor waits for your yes.
 - 🎨 **A product bar.** Accessible, responsive UI, clear copy, public-page SEO and a designed schema. Every UI run checks ten UX rules before the gate lets it finish. Non-production builds show their environment and label sample data.
 - 🧑‍⚖️ **Humans stay in charge.** Draft PRs only. It never merges, releases or deploys.
@@ -216,7 +216,7 @@ After an update or a rollback, the next `start`, `status` or `version` shows one
 
 **Active runs stay pinned.** New automatic selections use the newest verified release (`main` on edge or before the first release). `resolve_bundle.py --project <dir> --new-run` refreshes only before a new run; ordinary resume stays offline. Explicit `--ref`/`--bundle` pins and older receipts with unknown pin intent stay fixed. `fast_gate.py start` prints selected/latest versions, reports failed release checks and executes the selected gate. Its project commands and hooks follow that run's saved identity, including session-bound or absolute-path work outside the project directory. Tool calls spanning different factory versions must be split. A Fast/Lucky run closed in the gate home permits the next selection even if its project mirror is missing or stale. A named Safe run with a confirmed cancellation or checked handoff releases selection for the next ticket. Receipt-less bare starts are legacy use, not a freshness guarantee. Pin changes need `improve-factory`; never edit an active receipt.
 
-Factory maintenance uses an immutable selected runner and a separate editable candidate. The candidate can start from an explicitly approved unmerged dependency; that does not release or adopt it. Complete and commit planned changes before final candidate-bound proof. Use Prove when the selected runner supports it; otherwise run the required full suite directly on the committed candidate under its recorded gate workflow, retaining runner, commit, inputs, command, log and result. See `improve-factory` for the maintenance flow.
+Factory maintenance uses an immutable selected runner and a separate editable candidate. The candidate can start from an explicitly approved unmerged dependency; that does not release or adopt it. Complete and commit planned changes before final candidate-bound proof. Use Prove when the selected runner supports it; otherwise run planned validation directly on the committed candidate under its recorded gate workflow, retaining runner, commit, inputs, command, log and result. See `improve-factory` for the maintenance flow.
 
 ## 🧹 Uninstall
 
@@ -291,7 +291,7 @@ Rules live in [AGENTS.md](AGENTS.md); changes go through `improve-factory`. Repo
 python tests/run.py
 ```
 
-- `python tests/run.py --changed` runs only the tests your diff touches; run the full suite before any push.
+- `python tests/run.py --changed <run-base>` selects named dependency coverage; full validation needs shared risk, unknown impact or release/integration scope, not every push.
 - Adding, moving or deleting a factory file: `python scripts/package_skill_entries.py`, then `--check` before pushing.
 - Every PR adds a line to [CHANGELOG](CHANGELOG.md), and updates this README and `docs/` when it changes a command, flag, host, install or update step, release step, skill or folder; `tests/test_docs_sync.py` fails until they match.
 - Releases are local, no CI: `python scripts/release.py cut X.Y.Z`, merge the release PR, `python scripts/release.py prove vX.Y.Z`, tag, then `python scripts/release.py publish vX.Y.Z`. Publish reuses intact matching suite proof or runs the complete suite ([releasing](docs/releasing.md)).
@@ -329,3 +329,5 @@ New non-UI Fast runs declare `prove --plan <plan.json>` before plan completion. 
 Capture web proof with `shots --phase before` before edits and `shots --phase after` during final QA, retaining the same output folder. New Before-comparison Show plans bind the `before` image records; existing plans stay readable. Work locally unless delegation justifies its cost. See [Show](docs/show-first.md).
 
 Optional visual_inputs carries proven unchanged Show observations, retaining owner response/deadline and original provenance; full-source acceptance stays strict. Explicit owned ports and compact records avoid prose repair loops. See [Show](docs/show-first.md).
+
+Validation uses one planned affected pass per coherent change; full coverage is reserved for shared boundaries, unknown impact and release/integration risk. `tests/run.py --changed <run-base>` follows named dependencies; a full fallback is explicit. Covered simple logic can skip duplicate hidden checks with current validation proof.
