@@ -1,0 +1,44 @@
+{
+  "commit": "b728f17ad1c324ee4f37d3d2e1cd7f5a4f933d86",
+  "candidate": "cf40183cf1d44423a9b8cf1f1831200b45112c6cb6a6da1ea53693b676f150f9",
+  "scope": "Current223 delta versusb509417; actual selector/coveredCLI and owning methods reviewed. No product or broad test execution.",
+  "open_findings": [],
+  "resolved_findings": [
+    "Unchanged helper consumers now included in production-leaf closure; helper-gap.json retained",
+    "Every-mode and Look test cadence aligned to coherent batch",
+    "Unmapped helper empty-scope gap: actual current selector now returns full fallback; truly empty diff remains empty",
+    "Named dotted loader literal normalized to leaf; actual importers includes consumer without unrelated sibling"
+  ],
+  "positive_evidence": {
+    "A1": "walkthrough.md",
+    "A2": "selection-actual.json, selection-baseline.json",
+    "A3": "covered-actual.json (actual passing CLI/currentreceipt/reuse plus missing/stale/failed/risk refusals)",
+    "A4": "Source reviewed: default hidden route, visual safeguards and current-candidate validation retained; no new command/schema/stage"
+  },
+  "limits": [
+    "Final complete regression and actualdraft/A5 pending",
+    "Named AST graph is conservative where detected; no claim of arbitrary dependency inference",
+    "First actualCLI harness allowed untracked bytecode; source drift correctly refused. Later unstable factory/environment attempts retained as harness conditions, not product pass.",
+    "Covered CLI raw proof observed on506464e before selector-only02772c7; exact fast_checks/validation code unchanged in that delta, not claimed as a fresh CLI replay.",
+    "b728 selector-only delta reviewed with actual dotted-name importer call; covered proof boundary code unchanged, no coveredCLI replay."
+  ],
+  "source_hashes_utf8_lf": {
+    ".agents/skills/how-to-make-a-pr/SKILL.md": "54f07fa482f077baafc5d9e2f141c12c1d9efceb456ca044ebbfe413779c3689",
+    ".agents/skills/improve-factory/SKILL.md": "de71c339025da64993084dca83d4d5a3cbe9fe9ceb99356ab6bfd9966590e6bf",
+    ".agents/skills/safe-engine/SKILL.md": "63ab77e96d71eabdb1cbbf8b30b53fa725ea6fd6e2f05a6f745275b7102a77ea",
+    ".agents/skills/safe-engine/references/fast-run.md": "c7936a8eace1ec833a9b16ba637dad5b33d0abdd2652759db73952bfadbfc984",
+    ".agents/skills/safe-engine/references/hidden-checks.md": "fb3638f34313080d632a4307b986bc192ac27caaadb4b0b9c118cb2cb59a4843",
+    ".agents/skills/safe-engine/references/show.md": "5e03ff728e2af4f51f2fb8b7dc749f41f49000d70ce1989241c5fb95c34b93f4",
+    "AGENTS.md": "636a4ad60c881b6d1a17c434bb757082692d9d8a755038eda13f18ed324394e4",
+    "CHANGELOG.md": "d2a8e781caaa9f63a8bf2b26218110beb081e8056f1eb9e289331411c2372f32",
+    "README.md": "5ef1da778dc81ffebb904a1ced60adf2be253905ce926d544f470ebd59ecc468",
+    "UPGRADING.md": "14cf6ab14af85da019e57e954d526d3664b86c3f20c4cbb7c7f38690f39ca403",
+    "docs/show-first.md": "62b8b5f831f25b2375fcd8d6059ccec45200140afcf5ca6a0c3037538dd72f94",
+    "docs/suite-checks.md": "6d059b2cdba85c1d51c905db9a537892341b563e61673e6cc70a295ef07815a7",
+    "skills/safe-engine/scripts/fast_checks.py": "c28829980ed8fe0fd262d6c815c4772a6e9b54cdd0d92953ac2644dbbd749e0e",
+    "tests/run.py": "4e0718ace4866c72c66dfc3b6831c9c814c20349111173481e4bd63f5df20343",
+    "tests/test_fast_checks.py": "e22bbbd4019414e015cf5192c3024ceeb159cd2f5ac458d283e6a28e8a618af0",
+    "tests/test_test_selection.py": "eaad19e791e9438e1bcbf74be2c9b6d90134ea1fb8482b3091971c3752f18f82"
+  },
+  "state": "Source review PASS; final full regression/draft pending"
+}

@@ -1,0 +1,14 @@
+{
+  "baseline_factory": "b509417b8a126f849f8561999547930eb3e197ea",
+  "fixture_base": "6b0e1411412775ddc662b7c9a45204b6c4119604",
+  "changed": "skills/safe-engine/scripts/fast_leaf.py",
+  "baseline_selected": [
+    "test_bundle_inputs",
+    "test_consumer",
+    "test_leaf",
+    "test_skill_distribution",
+    "test_unrelated"
+  ],
+  "scope": "Actual committed selector called on a disposable actual Git diff; no tests executed",
+  "project": "G:\\.codex\\worktrees\\answer-first-215\\ai-software-factory\\.factory\\checks223\\selection-fixture"
+}

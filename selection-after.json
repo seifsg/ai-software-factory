@@ -1,0 +1,25 @@
+{
+  "selector_source_sha256": "28a509a95626d6a93980e1d2de28951f11885b164f35918b7b617f8eedccfd82",
+  "baseline_selected": [
+    "test_bundle_inputs",
+    "test_consumer",
+    "test_leaf",
+    "test_skill_distribution",
+    "test_unrelated"
+  ],
+  "current_selected": [
+    "test_bundle_inputs",
+    "test_consumer",
+    "test_leaf",
+    "test_skill_distribution"
+  ],
+  "current_helper_consumers": [
+    "test_bundle_inputs",
+    "test_direct",
+    "test_skill_distribution",
+    "test_via_helper"
+  ],
+  "unknown_untracked_full_fallback": true,
+  "unknown_graph_full_fallback": true,
+  "scope": "Actual selectors on disposable Git diffs; no project test execution; fixed helper gap retained separately"
+}

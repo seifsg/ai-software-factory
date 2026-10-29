@@ -1,0 +1,14 @@
+{
+  "base": "b509417",
+  "commit": "b728f17ad1c324ee4f37d3d2e1cd7f5a4f933d86",
+  "delta": {
+    "repository": {
+      "bytes": 3280,
+      "lines": 22
+    },
+    "skills": {
+      "bytes": -1161,
+      "lines": -2
+    }
+  }
+}

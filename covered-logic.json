@@ -1,0 +1,47 @@
+{
+  "scope": "Actual candidate copied-entry CLI on isolated committed project; fixture phase state initialized, never a mocked passing receipt",
+  "missing_proof": [
+    "Checks: Covered logic needs current passing planned validation"
+  ],
+  "positive_output": "signed addition PASS\n\n",
+  "positive_receipt": {
+    "argv": [
+      "C:\\Users\\seifs\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+      "-c",
+      "from app import add; assert add(-2,2)==0; print(\"signed addition PASS\")"
+    ],
+    "started_at": "2026-10-29T20:18:45.350708+00:00",
+    "duration_seconds": 0.187,
+    "exit_code": 0,
+    "timed_out": false,
+    "passed": true,
+    "log": "C:\\Users\\seifs\\AppData\\Local\\Temp\\tmpeqpx3owh\\project\\.factory\\fast\\prove\\860aeaa8210941a69565f01beaee9a62.log",
+    "log_truncated": false,
+    "log_sha256": "025d75e1c6691f2c96fbd4b4c8bcf608f8cc796ae6b98fe8df7201e6c6e9c102",
+    "reused": false,
+    "suite_execution": "860aeaa8210941a69565f01beaee9a62",
+    "suite_identity": {
+      "commit": "f0d43019d315d6183892a9584f4266dc648afb0f",
+      "fingerprint": "7ac18cdb0cc936b77e2c25b85e9aec235ef84b6659c03a70002ed51eb392ba39"
+    },
+    "candidate": "eba727b49d14974eb7e2e720ee2cdad2950a25ae04475a9b41828e17d4fb6d22"
+  },
+  "matching_reused": true,
+  "reuse_output": "Reused unchanged full-suite result: f0d43019d315d6183892a9584f4266dc648afb0f\nsigned addition PASS\n\n",
+  "stale_refused": [
+    "Checks: Covered logic needs current passing planned validation"
+  ],
+  "failed_output": "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n    from app import add; assert add(-2,2)==0; print(\"signed addition PASS\")\n                                ^^^^^^^^^^^^\nAssertionError\n\nShow: Suite failed, timed out or source changed; inspect the log\n",
+  "failed_refused": [
+    "Checks: Covered logic needs current passing planned validation"
+  ],
+  "risk_refusals": {
+    "data": "Data, safety and mixed tickets keep hidden checks",
+    "safety": "Data, safety and mixed tickets keep hidden checks",
+    "mixed": "Data, safety and mixed tickets keep hidden checks"
+  },
+  "missing_reason": "selection reason: needs text",
+  "first_harness_attempt": "Initial fixture allowed Python bytecode as untracked source; command printed signed addition PASS but gate refused source drift. Corrected explicit PYTHONDONTWRITEBYTECODE input; not a product pass or fresh replacement of initial failure.",
+  "retained_log": ".factory/checks223/covered-positive.log",
+  "retained_log_provenance": "Exact original bytes recovered from actual CLI output with newline normalization, verified against original receipt SHA256; no command replay."
+}

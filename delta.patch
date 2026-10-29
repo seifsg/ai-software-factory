@@ -1,0 +1,513 @@
+diff --git a/.agents/skills/how-to-make-a-pr/SKILL.md b/.agents/skills/how-to-make-a-pr/SKILL.md
+index 6920e40..0d71fd9 100644
+--- a/.agents/skills/how-to-make-a-pr/SKILL.md
++++ b/.agents/skills/how-to-make-a-pr/SKILL.md
+@@ -49,7 +49,7 @@ Every outcome needs observed Before/After. API: matched status/body; CLI/gate: c
+ 
+ ## 6. Review and handoff
+ 
+-- Required independent review: frozen source/manual/affected checks first; resolve source findings before the complete suite. Source-only review advances no controller phase. Same reviewer checks author deltas and carried findings/observations; changed inputs need fresh affected proof. After the suite, inspect exact-candidate receipt/log before verdict. Reviewer-written repairs require a fresh independent assessment.
++- Required independent review: frozen source/manual/affected checks first; resolve source findings before planned validation. Source-only review advances no controller phase. Same reviewer checks author deltas and carried findings/observations; changed inputs need fresh affected proof. After the suite, inspect exact-candidate receipt/log before verdict. Reviewer-written repairs require a fresh independent assessment.
+ - Own draft: `deep-review` in Safe; Fast/Lucky's optional Safe check covers it. Skip an already independently reviewed exact head. Own-branch fixes/comments are authorized; post open questions in the PR instead of stopping. Another author's PR keeps every checkpoint. Remote/cloud review: [cases](references/pr-cases.md).
+-- Fast/Lucky opens one draft per run, or updates its wave draft with outcomes, criteria, remaining work and refreshed summary. Offer once per PR: **"Run a Safe check first? (optional)"** (manual QA, relevant tests, one independent review). Yes: complete it; no/no answer: continue drafting. Variations get separate branches/drafts.
++- Fast/Lucky opens one draft per run, or updates its wave draft with outcomes, criteria, remaining work and refreshed summary. Safe checks run only on request; reuse completed current QA/tests/review. Variations get separate branches/drafts.
+ - Name missing baseline/tests/review and link the epic. Draft/review grants no merge/release. After merge, new work branches from current base. No force push, rewrite or unrequested notification.
+diff --git a/.agents/skills/improve-factory/SKILL.md b/.agents/skills/improve-factory/SKILL.md
+index 07040fa..7cae6ea 100644
+--- a/.agents/skills/improve-factory/SKILL.md
++++ b/.agents/skills/improve-factory/SKILL.md
+@@ -55,7 +55,7 @@ Record plan before code.
+ 1. Use realistic raw fixtures: instruction decisions/artifacts, or actual changed commands/flows. Seek independent judgment where needed. No product pilot/simulation without owner request; isolate secrets and project resources.
+ 2. Exercise touched boundaries: real domain tooling; live/adoption dirty bundle, running/pending work, drift before/after QA, stop/cancel/lost context; reuse and rejection for changed/tampered/pending proof.
+ 3. Check skill self-containment, names/dates/host exclusions and budgets. Await producer exit0 before dependent consumers; a yielded session is pending. Sample data/mode/resources never share a live preview root.
+-4. Then write/adjust affected tests, run them, commit source/docs/tests/packaging and do required source review (`how-to-make-a-pr`). Run `python tests/run.py` on that commit through selected Prove, else its recorded gate. Retain receipt/commit/inputs/command/log/result; edits need affected checks and fresh final proof.
++4. After use, adjust tests and commit. Run one affected pass through selected Prove; shared machinery, unknown impact or release risk needs full coverage. No blanket suite for prose/push. Review source before costly validation (`how-to-make-a-pr`); retain receipt/commit/inputs/log. Repeat only changed/failed affected checks.
+ 5. Each check proves itself: walkthrough is not code repair; suite is not walkthrough.
+ 
+ ## 6. Independent review
+diff --git a/.agents/skills/safe-engine/SKILL.md b/.agents/skills/safe-engine/SKILL.md
+index 3f4553f..1b7b8c3 100644
+--- a/.agents/skills/safe-engine/SKILL.md
++++ b/.agents/skills/safe-engine/SKILL.md
+@@ -64,7 +64,7 @@ Record every step in one work record and pass the gate: [fast-run](references/fa
+ 9. **Build:** each item through 0–4; spike unknown capabilities first, tick after use. UI: [Look, Show, Prove, Ship](references/show.md).
+    - Mark each frozen todo's observed start/finish/fail/cancel/resume with `fast_gate.py metrics task --key <run> --task-id Tn --state <state> --project <abs>`. `try` alone never proves completion; missed boundaries stay unknown.
+    - On each tick, write that todo's one log line, `T3 pre: … do: … post: …`, and in the same edit set `**Now:**` to the todos in progress.
+-   - After actual item use, run only mapped affected tests for feedback during build and fixes. In the plan, declare the project's command and changed-input mapping; an unknown mapping needs a manual choice and reason. A command that runs the complete suite, including `tests/run.py --changed` when its mapping falls back to all, is never a narrow check. Final tests follow manual use; UI also completes Show first. A POC waits for `verify` or Safe.
++   - Use each item, then run affected tests once per coherent batch, not every todo. Freeze command/scope in the existing plan; full coverage needs broad risk or unknown impact. Never call a full fallback narrow. Reuse intact passes; repeat changed/failed checks only. UI completes Show first; a POC waits for `verify` or Safe.
+ 10. **Done-run:** prove each ticket's definition of done.
+     - Start it once. Use every requested journey and the most likely failure through real controls (simulated input proves no requested integration). Read the logs; fix blockers.
+     - Reuse early Before; capture final After/video once for Show and the PR (`how-to-make-a-pr`). Batch known repairs before final capture; a demo bug still needs checked recovery and fresh proof.
+@@ -73,7 +73,7 @@ Record every step in one work record and pass the gate: [fast-run](references/fa
+     - Run selected hidden checks; visual-only ports keep current likeness and the declared suite.
+ 11. **Handoff:** open the draft PR (`how-to-make-a-pr`); report how to run, dev sign-in, each requested item (delivered, open for a later iteration, blocked with reason, owner-deferred, or deferred to the owner or hardware), verified, unverified, the `**Deferred:**` list, the follow-ups ticket and each owned ticket's final status (Ready for QA with its PR, naming items deferred to the owner or hardware; Blocked; or Backlog when owner-deferred); `close`. Any requested item not delivered, owner-deferred or deferred to the owner or hardware: the overall outcome is unfinished. Deferred items never hold the run open.
+ 
+-Hidden checks: follow [proof selection](references/hidden-checks.md). Record each ticket's route and reason during plan. Visual-only ports default to likeness plus the required suite; logic, data, safety and mixed tickets keep independent checks. Prepare syntax before build, actual runtime names and execution after manual use/Show. The builder never reads hidden checks. Safe retains its sealed-check controller.
++Hidden checks: follow [proof selection](references/hidden-checks.md). Record each ticket's route and reason during plan. Visual-only ports default to likeness plus the required suite; covered simple logic may reuse existing tests; data, safety, mixed and uncovered behavior keep independent checks. Prepare syntax before build, actual runtime names and execution after manual use/Show. The builder never reads hidden checks. Safe retains its sealed-check controller.
+ 
+ The owner names `lucky`, `verify` or `promote`: [run cases](references/run-cases.md#lucky-verify-promote).
+ 
+@@ -84,11 +84,11 @@ The owner names `lucky`, `verify` or `promote`: [run cases](references/run-cases
+ 
+ ## Every mode
+ 
+-- Tests follow actual use: affected feedback checks after each item use; final tests after all work and, for UI, Show. In Safe, `verify` or a Safe check, complete every requested journey, failure and recovery before final tests.
++- Tests follow actual use and a coherent batch; UI completes Show first. Run the planned affected/full command once; feedback reruns need changed inputs or a diagnosed failure. In Safe, `verify` or a Safe check, complete every requested journey, failure and recovery before final tests.
+ - Repair findings: [worth-it rounds](references/worth-it.md).
+ - Every UI change: `ux-quality`. New or changed persistence: `database-schema`. Material unknowns: `research-market`.
+ - Every PR: all of `how-to-make-a-pr`, including its mandatory visual and journey demonstration, scoped owner waivers and capture recovery. Plan its inventory and capture Before before editing; reuse final QA for After. One branch and draft PR per variation; an epic's wave: one integration branch and one draft PR its runs update, never a PR per run.
+-- Before a Fast or Lucky PR, offer once: "Run a Safe check first? (optional)". A Safe check is manual QA, relevant tests and one independent `deep-review`; media stay mandatory.
++- Run a Safe check only when requested: manual QA, relevant tests and independent review; media stays required.
+ - Never claim tested, reviewed or production ready without that evidence.
+ - Backlog: `ticketing` moves each ticket through its statuses, logs every ticket change in its activity and leaves untasked items alone. Deferred work appends to the epic's one open follow-ups ticket in Backlog, never one ticket per item.
+ - Every ticket has a definition of done and a checklist (`ticketing`); a change of intent updates both before the code. A ticket is finished only when every item is ticked and every criterion proven; otherwise it loops or is Blocked. Done comes with the PR merge.
+diff --git a/.agents/skills/safe-engine/references/fast-run.md b/.agents/skills/safe-engine/references/fast-run.md
+index b894b4c..42bdc93 100644
+--- a/.agents/skills/safe-engine/references/fast-run.md
++++ b/.agents/skills/safe-engine/references/fast-run.md
+@@ -75,7 +75,7 @@ python fast_gate.py view --all-projects [--port 8765] [--snapshot <file>]
+ 
+ ## Hooks
+ 
+-**One full suite per effective version.** Declare argv/file/environment/clock before done plan via show --plan(UI) or prove --plan. After use/Build/UI Show, prove --suite queues and reuses intact matching proof. Old runs keep policy.
++**One full suite per effective version** when broad/shared risk or unknown impact requires it; otherwise one affected pass. Declare argv/file/environment/clock before done plan via show --plan(UI) or prove --plan. After use/Build/UI Show, prove --suite queues and reuses intact matching proof. Old runs keep policy.
+ - Before build prerequisites pass, deny source edits, shell writes/redirections/tee and scaffold/install commands. Quoted/heredoc/here-string text is not executable; .factory stays writable except run.json.
+ - Active-run destructive denial covers recursive deletes outside project except scratch, entire project, .factory/fast, protected run.json/.git paths; clean -x/-X, stash --all; force/mirror/prune/default-branch-deletion pushes; database DROP/TRUNCATE/wipes; writes to gate-home active/runs; production-env migrations. Owner chooses an authorized alternative. [Exact exceptions/limits](gate-details.md#destructive-guard).
+ - Stop reminds once; repeated/paused/closed stops pass. Finite helpers use wait --add with a valid wakeup per owned run([waiting](waiting.md)); servers never qualify; helpers do not pause the gate.
+diff --git a/.agents/skills/safe-engine/references/hidden-checks.md b/.agents/skills/safe-engine/references/hidden-checks.md
+index 51773e2..988d9c7 100644
+--- a/.agents/skills/safe-engine/references/hidden-checks.md
++++ b/.agents/skills/safe-engine/references/hidden-checks.md
+@@ -1,15 +1,13 @@
+-# Hidden checks: select, author, execute
++# Select independent proof
+ 
+-Read for a new run's proof plan or independent checker handoff. Old runs keep their recorded contract; the sealed controller keeps its configured checks.
++Old runs retain their contract; Safe retains its sealed controller. Reuse existing criterion coverage instead of creating duplicate tests.
+ 
+-1. Before plan, record `checks --plan <json>`: every listed ticket's full pasted body, category and reason. Other trackers retain the existing offline/unverified path. At done plan, freeze which epic integration criteria this run owes from its todos; the owning run keeps the later proof. Pure appearance/layout ports default to no hidden checks; retain frozen coverage, fresh independent likeness and the declared suite. Logic, data, safety and mixed tickets require hidden checks. Adding them to a visual-only port needs the owner's request/source. Priority never waives proof.
+-2. Use an independent checker before its build wave; a human or separate context suffices. Give it the pasted issue text, Interface, Ports and applicable UX rules. It reads named committed interface files, never implementation. It writes one executable or specific manual procedure per selected criterion; the builder never opens those files. No guessed names. New runtime names unavailable before build stay explicitly pending.
+-3. The checker calls `checks --prepare <json>` after every edit. The gate parses declared source files; only a syntax-ready set releases authoring readiness. This is not a product pass and does not require a finished build. Unsupported syntax needs the project's real tool and a written manual check, never an invented parser success.
+-4. Finish implementation and manual use; UI also completes Show. Capture actual runtime accessible names, with candidate, viewport/state and source, then record `checks --runtime <json>`. Give that snapshot to the checker and finalize its selectors. Non-UI checks record why names do not apply. A path alone proves neither capture nor actual names; inspect the raw snapshot.
+-5. The independent checker runs `checks --run` on the build. It re-parses before execution. Manual procedures use `checks --observe <json>` with actual observation, observer/source and candidate. An owner/hardware-only check records the existing DEFERRED reason; everything else gets checked. Retain syntax, setup, execution and interruption failures. A nonzero result is failed/unclassified until inspected, never automatically a product defect or harness mistake.
+-6. The checker returns one `#<n> <ID>: PASS|FAIL|DEFERRED (owner|hardware: reason)` entry per selected criterion, or `<ticket URL>#<ID>: ...` when the tracker lacks an issue number or numbers collide. Notes follow only afterward in parentheses. Only a checker that has not seen implementation may repair a demonstrably wrong check, recording why. Any change invalidates its proof. The coordinator copies verdicts unchanged under `**Hidden checks:**`; any FAIL returns to build.
+-7. Completion checks current source, files, argv, declared environment, executable and logs. It still needs explicit criterion verdicts. Syntax-only, unrun, changed or failed sets cannot pass. Visual-only work cannot omit both hidden checks and likeness/suite proof. Refresh the ticket contract; changed requirements need a newly confirmed plan, not an edited receipt.
++1. Before plan, checks --plan records listed ticket bodies/category/reason. Freeze this run's owed epic criteria from its todos; later integration proof stays with its owning run. Covered simple logic may use hidden:false with a reason naming existing tests; completion requires current passing planned validation. Data/safety/mixed or uncovered behavior retains hidden checks. Visual-only ports retain frozen coverage, independent likeness and planned validation; adding hidden checks needs owner request/source. Priority waives nothing.
++2. For selected hidden checks, an independent human/separate context gets ticket, Interface/Ports and UX rules. Read named committed interfaces, never implementation; write one executable or specific manual procedure per criterion. Builder never reads assertions. Missing runtime names remain pending, never guessed.
++3. checks --prepare validates syntax before authoring readiness; repeat only after editing checks. Syntax is not a product pass. Unsupported syntax needs the real tool plus a written manual check.
++4. After implementation/manual use and UI Show, checks --runtime binds actual accessible names, candidate, viewport/state and source. Inspect raw capture, finalize selectors; non-UI says why names do not apply.
++5. Run checks --run once on the build; manual checks use checks --observe with actual observation/source/candidate. Only owner/hardware-only work may use the existing DEFERRED reason. Retain syntax/setup/execution/interruption failures; nonzero needs diagnosis, not automatic blame.
++6. Return each selected criterion as #2 A1: PASS|FAIL|DEFERRED (owner|hardware: reason), or <ticket URL>#A1 for other trackers/collisions; notes follow in parentheses. Coordinator copies unchanged under **Hidden checks:**. FAIL returns to build. Only an implementation-blind checker may repair a demonstrably wrong check with a reason; changes invalidate proof.
++7. Completion binds current source/files/argv/environment/executable/logs and explicit verdicts; syntax-only, unrun, changed or failed proof cannot pass. Refresh ticket requirements; drift needs a confirmed plan, never edited receipts. Other trackers retain offline/unverified behavior.
+ 
+-Artifacts stay ignored. Do not put private issue bodies, snapshots or environment values in commits. Record only hashed environment inputs. The gate observes commands and identities; it does not authenticate humans, prove checker independence or sandbox arbitrary commands. The coordinator verifies those boundaries.
+-
+-Browser checks: use [the runtime helper](playwright.md) for duplicated controls, focus-only links, alpha backgrounds and masks. These are observations for explicit assertions, not automatic visual signoff.
++Keep artifacts ignored, private bodies/snapshots/environment values out of Git; hash values. The gate cannot authenticate observers/owner authority, prove independence or sandbox commands. Coordinator verifies those boundaries. Browser edge cases use [runtime helper](playwright.md), not automatic visual signoff.
+diff --git a/.agents/skills/safe-engine/references/show.md b/.agents/skills/safe-engine/references/show.md
+index 73ac986..65574e9 100644
+--- a/.agents/skills/safe-engine/references/show.md
++++ b/.agents/skills/safe-engine/references/show.md
+@@ -3,12 +3,12 @@
+ Look, Show, Prove, Ship. Existing pins keep their order.
+ 
+ 1. Before edits, capture affected existing views. Before `done plan`, freeze surfaces, variants, suite and wait with `show --plan <json>`; bind actual `before` rows. Design ports retain their frozen design references; PRs still need actual Before/After.
+-2. **Look:** implement, use it, then affected tests/type checks and a quick render. Record build start and `done build`. No full suite, accessibility audit or deep review yet.
+-3. **Show:** batch known repairs and freeze source. Preflight capture/playback/publication with one planned frame; reuse it. Inspect matched viewport/theme/state/data/framing pairs through real controls. Record `show --candidate`, then `show --prepare <json>`; share Before/After or Design/Current with plain descriptions.
++2. **Look:** implement, use it and quick-render. Test feedback is optional; planned validation follows Show once. Record build start and `done build`. No full suite, accessibility audit or deep review yet.
++3. **Show:** batch known repairs and freeze source. Preflight capture/playback/publication with one planned frame; reuse it. Inspect matched viewport/theme/state/data/framing pairs through real controls. Record `show --candidate`, then `show --prepare <json>`; share Before/After or Design/Current.
+ 4. Verify owner access and record `show --shared <json>`. Share within one hour of Look; record misses/causes. A local report is not delivery.
+ 5. Record the actual answer with `show --reply <json>`. Stop/change binds. “Leave that” needs exact item/answer and the existing Finishing touches URL; scope cuts need owner authority. Safety/required quality are not polish.
+ 6. No reply: after the wait (default30minutes from delivery), continue authorized Prove. Use an authorized wake-up/resume, never blocking sleep. Timeout grants no merge approval.
+-7. **Prove:** manual use and UX/likeness review, then `prove --suite`. Reuse intact observations/uploads only with verified inputs, provenance and access. Default source drift, including docs/tests, needs fresh Show; optional scoped reuse below retains original observations. Changed images/report need sharing, not an unchanged suite rerun. Unknown impact, failure or stop never grants reuse.
++7. **Prove:** manual use and UX/likeness review, then `prove --suite` once for the planned scope. Reuse intact proof only with verified inputs/provenance/access. Source drift needs fresh Show unless scoped reuse below proves unchanged inputs. Changed images/report need sharing, not an unchanged suite rerun. Unknown impact, failure or stop never grants reuse.
+ 8. **Ship:** live `ticketing` refresh, criteria/proof, `how-to-make-a-pr`, draft, `done handoff`. Human ready/merge/release.
+ 
+ ## Inputs
+@@ -21,7 +21,7 @@ JSON stays project-local, normally ignored `.factory/`. Plan example:
+ - New defaults: light/desktop; mobile selects light/phone. Extra themes/devices need a request or existing requirement. Unique theme/device pairs only; legacy plans without variants retain all four. Design ports use `comparison:design`; old plans without comparison retain Design/Current.
+ - `before`: one actual image row per planned pair, including manual/native captures. Final Show retains its bytes/state. New UI uses the prior entry/empty state, labeled “did not exist”. Disclose missing early captures in legacy runs.
+ - `viewports`: desktop `[1280,800]`, phone `[390,844]`; custom maps cover selected devices, phone narrower when both exist. Images match sizes, including crops.
+-- `full_suite`: argv; optional `suite_inputs` names files/environment/clock; `timeout_seconds` defaults1800.
++- `full_suite`: planned affected/full argv (legacy name); `suite_inputs`: files/environment/clock; `timeout_seconds` defaults1800.
+ - Prepare: `version:1`, current `candidate`, `screens` per planned pair: unique `id`, `surface`, `theme`, `device`, `viewport`, `state`, matching `reference_state`, PNG `reference`/`capture`, one-line `description`, `inspected:true`. Design ports include every original screen/reference. Pixel checks detect blank/corrupt content, not wrong screens.
+ - Shared: `channel:chat|tool|url`, actual `source`, `sent:true`, `images_accessible:true`; URLs HTTPS. Reply: `action:proceed|change|stop`, `source`, exact `quote`; optional `leave:[{surface,description,followup}]`.
+ 
+diff --git a/AGENTS.md b/AGENTS.md
+index 344e00f..ddd8e9a 100644
+--- a/AGENTS.md
++++ b/AGENTS.md
+@@ -24,7 +24,7 @@ The `## Work rules` section of `.agents/skills/safe-engine/SKILL.md` applies to
+ - Moving, adding or deleting a factory file: update `safe_engine/bundle-inputs.json`, `safe_engine/distribution.py`, then `python scripts/package_skill_entries.py` (it regenerates both launcher resolvers; `--check` before pushing).
+ - Changing a command, flag, host, install or update step, release step, skill or top-level folder: update `README.md` and `docs/` in the same PR. `tests/test_docs_sync.py` fails on anything undocumented; keep what it cannot read (behavior, defaults, paths) true by hand.
+ - Manual use first, tests last. For method changes, walk through the changed skill; delegate when independence or parallel work justifies its cost.
+-- Tests run in parallel: `python tests/run.py` (the same tests as `python -m unittest discover -s tests`). While iterating, `python tests/run.py --changed` runs only the modules your diff touches. Before any PR or push, run the full `python tests/run.py`, prose-only changes included (about 40 s). The hygiene and budget tests enforce rules 1, 3, 4 and 6.
++- Run one affected validation pass per coherent change. Use `python tests/run.py --changed <run-base>` or named tests; prose needs affected method/docs/budget checks. Use the full `python tests/run.py` for shared test/proof machinery, unknown impact or release/integration risk, not every push. Reuse intact same-input passes; repeat only failed/changed affected checks. Record command/scope once in the existing plan.
+ - Keep secrets, client data, transcripts and `.factory/` run records out of Git.
+ 
+ ## PRs
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index d33db55..ba77b03 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -12,6 +12,8 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
+ 
+ ### Fixed
+ 
++- Reduce blanket validation: one affected pass, named dependency selection, and reuse existing covered-logic tests without duplicate hidden checking.
++
+ - Reuse unchanged visual observations with explicit dependency evidence; preserve owner waits and strict final proof. Parse compact records/resources clearly; reuse local draft preflight.
+ 
+ - Capture Before before edits and retain it through Show/QA; run locally unless delegation provides useful parallelism or independent judgment.
+diff --git a/README.md b/README.md
+index bf989a0..570f630 100644
+--- a/README.md
++++ b/README.md
+@@ -60,7 +60,7 @@ New runs use `fast_gate.py checks` to record reasoned hidden-check selection, ac
+ 
+ Record refusals collect independent problems with repair examples; explicit verdict fields distinguish a failed check from explanatory wording. See [record diagnostics](docs/record-diagnostics.md).
+ 
+-Check a local PR draft before publishing with `fast_gate.py report --pr-body <file> --project <abs>`; it uses handoff's proof structure checks without completing work. Required source review precedes the final full suite; the same reviewer checks author repairs and its final receipt. Combine related checks, retain unchanged observations and refresh affected proof. Store complete tool evidence locally and send only needed fields/diagnostics to model context; [details](docs/record-diagnostics.md).
++Check a local PR draft before publishing with `fast_gate.py report --pr-body <file> --project <abs>`; it uses handoff's proof structure checks without completing work. Required source review precedes planned validation; the same reviewer checks author repairs and its final receipt. Combine related checks, retain unchanged observations and refresh affected proof. Store complete tool evidence locally and send only needed fields/diagnostics to model context; [details](docs/record-diagnostics.md).
+ 
+ Browser journeys use a fixed instant and timezone before navigation. Each declared source calls `fixedBrowserPage` or `fixedBrowserClock`; run `node skills/safe-engine/scripts/journey_clock_lint.mjs <manifest.json>`. See [fixed browser time and affected tests](docs/journey-clock.md).
+ 
+@@ -73,10 +73,10 @@ safe-engine Build a habit tracker in /home/me/habits. Success means a signed-in
+ 1. Researches three competitors and writes a feature matrix with opportunities.
+ 2. Asks you about size, features, approach and stack: one round for a POC, more for an MVP.
+ 3. Reads the backlog, then opens an epic and outcome sub-issues in To do, each with a definition of done.
+-4. Analyzes requirements and consumers, then writes a plan whose todos become each ticket's checklist. Before each build wave, an independent checker writes the hidden checks for the criteria that wave builds.
++4. Analyzes requirements and consumers, then writes a plan whose todos become each ticket's checklist. Before a build wave, select uncovered or high-risk criteria for independent checks; reuse existing coverage for simple logic.
+ 5. Writes the design brief and the schema decision.
+ 6. Builds every checklist item through a check-change-check loop and ticks it once it works.
+-7. Runs the app through every requested journey and its most likely failure; the hidden checks decide each criterion.
++7. Runs the app through every requested journey and its most likely failure; planned proof covers each criterion.
+ 8. Opens a draft PR with before and after for every outcome and what is unverified. Tickets wait in Ready for QA until you merge.
+ 
+ While it works, the gate shows a card after every step and finished todo (illustrative):
+@@ -111,7 +111,7 @@ flowchart LR
+ - 📖 **Conditional detail.** The common product bar remains in every run. Logging/security implementation detail and visual PR capture instructions load when their named situation applies; the pointers in the owning methods keep those obligations visible. Preflight and delegate handbacks retain complete command, session and exit receipts.
+ 
+ The gate loads optional command parsers only for the requested command; help and invalid input retain the complete CLI. State checks and pinned routing still run. Host test setup is documented in [hosts](docs/hosts.md#local-test-hosts).
+-- 🧪 **Proof, not promises.** Every requested item traces to a criterion, a checklist item and proof. In product and feature runs, an independent checker writes a check for every criterion before the build, from the tickets and plan alone; the builder never sees them, and any FAIL sends the work back. Then a done-run with real controls and logs, and a PR showing before and after for every outcome, which the gate reads before the run can finish. MVPs and production slices also record a secret scan, a dependency audit and static analysis. Safe adds manual QA, tests and an independent reviewer.
++- 🧪 **Proof, not promises.** Every requested item traces to a criterion, a checklist item and proof. Existing tests may cover simple logic; uncovered or high-risk criteria get independent hidden checks from tickets/interfaces, unseen by the builder. Any failed required proof returns to repair. Then a done-run with real controls and logs, and a PR showing before and after for every outcome, which the gate reads before the run can finish. MVPs and production slices also record a secret scan, a dependency audit and static analysis. Safe adds manual QA, tests and an independent reviewer.
+ - 🩹 **Root causes, not patches.** A bug or edge case is fixed where it starts: impossible by design, or rejected loudly where data enters. No silent defaults. A big or risky refactor waits for your yes.
+ - 🎨 **A product bar.** Accessible, responsive UI, clear copy, public-page SEO and a designed schema. Every UI run checks ten UX rules before the gate lets it finish. Non-production builds show their environment and label sample data.
+ - 🧑‍⚖️ **Humans stay in charge.** Draft PRs only. It never merges, releases or deploys.
+@@ -216,7 +216,7 @@ After an update or a rollback, the next `start`, `status` or `version` shows one
+ 
+ **Active runs stay pinned.** New automatic selections use the newest verified release (`main` on edge or before the first release). `resolve_bundle.py --project <dir> --new-run` refreshes only before a new run; ordinary resume stays offline. Explicit `--ref`/`--bundle` pins and older receipts with unknown pin intent stay fixed. `fast_gate.py start` prints selected/latest versions, reports failed release checks and executes the selected gate. Its project commands and hooks follow that run's saved identity, including session-bound or absolute-path work outside the project directory. Tool calls spanning different factory versions must be split. A Fast/Lucky run closed in the gate home permits the next selection even if its project mirror is missing or stale. A named Safe run with a confirmed cancellation or checked handoff releases selection for the next ticket. Receipt-less bare starts are legacy use, not a freshness guarantee. Pin changes need `improve-factory`; never edit an active receipt.
+ 
+-Factory maintenance uses an immutable selected runner and a separate editable candidate. The candidate can start from an explicitly approved unmerged dependency; that does not release or adopt it. Complete and commit planned changes before final candidate-bound proof. Use Prove when the selected runner supports it; otherwise run the required full suite directly on the committed candidate under its recorded gate workflow, retaining runner, commit, inputs, command, log and result. See `improve-factory` for the maintenance flow.
++Factory maintenance uses an immutable selected runner and a separate editable candidate. The candidate can start from an explicitly approved unmerged dependency; that does not release or adopt it. Complete and commit planned changes before final candidate-bound proof. Use Prove when the selected runner supports it; otherwise run planned validation directly on the committed candidate under its recorded gate workflow, retaining runner, commit, inputs, command, log and result. See `improve-factory` for the maintenance flow.
+ 
+ ## 🧹 Uninstall
+ 
+@@ -291,7 +291,7 @@ Rules live in [AGENTS.md](AGENTS.md); changes go through `improve-factory`. Repo
+ python tests/run.py
+ ```
+ 
+-- `python tests/run.py --changed` runs only the tests your diff touches; run the full suite before any push.
++- `python tests/run.py --changed <run-base>` selects named dependency coverage; full validation needs shared risk, unknown impact or release/integration scope, not every push.
+ - Adding, moving or deleting a factory file: `python scripts/package_skill_entries.py`, then `--check` before pushing.
+ - Every PR adds a line to [CHANGELOG](CHANGELOG.md), and updates this README and `docs/` when it changes a command, flag, host, install or update step, release step, skill or folder; `tests/test_docs_sync.py` fails until they match.
+ - Releases are local, no CI: `python scripts/release.py cut X.Y.Z`, merge the release PR, `python scripts/release.py prove vX.Y.Z`, tag, then `python scripts/release.py publish vX.Y.Z`. Publish reuses intact matching suite proof or runs the complete suite ([releasing](docs/releasing.md)).
+@@ -329,3 +329,5 @@ New non-UI Fast runs declare `prove --plan <plan.json>` before plan completion.
+ Capture web proof with `shots --phase before` before edits and `shots --phase after` during final QA, retaining the same output folder. New Before-comparison Show plans bind the `before` image records; existing plans stay readable. Work locally unless delegation justifies its cost. See [Show](docs/show-first.md).
+ 
+ Optional visual_inputs carries proven unchanged Show observations, retaining owner response/deadline and original provenance; full-source acceptance stays strict. Explicit owned ports and compact records avoid prose repair loops. See [Show](docs/show-first.md).
++
++Validation uses one planned affected pass per coherent change; full coverage is reserved for shared boundaries, unknown impact and release/integration risk. `tests/run.py --changed <run-base>` follows named dependencies; a full fallback is explicit. Covered simple logic can skip duplicate hidden checks with current validation proof.
+diff --git a/UPGRADING.md b/UPGRADING.md
+index c6c834a..fced088 100644
+--- a/UPGRADING.md
++++ b/UPGRADING.md
+@@ -9,6 +9,8 @@ For every release:
+ 
+ ## Next release
+ 
++- New Fast plans may select affected validation in the existing full_suite field; covered logic can set hidden:false with existing-test coverage reasons. Old plans/pins retain their recorded duties. Test selection follows named dependencies and reports full fallbacks.
++
+ - Scoped visual reuse is opt-in through new Show plans; existing pins/plans keep their behavior. Supply explicit dependency evidence/runtime inputs only when carrying an observation. Full-source final proof is unchanged.
+ 
+ - After release/update, use early `shots --phase before`, final `--phase after` with the same output folder, and `before` image rows for new Show plans. Existing pins/plans stay intact; disclose reconstructed baselines.
+diff --git a/docs/show-first.md b/docs/show-first.md
+index 1fb0cb6..0b12e7f 100644
+--- a/docs/show-first.md
++++ b/docs/show-first.md
+@@ -13,3 +13,5 @@ The evidence JSON declares complete:true and sources:["index.html"]. Establish c
+ Reuse preserves original candidate/record time and compatible delivery/deadline/proceed response. Stop/change remains binding. Changed visual meaning needs the normal sharing process. Show, viewer and likeness share this identity; the final suite and hidden acceptance still bind the whole candidate. The gate validates declared bytes/identities, not dependency completeness or owner authenticity.
+ 
+ Commands: `python skills/safe-engine/scripts/fast_gate.py show --plan .factory/show-plan.json` (also --candidate, --prepare, --shared, --reply). `python skills/safe-engine/scripts/fast_gate.py prove --suite` follows manual use and owner reply/deadline; timeout is not merge authority. Legacy plans without optional reuse remain conservative. No new stage, extra default form or mandatory helper.
++
++The legacy full_suite field holds the planned validation command, which may be affected tests. Record scope once; preserve exact proof identity. Full suites are justified by shared risk, unknown impact or release, not every edit/push.
+diff --git a/docs/suite-checks.md b/docs/suite-checks.md
+index 4cf1f7b..346946e 100644
+--- a/docs/suite-checks.md
++++ b/docs/suite-checks.md
+@@ -1,77 +1,25 @@
+-# Complete suites
++# Planned validation and reuse
+ 
+-New Fast runs declare a complete suite before `done plan`. UI runs include the
+-declaration in `show --plan`; other runs use `prove --plan <project-local.json>`:
++Choose one affected validation command per coherent change. Full coverage is for shared boundaries, unknown impact or release/integration risk; a push or prose edit alone does not justify it. Report the actual scope, never call a partial pass a full-suite pass.
+ 
++New Fast plans freeze argv/inputs before done plan: UI uses show --plan; others prove --plan <project-local.json>. The legacy full_suite field names the selected command:
+ ```json
+-{"version":1,"full_suite":["python","tests/run.py"],"timeout_seconds":1800,
+- "suite_inputs":{"files":[],"environment":[],
+-   "clock":{"instant":"2026-01-01T00:00:00Z","timezoneId":"UTC"}}}
++{"version":1,"full_suite":["python","tests/run.py","--changed","<run-base>"],"timeout_seconds":1800,"suite_inputs":{"files":[],"environment":[],"clock":{"instant":"2026-01-01T00:00:00Z","timezoneId":"UTC"}}}
+ ```
++Run prove --suite after real use/Build and UI Show. Old plans/pins keep their recorded requirements. Factory --changed follows named imports/loaders transitively; changed test helpers include consumers, unrelated sibling modules do not join merely by folder. Unknown/unmapped graphs fall back to all, explicitly reported. Use the actual run base; select named tests when finer coverage is established.
+ 
+-List external input files and environment variable names explicitly. Empty arrays
+-assert there are no additional inputs. Source, executable bytes, arguments,
+-factory identity and relevant process paths are always included. Missing
+-`suite_inputs`, an unresolved executable/input, or an unborn Git HEAD means
+-unknown identity: the suite still queues and runs, but cannot reuse evidence.
+-The clock fields identify inputs; use the [browser helper](journey-clock.md) to
+-actually fix browser time.
++Receipts bind commit, source/factory files, argv, executable, declared files/environment and clock. Values are hashed. Intact same-input passes can be reused; no duplicate suite after an affected pass already satisfies the plan. Changed or unknown inputs, interrupted/timed-out/truncated/tampered proof cannot supply a pass. Failures remain failures. Each Fast execution has its own .factory/fast/prove/ log; the project .factory/suite-cache retains up to256 completed results.
+ 
+-Use the completed change manually, finish Build and, for UI work, complete Show.
+-Then run `prove --suite`. The current-policy hook directs raw invocations of the
+-declared suite to this command. `prove --suite --fresh` explicitly reruns it for
+-diagnosis; it still joins the queue.
++Cache hits return before queue admission; misses recheck after admission and executions recheck inputs afterward. One machine FIFO spans worktrees/gate homes, using ai-software-factory-suite-v1 under ProgramData on Windows or /tmp on POSIX. No per-run override; permissions stop admission, maximum256 requests. Cancellation removes only its request; crashed owned processes drain before replacement. Internal parallel tests stay within one admission. OS waiting promises no host-native wakeup.
+ 
+-The project-local `.factory/suite-cache` retains up to 256 completed results.
+-Fast executions keep separate logs under `.factory/fast/prove/`, so running B
+-does not alter A's log and a later A can reuse its intact receipt.
+-Reuse requires the same commit and effective inputs plus intact logs and output
+-hashes. An intact hit returns before queue admission after another input check.
+-Dirty source, changed arguments, environment, clock or declared files
+-invalidate reuse. A completed failure stays a failure when reused. Interrupted,
+-timed-out, truncated or tampered evidence cannot supply a passing result. Misses
+-enter the queue and recheck inputs and the cache after admission; executed
+-suites check inputs again afterward. Environment values are hashed, never stored
+-as plaintext.
+-Fast run-state writes reject stale whole-record updates. Suite and check
+-completion update only their owned receipts on the current open run; concurrent
+-observations and owner controls remain. A changed receipt or closed run refuses
+-completion, while changed source or suite inputs leave proof failed.
++Completion updates only its own current receipt; preserve concurrent observations/owner controls. A conflicting receipt, closed run, changed source or changed inputs cannot complete as passed.
+ 
+-New Safe states also reuse complete-profile `check` batches and queue misses;
+-`check --fresh` explicitly reruns them. Per-command IDs, artifacts, manual QA,
+-contract integrity and required checks still apply. Existing states retain their
+-saved policy. A partial test never replaces complete version acceptance.
+-
+-New complete-cycle Safe runs allow `feature-check --checks <ids> --file <json>`
+-during Build after using the completed item. Select fewer than all configured
+-checks and record the changed-file mapping. The receipt uses the existing manual
+-observation shape, with these additional fields:
++Safe keeps required complete-profile check/manual QA/contract integrity and per-command artifacts. check --fresh explicitly reruns; existing states retain their policy. Partial feedback cannot replace complete acceptance.
+ 
++New complete-cycle Safe runs may feature-check --checks <ids> --file <json> during Build after actual completed-item use. Select fewer than all checks with a changed-file mapping:
+ ```json
+-{"version":1,"item":"T1","completed":true,
+- "mapping":"changed parser -> parser-check",
+- "candidate":"<status.feature_candidate>",
+- "observations":[{"criterion":"A1","device":"local CLI",
+-   "action":"read a valid record","result":"the expected values appeared",
+-   "status":"PASS","evidence":[".factory/evidence/item.txt"]}]}
++{"version":1,"item":"T1","completed":true,"mapping":"parser -> parser-check","candidate":"<status.feature_candidate>","observations":[{"criterion":"A1","device":"local CLI","action":"read valid record","result":"expected values","status":"PASS","evidence":[".factory/evidence/item.txt"]}]}
+ ```
++Use actual observations/evidence. The gate validates current inputs, criterion identity and hashes, not authenticity. Carried final-QA receipts refuse; feedback remains Build, seals no contract and satisfies no final manual/full check. Fix failed feedback before finishing. Existing v2 states still prohibit early feature checks.
+ 
+-Supply actual observations and existing evidence. The gate checks current inputs,
+-criterion identity and evidence hashes; it cannot authenticate the observation.
+-Carried final-QA receipts are refused here. Partial feedback stays in Build and
+-does not supply final manual acceptance, seal a contract or satisfy full checks.
+-Failed feedback must be repaired before finishing implementation. Existing v2
+-states retain their prior prohibition on early feature checks.
+-
+-Complete suites needing execution share one FIFO queue per machine, across
+-worktrees and gate homes. The queue uses `ProgramData` on Windows and `/tmp` on POSIX under
+-`ai-software-factory-suite-v1`; it has no per-run override. Permission failures
+-stop admission. At most 256 requests wait; cancellation removes only its own
+-request. A crashed worker's owned processes must be drained before replacement
+-admission. Internal test parallelism stays inside that one admission. Waiting
+-uses an OS-backed process wait; it does not promise a host-native agent wakeup.
+-
+-Existing active bundles remain pinned. New Fast receipts adopt this behavior
+-from their selected methods; new Safe `init` states record it explicitly. Never
+-edit an active receipt to upgrade its policy.
++Active bundles never auto-upgrade; new Fast methods and Safe init states select their policy. Never edit a receipt to change it.
+diff --git a/skills/safe-engine/scripts/fast_checks.py b/skills/safe-engine/scripts/fast_checks.py
+index 45b683f..48ab5ab 100644
+--- a/skills/safe-engine/scripts/fast_checks.py
++++ b/skills/safe-engine/scripts/fast_checks.py
+@@ -50,8 +50,8 @@ def selection(data, run):
+         require(category in ("visual-port", "logic", "data", "safety", "mixed"), "Unknown proof category")
+         hidden = row.get("hidden", category != "visual-port")
+         require(type(hidden) is bool, "hidden must be boolean")
+-        require(hidden or category == "visual-port", "Logic, data, safety and mixed tickets keep hidden checks")
+-        if not hidden:
++        require(hidden or category in ("visual-port", "logic"), "Data, safety and mixed tickets keep hidden checks")
++        if not hidden and category == "visual-port":
+             require(run.get("design_port") and run.get("show_first"), "Visual-only proof needs design-port coverage and Show")
+         if hidden and category == "visual-port":
+             text(row.get("owner_request"), "owner request adding visual hidden checks")
+@@ -188,11 +188,17 @@ def problems(run, project, final=False):
+             for log in result["logs"]:
+                 require(evidence.file_hash(evidence.local(project, log["path"])) == log["sha256"], "Check log changed")
+             runtime(project, run, state["runtime"])
+-        if any(not row["hidden"] for row in state["plan"]["tickets"].values()):
++        if any(not row["hidden"] and row["category"] == "visual-port" for row in state["plan"]["tickets"].values()):
+             require(not evidence.problems(run, project, final=True), "Visual proof needs current complete independent likeness")
+             import fast_show
+             require(not fast_show.completion_problems(run, project), "Visual proof needs current Show")
+             require(run.get("show", {}).get("proof", {}).get("passed") is True, "Visual proof needs the declared suite pass")
++        if any(not row["hidden"] and row["category"] == "logic" for row in state["plan"]["tickets"].values()):
++            import fast_show
++            holder = run.get("show" if fast_show.enabled(run) else "suite", {})
++            require(run.get("suite_policy") and holder.get("proof", {}).get("passed") is True
++                    and not fast_show.completion_problems(run, project),
++                    "Covered logic needs current passing planned validation")
+         return []
+     except (OSError, ValueError, KeyError, TypeError) as error:
+         return [f"Checks: {error}"]
+diff --git a/tests/run.py b/tests/run.py
+index 4768dc9..b6de93a 100644
+--- a/tests/run.py
++++ b/tests/run.py
+@@ -6,6 +6,7 @@ processes. Timing-sensitive classes run one at a time in their own process besid
+ a file no rule maps runs everything. Python 3.9+, standard library only.
+ """
+ import argparse
++import ast
+ import os
+ import re
+ import shutil
+@@ -61,13 +62,24 @@ def sources():
+ 
+ def importers(names, texts):
+     """`names` plus every test helper or module that imports one of them, transitively."""
+-    found, grew = set(names), True
+-    while grew:
+-        grew = False
++    dependencies = {}
++    try:
+         for stem, text in texts.items():
+-            if stem not in found and any(re.search(rf"^(?:import|from) {n}\b", text, re.M) for n in found):
+-                found.add(stem)
+-                grew = True
++            refs = set()
++            for node in ast.walk(ast.parse(text)):
++                if isinstance(node, (ast.Import, ast.ImportFrom)):
++                    refs.update(alias.name.split(".")[-1] for alias in node.names)
++                    if isinstance(node, ast.ImportFrom):
++                        refs.add((node.module or "").split(".")[-1])
++                elif isinstance(node, ast.Constant) and isinstance(node.value, str):
++                    name = node.value.rsplit(".", 1)[-1]
++                    refs.update((name, "fast_" + name))  # Named dynamic loaders.
++            dependencies[stem] = refs
++    except SyntaxError:
++        return None  # An unknown graph needs full validation.
++    found = set(names)
++    while any(stem not in found and refs & found for stem, refs in dependencies.items()):
++        found.update(stem for stem, refs in dependencies.items() if refs & found)
+     return found
+ 
+ 
+@@ -84,19 +96,24 @@ def selected(base):
+     for path in files:
+         file = Path(path)
+         if path.startswith("tests/"):
+-            hits = {file.stem} if file.stem in texts else set()  # the runner itself, or an unknown helper: all
++            hits = importers({file.stem}, texts) if file.stem in texts else set()  # Changed helpers affect their callers.
+         elif path.startswith((".agents/", "docs/", "skills/agents/")) or "/" not in path and path.endswith(".md"):
+             hits = {stem for stem, text in texts.items() if SKILL_FILES.search(text)}
+         elif path.startswith("safe_engine/"):
+             hits = {stem for stem, text in texts.items() if "safe_engine" in text}
+         else:  # modules naming this file or a sibling it may load (the gate loads its scripts by name)
+-            names = {file.stem} | ({p.stem for p in (ROOT / file.parent).glob("*.py")} if "/" in path else set())
++            names = importers({file.stem}, {p.stem: p.read_text(encoding="utf-8")
++                                          for p in (ROOT / file.parent).glob("*.py")})
++            if names is None:
++                return None
+             hits = {stem for stem, text in texts.items()
+                     if any(re.search(rf"\b{re.escape(n)}\b", text) for n in names)}
+-        if not hits:
++        if hits is None or not hits:
+             return None  # nothing claims this file: run everything
+         modules |= hits | (PACKAGED if file.parts[0] in SOURCE_TREES else set())
+-    return {m for m in importers(modules, texts) if m.startswith("test_")}
++    affected = importers(modules, texts)
++    chosen = None if affected is None else {m for m in affected if m.startswith("test_")}
++    return chosen if chosen or not files else None
+ 
+ 
+ def main():
+@@ -110,6 +127,7 @@ def main():
+     if modules is not None and not modules:
+         print("No test module covers the changed files.")
+         return 0
++    print("Selection: full suite" if modules is None else f"Selection: {len(modules)} affected modules from {args.changed}")
+     tests = list(flatten(unittest.defaultTestLoader.discover(str(TESTS), top_level_dir=str(TESTS))))
+     broken = [t for t in tests if t.id().startswith("unittest.loader.")]  # modules that failed to import
+     tests = [t for t in tests if t not in broken and (modules is None or t.id().split(".")[0] in modules)]
+diff --git a/tests/test_fast_checks.py b/tests/test_fast_checks.py
+index 2a6059a..072975a 100644
+--- a/tests/test_fast_checks.py
++++ b/tests/test_fast_checks.py
+@@ -49,6 +49,16 @@ class OwnershipTests(unittest.TestCase):
+         with self.assertRaisesRegex(ValueError, "owner request"):
+             selected({**run, "checks": {}}, {**visual, "hidden": True}, mixed)
+ 
++    def test_covered_logic_skips_duplicate_hidden_checks_but_needs_current_proof(self):
++        row = {**ticket(CHILD, "T1"), "category": "logic", "hidden": False,
++               "reason": "A1 covered by existing signed-addition regression"}
++        run = selected({"kind": "change", "check_selection": True, "tickets": [CHILD]}, row)
++        self.assertEqual(checks.wanted(run), set())
++        self.assertIn("current passing", " ".join(checks.problems(run, ".", final=True)))
++        for category in ("data", "safety", "mixed"):
++            with self.subTest(category=category), self.assertRaisesRegex(ValueError, "keep hidden"):
++                selected({"tickets": [CHILD]}, {**row, "category": category})
++
+     def test_public_derived_fields_cannot_waive_child_and_live_owner_drifts(self):
+         run = {"kind": "feature", "check_selection": True, "tickets": [EPIC, CHILD], "todos": ["T1"]}
+         rows = [{**ticket(EPIC, "T9"), "category": "logic", "reason": "Other integration run"},
+diff --git a/tests/test_test_selection.py b/tests/test_test_selection.py
+new file mode 100644
+index 0000000..2b7627f
+--- /dev/null
++++ b/tests/test_test_selection.py
+@@ -0,0 +1,34 @@
++"""Named dependency selection does not select unrelated siblings or miss unknown graphs."""
++from pathlib import Path
++from tempfile import TemporaryDirectory
++from types import SimpleNamespace
++import unittest
++from unittest.mock import patch
++import run as selector
++
++
++class SelectionTests(unittest.TestCase):
++    def test_real_dependency_graph_and_unknown_fallback(self):
++        with TemporaryDirectory() as folder:
++            root = Path(folder)
++            (root / "src").mkdir()
++            (root / "tests").mkdir()
++            for name, text in {"leaf": "value=1", "consumer": "from . import leaf", "sibling": "pass"}.items():
++                (root / "src" / (name + ".py")).write_text(text)
++                (root / "tests" / ("test_" + name + ".py")).write_text("import " + name)
++            def select(path):
++                returns = [SimpleNamespace(stdout=path+"\0"), SimpleNamespace(stdout=""), SimpleNamespace(stdout="")]
++                with patch.object(selector, "ROOT", root), patch.object(selector, "TESTS", root / "tests"), \
++                     patch.object(selector.subprocess, "run", side_effect=returns):
++                    return selector.selected("fixture-base")
++            self.assertEqual(select("src/leaf.py"), {"test_leaf", "test_consumer"})
++            (root / "tests/helper.py").write_text("import leaf")
++            (root / "tests/test_via_helper.py").write_text("import helper")
++            self.assertEqual(select("src/leaf.py"), {"test_leaf", "test_consumer", "test_via_helper"})
++            (root / "src/consumer.py").write_text("__import__('src.leaf')")
++            self.assertEqual(select("src/leaf.py"), {"test_leaf", "test_consumer", "test_via_helper"})
++            self.assertIsNone(select("unknown.file"))
++            (root / "tests/orphan_helper.py").write_text("pass")
++            self.assertIsNone(select("tests/orphan_helper.py"))
++            (root / "src/consumer.py").write_text("def broken(")
++            self.assertIsNone(select("src/leaf.py"))
