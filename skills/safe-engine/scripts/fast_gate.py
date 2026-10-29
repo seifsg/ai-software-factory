@@ -286,8 +286,8 @@ def status_text(run, all_sections=None):
     suppress_report = sibling("fast_wait").suppress_report(waiting, run.get("owner_report"))
     lines = ([sibling("fast_wait").describe(waiting)] if live_wait else []) + [
              sibling("fast_card").card(run, steps_for(run), all_sections, now(), left=True, current=suppress_report),
-             f"{run['mode']} {run['kind']} run '{run['key']}' at {run['project']}"
-             f" (ui={run.get('ui')}, data={run.get('data')}, auth={run.get('auth')})",
+             f"{run['mode']} {run['kind']} {run['project']}"
+             f" (ui={run.get('ui')} data={run.get('data')} auth={run.get('auth')})",
              "Gate: " + ("open, source edits allowed" if not blocked else "closed until " + ", ".join(blocked)),
              "Next: " + ("closed" if run.get("closed") else next_step(run) or "close")]
     lines += list(filter(None, [sibling("fast_pr_policy").notice(HOME, run)]))
@@ -299,7 +299,7 @@ def status_text(run, all_sections=None):
 def skeleton(run):
     quoted = ["> " + line for line in run["request"].splitlines()]  # quoted: request headings never become sections
     lines = [f"# {run['key']}: {run['mode']} {run['kind']} run", "",
-             "<!-- Fill each section, then `fast_gate.py done <step>`. Markers: fast-run.md#work-record -->", "",
+             "<!-- Fill sections, then `fast_gate.py done <step>`; fast-run.md#work-record -->", "",
              "## Request", "", *quoted, ""]
     hints = sibling("fast_hints").record_hints(run)
     for step in steps_for(run):

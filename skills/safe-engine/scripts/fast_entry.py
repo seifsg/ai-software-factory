@@ -103,9 +103,13 @@ def hook_runs(event, runs, cwd, gate):
 
 def summary(result):
     """Distinguish selected identity, advertised release, and a failed or skipped check."""
-    latest = result.get("latest_release") or result.get("release") or "unknown (not checked or unavailable)"
-    return (f"Factory selected: {result.get('version') or 'unversioned'} at {result['revision']}\n"
-            f"Latest release: {latest}\n" + (result.get("notice", "") + "\n" if result.get("notice") else ""))
+    latest, notice = result.get("latest_release") or result.get("release"), result.get("notice", "")
+    policy = result.get("selection_policy")
+    unchecked = policy in ("explicit", "legacy") and notice == f"Keeping {policy} pin; latest factory not checked."
+    lines = [f"Factory: {result.get('version') or 'unversioned'} @{result['revision']}"]
+    if latest or not unchecked:  # Only the known pin notice already names an unperformed lookup.
+        lines.append(f"Latest release: {latest or 'unknown (not checked or unavailable)'}")
+    return "\n".join([*lines, *([notice] if notice else [])]) + "\n"
 
 
 def start(args, gate):

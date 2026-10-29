@@ -8,7 +8,7 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 
 ### Fixed
 
-- New Fast starts establish selected methods before recording policies; explicit pins avoid release discovery that cannot update them. Evaluation exports select real local snapshots instead of assuming setup (#213).
+- New Fast starts establish selected methods before recording policies; explicit pins avoid release discovery that cannot update them. Evaluation exports select real local snapshots. Startup hints are shorter, and output budgets measure selected methods offline (#213).
 
 - Run metrics: Fast runs start their timeline at the first applicable step, Safe runs record the factory revision and never share a metrics folder, and analytics hooks are plain calls instead of repeated guards (#175).
 

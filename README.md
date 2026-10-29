@@ -292,7 +292,7 @@ python tests/run.py
 - Adding, moving or deleting a factory file: `python scripts/package_skill_entries.py`, then `--check` before pushing.
 - Every PR adds a line to [CHANGELOG](CHANGELOG.md), and updates this README and `docs/` when it changes a command, flag, host, install or update step, release step, skill or folder; `tests/test_docs_sync.py` fails until they match.
 - Releases are local, no CI: `python scripts/release.py cut X.Y.Z`, merge the release PR, `python scripts/release.py prove vX.Y.Z`, tag, then `python scripts/release.py publish vX.Y.Z`. Publish reuses intact matching suite proof or runs the complete suite ([releasing](docs/releasing.md)).
-- Method byte budgets: `python scripts/token_report.py --against origin/main` compares file-text proxies for whole runs, overlapping phases and optional conditions. These are neither observed context nor billed model tokens.
+- Method byte budgets: `python scripts/token_report.py --against origin/main` compares file-text proxies for whole runs, overlapping phases and optional conditions. `--gate` measures actual selected methods offline, using complete local snapshots for archived revisions. These are neither observed context nor billed model tokens.
 - `python -m evals run` scores the factory against a plain agent ([evals](evals/README.md)). Windows evals require confirmed job ownership and descendant cleanup; isolated checks receive the same snapshotted ownership helper.
 
 The gate loads command arguments from `fast_cli.py` only for CLI calls; tool hooks retain their direct fast path.
