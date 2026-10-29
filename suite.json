@@ -1,0 +1,23 @@
+{
+  "commit": "d4067e2eedc6d8626ecbc934e2a185aea0a4606c",
+  "argv": [
+    "python",
+    "tests/run.py"
+  ],
+  "passed": true,
+  "log_sha256": "6ea7be8d46a40ae4f310acac46c10483644481ef474cff6781b0c554319e9666",
+  "duration_seconds": 355.612,
+  "suite_identity": {
+    "commit": "d4067e2eedc6d8626ecbc934e2a185aea0a4606c",
+    "fingerprint": "289bf50f5426a0c428bcf39ba389a5cbf6055745c25fc888baf98c2de671e120"
+  },
+  "runtime": {
+    "PYTHON_CPU_COUNT": "10",
+    "workers": 8,
+    "declared_in_suite_inputs": true
+  },
+  "summary": [
+    "Ran 645 tests in 354.4s (603 pooled on 8 workers, 42 serial)",
+    "OK (skipped=1)"
+  ]
+}

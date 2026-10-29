@@ -1,0 +1,89 @@
+diff --git a/.agents/skills/safe-engine/SKILL.md b/.agents/skills/safe-engine/SKILL.md
+index 3d9e5a5..2b72f30 100644
+--- a/.agents/skills/safe-engine/SKILL.md
++++ b/.agents/skills/safe-engine/SKILL.md
+@@ -102,14 +102,14 @@ Timing and comparisons: [run metrics](references/run-metrics.md).
+ - Fast and Lucky: the gate shows [progress](references/fast-run.md#progress); give the [live view](references/fast-run.md#live-view) link once per run; `fast_gate.py try` for each usable result.
+ - Before slow work: who does what; report its result.
+ - Waiting on the owner: the question first, then the options.
+-- Questions/status: answer at first supported boundary before optional work/report tools, then resume authorized work without approval, including after ticket-only requests.
++- At first supported boundary: answer questions; prioritize and deliver new requests, including a replacement objective. Resume only compatible work without reapproval.
+ - Mirror steps/todos in the task list once per wave.
+ - Final report: `close` card; honor owner update frequency.
+ - Orchestrator-started: no one watches the chat; follow the [orchestrated run](references/orchestrated-run.md).
+ 
+ ## Decide
+ 
+-- Unresolved owner choices or scope: ask. Apply explicit corrections.
++- Ask only unresolved owner choices/scope.
+ - Delegated in-scope choices: recommend, pick, record the reason. Plans and updates are not approval gates.
+ - New substantive choice: compare three options, recommend one.
+ - Answers bind the run. Later changes go to the ticket's activity.
+diff --git a/.agents/skills/safe-engine/references/owner-reports.md b/.agents/skills/safe-engine/references/owner-reports.md
+index e26b22a..c902134 100644
+--- a/.agents/skills/safe-engine/references/owner-reports.md
++++ b/.agents/skills/safe-engine/references/owner-reports.md
+@@ -1,10 +1,10 @@
+ # Plain owner reports
+ 
+-Use for scheduled progress and delegate handbacks, not direct interruption replies. Records/tickets keep identifiers.
++Scheduled reports/handbacks only; direct replies skip this pipeline. Records keep identifiers.
+ 
+ Interruptions:
+ - Stop/redirect: halt stale dependent dispatch. Do only necessary owned in-flight cleanup; preserve previews, unrelated processes, worktrees, data and proof. Frustration alone is not a stop.
+-- Run/test request: bounded real-runtime smoke first; report concrete failures and pending checks. Required integrity/security/acceptance checks still govern completion/release.
++- Requests: only the action's safety/correctness checks, not broad plans, proof rounds or paperwork first. Run/test: bounded real smoke; report failures/pending checks. Completion/release checks govern those claims.
+ - Long tool: disclose delivery limits, never promise preemption; apply the message when delivered, not after a phase.
+ 
+ Scheduled reports:
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 44171c4..d79431d 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -8,7 +8,7 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
+ 
+ ### Fixed
+ 
+-- Coordinator interruptions: answer direct questions before reporting bookkeeping, resume authorized work, distinguish stops/redirects, preserve previews and disclose tool-delivery limits.
++- Coordinator interruptions: prioritize new requests, including replacement objectives, before broad checking/reporting; resume only compatible work, preserve previews and disclose tool-delivery limits.
+ - Run metrics: Fast runs start their timeline at the first applicable step, Safe runs record the factory revision and never share a metrics folder, and analytics hooks are plain calls instead of repeated guards (#175).
+ 
+ ## [1.2.0] - 2026-10-28
+diff --git a/README.md b/README.md
+index c7fc408..c10a078 100644
+--- a/README.md
++++ b/README.md
+@@ -20,7 +20,7 @@ Coding agents jump straight to code. They skip the research, forget the ticket,
+ The factory **enforces** the process. Hooks block source edits until the ticket, analysis and plan are recorded. Every run ends in a draft pull request with before/after proof and a list of what is still unverified. You merge.
+ 
+ Plain progress reports show per-ticket spend, worth and checked PNG pictures: [report command](docs/owner-reports.md).
+-Direct questions get an answer before report bookkeeping, then authorized work resumes. Stops and scope changes affect dependent work; previews stay open. [Delivery limits](docs/hosts.md#message-delivery).
++New requests take priority and may replace the objective. Answer or deliver with only the action's necessary checks; resume earlier work only if compatible. Preserve previews unless asked otherwise. [Delivery limits](docs/hosts.md#message-delivery).
+ Local run timing, observed task/helper spans, rework and attributable host-session usage analytics (distinct from owner reports): [run metrics](docs/run-metrics.md). Fast runs mark observed T-number boundaries with `fast_gate.py metrics task --key <run> --task-id T1 --state start|finish|fail|cancel|resume`; reused gate keys keep separate metrics instances.
+ 
+ ## ⚡ Quick start
+diff --git a/docs/hosts.md b/docs/hosts.md
+index 3912a4b..bf7577c 100644
+--- a/docs/hosts.md
++++ b/docs/hosts.md
+@@ -12,7 +12,7 @@ Common gate commands load only their requested optional argument module, includi
+ 
+ ## Message delivery
+ 
+-The coordinator handles interruptions when the host delivers them at a supported message boundary. A method cannot preempt a blocking tool or guarantee immediate delivery. After delivery, answer direct questions before optional tools/reporting and resume authorized work; a stop or scope correction blocks stale dependent dispatch. Preserve the running preview and unrelated resources; cancel owned in-flight work only when needed and report an unfinished check as unfinished. No controller, hook event or adapter cancellation protocol changes here.
++The coordinator handles interruptions when the host delivers them at a supported boundary; methods cannot preempt blocking tools or guarantee immediate delivery. The latest request takes priority and may replace the whole objective. Answer or act with only necessary action checks before optional tools/reporting; resume only compatible earlier work. Stop stale dependent dispatch. Preserve previews and unrelated resources unless directed otherwise; clean up owned in-flight work only as needed and report pending checks honestly. No controller, hook or adapter protocol changes here.
+ 
+ ## First-class hosts
+ 
+diff --git a/docs/owner-reports.md b/docs/owner-reports.md
+index c766971..860fa30 100644
+--- a/docs/owner-reports.md
++++ b/docs/owner-reports.md
+@@ -1,6 +1,6 @@
+ # Plain progress reports
+ 
+-This pipeline serves scheduled progress and delegate handbacks. Direct interruption replies do not wait for report validation, spend/worth collection or publication. Answer known facts and pending checks first, then resume authorized work. A run/test request gets a bounded runtime smoke test before optional bookkeeping; this does not waive required completion or release checks.
++This pipeline serves scheduled progress and delegate handbacks. A new request takes priority and may replace the whole objective. Answer or deliver with only checks needed for that action, before broad planning, repeated proof or report bookkeeping. Resume earlier work only if compatible. Run/test requests get a bounded real smoke; required completion/release checks still apply before those claims.
+ 
+ `python skills/safe-engine/scripts/fast_gate.py report --project <folder> --file <json>` validates and publishes the latest owner report. Use `--lint <body-file>` for standalone body prose or `--picture <png>` before sharing an image. Files must stay inside the project. Reports require an open run and tickets already recorded in its Tickets section. Invalid input preserves the last accepted report.
+ 

@@ -1,0 +1,17 @@
+{
+  "commit": "d4067e2eedc6d8626ecbc934e2a185aea0a4606c",
+  "files": {
+    ".agents/skills/safe-engine/SKILL.md": {
+      "0425f8e": 15536,
+      "c068e81": 15554,
+      "HEAD": 15522
+    },
+    ".agents/skills/safe-engine/references/owner-reports.md": {
+      "0425f8e": 2030,
+      "c068e81": 2002,
+      "HEAD": 2017
+    }
+  },
+  "net_vs_main": -27,
+  "net_vs_c068": -17
+}
