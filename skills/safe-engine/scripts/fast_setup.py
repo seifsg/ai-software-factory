@@ -75,7 +75,7 @@ def hook_status(project):
 
 
 KEY = re.compile(r"[a-z][a-z0-9-]{0,63}")  # fast_gate.py's run key rule, checked again: a state may come from a mirror
-TEXT = ("Scratch: {} (throwaway data; set TMPDIR/TEMP/TMP here. Delete only this literal path: "
+TEXT = ("Scratch: {} (the run's temp; set TMPDIR/TEMP/TMP here. Delete only this literal path: "
         "rm -r (Bash, / separators) or rd /s, alone; close removes it.)")
 
 
