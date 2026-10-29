@@ -109,6 +109,12 @@ An orchestrator starts agent sessions and hands each one a task: [orchestrators.
 
 ## Evals
 
+The factory arm commits its captured export as a local Git snapshot and selects it
+before launching the agent. Its snapshot revision is distinct from source checkout
+provenance; neither implies a published release. Explicit selection prevents repeated
+remote discovery on `start`. JSON rows record setup identity and observed gate policies,
+or `not_observed` when activation is unavailable. Product scoring stays independent.
+
 `python -m evals run` lives in the factory repository only (`evals/README.md`); installed copies leave `evals/` out. It takes each agent's non-interactive command as a template. The prompt arrives on stdin and also sits at `../prompt.md` from the workspace. In the factory arm, `{factory}` is a fresh export of the factory bundle. Real runs cost model tokens; check each flag against the installed version before one. Windows eval commands require job ownership before execution and confirmed descendant exit at cleanup; failures remain explicit, all registered stops are attempted, and unconfirmed ownership remains retryable. Isolated rubric children receive the canonical ownership helper from the pre-run source snapshot, without importing repository paths or site packages.
 
 | Agent | `--agent` (plain arm, and factory arm unless overridden) | `--factory-agent` (factory arm) | Gate hooks in the factory arm |

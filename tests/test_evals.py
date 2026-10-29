@@ -36,6 +36,17 @@ class EvalRunTests(EvalCase):
                                  (0, False, None, []))
                 expected = run["total"] if run["arm"] == "factory" else len(keep[run["sample"]])
                 self.assertEqual(run["delivered"], expected)
+                self.assertGreaterEqual(run["setup_seconds"], 0)
+                if run["arm"] == "factory":
+                    setup = run["factory_setup"]
+                    self.assertEqual(setup["selection_policy"], "explicit")
+                    self.assertRegex(setup["snapshot_revision"], r"^[a-f0-9]{40}$")
+                    self.assertRegex(setup["source"]["bundle_sha256"], r"^[a-f0-9]{64}$")
+                    self.assertNotEqual(setup["snapshot_revision"], setup["source"]["checkout_revision"])
+                    self.assertEqual(run["factory_run"], {"status": "not_observed"})
+                else:
+                    self.assertNotIn("factory_setup", run)
+                    self.assertNotIn("factory_run", run)
         paths = report.write(base, self.tmp / "base")
         self.assertEqual(report.load(paths[0]), {"runs": json.loads(json.dumps(base["runs"]))})
         text = paths[1].read_text(encoding="utf-8")

@@ -125,10 +125,6 @@ def start(args, gate):
             raise RuntimeError(f"Run still open or unknown: {held}; resume or close it without changing its factory")
         receipt = project / ".factory/entry-bundle.json"
         local = project if project == gate.HERE.parents[2] and (project / "safe_engine/distribution.py").is_file() else None
-        if local:
-            release.inspect_bundle(local)  # Verify canonical source identity before treating this as maintenance.
-        if not receipt.exists() and not local:
-            return gate.cmd_start(args)  # Compatibility for older bare-gate callers, never a freshness claim.
         result = release.select_locked(project, local if not receipt.exists() else None, None,
                                        gate.HOME / "bundles", "safe-engine", new_run=True)
         print(summary(result), end="", flush=True)
