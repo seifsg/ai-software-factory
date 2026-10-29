@@ -72,7 +72,8 @@ def importers(names, texts):
                     if isinstance(node, ast.ImportFrom):
                         refs.add((node.module or "").split(".")[-1])
                 elif isinstance(node, ast.Constant) and isinstance(node.value, str):
-                    refs.update((node.value, "fast_" + node.value))  # Named dynamic loaders.
+                    name = node.value.rsplit(".", 1)[-1]
+                    refs.update((name, "fast_" + name))  # Named dynamic loaders.
             dependencies[stem] = refs
     except SyntaxError:
         return None  # An unknown graph needs full validation.

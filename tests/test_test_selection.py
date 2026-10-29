@@ -25,6 +25,8 @@ class SelectionTests(unittest.TestCase):
             (root / "tests/helper.py").write_text("import leaf")
             (root / "tests/test_via_helper.py").write_text("import helper")
             self.assertEqual(select("src/leaf.py"), {"test_leaf", "test_consumer", "test_via_helper"})
+            (root / "src/consumer.py").write_text("__import__('src.leaf')")
+            self.assertEqual(select("src/leaf.py"), {"test_leaf", "test_consumer", "test_via_helper"})
             self.assertIsNone(select("unknown.file"))
             (root / "tests/orphan_helper.py").write_text("pass")
             self.assertIsNone(select("tests/orphan_helper.py"))
