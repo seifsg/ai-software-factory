@@ -1,0 +1,10 @@
+reference #1: ACCEPT calibration=PASS
+alternative #1: ACCEPT calibration=PASS
+missing-section #1: REJECT R1 calibration=PASS
+hidden-section #1: REJECT R1 calibration=PASS
+hidden-content #1: REJECT R1 calibration=PASS
+missing-content #1: REJECT R1 calibration=PASS
+offscreen-content #1: REJECT R1 calibration=PASS
+mobile-overflow #1: REJECT R2 calibration=PASS
+lost-progress #1: REJECT R4 calibration=PASS
+dead-button #1: REJECT R3,R4 calibration=PASS
