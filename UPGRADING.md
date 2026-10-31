@@ -10,6 +10,7 @@ For every release:
 ## Next release
 
 - Update launchers for `report --pr-body`; it validates local draft structure without completing a step or replacing final published-PR checks. Existing pins stay intact. Accepted `fix-round` output adds its stored `report_sha256`; no input or record migration is needed.
+- A `start` without a selection now selects first, so offline starts need an existing selection or cache. Explicit and legacy pins skip the latest-release check. Active runs keep their recorded policies.
 
 ## 1.2.0
 

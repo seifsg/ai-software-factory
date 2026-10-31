@@ -7,6 +7,7 @@ inside the run folder. Actions: `tamper` rewrites the rubric under FAKE_SAMPLES;
 would answer every check into the running interpreter, and refuses unless that is a virtual environment.
 """
 import os
+import json
 from pathlib import Path
 import shutil
 import sys
@@ -45,8 +46,17 @@ def set_up_right(arm, sample, workdir, factory, prompt):
     homes = [Path(os.environ.get(name, "")).resolve() for name in ("TEMP", "TMPDIR", "SAFE_ENGINE_HOME")]
     exported = arm != "factory" or ((Path(factory) / ".agents/skills/safe-engine/SKILL.md").is_file()
                                     and not (Path(factory) / "evals").exists() and factory in prompt)
+    receipt = Path(workdir, '.factory/entry-bundle.json')
+    selected = not receipt.exists()
+    if arm == "factory":
+        try:
+            pin = json.loads(receipt.read_text(encoding="utf-8"))
+            selected = (Path(pin['bundle_root']).resolve() == Path(factory).resolve()
+                        and (Path(factory) / '.git').is_dir() and pin.get('policy') == 'explicit')
+        except (OSError, ValueError, KeyError, TypeError):
+            selected = False
     return (request in prompt and ("safe-engine/SKILL.md" in prompt) == (arm == "factory") and exported
-            and all(home.is_dir() and home.parent == run_folder for home in homes))
+            and selected and all(home.is_dir() and home.parent == run_folder for home in homes))
 
 
 def cheat(workdir):

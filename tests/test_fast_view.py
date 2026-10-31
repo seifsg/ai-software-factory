@@ -14,6 +14,7 @@ from unittest.mock import patch
 import urllib.error
 import urllib.request
 from png_fixtures import png
+from bundle_fixtures import historical_gate
 
 SCRIPTS = Path(__file__).resolve().parents[1] / "skills/safe-engine/scripts"
 GATE = SCRIPTS / "fast_gate.py"
@@ -63,7 +64,7 @@ class LiveViewTests(unittest.TestCase):
             self.assertNotIn("hook.error", text)
 
     def run_gate(self, *args):
-        return subprocess.run([sys.executable, str(GATE), *args, "--project", str(self.project)],
+        return subprocess.run([*historical_gate(), *args, "--project", str(self.project)],
                               capture_output=True, text=True, encoding="utf-8", env=self.env)
 
     def gate(self, *args):
@@ -278,7 +279,7 @@ class LiveViewTests(unittest.TestCase):
     def test_same_key_runs_in_two_projects_keep_their_own_views(self):
         other = self.root / "other app"
         other.mkdir()
-        start = subprocess.run([sys.executable, str(GATE), "start", "--key", "cockpit", "--kind", "change", "--no-ui",
+        start = subprocess.run([*historical_gate(), "start", "--key", "cockpit", "--kind", "change", "--no-ui",
                                 "--no-data", "--request", "other", "--project", str(other)], capture_output=True, env=self.env)
         self.assertEqual(start.returncode, 0, start.stderr)
         self.plan("- T1 pre: a do: b post: c\n")
@@ -318,7 +319,7 @@ class LiveViewTests(unittest.TestCase):
         """A second same-key run makes accidental cross-project aggregation visible."""
         other = self.root / "other app"
         other.mkdir()
-        subprocess.run([sys.executable, str(GATE), "start", "--project", str(other), "--key", "cockpit",
+        subprocess.run([*historical_gate(), "start", "--project", str(other), "--key", "cockpit",
                         "--kind", "change", "--no-ui", "--no-data", "--request", "other"],
                        capture_output=True, check=True, env=self.env)
         return other

@@ -514,7 +514,7 @@ def select_locked(project, bundle, ref, cache, entrypoint, new_run=False):
         if ref is not None or (bundle and Path(bundle).expanduser().resolve() != Path(saved["bundle_root"]).resolve()):
             raise RuntimeError("An existing selection cannot be upgraded here; use improve-factory")
         result = inspect_bundle(saved["bundle_root"], expected=saved["revision"], clean=policy == "automatic", entrypoint=entrypoint)
-        if not new_run or held:
+        if not new_run or held or policy != "automatic":  # pins never update: skip remote discovery
             return {**result, "selection_record": str(receipt), "selection_policy": policy,
                     **({"notice": f"Keeping selected factory: {held}."} if new_run and held else {})}
         try:
@@ -523,17 +523,13 @@ def select_locked(project, bundle, ref, cache, entrypoint, new_run=False):
             return {**result, "selection_record": str(receipt), "selection_policy": policy,
                     "notice": f"Latest factory check failed: {error}. Keeping factory {result['version'] or 'unversioned'} "
                               f"at {result['revision']}."}
-        if policy == "automatic":
-            if saved_selection(receipt) != saved:
-                raise RuntimeError("Bundle selection changed during resolution; preserve it and retry")
-            if held := active_selection(project):
-                return {**result, "selection_record": str(receipt), "selection_policy": policy,
-                        "notice": f"Keeping selected factory: {held} appeared during resolution."}
-            result = latest
-            save_selection(receipt, result, policy)
-        else:
-            result.update(latest_release=latest.get("latest_release", latest.get("release")),
-                          notice=f"Keeping {policy} pin. " + latest.get("notice", ""))
+        if saved_selection(receipt) != saved:
+            raise RuntimeError("Bundle selection changed during resolution; preserve it and retry")
+        if held := active_selection(project):
+            return {**result, "selection_record": str(receipt), "selection_policy": policy,
+                    "notice": f"Keeping selected factory: {held} appeared during resolution."}
+        result = latest
+        save_selection(receipt, result, policy)
     else:
         if held and not bundle:
             raise RuntimeError("Existing run has no bundle path record; establish its original bundle and use --bundle")

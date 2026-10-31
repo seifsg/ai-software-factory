@@ -7,6 +7,7 @@ import tempfile
 import time
 
 from evals import agent, catalog, interpreter, isolation, proc
+from safe_engine import distribution
 
 ARMS = ("factory", "plain")
 PROMPTS = Path(__file__).resolve().parent / "prompts"
@@ -48,13 +49,18 @@ def prompt_text(sample, arm, factory):
     return text.replace("{factory}", Path(factory).as_posix() if factory else "").replace("{request}", sample.request)
 
 
-def git_init(work):
-    """Make the copy a repository with the fixture as its first commit; skipped when Git is missing or fails."""
-    for args in (["init", "-q"], ["add", "-A"], GIT_COMMIT):
+def git_init(work, origin=None):
+    """Commit `work` as its first commit; a factory snapshot (`origin`) must succeed, a fixture may skip without Git."""
+    commands = [["init", "-q"]]
+    if origin:
+        commands += [["config", "core.autocrlf", "false"], ["remote", "add", "origin", origin]]
+    commands += [["add", "-A", *(["-f"] if origin else [])], GIT_COMMIT]
+    for args in commands:
         try:
-            if subprocess.run(["git", *args], cwd=work, capture_output=True, timeout=60).returncode:
-                return
-        except (OSError, subprocess.SubprocessError):
+            subprocess.run(["git", *args], cwd=work, capture_output=True, timeout=60, check=True)
+        except (OSError, subprocess.SubprocessError) as error:
+            if origin:
+                raise RuntimeError(f"Cannot initialize the factory snapshot: {error}") from error
             return
 
 
@@ -83,6 +89,9 @@ def attempt(sample, arm, base, ctx):
     work = catalog.write_fixture(sample, base / "work")
     git_init(work)
     factory = isolation.export_factory(ctx["bundle"], base / "factory") if arm == "factory" else ""
+    if factory:  # a committed snapshot pinned explicitly: start selects it with no remote lookup
+        git_init(factory, origin=distribution.REPOSITORY)
+        distribution.select_for_project(work, factory, None, base / "cache", "safe-engine")
     prompt = base / "prompt.md"
     prompt.write_text(prompt_text(sample, arm, factory), encoding="utf-8")
     env, seen, started = isolation.run_env(base), isolation.temp_entries(), time.monotonic()

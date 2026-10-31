@@ -12,6 +12,8 @@ import time
 import unittest
 from unittest.mock import patch
 
+from bundle_fixtures import historical_gate
+
 SCRIPTS = Path(__file__).resolve().parents[1] / "skills/safe-engine/scripts"
 GATE = SCRIPTS / "fast_gate.py"
 STEPS = ["tickets", "plan", "build", "done-run", "handoff"]
@@ -148,6 +150,8 @@ class DashboardTests(unittest.TestCase):
 
 
 class ProgressHookTests(unittest.TestCase):
+    """Historical run setup; real commands and hooks verify progress behavior."""
+
     def setUp(self):
         temp = tempfile.TemporaryDirectory(prefix="fast progress ")
         self.addCleanup(temp.cleanup)
@@ -169,7 +173,7 @@ class ProgressHookTests(unittest.TestCase):
             self.assertNotIn("hook.error", log.read_text(encoding="utf-8"))
 
     def gate(self, *args):
-        result = subprocess.run([sys.executable, str(GATE), *args, "--project", str(self.project)],
+        result = subprocess.run([*historical_gate(), *args, "--project", str(self.project)],
                                 capture_output=True, text=True, encoding="utf-8", env=self.env)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         return result.stdout
