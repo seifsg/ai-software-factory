@@ -505,7 +505,7 @@ def check_design(run, body, **_):
     theme, journeys = marker(body, "Theme"), marker(body, "Journeys")
     if theme and "light" not in theme.lower():
         problems.append("Theme must name light mode as the default")
-    if journeys and not re.search(r"\d.*\bmin\b\W*\d", journeys, re.I):
+    if journeys and not re.search(r"\d.*\bmin\W*\d", journeys, re.I):
         problems.append("Journeys must give counts and a minimum: '<journey>: 2 actions, 1 load, min 2 actions'")
     if brief and marker(body, "Hierarchy") and "primary" not in block(body, "Hierarchy").lower():
         problems.append("Hierarchy must name each key screen's primary action: '<screen>: primary <action>; ...'")

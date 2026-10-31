@@ -176,6 +176,8 @@ class FastWorthTests(GateHarness, unittest.TestCase):
         self.assertNotEqual(decision["report_sha256"], hashlib.sha256(path.read_bytes()).hexdigest())
         self.assertNotIn("done-run", state["done"])
         self.assertTrue(fast_round.findings("**Findings:** none", self.project, fast_record.marker, state))
+        self.assertIn("not an existing JSON report", " ".join(fast_round.findings(
+            "**Findings:** No introduced defects", self.project, fast_record.marker, state)))
         final = {"findings": [], "resolved": [{"report_sha256": state["fix_rounds"][0]["sha256"],
                                                "finding": "F2", "evidence": "Synthetic fixture evidence"}]}
         atomic_json(path, final)
