@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 import fast_metrics
+from fast_progress import is_none
 import fast_worth as worth
 
 
@@ -49,9 +50,9 @@ def findings(body, project, marker, run):
     """A completed new run names its final finding report, or explicitly records a clean check."""
     value = marker(body, "Findings")
     rounds = run.get("fix_rounds", [])
-    if value == "none" and not rounds:
+    if is_none(value) and not rounds:
         return []
-    if not value or value == "none":
+    if not value or is_none(value):
         return ["needs '**Findings:** none' for clean checks, or a JSON report path with every scored finding"]
     path = Path(value) if Path(value).is_absolute() else Path(project) / value
     if not path.is_file():

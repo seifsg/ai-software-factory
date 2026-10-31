@@ -3,6 +3,8 @@ dev ports no other open run holds, and DEFERRED (owner|hardware) items. Spec: fa
 """
 import re
 
+from fast_progress import is_none
+
 PORT = re.compile(r"(?<![\w.-])([1-9]\d{3,4})(?![\w-]|\.\d)")  # '5180', 'localhost:5180.'; kept when 1024..65535
 # 'DEFERRED (hardware: needs a macOS device)', 'DEFERRED (owner: sign-off on pricing copy)'
 MARK = r"DEFERRED[ \t]+\((?:owner|hardware):[ \t]*[^()\n]*\S[^()\n]*\)"
@@ -11,8 +13,7 @@ DEFER = re.compile(MARK)
 
 def ports(line):
     """The dev ports a Ports line names, in order; 'none (<why>)' owns none, even when <why> names one."""
-    line = re.sub(r"^\s*none\b\s*(?:\([^)]*\))?", "", line or "", flags=re.I)
-    return list(dict.fromkeys(int(n) for n in PORT.findall(line) if 1024 <= int(n) <= 65535))
+    return [] if is_none(line) else list(dict.fromkeys(int(n) for n in PORT.findall(line or "") if 1024 <= int(n) <= 65535))
 
 
 def plan_problems(run, body, marker, subsection, runs=None, light=False):

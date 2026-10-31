@@ -17,6 +17,7 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 
 ### Fixed
 
+- Every work-record value is read one way: trailing `.`, `;` or `,` is ignored and `none (<why>)` is recognised by one shared rule (Ports, Findings, Ticket), so its reason never counts as content.
 - Valid record lines pass the first time: `Ports: none (<why>)` owns no port it mentions, a port ending a sentence counts, `min2` is a minimum, a trailing `.` or `;` after a proof declaration is accepted, and a Findings value that is not a report path says so (#218).
 - Only delegated todos name a model tier, and a red full suite is diagnosed before a maker gets it (#219).
 - Owner messages come first: answer or act with only the needed checks, let the latest request replace the objective, and resume only work that still fits (#216).

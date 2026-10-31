@@ -17,6 +17,19 @@ ARROW_MARK = re.compile(r"→|->")
 NEXT_H3 = re.compile(r"^###\s", re.M)
 NOW = re.compile(r"\*\*Now:\*\*([^\n]*)", re.I)
 TRY = re.compile(r"\*\*Try:\*\*[ \t]*T(\d+)[ \t]+(cmd|url|file)[ \t]+(\S[^\n]*?)[ \t]*$", re.I | re.M)
+NONE = re.compile(r"[ \t]*none\b[ \t]*(?:\([^()\n]*\))?", re.I)  # 'none' or 'none (<why>)'
+
+
+def field_value(text):
+    """A record value without trailing sentence punctuation, so 'none.' and 'app 5180;' read as written."""
+    return text.strip().rstrip(" \t.;,")
+
+
+def is_none(text):
+    """An explicit 'none (<why>)': the reason never counts as content."""
+    return bool(NONE.fullmatch(field_value(text or "")))
+
+
 HINT = re.compile(r"^[ \t]*<!--(?:(?!\n##\s).)*?-->", re.S | re.M)
 TICKET_LINE = re.compile(r"\*\*(?:Epic|Ticket|Sub-issue):\*\*[ \t]*(\S+)[ \t]*([^\n]*)", re.I)
 
