@@ -124,7 +124,7 @@ Read-only: do not fix unless told to. Review the complete iteration and affected
 - Read the code around each file too; the diff alone is insufficient. Then run the lenses below.
 - Inspect source, diffs, logs and supplied evidence. Run no test suites during review unless told.
 - Label every claim verified (read or observed) or hypothesis. A raw count is a hypothesis about impact until you read what it means.
-- Any language: its debug output and loose types count as in categories 5 and 8.
+- Any language: its debug output and loose types count in categories 5 and 8.
 - Also hunt: non-critical integrations (analytics, history, messaging) breaking the main logic when they fail; valid actions that leave unrecoverable state (creation, update, save and load limits must agree); bypassing the project's wrapper for config or shared integrations; guards for states the design rules out (not defense in depth).
 - Factory rules, for our own work (someone else's project: judge by its rules): extra code or over-engineering; not O(1) or as close as the real workload allows; new code where an existing function fits; placeholders, stubs or TODOs; files at 1000 lines or more not split; functions without a short comment saying what they do and why; one more pass: less code? less complexity? faster?
 
@@ -151,7 +151,7 @@ Lenses may run as isolated parallel reviewers. Give each the scope, baseline, ra
 
 The report is the Output Format template; lens reports go inside it. Finding format: a Summary Table row that also carries Layer, Evidence (raw proof: code, log, observation), Fix and Confidence after Impact. Scope also names the baseline and lenses run; `### Unknowns` (required evidence still missing) follows the Summary Table; the verdict starts with PASS, FAIL or CONDITIONAL.
 
-- Score every review/check finding with [worth-it](references/worth-it.md). Keep severity, disposition and proof.
+- Score every finding with [worth-it](references/worth-it.md). Keep severity, disposition and proof.
 - Layer: `product` (code or behavior), `evidence` (proof missing or wrong), `report` (claim does not match result). Fix the affected layer. A proof gap needs actual verification, not a label.
 - Confidence: HIGH / MED / LOW. Label hunches.
 - Load-bearing code is not over-engineering: mark it **KEEP** with the reason.
