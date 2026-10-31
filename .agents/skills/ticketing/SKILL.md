@@ -10,7 +10,7 @@ The remote ticket is the record; local notes are a cache. Write tickets with `re
 ## Tracker
 
 1. Use the project's tracker, an available tracker integration first.
-2. None set and not already answered: ask once, recommending Issues in a private GitHub repository (`references/github.md`).
+2. A new project without a remote: create a private repository on the owner's account, push the default branch and use its Issues (`references/github.md`). Otherwise, none set and not already answered: ask once, recommending Issues in a private GitHub repository.
 3. Resolve the real repository, access and visibility before writing. No credentials, customer data, private transcripts or runtime dumps in tickets. Sensitive original input stays private: the ticket gets a faithful safe summary, saying details were withheld.
 4. Search before creating: symptom, feature, area, files, PR title, branch. Reuse the same work: a bug, enhancement, QA note or review finding on an existing ticket's outcome updates that ticket as a change of intent, reopened if closed. A new ticket only for a new outcome or on the owner's ask. No duplicates; after an uncertain response, read the tracker and reconcile before creating again.
 5. Record provider, project, native ID and URL.

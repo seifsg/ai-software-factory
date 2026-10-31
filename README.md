@@ -31,7 +31,7 @@ Coding agents jump straight to code, forget the method as the context grows and 
 3. **Build:** in your agent's chat (`/safe-engine` in Claude Code, `$safe-engine` in Codex):
 
    ```text
-   safe-engine Build [app or feature] in [absolute project directory]. Success means [observable outcome].
+   safe-engine Build [app or feature] in [absolute project directory, or leave it out for a new project]. Success means [observable outcome].
    ```
 
 4. **Watch, answer, merge.** Every step prints its output. Answer its questions, review the draft PR, merge it.

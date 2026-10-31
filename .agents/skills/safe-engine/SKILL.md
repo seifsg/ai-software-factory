@@ -70,7 +70,7 @@ Each step ends with its block: print it to the owner, write it to the run file, 
 
 Only what those skills do not say:
 
-- **0:** a new project first gets a folder, `git init`, a first commit on the default branch and a feature branch. Product and feature: research and kickoff questions come next.
+- **0:** no project folder named: create one beside the owner's other projects (the parent of the current project, else the current folder), named for the product in kebab-case, and report its absolute path. No Git: `git init`, a first commit on the default branch, then a feature branch. No remote: `ticketing` creates a private repository on the owner's account and pushes the default branch. Product and feature: research and kickoff questions come next.
 - **3:** UI work adds `ux-quality` step 1; new or changed persistence adds `database-schema`. A `change` uses the light plan. Fast passes the file-summary stop. Safe stops here: `Waiting: owner: plan OK?`.
 - **4:** starts as soon as the plan names the views and commands. Up to three items: capture them yourself. More: one light delegate captures while you finish the plan. No source edit until every Before file is saved. Open the host's live preview when it has one.
 - **5:** spike unknown capabilities first. After each todo's real use, run only the tests that cover its changed files; when those are the whole suite, that run is still only a build check. No separate full-suite run here. Commit by phase in the project's commit style.

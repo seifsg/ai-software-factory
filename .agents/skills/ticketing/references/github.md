@@ -9,7 +9,7 @@ gh auth status
 gh repo view --json nameWithOwner,isPrivate
 ```
 
-No repository yet and the owner chose private GitHub: `gh repo create <name> --private --source . --remote origin` from the local repository.
+No repository yet (a new project, or the owner chose private GitHub), from the local repository with its first commit: `gh repo create <name> --private --source . --remote origin --push`. Check the name is free first (`gh repo view <owner>/<name>` fails); taken: add a short suffix, never reuse someone's repository.
 
 ## Search, then create
 
