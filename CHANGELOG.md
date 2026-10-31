@@ -13,6 +13,7 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 ### Fixed
 
 - Run metrics: Fast runs start their timeline at the first applicable step, Safe runs record the factory revision and never share a metrics folder, and analytics hooks are plain calls instead of repeated guards (#175).
+- A host, URL or IP written in a ticket is tested by resolving the name and requesting that URL, never assumed linked or left unverified (#206).
 
 ## [1.2.0] - 2026-10-28
 
