@@ -235,12 +235,12 @@ def open_before_build(run):
 
 # ---- commands ---------------------------------------------------------------
 
-def find_project(given):
+def find_project(given, recover=True):
     """The given project, else the registered one holding cwd, else the nearest folder above cwd with a home state."""
     if given:
         return Path(native(given)).resolve()
     here = Path.cwd().resolve()
-    found = store.registered(ACTIVE, here)
+    found = store.registered(ACTIVE, here, recover=recover)
     if found:
         return Path(found)
     for folder in (here, *here.parents):
@@ -286,8 +286,8 @@ def status_text(run, all_sections=None):
     suppress_report = sibling("fast_wait").suppress_report(waiting, run.get("owner_report"))
     lines = ([sibling("fast_wait").describe(waiting)] if live_wait else []) + [
              sibling("fast_card").card(run, steps_for(run), all_sections, now(), left=True, current=suppress_report),
-             f"{run['mode']} {run['kind']} run '{run['key']}' at {run['project']}"
-             f" (ui={run.get('ui')}, data={run.get('data')}, auth={run.get('auth')})",
+             f"{run['mode']} {run['kind']} {run['project']}"
+             f" (ui={run.get('ui')} data={run.get('data')} auth={run.get('auth')})",
              "Gate: " + ("open, source edits allowed" if not blocked else "closed until " + ", ".join(blocked)),
              "Next: " + ("closed" if run.get("closed") else next_step(run) or "close")]
     lines += list(filter(None, [sibling("fast_pr_policy").notice(HOME, run)]))
@@ -299,7 +299,7 @@ def status_text(run, all_sections=None):
 def skeleton(run):
     quoted = ["> " + line for line in run["request"].splitlines()]  # quoted: request headings never become sections
     lines = [f"# {run['key']}: {run['mode']} {run['kind']} run", "",
-             "<!-- Fill each section, then `fast_gate.py done <step>`. Markers: fast-run.md#work-record -->", "",
+             "<!-- Fill sections, then `fast_gate.py done <step>`; fast-run.md#work-record -->", "",
              "## Request", "", *quoted, ""]
     hints = sibling("fast_hints").record_hints(run)
     for step in steps_for(run):
@@ -364,6 +364,8 @@ def cmd_start(args):
            "ui": product if args.ui is None else args.ui, "data": product if args.data is None else args.data,
            "auth": args.auth, "request": request.strip(), "created": now(), "done": {}, "paused": None,
            "closed": False, "bundle": bundle, "pr_instance": os.urandom(16).hex(), **method_flags(bundle, project)}
+    if os.path.lexists(project / ".factory/worktree-enrollment.json"):
+        run.update(sibling("fast_enroll").inheritance(project, sys.modules[__name__]))
     run.update(sibling("fast_pr_policy").start(HOME))
     if getattr(args, "design_port", False):
         run.update(design_port=True, ui=True)
@@ -985,6 +987,7 @@ def main():
         sys.exit(cmd_hook(host))
     args = sibling("fast_cli").parse(sys.modules[__name__])
     actions = {"start": lambda a: sibling("fast_entry").start(a, sys.modules[__name__]),
+               "enroll-worktree": lambda a: sibling("fast_enroll").run(a, sys.modules[__name__]),
                "wait": lambda a: sibling("fast_wait_command").run(a, sys.modules[__name__]),
                "done": cmd_done, "status": cmd_status, "close": cmd_close, "rehome": cmd_rehome,
                "try": cmd_try, "view": cmd_view, "scratch": cmd_scratch,

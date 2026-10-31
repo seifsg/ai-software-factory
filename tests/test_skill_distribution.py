@@ -442,9 +442,10 @@ class ReleaseResolutionTests(FixtureCase):
                 value = json.loads(receipt.read_text()); value["version"] = 1; value.pop("policy")
                 receipt.write_text(json.dumps(value))
             before = receipt.read_bytes()
-            result = resolver.select_for_project(project, None, None, self.cache, "safe-engine", True)
+            with patch.object(resolver, "resolve_bundle", side_effect=AssertionError("pinned start must stay offline")):
+                result = resolver.select_for_project(project, None, None, self.cache, "safe-engine", True)
             self.assertEqual(result["revision"], old)
-            self.assertEqual(result["latest_release"], "v1.1.0")
+            self.assertNotIn("latest_release", result)
             self.assertEqual(receipt.read_bytes(), before)
 
     def test_selection_lock_rejects_a_competing_process(self):

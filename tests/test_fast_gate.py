@@ -12,7 +12,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from bundle_fixtures import legacy_bundle, offline_gate
+from bundle_fixtures import historical_gate, legacy_bundle, offline_gate
 
 SCRIPTS = Path(__file__).resolve().parents[1] / "skills/safe-engine/scripts"
 GATE = SCRIPTS / "fast_gate.py"
@@ -99,7 +99,10 @@ def link(at, target):
 
 
 class GateHarness:
-    """A disposable project and gate home, with the real CLI and hook."""
+    """Historical run-state fixtures; real subsequent commands and hooks.
+
+    Current public initialization is covered independently in test_start_selection.
+    """
     def setUp(self):
         temp = tempfile.TemporaryDirectory(prefix="fast gate ")
         self.addCleanup(temp.cleanup)
@@ -115,7 +118,7 @@ class GateHarness:
             self.assertNotIn("hook.error", log.read_text(encoding="utf-8"))  # have swallowed an exception
 
     def gate(self, *args, ok=True, project=None):
-        result = subprocess.run([*getattr(self, "gate_command", [sys.executable, str(GATE)]), *args,
+        result = subprocess.run([*getattr(self, "gate_command", historical_gate()), *args,
                                  "--project", str(project or self.project)],
                                 capture_output=True, text=True, encoding="utf-8", errors="replace", env=self.env)
         self.assertEqual(result.returncode == 0, ok, result.stdout + result.stderr)
@@ -187,7 +190,7 @@ class FastGateTests(GateHarness, unittest.TestCase):
         self.assertFalse((self.project / ".gitignore").exists())  # no project file changes
         run = json.loads((self.project / ".factory/fast/run.json").read_text(encoding="utf-8"))
         self.assertEqual(run["bundle"]["revision"], receipt["revision"])
-        self.assertIn("Latest factory check failed: offline fixture", output)
+        self.assertIn("latest release: unknown", output)
         self.assertIn("Hooks:", output)
         record = (self.project / ".factory/fast/work-record.md").read_text(encoding="utf-8")
         self.assertIn("## Analysis", record)  # methods without the light lane keep it, with their own hints

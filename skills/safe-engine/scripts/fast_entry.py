@@ -43,7 +43,7 @@ def route(args, gate):
     project = next((arg.split("=", 1)[1] for arg in options if arg.startswith("--project=")), None)
     if "--project" in options and options.index("--project") + 1 < len(options):
         project = options[options.index("--project") + 1]
-    project = Path(gate.native(project)).resolve() if project else gate.find_project(None)
+    project = Path(gate.native(project)).resolve() if project else gate.find_project(None, recover=False)
     target = selected_command(gate, project)
     return subprocess.call([sys.executable, str(target), *args]) if target else None
 
@@ -103,9 +103,10 @@ def hook_runs(event, runs, cwd, gate):
 
 def summary(result):
     """Distinguish selected identity, advertised release, and a failed or skipped check."""
-    latest = result.get("latest_release") or result.get("release") or "unknown (not checked or unavailable)"
-    return (f"Factory selected: {result.get('version') or 'unversioned'} at {result['revision']}\n"
-            f"Latest release: {latest}\n" + (result.get("notice", "") + "\n" if result.get("notice") else ""))
+    latest = result.get("latest_release") or result.get("release") or "unknown"
+    notice = result.get("notice")
+    return (f"Factory {result.get('version') or 'unversioned'} at {result['revision']}; latest release: {latest}\n"
+            + (notice + "\n" if notice else ""))
 
 
 def start(args, gate):
@@ -125,10 +126,6 @@ def start(args, gate):
             raise RuntimeError(f"Run still open or unknown: {held}; resume or close it without changing its factory")
         receipt = project / ".factory/entry-bundle.json"
         local = project if project == gate.HERE.parents[2] and (project / "safe_engine/distribution.py").is_file() else None
-        if local:
-            release.inspect_bundle(local)  # Verify canonical source identity before treating this as maintenance.
-        if not receipt.exists() and not local:
-            return gate.cmd_start(args)  # Compatibility for older bare-gate callers, never a freshness claim.
         result = release.select_locked(project, local if not receipt.exists() else None, None,
                                        gate.HOME / "bundles", "safe-engine", new_run=True)
         print(summary(result), end="", flush=True)

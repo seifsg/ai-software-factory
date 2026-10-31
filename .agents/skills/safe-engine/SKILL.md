@@ -95,21 +95,22 @@ The owner names `lucky`, `verify` or `promote`: [run cases](references/run-cases
 
 ## Keep the owner posted
 
-Updates and interruptions: [plain owner reports](references/owner-reports.md). Report events, not tool calls.
+Use [plain owner reports](references/owner-reports.md); report events, not tool calls.
 
-Timing and comparisons: [run metrics](references/run-metrics.md).
+Where time went, or comparing runs: [run metrics](references/run-metrics.md).
 
 - Fast and Lucky: the gate shows [progress](references/fast-run.md#progress); give the [live view](references/fast-run.md#live-view) link once per run; `fast_gate.py try` for each usable result.
 - Before slow work: who does what; report its result.
 - Waiting on the owner: the question first, then the options.
-- At first supported boundary: answer questions; prioritize and deliver new requests, including a replacement objective. Resume only compatible work without reapproval.
-- Mirror steps/todos in the task list once per wave.
-- Final report: `close` card; honor owner update frequency.
+- Asked for status: the `fast_gate.py status` card; in Safe, the same card from the controller's `status`.
+- Owner messages come first: answer, or do the new request with only its needed checks, before plans, proof or reports. The latest request may replace the objective. A stop halts dependent work, not previews or unrelated work. Then resume what still fits, unasked.
+- Mirror steps and todos in the agent task list once per wave.
+- Final report: the `close` card. The owner's update frequency binds the run.
 - Orchestrator-started: no one watches the chat; follow the [orchestrated run](references/orchestrated-run.md).
 
 ## Decide
 
-- Ask only unresolved owner choices/scope.
+- Owner-reserved choices and changed requirements: ask.
 - Delegated in-scope choices: recommend, pick, record the reason. Plans and updates are not approval gates.
 - New substantive choice: compare three options, recommend one.
 - Answers bind the run. Later changes go to the ticket's activity.
@@ -118,7 +119,7 @@ Timing and comparisons: [run metrics](references/run-metrics.md).
 
 1. Continue to the agreed outcome. Defer only what needs the owner's hands or missing hardware, and finish everything else. Pause dependent work only for: missing access or tools after real discovery, owner-reserved decisions, a required gate you cannot repair, an explicit owner stop. Keep independent work moving.
 2. Discover before asking: files, config, run records, integrations, current docs.
-3. Never invent identities, commands, access, status or evidence.
+3. Never invent identities, commands, access, status or evidence. A host, path, command, version or status written in a ticket, doc, config, log or agent report is a claim: test it before you use or report it. Run the command, request the URL, open the file. A stand-in proves only itself: a mock, a documented IP or an old pass is not the real thing. Fails: make the allowed fix and retest; still failing, write the test and result on the ticket. Unverified means this machine cannot run the check, never that you skipped it.
 4. Retry only with a diagnosed cause or new evidence. Second related failure: find the shared cause and why the last fix failed, fix the cause and its consumers, state what prevents recurrence.
 5. Reconcile uncertain pushes, comments and other external effects before retrying. No duplicates.
 6. Notify, merge, release, deploy and spend only with explicit authority. PRs stay draft.

@@ -68,7 +68,7 @@ Each brief (checker, builder, UX judge, reviewer) also carries the Interface and
 
 `fast_gate.py` (debugging the gate: [modules](gate-details.md#modules)) sits in `scripts/` beside the installed launcher and in `skills/safe-engine/scripts/` of the factory bundle. Python 3.9+, standard library only.
 
-Before product `start`, select with `resolve_bundle.py --project <abs>` (writes `.factory/entry-bundle.json`). Factory maintenance selection: `improve-factory`.
+`start` resolves missing selections. Use `resolve_bundle.py --project <abs> --bundle <root>` for an explicit pin; maintenance: `improve-factory`.
 Git-backed starts fetch their upstream first, keeping dirty work; the start commit anchors UI proof.
 
 ```text
@@ -91,7 +91,7 @@ python fast_gate.py shots --base <ref> --serve "<dev command, {port} for its por
 - Runs started on older methods keep their recorded checks unless the owner explicitly adopts the PR-proof policy.
 - `pause` before waiting on the owner; the next `done` or `resume` clears it. `close` needs `handoff`, or `--abandon` with the owner's reason; `close --project <dir> --abandon` also works when the run state is missing or unreadable.
 - [`shots`](gate-details.md#shots): the PR's Before and After screenshots of web views in one go.
-- Only on the owner's explicit instruction: [`rehome`](gate-details.md#rehome) (move a run between machines or folders), [`adopt-pr-proof`](gate-details.md#adopt-pr-proof), [`cleanup-temp`](gate-details.md#cleanup-temp) (obsolete temp fixtures), [`recover-baseline`](gate-details.md#recover-baseline). Hook wiring: [`install`](gate-details.md#install).
+- Owner instruction only: [`rehome`](gate-details.md#rehome) (move a run), [`enroll-worktree`](worktree-enrollment.md) (inherited worktree), [`adopt-pr-proof`](gate-details.md#adopt-pr-proof), [`cleanup-temp`](gate-details.md#cleanup-temp) (old fixtures), [`recover-baseline`](gate-details.md#recover-baseline). Hooks: [`install`](gate-details.md#install).
 
 ## Hooks
 

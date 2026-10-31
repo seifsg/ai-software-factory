@@ -7,7 +7,9 @@ import json
 from contextlib import redirect_stdout
 from io import StringIO
 from pathlib import Path
+import subprocess
 import sys
+import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -19,6 +21,18 @@ BUDGETS = json.loads((ROOT / "tests/budgets.json").read_text(encoding="utf-8"))
 
 
 class BudgetTests(unittest.TestCase):
+    def test_archived_gate_fixture_retains_selected_methods_and_real_git_identity(self):
+        with tempfile.TemporaryDirectory() as folder:
+            source = Path(folder) / "source"
+            scripts = gate_output.scripts(ROOT, "HEAD", source)
+            self.assertEqual(scripts, source / gate_output.GATE)
+            self.assertEqual(Path(subprocess.check_output(
+                ["git", "-C", str(source), "rev-parse", "--show-toplevel"], text=True).strip()).resolve(), source.resolve())
+            method = ".agents/skills/safe-engine/references/fast-run.md"
+            self.assertEqual((source / method).read_bytes(), subprocess.check_output(
+                ["git", "-C", str(ROOT), "show", f"HEAD:{method}"]))
+            self.assertTrue((source / "safe_engine/bundle-inputs.json").is_file())
+
     def test_every_method_file_stays_within_its_byte_budget(self):
         files = token_report.expand(token_report.KINDS["all methods"], None)
         self.assertEqual(sorted(files), sorted(BUDGETS["methods"]))  # a new file needs a budget; a gone one, none

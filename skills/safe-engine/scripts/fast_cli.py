@@ -44,6 +44,7 @@ def _parser(gate, selected=None):
     register("fast_baseline", "recover-baseline")
     register("fast_release", "version", "verify", shared=False)
     register("fast_design_command", "design")
+    register("fast_enroll", "enroll-worktree")
     start = sub.add_parser("start", parents=[common], help="Begin a run and register it for hooks")
     start.add_argument("--key", required=True)
     start.add_argument("--mode", choices=gate.MODES, default="fast")
