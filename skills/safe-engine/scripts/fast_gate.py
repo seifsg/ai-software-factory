@@ -364,6 +364,8 @@ def cmd_start(args):
            "ui": product if args.ui is None else args.ui, "data": product if args.data is None else args.data,
            "auth": args.auth, "request": request.strip(), "created": now(), "done": {}, "paused": None,
            "closed": False, "bundle": bundle, "pr_instance": os.urandom(16).hex(), **method_flags(bundle, project)}
+    if os.path.lexists(project / ".factory/worktree-enrollment.json"):
+        run.update(sibling("fast_enroll").inheritance(project, sys.modules[__name__]))
     run.update(sibling("fast_pr_policy").start(HOME))
     if getattr(args, "design_port", False):
         run.update(design_port=True, ui=True)
@@ -985,6 +987,7 @@ def main():
         sys.exit(cmd_hook(host))
     args = sibling("fast_cli").parse(sys.modules[__name__])
     actions = {"start": lambda a: sibling("fast_entry").start(a, sys.modules[__name__]),
+               "enroll-worktree": lambda a: sibling("fast_enroll").run(a, sys.modules[__name__]),
                "wait": lambda a: sibling("fast_wait_command").run(a, sys.modules[__name__]),
                "done": cmd_done, "status": cmd_status, "close": cmd_close, "rehome": cmd_rehome,
                "try": cmd_try, "view": cmd_view, "scratch": cmd_scratch,
