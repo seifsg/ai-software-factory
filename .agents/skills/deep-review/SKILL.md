@@ -175,7 +175,7 @@ Severity is impact. Disposition decides the gate: `blocking`, `before-exposure` 
 
 ## Output contract
 
-In a factory run this is step 6, Verify. The block `## 6 Verify` holds:
+In a factory run this is step 6, Verify: the builder runs this pass, and the independent review is step 8 (`how-to-review-a-pr`). The block `## 6 Verify` holds:
 
 - [ ] Every requested journey used through real controls, with observed results
 - [ ] change-guard and compliance results, plus each other lens run, each with its findings table (possibly empty) and verdict

@@ -73,8 +73,8 @@ Only what those skills do not say:
 - **0:** a new project first gets a folder, `git init`, a first commit on the default branch and a feature branch. Product and feature: research and kickoff questions come next.
 - **3:** UI work adds `ux-quality` step 1; new or changed persistence adds `database-schema`. A `change` uses the light plan. Fast passes the file-summary stop. Safe stops here: `Waiting: owner: plan OK?`.
 - **4:** starts as soon as the plan names the views and commands. Up to three items: capture them yourself. More: one light delegate captures while you finish the plan. No source edit until every Before file is saved. Open the host's live preview when it has one.
-- **5:** spike unknown capabilities first. After each todo's real use, run only the tests that cover its changed files; when those are the whole suite, that run is still only a build check. No separate full-suite run here.
-- **6:** verify is yours; independence comes from the checker and step 8. Order: the lenses (change-guard and compliance always, others by `deep-review`'s scale), their fixes, then one final manual pass through every requested journey that captures After with the same ids, then the full suite once on that candidate. Before captures of the base never count as that run. MVP and production slice: the product bar scans.
+- **5:** spike unknown capabilities first. After each todo's real use, run only the tests that cover its changed files; when those are the whole suite, that run is still only a build check. No separate full-suite run here. Commit by phase in the project's commit style.
+- **6:** verify is yours; independence comes from the checker and step 8. Order: the lenses (change-guard and compliance always, others by `deep-review`'s scale), their fixes, then one final manual pass through every requested journey that captures After with the same ids, then the full suite once on that candidate; a proof id that is the full suite is that same run. Before captures of the base never count as that run. MVP and production slice: the product bar scans.
 - **7:** the ticket moves to Ready for QA with its PR.
 - **8:** a fresh agent that did not build it. The full suite runs again only if the reviewer pushed fixes.
 
@@ -83,6 +83,7 @@ Only what those skills do not say:
 After steps 3, 6 and 7, start the [checker](references/checker.md): a fresh light delegate that gets only the contracts and the outputs, never your reasoning. It writes `Gate A: PASS` (B, C) into the run file or returns the missing items.
 
 - Gate A checks the blocks of steps 0–3; Gate B steps 4–6; Gate C step 7 and the whole run file.
+- No source edit before Gate A passes (Before capture may run beside it); no PR before Gate B passes; no close before Gate C passes.
 - Missing items: fix them, then rerun the checker. After two failed rounds, ask the owner with the list.
 - Never write a PASS line yourself. The run cannot close without all three.
 
@@ -129,7 +130,7 @@ After steps 3, 6 and 7, start the [checker](references/checker.md): a fresh ligh
 
 ## Resume
 
-Read the run file and the ticket, load the `Next:` skill fresh and continue there. Never restart a run or invent artifacts.
+Read the run file and the ticket, load the `Next:` skill fresh and continue there. When they disagree, test both against the checkout and keep what holds; log the correction in the ticket's activity. Never restart a run or invent artifacts.
 
 ## Factory fault
 
