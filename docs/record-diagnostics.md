@@ -2,11 +2,9 @@
 
 ## Local PR draft preflight
 
-Before publishing a Fast/Lucky draft, run `python skills/safe-engine/scripts/fast_gate.py report --pr-body <project-local.md> --project <absolute-project>`. It applies the same proof, credit, effective PR policy and UI/journey structure checks as handoff to a local UTF-8 file (maximum 100,000 bytes). Existing authoritative run state is required; a legacy run needing migration is refused until its normal gate path resolves that state. Preflight changes no phase, proof receipt, ticket or PR. Success proves structure only; actual media access, observed behavior, current checks and the real published PR remain required at handoff. Invalid drafts fail locally before a network write.
+Before publishing a Fast/Lucky draft, run `python skills/safe-engine/scripts/fast_gate.py report --pr-body <project-local.md> --project <absolute-project>`. It applies handoff's PR body checks (proof, credit, effective PR policy, UI/journey) to a local UTF-8 file of at most 100,000 bytes. It needs a readable open run, refuses a legacy run that needs migration, and changes no state, ticket or PR. Success proves structure only; handoff still checks the published PR.
 
-## Completion diagnostics
-
-Required independent review starts with source and affected manual evidence before the final complete suite. Keep the same reviewer for author-written repair deltas and unchanged observations; replace it if it wrote repairs or lost context. Final acceptance still needs current affected proof and inspection of the exact-candidate suite receipt. Combine related checking work instead of creating a new agent for every command.
+## Refusals
 
 `fast_diagnostics.py` shares ticket reads only during one validation, including read failures. Every new invocation refreshes sources. A refusal collects independently knowable local, ticket, checklist, coverage and PR errors with repair examples; inaccessible data remains explicitly unverified.
 
