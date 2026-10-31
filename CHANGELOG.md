@@ -8,6 +8,7 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 
 ### Added
 
+- Released apps keep their own changelog, version and release-note steps through every change and session; authorized releases run the app's tools, read back the result and reconcile partial effects (#221).
 - `enroll-worktree` archives a new Git worktree's inherited run files and selects a factory for its own run, leaving the source run untouched (#209).
 
 ### Changed

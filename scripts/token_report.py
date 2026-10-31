@@ -43,6 +43,7 @@ KINDS = {
     "+data": (S + "database-schema/",),
     "+safe-check": (S + "deep-review/",),
     "+on demand": (  # detail behind pointers that name its situation: read only when it occurs
+        REF + "app-releases.md",
         REF + "work-record-sample.md", REF + "gate-details.md", REF + "cases.md", REF + "quality-cases.md", REF + "run-cases.md", S + "ticketing/references/safe-contract.md",
         S + "ticketing/references/unmerged-pr.md", S + "ticketing/references/epic-cases.md",
         REF + "worth-it.md", S + "ticketing/references/finishing-touches.md",

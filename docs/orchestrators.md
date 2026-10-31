@@ -1,6 +1,6 @@
 # Orchestrators
 
-An orchestrator wakes agents, hands each one a task and wakes it again when something changes. With the factory behind it, every task ends in a proven draft PR and no person starts a session or writes a prompt.
+An orchestrator wakes agents, hands each one a task and wakes it again when something changes. With the factory behind it, every task ends in a proven draft PR and no person starts a session or writes a prompt. A release-only task follows the app's own release process and finishes at its verified stage, without a build run.
 
 ```text
 task assigned ─► wake ─► safe-engine run in a fresh worktree ─┬─► question: ASK, wait, answer wakes the same task

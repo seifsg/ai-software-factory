@@ -89,6 +89,7 @@ The owner names `lucky`, `verify` or `promote`: [run cases](references/run-cases
 - Every UI change: `ux-quality`. New or changed persistence: `database-schema`. Material unknowns: `research-market`.
 - Every PR: all of `how-to-make-a-pr`, including its mandatory visual and journey demonstration, scoped owner waivers and capture recovery. Plan its inventory and capture Before before editing; reuse final QA for After. One branch and draft PR per variation; an epic's wave: one integration branch and one draft PR its runs update, never a PR per run.
 - Before a Fast or Lucky PR, offer once: "Run a Safe check first? (optional)". A Safe check is manual QA, relevant tests and one independent `deep-review`; media stay mandatory.
+- Released app or release policy: [app releases](references/app-releases.md), analysis to handoff.
 - Never claim tested, reviewed or production ready without that evidence.
 - Backlog: `ticketing` moves each ticket through its statuses, logs every ticket change in its activity and leaves untasked items alone. Deferred work appends to the epic's one open follow-ups ticket in Backlog, never one ticket per item.
 - Every ticket has a definition of done and a checklist (`ticketing`); a change of intent updates both before the code. A ticket is finished only when every item is ticked and every criterion proven; otherwise it loops or is Blocked. Done comes with the PR merge.
