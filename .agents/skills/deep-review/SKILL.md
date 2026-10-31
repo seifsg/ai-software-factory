@@ -7,21 +7,12 @@ description: Deep code analysis and review that hunts for bugs, oversights, anti
 
 Ruthless code review. No mercy, no shortcuts. Find every damn problem.
 
-Read-only. Do not fix unless told to.
-
-Review the complete iteration and affected consumers. Does the journey work? Separate blockers from polish; keep the overall requirements open. Size/style prompts inspection; prove impact before blocking.
-
 ## Instructions
 
-1. **Identify the scope** - all files modified/created in the current task, plus their callers and consumers
-2. **Gather the baseline** - request, confirmed criteria, plan, project rules, raw evidence (logs, manual QA observations, check results)
-3. **Read every file** in scope, fully, and the code around it. The diff alone is insufficient.
-4. **Analyze against each category below**
-5. **Run the lenses** - load each reference only when its line applies
-6. **Produce the summary table** - no fluff, just findings
-
-Inspect source, diffs, logs and supplied evidence. Run no test suites during review unless told.
-Label every claim verified (read or observed) or hypothesis. A raw count is a hypothesis about impact until you read what it means.
+1. **Identify the scope** - all files modified/created in the current task
+2. **Read every file** in scope, fully
+3. **Analyze against each category below**
+4. **Produce the summary table** - no fluff, just findings
 
 ### Analysis Categories
 
@@ -41,18 +32,15 @@ Label every claim verified (read or observed) or hypothesis. A raw count is a hy
 - Incomplete error handling (catch blocks that swallow errors)
 - Missing logging for debugging critical paths
 - Forgotten TODO/FIXME items that should be addressed now
-- Non-critical integrations (analytics, history, messaging) breaking the main logic when they fail
-- Valid actions must leave recoverable state. Check creation, update, save and load limits agree.
 
 #### 3. Anti-Patterns
-- Functions doing too much
+- God classes or functions doing too much
 - Tight coupling between modules
 - Magic numbers/strings without constants
 - Callback hell or deeply nested conditionals
 - Premature abstraction or over-engineering
 - Violating SOLID, DRY, SRP, KISS principles
 - Circular dependencies
-- Bypassing the project's wrapper for config or shared integrations
 
 #### 4. Performance Issues
 - N+1 queries or unnecessary DB calls
@@ -70,7 +58,6 @@ Label every claim verified (read or observed) or hypothesis. A raw count is a hy
 - Wrong file/module imported
 - Copy-pasted code with unchanged variable names
 - Typos in string literals, enum values, or identifiers
-- Guards for states the design rules out (not defense in depth)
 
 #### 6. Potential Blockers
 - Missing environment variables or config
@@ -94,37 +81,6 @@ Label every claim verified (read or observed) or hypothesis. A raw count is a hy
 - No error messages or unhelpful ones
 - Inconsistent patterns within the same module
 - Missing TypeScript types (any, unknown abuse)
-
-#### 9. Factory Rules
-
-Our own work. Someone else's project: judge by its rules instead.
-
-- Extra code or over-engineering. Least code that fully solves the problem.
-- Not O(1) or as close as the real workload allows; wasted CPU or memory
-- New code where an existing function fits
-- Placeholders, stubs or TODOs left behind: not production ready
-- Files at 1000 lines or more: must be split
-- Functions without a short comment saying what they do and why
-- One more pass: less code? less complexity? faster?
-
-## Lenses
-
-| Lens | Load when |
-|---|---|
-| [change-guard](references/change-guard.md) | Existing code, contracts, config or data changed. |
-| [compliance](references/compliance.md) | Always: a request, criteria, plan or project rules exist. |
-| [security](references/security.md) | Input, auth, sessions, secrets, data, files, network, logs, dependencies or deployment touched. |
-| [performance](references/performance.md) | Loops, rendering, queries, I/O, caching, concurrency, memory, assets or startup touched. |
-| [journey](references/journey.md) | User- or consumer-visible behavior changed. |
-
-Lenses may run as isolated parallel reviewers. Give each the scope, baseline, raw evidence, its lens and the finding format below. Reviewers verify hypotheses and request missing evidence; an omission cannot hide a risk.
-
-## Scale to the change
-
-- Bounded fix: one independent reviewer covers changed lines, surrounding code, consumers and the applicable lenses together. No whole-project audit, alternative designs or unrelated fixes.
-- Update to a reviewed change: review the delta and its consumers; carry unresolved earlier findings. Do not re-audit accepted code.
-- Repeat checks only for changed code or inputs, failures or unresolved concerns.
-- State the exact verdict scope. A narrow review never approves an unreviewed whole.
 
 ## Output Format
 
@@ -160,12 +116,42 @@ Lenses may run as isolated parallel reviewers. Give each the scope, baseline, ra
 [Overall assessment - is this code ready to ship?]
 ```
 
-Finding format: a Summary Table row that also carries Layer, Evidence (raw proof: code, log, observation), Fix and Confidence after Impact. Add `### Unknowns` (required evidence still missing) after the Summary Table and the baseline and lenses run under Scope. The verdict starts with PASS, FAIL or CONDITIONAL.
+## Additions for every review
 
-## Findings
+Read-only: do not fix unless told to. Review the complete iteration and affected consumers: does the journey work? Separate blockers from polish; keep the overall requirements open. Size or style prompts inspection; prove impact before blocking.
 
-Score every review/check finding with [worth-it](references/worth-it.md). Keep severity, disposition and proof.
+- Scope adds the callers and consumers. Before reading, gather the baseline: request, confirmed criteria, plan, project rules, raw evidence (logs, manual QA observations, check results).
+- Read the code around each file too; the diff alone is insufficient. Then run the lenses below.
+- Inspect source, diffs, logs and supplied evidence. Run no test suites during review unless told.
+- Label every claim verified (read or observed) or hypothesis. A raw count is a hypothesis about impact until you read what it means.
+- Any language: its debug output and loose types count as in categories 5 and 8.
+- Also hunt: non-critical integrations (analytics, history, messaging) breaking the main logic when they fail; valid actions that leave unrecoverable state (creation, update, save and load limits must agree); bypassing the project's wrapper for config or shared integrations; guards for states the design rules out (not defense in depth).
+- Factory rules, for our own work (someone else's project: judge by its rules): extra code or over-engineering; not O(1) or as close as the real workload allows; new code where an existing function fits; placeholders, stubs or TODOs; files at 1000 lines or more not split; functions without a short comment saying what they do and why; one more pass: less code? less complexity? faster?
 
+### Lenses
+
+| Lens | Load when |
+|---|---|
+| [change-guard](references/change-guard.md) | Existing code, contracts, config or data changed. |
+| [compliance](references/compliance.md) | Always: a request, criteria, plan or project rules exist. |
+| [security](references/security.md) | Input, auth, sessions, secrets, data, files, network, logs, dependencies or deployment touched. |
+| [performance](references/performance.md) | Loops, rendering, queries, I/O, caching, concurrency, memory, assets or startup touched. |
+| [journey](references/journey.md) | User- or consumer-visible behavior changed. |
+
+Lenses may run as isolated parallel reviewers. Give each the scope, baseline, raw evidence, its lens and the finding format below. Reviewers verify hypotheses and request missing evidence; an omission cannot hide a risk.
+
+### Scale to the change
+
+- Bounded fix: one independent reviewer covers changed lines, surrounding code, consumers and the applicable lenses together. No whole-project audit, alternative designs or unrelated fixes.
+- Update to a reviewed change: review the delta and its consumers; carry unresolved earlier findings. Do not re-audit accepted code.
+- Repeat checks only for changed code or inputs, failures or unresolved concerns.
+- State the exact verdict scope. A narrow review never approves an unreviewed whole.
+
+### Findings
+
+Finding format: a Summary Table row that also carries Layer, Evidence (raw proof: code, log, observation), Fix and Confidence after Impact. Scope also names the baseline and lenses run; `### Unknowns` (required evidence still missing) follows the Summary Table; the verdict starts with PASS, FAIL or CONDITIONAL.
+
+- Score every review/check finding with [worth-it](references/worth-it.md). Keep severity, disposition and proof.
 - Layer: `product` (code or behavior), `evidence` (proof missing or wrong), `report` (claim does not match result). Fix the affected layer. A proof gap needs actual verification, not a label.
 - Confidence: HIGH / MED / LOW. Label hunches.
 - Load-bearing code is not over-engineering: mark it **KEEP** with the reason.
@@ -173,7 +159,7 @@ Score every review/check finding with [worth-it](references/worth-it.md). Keep s
 - Out-of-scope opportunities: list as notes, not findings.
 - A clean pass is valid. Invent no findings.
 
-## Verdict
+### Verdict
 
 Severity is impact. Disposition decides the gate: `blocking`, `before-exposure` or `accepted-deferral`.
 
@@ -187,7 +173,7 @@ Severity is impact. Disposition decides the gate: `blocking`, `before-exposure` 
 
 `PASS`: no blocking finding; every other finding listed with its disposition. `FAIL`: any blocking finding. PR verdicts: `how-to-review-a-pr`.
 
-## Fixes and review rounds
+### Fixes and review rounds
 
 - When told to fix: smallest change that removes the cause, affected layer only, intent unchanged. Then a fresh independent reviewer, not the one who fixed, assesses the result. A clean review needs no edits.
 - After any repair, rerun all configured checks. Reuse proof only when its inputs are exactly unchanged.

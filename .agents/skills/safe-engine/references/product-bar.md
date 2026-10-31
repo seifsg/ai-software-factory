@@ -64,12 +64,7 @@ Budget in the first plan: fast first load, instant common actions, no N+1, pagin
 - Record `workload → target → cost → decision → bound/lifetime → evidence`; mark targets measured or provisional.
 - Workload-specific complexity and latency; no blanket O(1) claim. Remove work before caching. Batching, indexes, pools and coalescing solve different problems.
 - No distributed services, deployment changes or spending without authority. Justify N/A; invent no infrastructure.
-- CPU: algorithms, data layout, repeated scans, allocations, hot loops. Heavy work off interaction threads; bound queues and parallelism.
-- Memory: peak and retained memory, leaks, pools, subscriptions. Release on cancel, replace and exit.
-- Database: real plans on representative data, N+1, indexes, pagination, locks, connection bounds, index write cost. No destructive production probes.
-- Network: round trips, payload size, dedupe, streaming, timeouts/backoff, offline. Keep ordering, idempotency and authorization.
-- Storage: write amplification, asset size, atomic writes, migrations, full disk.
-- Interaction: input latency, startup, battery, polling. Prefer events; pause hidden work. CLI/API: responsive output, backpressure, usable errors.
+Profiling or reviewing CPU, memory, database, network, storage or interaction cost: [speed checklist](cases.md#speed-checklist).
 
 Adding, changing or reviewing a cache, what cached work depends on (inputs, access scope), duplicate-work coalescing or generated-media reuse: [caching](cases.md#caching).
 
@@ -106,14 +101,7 @@ Record unsupported cases. One desktop browser proves nothing about mobile, audio
 
 ## External effects
 
-Payments, messages, webhooks, remote jobs and any other state-changing call to another system:
-
-- Record `operation identity → durable state → effect → completion/reconciliation owner`.
-- Cover pending, success, failure and unknown outcomes; commit/effect order; ambiguous timeouts; duplicate or out-of-order delivery; bounded retry with backoff; cancellation; safe replay.
-- A database commit, sent request or signed webhook does not prove the business effect happened.
-- Choose once the smallest adequate mechanism: provider idempotency and reconciliation, a durable pending record, a transactional outbox or a workflow engine. No universal queue.
-- Webhooks: after the signature check ([security](#security)), freshness and replay checks; dedupe; idempotent retries. Never trust unsigned payloads or IP allowlists alone.
-- Final manual QA uses safe disposable operations, including interruption and retry. Read correlated logs and preserve unresolved effects before retrying.
+Payments, messages, webhooks, remote jobs and any other state-changing call to another system: [external effects](cases.md#external-effects).
 
 ## Release
 
@@ -123,6 +111,4 @@ Proof before any ready claim:
 - Map each criterion to manual, automated or mixed evidence: candidate, environment/device, action, result, limits. Feel, art and interaction need honest observation, not an unrelated passing script. Missing evidence stays UNKNOWN. Never fabricate a tester or infer completion from a screenshot.
 - A demo names the exact build, environment, device, data or save identity, actions and result. Same URL is not same context. Passing checks alone prove no outcome.
 - Local ready, PR approval, merge and live release are separate; never infer deployment authority.
-- One release record: reviewed build artifact, target environment and config, required services and secrets, migration and app ordering, compatible clients and data, rollback or roll-forward, backups with a usable restore. Attach security, UX, SEO and integration evidence.
-- Operations: log access, failure, stalled-job and capacity signals, an authorized destination and operator, retention and recovery. Reuse existing facilities; no automatic paid monitor, new notifications or perpetual polling.
-- Deploying or operating a live release: [live release](cases.md#live-release).
+- The release record, operations, or deploying and operating a live release: [live release](cases.md#live-release).
