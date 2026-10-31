@@ -9,11 +9,14 @@ import unittest
 from unittest.mock import patch
 
 from png_fixtures import png
+from test_fast_gate import GateHarness
 
 SCRIPTS = Path(__file__).resolve().parents[1] / "skills/safe-engine/scripts"
 sys.path.insert(0, str(SCRIPTS))
 import fast_image
 import fast_report
+import fast_record
+import fast_proof
 
 TICKETS = ("https://example.test/issues/11", "https://example.test/issues/12")
 
@@ -147,6 +150,117 @@ class ReportTests(unittest.TestCase):
         closed = fast_card.card({**base, "closed": True}, [], {}, "")
         self.assertLess(closed.index("closed"), closed.index("Last published report"))
         self.assertIn("References\n- [Ticket 1]", closed)
+
+
+class DraftBodyTests(GateHarness, unittest.TestCase):
+    BODY = ("## Before & after\n### Command result\n**Visual:** no (CLI only)\n"
+            "**Journey:** no (structure check)\n**Before:**\n```text\nold\n```\n"
+            "**After:**\n```text\nnew\n```\n\n" + fast_proof.CREDIT + "\n")
+
+    def inventory(self):
+        """Ignore interpreter caches while checking all project, ledger and proof bytes."""
+        return {str(path.relative_to(self.root)): path.read_bytes() for path in self.root.rglob("*")
+                if path.is_file() and not {"pycache", "__pycache__"}.intersection(path.parts)}
+
+    def test_legacy_draft_refuses_without_migration_until_normal_status_recovers(self):
+        self.start("--no-ui", "--no-data", kind="change")
+        state = next((self.root / "home/runs").glob("*.json"))
+        entry = self.root / "home/active" / state.name
+        state.unlink()  # Legacy installations have only the mirror and an unmarked registration.
+        registration = json.loads(entry.read_text(encoding="utf-8"))
+        registration.pop("home")
+        entry.write_text(json.dumps(registration), encoding="utf-8")
+        path = self.project / "draft.md"
+        path.write_text("invalid draft", encoding="utf-8")
+        before = self.inventory()
+        self.gate("report", "--pr-body", "draft.md", ok=False)
+        self.assertEqual(self.inventory(), before)
+        self.assertFalse(state.exists())
+        self.gate("status")
+        self.assertTrue(state.exists())
+        self.assertIn("run.migrate", (self.root / "home/logs/gate.log").read_text(encoding="utf-8"))
+        path.write_text(self.BODY, encoding="utf-8")
+        before = self.inventory()
+        self.assertIn("STRUCTURE ONLY", self.gate("report", "--pr-body", "draft.md"))
+        self.assertEqual(self.inventory(), before)
+
+    def test_draft_discovery_never_recovers_registration_for_implicit_or_abbreviated_paths(self):
+        self.start("--no-ui", "--no-data", kind="change")
+        entry = next((self.root / "home/active").glob("*.json"))
+        nested = self.project / "nested"
+        nested.mkdir()
+        command = getattr(self, "gate_command", [sys.executable, str(SCRIPTS / "fast_gate.py")])
+        for text in (self.BODY, "invalid draft"):
+            (self.project / "draft.md").write_text(text, encoding="utf-8")
+            for cwd, flags in ((self.project, []), (nested, []), (nested, ["--project", str(self.project)]),
+                               (nested, ["--project=" + str(self.project)]), (nested, ["--proj", str(self.project)]),
+                               (nested, ["--proj=" + str(self.project)])):
+                with self.subTest(cwd=cwd, flags=flags, valid=text == self.BODY):
+                    entry.unlink(missing_ok=True)
+                    before = self.inventory()
+                    result = subprocess.run([*command, "report", "--pr-b", "draft.md", *flags], cwd=cwd,
+                                            env=self.env, capture_output=True, text=True, encoding="utf-8")
+                    self.assertEqual(result.returncode, 0 if text == self.BODY else 1, result.stdout + result.stderr)
+                    self.assertEqual(self.inventory(), before)
+                    self.assertFalse(entry.exists())
+        result = subprocess.run([*command, "status"], cwd=nested, env=self.env,
+                                capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertTrue(entry.exists())  # Normal commands retain recovery after pure routing discovery.
+
+    def test_draft_matches_handoff_rules_and_never_records_progress(self):
+        self.start("--no-ui", "--no-data", kind="change")
+        path = self.project / "draft.md"
+        run = json.loads((self.project / ".factory/fast/run.json").read_text(encoding="utf-8"))
+        cases = (self.BODY, self.BODY.replace("```text\nold\n```", "raw before"),
+                 self.BODY.replace(fast_proof.CREDIT, ""),
+                 self.BODY.replace("**Journey:** no (structure check)", "**Journey:** yes"),
+                 self.BODY.replace("**Visual:** no (CLI only)", "**Visual:** yes"))
+        for text in cases:
+            with self.subTest(text=text):
+                path.write_text(text, encoding="utf-8")
+                before = self.inventory()
+                problems = fast_record.pr_proof(run, "**PR:** https://github.com/acme/site/pull/2 (body: draft.md)",
+                                                project=self.project, offline="local fixture")
+                output = self.gate("report", "--pr-body", "draft.md", ok=not problems)
+                for problem in problems:
+                    self.assertIn(problem, output)
+                if not problems:
+                    self.assertIn("STRUCTURE ONLY", output)
+                self.assertEqual(self.inventory(), before)
+
+    def test_draft_rejects_bad_paths_bytes_and_retains_touched_ui_and_policy(self):
+        subprocess.run(["git", "init", "-q", str(self.project)], check=True, capture_output=True)
+        self.start("--no-ui", "--no-data", kind="change")
+        path = self.project / "draft.md"
+        outside = self.root / "outside.md"
+        outside.write_text(self.BODY, encoding="utf-8")
+        for value, content, message in (("missing.md", b"", "Missing evidence"),
+                                        (str(outside), b"", "inside the project"),
+                                        ("draft.md", b"x" * 100001, "100000 bytes"),
+                                        ("draft.md", b"\xff", "decode")):
+            with self.subTest(value=value, message=message):
+                path.write_bytes(content)
+                before = self.inventory()
+                self.assertIn(message, self.gate("report", "--pr-body", value, ok=False))
+                self.assertEqual(self.inventory(), before)
+        path.write_text(self.BODY, encoding="utf-8")
+        (self.project / "view.tsx").write_text("export default () => null;", encoding="utf-8")
+        before = self.inventory()
+        self.assertIn("this run changed UI", self.gate("report", "--pr-body", "draft.md", ok=False))
+        self.assertEqual(self.inventory(), before)
+        (self.project / "view.tsx").unlink()
+        method = self.root / "policy/SKILL.md"
+        method.parent.mkdir()
+        method.write_text("**Visual:** and **Journey:** proof", encoding="utf-8")
+        self.gate("adopt-pr-proof", "--method", str(method), "--reason", "Synthetic fixture owner instruction")
+        before = self.inventory()
+        self.assertIn("STRUCTURE ONLY", self.gate("report", "--pr-body", "draft.md"))
+        self.assertEqual(self.inventory(), before)
+        method.write_text("**Visual:** and **Journey:** changed", encoding="utf-8")
+        before = self.inventory()
+        self.assertIn("changed since adoption", self.gate("report", "--pr-body", "draft.md", ok=False))
+        self.assertEqual(self.inventory(), before)
 
 
 if __name__ == "__main__":

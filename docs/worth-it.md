@@ -18,6 +18,8 @@ Choose all known required/worthwhile findings from one report as a coherent batc
 
 Save a JSON object with a `findings` array. Finding IDs are `F1`, `F2`, etc. in that report's order. Keep all findings, not only the selected ones.
 
+Accepted `fix-round` JSON returns `report_sha256`, the canonical identity stored in its receipt. Use that value for final reconciliation; a hash of the formatted input file is a different identity. The command still requires actual evidence for each resolved finding and never grants permission to defer.
+
 ```text
 python skills/safe-engine/scripts/fast_gate.py fix-round --project <project> --file <report.json> --finding F1 --finding F3
 python skills/safe-engine/scripts/fast_gate.py fix-round --project <project> --file <report.json> --finding F2 --finishing-authority "<owner instruction and source>"
