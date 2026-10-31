@@ -16,6 +16,7 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 
 ### Fixed
 
+- Owner messages come first: answer or act with only the needed checks, let the latest request replace the objective, and resume only work that still fits (#216).
 - Fast starts without a selection select one instead of starting with legacy defaults; explicit pins skip release discovery; eval exports are pinned local snapshots; startup hints are shorter (#213).
 - Written facts (host, path, command, version, status) are claims to test before use or report; a stand-in proves only itself; unverified means the check cannot run here.
 - Run metrics: Fast runs start their timeline at the first applicable step, Safe runs record the factory revision and never share a metrics folder, and analytics hooks are plain calls instead of repeated guards (#175).

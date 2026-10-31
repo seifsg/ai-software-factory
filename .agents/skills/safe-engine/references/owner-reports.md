@@ -1,6 +1,6 @@
 # Plain owner reports
 
-Use for every coordinator progress update and delegate handback to the owner. Records and tickets retain their identifiers.
+Use for progress updates and delegate handbacks, not direct answers. Records and tickets keep their identifiers.
 
 1. Name the page or feature, what changed in user words, the next action, worth-it score, estimated time left and who waits on whom. No ticket/criterion codes, lane or branch names, hashes or unexplained abbreviations in the body. Put reference links last.
 2. For every reported ticket, show elapsed time, active work and tokens used against planned time/tokens. Label measured, estimated or unavailable with the source. Never allocate a shared session total to individual tickets or invent missing telemetry. Unknown estimates stay unknown.
