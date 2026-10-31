@@ -52,16 +52,18 @@ Do no coding while producing the plan.
 
 ## Light plan
 
-A small `change` or follow-up, when your instructions ask for one: files with a one-line critique, the todo list, one success line, the proof list and the test map; phases and plan may be one line each. It meets the same output contract. The 0–4 loop stays.
+A small `change` or follow-up, when your instructions ask for one: files with a one-line critique, the todo list, one success line, the proof list and the test map. It meets the same output contract, whose product-only lines it omits. The 0–4 loop stays.
+
+Never code during planning. Plan only.
 
 ## Output contract
 
 The block `## 3 Plan` holds:
 
 - [ ] **Files:** the summary, then the critique and what it changed
-- [ ] **Phases:** ordered, smallest real journey first
+- [ ] **Phases:** ordered, smallest real journey first (product, feature or new UI; a `change` omits it)
 - [ ] **Todos:** `T1..Tn`, each an outcome with ticket and criteria; every criterion maps to at least one todo; the ticket checklist matches
-- [ ] **Plan:** interfaces and ports (UI: UX rules)
+- [ ] **Plan:** interfaces and ports, UI: UX rules (product, feature, new UI or delegated work; a `change` omits it)
 - [ ] **Proof list:** every changed view, state, journey or command with an id
 - [ ] **Test map:** per-file test command and the full-suite command
 - [ ] No source file changed during this step
@@ -71,5 +73,3 @@ The block `## 5 Build` holds:
 - [ ] One `Tn pre: … do: … post: …` line per todo, each ticked
 - [ ] Every todo ticked in the ticket checklist after its use-check
 - [ ] Only mapped tests ran; their commands and results are named
-
-Never code during planning. Plan only.

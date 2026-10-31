@@ -40,6 +40,10 @@ Deep, thorough, analysis-only phase. Educate yourself on the feature, task or PR
 
 Docs or method changes: map readers, links and canonical owners instead of inventing code consumers.
 
+## Hard rule
+
+No code in this phase. No edits, no fixes, no quick changes. Coding happens only in a later, explicit build phase.
+
 ## Output contract
 
 The block `## 1 Analyze` holds, in this order:
@@ -54,7 +58,3 @@ The block `## 1 Analyze` holds, in this order:
 - [ ] No file changed during this step
 
 A small `change` keeps every line, each one short.
-
-## Hard rule
-
-No code in this phase. No edits, no fixes, no quick changes. Coding happens only in a later, explicit build phase.

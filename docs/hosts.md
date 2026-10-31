@@ -18,9 +18,9 @@ The methods are host-neutral. This page holds what differs per agent: where skil
 | Fresh-context delegate | Agent tool with a plugin role | `spawn_agent` with `fork_turns: "none"` |
 | Checker | `safe-engine:checker` | `spawn_agent`, `fork_turns: "none"`, `reasoning_effort: "low"`, message = the [checker](../.agents/skills/safe-engine/references/checker.md) brief plus `.agents/agents/checker.md`'s body |
 | Live preview | the desktop app's browser pane (`preview_start`, `.claude/launch.json`) keeps the dev server the owner watches; its screenshots count as proof | the browser or screenshot tool the session has |
-| Background jobs | background subagents report back in a later turn: set `Waiting: jobs: …` first | subagent results arrive in the parent: set `Waiting: jobs: …` while they run |
+| Background jobs | background subagents report back in a later turn: set `Waiting: jobs: …` first; the guard also lets the stop through when the Stop input lists running `background_tasks` | subagent results arrive in the parent: set `Waiting: jobs: …` while they run |
 
-Both hosts run hooks through a POSIX `sh`; on Windows that is Git Bash. Each guard reads only `.factory/run.md` in the session's project (`CLAUDE_PROJECT_DIR`, else the working folder), so sessions without a run exit in about 65 ms.
+Both hosts run `run-guard.sh` through a POSIX `sh`; on Windows that is Git Bash. It reads only the nearest `.factory/run.md` inside the session's current checkout, so a worktree's run stays separate from its parent's. It ignores runs untouched for 12 hours and costs about 65 ms with no run and 150 ms with one, once per turn end.
 
 ## Delegation
 

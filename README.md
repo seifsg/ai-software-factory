@@ -14,7 +14,7 @@ Ticket, analyze, recommend, plan, Before proof, build, verify, PR, review. In th
 
 </div>
 
-Coding agents jump straight to code, forget the method as the context grows and tell you it works. The factory is a set of skills that gives your agent a team's process, plus two small hooks that keep a run going until every step is done and checked. No runtime, no Python, nothing on every tool call.
+Coding agents jump straight to code, forget the method as the context grows and tell you it works. The factory is a set of skills that gives your agent a team's process, plus one small hook script that keeps a run going until every step is done and checked. No runtime, no Python, nothing on every tool call.
 
 ## ⚡ Quick start
 
@@ -66,7 +66,7 @@ compaction: compact hook reads run.md → re-injects the next step
 
 - The run cannot close without step 8 and three PASS lines.
 - Waiting on you or on background agents is allowed: the run file says so (`Waiting:`) and the guard lets the stop through.
-- The guard reads one file in the project: about 0.1 s per turn end, nothing per tool call.
+- The guard reads one file in the current checkout: about 0.07 s per turn end without a run, 0.15 s with one, nothing per tool call.
 
 Details: [run file](.agents/skills/safe-engine/references/run-file.md), [checker](.agents/skills/safe-engine/references/checker.md), [hosts](docs/hosts.md).
 

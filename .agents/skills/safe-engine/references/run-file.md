@@ -43,9 +43,11 @@ T1 pre: <before> do: <change> post: <check> ✔
 
 ## What the hooks do
 
-| Hook | When | Reads | Does |
-|---|---|---|---|
-| Stop guard | your turn ends | `Status`, `Waiting`, `Next`, step 8 tick, gate lines | open run, `Waiting: none`, not finished: blocks the stop and says `Next:`. A second stop with no run-file change since the last block passes. |
-| Compact hook | after compaction or a resume | header lines | prints them with "reload the `Next:` skill" |
+Both run `scripts/run-guard.sh` (`stop` or `compact`) on the nearest run file inside the current checkout. A run file untouched for 12 hours, `Status: stopped` or a finished run (step 8 ticked, three PASS lines) is ignored.
 
-`Status: closed` without step 8 ticked and three PASS lines gets blocked like an open run.
+| Hook | When | Does |
+|---|---|---|
+| Stop guard | your turn ends | with `Waiting: none` and no background tasks reported by the host: blocks the stop and names the first missing gate, else `Next:`. A second stop with no run-file change since the last block passes. |
+| Compact hook | after compaction or a resume | prints `Next:` with "load that skill fresh" |
+
+Only a well-formed `Next:` value (`<step> <name> · <skill>`) reaches the agent; no other run-file text does.

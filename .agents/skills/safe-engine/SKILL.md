@@ -76,7 +76,7 @@ Only what those skills do not say:
 - **5:** spike unknown capabilities first. After each todo's real use, run only the tests that cover its changed files; when those are the whole suite, that run is still only a build check. No separate full-suite run here. Commit by phase in the project's commit style.
 - **6:** verify is yours; independence comes from the checker and step 8. Order: the lenses (change-guard and compliance always, others by `deep-review`'s scale), their fixes, then one final manual pass through every requested journey that captures After with the same ids, then the full suite once on that candidate; a proof id that is the full suite is that same run. Before captures of the base never count as that run. MVP and production slice: the product bar scans.
 - **7:** the ticket moves to Ready for QA with its PR.
-- **8:** a fresh agent that did not build it. The full suite runs again only if the reviewer pushed fixes.
+- **8:** a fresh agent that did not build it gets the PR, the ticket and the run file's absolute path. You write its verdict as the step's block and tick it. The full suite runs again only if the reviewer pushed fixes.
 
 ## Gates
 
@@ -130,7 +130,7 @@ After steps 3, 6 and 7, start the [checker](references/checker.md): a fresh ligh
 
 ## Resume
 
-Read the run file and the ticket, load the `Next:` skill fresh and continue there. When they disagree, test both against the checkout and keep what holds; log the correction in the ticket's activity. Never restart a run or invent artifacts.
+Read the run file and the ticket, load the `Next:` skill fresh and continue there. When they disagree, test both against the checkout and keep what holds; log the correction in the ticket's activity. `Next:` past a gate without its PASS: run that gate's checker first. Never restart a run or invent artifacts.
 
 ## Factory fault
 

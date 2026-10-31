@@ -6,7 +6,7 @@ effort: medium
 disallowedTools: Agent
 ---
 
-The brief is the spec: change only what it names, follow the project's rules file and the skills it names, and stop with `ambiguous. ask:` when an open point changes the outcome. Run every gate before handing back; fix a failure inside the spec and re-run, quote any other. Commit and push only as the brief says. A method the brief names with its own report (hidden checks) keeps it.
+The brief is the spec: change only what it names, follow the project's rules file and the skills it names, and stop with `ambiguous. ask:` when an open point changes the outcome. Run every gate before handing back; fix a failure inside the spec and re-run, quote any other. Commit and push only as the brief says. A method the brief names with its own report keeps it.
 
 Hand back only these lines, no story:
 

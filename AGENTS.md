@@ -16,7 +16,7 @@ The `## Work rules` section of `.agents/skills/safe-engine/SKILL.md` applies to 
 4. No person, company or product names. No dates, history, decision logs or provenance. Git keeps history (tag `history-archive`); release history lives only in `CHANGELOG.md` and `UPGRADING.md` at the root.
 5. No agent, OS or tracker specifics in methods. They live in `docs/hosts.md`, the adapters (`.agents/.claude-plugin/`, `.agents/agents/`, `.agents/hooks/`) and reference files named for one tool (`references/github.md`).
 6. A step skill ends with its `## Output contract`: the block it writes and a checklist the checker can verify.
-7. Size: every SKILL.md under 20,000 bytes (about 5k tokens: Claude Code keeps only that much of a skill after compaction), aim for 150 lines. References under 200 lines; over 100 lines starts with a contents line. The main agent of a `change` run reads under 60 KB of methods; all methods together stay under 220 KB. Both numbers only go down. Detail needed only in a rare situation goes to a reference behind a pointer that names the situation.
+7. Size: every SKILL.md under 17,000 bytes (under 5k tokens: Claude Code keeps only that much of a skill after compaction), aim for 150 lines. References under 200 lines; over 100 lines starts with a contents line. The methods a run's main agent reads (the read-set command below) stay under 115 KB; all methods together under 220 KB. Both numbers only go down. Detail needed only in a rare situation goes to a reference behind a pointer that names the situation.
 8. Every operative rule lives once per skill that needs it. Merge duplicates; cut filler. Never cut examples or ordering rules to save bytes.
 9. English. No em dashes, stock phrases or invented claims.
 
@@ -26,11 +26,12 @@ No Python, test suite or build. The checks are commands and a fresh agent:
 
 ```text
 grep -rnE '\]\(\.\./' .agents/skills                 # no links out of a skill's folder: expect nothing
-wc -c .agents/skills/*/SKILL.md                      # each under 20000
+wc -c .agents/skills/*/SKILL.md                      # each under 17000
 cat .agents/skills/*/SKILL.md .agents/skills/*/references/*.md | wc -c   # under 220000
+cd .agents/skills && cat safe-engine/SKILL.md safe-engine/references/{run-file,checker,product-bar,sizes,delegate,owner-reports,worth-it}.md ticketing/SKILL.md ticketing/references/ticket-layout.md analyze-start/SKILL.md recommend/SKILL.md get-ready-to-code/SKILL.md how-to-make-a-pr/SKILL.md how-to-make-a-pr/references/{media-proof,pr-layout,github,credit}.md deep-review/SKILL.md deep-review/references/{change-guard,compliance}.md | wc -c   # read set: under 115000
 ```
 
-- Every changed hook script runs on fixture run files (`improve-factory`, Proof). The scripts stay POSIX `sh` with LF endings.
+- A changed `run-guard.sh` runs on fixture run files (`improve-factory`, Proof). It stays POSIX `sh` with LF endings and one `awk` pass.
 - Every changed method gets a fresh-agent walkthrough before review.
 - Moving, adding or deleting a skill, reference, role or hook: update `README.md` and `docs/` in the same PR. Keep what they say (commands, paths, defaults) true by hand.
 - Each PR states method bytes before and after (`wc -c`). Net growth needs the owner's OK with the reason.

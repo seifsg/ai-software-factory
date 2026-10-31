@@ -30,17 +30,17 @@ Try an unreleased checkout: `claude --plugin-dir <clone>/.agents`.
    cp -r <clone>/.agents/skills/* ~/.agents/skills/
    ```
 
-3. Add the hooks to `~/.codex/hooks.json` (merge with entries you already have). Use absolute paths; on Windows, `commandWindows` runs Git's `sh`:
+3. Add the hooks to `~/.codex/hooks.json` (merge with entries you already have), with absolute paths. On Windows, `commandWindows` needs Git's `sh` on `PATH` (add `C:\Program Files\Git\bin`); not yet tried in a live Windows Codex session:
 
    ```json
    {
      "hooks": {
        "Stop": [{"hooks": [{"type": "command", "timeout": 10,
-         "command": "sh \"<home>/.agents/skills/safe-engine/scripts/stop-guard.sh\"",
-         "commandWindows": "\"C:/Program Files/Git/bin/sh.exe\" \"<home>/.agents/skills/safe-engine/scripts/stop-guard.sh\""}]}],
+         "command": "sh \"<home>/.agents/skills/safe-engine/scripts/run-guard.sh\" stop",
+         "commandWindows": "sh \"<home>/.agents/skills/safe-engine/scripts/run-guard.sh\" stop"}]}],
        "SessionStart": [{"matcher": "compact|resume", "hooks": [{"type": "command", "timeout": 10,
-         "command": "sh \"<home>/.agents/skills/safe-engine/scripts/compact.sh\"",
-         "commandWindows": "\"C:/Program Files/Git/bin/sh.exe\" \"<home>/.agents/skills/safe-engine/scripts/compact.sh\""}]}]
+         "command": "sh \"<home>/.agents/skills/safe-engine/scripts/run-guard.sh\" compact",
+         "commandWindows": "sh \"<home>/.agents/skills/safe-engine/scripts/run-guard.sh\" compact"}]}]
      }
    }
    ```

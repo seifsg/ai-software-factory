@@ -16,7 +16,7 @@ The public surface is the skill names, the run file format, and the hook scripts
 ### Added
 
 - `recommend`: three solutions in one table, one pick.
-- Run guarantees: each step loads its skill fresh; a Stop guard re-prompts the next step until step 8 and three checker gates pass, and lets the stop through while the run waits on the owner or background jobs; a compact hook re-injects the next step after compaction. About 0.1 s per turn end, nothing per tool call.
+- Run guarantees: each step loads its skill fresh; a Stop guard re-prompts the next step until step 8 and three checker gates pass, and lets the stop through while the run waits on the owner or background jobs; a compact hook re-injects the next step after compaction. One `sh` script with one `awk` pass: about 0.07 s per turn end without a run, 0.15 s with one, nothing per tool call.
 - The `checker` role: a fresh light delegate that checks step outputs against their contracts after steps 3, 6 and 7.
 
 ### Removed
