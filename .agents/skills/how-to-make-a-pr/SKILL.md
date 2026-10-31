@@ -9,7 +9,7 @@ Open a **draft PR**. Humans decide ready, merge and release. Analysis or review-
 
 ## 1. Bind the project
 
-Find the real repository, branches, release policy, PR template, signing rule, check commands, tracker and review owner from rules, manifests, CI and remote metadata; never copy accounts, branches or tools from another project. Ask only consequential gaps. A missing binding blocks its dependent step; keep local work going.
+Find the real repository, branches, release policy, PR template, signing rule, check commands, tracker and review owner from rules, manifests, CI and remote metadata; never copy accounts, branches or tools from another project. Ask only consequential gaps. A missing binding blocks its dependent step; keep local work going. A released app: its changelog, version and note updates follow its existing format, timing and generators; the handoff lists remaining release steps.
 
 ## 2. Ticket first
 

@@ -19,8 +19,8 @@ An orchestrator started this session and handed it one task. No person watches t
 ## Each wake
 
 1. Take the one TASK the wake names. One task per wake, one open run per workspace.
-2. An open run in this workspace: resume it first (`status`, then its resume step). Never open a second.
-3. No open run and work to do: start one on the TASK in the workspace the orchestrator gave you. Mode and kind as the TASK says, else Fast and the kind table. Keep the TASK's words verbatim for the ticket.
+2. An open run in this workspace: resume it first (`status`, then its resume step).
+3. No open run and work to do: start one on the TASK in the orchestrator's workspace. Mode and kind as the TASK says, else Fast and the kind table. Keep the TASK verbatim for the ticket. Release-only: [app releases](app-releases.md), no run.
 4. Nothing to build (a comment that is only evidence, thanks or a question you can answer): REPORT if a reply helps, keep the waiting status, start no run.
 5. Commits and PR text follow `how-to-make-a-pr` and the product's rules, never the orchestrator's attribution lines.
 
@@ -46,4 +46,4 @@ An orchestrator started this session and handed it one task. No person watches t
 
 1. Draft PR opened: HANDOFF it, REPORT the proof summary and what is unverified, WATCH it, ASK the OWNER to review and merge.
 2. Woken on CI red or a review comment: that is work now. Run a `change` on the same ticket and branch, push, REPORT what changed, WATCH again.
-3. Never mark the PR ready, merge or release. FINISH only after a person merged it.
+3. Never mark the PR ready or merge. FINISH after a person merged it, or a requested release at its verified stage.
