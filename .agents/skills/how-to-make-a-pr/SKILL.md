@@ -23,8 +23,8 @@ Find the real repository, branches, release policy, PR template, signing rule, c
 
 - Work on your own branch, `<scope>/<short-name>` (`fix`, `feat`, `docs`, `chore`) or the project's convention; never commit to the base. Protect dirty and foreign work: new branch or isolated checkout.
 - Base = the project's integration branch, else the default branch. Say so in the PR when it differs.
-- **Epic waves:** share an integration branch and draft PR. Finished lanes incorporate it, resolve/recheck, then integrate and push without force. Exception: an independently complete UI ticket ships its own draft after Show and Prove; dependencies must be included and checked. Do not wait for unrelated wave tickets.
-- Dependent Safe ticket, wrong base or hotfix: `references/pr-cases.md`.
+- **Epic waves:** share an integration branch and draft PR. Finished lanes incorporate it, resolve/recheck, then integrate and push without force. Exception: an independently complete UI ticket ships its own draft after its verify; dependencies must be included and checked. Do not wait for unrelated wave tickets.
+- Dependent ticket, wrong base or hotfix: `references/pr-cases.md`.
 - Check the remote, not the local list: shallow and single-branch clones hide branches.
 
 ```text
@@ -34,9 +34,15 @@ git fetch origin
 git switch -c <scope>/<short-name> origin/<base>
 ```
 
-## 4. Plan the proof before editing
+## 4. Before proof, before the first edit
 
-Every PR shows observed Before/After for each outcome; prose or illustrative diagrams never replace results. In a `diff`, API proof shows one request's status and body; CLI/script/gate proof, one command's output; method/prose proof, a fresh walkthrough's changed result and key text. Speed/size/cost proof measures the same workload. An internal module proves its changed screen, endpoint or command. A new nonvisual result shows the prior output as "did not exist". Name `**Visual:**` and `**Journey:**` under each outcome (`references/pr-layout.md`), with a reason when no. Map shared backend effects to UI journeys. For changed views, states, motion, interactions or affected UI journeys, read [visual and journey proof](references/media-proof.md) before editing; its rules apply in full.
+Every PR shows observed Before/After for each outcome; prose or illustrative diagrams never replace results. In a `diff`, API proof shows one request's status and body; CLI/script proof, one command's output; method/prose proof, a fresh walkthrough's changed result and key text. Speed/size/cost proof measures the same workload. An internal module proves its changed screen, endpoint or command. A new nonvisual result shows the prior output as "did not exist". Name `**Visual:**` and `**Journey:**` under each outcome (`references/pr-layout.md`), with a reason when no. Map shared backend effects to UI journeys.
+
+1. Take the plan's proof list. For changed views, states, motion, interactions or affected UI journeys, read [visual and journey proof](references/media-proof.md) now; its rules apply in full.
+2. Capture each Before now, before any source edit, into `.factory/proof/<ticket>/before-<id>.png` (screens) or `before-<id>.txt` (commands, responses, text). Any capture tool your host has counts: its browser or preview screenshot, a CLI, a script. Open the host's live preview for the owner when it has one, and keep that one server for After.
+3. Inspect every capture: right screen, readable, no secrets.
+4. Missed a Before after editing: text and command proof come from the base (`git show <base>:<path>`, the base build's output); a screenshot you can no longer take is stated as missing in the PR. Never a second checkout or server just for a picture.
+5. After is captured during verify's manual pass, on the same server, with the same ids: `after-<id>.*`.
 
 ## 5. Make the change
 
@@ -50,7 +56,7 @@ Every PR shows observed Before/After for each outcome; prose or illustrative dia
 
 ## 6. Open the draft
 
-1. Write the body to a file with `references/pr-layout.md`. Fast/Lucky: preflight it with `fast_gate.py report --pr-body <file> --project <abs>`; a pass proves structure only.
+1. Write the body to a file with `references/pr-layout.md`. Upload Before/After media first (`references/github.md`) and link them with `https` URLs.
 2. Push, then open as **draft** against the base. Commands: `references/github.md`.
 3. Closing keyword only on each sub-issue or change ticket this PR finishes; the epic always gets a plain reference.
 4. Request review from the project's actual review owner through the supported mechanism, at draft time. Notify only the authorized recipient or channel. Reminders only when asked.
@@ -58,14 +64,15 @@ Every PR shows observed Before/After for each outcome; prose or illustrative dia
 
 ## 7. Review
 
-- Required independent review: source, manual use and affected checks before the complete suite, findings fixed first; then it inspects the exact-candidate suite receipt and log, and checks author repairs and their consumers. A reviewer that changes code needs a fresh one.
-- Own draft: `deep-review` it in Safe; in Fast and Lucky, the optional Safe check covers it. Skip when this exact head already passed an independent review. Pushing fixes to that PR's own branch and posting its comments are pre-authorized; open questions go in a PR comment, not a stop. Someone else's PR keeps every checkpoint.
+- Every PR gets `how-to-review-a-pr` from a fresh agent that did not build it, on the exact pushed head. Give it the PR, the ticket and the run file, never your reasoning or a desired verdict. The builder's self-check never replaces it.
+- Pushing fixes to your own draft's branch and posting its review comment are pre-authorized. Someone else's PR keeps every checkpoint.
+- Every code update invalidates the previous verdict: the new head needs a fresh review.
 - Project has a remote or cloud review: `references/pr-cases.md`.
 - The PR stays draft. Review is not merge or release approval.
 
-## 8. Fast and Lucky PRs
+## 8. Every run
 
-Open one for every run, unasked, unless its wave's draft PR is open: then push to that branch and update that PR, appending the run's outcomes, criteria verification and remaining steps and refreshing the summary. Before creating or updating it, offer once per PR (a wave's shared PR: its first run): **"Run a Safe check first? (optional)"** (final manual QA, relevant tests, one independent review of the finished work). Yes: run it, fix, then open. No or no answer: open the draft as is.
+Open one for every run, unasked, unless its wave's draft PR is open: then push to that branch and update that PR, appending the run's outcomes, criteria verification and remaining steps and refreshing the summary.
 
 - Variations requested: one branch and draft PR per variation, each following these rules with its own proof.
 - List missing tests, review and baseline as unverified. Link the run's epic.
@@ -75,3 +82,21 @@ Open one for every run, unasked, unless its wave's draft PR is open: then push t
 - After a merge, start new work on a fresh branch from the current base.
 - No force-push, history rewrite or unrequested merge, release or notification.
 - No invented results, tests, authorship or accounts.
+
+## Output contract
+
+The block `## 4 Before` holds:
+
+- [ ] Every proof-list id with its `before-<id>` file under `.factory/proof/<ticket>/`, or "did not exist" for a new surface
+- [ ] Saved before the first source edit
+- [ ] Each capture inspected
+
+The block `## 7 PR` holds the draft PR URL, and the PR itself has:
+
+- [ ] Title `<type>(<scope>): <subject>`; draft; the verified base
+- [ ] A clickable ticket link in the body, and the PR link in the ticket's activity
+- [ ] The `pr-layout.md` sections that apply, in order
+- [ ] One heading per outcome under Before & after, each with `**Before:**` and `**After:**` proof that opens (`https` images, fenced output), plus `**Visual:**` and `**Journey:**`
+- [ ] Verification: criterion → change → proof → gap, with each command and its result; unverified items named
+- [ ] Review requested from the project's review owner, or the blocker stated
+- [ ] The credit line from `references/credit.md` as the last line

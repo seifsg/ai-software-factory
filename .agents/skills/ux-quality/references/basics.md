@@ -86,7 +86,7 @@ Run it in any browser tool that executes page scripts, on each audited screen an
 - Many screens: one judge per journey in parallel, then one pass across all screens for U2, U5 and U9.
 - Never loop until a judge finds nothing.
 - Example lines: `U3 PASS schedule, roster (375, 1280): one filled button each` and `U5 FAIL checkout, phone: the note field shows only the placeholder "Add a note"`.
-- The done-run's `**UX judge:**` line names the judge and its inputs.
+- The verify block in the run file names the judge and its inputs.
 
 ## Tree test (before UI code)
 

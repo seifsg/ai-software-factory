@@ -36,7 +36,7 @@ Fill the project's PR template first, then use these blocks inside it. Skip what
 - **Nonvisual proof:** matched request/response JSON, status, logs or command results: `**Before:**` then `**After:**` with fenced output, or `**Before → After:** <same input>, base <sha> → head <sha> (<criterion>)` and a `diff` block. Server-only, infrastructure or internal work with no affected interactive UI journey needs no media waiver.
 - **Demo context:** base and demonstrated candidate, isolated empty slot or seed/reset recipe, viewport/environment, covered journeys and limitations.
 - **Cold start:** the original request and why, decisions with reasons, facts (IDs, paths, repos), current state, remaining steps and blockers. Links are an audit trail, not a substitute.
-- **Verification:** one row per confirmed criterion, plus the ticket's checklist state: every item ticked, or the gap. Ticketed work: the ticket's confirmed revision and digest, dependencies and integration status. Proof is bound to the exact pushed candidate. Name what is **unverified**.
+- **Verification:** one row per confirmed criterion, plus the ticket's checklist state: every item ticked, or the gap. Ticketed work: the ticket's confirmed criteria, dependencies and integration status. Proof is bound to the exact pushed candidate. Name what is **unverified**.
 - **Adjustment history:** append an entry per requested change; keep it for the PR's whole life.
 - **Progress:** checked, reviewed, merged and released stay separate; name the next visible result. Overall acceptance stays open.
 

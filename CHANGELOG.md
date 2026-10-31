@@ -2,9 +2,27 @@
 
 Every notable change to the AI Software Factory, newest first. The format follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/) and versions follow [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html). This file and [UPGRADING.md](UPGRADING.md) are the only places for release history.
 
-The public surface is the `fast_gate.py` commands and flags, the work record format, the hook events and entries, and the skill names. A breaking change to any of them bumps MAJOR.
+The public surface is the skill names, the run file format, and the hook scripts and events. A breaking change to any of them bumps MAJOR.
 
 ## [Unreleased]
+
+### Changed
+
+- **Breaking:** the factory is methods only. One pipeline of nine visible steps, ticket → analyze → recommend → plan → Before proof → build → verify → PR → review, each printing its block to the owner, the ticket and `.factory/run.md` (#231).
+- `analyze-start` and `get-ready-to-code` are restored to their full original outputs; `how-to-review-a-pr` is its own skill again; every step skill ends with an output contract.
+- Before proof is captured before the first edit with any host capture tool; After on the same server during verify. Builds run only tests mapped to changed files; the full suite runs once at verify.
+- The plugin root is `.agents/`; the delegate roles live in `.agents/agents/`.
+
+### Added
+
+- `recommend`: three solutions in one table, one pick.
+- Run guarantees: each step loads its skill fresh; a Stop guard re-prompts the next step until step 8 and three checker gates pass, and lets the stop through while the run waits on the owner or background jobs; a compact hook re-injects the next step after compaction. About 0.1 s per turn end, nothing per tool call.
+- The `checker` role: a fresh light delegate that checks step outputs against their contracts after steps 3, 6 and 7.
+
+### Removed
+
+- All Python: the `fast_gate.py` gate and its per-tool-call hook (761 ms per call measured), the Safe controller, hidden checks, `shots`, metrics, the live view, bundle resolution, the installer and self-update, evals, release scripts and the 665-test suite.
+- Lucky mode, `verify` and `promote` of a Fast run, the optional Safe check, Show/Look/Prove/Ship phases and the owner-reply timer.
 
 ## [1.3.0] - 2026-10-31
 

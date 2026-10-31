@@ -77,7 +77,7 @@ Evidence: source proves repetition; speed and memory claims need runtime measure
 
 ## Security
 
-Assess affected trust boundaries and reachable surfaces on every change. Protect secrets and private data, validate untrusted input, enforce authorization at the trusted boundary, keep dependencies current and exercise relevant denial paths before exposure. A failed required check stays blocking. For any change to untrusted input, accounts, sessions, access, files, URLs, network effects, dependencies, deployment or exposed data, read [security details](quality-cases.md#security) before implementation and review. MVP and production-slice done-runs still record `**Secrets:**`, `**Dependencies:**` and `**Static:**` with the tool, command and result; confirmed secrets and high or critical findings block handoff until fixed or handled under the detailed rule.
+Assess affected trust boundaries and reachable surfaces on every change. Protect secrets and private data, validate untrusted input, enforce authorization at the trusted boundary, keep dependencies current and exercise relevant denial paths before exposure. A failed required check stays blocking. For any change to untrusted input, accounts, sessions, access, files, URLs, network effects, dependencies, deployment or exposed data, read [security details](quality-cases.md#security) before implementation and review. MVP and production-slice verify still records Secrets, Dependencies and Static in the run file with the tool, command and result; confirmed secrets and high or critical findings block handoff until fixed or handled under the detailed rule.
 
 ## Dev sign-in
 
@@ -88,7 +88,7 @@ Apps with accounts seed one user per role. Development builds show one-click but
 - A small fixed environment badge (DEV, STAGING, PREVIEW; games: a corner tag) follows the runtime environment from config, not the build mode: staging and preview show it even on a production build. Only production hides it: render nothing, not CSS-hidden.
 - Sample data and mocked or sandbox integrations carry a visible label wherever they appear outside production: "Sample data", "Test mode: no real charge". Production never seeds sample data.
 - No screen (CLI, API, library, service): print the environment in the startup log and version or health output.
-- Done-run screenshots show the badge; the handoff names the environment.
+- After screenshots show the badge; the handoff names the environment.
 
 ## Games and browser lifecycle
 

@@ -31,8 +31,6 @@ Label every claim verified (read or observed) or hypothesis. A raw count is a hy
 | [security](references/security.md) | Input, auth, sessions, secrets, data, files, network, logs, dependencies or deployment touched. |
 | [performance](references/performance.md) | Loops, rendering, queries, I/O, caching, concurrency, memory, assets or startup touched. |
 | [journey](references/journey.md) | User- or consumer-visible behavior changed. |
-| [pr-review](references/pr-review.md) | Reviewing an incoming pull request end to end. |
-| [github](references/github.md) | The PR host is GitHub. |
 
 Lenses may run as isolated parallel reviewers. Give each the scope, baseline, raw evidence, its lens and the finding format below. Reviewers verify hypotheses and request missing evidence; an omission cannot hide a risk.
 
@@ -154,7 +152,7 @@ Severity is impact. Disposition decides the gate: `blocking`, `before-exposure` 
 - Mandatory rule exceptions need an authorized owner, scope and record. Explanation alone waives nothing.
 - A verdict that depends on fixes not yet applied is **conditional**. Judge the actual candidate.
 
-`PASS`: no blocking finding; every other finding listed with its disposition. `FAIL`: any blocking finding. PR verdicts: see pr-review.
+`PASS`: no blocking finding; every other finding listed with its disposition. `FAIL`: any blocking finding. PR verdicts: `how-to-review-a-pr`.
 
 ## Fixes and review rounds
 
@@ -174,3 +172,13 @@ Severity is impact. Disposition decides the gate: `blocking`, `before-exposure` 
 4. **Stats**: total findings; Critical: X | High: X | Medium: X | Low: X
 5. **Top 3 Priority Fixes**: the most impactful findings
 6. **Verdict**: PASS / FAIL / CONDITIONAL - one line: is this code ready to ship?
+
+## Output contract
+
+In a factory run this is step 6, Verify. The block `## 6 Verify` holds:
+
+- [ ] Every requested journey used through real controls, with observed results
+- [ ] change-guard and compliance results, plus each other lens run, each with its findings table (possibly empty) and verdict
+- [ ] An `after-<id>` file for every proof-list id, same ids as Before, captured in that same pass
+- [ ] The full suite: command and result, run once after manual use
+- [ ] The verdict; blocking findings fixed through the build loop before the gate

@@ -1,6 +1,6 @@
 # Sizes
 
-Size sets how far each requested item is built, never which requested items ship. It applies to new products and big features. Inside an existing product, every size keeps that product's protections and behavior, and new paths get the same protections. Ask it at kickoff when the request leaves it open. A Lucky product run without a size records `**Size:** POC`. A Lucky MVP request gets the launch baseline with product-bar defaults and no suggestion rounds; the suggestions it would have asked go to the epic's follow-ups ticket.
+Size sets how far each requested item is built, never which requested items ship. It applies to new products and big features. Inside an existing product, every size keeps that product's protections and behavior, and new paths get the same protections. Ask it at kickoff when the request leaves it open.
 
 ## Requested scope
 
@@ -27,7 +27,7 @@ Show each requested feature working, built minimally: nothing extra, nothing cut
 
 - Minimal backend: the smallest real service and storage running the requested behavior end to end (one local process, a file or an embedded database), structured so the MVP can grow it.
 - No sign-in layer; requested roles switch through a development-only role switcher. A requested role rule is built as asked, checked on the server, without the rest of the security bar.
-- No done-run scans (secrets, dependencies, static analysis).
+- No verify scans (secrets, dependencies, static analysis).
 - Local only. Any shared preview is exposure: the full security bar applies before it.
 - An owner-approved simplification of a requested item (a mock checkout) follows the requested-scope rule, follow-ups ticket entry included, and stays labeled in the interface.
 - List skipped parts once in the epic's guardrails as "POC skips"; an MVP run turns that list into tickets. No follow-up ticket per skip.
@@ -38,7 +38,7 @@ The owner publishes it to test with real users: fill every gap a launch needs.
 
 - Launch baseline (part of MVP), built without asking:
   - real sign-in and enforced roles when anyone signs in or roles exist;
-  - the full security bar, with the three done-run scans (secrets, dependencies, static analysis);
+  - the full security bar, with the three verify scans (secrets, dependencies, static analysis);
   - landing page and SEO for public products;
   - privacy and terms pages when it collects personal data;
   - its legal and platform duties (for example consent and one-click unsubscribe for marketing email);

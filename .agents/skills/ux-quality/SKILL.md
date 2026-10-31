@@ -60,7 +60,7 @@ Every audit gives each ID a verdict. U1 to U5 state the goal; their checks live 
 
 ## 4. Use it. Audit it.
 
-1. Finish Look and share Show before auditing. Use each item before affected tests, type checks and rendering.
+1. Finish the brief's Look lines before auditing. Use each item before affected tests, type checks and rendering.
 2. Use the real browser, app, game or CLI: journeys, failure/recovery, supported inputs and display variants. Recount journeys; exceeding the recorded minimum without a reason is FAIL. Log actions, observations, journey counts, states, inputs and devices for the judge.
 3. Read logs; inspect assets at real size/theme; listen in context. Screenshots prove no interaction; filenames/waveforms prove no sound quality.
 4. Capture scoped changed views/states as matched Before/After: same viewport, theme, state, data and framing; focus on the change with context. Full-page/extra widths need a coverage reason. Web: inspect the affected outline and run `references/basics.md`'s scan.
