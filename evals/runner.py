@@ -50,7 +50,7 @@ def prompt_text(sample, arm, factory):
 
 
 def git_init(work, origin=None):
-    """Commit a fixture; factory snapshots require real identity and preserve captured bytes."""
+    """Commit `work` as its first commit; a factory snapshot (`origin`) must succeed, a fixture may skip without Git."""
     commands = [["init", "-q"]]
     if origin:
         commands += [["config", "core.autocrlf", "false"], ["remote", "add", "origin", origin]]
@@ -61,10 +61,7 @@ def git_init(work, origin=None):
         except (OSError, subprocess.SubprocessError) as error:
             if origin:
                 raise RuntimeError(f"Cannot initialize the factory snapshot: {error}") from error
-            return  # Existing fixture behavior when Git is unavailable.
-    if origin:
-        with Path(work, ".git/info/exclude").open("a", encoding="utf-8") as output:
-            output.write("\n__pycache__/\n*.pyc\n")  # Generated imports are not snapshot source edits.
+            return
 
 
 def row(sample, arm, failing, **fields):
@@ -89,14 +86,12 @@ def judge(sample, work, base, env, timed_out, ctx):
 
 def attempt(sample, arm, base, ctx):
     """Agent then rubric in `base`: (row fields, or None when stopped, and the workspace). Raises on setup errors."""
-    setup_started = time.monotonic()
     work = catalog.write_fixture(sample, base / "work")
     git_init(work)
     factory = isolation.export_factory(ctx["bundle"], base / "factory") if arm == "factory" else ""
-    selected = None
-    if factory:
+    if factory:  # a committed snapshot pinned explicitly: start selects it with no remote lookup
         git_init(factory, origin=distribution.REPOSITORY)
-        selected = distribution.select_for_project(work, factory, None, base / "cache", "safe-engine")
+        distribution.select_for_project(work, factory, None, base / "cache", "safe-engine")
     prompt = base / "prompt.md"
     prompt.write_text(prompt_text(sample, arm, factory), encoding="utf-8")
     env, seen, started = isolation.run_env(base), isolation.temp_entries(), time.monotonic()
@@ -104,12 +99,7 @@ def attempt(sample, arm, base, ctx):
     code, timed_out = agent.run(ctx["templates"][arm], values, work, prompt, ctx["logs"] / f"{sample.name}-{arm}.log",
                                 ctx["minutes"] * 60, env)
     fields = {"minutes": round((time.monotonic() - started) / 60, 2), "exit": code, "timed_out": timed_out,
-              "setup_seconds": round(started - setup_started, 3),
               "possible_escapes": sorted(isolation.temp_entries() - seen)}
-    if selected:
-        fields.update(factory_setup={"snapshot_revision": selected["revision"], "source": ctx["bundle_identity"],
-                                     "selection_policy": selected["selection_policy"]},
-                      factory_run=isolation.observed_run(env["SAFE_ENGINE_HOME"], work, selected))
     if proc.STOPPING.is_set():
         return None, work
     void, failing = judge(sample, work, base, env, timed_out, ctx)
@@ -177,9 +167,8 @@ def run_all(template, out, names=None, minutes=30.0, jobs=1, keep=False, factory
         raise ValueError("timeout must be above 0 minutes and jobs at least 1")
     logs = check_out(out) / "logs"
     samples, sources = catalog.load(names), catalog.kit()  # everything here is read before any agent starts
-    bundle = isolation.read_bundle()
     ctx = {"templates": templates, "minutes": minutes, "logs": logs, "keep": keep, "sources": sources,
-           "bundle": bundle, "bundle_identity": isolation.bundle_identity(bundle), "watch": Watch(samples, sources)}
+           "bundle": isolation.read_bundle(), "watch": Watch(samples, sources)}
     logs.mkdir(parents=True, exist_ok=True)
     base = Path(tempfile.mkdtemp(prefix="eval-runs-"))
     failures = []

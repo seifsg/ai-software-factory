@@ -20,7 +20,7 @@ TICKETS = "**Ticket:** none (fixture)\n\n**Backlog:** none\n"
 
 
 def scripts(root, rev, dest):
-    """Use complete selected methods; an archived revision gets its own real local Git identity."""
+    """The gate's scripts folder: the working tree's, or rev's tree committed into dest (selection needs a checkout)."""
     if not rev:
         return Path(root) / GATE
     tar = subprocess.run(("git", "-C", str(root), "-c", "core.autocrlf=false", "archive", "--format=tar", rev),
@@ -58,19 +58,14 @@ def messages(gate, tmp):
     env = {**os.environ, "SAFE_ENGINE_HOME": str(tmp / "h"), "HOME": str(tmp), "USERPROFILE": str(tmp),
            "SAFE_ENGINE_NO_UPDATE": "1", "PYTHONIOENCODING": "utf-8"}
     factory = Path(gate).resolve().parents[3]
-    # Pin the measured checkout, not a remotely selected release. Only discovery is controlled;
-    # receipt validation, current CLI startup, policies and every measured command remain real.
-    probe = ("import sys;from pathlib import Path;sys.path.insert(0,sys.argv.pop(1));"
-             "import fast_gate,resolve_bundle;root=Path(sys.argv.pop(1));"
-             "hasattr(resolve_bundle,'select_for_project') or sys.exit('Message fixture requires a selection-capable revision');"
-             "resolve_bundle.resolve_bundle=lambda *a,**k: resolve_bundle.inspect_bundle(root,entrypoint=k.get('entrypoint','safe-engine'));"
-             "args=sys.argv[1:];project=Path(args[args.index('--project')+1]) if '--project' in args else None;"
-             "resolve_bundle.select_for_project(project,root,None,fast_gate.HOME/'bundles','safe-engine') "
-             "if args[:1]==['start'] and not (project/'.factory/entry-bundle.json').exists() else None;fast_gate.main()")
+    # Discovery resolves to the measured checkout; selection, CLI startup and policies stay real.
+    probe = ("import sys;from pathlib import Path;sys.path.insert(0,sys.argv.pop(1));import fast_gate,resolve_bundle;"
+             "root=Path(sys.argv.pop(1));resolve_bundle.resolve_bundle="
+             "lambda *a,**k: resolve_bundle.inspect_bundle(root,entrypoint=k.get('entrypoint','safe-engine'));fast_gate.main()")
 
     def run(*args, stdin=None):
-        done = subprocess.run((sys.executable, "-c", probe, str(Path(gate).parent), str(factory), *args), input=stdin, capture_output=True, text=True,
-                              encoding="utf-8", env=env, cwd=project, check=args[0] != "hook")
+        done = subprocess.run((sys.executable, "-c", probe, str(Path(gate).parent), str(factory), *args), input=stdin,
+                              capture_output=True, text=True, encoding="utf-8", env=env, cwd=project, check=args[0] != "hook")
         return done.stdout
 
     def hook(name, keys, **event):
@@ -80,10 +75,6 @@ def messages(gate, tmp):
     deny = ("hookSpecificOutput", "permissionDecisionReason")
     out = {"start": run("start", "--project", str(project), "--key", "fixture", "--kind", "change",
                         "--request", "Fix the footer typo")}
-    selected = json.loads((project / ".factory/entry-bundle.json").read_text(encoding="utf-8"))
-    started = json.loads((project / ".factory/fast/run.json").read_text(encoding="utf-8"))
-    if started.get("bundle") != {"root": str(factory), "revision": selected["revision"]}:
-        raise RuntimeError("Message fixture did not start the measured factory")
     record = project / ".factory" / "fast" / "work-record.md"
     text = record.read_text(encoding="utf-8")
     out["record hints"] = "\n".join(line for line in text.splitlines() if line.startswith("<!--"))

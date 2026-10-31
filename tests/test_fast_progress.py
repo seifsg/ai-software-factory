@@ -65,7 +65,7 @@ class DashboardTests(unittest.TestCase):
 
     def test_dashboard_shows_ticket_done_now_and_next(self):
         self.assertEqual(cards.card(self.run, STEPS, self.sections, self.at).splitlines(), [
-            "🏭 'portal-poc' · 🔨 build · step 3/5 · ⏱️ 1h02m total, 42m in step",
+            "🏭 portal-poc · 🔨 build · step 3/5 · ⏱️ 1h02m total, 42m in step",
             "🎫 #12 Download & SEO   ▰▱▱ 1/3 · run 2/4",
             "✅ SEO tags",
             "🔨 NOW  Download button",
@@ -86,7 +86,7 @@ class DashboardTests(unittest.TestCase):
         done = {step: {"at": f"2026-10-10T1{i}:00:00+00:00"} for i, step in enumerate(STEPS, 1)}
         finished = cards.card({**self.run, "done": done, "closed": True}, STEPS, self.sections, "2026-10-10T16:30:00+00:00")
         self.assertEqual(finished.splitlines(), [
-            "🏭 'portal-poc' · ⏱️ 6h30m total · 🏁 closed",
+            "🏭 portal-poc · ⏱️ 6h30m total · 🏁 closed",
             "⏱️ tickets 1h00m · plan 1h00m · build 1h00m · done-run 1h00m · handoff 1h00m"])
 
     def test_record_facts(self):
@@ -194,7 +194,7 @@ class ProgressHookTests(unittest.TestCase):
 
     def test_commands_print_the_card_first_and_keep_the_plain_status(self):
         status = self.gate("status")
-        self.assertTrue(status.startswith("🏭 'copy-fix' · 🎫 tickets · step 1/5"), status)
+        self.assertTrue(status.startswith("🏭 copy-fix · 🎫 tickets · step 1/5"), status)
         self.assertIn("🎫 tickets · step 1/", status)
         self.assertIn("Next: tickets", status)
         self.plan()  # mid-build the card shows todos; status still names the steps left

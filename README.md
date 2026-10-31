@@ -59,6 +59,8 @@ New runs use `fast_gate.py checks` to record reasoned hidden-check selection, ac
 
 Record refusals collect independent problems with repair examples; explicit verdict fields distinguish a failed check from explanatory wording. See [record diagnostics](docs/record-diagnostics.md).
 
+Check a local PR draft before publishing with `fast_gate.py report --pr-body <file> --project <abs>`: handoff's PR body checks, without completing anything. See [record diagnostics](docs/record-diagnostics.md).
+
 Browser journeys use a fixed instant and timezone before navigation. Each declared source calls `fixedBrowserPage` or `fixedBrowserClock`; run `node skills/safe-engine/scripts/journey_clock_lint.mjs <manifest.json>`. See [fixed browser time and affected tests](docs/journey-clock.md).
 
 Illustrative example:
@@ -211,7 +213,7 @@ After an update or a rollback, the next `start`, `status` or `version` shows one
 - **Switch channel:** rerun the install with `--channel edge` to follow `main`, or `--channel stable` to return to releases. Claude Code has no channels: edge changes what new projects pin ([hosts](docs/hosts.md#updates)).
 - **Roll back by hand:** in your clone `git checkout vX.Y.Z` (the release you want), then rerun the install with `--no-auto-update` so the daily update keeps it there. Claude Code serves one version: run an older release with `claude --plugin-dir <clone at that tag>/skills`, the plugin disabled.
 
-**Active runs stay pinned.** New automatic selections use the newest verified release (`main` on edge or before the first release). `resolve_bundle.py --project <dir> --new-run` refreshes only before a new run; ordinary resume stays offline. Explicit `--ref`/`--bundle` pins and older receipts with unknown pin intent stay fixed. `fast_gate.py start` prints selected/latest versions, reports failed release checks and executes the selected gate. Its project commands and hooks follow that run's saved identity, including session-bound or absolute-path work outside the project directory. Tool calls spanning different factory versions must be split. A Fast/Lucky run closed in the gate home permits the next selection even if its project mirror is missing or stale. A named Safe run with a confirmed cancellation or checked handoff releases selection for the next ticket. A new start without a receipt uses the existing resolver; a failed selection creates no run state. Pin changes need `improve-factory`; never edit an active receipt.
+**Active runs stay pinned.** New automatic selections use the newest verified release (`main` on edge or before the first release). `resolve_bundle.py --project <dir> --new-run` refreshes only before a new run; ordinary resume stays offline. Explicit `--ref`/`--bundle` pins and older receipts with unknown pin intent stay fixed. `fast_gate.py start` prints selected/latest versions, reports failed release checks and executes the selected gate. Its project commands and hooks follow that run's saved identity, including session-bound or absolute-path work outside the project directory. Tool calls spanning different factory versions must be split. A Fast/Lucky run closed in the gate home permits the next selection even if its project mirror is missing or stale. A named Safe run with a confirmed cancellation or checked handoff releases selection for the next ticket. A start without a selection resolves one first; a failed selection creates no run. Pin changes need `improve-factory`; never edit an active receipt.
 
 Factory maintenance uses an immutable selected runner and a separate editable candidate. The candidate can start from an explicitly approved unmerged dependency; that does not release or adopt it. Complete and commit planned changes before final candidate-bound proof. Use Prove when the selected runner supports it; otherwise run the required full suite directly on the committed candidate under its recorded gate workflow, retaining runner, commit, inputs, command, log and result. See `improve-factory` for the maintenance flow.
 
@@ -238,6 +240,7 @@ Factory maintenance uses an immutable selected runner and a separate editable ca
 | The agent's `gh` commands break in PowerShell | Have it run them in Git Bash: PowerShell 5.1 breaks `{owner}/{repo}` placeholders and nested quotes |
 | Missing on another machine or in a cloud session | Install there too; cloud sessions load the skills committed to their repository |
 | A run started on another machine reads as lost here | Bring the project with its `.factory/` and the run's bundle, then ask the agent to bring the run in, naming the folder it lived in (`fast_gate.py rehome --project <here> --from <old folder>`). Check the card against `status` on the old machine, then retire the copy there with `close --abandon` |
+| A new worktree inherited another worktree's tracked run files | Ask the agent to enroll it (`fast_gate.py enroll-worktree --project <new> --source <original> --bundle <factory> --reason "<why>"`), then start a new run; the original keeps its run |
 | The factory itself misbehaved | `improve-factory The factory did [observed]; expected [result].`, or [open an issue](https://github.com/seifsg/ai-software-factory/issues) |
 
 ## 🧰 Skills
@@ -292,7 +295,7 @@ python tests/run.py
 - Adding, moving or deleting a factory file: `python scripts/package_skill_entries.py`, then `--check` before pushing.
 - Every PR adds a line to [CHANGELOG](CHANGELOG.md), and updates this README and `docs/` when it changes a command, flag, host, install or update step, release step, skill or folder; `tests/test_docs_sync.py` fails until they match.
 - Releases are local, no CI: `python scripts/release.py cut X.Y.Z`, merge the release PR, `python scripts/release.py prove vX.Y.Z`, tag, then `python scripts/release.py publish vX.Y.Z`. Publish reuses intact matching suite proof or runs the complete suite ([releasing](docs/releasing.md)).
-- Method byte budgets: `python scripts/token_report.py --against origin/main` compares file-text proxies for whole runs, overlapping phases and optional conditions. `--gate` measures actual selected methods offline, using complete local snapshots for archived revisions. These are neither observed context nor billed model tokens.
+- Method byte budgets: `python scripts/token_report.py --against origin/main` compares file-text proxies for whole runs, overlapping phases and optional conditions. `--gate` measures gate messages offline. These are neither observed context nor billed model tokens.
 - `python -m evals run` scores the factory against a plain agent ([evals](evals/README.md)). Windows evals require confirmed job ownership and descendant cleanup; isolated checks receive the same snapshotted ownership helper.
 
 The gate loads command arguments from `fast_cli.py` only for CLI calls; tool hooks retain their direct fast path.

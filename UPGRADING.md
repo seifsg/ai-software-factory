@@ -7,9 +7,10 @@ For every release:
 - **Active and explicit pins never change automatically.** Ask `improve-factory` for a compatible pin change; never edit a selected bundle or receipt.
 - **Check what you run:** `fast_gate.py version` names the version, commit, channel and route; `fast_gate.py verify` lists every file that differs from the release manifest.
 
-## 1.2.1
+## Next release
 
-- After release, update launchers for startup selection repair. New unresolved starts select a complete factory rather than using legacy defaults; offline starts need an existing usable selection/cache. Explicit and legacy pins skip remote freshness discovery. Existing active runs retain their recorded policies. Repository evaluations create local Git snapshots and record their identity separately from source provenance; older reports contain no such evidence.
+- Update launchers for `report --pr-body`; it validates local draft structure without completing a step or replacing final published-PR checks. Existing pins stay intact. Accepted `fix-round` output adds its stored `report_sha256`; no input or record migration is needed.
+- A `start` without a selection now selects first, so offline starts need an existing selection or cache. Explicit and legacy pins skip the latest-release check. Active runs keep their recorded policies.
 
 ## 1.2.0
 

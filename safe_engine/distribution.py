@@ -514,12 +514,9 @@ def select_locked(project, bundle, ref, cache, entrypoint, new_run=False):
         if ref is not None or (bundle and Path(bundle).expanduser().resolve() != Path(saved["bundle_root"]).resolve()):
             raise RuntimeError("An existing selection cannot be upgraded here; use improve-factory")
         result = inspect_bundle(saved["bundle_root"], expected=saved["revision"], clean=policy == "automatic", entrypoint=entrypoint)
-        if not new_run or held:
+        if not new_run or held or policy != "automatic":  # pins never update: skip remote discovery
             return {**result, "selection_record": str(receipt), "selection_policy": policy,
                     **({"notice": f"Keeping selected factory: {held}."} if new_run and held else {})}
-        if policy != "automatic":
-            return {**result, "selection_record": str(receipt), "selection_policy": policy,
-                    "notice": f"Keeping {policy} pin; latest factory not checked."}
         try:
             latest = resolve_bundle(cache, channel_ref(), entrypoint=entrypoint)
         except (RuntimeError, OSError, subprocess.TimeoutExpired) as error:

@@ -43,7 +43,7 @@ def route(args, gate):
     project = next((arg.split("=", 1)[1] for arg in options if arg.startswith("--project=")), None)
     if "--project" in options and options.index("--project") + 1 < len(options):
         project = options[options.index("--project") + 1]
-    project = Path(gate.native(project)).resolve() if project else gate.find_project(None)
+    project = Path(gate.native(project)).resolve() if project else gate.find_project(None, recover=False)
     target = selected_command(gate, project)
     return subprocess.call([sys.executable, str(target), *args]) if target else None
 
@@ -103,13 +103,10 @@ def hook_runs(event, runs, cwd, gate):
 
 def summary(result):
     """Distinguish selected identity, advertised release, and a failed or skipped check."""
-    latest, notice = result.get("latest_release") or result.get("release"), result.get("notice", "")
-    policy = result.get("selection_policy")
-    unchecked = policy in ("explicit", "legacy") and notice == f"Keeping {policy} pin; latest factory not checked."
-    lines = [f"Factory: {result.get('version') or 'unversioned'} @{result['revision']}"]
-    if latest or not unchecked:  # Only the known pin notice already names an unperformed lookup.
-        lines.append(f"Latest release: {latest or 'unknown (not checked or unavailable)'}")
-    return "\n".join([*lines, *([notice] if notice else [])]) + "\n"
+    latest = result.get("latest_release") or result.get("release") or "unknown"
+    notice = result.get("notice")
+    return (f"Factory {result.get('version') or 'unversioned'} at {result['revision']}; latest release: {latest}\n"
+            + (notice + "\n" if notice else ""))
 
 
 def start(args, gate):

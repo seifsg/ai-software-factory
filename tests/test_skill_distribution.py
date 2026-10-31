@@ -446,7 +446,6 @@ class ReleaseResolutionTests(FixtureCase):
                 result = resolver.select_for_project(project, None, None, self.cache, "safe-engine", True)
             self.assertEqual(result["revision"], old)
             self.assertNotIn("latest_release", result)
-            self.assertIn("latest factory not checked", result["notice"])
             self.assertEqual(receipt.read_bytes(), before)
 
     def test_selection_lock_rejects_a_competing_process(self):

@@ -134,7 +134,7 @@ def card(run, steps, all_sections, now, v=None, left=False, current=False):
     v = v or view(run, all_sections)
     done, created = run.get("done") or {}, run.get("created")
     current = next((step for step in steps if step not in done), None)
-    head = [f"🏭 {run.get('key')!r}"]
+    head = [f"🏭 {run.get('key')}"]
     if current:
         began = max([entry.get("at") or "" for entry in done.values()] + [created or ""])
         head += [f"{ICONS.get(current, '▶️')} {current} · step {steps.index(current) + 1}/{len(steps)}",

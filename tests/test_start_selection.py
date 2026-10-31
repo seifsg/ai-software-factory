@@ -87,7 +87,7 @@ class StartSelectionTests(unittest.TestCase):
         receipt['policy'] = 'explicit'
         receipt_path.write_text(json.dumps(receipt), encoding='utf-8')
         before = receipt_path.read_bytes()
-        self.assertIn('latest factory not checked', self.start(forbidden=True))
+        self.assertIn('latest release: unknown', self.start(forbidden=True))
         self.assertEqual(receipt_path.read_bytes(), before)
         self.assertEqual(self.calls.read_text(), 'x')
 

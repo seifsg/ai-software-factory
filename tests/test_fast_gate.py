@@ -190,7 +190,7 @@ class FastGateTests(GateHarness, unittest.TestCase):
         self.assertFalse((self.project / ".gitignore").exists())  # no project file changes
         run = json.loads((self.project / ".factory/fast/run.json").read_text(encoding="utf-8"))
         self.assertEqual(run["bundle"]["revision"], receipt["revision"])
-        self.assertIn("Keeping legacy pin; latest factory not checked.", output)
+        self.assertIn("latest release: unknown", output)
         self.assertIn("Hooks:", output)
         record = (self.project / ".factory/fast/work-record.md").read_text(encoding="utf-8")
         self.assertIn("## Analysis", record)  # methods without the light lane keep it, with their own hints
