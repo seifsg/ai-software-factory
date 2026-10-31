@@ -1,12 +1,12 @@
 # Planned validation and reuse
 
-Choose one affected validation command per coherent change. Full coverage is for shared boundaries, unknown impact or release/integration risk; a push or prose edit alone does not justify it. Report the actual scope, never call a partial pass a full-suite pass.
+Choose named affected checks once per coherent change. Full suites need release policy or a specific integration failure those checks cannot cover. Shared code or uncertainty alone is insufficient; investigate scope first. Report actual coverage, never call a partial pass a full-suite pass.
 
-New Fast plans freeze argv/inputs before done plan: UI uses show --plan; others prove --plan <project-local.json>. The legacy full_suite field names the selected command:
+New Fast plans freeze argv/inputs before done plan: UI uses show --plan; others prove --plan <project-local.json>. The legacy full_suite field names the selected command. Example for docs only:
 ```json
-{"version":1,"full_suite":["python","tests/run.py","--changed","<run-base>"],"timeout_seconds":1800,"suite_inputs":{"files":[],"environment":[],"clock":{"instant":"2026-01-01T00:00:00Z","timezoneId":"UTC"}}}
+{"version":1,"full_suite":["python","-m","unittest","discover","-s","tests","-p","test_docs_sync.py"],"timeout_seconds":120,"suite_inputs":{"files":[],"environment":[],"clock":{"instant":"2026-01-01T00:00:00Z","timezoneId":"UTC"}}}
 ```
-Run prove --suite after real use/Build and UI Show. Old plans/pins keep their recorded requirements. Factory --changed follows named imports/loaders transitively; changed test helpers include consumers, unrelated sibling modules do not join merely by folder. Unknown/unmapped graphs fall back to all, explicitly reported. Use the actual run base; select named tests when finer coverage is established.
+Run prove --suite after real use/Build and UI Show. Old plans/pins keep their recorded requirements. Factory --changed follows named imports/loaders transitively; changed test helpers include consumers, unrelated siblings do not join merely by folder. Unknown/unmapped graphs still run all tests: inspect uncertain mappings first and use named tests when a full run is unjustified. Use the actual run base.
 
 Receipts bind commit, source/factory files, argv, executable, declared files/environment and clock. Values are hashed. Intact same-input passes can be reused; no duplicate suite after an affected pass already satisfies the plan. Changed or unknown inputs, interrupted/timed-out/truncated/tampered proof cannot supply a pass. Failures remain failures. Each Fast execution has its own .factory/fast/prove/ log; the project .factory/suite-cache retains up to256 completed results.
 

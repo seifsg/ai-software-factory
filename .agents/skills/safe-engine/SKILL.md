@@ -64,7 +64,7 @@ Record every step in one work record and pass the gate: [fast-run](references/fa
 9. **Build:** each item through 0–4; spike unknown capabilities first, tick after use. UI: [Look, Show, Prove, Ship](references/show.md).
    - Mark each frozen todo's observed start/finish/fail/cancel/resume with `fast_gate.py metrics task --key <run> --task-id Tn --state <state> --project <abs>`. `try` alone never proves completion; missed boundaries stay unknown.
    - On each tick, write that todo's one log line, `T3 pre: … do: … post: …`, and in the same edit set `**Now:**` to the todos in progress.
-   - Use each item, then run affected tests once per coherent batch, not every todo. Freeze command/scope in the existing plan; full coverage needs broad risk or unknown impact. Never call a full fallback narrow. Reuse intact passes; repeat changed/failed checks only. UI completes Show first; a POC waits for `verify` or Safe.
+   - Use each item, then named affected tests once per batch. Full suites need release policy or an integration failure those checks cannot cover; shared code/uncertainty alone is insufficient. Investigate first; freeze scope in the plan. Reuse intact passes; repeat changed/failed checks only. UI completes Show first; POC waits for `verify` or Safe.
 10. **Done-run:** prove each ticket's definition of done.
     - Start it once. Use every requested journey and the most likely failure through real controls (simulated input proves no requested integration). Read the logs; fix blockers.
     - Reuse early Before; capture final After/video once for Show and the PR (`how-to-make-a-pr`). Batch known repairs before final capture; a demo bug still needs checked recovery and fresh proof.

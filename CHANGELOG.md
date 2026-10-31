@@ -12,7 +12,7 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 
 ### Fixed
 
-- Reduce blanket validation: one affected pass, named dependency selection, and reuse existing covered-logic tests without duplicate hidden checking.
+- Reduce blanket validation: named affected checks once; full suites require release policy or a demonstrated integration gap, not shared code or uncertainty alone. Reuse covered-logic proof without duplicate hidden checks.
 
 - Reuse unchanged visual observations with explicit dependency evidence; preserve owner waits and strict final proof. Parse compact records/resources clearly; reuse local draft preflight.
 

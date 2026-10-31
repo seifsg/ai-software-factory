@@ -287,11 +287,12 @@ Design ports use `fast_gate.py start --design-port`, then `fast_gate.py design -
 
 Rules live in [AGENTS.md](AGENTS.md); changes go through `improve-factory`. Report problems as [issues](https://github.com/seifsg/ai-software-factory/issues).
 
+For a docs-only edit, select its validator:
 ```bash
-python tests/run.py
+python -m unittest discover -s tests -p test_docs_sync.py
 ```
 
-- `python tests/run.py --changed <run-base>` selects named dependency coverage; full validation needs shared risk, unknown impact or release/integration scope, not every push.
+- Run named affected tests; `python tests/run.py --changed <run-base>` selects dependencies but unknown mappings fall back to all. See [validation scope](docs/suite-checks.md).
 - Adding, moving or deleting a factory file: `python scripts/package_skill_entries.py`, then `--check` before pushing.
 - Every PR adds a line to [CHANGELOG](CHANGELOG.md), and updates this README and `docs/` when it changes a command, flag, host, install or update step, release step, skill or folder; `tests/test_docs_sync.py` fails until they match.
 - Releases are local, no CI: `python scripts/release.py cut X.Y.Z`, merge the release PR, `python scripts/release.py prove vX.Y.Z`, tag, then `python scripts/release.py publish vX.Y.Z`. Publish reuses intact matching suite proof or runs the complete suite ([releasing](docs/releasing.md)).
@@ -330,4 +331,4 @@ Capture web proof with `shots --phase before` before edits and `shots --phase af
 
 Optional visual_inputs carries proven unchanged Show observations, retaining owner response/deadline and original provenance; full-source acceptance stays strict. Explicit owned ports and compact records avoid prose repair loops. See [Show](docs/show-first.md).
 
-Validation uses one planned affected pass per coherent change; full coverage is reserved for shared boundaries, unknown impact and release/integration risk. `tests/run.py --changed <run-base>` follows named dependencies; a full fallback is explicit. Covered simple logic can skip duplicate hidden checks with current validation proof.
+Validation uses named affected checks once per change. Full suites need release policy or a specific integration gap those checks cannot cover; shared code or uncertainty alone is insufficient. Covered simple logic can reuse existing proof.

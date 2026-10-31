@@ -24,7 +24,7 @@ The `## Work rules` section of `.agents/skills/safe-engine/SKILL.md` applies to 
 - Moving, adding or deleting a factory file: update `safe_engine/bundle-inputs.json`, `safe_engine/distribution.py`, then `python scripts/package_skill_entries.py` (it regenerates both launcher resolvers; `--check` before pushing).
 - Changing a command, flag, host, install or update step, release step, skill or top-level folder: update `README.md` and `docs/` in the same PR. `tests/test_docs_sync.py` fails on anything undocumented; keep what it cannot read (behavior, defaults, paths) true by hand.
 - Manual use first, tests last. For method changes, walk through the changed skill; delegate when independence or parallel work justifies its cost.
-- Run one affected validation pass per coherent change. Use `python tests/run.py --changed <run-base>` or named tests; prose needs affected method/docs/budget checks. Use the full `python tests/run.py` for shared test/proof machinery, unknown impact or release/integration risk, not every push. Reuse intact same-input passes; repeat only failed/changed affected checks. Record command/scope once in the existing plan.
+- Run named affected checks once per change; prose needs method/docs/budget checks. Full suites need release policy or an integration failure those checks cannot cover; shared code/uncertainty alone is insufficient. Investigate first; `--changed` can fall back to all tests. Reuse intact passes; repeat failed/changed checks only. Record scope once in the plan.
 - Keep secrets, client data, transcripts and `.factory/` run records out of Git.
 
 ## PRs

@@ -9,7 +9,7 @@ For every release:
 
 ## Next release
 
-- New Fast plans may select affected validation in the existing full_suite field; covered logic can set hidden:false with existing-test coverage reasons. Old plans/pins retain their recorded duties. Test selection follows named dependencies and reports full fallbacks.
+- New Fast plans use named affected validation in the existing full_suite field; full runs need release policy or a demonstrated integration gap. Covered logic can set hidden:false with existing-test coverage reasons. Old plans/pins retain their duties; --changed still falls back to all for unknown mappings.
 
 - Scoped visual reuse is opt-in through new Show plans; existing pins/plans keep their behavior. Supply explicit dependency evidence/runtime inputs only when carrying an observation. Full-source final proof is unchanged.
 
