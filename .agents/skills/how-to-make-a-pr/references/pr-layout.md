@@ -28,13 +28,13 @@ Fill the project's PR template first, then use these blocks inside it. Skip what
 
 - **Header:** credit the requester, deciders and real human author; separate original work from a port or adaptation.
 - **Context:** link the discussion that triggered the PR; the ticket link stays visible, not hidden in a comment.
-- **Before & after:** never skipped; right after purpose, ahead of implementation detail. One `### <outcome>` per changed view/state or touched journey, named by its effect (`### 🧾 Invoice totals include tax`, never `### invoice.ts`). Every inventory item maps here; reuse shared proof with captions or timestamps.
+- **Before & after:** never skipped. One `### <outcome>` per changed view, state or touched journey, named by its effect (`### 🧾 Invoice totals include tax`, never `### invoice.ts`). Every inventory item maps here; reuse shared proof with captions or timestamps.
 - **Outcome declarations:** each outcome has `**Visual:** yes` or `**Visual:** no (<reason>)`, and `**Journey:** yes` or `**Journey:** no (<reason>)`, in these exact forms; extra explanation on the next line. A UI run needs a visual outcome. Never call a real user journey nonvisual merely because the diff changes shared logic.
-- **Screenshots:** Visual yes requires `**Before:**` and `**After:**`, each with a different screenshot, or `**Before → After:**` with a two-column image table. Captions identify state, base/head and criterion. New UI includes the prior entry/empty-state screenshot labeled "did not exist". Prose, video or a code block never replaces a screenshot pair.
-- **Video:** Journey yes requires `**Video:** [<journey and result>](https://<host>/<clip>.mp4)` (or webm/mov, or an HTML video element for an extensionless upload); a shared clip gives that journey's start/end timestamps. A GIF or still image is only a preview.
+- **Screenshots:** Visual yes requires `**Before:**` and `**After:**`, each with a different screenshot, or `**Before → After:**` with a two-column image table. Captions identify state, base or head, and criterion. New UI includes the prior entry/empty-state screenshot labeled "did not exist". Prose, video or a code block never replaces a screenshot pair.
+- **Video:** Journey yes requires `**Video:** [<journey and result>](https://<host>/<clip>.mp4)` (or `.webm`, `.mov`, or an HTML video element for an extensionless upload); a shared clip gives that journey's start and end timestamps. A GIF or still image is only a preview.
 - **Media waiver:** scoped to this outcome: `**Media waiver:** screenshots | <exact owner request> | <source>` (first field `screenshots`, `video` or `all`). Repeat only where that request applies; a screenshot waiver does not waive video. It waives that media, not the truthful description of both states or other proof.
 - **Nonvisual proof:** matched request/response JSON, status, logs or command results: `**Before:**` then `**After:**` with fenced output, or `**Before → After:** <same input>, base <sha> → head <sha> (<criterion>)` and a `diff` block. Server-only, infrastructure or internal work with no affected interactive UI journey needs no media waiver.
-- **Demo context:** base and demonstrated candidate, isolated empty slot or seed/reset recipe, viewport/environment, covered journeys and limitations.
+- **Demo context:** base and demonstrated candidate, isolated empty slot or seed or reset recipe, viewport and environment, covered journeys and limitations.
 - **Cold start:** the original request and why, decisions with reasons, facts (IDs, paths, repos), current state, remaining steps and blockers. Links are an audit trail, not a substitute.
 - **Verification:** one row per confirmed criterion, plus the ticket's checklist state: every item ticked, or the gap. Ticketed work: the ticket's confirmed revision and digest, dependencies and integration status. Proof is bound to the exact pushed candidate. Name what is **unverified**.
 - **Adjustment history:** append an entry per requested change; keep it for the PR's whole life.
@@ -62,14 +62,13 @@ Fill the project's PR template first, then use these blocks inside it. Skip what
 
 - Compare variants across dimensions in a table; mark what is new.
 - Put monospace diagrams in code blocks. Bold only key terms.
-- Never copy claimed results from a template or example.
 
 ## Writing rules
 
 - No em dashes. Use a period, comma, colon or parentheses.
 - Cut generic openers, canned summaries, buzzwords, inflated adjectives, filler transitions, "not X, but Y" and slogans. State the point, key facts first.
 - Specific nouns, active verbs, consistent terms, short bullets, narrow tables. Emojis only to label sections and aid scanning.
-- No invented facts, metrics, benefits, tests, visuals, authorship or consent; charts need measured values; screenshots show real, relevant proof. Label illustrative examples. Verify names, numbers, units, dates.
+- No invented facts, metrics, benefits, tests, visuals, authorship or consent, and no results copied from a template or example; charts need measured values; screenshots show real, relevant proof. Label illustrative examples. Verify names, numbers, units, dates.
 - Fold long machine data; keep purpose, outcome, proof, gaps and next action visible.
 - Finishing pass: can a cold reader say what, why, before, after and next, open every outcome's proof, and find every requested detail?
 
@@ -111,31 +110,12 @@ Illustration only.
 + {"theme": "dark"}
 ```
 
-### 📍 Context
-
-- Theme store had no save path. Demo: isolated empty profile, same viewport.
-
-### 🔧 What & why
-
-- **Approach:** reuse settings storage, one save path.
-
-### 🧩 Files
-
-```text
- M  settings/theme-store    save on change, load on start
-NEW settings/theme-save     single save path, returns error result
-```
-
 ### ✅ Verification
 
 | Criterion | Change | Proof | Gap |
 |---|---|---|---|
 | A1 save, reload | store saves and loads | screenshot pair | none |
 | A2 save fails | error shown, choice kept | forced failure, screenshot | mobile retry unchecked |
-
-### 🚦 Progress / next
-
-- Draft; tests and independent review pending. A human decides ready and merge.
 
 ---
 <the credit line from credit.md>

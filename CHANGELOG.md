@@ -6,6 +6,10 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 
 ## [Unreleased]
 
+### Changed
+
+- Shorten the Fast run, gate details and PR layout methods: merge duplicate rules, drop the repeated `shots` usage and repeated owner-only notes, trim the PR example to its proof sections and spell out slash shorthand, with no rule removed.
+
 ## [1.3.0] - 2026-10-31
 
 ### Added

@@ -1,8 +1,8 @@
 # Fast gate details
 
-Contents: modules · run state · older gate · owed epic · scratch deletes · destructive guard · rehome · adopt PR proof · cleanup temp · install · progress internals · live view internals
+Contents: modules · run state · older gate · owed epic · scratch deletes · destructive guard · rehome · adopt PR proof · cleanup temp · recover baseline · shots · install · progress internals · live view internals
 
-Read only the section your situation needs. The rest of the gate is in [fast-run](fast-run.md).
+Read only the section you need; the rest of the gate is in [fast-run](fast-run.md).
 
 ## Modules
 
@@ -10,8 +10,7 @@ Read only the section your situation needs. The rest of the gate is in [fast-run
 
 ## Run state
 
-- `start` registers the run, keeps its state in the gate home and notes the bundle and hook status. It keeps `.factory/` out of Git in the clone's `.git/info/exclude`: no project file changes; a reverted `.gitignore` and `git clean -fd` leave the records.
-- `.factory/fast/run.json` is a mirror the gate rewrites on every change.
+- `start` registers the run and notes the bundle and hook status. It keeps `.factory/` out of Git in the clone's `.git/info/exclude`: no project file changes; a reverted `.gitignore` and `git clean -fd` leave the records.
 - `close` moves the run's state to `runs/closed/` until the next `start`.
 - The registration (`active/`) and the state (`runs/`) guard each other: a deleted registration comes back from the open state, and a deleted state never falls back to `run.json`.
 - A registered run whose state in the gate home is missing or unreadable keeps the gate closed and every destructive rule on until the owner closes the run.
@@ -58,7 +57,7 @@ Hooks see tool calls, not intent: files written and destructive commands run fro
 python fast_gate.py rehome --project <abs> --from <the folder its run.json records>
 ```
 
-The owner's step, run only on their instruction. It brings in an open run from another machine or folder, which reads as lost in this gate home; `status` then names the command.
+It brings in an open run from another machine or folder, which reads as lost in this gate home; `status` then names the command.
 
 1. First bring the project with its `.factory/` and the run's bundle (the launcher's `resolve_bundle.py --ref <revision in .factory/entry-bundle.json>`). When the receipt's old bundle path is missing here, `rehome` points it at this gate home's copy of the same revision.
 2. `rehome` takes the open `run.json` home once, with its steps and pause, and keeps `.factory/` out of Git as `start` does.
@@ -72,7 +71,7 @@ It refuses, writing nothing, when the run is closed, malformed or records anothe
 python fast_gate.py adopt-pr-proof --project <abs> | --new-runs --method <absolute PR SKILL.md> --reason "<owner authority>"
 ```
 
-Only on explicit owner authorization. `--project` adopts for an open run, `--new-runs` for future starts; pass `--method` and `--reason` with either form.
+`--project` adopts for an open run, `--new-runs` for future starts; pass `--method` and `--reason` with either form.
 
 - The method must remain available and unchanged in its reviewed bundle; a changed or missing source blocks dependent checks.
 - A separate identity-bound policy preserves progress, pauses and unrelated pins; status and prompt hooks show its source.
@@ -85,7 +84,7 @@ Only on explicit owner authorization. `--project` adopts for an open run, `--new
 python fast_gate.py cleanup-temp --project <abs> --path <absolute temp child> --reason "<owner authority>" [--expect <preview SHA256>]
 ```
 
-Obsolete fixtures outside managed scratch, only on the owner's explicit instruction for those exact folders. Normal QA still uses managed scratch.
+Removes obsolete fixtures outside managed scratch, only the exact folders the owner named. Normal QA still uses managed scratch.
 
 1. Verify ownership and that no process uses them; preserve needed reports.
 2. Repeat `--path` for each absolute direct child of the system temp folder. Run with the original temp environment, not a QA scratch override; do not change global settings.
@@ -99,7 +98,7 @@ The command refuses links, special nodes, protected project or factory overlap a
 python fast_gate.py recover-baseline --project <abs> --base <full-sha> --upstream refs/remotes/<remote>/<branch> --reason "<owner authority>" [--expect <preview SHA256>]
 ```
 
-A stale start baseline, only on the owner's explicit instruction: Git dates and remote ancestry alone do not prove ownership.
+Corrects a stale start baseline. Git dates and remote ancestry alone do not prove ownership.
 
 1. Pause and checkpoint the run, stop its writers, fetch the actual upstream, then preview.
 2. Review every excluded commit and path against owned work before repeating with `--expect`.
@@ -113,7 +112,7 @@ The command requires an ancestor of HEAD and upstream, commits predating start, 
 python fast_gate.py shots --base <ref> --serve "<dev command, {port} for its port>" --path <view> [--path <view>] [--setup "<command>"] [--ports <before>,<after>] [--size 1280x800] [--browser <exe>] [--project <abs>]
 ```
 
-`shots` makes the PR's Before and After screenshots in one go: it checks out `--base` in the run's scratch folder, runs `--setup` in each tree, serves both at once on their own ports (`{port}` in `--serve`, also `PORT`), shoots each `--path` at one size with a headless Chromium-family browser (`--browser` or `SAFE_ENGINE_BROWSER` when none is found), stops both servers and removes the base checkout. Shots land in `.factory/fast/shots/` as `<view>-before.png` and `<view>-after.png`. Views behind sign-in or seeded state still need the project's own capture; Git Bash rewrites a bare `/`, so pass `--path=/` there.
+It checks out `--base` in the run's scratch folder, runs `--setup` in each tree, serves both at once on their own ports (`{port}` in `--serve`, also `PORT`), shoots each `--path` at one size with a headless Chromium-family browser (`--browser` or `SAFE_ENGINE_BROWSER` when none is found), stops both servers and removes the base checkout. Shots land in `.factory/fast/shots/` as `<view>-before.png` and `<view>-after.png`. Views behind sign-in or seeded state still need the project's own capture; Git Bash rewrites a bare `/`, so pass `--path=/` there.
 
 ## Install
 
@@ -139,13 +138,13 @@ The run card:
 - Before the build it shows the steps done, current and left. A paused run leads with `⏸️ WAITING ON YOU: <reason>` and shows what is on hold. Once every step is done, it lists each step's duration.
 - The facts come from the record: ticket titles after their URLs, each todo's title and result, and the Build log's last `**Now:**`. A todo counts as built once its Build log line passes the `build` check.
 - Unseen progress rides along with each hook's answer, once each, even under parallel calls: the card after each step, pause or resume; `✅ <title> done → <result>` per newly built todo, then the new NOW and the ticket bar; the new NOW when `**Now:**` changes. The same check refreshes the live view.
-- Nothing changed: one directory scan, no reads, no network. Hook calls your agent marks as a delegate's (the factory's `docs/hosts.md`) show nothing; the next main-thread call does.
+- Nothing changed: one directory scan, no reads, no network. How a host marks delegate calls: the factory's `docs/hosts.md`.
 - Claims live in `.factory/fast/shown/`, one folder per run; `start` and `close` clear them. A closed run leaves the hooks.
 
 ## Live view internals
 
 - A busy port gets the next free one; a running server prints the requested link. One server handles every project's scoped URL; the URL keeps its scope through filters, details and reload. In Git, worktrees sharing a local repository are one project; separate clones and submodules stay separate; outside Git, the exact canonical folder. `view --project <abs> --snapshot <file>` writes that project's page with the current state, marked static.
-- The gate is the only writer of its data, `view/state.json` in the gate home: at each gate command, and at each hook whose file-time check saw the run state or record change, from delegates and on every host. Nothing changed: no extra work. The page polls every 2 s; an unchanged file costs one 304.
+- The gate writes `view/state.json` in the gate home at each gate command and at each hook whose file-time check saw the run state or record change, from delegates and on every host. Nothing changed: no extra work. The page polls every 2 s; an unchanged file costs one 304.
 - The page leads with the selected session's goal, measured milestones and next test, then sessions, reported subsessions and ticket activity; task progress is separate from goal completion. All data, details and thumbnails included, shares the project scope; an empty project offers starting a session there.
 - It shows each run's steps, its todos (done, now, next, later, counted as the card counts), its agents and sessions, the owner's open question and Ready to try. Agents: the todos in `**Now:**`, plus the background agents your agent reports at a stop (the factory's `docs/hosts.md`). Screenshots under `.factory/fast/shots/` show as thumbnails.
 - On the first prompt and every sixth after, the prompt hook's message to the owner carries this run's project link, or says the view is off and how to start it for that project.

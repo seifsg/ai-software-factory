@@ -2,13 +2,11 @@
 
 Steps: `research`, `kickoff`, `tickets`, `analysis`, `plan`, `design`, `schema`, `build`, `show`, `done-run`, `handoff`. New UI runs use [Look, Show, Prove, Ship](show.md); others skip Show.
 
-Reasoned proof selection: [hidden checks](hidden-checks.md), new runs.
-
-Read record refusals: [complete diagnostics and verdict fields](record-diagnostics.md).
+Reasoned proof selection on new runs: [hidden checks](hidden-checks.md). Record refusals: [diagnostics and verdict fields](record-diagnostics.md).
 
 ## Kickoff questions
 
-After research, `product`/`feature` only: one round for POC; MVP/production until launch-baseline choices are decided. Unanswered suggestions: [sizes](sizes.md). Use the question tool (choices, recommended first, one-line tradeoffs), else one short message. Ask only gaps:
+After research, product and feature runs only: one round for POC; MVP/production until launch-baseline choices are decided. Unanswered suggestions: [sizes](sizes.md). Use the question tool (choices, recommended first, one-line tradeoffs), else one short message. Ask only gaps:
 
 1. **Size:** POC (it works and does exactly what was asked), MVP (it can go live with real test users) or production slice. Ask it first; features depend on it.
 2. **Features:** every requested item is fixed, never an option. POC: ask only what the requested items leave open; extra ideas go to the epic's follow-ups ticket. MVP: offer the researched launch gaps and extra features with their evidence, up to four per question.
@@ -21,7 +19,7 @@ More than four open: ask the rest in a second call of the same round. Pause the 
 
 ## Light lane
 
-A `change` records tickets, plan, build, done-run and handoff; design/Show with `--ui`, schema with `--data`. Design ports start with `--design-port` (implies UI); follow `ux-quality` reference coverage before plan.
+A `change` records tickets, plan, build, done-run and handoff; design and Show with `--ui`, schema with `--data`. Design ports start with `--design-port` (implies UI); follow `ux-quality` reference coverage before plan.
 
 - Tickets: `**Ticket:** <url>` names the ticket it follows up and updates. A new ticket only for a new outcome; `**Ticket:** none (<why>)` when trivial.
 - No analysis step. Plan: `**Success:**` and `### Todos`. Unknown cause or several consumers: run `analyze-start` first and keep its result in the plan.
@@ -32,7 +30,7 @@ A `change` records tickets, plan, build, done-run and handoff; design/Show with 
 
 New runs record `**Findings:** none` or final scored JSON at done-run; use [fix rounds](worth-it.md) before repairs.
 
-`.factory/fast/work-record.md`, sections in step order; `start` writes the skeleton. The rows below and the skeleton's hints name every marker; a `change` writes the markers its rows name, with the light-lane forms. A `done` refusal its message does not explain: the [sample](work-record-sample.md) shows each section complete for an unrelated product; never copy its content. Labels end with the colon inside the bold: `**Epic:**`. The gate checks (listed tickets: the `**Epic:**` or `**Ticket:**` and `**Sub-issue:**` lines):
+`.factory/fast/work-record.md`, sections in step order; `start` writes the skeleton; its hints and the rows below name every marker (a `change`: its rows' light-lane forms). A `done` refusal its message does not explain: the [sample](work-record-sample.md) shows each section complete for an unrelated product; never copy its content. Labels end with the colon inside the bold: `**Epic:**`. The gate checks (listed tickets: the `**Epic:**` or `**Ticket:**` and `**Sub-issue:**` lines):
 
 | Section | Must contain |
 |---|---|
@@ -44,7 +42,7 @@ New runs record `**Findings:** none` or final scored JSON at done-run; use [fix 
 | Design | ≥4 `#RRGGBB` hex colors, `**UI kit:**`, `**Font:**`, `**Logo:**`, `**Icons:**`, `**Layout:**`, `**Theme:**` naming light mode, `**Journeys:**` with counts and a minimum (`<journey>: 2 actions, 1 load, min 2`), `**Map:**`, `**Hierarchy:**` naming primary actions, `**Labels:**` |
 | Schema | a 3-option table, `**Chosen:**`, a fenced ERD or DDL |
 | Build log | one line per plan todo, starting with its ID: `- T1 pre: … do: … post: …`; `**Now:** T2 T3` names the todos in progress; `**Try:** T1 cmd\|url\|file <target>` lines come only from `try`, never by hand |
-| Done-run | ≥1 `PASS` line from using it (on UI runs, lines naming a rule and the judge line do not count), `**Logs:**`; UI runs and runs that create, edit or delete UI files in their project also ≥1 existing screenshot path under `.factory/fast/shots/`, one verdict line per rule `U1` to `U10` (`- U3 PASS <screens checked>: <evidence>`; N/A and UNKNOWN with the reason; no explicit FAIL verdict; quoted failure words do not change the verdict; one final verdict per rule) and `**UX judge:**` naming the fresh agent that wrote them; a run sized MVP or production also `**Secrets:**`, `**Dependencies:**`, `**Static:**` (tool, command, result; [product bar](product-bar.md#security)); legacy product/feature runs a `**Hidden checks:**` block up to the next label, only entries `#2 A1: PASS`, on current methods also `#2 A1: DEFERRED (owner: <why>)` or `(hardware: <why>)` (a note only after it in parentheses), one per line or comma-separated; any other line or a FAIL is refused; online, every criterion of each listed ticket not Blocked, Backlog or not planned needs its PASS or DEFERRED (an epic another run owes: none); offline, ≥1 entry |
+| Done-run | ≥1 `PASS` line from using it (on UI runs, lines naming a rule and the judge line do not count), `**Logs:**`; UI runs and runs that create, edit or delete UI files in their project also ≥1 existing screenshot path under `.factory/fast/shots/`, one verdict line per rule `U1` to `U10` (`- U3 PASS <screens checked>: <evidence>`; N/A and UNKNOWN with the reason; no explicit FAIL verdict; quoted failure words do not change the verdict; one final verdict per rule) and `**UX judge:**` naming the fresh agent that wrote them; a run sized MVP or production also `**Secrets:**`, `**Dependencies:**`, `**Static:**` (tool, command, result; [product bar](product-bar.md#security)); legacy product and feature runs a `**Hidden checks:**` block up to the next label, only entries `#2 A1: PASS`, on current methods also `#2 A1: DEFERRED (owner: <why>)` or `(hardware: <why>)` (a note only after it in parentheses), one per line or comma-separated; any other line or a FAIL is refused; online, every criterion of each listed ticket not Blocked, Backlog or not planned needs its PASS or DEFERRED (an epic another run owes: none); offline, ≥1 entry |
 | Handoff | `**Run:**`, `**Statuses:**` (each owned ticket's final status), `**Unverified:**`, `**Follow-ups:**`; current methods also `**Deferred:**` (`none`, or every deferred item, naming each DEFERRED hidden check), and an unticked checklist item ending `DEFERRED (owner|hardware: <why>)` is not open; sign-in runs `**Dev sign-in:**`; online, each listed ticket not Blocked, Backlog or not planned (label or board status) is fully ticked (an epic another run owes: only the items this run's todos lead), with an item naming each criterion, every plan todo an item and every R-id not marked owner-deferred named by a criterion; `**PR:**` with the draft PR's URL; its body (`how-to-make-a-pr`) ends with the factory credit line and has a heading naming Before and after, under it one heading per outcome that is not a file or path, each with `**Before:**` then `**After:**` (each followed by an image, a recording or a fenced block; Before may say "did not exist") or one `**Before → After:**` or `\| Before \| After \|` table with a `diff` block (`-` or `+` lines beside other lines) or two images; image and video links `https`, not localhost; on current methods each outcome declares Visual and Journey (yes, or no with a reason): a visual needs distinct before/after screenshots, a journey a Video link, unless an explicitly scoped owner media waiver covers it; UI runs need a visual outcome. The gate checks declarations and link structure, not full coverage, playable media or waiver authority |
 
 An epic's checklist (a change: its ticket's) holds integration todos (`T<n>`-led items naming its criteria), each another run's: who owes it, [gate details](gate-details.md#owed-epic).
@@ -57,12 +55,12 @@ Agents work from recorded facts, never guesses; the plan fixes them once:
 
 - **Interface** (`### Interface`): the public names as written: exports, record shapes, UI labels and test ids, routes, commands and flags, and the committed files holding them. `none (<why>)` only when nothing is public. A light-lane plan writes it when it delegates.
 - **Ports** (`**Ports:**`): this checkout's dev port per server the run starts (app, API, hub, a spare). The main checkout (lane 0) keeps the project's defaults; lane n, an extra worktree, takes its own fixed block for its whole life: the project's lane rule, else the defaults plus 100 × n. Add two spare ports for `shots`. Never start, reuse or stop another lane's stack. `done plan` refuses a port another open run's plan holds. `none (<why>)` when the run serves nothing.
-- Own stacks with `fast_gate.py lane start` / `lane stop`; brief generation and resources. Verify cache writes; configure unsupported tools. Host limits: the factory's `docs/hosts.md`.
+- Own stacks with `fast_gate.py lane start` and `lane stop`; brief generation and resources. Verify cache writes; configure unsupported tools. Host limits: the factory's `docs/hosts.md`.
 - **UX rules** (UI runs, `**UX rules:**`): U1 to U10 (`ux-quality` step 3) plus the project's own UX rule files by path.
 
 Each brief (checker, builder, UX judge, reviewer) also carries the Interface and Ports verbatim and, for UI work, the UX rules line. A checker binds its checks to those names and reads the committed interface files they name, never the implementation. A name a brief lacks: read the named interface files; still missing, the agent returns `blocked: <name>` instead of inventing one, and the coordinator adds it to the Interface (committed code wins) and briefs again.
 
-**Deferred (owner/hardware):** an item only the owner's hands or hardware this machine lacks can finish (another OS, a physical device, an owner sign-off or account) ends `DEFERRED (hardware: <what is needed>)` or `DEFERRED (owner: <what is needed>)` on its unticked checklist item and its hidden-check entry, and is listed once on the handoff's `**Deferred:**` line. Everything else gets done first. Never defer what the run can do, a FAIL, or access not yet sought. Its criterion still gets the checker's written manual check, for the owner to run. A run whose only open items are deferred closes as done; its tickets go to Ready for QA naming them.
+**Deferred:** an item only the owner's hands or hardware this machine lacks can finish (another OS, a physical device, an owner sign-off or account) ends its unticked checklist item and hidden-check entry with `DEFERRED (owner: <what is needed>)` or `DEFERRED (hardware: <what is needed>)`, listed once on the handoff's `**Deferred:**` line. Do everything else first; never defer what the run can do, a FAIL, or access not yet sought. The checker still writes the criterion's manual check for the owner to run. A run whose only open items are deferred closes as done; its tickets go to Ready for QA naming them.
 
 ## The gate
 
@@ -78,7 +76,6 @@ python fast_gate.py status | scratch | pr-proof-method | pause --reason "<why>" 
 python fast_gate.py try T3 --cmd "<command>" | --url <http(s) link> | --file <path in the project> [--project <abs>]
 python fast_gate.py view --project <abs> [--port 8765] [--snapshot <file>]
 python fast_gate.py view --all-projects [--port 8765] [--snapshot <file>]
-python fast_gate.py shots --base <ref> --serve "<dev command, {port} for its port>" --path <view> [--path <view>] [--setup "<command>"] [--ports <before>,<after>] [--size 1280x800] [--browser <exe>] [--project <abs>]
 ```
 
 - Always pass `--project`. Write the request verbatim to a file first (`.factory/request.md`).
@@ -95,10 +92,10 @@ python fast_gate.py shots --base <ref> --serve "<dev command, {port} for its por
 
 ## Hooks
 
-**One full suite per effective version.** Before `done plan`, declare argv, file/environment inputs and browser clock via `show --plan` (UI) or `prove --plan`. After manual use, Build and UI Show, `prove --suite` queues the suite and reuses intact matching proof. Old runs keep their policy.
+**One full suite per effective version.** Before `done plan`, declare argv, file and environment inputs and browser clock via `show --plan` (UI) or `prove --plan`. After manual use, Build and UI Show, `prove --suite` queues the suite and reuses intact matching proof. Old runs keep their policy.
 
 - Until every step before `build` passes, source edits, shell writes (`>`, `>>`, `&>`, `>|`, piped `tee`) and scaffold or install commands in the run's project are denied. Quoted text, heredoc bodies and here-strings never count, so ticket bodies pass. `.factory/` stays writable, except `run.json`.
-- Destructive commands are denied in every step of an active run; the owner runs them or approves another approach: recursive deletes (`rm -r`, `Remove-Item -Recurse`, `find -delete`) outside the project (the run's scratch folder excepted), of the whole project, of `.factory` or `.factory/fast`; any delete, move or wildcard that can reach `.factory/fast/run.json`, or anything in `.git` except `index.lock`; `git clean -x`/`-X`, `git stash --all`; force, mirror, prune or `main`/`master`-delete pushes; `DROP` or `TRUNCATE` through a database client, and database wipes; deletes, moves and writes reaching the gate home's `active/` or `runs/`; migrations naming a production env value. A command you need matches one, or a deny came: [what passes, what hooks miss](gate-details.md#destructive-guard).
+- Destructive commands are denied in every step of an active run; the owner runs them or approves another approach: recursive deletes (`rm -r`, `Remove-Item -Recurse`, `find -delete`) outside the project (the run's scratch folder excepted), of the whole project, of `.factory` or `.factory/fast`; any delete, move or wildcard that can reach `.factory/fast/run.json`, or anything in `.git` except `index.lock`; `git clean -x` or `-X`, `git stash --all`; force, mirror, prune, or `main` or `master` delete pushes; `DROP` or `TRUNCATE` through a database client, and database wipes; deletes, moves and writes reaching the gate home's `active/` or `runs/`; migrations naming a production env value. A command you need matches one, or a deny came: [what passes, what hooks miss](gate-details.md#destructive-guard).
 - Stop reminds once for unfinished work; repeat, paused and closed stops pass. For finite helpers, `wait --add` records a supported completion wakeup: follow [quiet waits](waiting.md). Every owned run needs its own valid wait. Servers never qualify; do not `pause` for helpers.
 - Each prompt and session start gets one status line: run, next step, pause reason.
 - No active run anywhere: hooks exit at once. Without hooks the gate still records and checks steps; follow the order yourself.
@@ -112,11 +109,11 @@ Use [plain owner reports](owner-reports.md) for coordinator updates.
 
 ## Live view
 
-- `view --project <abs>` serves that project's runs, open or closed today, at `http://127.0.0.1:8765/`; no `--project`: the current repository, never all. Start it in the background; give the owner the link once per run. Only the gate writes `view/state.json`. Debugging the view: [view internals](gate-details.md#live-view-internals).
+- `view --project <abs>` serves that project's runs, open or closed today, at `http://127.0.0.1:8765/`; no `--project`: the current repository, never all. Start it in the background. Only the gate writes `view/state.json`. Debugging the view: [view internals](gate-details.md#live-view-internals).
 - When a ticked todo leaves something the owner can use, record it with `try`; it refuses an unknown todo or any other target and names the form.
 - The preview's goal, next test and child sessions: [preview reporting](preview-reporting.md), at dispatch, task change and finish.
 
 ## Keep it fast
 
 - One record; boundary status only.
-- No controller capture/seal commands or routine independent code review in Fast or Lucky. PR screenshot and video capture still applies in full (`how-to-make-a-pr`). Exception: on UI work, a fresh agent writes the done-run's UX verdicts (`ux-quality` step 4). `verify` adds manual QA and tests; `promote` moves to Safe.
+- No controller capture or seal commands or routine independent code review in Fast or Lucky. PR screenshot and video capture still applies in full (`how-to-make-a-pr`). Exception: on UI work, a fresh agent writes the done-run's UX verdicts (`ux-quality` step 4). `verify` adds manual QA and tests; `promote` moves to Safe.
