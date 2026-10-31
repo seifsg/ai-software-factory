@@ -10,9 +10,11 @@ while [ ! -f "$d/.factory/run.md" ]; do
   d=${d%/*}
 done
 run="$d/.factory/run.md"
-[ -n "$(find "$run" -mmin +720)" ] && exit 0  # untouched for 12 hours: abandoned, not this session's
+# Untouched for 12 hours: abandoned, not this session's. A resume (compact mode) still gets its place back.
+[ "$mode" = stop ] && [ -n "$(find "$run" -mmin +720)" ] && exit 0
 # One pass over the run file. Only a strict "<step> <name> · <skill>" Next value is kept for the reply:
-# no free text, quotes or control characters. gate: the first gate the run has reached without a PASS.
+# no free text, quotes or control characters. The step is the later of Next and the last ticked heading,
+# so a malformed Next never skips a gate. gate: the first gate the run has reached without a PASS.
 read -r stopped waiting finished gate next <<EOF
 $(awk '
   /^Status: stopped/ { s = 1 }
@@ -21,9 +23,10 @@ $(awk '
   /^Gate A: PASS/ { p["A"] = 1 }
   /^Gate B: PASS/ { p["B"] = 1 }
   /^Gate C: PASS/ { p["C"] = 1 }
+  /^## [0-8] .*✔/ { t = substr($0, 4, 1) + 1; if (t > m) m = t }
   n == "" && match($0, /^Next: *[0-8] [A-Za-z]+ · [a-z-]+/) { n = substr($0, RSTART, RLENGTH); sub(/^Next: */, "", n) }
   END {
-    step = n == "" ? 0 : substr(n, 1, 1) + 0; g = "-"
+    step = n == "" ? 0 : substr(n, 1, 1) + 0; if (m > step) step = m; g = "-"
     if ((step > 3 || r) && !p["A"]) g = "A"; else if ((step > 6 || r) && !p["B"]) g = "B"; else if ((step > 7 || r) && !p["C"]) g = "C"
     printf "%d %d %d %s %s\n", s, w, r && g == "-", g, n
   }' "$run")
@@ -36,7 +39,8 @@ if [ "$mode" = compact ]; then
 fi
 [ "$waiting" = 1 ] || exit 0  # waiting on the owner or background jobs: stopping is right
 case $(cat) in
-  *'"background_tasks":[{'* | *'"background_tasks": [{'*) exit 0 ;;  # the host reports running background work
+  # The host reports a running subagent: its result wakes the session. A background shell (a dev server) never does.
+  *'"background_tasks"'*'"type":"subagent"'* | *'"background_tasks"'*'"type": "subagent"'*) exit 0 ;;
   *'"stop_hook_active":true'* | *'"stop_hook_active": true'*)
     # Loop guard: a second stop with no run-file change since the last nudge goes through.
     if [ -f "$run.nudge" ] && [ ! "$run" -nt "$run.nudge" ]; then

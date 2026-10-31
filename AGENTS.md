@@ -28,7 +28,7 @@ No Python, test suite or build. The checks are commands and a fresh agent:
 grep -rnE '\]\(\.\./' .agents/skills                 # no links out of a skill's folder: expect nothing
 wc -c .agents/skills/*/SKILL.md                      # each under 17000
 cat .agents/skills/*/SKILL.md .agents/skills/*/references/*.md | wc -c   # under 220000
-cd .agents/skills && cat safe-engine/SKILL.md safe-engine/references/{run-file,checker,product-bar,sizes,delegate,owner-reports,worth-it}.md ticketing/SKILL.md ticketing/references/ticket-layout.md analyze-start/SKILL.md recommend/SKILL.md get-ready-to-code/SKILL.md how-to-make-a-pr/SKILL.md how-to-make-a-pr/references/{media-proof,pr-layout,github,credit}.md deep-review/SKILL.md deep-review/references/{change-guard,compliance}.md | wc -c   # read set: under 115000
+(cd .agents/skills && cat safe-engine/SKILL.md safe-engine/references/run-file.md safe-engine/references/checker.md safe-engine/references/product-bar.md safe-engine/references/sizes.md safe-engine/references/delegate.md safe-engine/references/owner-reports.md safe-engine/references/worth-it.md ticketing/SKILL.md ticketing/references/ticket-layout.md analyze-start/SKILL.md recommend/SKILL.md get-ready-to-code/SKILL.md how-to-make-a-pr/SKILL.md how-to-make-a-pr/references/media-proof.md how-to-make-a-pr/references/pr-layout.md how-to-make-a-pr/references/github.md how-to-make-a-pr/references/credit.md deep-review/SKILL.md deep-review/references/change-guard.md deep-review/references/compliance.md | wc -c)   # read set: under 115000
 ```
 
 - A changed `run-guard.sh` runs on fixture run files (`improve-factory`, Proof). It stays POSIX `sh` with LF endings and one `awk` pass.
