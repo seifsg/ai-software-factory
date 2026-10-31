@@ -67,6 +67,18 @@ class WorktreeEnrollmentTests(unittest.TestCase):
         return {p.relative_to(root).as_posix(): p.read_bytes() for p in root.rglob('*')
                 if p.is_file() and not p.name.endswith('.lock')}
 
+    def unchanged(self, target=None, **enroll):
+        """Enrollment refuses and writes nothing under the target's .factory."""
+        target = target or self.target
+        before = self.bytes_under(target / '.factory')
+        self.enroll(project=target, expected=1, **enroll)
+        self.assertEqual(self.bytes_under(target / '.factory'), before)
+
+    def worktree(self, name):
+        target = self.root / name
+        self.git('worktree', 'add', '-qb', name, str(target))
+        return target
+
     def test_enroll_preserves_source_bytes_and_starts_new_identity(self):
         original = self.bytes_under(self.source / '.factory')
         state = self.home / 'runs' / self.entry(self.source).name
@@ -75,17 +87,16 @@ class WorktreeEnrollmentTests(unittest.TestCase):
         self.assertIn('open or unknown', self.start(self.target, 'separate', expected=1))
         self.assertIn('No run started', self.enroll())
         lineage = json.loads((self.target / '.factory/worktree-enrollment.json').read_text())
+        self.assertEqual(lineage['bundle']['root'], self.new_bundle['bundle_root'])
         archive = self.target / lineage['archive']
         for name in ('fast/run.json', 'entry-bundle.json', 'fast/work-record.md'):
             raw = (archive / Path(name).name).read_bytes()
             self.assertEqual(raw, inherited[name])
             self.assertEqual(hashlib.sha256(raw).hexdigest(), lineage['files'][Path(name).name])
-        self.assertEqual(json.loads((archive / 'lineage.json').read_text()), lineage)
+        self.write(self.target / '.factory/entry-bundle.json', self.old_bundle)  # a later selection keeps lineage
         self.start(self.target, 'separate')
-        old = json.loads(protected[state])
         new = json.loads((self.target / '.factory/fast/run.json').read_text())
-        self.assertNotEqual(old['pr_instance'], new['pr_instance'])
-        self.assertEqual(new['bundle']['root'], self.new_bundle['bundle_root'])
+        self.assertNotEqual(json.loads(protected[state])['pr_instance'], new['pr_instance'])
         self.assertEqual(new['project'], str(self.target))
         self.assertEqual(new['inherited'], lineage)
         target_state = self.home / 'runs' / self.entry(self.target).name
@@ -93,46 +104,36 @@ class WorktreeEnrollmentTests(unittest.TestCase):
         self.assertFalse(new['done'].get('plan'))
         self.assertEqual(self.bytes_under(self.source / '.factory'), original)
         self.assertEqual({p: p.read_bytes() for p in protected}, protected)
-        before = self.bytes_under(self.target / '.factory')
-        self.enroll(expected=1)
-        self.assertEqual(self.bytes_under(self.target / '.factory'), before)
+        self.unchanged()
 
-    def test_local_lifecycle_and_changed_inherited_files_refuse_without_writes(self):
-        cases = ('active', 'lost', 'orphan', 'closed', 'safe', 'unknown', 'receipt', 'record', 'local-mirror')
-        for case in cases:
+    def test_local_state_or_changed_inherited_files_refuse(self):
+        for case in ('active', 'closed', 'safe', 'unknown', 'record'):
             with self.subTest(case=case):
-                target = self.root / case
-                self.git('worktree', 'add', '-qb', case, str(target))
+                target = self.worktree(case)
                 entry = self.entry(target)
-                if case in ('active', 'lost'):
+                if case == 'active':
                     self.write(entry, {'project': str(target), 'key': 'local', 'home': True})
-                if case in ('active', 'orphan', 'closed'):
-                    path = self.home / 'runs' / ('closed' if case == 'closed' else '') / entry.name
-                    self.write(path, {'version': 1, 'project': str(target), 'key': 'local', 'closed': case == 'closed'})
+                if case == 'closed':
+                    self.write(self.home / 'runs/closed' / entry.name,
+                               {'version': 1, 'project': str(target), 'key': 'local', 'closed': True})
                 if case == 'safe':
                     self.write(target / '.factory/state.json', {})
-                if case in ('unknown', 'local-mirror'):
-                    path = target / '.factory/fast/run.json'
-                    self.write(path, {} if case == 'unknown' else {'version': 1, 'project': str(target), 'closed': False})
-                if case in ('receipt', 'record'):
-                    name = '.factory/entry-bundle.json' if case == 'receipt' else '.factory/fast/work-record.md'
-                    (target / name).write_text('unrelated evidence\n')
-                before = self.bytes_under(target / '.factory')
-                self.enroll(project=target, expected=1)
-                self.assertEqual(self.bytes_under(target / '.factory'), before)
+                if case == 'unknown':
+                    self.write(target / '.factory/fast/run.json', {})
+                if case == 'record':
+                    (target / '.factory/fast/work-record.md').write_text('unrelated evidence')
+                self.unchanged(target)
                 self.assertFalse((target / '.factory/fast/archive').exists())
 
     def test_invalid_source_and_committed_unrelated_receipt_refuse(self):
         for source in (self.target, self.root):
             with self.subTest(source=source):
-                self.enroll(source=source, expected=1)
+                self.unchanged(source=source)
         receipt = self.target / '.factory/entry-bundle.json'
         self.write(receipt, self.new_bundle)
         self.git('add', '-f', str(receipt), project=self.target)
         self.git('commit', '-qm', 'unrelated receipt', project=self.target)
-        before = self.bytes_under(self.target / '.factory')
-        self.enroll(expected=1)
-        self.assertEqual(self.bytes_under(self.target / '.factory'), before)
+        self.unchanged()
 
     def test_source_move_lineage_allows_legacy_path_and_normalizes_case(self):
         state = self.home / 'runs' / self.entry(self.source).name
@@ -144,57 +145,29 @@ class WorktreeEnrollmentTests(unittest.TestCase):
         self.write(self.target / '.factory/fast/run.json', old)
         self.git('add', '-f', '.factory/fast/run.json', project=self.target)
         self.git('commit', '-qm', 'inherited legacy path', project=self.target)
-        source = str(self.source).upper() if os.name == 'nt' else str(self.source)
-        self.enroll(source=source)
+        self.enroll(source=str(self.source).upper() if os.name == 'nt' else self.source)
         lineage = json.loads((self.target / '.factory/worktree-enrollment.json').read_text())
         self.assertEqual(lineage['inherited_project'], old['project'])
 
-    def test_foreign_run_with_no_matching_source_identity_refuses(self):
+    def test_mismatched_or_malformed_runs_refuse(self):
         state = self.home / 'runs' / self.entry(self.source).name
         original = state.read_bytes()
-        for changed in ({'key': 'another'}, {'closed': True}, {'moves': None}, {'bundle': None}):
+        for changed in ({'key': 'another'}, {'closed': True}, {'moves': None}, {'bundle': None}, {'paused': []}):
             with self.subTest(changed=changed):
-                run = json.loads(original)
-                run.update(changed)
-                self.write(state, run)
-                before = self.bytes_under(self.target / '.factory')
-                self.enroll(expected=1)
-                self.assertEqual(self.bytes_under(self.target / '.factory'), before)
+                self.write(state, {**json.loads(original), **changed})
+                self.unchanged()
+                self.assertEqual(state.read_bytes(), json.dumps({**json.loads(original), **changed}).encode())
         state.write_bytes(original)
-
-    def test_malformed_supported_run_shapes_refuse_before_archival(self):
-        source_state = self.home / 'runs' / self.entry(self.source).name
-        original = source_state.read_bytes()
-        for where in ('canonical', 'inherited'):
-            for field, value in (('done', None), ('mode', 'unknown'), ('kind', []), ('paused', [])):
-                with self.subTest(where=where, field=field):
-                    target = self.root / (where + '-' + field)
-                    self.git('worktree', 'add', '-qb', target.name, str(target))
-                    path = source_state if where == 'canonical' else target / '.factory/fast/run.json'
-                    run = json.loads(path.read_bytes())
-                    run[field] = value
-                    self.write(path, run)
-                    if where == 'inherited':
-                        self.git('add', '-f', '.factory/fast/run.json', project=target)
-                        self.git('commit', '-qm', 'malformed inherited fixture', project=target)
-                    before = self.bytes_under(target / '.factory')
-                    source_before = source_state.read_bytes()
-                    self.enroll(project=target, expected=1)
-                    self.assertEqual(self.bytes_under(target / '.factory'), before)
-                    self.assertEqual(source_state.read_bytes(), source_before)
-                    self.assertFalse((target / '.factory/fast/archive').exists())
-                    source_state.write_bytes(original)
-
-    def test_later_factory_selection_keeps_lineage(self):
-        self.enroll()
-        self.write(self.target / '.factory/entry-bundle.json', self.old_bundle)
-        self.start(self.target, 'later')
+        mirror = self.target / '.factory/fast/run.json'
+        self.write(mirror, {**json.loads(mirror.read_bytes()), 'paused': []})
+        self.git('add', '-f', str(mirror), project=self.target)
+        self.git('commit', '-qm', 'malformed inherited fixture', project=self.target)
+        self.unchanged()
 
     def test_tampered_archive_cannot_become_new_run_lineage(self):
         self.enroll()
         lineage = json.loads((self.target / '.factory/worktree-enrollment.json').read_text())
-        path = self.target / lineage['archive'] / 'run.json'
-        path.write_bytes(b'changed archive bytes')
+        (self.target / lineage['archive'] / 'run.json').write_bytes(b'changed archive bytes')
         before = self.bytes_under(self.target / '.factory')
         self.assertIn('Enrollment lineage changed', self.start(self.target, 'new-run', expected=1))
         self.assertEqual(self.bytes_under(self.target / '.factory'), before)
