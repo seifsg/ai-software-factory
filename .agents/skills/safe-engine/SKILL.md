@@ -97,6 +97,8 @@ The owner names `lucky`, `verify` or `promote`: [run cases](references/run-cases
 
 Use [plain owner reports](references/owner-reports.md); report events, not tool calls.
 
+To explain where a run's time went or compare runs, read [run metrics](references/run-metrics.md).
+
 - Fast and Lucky: the gate shows [progress](references/fast-run.md#progress); give the [live view](references/fast-run.md#live-view) link once per run; `fast_gate.py try` for each usable result.
 - Before slow work: who does what; report its result.
 - Waiting on the owner: the question first, then the options.

@@ -1,4 +1,5 @@
 """Bridge Fast gate lifecycle to safe_engine.run_metrics (failure-open)."""
+from contextlib import nullcontext
 from pathlib import Path
 import sys
 
@@ -30,7 +31,7 @@ def identity(run):
     return run["key"]  # legacy run without an instance
 
 
-def on_start(project, run):
+def on_start(project, run, steps):
     key = identity(run)
     revision = (run.get("bundle") or {}).get("revision")
     safe(
@@ -42,7 +43,8 @@ def on_start(project, run):
         kind=run.get("kind"),
         extra={"gate_key": run["key"]},
     )
-    safe("emit_phase", project, key, "tickets", "start", event_id=f"{key}-phase-tickets-start")
+    first = steps[0] if steps else "tickets"  # research/kickoff come first on product and feature runs
+    safe("emit_phase", project, key, first, "start", event_id=f"{key}-phase-{first}-start")
 
 
 def on_done(project, run, step, steps):
@@ -132,4 +134,4 @@ def bind(project, run, task_id=None):
         mode=run.get("mode"),
         kind=run.get("kind"),
         task_id=task_id,
-    )
+    ) or nullcontext()  # analytics down: the command still runs

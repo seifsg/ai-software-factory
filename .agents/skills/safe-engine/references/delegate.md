@@ -22,11 +22,9 @@ Read refusals first: split, confirm or clarify before briefing again. Owner hand
 
 ## Brief
 
-Carry goal, role, absolute paths, edit limits, branch, handback and [scratch folder](fast-run.md#the-gate). Quote needed rules; whole methods only for walkthroughs/reviews. End with a gate per required outcome:
+Carry goal, role, absolute paths, edit limits, branch, handback and [scratch folder](fast-run.md#the-gate). Quote needed rules; whole methods only for walkthroughs/reviews. Fresh context: request, decisions, interface, stops, evidence paths; full chat needs a reason. Keep bulky returns in files; pass needed fields and paths. Never resend unchanged methods or transcripts. Host controls: adapter.
 
-Default to fresh context: request, decisions, interface, stops and artifact paths. Full chat needs a reason a compact packet cannot suffice. Read targeted ranges/log tails; never resend unchanged methods, transcripts or full outputs each turn. Host controls live in its adapter.
-
-Verify lane cwd before writes; stop on mismatch. Pass its resources to commands/browsers. Use [quiet waits](waiting.md).
+Verify lane cwd before writes; stop on mismatch. Pass its resources to commands/browsers. Use [quiet waits](waiting.md). End with a gate per required outcome:
 
 ```text
 G1 <outcome> CHECK: <command> EXPECT: <text its output must show>
@@ -40,7 +38,7 @@ G3 MANUAL <outcome>: <what the reviewer judges>
 
 ## Size
 
-- One job per agent: an item or related findings. Separate useful independent jobs.
+- One coherent job per agent. Combine related checks; separate only useful independent jobs.
 - Split briefs with over three outcomes, multiple commits or a whole unrelated document; one change across files counts once.
 - Large spec: an analyst returns focused briefs with required rules and affected paths.
 - Changes smaller than their brief stay local.
@@ -56,5 +54,5 @@ G3 MANUAL <outcome>: <what the reviewer judges>
 
 ## Rounds
 
-- Keep one focused maker through a coherent repair batch; start fresh when its context is stale or unrelated. Independent reviewers are fresh and never approve their own repairs.
-- A review goes to a fresh reviewer with the baseline its method names (requirements, plan, rules, the diff and raw evidence such as logs, transcripts and QA notes), never the builder's reasoning or a verdict.
+- Keep one maker and one independent reviewer through a repair batch; the reviewer checks deltas. Replace either on lost context, and a reviewer that repaired.
+- A first review goes to a fresh reviewer with the baseline its method names (requirements, plan, rules, the diff and raw evidence such as logs, transcripts and QA notes), never the builder's reasoning or a verdict.
