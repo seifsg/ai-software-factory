@@ -22,11 +22,9 @@ Read refusals first: split, confirm or clarify before briefing again. Owner hand
 
 ## Brief
 
-Carry goal, role, absolute paths, edit limits, branch, handback and [scratch folder](fast-run.md#the-gate). Quote needed rules; whole methods only for walkthroughs/reviews. End with a gate per required outcome:
+Carry goal, role, absolute paths, edit limits, branch, handback and [scratch folder](fast-run.md#the-gate). Quote needed rules; whole methods only for walkthroughs/reviews. Fresh context: request, decisions, interface, stops, evidence paths; full chat needs a reason. Keep bulky returns in files; pass needed fields and paths. Never resend unchanged methods or transcripts. Host controls: adapter.
 
-Fresh context: request, decisions, interface, stops, evidence paths. Full chat needs a reason. Store bulky returns locally; emit needed fields/diagnostics and paths. Never dump nested results or resend unchanged methods/transcripts. Read needed ranges/log tails. Host controls: adapter.
-
-Verify lane cwd before writes; stop on mismatch. Pass its resources to commands/browsers. Use [quiet waits](waiting.md).
+Verify lane cwd before writes; stop on mismatch. Pass its resources to commands/browsers. Use [quiet waits](waiting.md). End with a gate per required outcome:
 
 ```text
 G1 <outcome> CHECK: <command> EXPECT: <text its output must show>
@@ -56,5 +54,5 @@ G3 MANUAL <outcome>: <what the reviewer judges>
 
 ## Rounds
 
-- Keep one maker and one independent reviewer through a repair batch. Review deltas; restart for lost context or reviewer-written repairs.
-- A review goes to a fresh reviewer with the baseline its method names (requirements, plan, rules, the diff and raw evidence such as logs, transcripts and QA notes), never the builder's reasoning or a verdict.
+- Keep one maker and one independent reviewer through a repair batch; the reviewer checks deltas. Replace either on lost context, and a reviewer that repaired.
+- A first review goes to a fresh reviewer with the baseline its method names (requirements, plan, rules, the diff and raw evidence such as logs, transcripts and QA notes), never the builder's reasoning or a verdict.

@@ -81,16 +81,15 @@ Do not code before the plan is recorded.
    - Evidence reuse: both reuse and rejection (changed inputs, tampered proof, pending operations).
 3. Isolate fixtures from real project work and secrets. No product pilot or simulation unless the owner asks.
 4. Check every changed skill stays self-contained: links only inside its own folder; no names, dates or host specifics.
-5. After manual use, write/adjust tests and run affected checks, then commit source/docs/tests/packaging. Before the complete suite, do the required source review (`how-to-make-a-pr`). Run `python tests/run.py` on that commit through the selected Prove, else its recorded gate. Keep receipt, commit, inputs, command, log and result. Edits require affected checks and fresh final proof.
+5. After manual use, write tests, run affected checks and commit. Source review (`how-to-make-a-pr`) precedes `python tests/run.py` on that commit, through the selected Prove, else its recorded gate. Keep receipt, commit, inputs, command, log and result. Edits need affected checks and fresh final proof.
 6. Each check proves only itself. A walkthrough does not prove a code repair; a passing suite does not prove a walkthrough.
 
 ## 6. Independent review
 
 - Safe runs this locally. Fast skips it. In every mode, no factory change reaches the main branch without an independent PR review.
 - A fresh agent, never the writer, runs `deep-review` on the exact candidate from raw evidence. Give it no verdict.
-- A reviewer who repairs needs a different fresh review.
 - A changed gate needs its old rule, a reproduction and independent review. Its own pass proves too little.
-- One round: review, author fixes, same reviewer checks the delta; replace it if it repaired or lost context. After round 3, only high or critical findings continue; lower findings join the epic's open follow-ups ticket in Backlog. At most 6 failed rounds; then ask once with findings, shared cause and options: extend, defer, amend scope, cancel. Keep independent work moving.
+- One round: review, author fixes, the same reviewer checks the delta; a reviewer who repaired or lost context is replaced. After round 3, only high or critical findings continue; lower findings join the epic's open follow-ups ticket in Backlog. At most 6 failed rounds; then ask once with findings, shared cause and options: extend, defer, amend scope, cancel. Keep independent work moving.
 - No reviewer available: name the blocker. Never self-approve.
 
 ## 7. Deliver
