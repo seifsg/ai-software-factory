@@ -19,9 +19,10 @@ Build systems that outlast their creator. Breakage is not acceptable.
 - Many small functions and files, no long functions; split a file before 1000 lines. Reuse existing functions first; build new ones to be reused.
 - Fix the design at the root cause of a bug or edge case, not the symptom; lean to refactoring. A big or regression-risky root fix (shared contracts, schema, stored data, consumers outside the task) needs the owner's yes first.
 - Guarantees, not guards. Each real edge case gets the first that fits: impossible by design; normalized or rejected loudly where data enters (undefined, null, wrong values, exceptions); specified, logged behavior. A state beyond the data, config and platform in use gets one loud assertion, never new code paths. No silent defaults or swallowed errors.
-- Production ready: no placeholders, stubs or TODOs. Human-readable code; short comments: what a function does and why it exists. Never a circular dependency.
+- Production ready: no placeholders, stubs or TODOs unless the owner asks for them. Human-readable code; short comments: what a function does and why it exists. Never a circular dependency.
 - When done, one more pass: less code, less complexity, faster? Question every solution, yours and the code you read.
-- Stay on the task: touch only what the change, its root fix and the product bar need; ticket unrelated issues.
+- Stay on the task: touch only what the change and its root fix need; ticket unrelated issues.
+- The owner's explicit words beat every method default: placeholders, copy, scope, style.
 - Additive: never disable, hide or replace a host capability you would use without the factory (live preview, screenshots, background agents, task list).
 - Output: lead with the answer or result, in specific words; no preamble, filler, restated question or closing recap, no em dashes or invented claims. Keep code, commands, paths, errors, numbers and quotes verbatim; never drop not, never, no, only or except. Status during long work: one short line. Full plain sentences for security warnings, irreversible or destructive actions, order-sensitive steps and questions to the owner. Persisted artifacts (tickets, PRs, run files, docs) keep their own layouts.
 
@@ -38,7 +39,7 @@ Build systems that outlast their creator. Breakage is not acceptable.
 | `feature` | big feature with product choices | same |
 | `change` | bug fix, small change, follow-up, factory maintenance | none; every block stays short |
 
-Every run meets the [product bar](references/product-bar.md) for its size, keeps project rules and never puts secrets in code or Git.
+Every run keeps project rules and never puts secrets in code or Git. Size (POC, MVP, production slice) sets scope, never quality: [sizes](references/sizes.md). Fast never waits for the size answer: it takes the size the request fits, records it and goes on.
 
 ## The run file
 
@@ -54,7 +55,7 @@ The factory's hooks read this file. The Stop guard re-prompts `Next:` when a tur
 
 Before each step, load its skill fresh, even one you read earlier: invoke it with your agent's skill command or read the file. Context compaction drops skill text; the fresh read keeps the method exact. When the previous step used the same skill, rereading this step's section is enough.
 
-Each step ends with its block: print it to the owner, write it to the run file, and post it to the ticket as a comment when the tracker is reachable.
+Each step ends with its block: print the full block to the owner, never a summary, and write it to the run file. Before the next step reads it, fold in any owner reply that arrived; Fast never waits for one. The ticket gets a comment only on a status change (steps 0, 7 and 8), linking the run file's blocks.
 
 | Step | Skill | Block |
 |---|---|---|
@@ -70,13 +71,13 @@ Each step ends with its block: print it to the owner, write it to the run file, 
 
 Only what those skills do not say:
 
-- **0:** no project folder named: create one beside the owner's other projects (the parent of the current project, else the current folder), named for the product in kebab-case, and report its absolute path. No Git: `git init`, a first commit on the default branch, then a feature branch. No remote: `ticketing` creates a private repository on the owner's account and pushes the default branch. Product and feature: research and kickoff questions come next.
-- **3:** UI work adds `ux-quality` step 1; new or changed persistence adds `database-schema`. A `change` uses the light plan. Fast passes the file-summary stop. Safe stops here: `Waiting: owner: plan OK?`.
+- **0:** no project folder named: create one beside the owner's other projects (the parent of the current project, else the current folder), named for the product in kebab-case, and report its absolute path. No Git: `git init`, a first commit on the default branch, then a feature branch. Every commit, the first included, follows `how-to-make-a-pr`'s commit rules: no AI attribution lines. No remote: `ticketing` creates a private repository on the owner's account and pushes the default branch. Product and feature: research and kickoff questions come next.
+- **3:** new or changed persistence adds `database-schema`. A `change` uses the light plan. Fast passes the file-summary stop. Safe stops here: `Waiting: owner: plan OK?`.
 - **4:** starts as soon as the plan names the views and commands. Up to three items: capture them yourself. More: one light delegate captures while you finish the plan. No source edit until every Before file is saved. Open the host's live preview when it has one.
 - **5:** spike unknown capabilities first. After each todo's real use, run only the tests that cover its changed files; when those are the whole suite, that run is still only a build check. No separate full-suite run here. Commit by phase in the project's commit style.
-- **6:** verify is yours; independence comes from the checker and step 8. Order: the lenses (change-guard and compliance always, others by `deep-review`'s scale), their fixes, then one final manual pass through every requested journey that captures After with the same ids, then the full suite once on that candidate; a proof id that is the full suite is that same run. Before captures of the base never count as that run. MVP and production slice: the product bar scans.
+- **6:** verify is yours; independence comes from the checker and step 8. Order: the lenses (compliance always; change-guard when existing code, contracts or data changed, so never on a new project; others by `deep-review`'s scale), their fixes, then one final manual pass through every requested journey that captures After with the same ids, then the full suite once on that candidate; a proof id that is the full suite is that same run. Before captures of the base never count as that run. MVP and production slice: the secrets, dependency and static-analysis scans.
 - **7:** the ticket moves to Ready for QA with its PR.
-- **8:** a fresh agent that did not build it gets the PR, the ticket and the run file's absolute path. You write its verdict as the step's block and tick it. The full suite runs again only if the reviewer pushed fixes.
+- **8:** a fresh agent that did not build it gets the PR, the ticket and the run file's absolute path. The reviewer hands back its fix-set and never pushes in a factory run: you apply it through the 0–4 loop, the same reviewer checks the delta, and Gate C reruns when the PR or its body changed. You write the final verdict as the step's block and tick it. The full suite runs again only after those fixes.
 
 ## Gates
 
@@ -84,7 +85,7 @@ After steps 3, 6 and 7, start the [checker](references/checker.md): a fresh ligh
 
 - Gate A checks the blocks of steps 0–3; Gate B steps 4–6; Gate C step 7 and the whole run file.
 - No source edit before Gate A passes (Before capture may run beside it); no PR before Gate B passes; no close before Gate C passes.
-- Missing items: fix them, then rerun the checker. After two failed rounds, ask the owner with the list.
+- Missing items: fix them, then rerun the checker. The checker reports every missing item in one pass; only an item missing twice counts as a failed round. Two failed rounds: ask the owner with the list.
 - Never write a PASS line yourself. The run cannot close without all three.
 
 ## Every mode

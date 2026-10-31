@@ -43,7 +43,7 @@ Record: a `### <competitor>` subsection per product with its URL, one feature-ma
 
 - New substantive choice: compare three credible options, recommend one with reason and tradeoff. Fewer than three viable: say why. Invent none. Record adopted, deferred and rejected ideas with reasons.
 - Delegated in-scope choices are yours. Reserved decisions go to the owner.
-- Route evidence once, no recursive research. Interface, interaction, media and public pages meant for search: `ux-quality`. New or materially changed persistence: `database-schema`.
+- Route evidence once, no recursive research. New or materially changed persistence: `database-schema`.
 - Naming: check credible options and obvious collisions. Search is not trademark clearance. A rejected name stays rejected.
 - During delivery, revise the `get-ready-to-code` plan outputs: `original item → evidence → keep / adapt / add / defer / reject → reason → acceptance impact`. Evidence may justify no change.
 - Requested items: keep, or adapt how they are built without changing what the owner gets. Defer, reject or replace needs the owner's recorded decision. An addition records its evidence and the owner's approval, apart from the requested items.

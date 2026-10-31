@@ -8,6 +8,7 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ### Changed
 
+- After the first real run: the checker reports every missing item in one pass and only a repeated item counts as a failed round; no Before capture for a brand-new surface, no mandatory journey video, a fix recaptures only its ids; a small product gets one ticket and ticket comments only on status changes; change-guard only when existing code changed; size sets scope, never quality, and Fast never waits for it; every step prints its full block, and owner replies are folded in before the next step; the reviewer hands fixes back to the builder and Gate C reruns when the PR changed.
 - **Breaking:** the factory is methods only. One pipeline of nine visible steps, ticket → analyze → recommend → plan → Before proof → build → verify → PR → review, each printing its block to the owner, the ticket and `.factory/run.md` (#231).
 - `analyze-start` and `get-ready-to-code` are restored to their full original outputs; `how-to-review-a-pr` is its own skill again; every step skill ends with an output contract.
 - Before proof is captured before the first edit with any host capture tool; After on the same server during verify. Builds run only tests mapped to changed files; the full suite runs once at verify.
@@ -23,6 +24,7 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ### Removed
 
+- The product bar (`product-bar.md`, `cases.md`, `quality-cases.md`) and the `ux-quality` skill. Security stays in `deep-review`'s security lens; the owner's words decide look, copy and placeholders.
 - All Python: the `fast_gate.py` gate and its per-tool-call hook (761 ms per call measured), the Safe controller, hidden checks, `shots`, metrics, the live view, bundle resolution, the installer and self-update, evals, release scripts and the 665-test suite.
 - Lucky mode, `verify` and `promote` of a Fast run, the optional Safe check, Show/Look/Prove/Ship phases and the owner-reply timer.
 

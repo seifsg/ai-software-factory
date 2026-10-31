@@ -15,7 +15,7 @@ Keep required quality. Build in complete working iterations; a tiny bug or a ful
 2. **Self-critique that set.** Is this file set optimal, the best path for the plan? Can it be smaller, cleaner, more reusable? Revise it before going on.
 3. **Steps or phases.** Ordered by user value: first the smallest real journey someone can see and use. Before dependent work, settle the shared state owner, invariants and who enforces them, entry points, limits, compatibility and failure behavior. Root fix, not patch; big or risky ones go to the owner.
 4. **The entire todo list.** Every todo concrete and checkable, and it becomes the ticket's checklist. Order never drops scope: every requested item maps to a todo, or stays open in its ticket when the owner narrowed this iteration.
-5. **The entire plan.** The whole thing written out, so no agent guesses: interfaces, this checkout's dev ports, and for UI work the UX rules from `ux-quality`.
+5. **The entire plan.** The whole thing written out, so no agent guesses: interfaces and this checkout's dev ports.
 6. **Proof and tests.** The proof list for the PR's Before and After: each changed view, state, journey or command with a short id. The test map: the command that runs the tests covering each changed file, and the project's full-suite command for verify.
 
 Do no coding while producing the plan.
@@ -63,7 +63,7 @@ The block `## 3 Plan` holds:
 - [ ] **Files:** the summary, then the critique and what it changed
 - [ ] **Phases:** ordered, smallest real journey first (product, feature or new UI; a `change` omits it)
 - [ ] **Todos:** `T1..Tn`, each an outcome with ticket and criteria; every criterion maps to at least one todo; the ticket checklist matches
-- [ ] **Plan:** interfaces and ports, UI: UX rules (product, feature, new UI or delegated work; a `change` omits it)
+- [ ] **Plan:** interfaces and ports (product, feature, new UI or delegated work; a `change` omits it)
 - [ ] **Proof list:** every changed view, state, journey or command with an id
 - [ ] **Test map:** per-file test command and the full-suite command
 - [ ] No source file changed during this step

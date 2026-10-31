@@ -31,4 +31,4 @@ Gate <X>: PASS | FAIL <n> missing
 
 ## After a FAIL
 
-Fix each missing item at its step, then brief a fresh checker for the same gate. Two failed rounds: ask the owner with both lists. Never edit a gate line yourself.
+Fix each missing item at its step, then brief a fresh checker for the same gate. Check every contract line in one pass; never stop at the first miss. Only an item that is missing again counts as a failed round; two failed rounds: ask the owner with the repeated items. Never edit a gate line yourself.

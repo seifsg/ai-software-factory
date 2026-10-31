@@ -1,6 +1,6 @@
 # Sizes
 
-Size sets how far each requested item is built, never which requested items ship. It applies to new products and big features. Inside an existing product, every size keeps that product's protections and behavior, and new paths get the same protections. Ask it at kickoff when the request leaves it open.
+Size sets how far each requested item is built, never which requested items ship, and never the quality of what ships: a POC is minimal in scope, finished in look and behavior. It applies to new products and big features. Inside an existing product, every size keeps that product's protections and behavior, and new paths get the same protections. Ask it at kickoff when the request leaves it open; Fast takes the size the request fits (POC when unsure), records it and goes on without waiting.
 
 ## Requested scope
 
@@ -16,7 +16,7 @@ Every feature, journey, integration and behavior the owner asked for, plus what 
 | | POC | MVP | Production slice |
 |---|---|---|---|
 | Promise | It works and does exactly what was asked | It works and can go live with real test users | It runs in production |
-| Builds | Every requested item, minimal and working. No extras | Requested items, the launch baseline, and the extra gaps the owner approved | Requested scope at the full product bar |
+| Builds | Every requested item, minimal and working. No extras | Requested items, the launch baseline, and the extra gaps the owner approved | Requested scope, every `deep-review` lens in full |
 | Skips unless requested | Sign-in, authorization, security hardening, a full backend, deployment, CI/CD, test suites, landing page and SEO (it opens on its main screen) | Only scale beyond launch (clusters, multiple regions), paid services without authority, and what the owner declined | Nothing |
 | Keeps everything else, including | Stack, visual system and screen states, logging, secrets out of Git, environment and sample labels | Everything a launch needs | Everything |
 | Research | How to build the requested items; the riskiest capability | Plus launch gaps users expect | Plus operations at scale |
@@ -26,9 +26,9 @@ Every feature, journey, integration and behavior the owner asked for, plus what 
 Show each requested feature working, built minimally: nothing extra, nothing cut.
 
 - Minimal backend: the smallest real service and storage running the requested behavior end to end (one local process, a file or an embedded database), structured so the MVP can grow it.
-- No sign-in layer; requested roles switch through a development-only role switcher. A requested role rule is built as asked, checked on the server, without the rest of the security bar.
+- No sign-in layer; requested roles switch through a development-only role switcher. A requested role rule is built as asked, checked on the server, without the rest of the security lens.
 - No verify scans (secrets, dependencies, static analysis).
-- Local only. Any shared preview is exposure: the full security bar applies before it.
+- Local only. Any shared preview is exposure: `deep-review`'s security lens applies in full before it.
 - An owner-approved simplification of a requested item (a mock checkout) follows the requested-scope rule, follow-ups ticket entry included, and stays labeled in the interface.
 - List skipped parts once in the epic's guardrails as "POC skips"; an MVP run turns that list into tickets. No follow-up ticket per skip.
 
@@ -38,14 +38,14 @@ The owner publishes it to test with real users: fill every gap a launch needs.
 
 - Launch baseline (part of MVP), built without asking:
   - real sign-in and enforced roles when anyone signs in or roles exist;
-  - the full security bar, with the three verify scans (secrets, dependencies, static analysis);
+  - `deep-review`'s security lens in full, with the three verify scans (secrets, dependencies, static analysis);
   - landing page and SEO for public products;
   - privacy and terms pages when it collects personal data;
   - its legal and platform duties (for example consent and one-click unsubscribe for marketing email);
   - onboarding;
   - transactional email when journeys send mail;
   - a logging destination (asked once when unknown) and error alerts;
-  - product analytics on key journey events, under the [product bar](product-bar.md)'s privacy rules, to a destination asked once when unknown (default: the app's own storage);
+  - product analytics on key journey events, with no personal data beyond what the journey needs, to a destination asked once when unknown (default: the app's own storage);
   - in-app feedback that reaches the owner, with the page and app version attached;
   - migrations for persisted data; backups stored apart from that data, with a tested restore;
   - automated tests, written after the journeys work, run by one local command;
@@ -57,4 +57,4 @@ The owner publishes it to test with real users: fill every gap a launch needs.
 
 ## Production slice
 
-Full product bar for the affected paths, release and operations included.
+Every `deep-review` lens in full for the affected paths, release and operations included.

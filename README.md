@@ -50,7 +50,7 @@ Coding agents jump straight to code, forget the method as the context grows and 
 | 7 PR | `how-to-make-a-pr` | draft PR with Before/After pairs |
 | 8 Review | `how-to-review-a-pr` | a fresh agent's verdict comment |
 
-Products and big features add `research-market` and kickoff questions before step 1; UI work adds `ux-quality`; persistence adds `database-schema`. **Fast** (default) runs straight through; **Safe** also stops for your OK on the plan.
+Products and big features add `research-market` and kickoff questions before step 1; persistence adds `database-schema`. **Fast** (default) runs straight through; **Safe** also stops for your OK on the plan.
 
 ## 🛡️ How it stays on track
 
@@ -101,7 +101,7 @@ Claude Code: `claude plugin uninstall safe-engine@ai-software-factory`. Codex: d
 | `deep-review` | verify: bug hunt and review lenses |
 | `how-to-make-a-pr` | Before/After proof and the draft PR |
 | `how-to-review-a-pr` | the fresh-agent PR review |
-| `ux-quality`, `database-schema`, `research-market` | specialists the steps call when needed |
+| `database-schema`, `research-market` | specialists the steps call when needed |
 | `improve-factory` | repairs the factory itself |
 
 ## 🛠️ Work on the factory
