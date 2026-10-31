@@ -6,12 +6,21 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 
 ## [Unreleased]
 
+### Added
+
+- `enroll-worktree` archives a new Git worktree's inherited run files and selects a factory for its own run, leaving the source run untouched (#209).
+
+### Changed
+
+- Preflight local PR draft structure through the real handoff validator, expose canonical repair identities, review source before the final suite, retain the independent reviewer for author repair deltas and keep bulky tool evidence outside model context.
+
 ### Fixed
 
-- Capture Before before edits and retain it through Show/QA; run locally unless delegation provides useful parallelism or independent judgment.
-
-- Coordinator interruptions: prioritize new requests, including replacement objectives, before broad checking/reporting; resume only compatible work, preserve previews and disclose tool-delivery limits.
+- Owner messages come first: answer or act with only the needed checks, let the latest request replace the objective, and resume only work that still fits (#216).
+- Fast starts without a selection select one instead of starting with legacy defaults; explicit pins skip release discovery; eval exports are pinned local snapshots; startup hints are shorter (#213).
+- Written facts (host, path, command, version, status) are claims to test before use or report; a stand-in proves only itself; unverified means the check cannot run here.
 - Run metrics: Fast runs start their timeline at the first applicable step, Safe runs record the factory revision and never share a metrics folder, and analytics hooks are plain calls instead of repeated guards (#175).
+- A host, URL or IP written in a ticket is tested by resolving the name and requesting that URL, never assumed linked or left unverified (#206).
 
 ## [1.2.0] - 2026-10-28
 

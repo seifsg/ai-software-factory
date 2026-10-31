@@ -2,13 +2,13 @@
 
 New UI runs follow this checkpoint; old runs keep their order. Resolve the bundle first.
 
-1. Freeze changed surfaces with `show --plan <json>` before `done plan`. Bind actual `before` images here; reuse them for final Show. Design ports select design comparison and keep frozen references. Missing evidence blocks.
+1. Freeze changed surfaces with `show --plan <json>` before `done plan`. POC/MVP: light desktop; mobile apps: light phone. Cite any extra theme/device requirement. Use actual Before captures; design ports select design comparison and keep frozen references. Missing evidence blocks.
 2. **Look:** finish the visual change; use it before affected tests, type checks and a quick render. No full suite, accessibility audit or deep review yet. Record build start, then `done build`.
-3. **Show:** batch repairs, then freeze source. Inspect pairs at matched dimensions, theme, state, data and framing. Use real controls and ready conditions. Record `show --candidate`, then `show --prepare <json>`; share Before/After or Design/Current for ports.
-4. Verify pictures are accessible/readable, then `show --shared <json>` records actual delivery. Share complete pictures within one hour of Look; record time and any miss/cause.
-5. Record the owner's actual answer with `show --reply <json>`. A stop binds; a change needs fresh Show. For “leave that”, record the exact answer/item and existing Finishing touches follow-up URL. Scope cuts need owner authority; safety and required quality are never polish.
+3. **Show:** batch repairs, then freeze source. Preflight one planned frame and playback/publication; reuse it. Inspect pairs at matched dimensions, theme, state, data and framing. Focus on changes; extra full-page/width shots need a reason. Use real controls and ready conditions. Record `show --candidate`, then `show --prepare <json>`; share Before/After with plain descriptions, or Design/Current for design ports.
+4. Verify pictures are accessible/readable, then `show --shared <json>` records actual delivery. A report or claimed send is not delivery. Share complete pictures within one hour of Look; record time and any miss/cause.
+5. Record the owner's actual answer with `show --reply <json>`. A stop binds; a change needs fresh Show. For “leave that”, record the exact answer/item and existing Finishing touches follow-up URL. Scope cuts need owner authority; safety and required quality are never polish. Keep design denominators and decisions.
 6. No reply: after the configured wait (default 30 minutes from delivery), continue only authorized Prove. State no reply arrived; use an authorized wake-up or resume at the deadline, never a blocking sleep. Timeout grants no approval or merge authority. Record `done show` when permitted.
-7. **Prove:** manual use and UX/likeness review, then `prove --suite`. Reuse only intact same-candidate/state/input observations/uploads with verified provenance/access. Hashes alone prove no freshness. Source drift, including docs/tests, requires fresh Show; never relabel captures. Changed pictures/report need sharing, not an unchanged suite rerun. Failure, unknown impact or owner stop forbids reuse. The gate checks bytes and declared command timing, not hidden shell execution.
+7. **Prove:** manual use and fresh UX/likeness review, then `prove --suite`. Reuse only intact same-candidate/state/input observations/uploads with verified provenance/access. Hashes alone prove no freshness. Source drift, including docs/tests, requires fresh Show; never relabel captures. Changed pictures/report need sharing, not an unchanged suite rerun. Failure, unknown impact or owner stop forbids reuse. The gate checks bytes and declared command timing, not hidden shell execution.
 8. **Ship:** deliver a complete UI ticket as a draft PR after dependencies are integrated and checked. Humans decide ready, merge and release. Show replies or timeout grant no merge authority; unrelated tickets do not delay Ship.
 
 ## Inputs
@@ -16,10 +16,8 @@ New UI runs follow this checkpoint; old runs keep their order. Resolve the bundl
 All JSON is inside the project, normally ignored `.factory/`. `show --plan` freezes this shape:
 
 ```json
-{"version":1,"surfaces":[{"id":"home","name":"Home"}],"variants":[{"theme":"light","device":"desktop"}],"comparison":"before","before":[{"id":"home-before","surface":"home","theme":"light","device":"desktop","state":"ready","reference":".factory/fast/shots/home-before.png"}],"full_suite":["npm","test"],"wait_minutes":30}
+{"version":1,"surfaces":[{"id":"home","name":"Home"}],"variants":[{"theme":"light","device":"desktop"}],"comparison":"before","full_suite":["npm","test"],"wait_minutes":30}
 ```
-
-Manual/native captures use the same rows. Stored legacy plans remain readable; disclose missing early captures.
 
 New input defaults to light/desktop and `comparison:before`; mobile selects light/phone. List unique theme (`light`/`dark`) and device (`desktop`/`phone`) pairs. Design ports use `comparison:design`. Stored plans lacking these fields keep four historical variants and Design/Current labels.
 

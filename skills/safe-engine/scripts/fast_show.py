@@ -71,23 +71,6 @@ def plan(data):
     return result
 
 
-def baseline(project, planned, rows):
-    """Bind actual Before images at the existing planning boundary."""
-    values = evidence.rows(rows, "before")
-    expected = {(s["id"], v["theme"], v["device"]) for s in planned["surfaces"] for v in planned["variants"]}
-    result = []
-    for row in values.values():
-        case = (row.get("surface"), row.get("theme"), row.get("device"))
-        evidence.require(case in expected, "Unknown or duplicate Before surface variant")
-        expected.remove(case)
-        viewport = planned["viewports"][case[2]]
-        result.append({"surface": case[0], "theme": case[1], "device": case[2],
-                       "state": evidence.text(row.get("state"), "Before state"),
-                       "reference": evidence.image(project, row.get("reference"), viewport)})
-    evidence.require(not expected, "Before needs every planned surface variant")
-    return result
-
-
 def selected_variants(value):
     """Bound explicit coverage to unique supported pairs before freezing it."""
     evidence.require(isinstance(value, list) and 0 < len(value) <= len(VARIANTS), "variants needs 1..4 pairs")
@@ -138,10 +121,6 @@ def prepare(project, run, data):
                          **{kind: evidence.image(project, row.get(kind), row.get("viewport"))
                             for kind in ("reference", "capture")}})
     evidence.require(actual == expected, "Show needs every planned surface variant pair")
-    for before in planned.get("before", []):
-        current = next(row for row in captures if all(row[k] == before[k] for k in ("surface", "theme", "device")))
-        evidence.require(all(current[k] == before[k] for k in ("state", "reference")),
-                         "Show must retain the Before image and state frozen during plan")
     if run.get("design_port"):
         evidence.load(project, run)
         by_id = {s["id"]: s for s in captures}

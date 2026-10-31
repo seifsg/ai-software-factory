@@ -33,7 +33,7 @@ python -m evals compare <baseline report.json> <report.json>
 
 Both arms get the same request, from `prompts/factory.md` or `prompts/plain.md`:
 
-- **factory**: follow the exported `safe-engine` in Fast mode, offline, no tracker or pull request.
+- **factory**: follow the exported `safe-engine` in Fast mode, offline, no tracker or pull request. The export is committed as a local Git snapshot and pinned explicitly before the agent starts; a failed pin stops that trial.
 - **plain**: plan first, then build. It must run without the factory installed.
 
 ## Isolation

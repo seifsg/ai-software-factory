@@ -20,13 +20,19 @@ TICKETS = "**Ticket:** none (fixture)\n\n**Backlog:** none\n"
 
 
 def scripts(root, rev, dest):
-    """The gate's scripts folder: the working tree's, or rev's extracted into dest with its skill folder (VERSION)."""
+    """The gate's scripts folder: the working tree's, or rev's tree committed into dest (selection needs a checkout)."""
     if not rev:
         return Path(root) / GATE
-    tar = subprocess.run(("git", "-C", str(root), "archive", "--format=tar", rev, SKILL),
+    tar = subprocess.run(("git", "-C", str(root), "-c", "core.autocrlf=false", "archive", "--format=tar", rev),
                          capture_output=True, check=True).stdout
     with tarfile.open(fileobj=io.BytesIO(tar)) as archive:
         archive.extractall(dest, **({"filter": "data"} if hasattr(tarfile, "data_filter") else {}))
+    origin = subprocess.check_output(("git", "-C", str(root), "remote", "get-url", "origin"), text=True).strip()
+    origin = re.sub(r"(?<=//)[^@/]+@", "", origin)
+    for args in (("init", "-q"), ("config", "core.autocrlf", "false"), ("remote", "add", "origin", origin),
+                 ("add", "-A", "-f"), ("-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid",
+                                      "-c", "commit.gpgsign=false", "commit", "-qm", "Message fixture", "--no-verify")):
+        subprocess.run(("git", "-C", str(dest), *args), capture_output=True, check=True)
     return dest / GATE
 
 
@@ -51,10 +57,15 @@ def messages(gate, tmp):
     subprocess.run(("git", "init", "-q", str(project)), check=True)
     env = {**os.environ, "SAFE_ENGINE_HOME": str(tmp / "h"), "HOME": str(tmp), "USERPROFILE": str(tmp),
            "SAFE_ENGINE_NO_UPDATE": "1", "PYTHONIOENCODING": "utf-8"}
+    factory = Path(gate).resolve().parents[3]
+    # Discovery resolves to the measured checkout; selection, CLI startup and policies stay real.
+    probe = ("import sys;from pathlib import Path;sys.path.insert(0,sys.argv.pop(1));import fast_gate,resolve_bundle;"
+             "root=Path(sys.argv.pop(1));resolve_bundle.resolve_bundle="
+             "lambda *a,**k: resolve_bundle.inspect_bundle(root,entrypoint=k.get('entrypoint','safe-engine'));fast_gate.main()")
 
     def run(*args, stdin=None):
-        done = subprocess.run((sys.executable, str(gate), *args), input=stdin, capture_output=True, text=True,
-                              encoding="utf-8", env=env, cwd=project, check=args[0] != "hook")
+        done = subprocess.run((sys.executable, "-c", probe, str(Path(gate).parent), str(factory), *args), input=stdin,
+                              capture_output=True, text=True, encoding="utf-8", env=env, cwd=project, check=args[0] != "hook")
         return done.stdout
 
     def hook(name, keys, **event):
@@ -80,7 +91,10 @@ def messages(gate, tmp):
     run("start", "--project", str(product), "--key", "fixture-product", "--kind", "product", "--auth", "--request", "A shop")
     hints = (product / ".factory" / "fast" / "work-record.md").read_text(encoding="utf-8").splitlines()
     out["product hints"] = "\n".join(line for line in hints if line.startswith("<!--"))
-    return {name: shorten(shorten(value, project, "<p>"), tmp, "<t>") for name, value in out.items()}
+    for path, tag in sorted(((project, "<p>"), (factory, "<factory>"), (tmp, "<t>")),
+                            key=lambda item: len(str(item[0])), reverse=True):
+        out = {name: shorten(value, path, tag) for name, value in out.items()}
+    return out
 
 
 def measure(root, rev=None):

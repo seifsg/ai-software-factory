@@ -110,10 +110,10 @@ The command requires an ancestor of HEAD and upstream, commits predating start, 
 ## Shots
 
 ```text
-python fast_gate.py shots --phase before|after --serve "<dev command, {port} for its port>" --path <view> [--path <view>] [--setup "<command>"] [--ports <before>,<after>] [--size 1280x800] [--browser <exe>] [--project <abs>]
+python fast_gate.py shots --base <ref> --serve "<dev command, {port} for its port>" --path <view> [--path <view>] [--setup "<command>"] [--ports <before>,<after>] [--size 1280x800] [--browser <exe>] [--project <abs>]
 ```
 
-`shots --phase before` captures the current views before edits. `--phase after` uses the same `--out`, paths, size and serve command; it verifies retained Before bytes before capturing After. The default output is `.factory/fast/shots/`, with `<view>-before.png`, `<view>-after.png` and `baseline.json`. Never replace an early baseline during repairs. `--base <ref>` retains explicit reconstructed pairs and labels them; it does not prove pre-edit capture. Browser: `--browser` or `SAFE_ENGINE_BROWSER`. Authenticated/seeded/native views use their own capture route and the Show plan's `before` records.
+`shots` makes the PR's Before and After screenshots in one go: it checks out `--base` in the run's scratch folder, runs `--setup` in each tree, serves both at once on their own ports (`{port}` in `--serve`, also `PORT`), shoots each `--path` at one size with a headless Chromium-family browser (`--browser` or `SAFE_ENGINE_BROWSER` when none is found), stops both servers and removes the base checkout. Shots land in `.factory/fast/shots/` as `<view>-before.png` and `<view>-after.png`. Views behind sign-in or seeded state still need the project's own capture; Git Bash rewrites a bare `/`, so pass `--path=/` there.
 
 ## Install
 

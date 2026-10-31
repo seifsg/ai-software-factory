@@ -144,7 +144,7 @@ indexes: classes(starts_at), bookings(class_id, status), waitlist(class_id, posi
 - U8 PASS shots at 375 and 1280, keyboard booking, axe 0 violations
 - U9 PASS schedule, roster, packs: one icon family, Cancel booking in one place
 - U10 UNKNOWN no low-end phone; 180 KB JS measured on desktop
-**UX judge:** local audit; no separate agent needed, from shots, outlines, axe scan, use log
+**UX judge:** fresh mid-size subagent, not the builder, from shots, outlines, axe scan, use log
 **Hidden checks:**
 - #1 A1: PASS, #1 A2: PASS (epic integration: credits booked, promoted member checked in)
 - #2 A1: PASS, #2 A2: PASS

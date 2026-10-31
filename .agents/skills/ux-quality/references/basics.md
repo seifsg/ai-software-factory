@@ -90,6 +90,6 @@ Run it in any browser tool that executes page scripts, on each audited screen an
 
 ## Tree test (before UI code)
 
-- Walk the Map and Labels as a text tree against 3 to 5 top tasks; record where each starts. Use an independent reader when label ambiguity needs it.
-- A missed task: rename or regroup before building. Record `tree test <passed>/<tasks>` in the Map line.
+- A fresh agent gets only the Map and Labels as a text tree and the 3 to 5 top tasks, and says where it would look first. 5 runs, siblings shuffled each time.
+- A task missed in 2 or more runs: rename or regroup before building. Record `tree test <passed>/<tasks>` in the Map line.
 - Only failures count: models find items that people miss.

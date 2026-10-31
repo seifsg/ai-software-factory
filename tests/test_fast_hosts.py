@@ -12,6 +12,7 @@ import tempfile
 import unittest
 from types import SimpleNamespace
 from unittest import mock
+from bundle_fixtures import historical_gate
 
 SCRIPTS = Path(__file__).resolve().parents[1] / "skills/safe-engine/scripts"
 
@@ -152,7 +153,7 @@ class LauncherAndInstallerTests(unittest.TestCase):
         gate_home = mock.patch.dict(os.environ, {"SAFE_ENGINE_HOME": str(self.root / "gate")})  # install records here
         gate_home.start()
         self.addCleanup(gate_home.stop)
-        subprocess.run([sys.executable, str(SCRIPTS / "fast_gate.py"), "start", "--project", str(self.project),
+        subprocess.run([*historical_gate(), "start", "--project", str(self.project),
                         "--key", "hosts", "--kind", "change", "--request", "x"], check=True, capture_output=True,
                        env=self.env)
 

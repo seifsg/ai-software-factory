@@ -50,7 +50,7 @@ Keep any active app run safe. The repair never writes the app's source; pausing 
 2. Record the invariants: project goal, selected decisions, complete methods, owner stops, human release. Changing one needs the owner. Never weaken a failed check. A proposal is not approval.
 3. Plan the smallest complete correction. Exclude unrelated improvements. A new skill, gate, helper or report needs a demonstrated gap. No universal rule for an isolated complaint.
 4. Run `get-ready-to-code`: all five outputs. Include reproduction, behavioral checks, consumers, before/after evidence, compatibility and the resume step.
-5. Choose the proof now. Instruction change: walk through the changed method; delegate when useful. Code or config change: run the affected behavior. Mixed: both.
+5. Choose the proof now. Instruction change: a fresh agent walks through the changed method. Code or config change: run the affected behavior. Mixed: both.
 
 Do not code before the plan is recorded.
 
@@ -74,23 +74,22 @@ Do not code before the plan is recorded.
 
 ## 5. Check: manual first, tests last
 
-1. Use it first. Instructions: use the changed skill on realistic raw fixtures. Judge decisions and artifacts; seek independent judgment when needed. Code: run the changed command or flow on a realistic case.
+1. Use it first. Instructions: give a fresh agent the changed skill, a realistic request and raw fixtures, without the expected outcome. Judge its decisions and artifacts, not word matches. Code: run the changed command or flow on a realistic case.
 2. Pick the cases the change touches:
    - Domain rule: exercise that domain (game, mobile, desktop, server, CLI) with its real tooling. Never import another project's bindings.
    - Live-session or adoption rule: dirty bundle, running operation, inputs changed during plan, change after QA, owner stop, cancellation, lost context.
    - Evidence reuse: both reuse and rejection (changed inputs, tampered proof, pending operations).
 3. Isolate fixtures from real project work and secrets. No product pilot or simulation unless the owner asks.
 4. Check every changed skill stays self-contained: links only inside its own folder; no names, dates or host specifics.
-5. After manual use, run affected checks. Commit planned source, docs, tests and packaging edits. Run `python tests/run.py` on that commit via the selected runner's Prove if available; else directly under its recorded gate workflow. Retain runner receipt, commit, inputs, command, log and result. After edits, repeat affected checks and final proof. Write tests only after step 1.
+5. After manual use, write tests, run affected checks and commit. Source review (`how-to-make-a-pr`) precedes `python tests/run.py` on that commit, through the selected Prove, else its recorded gate. Keep receipt, commit, inputs, command, log and result. Edits need affected checks and fresh final proof.
 6. Each check proves only itself. A walkthrough does not prove a code repair; a passing suite does not prove a walkthrough.
 
 ## 6. Independent review
 
 - Safe runs this locally. Fast skips it. In every mode, no factory change reaches the main branch without an independent PR review.
-- A human or separate reviewer runs `deep-review` on the exact candidate from raw evidence, independently of the writer.
-- A reviewer who repairs needs a different fresh review.
+- A fresh agent, never the writer, runs `deep-review` on the exact candidate from raw evidence. Give it no verdict.
 - A changed gate needs its old rule, a reproduction and independent review. Its own pass proves too little.
-- One round: review, fixes, fresh review. After round 3, only open high or critical findings keep it going; medium and below are appended to the epic's one open follow-ups ticket in Backlog, never one ticket per finding. At most 6 failed rounds. Then stop that loop and ask the owner once: findings per round, shared cause, options (extend, defer, amend scope, cancel). Keep independent work moving.
+- One round: review, author fixes, the same reviewer checks the delta; a reviewer who repaired or lost context is replaced. After round 3, only high or critical findings continue; lower findings join the epic's open follow-ups ticket in Backlog. At most 6 failed rounds; then ask once with findings, shared cause and options: extend, defer, amend scope, cancel. Keep independent work moving.
 - No reviewer available: name the blocker. Never self-approve.
 
 ## 7. Deliver

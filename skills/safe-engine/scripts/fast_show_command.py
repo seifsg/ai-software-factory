@@ -122,10 +122,7 @@ def run(args, gate):
         data = evidence.read(evidence.local(project, getattr(args, action)))
         if action == "plan":
             evidence.require("plan" not in state["done"] and not state.get("show"), "Show plan is already frozen")
-            planned = show.plan(data)
-            if planned["comparison"] == "before":
-                planned["before"] = show.baseline(project, planned, data.get("before"))
-            state["show"] = {"plan": planned}
+            state["show"] = {"plan": show.plan(data)}
         elif action == "prepare":
             evidence.require("build" in state["done"], "Finish Look with done build before preparing Show")
             report = show.prepare(project, state, data)

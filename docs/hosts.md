@@ -10,10 +10,6 @@ Run `python tests/run.py` from the factory checkout. On Windows its setup prefer
 
 Common gate commands load only their requested optional argument module, including their own complete command help. Leading-option input, unknown commands and parse errors use complete registration with the original diagnostics. The selected bundle and state checks are never cached or skipped.
 
-## Message delivery
-
-The coordinator handles interruptions when the host delivers them at a supported boundary; methods cannot preempt blocking tools or guarantee immediate delivery. The latest request takes priority and may replace the whole objective. Answer or act with only necessary action checks before optional tools/reporting; resume only compatible earlier work. Stop stale dependent dispatch. Preserve previews and unrelated resources unless directed otherwise; clean up owned in-flight work only as needed and report pending checks honestly. No controller, hook or adapter protocol changes here.
-
 ## First-class hosts
 
 | | Claude Code | Codex | Cursor |
@@ -147,5 +143,3 @@ State and stdout live in `<project>/.factory/lanes/<name>/`. Resources use a has
 Every lane command receives `CARGO_TARGET_DIR` and `CARGO_BUILD_BUILD_DIR` for Cargo build artifacts, `npm_config_cache` for npm package downloads, `PYTHONPYCACHEPREFIX` for Python bytecode, and `FACTORY_CACHE_DIR` for other tools configured explicitly by the caller. Screenshot setup/server commands receive the same adapters keyed by their checkout. These are process environment settings, never global configuration. Tool flags can override them; record actual writes before claiming isolation. No automatic cache support is claimed for arbitrary bundlers. Browser harnesses use `FACTORY_PROFILE_DIR` or `safe_engine.resources.profile(identity)` and must pass that path to their browser's profile option; environment alone does not configure every browser.
 
 Delegate hosts with a cwd/workdir setting must set it to the absolute lane folder. Hosts without it pass an explicit workdir per tool call. The helper's first action prints and compares its actual cwd before any write. The Paperclip adapter already sets its configured project's `cwd`; newly created worktree lanes must pass their own path. No prompt can claim a host changed directories without that check.
-
-Screenshot phases: `shots --phase before` before editing, then `--phase after` with the same paths, size, serve command and output folder. `--base` is explicitly reconstructed history. Run routine work, UX audits and method walkthroughs locally; use helpers for worthwhile parallel work or required independent judgment. Independent checkers may use an existing separate context or a human; Safe review remains independent.
