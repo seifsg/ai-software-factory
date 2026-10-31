@@ -1065,6 +1065,9 @@ class FastGateTests(GateHarness, unittest.TestCase):
         self.assertEqual(record.check_design(on, design), [])
         self.assertIn("needs a '**Map:** <value or evidence>' line", record.check_design(on, design.replace("**Map:**", "Map:")))
         self.assertIn("primary action", " ".join(record.check_design(on, design.replace("primary", "main"))))
+        journeys = "**Journeys:** " + record.marker(design, "Journeys")
+        self.assertEqual(record.check_design(on, design.replace(journeys, "**Journeys:** Inspect: 2 actions, min2")), [])
+        self.assertIn("minimum", " ".join(record.check_design(on, design.replace(journeys, "**Journeys:** Inspect: 2 actions"))))
         bare = re.sub(r"(?m)^\*\*(?:Map|Hierarchy|Labels):\*\*.*\n", "", design)
         self.assertEqual(record.check_design(old, bare), [])  # older methods keep the old brief
         hierarchy = "**Hierarchy:** " + record.marker(design, "Hierarchy")

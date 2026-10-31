@@ -52,7 +52,9 @@ class BriefsTests(unittest.TestCase):
 
     def test_ports_are_read_from_the_line(self):
         self.assertEqual(briefs.ports("app http://localhost:5281, hub 8791; spare 8792, app again 5281"), [5281, 8791, 8792])
-        self.assertEqual(briefs.ports("none (no server)"), [])
+        for line, wanted in (("none (no server)", []), ("none (reuses preview 8877)", []), ("none; app 5180", [5180]),
+                             ("app 5281.", [5281]), ("app 5281.5", [])):
+            self.assertEqual(briefs.ports(line), wanted, line)
         self.assertEqual(briefs.ports("v1.2.3000 and 80 and 70000"), [])
 
     def test_another_lanes_ports_are_refused(self):

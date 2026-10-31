@@ -115,7 +115,7 @@ def media(text):
 
 def declaration(text, label, found):
     """Require an explicit yes or a reasoned no on every outcome."""
-    values = field(text, label)
+    values = [value.rstrip(" \t.;") for value in field(text, label)]
     if len(values) != 1 or not re.fullmatch(r"yes|no[ \t]+\([^\n()]*\S[^\n()]*\)", values[0], re.I):
         found.append(f"needs one '**{label}:** yes' or '**{label}:** no (<reason>)' line")
     return len(values) == 1 and values[0].lower() == "yes"
