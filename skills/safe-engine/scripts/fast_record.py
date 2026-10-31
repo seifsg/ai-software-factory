@@ -11,7 +11,7 @@ from pathlib import Path
 HERE = str(Path(__file__).resolve().parent)
 if HERE not in sys.path:
     sys.path.insert(0, HERE)  # loaded by file path (tests, older gates): find the sibling module
-from fast_progress import built_ids, sections, subsection, todo_ids, without_result  # noqa: E402,F401 - shared parsers
+from fast_progress import built_ids, field_value, is_none, sections, subsection, todo_ids, without_result  # noqa: E402,F401 - shared parsers
 import fast_proof  # noqa: E402 - the PR body's Before & after check
 import fast_briefs  # noqa: E402 - Interface, Ports, UX rules and DEFERRED items
 from fast_diagnostics import once, validation  # noqa: E402 - bounded remote reads
@@ -48,7 +48,7 @@ ENTRIES = re.compile(rf"{BULLET}{ENTRY}(?:[ \t]*,[ \t]*{ENTRY})*[ \t]*")  # one 
 def marker(body, label):
     """The label's value: on its line, or on the next line unless that line is another marker."""
     match = re.search(r"\*\*" + re.escape(label) + r":\*\*[ \t]*(?:\n[ \t]*(?!\*\*[^*\n]+:\*\*))?(\S[^\n]*)", body, re.I)
-    return match.group(1).strip() if match else None
+    return field_value(match.group(1)) if match else None
 
 
 def table_rows(body):
@@ -136,7 +136,7 @@ def requested(body, deferred=False):
 def check_tickets(run, body, offline=None, **_):
     epic, subs = ticket_urls(body)
     change, coverage, lane = run["kind"] == "change", run.get("coverage"), light(run)
-    trivial = lane and not epic and (marker(body, "Ticket") or "").lower().startswith("none")
+    trivial = lane and not epic and is_none(marker(body, "Ticket"))
     problems = [] if epic or trivial else [
         "needs an '**Epic:** <url>' line" + (" or '**Ticket:** <url, or none (why)>'" if lane else "")]
     if lane and marker(body, "Epic") and marker(body, "Ticket"):

@@ -6,6 +6,8 @@ reads the body (gh or a file). Checks declared proof structure, not media conten
 import re
 from urllib.parse import urlsplit
 
+from fast_progress import field_value
+
 HEADING = re.compile(r"^[ \t]{0,3}(#{1,6})[ \t]+(.+?)[ \t#]*$", re.M)
 FENCE = re.compile(r"^[ \t]{0,3}(`{3,}|~{3,})[^\n]*\n(.*?)(?:^[ \t]{0,3}\1[ \t]*$|\Z)", re.M | re.S)
 SECTION = re.compile(r"\bbefore\b.*\bafter\b", re.I)
@@ -80,7 +82,7 @@ def blank(match):
 
 def field(text, label):
     """Read whole-line declarations; duplicates cannot override an earlier obligation."""
-    return re.findall(r"^[ \t]*(?:[-*] )?\*\*" + re.escape(label) + r":\*\*[ \t]*(.*)$", text, re.M | re.I)
+    return [field_value(v) for v in re.findall(r"^[ \t]*(?:[-*] )?\*\*" + re.escape(label) + r":\*\*[ \t]*(.*)$", text, re.M | re.I)]
 
 
 def public_url(url):
@@ -115,7 +117,7 @@ def media(text):
 
 def declaration(text, label, found):
     """Require an explicit yes or a reasoned no on every outcome."""
-    values = [value.rstrip(" \t.;") for value in field(text, label)]
+    values = field(text, label)
     if len(values) != 1 or not re.fullmatch(r"yes|no[ \t]+\([^\n()]*\S[^\n()]*\)", values[0], re.I):
         found.append(f"needs one '**{label}:** yes' or '**{label}:** no (<reason>)' line")
     return len(values) == 1 and values[0].lower() == "yes"

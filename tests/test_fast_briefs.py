@@ -57,6 +57,12 @@ class BriefsTests(unittest.TestCase):
             self.assertEqual(briefs.ports(line), wanted, line)
         self.assertEqual(briefs.ports("v1.2.3000 and 80 and 70000"), [])
 
+    def test_every_record_value_reads_none_and_end_punctuation_alike(self):
+        self.assertEqual(record.marker("**Theme:** light;", "Theme"), "light")
+        for text, wanted in (("none", True), ("None (cli only).", True), ("none (x); app 5180", False),
+                             ("nonexistent", False), (None, False)):
+            self.assertEqual(record.is_none(text), wanted, text)
+
     def test_another_lanes_ports_are_refused(self):
         run = {"project": "/w/lane-b"}
         others = [(None, None, {"key": "lane-a", "project": "/w/lane-a", "ports": [5281, 8791]}),
