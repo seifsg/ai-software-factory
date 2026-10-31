@@ -10,8 +10,9 @@ Contracts: the "Output contract" section of <skill paths for the gate's steps>.
 Outputs: .factory/run.md, steps <range>; <PR URL for gate C>.
 For every contract line, find the output that meets it. Open files, links and
 images it names. Gate C also checks every step 0-6 heading is ticked.
-All lines met: append "Gate <X>: PASS" under step <3|6|7> in .factory/run.md.
-Otherwise: write "Gate <X>: FAIL <n> missing" there and hand back the list.
+All lines met: write "Gate <X>: PASS" under step <3|6|7> in .factory/run.md,
+replacing any earlier line for this gate. Otherwise: write "Gate <X>: FAIL <n>
+missing" there the same way and hand back the list.
 Do not fix anything. Do not read the builder's notes or chat.
 ```
 

@@ -50,7 +50,7 @@ Every PR shows observed Before/After for each outcome; prose or illustrative dia
 - Stage your own files by name. Never `git add .` or `git add -A`.
 - Commit as `<type>(<scope>): <imperative subject>`; body = why, not the lines changed.
 - Honor required signing with the existing identity; never invent one or bypass signing, permissions or protected gates.
-- **No AI or tool attribution lines** in commits. The PR body ends with the factory credit line in `references/credit.md`.
+- **No AI or tool attribution lines** in commits, even when your agent's defaults add one. The PR body ends with the factory credit line in `references/credit.md`.
 - Required gates (step 1) pass locally before push; the PR names their commands and results. A check not run is **unverified**. CI is never required: never wait on or rerun it; a result that arrives is extra evidence.
 - Tests come last: implement, manually QA the real behavior, then write and run tests. A fix found by tests repeats manual QA and tests. No tests that restate the implementation.
 

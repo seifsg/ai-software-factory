@@ -52,7 +52,7 @@ Do no coding while producing the plan.
 
 ## Light plan
 
-A small `change` or follow-up, when your instructions ask for one: files, the todo list, one success line, the proof list and the test map. The 0–4 loop stays.
+A small `change` or follow-up, when your instructions ask for one: files with a one-line critique, the todo list, one success line, the proof list and the test map; phases and plan may be one line each. It meets the same output contract. The 0–4 loop stays.
 
 ## Output contract
 

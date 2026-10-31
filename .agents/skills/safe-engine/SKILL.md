@@ -52,7 +52,7 @@ The factory's hooks read this file. The Stop guard re-prompts `Next:` when a tur
 
 ## Steps
 
-Before each step, load its skill fresh, even one you read earlier: invoke it with your agent's skill command or read the file. Context compaction drops skill text; the fresh read keeps the method exact.
+Before each step, load its skill fresh, even one you read earlier: invoke it with your agent's skill command or read the file. Context compaction drops skill text; the fresh read keeps the method exact. When the previous step used the same skill, rereading this step's section is enough.
 
 Each step ends with its block: print it to the owner, write it to the run file, and post it to the ticket as a comment when the tracker is reachable.
 
@@ -71,10 +71,10 @@ Each step ends with its block: print it to the owner, write it to the run file, 
 Only what those skills do not say:
 
 - **0:** a new project first gets a folder, `git init`, a first commit on the default branch and a feature branch. Product and feature: research and kickoff questions come next.
-- **3:** UI work adds `ux-quality` step 1; new or changed persistence adds `database-schema`. Fast passes the file-summary stop. Safe stops here: `Waiting: owner: plan OK?`.
+- **3:** UI work adds `ux-quality` step 1; new or changed persistence adds `database-schema`. A `change` uses the light plan. Fast passes the file-summary stop. Safe stops here: `Waiting: owner: plan OK?`.
 - **4:** starts as soon as the plan names the views and commands. Up to three items: capture them yourself. More: one light delegate captures while you finish the plan. No source edit until every Before file is saved. Open the host's live preview when it has one.
-- **5:** spike unknown capabilities first. After each todo's real use, run only the tests that cover its changed files. Never the full suite here.
-- **6:** change-guard and compliance always; other lenses by `deep-review`'s scale. Use every requested journey through real controls, capture After in that same pass with the same names, then run the full suite once. MVP and production slice: the product bar scans.
+- **5:** spike unknown capabilities first. After each todo's real use, run only the tests that cover its changed files; when those are the whole suite, that run is still only a build check. No separate full-suite run here.
+- **6:** verify is yours; independence comes from the checker and step 8. Order: the lenses (change-guard and compliance always, others by `deep-review`'s scale), their fixes, then one final manual pass through every requested journey that captures After with the same ids, then the full suite once on that candidate. Before captures of the base never count as that run. MVP and production slice: the product bar scans.
 - **7:** the ticket moves to Ready for QA with its PR.
 - **8:** a fresh agent that did not build it. The full suite runs again only if the reviewer pushed fixes.
 

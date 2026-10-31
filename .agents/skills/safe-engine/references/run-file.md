@@ -35,10 +35,10 @@ T1 pre: <before> do: <change> post: <check> ✔
 ```
 
 - `Status:` `open`, `closed`, or `stopped (<owner's reason>)`.
-- `Next:` `<step number> <step name> · <skill>`, always the first unticked step.
+- `Next:` `<step number> <step name> · <skill>`: the first unticked step, or, while an earlier step is blocked, the step you continue with; the blocked step's block names its blocker.
 - `Waiting:` `none`, `owner: <question>` or `jobs: <what runs and who reports back>`.
 - A heading gets `✔` only when its block meets its skill's output contract.
-- `Gate A|B|C: PASS` lines come only from the checker, under steps 3, 6 and 7. A failed check leaves `Gate <X>: FAIL <missing items>` until a rerun passes.
+- `Gate A|B|C: PASS` lines come only from the checker, under steps 3, 6 and 7. A failed check leaves `Gate <X>: FAIL <missing items>`; each rerun replaces the earlier line for that gate.
 - Long blocks may live on the ticket: write the comment link and a one-line summary instead of the full text.
 
 ## What the hooks do

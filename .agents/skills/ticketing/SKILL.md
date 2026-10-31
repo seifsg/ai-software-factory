@@ -17,6 +17,7 @@ The remote ticket is the record; local notes are a cache. Write tickets with `re
 6. Record provider, project, native ID and URL.
 7. Access or a write fails: name the step and next action, keep a pending local record. No silent tracker switch, duplicate or success claim.
 8. Use only tools that exist. Installing, paid access and messaging need their own authority.
+9. No tracker reachable, or none chosen yet while the run goes on: write the ticket to `.factory/ticket.md` in the same layout; `local: .factory/ticket.md` stands in for its link. Move it to the tracker once one is set.
 
 ## Backlog
 
@@ -117,6 +118,15 @@ Safe runs, or moving an epic to Safe: [the contract](references/safe-contract.md
 1. Refresh the ticket.
 2. Map every latest confirmed expectation and original input item to its implementation and actual evidence. Every checklist item is ticked with its proof. Compare actual before with delivered after. List missing or partial results, unintended behavior, deviations.
 3. Approved deviations keep authority and reason. Pending changes cannot redefine a pass. Unresolved drift, unknown required scope or missing evidence blocks dependent acceptance.
-4. PRs and reviews carry ticket and epic links, confirmed revision and digest, before/after proof, decisions, unresolved findings, resume step.
+4. PRs and reviews carry ticket and epic links, confirmed criteria, before/after proof, decisions, unresolved findings, resume step.
 5. Update the ticket with the actual outcome and openable, sanitized proof. Preserve blocked and cancelled work and open human decisions.
 6. A closed child list does not certify the epic: it needs combined journey evidence, and combined QA waits until its tickets finish implementation. A draft PR is not merge or release.
+
+## Output contract
+
+In a factory run this is step 0. The block `## 0 Ticket` holds:
+
+- [ ] The ticket link, or `local: .factory/ticket.md` with the reason
+- [ ] Reused or new, with the search terms used
+- [ ] The definition of done as labelled criteria
+- [ ] The checklist (filled from the plan's todos at step 3) and the status
