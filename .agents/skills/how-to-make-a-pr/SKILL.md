@@ -39,7 +39,7 @@ git switch -c <scope>/<short-name> origin/<base>
 Every PR shows observed Before/After for each outcome; prose or illustrative diagrams never replace results. In a `diff`, API proof shows one request's status and body; CLI/script proof, one command's output; method/prose proof, a fresh walkthrough's changed result and key text. Speed/size/cost proof measures the same workload. An internal module proves its changed screen, endpoint or command. A new nonvisual result shows the prior output as "did not exist". Name `**Visual:**` and `**Journey:**` under each outcome (`references/pr-layout.md`), with a reason when no. Map shared backend effects to UI journeys.
 
 1. Take the plan's proof list. For changed views, states, motion, interactions or affected UI journeys, read [visual and journey proof](references/media-proof.md) now; its rules apply in full.
-2. A brand-new surface needs no Before capture: its Before is "did not exist". Capture every other Before now, before any source edit, into `.factory/proof/<ticket>/before-<id>.png` (screens) or `before-<id>.txt` (commands, responses, text). Screens: capture with the host's built-in browser, the preview the owner watches, and keep that one server for After. No Playwright, headless browsers or capture scripts unless the owner asks. A screenshot the host cannot save as a file: write what it shows into `before-<id>.txt`, and the PR names the image as not attached.
+2. A brand-new surface needs no Before capture: its Before is "did not exist". Capture every other Before now, before any source edit, into `.factory/proof/<ticket>/before-<id>.png` (screens) or `before-<id>.txt` (commands, responses, text). Screens: capture with the host's built-in browser, the preview the owner watches, and keep that one server for After. No Playwright, headless browsers or capture scripts unless the owner asks. A screenshot the host cannot save as a file: write what it shows into `before-<id>.txt` as a `pane:` observation; that is valid proof, no waiver needed.
 3. Inspect every capture: right screen, readable, no secrets.
 4. Missed a Before after editing: text and command proof come from the base (`git show <base>:<path>`, the base build's output); a screenshot you can no longer take is stated as missing in the PR. Never a second checkout or server just for a picture.
 5. After is captured during verify's manual pass, on the same server, with the same ids: `after-<id>.*`. A later fix recaptures only the ids it affects.
@@ -96,7 +96,7 @@ The block `## 7 PR` holds the draft PR URL, and the PR itself has:
 - [ ] Title `<type>(<scope>): <subject>`; draft; the verified base
 - [ ] A clickable ticket link in the body, and the PR link in the ticket's activity
 - [ ] The `pr-layout.md` sections that apply, in order
-- [ ] One heading per outcome under Before & after, each with `**Before:**` and `**After:**` proof that opens (`https` images, fenced output), plus `**Visual:**` and `**Journey:**`
+- [ ] One heading per outcome under Before & after, each with `**Before:**` and `**After:**` proof that opens (`https` images, fenced output, or a `pane:` observation (what the built-in browser showed: view, state, viewport, time) when the host cannot save the image), plus `**Visual:**` and `**Journey:**`
 - [ ] Verification: criterion → change → proof → gap, with each command and its result; unverified items named
 - [ ] Review requested from the project's review owner, or the blocker stated
 - [ ] The credit line from `references/credit.md` as the last line
