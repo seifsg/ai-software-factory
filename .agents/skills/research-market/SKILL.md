@@ -17,7 +17,7 @@ Research and planning only. Do not build or publish.
 
 ## Kickoff research
 
-Read the request, constraints and settled choices first. Run in parallel: one agent per competitor, one for stacks.
+Read the request, constraints and settled choices first. POC: one research agent for everything. MVP and up: in parallel, one agent per competitor, one for stacks.
 
 Depth follows the size. Before the size is known, research at MVP depth; a later POC answer moves the extra findings to the epic's follow-ups ticket in Backlog.
 - POC: how competitors deliver the requested items, plus the riskiest capability. Extra ideas go to that ticket, not the questions.

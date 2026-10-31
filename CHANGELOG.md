@@ -8,6 +8,7 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ### Changed
 
+- After rerun 2: one step at a time, never batched, so analysis and recommendation each get a full pass; screenshots come from the host's built-in browser, never Playwright or headless scripts unless asked; step 0 asks once, up front, for host-blocked actions; the checker is read-only and the builder pastes its gate line; POC research uses one agent; proof ids per view or state; a plan change reruns Gate A only for what changed.
 - After the first real run: the checker reports every missing item in one pass and only a repeated item counts as a failed round; no Before capture for a brand-new surface, no mandatory journey video, a fix recaptures only its ids; a small product gets one ticket and ticket comments only on status changes; change-guard only when existing code changed; size sets scope, never quality, and Fast never waits for it; every step prints its full block, and owner replies are folded in before the next step; the reviewer hands fixes back to the builder and Gate C reruns when the PR changed.
 - **Breaking:** the factory is methods only. One pipeline of nine visible steps, ticket → analyze → recommend → plan → Before proof → build → verify → PR → review, each printing its block to the owner, the ticket and `.factory/run.md` (#231).
 - `analyze-start` and `get-ready-to-code` are restored to their full original outputs; `how-to-review-a-pr` is its own skill again; every step skill ends with an output contract.

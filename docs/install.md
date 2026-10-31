@@ -9,7 +9,7 @@ claude plugin marketplace add https://github.com/seifsg/ai-software-factory.git
 claude plugin install safe-engine@ai-software-factory
 ```
 
-Use the HTTPS URL; the `owner/repo` shorthand tries SSH first. The plugin brings every skill, the delegate roles and both hooks, and follows release tags. Start a new session.
+Use the HTTPS URL; the `owner/repo` shorthand tries SSH first. In auto mode, new projects need `gh repo create` and `git push` allowed: add `Bash(gh repo create:*)` and `Bash(git push:*)` to your permission allow rules, or approve them once when step 0 asks. The plugin brings every skill, the delegate roles and both hooks, and follows release tags. Start a new session.
 
 Desktop app without a terminal: add to `~/.claude/settings.json`, start a new session, then install from `/plugin` if it is missing:
 

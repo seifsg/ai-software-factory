@@ -53,7 +53,7 @@ The factory's hooks read this file. The Stop guard re-prompts `Next:` when a tur
 
 ## Steps
 
-Before each step, load its skill fresh, even one you read earlier: invoke it with your agent's skill command or read the file. Context compaction drops skill text; the fresh read keeps the method exact. When the previous step used the same skill, rereading this step's section is enough.
+One step at a time: load its skill, do that step's own work with fresh reading, searching or running, print its block, then start the next. Never batch steps or write two blocks at once; analysis and recommendation each get their own full pass. Before each step, load its skill fresh, even one you read earlier: invoke it with your agent's skill command or read the file. Context compaction drops skill text; the fresh read keeps the method exact. When the previous step used the same skill, rereading this step's section is enough.
 
 Each step ends with its block: print the full block to the owner, never a summary, and write it to the run file. Before the next step reads it, fold in any owner reply that arrived; Fast never waits for one. The ticket gets a comment only on a status change (steps 0, 7 and 8), linking the run file's blocks.
 
@@ -71,7 +71,7 @@ Each step ends with its block: print the full block to the owner, never a summar
 
 Only what those skills do not say:
 
-- **0:** no project folder named: create one beside the owner's other projects (the parent of the current project, else the current folder), named for the product in kebab-case, and report its absolute path. No Git: `git init`, a first commit on the default branch, then a feature branch. Every commit, the first included, follows `how-to-make-a-pr`'s commit rules: no AI attribution lines. No remote: `ticketing` creates a private repository on the owner's account and pushes the default branch. Product and feature: research and kickoff questions come next.
+- **0:** before any work, check tracker and push access (`ticketing`) and ask the owner once, up front, for every action the host may block (creating a repository, pushing). No project folder named: create one beside the owner's other projects (the parent of the current project, else the current folder), named for the product in kebab-case, and report its absolute path. No Git: `git init`, a first commit on the default branch, then a feature branch. Every commit, the first included, follows `how-to-make-a-pr`'s commit rules: no AI attribution lines. No remote: `ticketing` creates a private repository on the owner's account and pushes the default branch. Product and feature: research and kickoff questions come next.
 - **3:** new or changed persistence adds `database-schema`. A `change` uses the light plan. Fast passes the file-summary stop. Safe stops here: `Waiting: owner: plan OK?`.
 - **4:** starts as soon as the plan names the views and commands. Up to three items: capture them yourself. More: one light delegate captures while you finish the plan. No source edit until every Before file is saved. Open the host's live preview when it has one.
 - **5:** spike unknown capabilities first. After each todo's real use, run only the tests that cover its changed files; when those are the whole suite, that run is still only a build check. No separate full-suite run here. Commit by phase in the project's commit style.
@@ -81,12 +81,13 @@ Only what those skills do not say:
 
 ## Gates
 
-After steps 3, 6 and 7, start the [checker](references/checker.md): a fresh light delegate that gets only the contracts and the outputs, never your reasoning. It writes `Gate A: PASS` (B, C) into the run file or returns the missing items.
+After steps 3, 6 and 7, start the [checker](references/checker.md): a fresh light delegate that gets only the contracts and the outputs, never your reasoning. It is read-only and hands back `Gate A: PASS` (B, C) or the missing items; you paste its gate line verbatim into the run file with the checker's agent id.
 
 - Gate A checks the blocks of steps 0–3; Gate B steps 4–6; Gate C step 7 and the whole run file.
 - No source edit before Gate A passes (Before capture may run beside it); no PR before Gate B passes; no close before Gate C passes.
 - Missing items: fix them, then rerun the checker. The checker reports every missing item in one pass; only an item missing twice counts as a failed round. Two failed rounds: ask the owner with the list.
-- Never write a PASS line yourself. The run cannot close without all three.
+- Never write or change a gate line yourself; paste only what a checker handed back. The run cannot close without all three.
+- A plan change after Gate A passed reruns the checker only when it adds or removes todos, criteria or proof ids, and only on that change.
 
 ## Every mode
 

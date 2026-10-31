@@ -16,7 +16,7 @@ Keep required quality. Build in complete working iterations; a tiny bug or a ful
 3. **Steps or phases.** Ordered by user value: first the smallest real journey someone can see and use. Before dependent work, settle the shared state owner, invariants and who enforces them, entry points, limits, compatibility and failure behavior. Root fix, not patch; big or risky ones go to the owner.
 4. **The entire todo list.** Every todo concrete and checkable, and it becomes the ticket's checklist. Order never drops scope: every requested item maps to a todo, or stays open in its ticket when the owner narrowed this iteration.
 5. **The entire plan.** The whole thing written out, so no agent guesses: interfaces and this checkout's dev ports.
-6. **Proof and tests.** The proof list for the PR's Before and After: each changed view, state, journey or command with a short id. The test map: the command that runs the tests covering each changed file, and the project's full-suite command for verify.
+6. **Proof and tests.** The proof list for the PR's Before and After: one short id per changed view, state, journey or command; interactive elements share their journey's id, never one id each. The test map: the command that runs the tests covering each changed file, and the project's full-suite command for verify.
 
 Do no coding while producing the plan.
 
@@ -65,7 +65,7 @@ The block `## 3 Plan` holds:
 - [ ] **Todos:** `T1..Tn`, each an outcome with ticket and criteria; every criterion maps to at least one todo; the ticket checklist matches
 - [ ] **Plan:** interfaces and ports (product, feature, new UI or delegated work; a `change` omits it)
 - [ ] **Proof list:** every changed view, state, journey or command with an id
-- [ ] **Test map:** per-file test command and the full-suite command
+- [ ] **Test map:** per-file test command and the full-suite command, or `none (POC: no suite)`
 - [ ] No source file changed during this step
 
 The block `## 5 Build` holds:

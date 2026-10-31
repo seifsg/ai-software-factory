@@ -1,6 +1,6 @@
 # Checker
 
-The gate after steps 3, 6 and 7. A fresh light delegate (role `checker`), read-only except for its one gate line. It judges the outputs against their contracts, never the work's quality; quality is `deep-review`'s and `how-to-review-a-pr`'s job.
+The gate after steps 3, 6 and 7. A fresh light read-only delegate (role `checker`, or any light read-only agent given this brief). The coordinator pastes its gate line verbatim with its agent id. It judges the outputs against their contracts, never the work's quality; quality is `deep-review`'s and `how-to-review-a-pr`'s job.
 
 ## Brief
 
@@ -10,9 +10,8 @@ Contracts: the "Output contract" section of <skill paths for the gate's steps>.
 Outputs: .factory/run.md, steps <range>; <PR URL for gate C>.
 For every contract line, find the output that meets it. Open files, links and
 images it names. Gate C also checks every step 0-6 heading is ticked.
-All lines met: write "Gate <X>: PASS" under step <3|6|7> in .factory/run.md,
-replacing any earlier line for this gate. Otherwise: write "Gate <X>: FAIL <n>
-missing" there the same way and hand back the list.
+Read-only: change no file. Check every contract line in one pass. Hand back
+"Gate <X>: PASS" when all are met, else "Gate <X>: FAIL <n> missing" and the list.
 Do not fix anything. Do not read the builder's notes or chat.
 ```
 
