@@ -64,7 +64,8 @@ Budget in the first plan: fast first load, instant common actions, no N+1, pagin
 - Record `workload → target → cost → decision → bound/lifetime → evidence`; mark targets measured or provisional.
 - Workload-specific complexity and latency; no blanket O(1) claim. Remove work before caching. Batching, indexes, pools and coalescing solve different problems.
 - No distributed services, deployment changes or spending without authority. Justify N/A; invent no infrastructure.
-Profiling or reviewing CPU, memory, database, network, storage or interaction cost: [speed checklist](cases.md#speed-checklist).
+
+Building, changing, profiling or reviewing CPU, memory, database, network, storage or interaction cost: [speed checklist](cases.md#speed-checklist).
 
 Adding, changing or reviewing a cache, what cached work depends on (inputs, access scope), duplicate-work coalescing or generated-media reuse: [caching](cases.md#caching).
 
@@ -111,4 +112,4 @@ Proof before any ready claim:
 - Map each criterion to manual, automated or mixed evidence: candidate, environment/device, action, result, limits. Feel, art and interaction need honest observation, not an unrelated passing script. Missing evidence stays UNKNOWN. Never fabricate a tester or infer completion from a screenshot.
 - A demo names the exact build, environment, device, data or save identity, actions and result. Same URL is not same context. Passing checks alone prove no outcome.
 - Local ready, PR approval, merge and live release are separate; never infer deployment authority.
-- The release record, operations, or deploying and operating a live release: [live release](cases.md#live-release).
+- Preparing a release record, setting up operations, or deploying and operating a live release: [live release](cases.md#live-release).

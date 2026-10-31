@@ -74,7 +74,7 @@ Every ticket, every mode: unfinished until both are complete.
 
 1. Write the definition of done (criteria with IDs) at creation, the checklist (the plan's todos as task items) at plan time.
 2. Each item runs the `get-ready-to-code` 0–4 loop; tick it only after its check passed (its real effect used and seen working), proof beside the tick.
-3. Independent items run in parallel as far as files, dependencies and capacity allow, each ticked after its own check. One writer per ticket body: the coordinator ticks, delegates report. Tickets built in parallel, handed to another session or depending on another ticket: [parallel work](references/parallel-work.md).
+3. Independent items and tickets run in parallel as far as files, dependencies and capacity allow; each item is ticked after its own check, each ticket keeps its own checklist loop. One writer per ticket body: the coordinator ticks, delegates report. Parallel tickets, handoffs to other sessions and dependencies between tickets: [parallel work](references/parallel-work.md).
 4. Finished: every item ticked and every criterion proven; otherwise loop on the failing item until it passes. Blocked only when the run cannot clear it (access, capability, owner decision): reason, next action, who unblocks; its independent items continue.
 5. An owner-deferred item is ticked as `Deferred by the owner: <decision link>`; its criteria leave the ticket with it. It counts as resolved, never as delivered.
 6. An item only the owner or missing hardware can finish stays unticked, ending `DEFERRED (owner|hardware: <what is needed>)`. Not Blocked: the rest finishes, the ticket reaches Ready for QA naming it, the owner ticks it once done.
@@ -85,7 +85,7 @@ No contract or confirmation round. Same tracker, layout, backlog and authority r
 
 Product and feature runs list every requested item and approved addition as R1, R2, ...; an owner-deferred one stays listed as `R2 (owner-deferred: <decision link>)` and needs no criterion. The checker refuses gaps: at plan (gate A) and PR (gate C), a requested item no criterion names, and a criterion no checklist item names.
 
-1. Product and feature runs: create the epic after the owner's kickoff answers with the owner's words, the answers and every layout section, the definition of done with IDs included. Change runs update the ticket they follow up, create one only for a new outcome, none when trivial.
+1. Product and feature runs: create the epic after the owner's kickoff answers with the owner's words, the answers and every layout section. Change runs update the ticket they follow up, create one only for a new outcome, none when trivial.
 2. Create the sub-issues in user-value order, linked as native sub-issues; optional ideas go to the follow-ups ticket.
 3. Write into the step 0 block of the run file (`.factory/run.md`): the epic URL (a `change` run: the ticket URL, or `none (<why>)`), each sub-issue URL in the run, the R-ids (product and feature runs), the owned, affected and untouched backlog items, follow-ups included. At the PR step, add each owned ticket's final status: Ready for QA with its PR (naming items deferred to the owner or hardware), Blocked, or Backlog when owner-deferred.
 

@@ -118,15 +118,15 @@ Ruthless code review. No mercy, no shortcuts. Find every damn problem.
 
 ## Additions for every review
 
-Read-only: do not fix unless told to. Review the complete iteration and affected consumers: does the journey work? Separate blockers from polish; keep the overall requirements open. Size or style prompts inspection; prove impact before blocking.
+Read-only: do not fix unless told to. Does the journey work? Keep the overall requirements open. Size or style prompts inspection; prove impact before blocking.
 
 - Scope adds the callers and consumers. Before reading, gather the baseline: request, confirmed criteria, plan, project rules, raw evidence (logs, manual QA observations, check results).
 - Read the code around each file too; the diff alone is insufficient. Then run the lenses below.
-- Inspect source, diffs, logs and supplied evidence. Run no test suites during review unless told.
+- Run no test suites during review unless told.
 - Label every claim verified (read or observed) or hypothesis. A raw count is a hypothesis about impact until you read what it means.
 - Any language: its debug output and loose types count in categories 5 and 8.
 - Also hunt: non-critical integrations (analytics, history, messaging) breaking the main logic when they fail; valid actions that leave unrecoverable state (creation, update, save and load limits must agree); bypassing the project's wrapper for config or shared integrations; guards for states the design rules out (not defense in depth).
-- Factory rules, for our own work (someone else's project: judge by its rules): extra code or over-engineering; not O(1) or as close as the real workload allows; new code where an existing function fits; placeholders, stubs or TODOs; files at 1000 lines or more not split; functions without a short comment saying what they do and why; one more pass: less code? less complexity? faster?
+- Factory rules, for our own work (someone else's project: judge by its rules): extra code or over-engineering (least code that fully solves the problem); not O(1) or as close as the real workload allows, wasted CPU or memory; new code where an existing function fits; placeholders, stubs or TODOs; files at 1000 lines or more not split; functions without a short comment saying what they do and why; one more pass: less code? less complexity? faster?
 
 ### Lenses
 
@@ -149,11 +149,17 @@ Lenses may run as isolated parallel reviewers. Give each the scope, baseline, ra
 
 ### Findings
 
-The report is the Output Format template; lens reports go inside it. Finding format: a Summary Table row that also carries Layer, Evidence (raw proof: code, log, observation), Fix and Confidence after Impact. Scope also names the baseline and lenses run; `### Unknowns` (required evidence still missing) follows the Summary Table; the verdict starts with PASS, FAIL or CONDITIONAL.
+The report is the Output Format template; lens reports go inside it. Finding format, rows most severe first:
 
-- Score every finding with [worth-it](references/worth-it.md). Keep severity, disposition and proof.
+| # | Category | Severity | File:Line | Finding | Impact | Layer | Evidence | Fix | Confidence |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Bug | HIGH | file.ts:42 | Description | What breaks, for whom | product | Raw proof: code, log, observation | Clear fix | HIGH |
+
+Scope also names the baseline, lenses run and verdict scope; `### Unknowns` (required evidence still missing) follows the Summary Table; the verdict starts with PASS, FAIL or CONDITIONAL.
+
+- Score every finding with [worth-it](references/worth-it.md).
 - Layer: `product` (code or behavior), `evidence` (proof missing or wrong), `report` (claim does not match result). Fix the affected layer. A proof gap needs actual verification, not a label.
-- Confidence: HIGH / MED / LOW. Label hunches.
+- Confidence: HIGH / MED / LOW.
 - Load-bearing code is not over-engineering: mark it **KEEP** with the reason.
 - Edge-case fix: at the root cause, first rung that fits (impossible by design; normalized or rejected loudly at entry; specified, logged behavior); a state beyond the data, config and platform in use: one loud assertion. One cause, one finding.
 - Out-of-scope opportunities: list as notes, not findings.
@@ -161,10 +167,10 @@ The report is the Output Format template; lens reports go inside it. Finding for
 
 ### Verdict
 
-Severity is impact. Disposition decides the gate: `blocking`, `before-exposure` or `accepted-deferral`.
+Disposition decides the gate: `blocking`, `before-exposure` or `accepted-deferral`.
 
 - Blocking: any CRITICAL or HIGH, an unmet core requirement, a broken existing journey, a required UNKNOWN, a mandatory rule violated without an authorized exception. Clean code that solves the wrong problem fails.
-- UNKNOWN is never N/A. Missing required evidence stays UNKNOWN and blocks dependent judgment. N/A needs evidence.
+- UNKNOWN is never N/A; N/A needs evidence. Missing required evidence stays UNKNOWN and blocks dependent judgment.
 - Deferral needs owner authority and a record: owner, reason, scope, its entry in the follow-ups ticket, revisit trigger. A note alone grants nothing.
 - The owner may delegate in advance the deferral of LOW findings, and of MEDIUM while exposure stays local. MEDIUM and LOW left after round 3 are appended to the epic's one open follow-ups ticket in Backlog, never one ticket per finding. HIGH and CRITICAL are never deferred.
 - Before-exposure items resolve before public exposure or production. A MEDIUM is not automatically a failure, and never silently waived.
@@ -176,7 +182,6 @@ Severity is impact. Disposition decides the gate: `blocking`, `before-exposure` 
 ### Fixes and review rounds
 
 - When told to fix: smallest change that removes the cause, affected layer only, intent unchanged. Then a fresh independent reviewer, not the one who fixed, assesses the result. A clean review needs no edits.
-- After any repair, rerun all configured checks. Reuse proof only when its inputs are exactly unchanged.
 - One round = independent review, selected fixes, fresh review. Mandatory findings keep it open; optional fixes follow worth-it. At most 6 failed rounds per review loop.
 - After the sixth failed round, stop that loop. Give the owner one short packet: findings per round (new vs repeated), the shared cause, options (extend 1-3 rounds, defer with an owner record, amend scope, cancel).
 - Keep independent work moving while you wait.
