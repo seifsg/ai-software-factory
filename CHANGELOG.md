@@ -12,6 +12,7 @@ The public surface is the skill names, the run file format, and the hook scripts
 - `analyze-start` and `get-ready-to-code` are restored to their full original outputs; `how-to-review-a-pr` is its own skill again; every step skill ends with an output contract.
 - Before proof is captured before the first edit with any host capture tool; After on the same server during verify. Builds run only tests mapped to changed files; the full suite runs once at verify.
 - The plugin root is `.agents/`; the delegate roles live in `.agents/agents/`.
+- `deep-review` opens with the owner's original method word for word; factory additions follow it. `ticketing` and the product bar are shorter: duplicate rules merged, rare cases (parallel tickets, speed checklist, external effects, release record) moved behind pointers. Read set 114,523 → 110,950 B (#233).
 
 ### Added
 

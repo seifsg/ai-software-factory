@@ -57,7 +57,7 @@ The PR came from a factory run: read its `.factory/run.md` and ticket. Check eve
 
 ## 2. Lenses
 
-Run `deep-review`'s deep bug hunt and every applicable lens it lists: security, performance, journey, change-guard, compliance.
+Run `deep-review`'s analysis categories and every applicable lens it lists: security, performance, journey, change-guard, compliance.
 
 - Same candidate already passed a full local review: one reviewer covers all lenses on the delta plus a residual-risk check.
 - Otherwise, or for security, release or public-exposure scope: one isolated reviewer per lens, in parallel when your agent has subagents (waves if capacity is short), otherwise one lens at a time. Synthesize only after all return. Never call sequential work parallel or drop a lens.

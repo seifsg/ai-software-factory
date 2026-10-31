@@ -50,7 +50,7 @@ Size the risk: environment, reachable surfaces, roles, valuable data, trust boun
 - Output: context-aware encoding, safe framework sinks, maintained sanitizer for rich HTML, fitting CSP. CSRF protection on cookie-authenticated mutations; no state change on GET. CORS is neither authorization nor CSRF protection.
 - Uploads: authorize; limit size and count; check extension and detected content, distrust MIME and name. Generated names, traversal and archive-bomb protection, non-executable isolated storage, authorized downloads. Never serve active uploads from the app origin.
 - Abuse/CORS: rate, size, concurrency and cost limits per surface, login, reset, search, uploads and expensive work first. Trusted proxy handling; keep legitimate retries working. CORS only for needed origins; no reflected origin or wildcard with credentials.
-- Webhooks: verify the signature over the original bytes before any effect ([external effects](product-bar.md#external-effects)).
+- Webhooks: verify the signature over the original bytes before any effect ([external effects](cases.md#external-effects)).
 - Dependencies: lockfiles. Review actual advisories; update vulnerable versions compatibly. No blind major upgrades or invented CVEs.
 
 Before exposure: HTTPS, valid certificates, production config, fitting security headers, least-privilege network and storage; no debug consoles, stack traces, default credentials or test bypasses. Exercise denial paths with harmless accounts (anonymous, other user or tenant, tampered or expired token, forged webhook), then run the `deep-review` security lens. Fix demonstrated compromise risks or disable the path.
