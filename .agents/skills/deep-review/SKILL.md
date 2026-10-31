@@ -149,7 +149,7 @@ Lenses may run as isolated parallel reviewers. Give each the scope, baseline, ra
 
 ### Findings
 
-Finding format: a Summary Table row that also carries Layer, Evidence (raw proof: code, log, observation), Fix and Confidence after Impact. Scope also names the baseline and lenses run; `### Unknowns` (required evidence still missing) follows the Summary Table; the verdict starts with PASS, FAIL or CONDITIONAL.
+The report is the Output Format template; lens reports go inside it. Finding format: a Summary Table row that also carries Layer, Evidence (raw proof: code, log, observation), Fix and Confidence after Impact. Scope also names the baseline and lenses run; `### Unknowns` (required evidence still missing) follows the Summary Table; the verdict starts with PASS, FAIL or CONDITIONAL.
 
 - Score every review/check finding with [worth-it](references/worth-it.md). Keep severity, disposition and proof.
 - Layer: `product` (code or behavior), `evidence` (proof missing or wrong), `report` (claim does not match result). Fix the affected layer. A proof gap needs actual verification, not a label.
