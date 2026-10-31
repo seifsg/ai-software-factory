@@ -12,6 +12,7 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 
 ### Fixed
 
+- A fact written in a ticket, doc, config, log or report is a claim to test before relying on or reporting it; a stand-in proves only itself, and unverified means the check cannot run here.
 - Run metrics: Fast runs start their timeline at the first applicable step, Safe runs record the factory revision and never share a metrics folder, and analytics hooks are plain calls instead of repeated guards (#175).
 - A host, URL or IP written in a ticket is tested by resolving the name and requesting that URL, never assumed linked or left unverified (#206).
 
