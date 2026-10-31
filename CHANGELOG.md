@@ -6,6 +6,8 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-10-31
+
 ### Added
 
 - Released apps keep their own changelog, version and release-note steps through every change and session; authorized releases run the app's tools, read back the result and reconcile partial effects (#221).
@@ -110,7 +112,8 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 - Leaner runs (#137): product, feature and change runs each read 24% less method text, every gate message is shorter with the same facts, `scripts/token_report.py` measures both, and tests hold every method file and the gate's fixture messages to a byte budget and the product and change loads to 80% of their earlier size.
 - Self-update (#139): a clone install moves only to a release tag on `main` whose files match its manifest, records the previous revision, rolls back a failed install and shows a one-time notice naming both versions.
 
-[Unreleased]: https://github.com/seifsg/ai-software-factory/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/seifsg/ai-software-factory/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/seifsg/ai-software-factory/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/seifsg/ai-software-factory/compare/v1.1.2...v1.2.0
 [1.1.2]: https://github.com/seifsg/ai-software-factory/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/seifsg/ai-software-factory/compare/v1.1.0...v1.1.1
