@@ -43,7 +43,7 @@ T1 pre: <before> do: <change> post: <check> ✔
 
 ## What the hooks do
 
-Both run `scripts/run-guard.sh` (`stop` or `compact`) on the nearest run file inside the current checkout. A run file untouched for 12 hours, `Status: stopped` or a finished run (step 8 ticked, three PASS lines) is ignored.
+Both run `scripts/run-guard.sh` (`stop` or `compact`) on the nearest run file inside the current checkout. The Stop guard ignores a run file untouched for 12 hours; both ignore `Status: stopped` and a finished run (step 8 ticked, three PASS lines).
 
 | Hook | When | Does |
 |---|---|---|
