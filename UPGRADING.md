@@ -9,7 +9,7 @@ For every release:
 
 ## Next release
 
-- After updating, use `fast_gate.py enroll-worktree --project <new-worktree> --source <original-worktree> --bundle <reviewed-factory> --reason "<owner authority>"` only for an unregistered Git worktree inheriting unchanged tracked legacy run files. Read its archived lineage, then start a distinct run normally. The source must retain its registered open run. Enrollment keeps the source and inherited evidence intact; it does not resume, move or upgrade that run. Existing installs and pins need no migration.
+- Update launchers for `report --pr-body`; it validates local draft structure without completing a step or replacing final published-PR checks. Existing pins stay intact. Accepted `fix-round` output adds its stored `report_sha256`; no input or record migration is needed.
 
 ## 1.2.0
 

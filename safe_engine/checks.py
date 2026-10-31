@@ -35,13 +35,7 @@ class CheckMixin:
         state["pending_operation"] = "checks"
         self.persist(state, "Started check batch; previous acceptance invalidated")
         reused, stable = False, True
-        from contextlib import nullcontext
-        binder = nullcontext()
-        try:
-            binder = self.metrics_bound(state)
-        except Exception:
-            binder = nullcontext()
-        with binder if binder is not None else nullcontext():
+        with self.metrics_bound(state):
             if state.get('suite_policy'):
                 from .suites import describe, execute
                 profile = state['profile']

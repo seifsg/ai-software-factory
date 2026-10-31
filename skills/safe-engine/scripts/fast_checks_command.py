@@ -1,5 +1,4 @@
 """Execute syntax and candidate checks with the existing bounded runner."""
-from contextlib import nullcontext
 import json
 from pathlib import Path
 import shutil
@@ -8,6 +7,7 @@ import uuid
 
 import fast_checks as checks
 import fast_design as evidence
+import fast_metrics
 import fast_show
 
 
@@ -61,12 +61,8 @@ def execute(project, state, gate, syntax_only=False):
     target = "syntax" if syntax_only else "result"
     if saved.get(target):
         gate.log("checks.receipt_replaced", key=state["key"], receipt=saved[target])
-        try:
-            import fast_metrics
-            fast_metrics.safe("emit", project, fast_metrics.identity(state), "invalidate",
-                              reason="checks_receipt_replaced", receipt=target)
-        except Exception:
-            pass
+        fast_metrics.safe("emit", project, fast_metrics.identity(state), "invalidate",
+                          reason="checks_receipt_replaced", receipt=target)
     receipt = uuid.uuid4().hex
     result = {"passed": False, "status": "running", "receipt": receipt,
               "inputs": before, "candidate": candidate, "logs": []}
@@ -83,9 +79,7 @@ def execute(project, state, gate, syntax_only=False):
         if not outcome["passed"]:
             result["status"] = "harness-invalid" if kind == "syntax" else "failed-unclassified"
         return outcome["passed"]
-    import fast_metrics
-    binder = fast_metrics.bind(project, state)
-    with binder if binder is not None else nullcontext():
+    with fast_metrics.bind(project, state):
         parsed = all(run(command, 60, "syntax") for command in parse_commands(project, prepared))
         passed = parsed
         if parsed and not syntax_only:

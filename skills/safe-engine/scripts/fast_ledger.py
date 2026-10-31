@@ -227,26 +227,28 @@ def listing(folder):
         return []
 
 
-def registrations(active, log=None):
+def registrations(active, log=None, recover=True):
     """(entry, registration, project) for each run the gate home knows: every well-formed registration, and every open
     state whose registration is gone, re-registered here, so deleting one of the two files never switches a run off."""
     names = set(listing(active))
     for name in sorted(names.union(listing(active.parent / "runs"))):
         entry = active / name
         try:
-            registration = load(entry) if name in names else reregister(entry, log)
+            registration = load(entry) if name in names else reregister(entry, log, recover=recover)
             if registration:
                 yield entry, registration, Path(registration["project"])
         except Exception:  # noqa: BLE001 - malformed entry: skip it, keep gating the rest
             continue
 
 
-def reregister(entry, log):
+def reregister(entry, log, recover=True):
     """The registration rebuilt from an open home state whose registration was deleted; None for a closed one."""
     run = current(load(state_path(entry)))
     if not run or run.get("closed"):
         return None
     restored = new_registration(run["project"], run["key"])
+    if not recover:
+        return restored  # Queries derive ownership without restoring the registry.
     try:
         save(entry, restored, new=True)
         if log:
@@ -286,8 +288,8 @@ def forget(entry, project):
     return None
 
 
-def registered(active, folder):
+def registered(active, folder, recover=True):
     """The registered project that holds folder (the deepest), or None: close finds its run from any subfolder."""
     here = norm(folder)
-    found = [project for _, _, project in registrations(active) if inside(here, norm(project))]
+    found = [project for _, _, project in registrations(active, recover=recover) if inside(here, norm(project))]
     return max(found, key=lambda project: len(str(project)), default=None)

@@ -185,6 +185,11 @@ class WorktreeEnrollmentTests(unittest.TestCase):
                     self.assertFalse((target / '.factory/fast/archive').exists())
                     source_state.write_bytes(original)
 
+    def test_later_factory_selection_keeps_lineage(self):
+        self.enroll()
+        self.write(self.target / '.factory/entry-bundle.json', self.old_bundle)
+        self.start(self.target, 'later')
+
     def test_tampered_archive_cannot_become_new_run_lineage(self):
         self.enroll()
         lineage = json.loads((self.target / '.factory/worktree-enrollment.json').read_text())

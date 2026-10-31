@@ -66,11 +66,10 @@ def inherited_snapshot(project, source, gate, release):
             or gate.norm(location(project, '--git-dir')) == gate.norm(location(source, '--git-dir'))):
         raise RuntimeError('Enrollment requires distinct worktrees of the same Git repository')
     entry = gate.registry_path(project)
-    for path in (entry, gate.store.state_path(entry), gate.store.closed_path(entry)):
+    held = (entry, gate.store.state_path(entry), gate.store.closed_path(entry))
+    for path in held:
         plain(path)
-        if os.path.lexists(path):
-            raise RuntimeError('Local active, lost or closed run state cannot be enrolled')
-    if gate.store.held(gate.ACTIVE, project):
+    if gate.store.held(gate.ACTIVE, project) or any(map(os.path.lexists, held)):
         raise RuntimeError('Local active, lost or closed run state cannot be enrolled')
     for name in ('.factory/state.json', '.factory/history', '.factory/runs', '.factory/worktree-enrollment.json'):
         plain(project / name)
@@ -116,17 +115,15 @@ def inherited_snapshot(project, source, gate, release):
     return snapshot, inherited, canonical
 
 
-def inheritance(project, bundle, gate):
+def inheritance(project, gate):
     """Bind a new run to complete archived enrollment evidence, never inherited acceptance."""
     marker = project / '.factory/worktree-enrollment.json'
-    if not os.path.lexists(marker):
-        return {}
     plain(marker)
     try:
         lineage = gate.load(marker)
         archive = lineage['archive']
+        # The selection may change after enrollment; only the archive identity binds later runs.
         if (lineage['version'] != 1 or gate.norm(lineage['project']) != gate.norm(project)
-                or lineage['bundle'] != bundle
                 or not re.fullmatch(r'\.factory/fast/archive/inherited-[0-9a-f]{32}', archive)
                 or set(lineage['files']) != {Path(name).name for name in FILES}):
             raise ValueError('enrollment identity mismatch')

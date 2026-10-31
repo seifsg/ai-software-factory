@@ -59,7 +59,6 @@ launcher → resolve_bundle.py pins the newest release tag on main whose files m
 - An installed launcher older than the factory it fetches says the layout is newer (older launchers say "Incomplete factory bundle"). Update the install.
 - Reproducible installs: check out one release tag, install from it, and pass the same tag (`--ref vX.Y.Z`) or SHA to the resolver for a new project.
 - Installing on one machine does not reach other machines or cloud sessions; install there too. Cloud sessions load skills committed to their repository.
-- A new Git worktree containing tracked legacy foreign `.factory/` files needs explicit enrollment, not a rehome takeover: `fast_gate.py enroll-worktree --project <new-worktree> --source <original-worktree> --bundle <reviewed-factory> --reason "<owner authority>"`. The source keeps its intact registered open run. Enrollment validates shared Git identity, unchanged inherited mirror/receipt/record and source lineage, archives their exact bytes under `.factory/fast/archive/`, and records `.factory/worktree-enrollment.json`. Read the archive and receipt back, then use normal `start` with a new key/request. The new mirror and canonical run retain validated `inherited` lineage with no accepted progress. Local active/lost/closed/unknown state and unrelated receipts refuse; interrupted enrollment retains evidence for diagnosis, without automatic retry or rollback. No source state, global install or existing bundle changes.
 
 ## Update and uninstall
 

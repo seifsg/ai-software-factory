@@ -8,7 +8,16 @@ The public surface is the `fast_gate.py` commands and flags, the work record for
 
 ### Added
 
-- Explicit `enroll-worktree` validates tracked foreign-run lineage, archives inherited evidence and selects a factory for an independent worktree run without changing its source run (#209).
+- `enroll-worktree` archives a new Git worktree's inherited run files and selects a factory for its own run, leaving the source run untouched (#209).
+
+### Changed
+
+- Preflight local PR draft structure through the real handoff validator, expose canonical repair identities, review source before the final suite, retain the independent reviewer for author repair deltas and keep bulky tool evidence outside model context.
+
+### Fixed
+
+- Run metrics: Fast runs start their timeline at the first applicable step, Safe runs record the factory revision and never share a metrics folder, and analytics hooks are plain calls instead of repeated guards (#175).
+- A host, URL or IP written in a ticket is tested by resolving the name and requesting that URL, never assumed linked or left unverified (#206).
 
 ## [1.2.0] - 2026-10-28
 

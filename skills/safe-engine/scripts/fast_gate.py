@@ -235,12 +235,12 @@ def open_before_build(run):
 
 # ---- commands ---------------------------------------------------------------
 
-def find_project(given):
+def find_project(given, recover=True):
     """The given project, else the registered one holding cwd, else the nearest folder above cwd with a home state."""
     if given:
         return Path(native(given)).resolve()
     here = Path.cwd().resolve()
-    found = store.registered(ACTIVE, here)
+    found = store.registered(ACTIVE, here, recover=recover)
     if found:
         return Path(found)
     for folder in (here, *here.parents):
@@ -365,7 +365,7 @@ def cmd_start(args):
            "auth": args.auth, "request": request.strip(), "created": now(), "done": {}, "paused": None,
            "closed": False, "bundle": bundle, "pr_instance": os.urandom(16).hex(), **method_flags(bundle, project)}
     if os.path.lexists(project / ".factory/worktree-enrollment.json"):
-        run.update(sibling("fast_enroll").inheritance(project, bundle, sys.modules[__name__]))
+        run.update(sibling("fast_enroll").inheritance(project, sys.modules[__name__]))
     run.update(sibling("fast_pr_policy").start(HOME))
     if getattr(args, "design_port", False):
         run.update(design_port=True, ui=True)
@@ -386,7 +386,7 @@ def cmd_start(args):
         record.write_text(skeleton(run), encoding="utf-8")
     save(registry_path(project), store.new_registration(project, args.key))
     log("run.start", key=args.key, project=str(project), mode=args.mode, kind=args.kind, bundle=run["bundle"], hooks=hooks)
-    sibling("fast_metrics").on_start(project, run)
+    sibling("fast_metrics").on_start(project, run, steps_for(run))
     bundle = (f"{run['bundle']['root']} @ {run['bundle']['revision'][:12]}" if run["bundle"] else
               "legacy start; latest unknown (resolve the entry first)")
     print(status_text(run) + f"\n{sibling('fast_release').card(run, HOME)}\nRecord: {record}\nBundle: {bundle}\n"
