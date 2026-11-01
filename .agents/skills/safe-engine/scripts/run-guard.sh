@@ -37,15 +37,16 @@ fi
 # Evidence: Claude Code keeps each subagent's transcript in <session>/subagents/agent-<id>.jsonl, its brief first.
 # Other hosts: the gate's agent id must appear in the session transcript. No transcript at all: text only.
 sub="${tp%.jsonl}/subagents" fb=0 nov=0
-set -- "$sub"/agent-*.jsonl
-if [ ! -f "$1" ]; then set --; if [ -d "$sub" ]; then :; elif [ -f "$tp" ]; then fb=1; set -- "$tp"; else nov=1; fi; fi
+ev=.; set -- "$sub"/agent-*.jsonl
+if [ -f "$1" ]; then ev=$sub; set -- $(cd "$sub" && ls -tr agent-*.jsonl)  # oldest first: rounds count in order
+else set --; if [ -d "$sub" ]; then :; elif [ -f "$tp" ]; then fb=1; set -- "$tp"; else nov=1; fi; fi
 head=$(git -C "$d" rev-parse HEAD 2>/dev/null) up=$(git -C "$d" rev-parse '@{u}' 2>/dev/null)
 night=0; [ "${g_night_until:-0}" -gt 0 ] 2>/dev/null && night=1
 # One awk pass over the run file and the evidence files. Only a strict "<step> <name> · <skill>" Next value
 # is kept for the reply. The step is the later of Next and the last ticked heading, so a malformed Next never
 # skips a gate. gate: the first gate the run has reached without proof; R: step 8 without a proven review.
 read -r stopped waiting finished ticks gate sig jobs jmax crit fA fB fC fR step next <<EOF
-$(awk -v R="$run" -v fb=$fb -v nov=$nov -v head="$head" -v up="$up" -v night=$night '
+$(cd "$ev" && awk -v R="$run" -v fb=$fb -v nov=$nov -v head="$head" -v up="$up" -v night=$night '
   function pre(a, b,  n) { n = length(a) < length(b) ? length(a) : length(b); return n >= 7 && substr(a, 1, n) == substr(b, 1, n) }
   function at(t) { sub(/.*@/, "", t); return t }
   function proven(id, k, sha) {
@@ -74,8 +75,9 @@ $(awk -v R="$run" -v fb=$fb -v nov=$nov -v head="$head" -v up="$up" -v night=$ni
     next
   }
   fb { for (x in want) if (index($0, x)) seen[x] = 1; next }
-  FNR == 1 {  # a subagent: its brief names its role
-    id = FILENAME; sub(/.*agent-/, "", id); sub(/\.jsonl$/, "", id)
+  function done1(k) { k = kind[id]; if (k ~ /^[ABC]$/) f[k] = last[id] ~ /PASS/ ? 0 : f[k] + (last[id] ~ /FAIL/) }  # one checker per gate round
+  FNR == 1 {  # a subagent, oldest first: its brief names its role; a PASS or ready verdict closes its loop
+    done1(); id = FILENAME; sub(/.*agent-/, "", id); sub(/\.jsonl$/, "", id)
     if (match($0, /Role: checker\. Gate [ABC]/)) kind[id] = substr($0, RSTART + RLENGTH - 1, 1)
     else if (index($0, "Role: reviewer")) kind[id] = "R"
     else nextfile
@@ -85,11 +87,11 @@ $(awk -v R="$run" -v fb=$fb -v nov=$nov -v head="$head" -v up="$up" -v night=$ni
   /"role":"assistant"/ && !/api-request-blob/ {  # its own handback; the last one counts, every failed one is a round
     if (kind[id] == "R") {
       v = final($0, "verdict: (not ready|ready after fixes|ready)( @[0-9a-f]+)?")
-      if (v != "") { last[id] = v; if (v !~ /^verdict: ready( @|$)/) f["R"]++ }
+      if (v != "") { last[id] = v; f["R"] = v ~ /^verdict: ready( @|$)/ ? 0 : f["R"] + 1 }
     } else if ((v = final($0, "Gate " kind[id] ": (PASS|FAIL)[^\"\\\\]*")) != "") last[id] = v
   }
   END {
-    for (id in kind) if (kind[id] != "R" && last[id] ~ /FAIL/) f[kind[id]]++  # one checker per gate round
+    done1()
     step = n == "" ? 0 : substr(n, 1, 1) + 0; if (m > step) step = m; g = "-"
     rok = rid != "" && pre(rsha, head) && head == up && proven(rid, "R", rsha) && (nov || fb || last[rid] ~ /^verdict: ready( @|$)/)
     if ((step > 3 || r) && !ok("A")) g = "A"; else if ((step > 6 || r) && !ok("B")) g = "B"; else if (r && !ok("C")) g = "C"; else if (r && !rok) g = "R"
