@@ -5,7 +5,9 @@
 #   compact  after compaction or a resume, re-injects the run's place, because compaction drops skill text.
 # Reads only the nearest .factory/run.md inside the current Git checkout, so other sessions exit at once.
 # Its own state lives in .factory/guard/; proof comes from files the host writes, never from run-file text alone.
+#   clear    the owner's command after a halt: the guard drives the run again, loop caps count from here.
 mode=${1:-stop}
+self=$0; case $self in *run-guard.sh) ;; *) self=${g:-run-guard.sh} ;; esac  # the plugin hook sources it from $g
 d=$PWD
 while [ ! -f "$d/.factory/run.md" ]; do
   { [ -e "$d/.git" ] || [ -z "$d" ]; } && exit 0  # checkout root reached: no run here
@@ -15,15 +17,21 @@ run="$d/.factory/run.md" g="$d/.factory/guard"
 st="$g/state"
 # Untouched for 12 hours: abandoned, not this session's. A resume (compact mode) still gets its place back.
 [ "$mode" = stop ] && [ -n "$(find "$run" -mmin +720)" ] && exit 0
-in=$(cat)
+in=; [ "$mode" = clear ] || in=$(cat)
 val() { printf '%s' "$in" | sed -n "s/.*\"$1\": *\"\([^\"]*\)\".*/\1/p" | head -n 1; }  # one JSON string field
-sid=$(val session_id) tp=$(val transcript_path | sed 's/\\\\/\//g') now=$(date +%s)
+sid=$(val session_id) tp=$(val transcript_path | sed 's/\\\\/\//g' | tr -d "'") now=$(date +%s)
 # State: single-quoted g_* lines only the guard writes. Anything else is reported and ignored, never trusted.
 note=
 if [ -f "$st" ]; then
-  if grep -qv "^g_[a-z_]*='[^']*'\$" "$st"; then note='guard state was edited outside the guard; ignored.'; else . "$st"; fi
+  if grep -qv "^g_[A-Za-z_]*='[^']*'\$" "$st"; then note='guard state was edited outside the guard; ignored.'; else . "$st"; fi
 fi
 [ -f "$run.ticks" ] && { g_ticks=$(cat "$run.ticks"); rm -f "$run.ticks" "$run.nudge"; }  # state of an older guard
+keys='ticks session transcript seen night_until sig idle halt end clear base_A base_B base_C base_R'
+save() { mkdir -p "$g" && for k in $keys; do eval "printf \"g_%s='%s'\\n\" $k \"\$g_$k\""; done > "$st"; }
+if [ "$mode" = clear ]; then
+  g_halt= g_end= g_idle=0 g_clear=1; save
+  printf 'Factory run cleared: the guard drives it again; loop caps count from here.\n'; exit 0
+fi
 # Evidence: Claude Code keeps each subagent's transcript in <session>/subagents/agent-<id>.jsonl, its brief first.
 # Other hosts: the gate's agent id must appear in the session transcript. No transcript at all: text only.
 sub="${tp%.jsonl}/subagents" fb=0 nov=0
@@ -34,7 +42,7 @@ night=0; [ "${g_night_until:-0}" -gt 0 ] 2>/dev/null && night=1
 # One awk pass over the run file and the evidence files. Only a strict "<step> <name> · <skill>" Next value
 # is kept for the reply. The step is the later of Next and the last ticked heading, so a malformed Next never
 # skips a gate. gate: the first gate the run has reached without proof; R: step 8 without a proven review.
-read -r stopped waiting finished ticks gate sig jobs jmax next <<EOF
+read -r stopped waiting finished ticks gate sig jobs jmax crit fA fB fC fR next <<EOF
 $(awk -v R="$run" -v fb=$fb -v nov=$nov -v head="$head" -v up="$up" -v night=$night '
   function pre(a, b,  n) { n = length(a) < length(b) ? length(a) : length(b); return n >= 7 && substr(a, 1, n) == substr(b, 1, n) }
   function at(t) { sub(/.*@/, "", t); return t }
@@ -57,7 +65,8 @@ $(awk -v R="$run" -v fb=$fb -v nov=$nov -v head="$head" -v up="$up" -v night=$ni
     if (/^## 8 Review ✔/) r = 1
     if (/^## [0-8] .*✔/) { t = substr($0, 4, 1) + 1; if (t > m) m = t }
     if (n == "" && match($0, /^Next: *[0-8]b? [A-Za-z]+ · [a-z-]+/)) { n = substr($0, RSTART, RLENGTH); sub(/^Next: */, "", n) }
-    if (/^Gate [ABC]: PASS \(checker [^ )]+\) @[0-9a-f]+/) { x = substr($0, 6, 1); gid[x] = $5; sub(/\)$/, "", gid[x]); gsha[x] = at($6); want[gid[x]] = 1; p++ }
+    if (/^Gate [ABC]: PASS \(checker [^ )]+\) @[0-9a-f]+/) { x = substr($0, 6, 1); gid[x] = $5; sub(/\)$/, "", gid[x]); gsha[x] = at($6); want[gid[x]] = 1 }
+    if (/^CRITICAL: /) cr = 1
     if (/^Gate [ABC]: WAIVED by owner/) wv[substr($0, 6, 1)] = 1
     if (/^Review: ready \(reviewer [^ )]+\) @[0-9a-f]+/) { rid = $4; sub(/\)$/, "", rid); rsha = at($5); want[rid] = 1 }
     next
@@ -70,33 +79,43 @@ $(awk -v R="$run" -v fb=$fb -v nov=$nov -v head="$head" -v up="$up" -v night=$ni
     else nextfile
     next
   }
-  /"role":"assistant"/ && !/api-request-blob/ {  # its own handback; the last one counts
-    if (kind[id] == "R") { if (match($0, /verdict: (not ready|ready after fixes|ready)( @[0-9a-f]+)?/)) last[id] = substr($0, RSTART, RLENGTH) }
-    else if (match($0, "Gate " kind[id] ": (PASS|FAIL)[^\"\\\\]*")) last[id] = substr($0, RSTART, RLENGTH)
+  /"role":"assistant"/ && !/api-request-blob/ {  # its own handback; the last one counts, every failed one is a round
+    if (kind[id] == "R") {
+      if (match($0, /verdict: (not ready|ready after fixes|ready)( @[0-9a-f]+)?/)) { last[id] = substr($0, RSTART, RLENGTH); if (last[id] !~ /^verdict: ready( @|$)/) f["R"]++ }
+    } else if (match($0, "Gate " kind[id] ": (PASS|FAIL)[^\"\\\\]*")) last[id] = substr($0, RSTART, RLENGTH)
   }
   END {
+    for (id in kind) if (kind[id] != "R" && last[id] ~ /FAIL/) f[kind[id]]++  # one checker per gate round
     step = n == "" ? 0 : substr(n, 1, 1) + 0; if (m > step) step = m; g = "-"
     rok = rid != "" && pre(rsha, head) && head == up && proven(rid, "R", rsha) && (nov || fb || last[rid] ~ /^verdict: ready( @|$)/)
     if ((step > 3 || r) && !ok("A")) g = "A"; else if ((step > 6 || r) && !ok("B")) g = "B"; else if (r && !ok("C")) g = "C"; else if (r && !rok) g = "R"
-    printf "%d %d %d %d %s %d %d %d %s\n", s, w, r && g == "-", c, g, p, j, jm, n
+    p += ok("A") + ok("B") + ok("C") + rok  # progress: ticks plus proven gates
+    printf "%d %d %d %d %s %d %d %d %d %d %d %d %d %s\n", s, w, r && g == "-", c, g, p, j, jm, cr, f["A"], f["B"], f["C"], f["R"], n
   }' "$run" "$@")
 EOF
 [ "$gate" = - ] && gate=
 [ -f "$st" ] || [ "${ticks:-0}" -le 1 ] || [ -n "$g_ticks" ] || note='guard state was missing; counts restart from here.'
-save() {
-  mkdir -p "$g" && printf "g_ticks='%s'\ng_session='%s'\ng_transcript='%s'\ng_seen='%s'\ng_night_until='%s'\n" \
-    "$ticks" "$sid" "$tp" "$now" "${g_night_until:-0}" > "$st"
-}
+prev=${g_ticks:-$ticks}
+case $prev in '' | *[!0-9]*) prev=$ticks ;; esac
+g_ticks=$ticks g_seen=$now; [ "$mode" = stop ] && g_session=$sid g_transcript=$tp
+[ "$finished" = 1 ] && g_end=done
 [ "$stopped" = 1 ] || [ "$finished" = 1 ] && { [ "$mode" = stop ] && save; exit 0; }  # stopped by the owner, or finished
+if [ -n "$g_halt" ]; then  # halted: the guard drives nothing until the owner clears it
+  [ "$mode" = compact ] && { printf 'Factory run halted (%s): wait for the owner; do not continue the run.\n' "$g_halt"; exit 0; }
+  save; printf '{"systemMessage":"Factory run halted (%s). The owner reads the packet in .factory/run.md and resumes with: sh %s clear"}\n' "$g_halt" "$self"
+  exit 0
+fi
 if [ "$mode" = compact ]; then
   case $gate in '') ;; R) next='8 Review: a proven reviewer verdict on HEAD' ;; *) next="Gate $gate checker" ;; esac
   printf 'Factory run open (.factory/run.md). Next: %s. Read the run file, load that skill fresh, do only that step, then end your turn.\n' "${next:-see the run file}"
   exit 0
 fi
 # More than one heading ticked since the last turn end: two steps shared a turn. Waits update the count too.
-prev=${g_ticks:-$ticks}
-case $prev in '' | *[!0-9]*) prev=$ticks ;; esac
 batched=$(( ticks - prev > 1 ))
+# Loop caps count failed rounds from the host's subagent files, since the owner's last clear.
+if [ "$g_clear" = 1 ]; then g_base_A=$fA g_base_B=$fB g_base_C=$fC g_base_R=$fR g_clear=; fi
+loop= rounds=0
+for x in A B C R; do eval "n=\$((f$x - \${g_base_$x:-0}))"; [ "$n" -gt "$rounds" ] && rounds=$n loop=$x; done
 save
 [ "$waiting" = 1 ] || exit 0  # waiting on the owner or background jobs: stopping is right
 case $in in
@@ -110,6 +129,20 @@ case $in in
     fi ;;
 esac
 : > "$g/nudge"
+# Progress budget: turns that change the run file without a new tick or proven gate.
+[ "$sig" = "$g_sig" ] && g_idle=$(( ${g_idle:-0} + 1 )) || g_idle=0
+g_sig=$sig
+# Rounds 1-3 run; 4 and 5 only while the run file names an open CRITICAL; after 5, or idle too long: halt.
+[ "$loop" = R ] && loop='review' || loop="Gate $loop"
+if [ "$rounds" -ge 5 ] || { [ "$rounds" -ge 3 ] && [ "$crit" != 1 ]; }; then g_halt="$loop: $rounds failed rounds"
+elif [ "$g_idle" -ge "${FACTORY_IDLE_TURNS:-6}" ]; then g_halt="no progress in $g_idle turns"
+fi
+if [ -n "$g_halt" ]; then
+  g_end=halt; save
+  printf '{"decision":"block","reason":"HALT (%s): the guard stops driving this run. Start no new round. Write the owner packet under the current step: findings per round (new vs repeated), the shared cause, options (extend, defer with an owner record, amend scope, cancel). Set Waiting: owner: <question>, then end your turn. Only the owner resumes it: sh %s clear"}\n' "$g_halt" "$self"
+  exit 0
+fi
+save
 # One step per turn: the next step's prompt arrives only after the last answer is complete, as if the owner typed it.
 if [ "$batched" = 1 ]; then
   todo="Batched: more than one step heading was ticked in one turn. Redo the last ticked step as its own fresh pass, run any open gate, then end your turn."
