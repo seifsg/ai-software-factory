@@ -13,7 +13,7 @@ Use the cheapest capable role; host models/overrides: `docs/hosts.md`.
 | checker | light | its gate line only | gate checks against output contracts ([checker](checker.md)) | `<contract line>: met <where>` or `MISSING <what>`, then `Gate <X>: PASS` or `FAIL <n> missing` |
 | reviewer | deep | no | final and independent review (`deep-review`), judgement calls that change no file: unclear bugs, architecture | `<path:line or URL> <severity>: <problem>. <fix>.` most severe first, then `verdict: ready`, `ready after fixes` or `not ready: <why>`, each ending ` @<reviewed sha>`; with no diff, `decision: <choice> because <reason>` instead |
 
-Use the role's tier/edit access; keep method reports (UX, `deep-review`, checker). Every handback then adds:
+Use the role's tier/edit access; keep method reports (UX, `deep-review`, checker). Every handback except the checker's (its lines only) then adds:
 
 - `G<n> PASS <evidence>` or `G<n> FAIL <evidence>` per gate in the brief;
 - `left: <item>: <what it learned>` per unfinished item, when it stops early;
