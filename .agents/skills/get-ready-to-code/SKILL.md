@@ -73,3 +73,4 @@ The block `## 5 Build` holds:
 - [ ] One `Tn pre: … do: … post: …` line per todo, each ticked
 - [ ] Every todo ticked in the ticket checklist after its use-check
 - [ ] Only mapped tests ran; their commands and results are named
+- [ ] Commits staged by name, each `<type>(<scope>): <subject>`

@@ -59,7 +59,7 @@ Every PR shows observed Before/After for each outcome; prose or illustrative dia
 1. Write the body to a file with `references/pr-layout.md`. Upload Before/After media first (`references/github.md`) and link them with `https` URLs.
 2. Push, then open as **draft** against the base. Commands: `references/github.md`.
 3. Closing keyword only on each sub-issue or change ticket this PR finishes; the epic always gets a plain reference.
-4. Request review from the project's actual review owner through the supported mechanism, at draft time. Notify only the authorized recipient or channel. Reminders only when asked.
+4. Request review only from a review owner other than the PR author, through the supported mechanism, at draft time. Notify only the authorized recipient or channel. Reminders only when asked.
 5. Link observation evidence only when authorized to share; state source and limits. No foreign session IDs, secrets or private data.
 
 ## 7. Review
@@ -89,14 +89,15 @@ The block `## 4 Before` holds:
 
 - [ ] Every proof-list id with its `before-<id>` file under `.factory/proof/<ticket>/`, or "did not exist" for a new surface
 - [ ] Saved before the first source edit
-- [ ] Each capture inspected
+- [ ] Each capture inspected, or none to inspect: every id "did not exist"
 
 The block `## 7 PR` holds the draft PR URL, and the PR itself has:
 
 - [ ] Title `<type>(<scope>): <subject>`; draft; the verified base
 - [ ] A clickable ticket link in the body, and the PR link in the ticket's activity
-- [ ] The `pr-layout.md` sections that apply, in order
-- [ ] One heading per outcome under Before & after, each with `**Before:**` and `**After:**` proof that opens (`https` images, fenced output, or a `pane:` observation (what the built-in browser showed: view, state, viewport, time) when the host cannot save the image), plus `**Visual:**` and `**Journey:**`
+- [ ] Purpose & goal, Before & after, Verification and Progress / next, in that order (other sections and their wording are never a FAIL)
+- [ ] One heading per outcome under Before & after, each with `**Visual:**`, `**Journey:**`, `**Before:**` and `**After:**`; Before and After are each an `https` image, fenced output or `pane:` observation; a new surface or output's Before is `did not exist`
+- [ ] Each After names the commit it was captured on
 - [ ] Verification: criterion → change → proof → gap, with each command and its result; unverified items named
-- [ ] Review requested from the project's review owner, or the blocker stated
+- [ ] Review requested from a review owner other than the author, or none (solo owner)
 - [ ] The credit line from `references/credit.md` as the last line

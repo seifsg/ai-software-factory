@@ -14,10 +14,10 @@ The methods are host-neutral. This page holds what differs per agent: where skil
 | What compaction keeps | the first 5k tokens of each recently used skill, 25k in total; CLAUDE.md is re-read | AGENTS.md and the skill list; skill bodies are dropped |
 | Stop guard | plugin `Stop` hook, sourced in the hook shell | `Stop` hook; trust once in `/hooks` |
 | Compact hook | plugin `SessionStart`, matcher `compact\|resume`; stdout becomes context | `SessionStart`, matcher `compact\|resume`; stdout becomes developer context |
-| Guard output | `{"decision":"block","reason":…}`; Claude Code overrides after 8 blocks in a row | same JSON; the reason arrives as a new prompt |
+| Guard output | `{"decision":"block","reason":…}`: the next step's prompt; Claude Code overrides after 8 blocks in a row, a count every tool call resets, so one step per turn never reaches it | same JSON; the reason arrives as a new prompt |
 | Fresh-context delegate | Agent tool with a plugin role | `spawn_agent` with `fork_turns: "none"` |
 | Checker | `safe-engine:checker` | `spawn_agent`, `fork_turns: "none"`, `reasoning_effort: "low"`, message = the [checker](../.agents/skills/safe-engine/references/checker.md) brief plus `.agents/agents/checker.md`'s body |
-| Live preview and captures | the desktop app's browser pane (`preview_start`, `.claude/launch.json`) keeps the dev server the owner watches and takes every screenshot; the agent and the owner see them in chat, but the pane saves no file, so the PR carries `pane:` observations instead of image files | the browser or screenshot tool the session has |
+| Live preview and captures | the desktop app's browser pane (`preview_start`, `.claude/launch.json`, then show the browser pane so the owner sees it) keeps the dev server the owner watches and takes every screenshot; the agent and the owner see them in chat, but the pane saves no file, so the PR carries `pane:` observations instead of image files | the browser or screenshot tool the session has |
 | Background jobs | background subagents report back in a later turn: set `Waiting: jobs: …` first; the guard also lets the stop through when the Stop input's `background_tasks` lists a running subagent (a background shell such as a dev server does not count) | subagent results arrive in the parent: set `Waiting: jobs: …` while they run |
 
 Both hosts run `run-guard.sh` through a POSIX `sh`; on Windows that is Git Bash. It reads only the nearest `.factory/run.md` inside the session's current checkout, so a worktree's run stays separate from its parent's. It ignores runs untouched for 12 hours and costs about 65 ms with no run and 150 ms with one, once per turn end.
@@ -44,7 +44,7 @@ Pass the request, decisions, interfaces, stops and artifact paths explicitly; fu
 | GitHub Copilot, Gemini CLI, OpenCode | read `.agents/skills` | none wired: apply the run-file rules by hand |
 | Anything else | point it at `.agents/skills/safe-engine/SKILL.md` | none |
 
-Without hooks, the agent rereads `.factory/run.md` at every turn and loads the `Next:` skill fresh; the checker gates and the PR review still apply.
+Without hooks, the agent ends each step with `Say go for step <n>`; the owner's `go` starts the next turn, which rereads `.factory/run.md` and loads the `Next:` skill fresh; the checker gates and the PR review still apply.
 
 ## Sources
 
