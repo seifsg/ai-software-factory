@@ -43,7 +43,7 @@ T1 pre: <before> do: <change> post: <check> ✔
 - A heading gets `✔` only when its block meets its skill's output contract. A gate line is separate: an open gate never unticks a step.
 - `Gate A|B|C: PASS (checker <agent id>) @<sha>` lines carry a checker's handback (`Gate <X>: PASS @<sha>`), under steps 3, 6 and 8. An owner waiver is `Gate <X>: WAIVED by owner ("<their words>")`; night runs take none. A failed check leaves `Gate <X>: FAIL <missing items>`; each rerun replaces the earlier line for that gate.
 - `Review: ready (reviewer <agent id>) @<sha>` under step 8: the reviewer's last verdict, on the pushed head.
-- `CRITICAL: <finding>` while a critical finding is open, `CRITICAL fixed: <finding>` once resolved: it opens loop rounds 4 and 5 ([run cases](run-cases.md#review-loops)).
+- `CRITICAL: <finding>` in the current step's block while a critical finding is open, `CRITICAL fixed: <finding>` once the reviewer confirms the fix: it opens loop rounds 4 and 5 ([run cases](run-cases.md#review-loops)).
 - Long blocks may live on the ticket: write the comment link and a one-line summary instead of the full text.
 
 ## What the hooks do

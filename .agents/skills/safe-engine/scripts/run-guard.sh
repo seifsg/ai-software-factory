@@ -28,9 +28,10 @@ fi
 [ -f "$run.ticks" ] && { g_ticks=$(cat "$run.ticks"); rm -f "$run.ticks" "$run.nudge"; }  # state of an older guard
 keys='ticks session transcript seen night_until sig idle halt end clear base_A base_B base_C base_R sstep relay rstep compacts csession jobs_since'
 save() { mkdir -p "$g" && for k in $keys; do eval "printf \"g_%s='%s'\\n\" $k \"\$g_$k\""; done > "$st"; }
-if [ "$mode" = clear ]; then
-  g_halt= g_end= g_idle=0 g_clear=1; save
-  printf 'Factory run cleared: the guard drives it again; loop caps count from here.\n'; exit 0
+if [ "$mode" = clear ]; then  # also ends night mode: the owner is back
+  g_halt= g_end= g_idle=0 g_clear=1 g_night_until=0; save
+  grep -v '^Night:' "$run" > "$run.n" && mv "$run.n" "$run"
+  printf 'Factory run cleared: the guard drives it again, loop caps count from here, night mode is off.\n'; exit 0
 fi
 # Evidence: Claude Code keeps each subagent's transcript in <session>/subagents/agent-<id>.jsonl, its brief first.
 # Other hosts: the gate's agent id must appear in the session transcript. No transcript at all: text only.

@@ -7,12 +7,12 @@ The night command refuses to start unless the run is open, the guard is wired, t
 ## While it runs
 
 1. **Owner questions:** never wait. Take the recommended answer and record `Default: <question> → <choice> (<why>)` in the step's block and the ticket's activity. The owner can reverse it before merging.
-2. **Owner-reserved items** (spend, release, merge, scope beyond the ticket, deleting data, anything the request did not cover): never decide them. Record `Parked: <item>, needs <what>` and continue with independent work. Only parked work left: `Waiting: owner: <the parked list>`.
+2. **Owner-reserved items** (spend, release, merge, scope beyond the ticket, deleting data, anything the request did not cover): never decide them. Record `Parked: <item>, needs <what>` in the step's block and the ticket's activity, and continue with independent work. Only parked work left, or a parked item blocks a required fix: `Waiting: owner: <the parked list>`.
 3. **Outward actions:** push the run's own branch, open or update its draft PR and its tickets. Nothing else leaves the machine. A denied command is never retried another way: park it.
 4. **Gates:** no waivers. A gate passes by its checker or its loop runs into the cap.
-5. **Relay:** when the guard asks for one, make sure the run file and the ticket hold everything the next step needs, then end the session as the prompt says. The fresh session reads only those two.
+5. **Relay:** the guard asks for one before steps 4, 6 and 8 and after two compactions. Make sure the run file and the ticket hold everything the next step needs, then end the session as the prompt says. The fresh session reads only those two.
 6. **Halt:** write the packet, set `Waiting: owner:`, end the turn. Never work around a halt.
 
 ## Morning
 
-The watchdog sends one notification: done (the draft PR), halted (the reason and the packet) or parked (the list). The owner answers in the run's session or runs the guard's `clear` after a halt.
+The watchdog sends one notification: done (the draft PR), halted (the reason and the packet) or parked (the list). The owner answers in the run's session or runs the guard's `clear` after a halt; `clear` also ends night mode and removes the `Night:` line.
