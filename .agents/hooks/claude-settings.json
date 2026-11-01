@@ -9,6 +9,8 @@
       "Bash(gh api *merge*)", "Bash(gh api -X DELETE *)", "Bash(gh api --method DELETE *)",
       "Bash(gh api repos/* -X*)", "Bash(gh api repos/* --method*)", "Bash(gh api repos/* -f*)", "Bash(gh api repos/* -F*)",
       "Bash(gh api repos/* --field*)", "Bash(gh api repos/* --raw-field*)", "Bash(gh api repos/* --input*)",
+      "Bash(gh api --paginate * -f*)", "Bash(gh api --paginate * -F*)", "Bash(gh api --paginate * --field*)",
+      "Bash(gh api --paginate * --raw-field*)", "Bash(gh api --paginate * --input*)",
       "Bash(gh * -R *)", "Bash(gh * --repo *)",
       "Bash(rm -rf /*)", "Bash(rm -rf ~*)", "Bash(rm -rf ../*)", "Bash(rm -rf $HOME*)", "Bash(rm -r /*)", "Bash(rm -r ~*)", "Bash(rm -r ../*)",
       "Bash(*run-guard.sh clear*)", "Bash(*.factory/guard*)",

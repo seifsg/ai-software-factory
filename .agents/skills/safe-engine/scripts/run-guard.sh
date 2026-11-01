@@ -26,13 +26,14 @@ sid=$(val session_id) tp=$(val transcript_path | sed 's/\\\\/\//g' | tr -d "'") 
 note=
 num='ticks|seen|night_until|sig|idle|base_[ABCR]|sstep|rstep|compacts|jobs_since|jobs_key|clear'
 if [ -f "$st" ]; then
-  if grep -qvE "^g_($num)='[0-9]*'\$|^g_[a-z]+='[^'\$\`]*'\$" "$st"; then note='guard state was edited outside the guard'; else . "$st"; fi
+  if grep -qvE "^g_($num)='[0-9]*'\$|^g_(session|sessions|transcript|halt|end|relay|csession)='[^'\$\`]*'\$" "$st"; then note='guard state was edited outside the guard'; else . "$st"; fi
 fi
 [ -f "$run.ticks" ] && { g_ticks=$(cat "$run.ticks"); rm -f "$run.ticks" "$run.nudge"; }  # state of an older guard
 case $sid in '' | *[!A-Za-z0-9_-]*) ;; *) case " $g_sessions " in *" $sid "*) ;; *) g_sessions="${g_sessions:+$g_sessions }$sid" ;; esac ;; esac
 keys='ticks session sessions transcript seen night_until sig idle halt end clear base_A base_B base_C base_R sstep relay rstep compacts csession jobs_since jobs_key'
 save() { mkdir -p "$g" && for k in $keys; do eval "printf \"g_%s='%s'\\n\" $k \"\$g_$k\""; done > "$st"; }
-if [ "$mode" = clear ]; then  # also ends night mode: the owner is back
+if [ "$mode" = clear ]; then  # also ends night mode: the owner is back; keeps the run's sessions for gate proof
+  [ -n "$g_sessions" ] || g_sessions=$(sed -n "s/^g_sessions='\([A-Za-z0-9_ -]*\)'\$/\1/p" "$st" 2>/dev/null)
   g_halt= g_end= g_idle=0 g_clear=1 g_night_until=0; save
   grep -v '^Night:' "$run" > "$run.n" && mv "$run.n" "$run"
   printf 'Factory run cleared: the guard drives it again, loop caps count from here, night mode is off.\n'; exit 0
@@ -131,7 +132,7 @@ if [ "$mode" = compact ]; then
   [ "${g_compacts:-0}" -ge 2 ] && [ "$g_csession" = "$sid" ] && printf 'Relay due: this session was compacted %s times; at the next turn end the guard hands the run to a fresh session.\n' "$g_compacts"
   exit 0
 fi
-[ -n "$g_relay" ] && { save; printf '{"systemMessage":"Factory run relayed to a fresh session; this session no longer drives it. Start one with: safe-engine Resume %s"}\n'; exit 0; }
+[ -n "$g_relay" ] && { save; printf '{"systemMessage":"Factory run relayed to a fresh session; this session no longer drives it. Start one with: safe-engine Resume %s"}\n' "$d"; exit 0; }
 # More than one heading ticked since the last turn end: two steps shared a turn. Waits update the count too.
 batched=$(( ticks - prev > 1 ))
 # Loop caps count failed rounds from the host's subagent files, since the owner's last clear.
