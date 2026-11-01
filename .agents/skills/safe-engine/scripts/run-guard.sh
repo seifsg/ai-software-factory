@@ -81,10 +81,12 @@ $(awk -v R="$run" -v fb=$fb -v nov=$nov -v head="$head" -v up="$up" -v night=$ni
     else nextfile
     next
   }
+  function final(s, re,  v) { while (match(s, re)) { v = substr(s, RSTART, RLENGTH); s = substr(s, RSTART + RLENGTH) } return v }  # last match: notes may quote older verdicts
   /"role":"assistant"/ && !/api-request-blob/ {  # its own handback; the last one counts, every failed one is a round
     if (kind[id] == "R") {
-      if (match($0, /verdict: (not ready|ready after fixes|ready)( @[0-9a-f]+)?/)) { last[id] = substr($0, RSTART, RLENGTH); if (last[id] !~ /^verdict: ready( @|$)/) f["R"]++ }
-    } else if (match($0, "Gate " kind[id] ": (PASS|FAIL)[^\"\\\\]*")) last[id] = substr($0, RSTART, RLENGTH)
+      v = final($0, "verdict: (not ready|ready after fixes|ready)( @[0-9a-f]+)?")
+      if (v != "") { last[id] = v; if (v !~ /^verdict: ready( @|$)/) f["R"]++ }
+    } else if ((v = final($0, "Gate " kind[id] ": (PASS|FAIL)[^\"\\\\]*")) != "") last[id] = v
   }
   END {
     for (id in kind) if (kind[id] != "R" && last[id] ~ /FAIL/) f[kind[id]]++  # one checker per gate round
