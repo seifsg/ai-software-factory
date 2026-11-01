@@ -50,7 +50,7 @@ Both run `scripts/run-guard.sh` (`stop` or `compact`) on the nearest run file in
 
 | Hook | When | Does |
 |---|---|---|
-| Stop guard | your turn ends | with `Waiting: none` and no background tasks reported by the host: blocks the stop and names the first missing gate, else `Next:`. A second stop with no run-file change since the last block passes. |
+| Stop guard | your turn ends | with `Waiting: none` and no background tasks reported by the host: blocks the stop and sends the first missing gate, else the fixed prompt for `Next:`'s step. Two headings ticked in one turn: asks to redo the later one as its own pass. A second stop with no run-file change since the last block passes. |
 | Compact hook | after compaction or a resume | prints `Next:` with "load that skill fresh" |
 
 Only a well-formed `Next:` value (`<step> <name> · <skill>`) reaches the agent; no other run-file text does.
