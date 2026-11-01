@@ -47,6 +47,35 @@ Try an unreleased checkout: `claude --plugin-dir <clone>/.agents`.
 
 4. Start Codex and trust both hooks once in `/hooks`.
 
+## Overnight runs
+
+Optional. Everything below is per project and stays on your machine. `<clone>` is the factory checkout (Claude Code: the plugin folder, `~/.claude/plugins/marketplaces/ai-software-factory`).
+
+1. **Push guard** (both hosts), from the project:
+
+   ```text
+   cp <clone>/.agents/hooks/pre-push "$(git rev-parse --git-common-dir)/hooks/pre-push"
+   chmod +x "$(git rev-parse --git-common-dir)/hooks/pre-push"
+   ```
+
+   It blocks pushes to the default branch, force pushes, branch deletes and added token shapes. Pair it with your host's server-side rules (GitHub: a ruleset on the default branch that blocks force pushes and requires a pull request) and secret push protection: only those hold against a shell that skips local hooks.
+2. **Deny rules.** Claude Code: nothing to copy; `night.sh` passes `<clone>/.agents/hooks/claude-settings.json` with `--settings`. To use the same deny list by day, merge its `deny` array into `~/.claude/settings.json`. Add your project's test and build commands to its `allow` list. Codex: `cp <clone>/.agents/hooks/codex.rules ~/.codex/rules/factory.rules`.
+3. **Start a night run** from the project, once the run is open and past any owner question:
+
+   ```text
+   sh <clone>/.agents/hooks/night.sh claude 8 --check   # preflight only
+   sh <clone>/.agents/hooks/night.sh claude 8           # preflight, then start
+   ```
+
+4. **Watchdog** every 30 minutes, outside the session:
+
+   ```text
+   cron:    */30 * * * * sh <clone>/.agents/hooks/watchdog.sh claude <project>
+   Windows: schtasks /create /tn factory-watchdog /sc minute /mo 30 /tr "\"C:\Program Files\Git\bin\sh.exe\" <clone>/.agents/hooks/watchdog.sh claude <project>"
+   ```
+
+   Set `FACTORY_NOTIFY` to a command that reaches you (it gets `$MSG`), for example `curl -d "$MSG" ntfy.sh/<your-topic>`; without it, notices go to `.factory/guard/notices`. A sleeping machine runs nothing: keep it awake for the night.
+
 ## Other agents
 
 Copy `.agents/skills/*` into the folder your agent reads skills from (many read `~/.agents/skills` or `.agents/skills`), or point it at `.agents/skills/safe-engine/SKILL.md`. Without hooks the agent applies the run-file rules itself. Per-host notes: [hosts](hosts.md).

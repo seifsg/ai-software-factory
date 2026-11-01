@@ -58,17 +58,23 @@ Long runs lose skill text when the host compacts context. The factory works arou
 
 ```text
 each step:  load its skill fresh → do it → write its block to .factory/run.md
-gates:      after steps 3, 6, 7 a fresh light checker compares outputs with each skill's
-            output contract and writes Gate A/B/C: PASS, or the missing items
-turn ends:  Stop guard reads run.md → open and not waiting → "Next: step N, load skill X"
+gates:      after steps 3, 6, 8 a fresh light checker compares outputs with each skill's
+            output contract and hands back Gate A/B/C: PASS @<commit>, or the missing items
+turn ends:  Stop guard reads run.md + the host's subagent files → "Next: step N, load skill X"
 compaction: compact hook reads run.md → re-injects the next step
 ```
 
-- The run cannot close without step 8 and three PASS lines.
-- Waiting on you or on background agents is allowed: the run file says so (`Waiting:`) and the guard lets the stop through.
-- The guard reads one file in the current checkout: about 0.07 s per turn end without a run, 0.15 s with one, nothing per tool call.
+- The run cannot close without step 8, three gates and a review, each proven by the host's record of that checker or reviewer on that commit; Gate C and the review on the pushed HEAD.
+- Loops stop: rounds 1-3 run, 4-5 only with an open `CRITICAL:` line; then, or after 6 turns without progress, the guard halts the run with one packet for you. `sh run-guard.sh clear` resumes it.
+- Waiting on you is allowed (`Waiting: owner:`); waiting on background jobs needs a deadline (`(max <n> min)`), past which the guard wakes the run.
+- After two compactions the run moves to a fresh session that reads only the run file and the ticket.
+- The guard reads the run file and the run's subagent files: about 0.4 s per turn end with a run on Windows, nothing per tool call.
 
-Details: [run file](.agents/skills/safe-engine/references/run-file.md), [checker](.agents/skills/safe-engine/references/checker.md), [hosts](docs/hosts.md).
+### 🌙 Overnight runs
+
+`night.sh` refuses to start unless the run can finish unattended (guard wired, deny rules, own branch, `pre-push` hook, push dry run, tracker sign-in), then starts a session that denies instead of prompting. Owner questions get recorded defaults, owner-only items are parked, nothing leaves the machine but the run's branch, draft PR and tickets. A watchdog from the OS scheduler resumes a stalled run, waits out usage limits, starts relays and tells you once how it ended. Setup: [install](docs/install.md#overnight-runs).
+
+Details: [run file](.agents/skills/safe-engine/references/run-file.md), [checker](.agents/skills/safe-engine/references/checker.md), [night mode](.agents/skills/safe-engine/references/night.md), [hosts](docs/hosts.md).
 
 ## 🔄 Update
 
@@ -87,6 +93,8 @@ Claude Code: `claude plugin uninstall safe-engine@ai-software-factory`. Codex: d
 | `safe-engine` not listed | Start a new session; check `/plugin` (Claude Code) or the copied folder under `~/.agents/skills` (Codex) |
 | Agent stops mid-run | Check the hooks are installed and trusted (Codex: `/hooks`); read `.factory/run.md`; say "resume" |
 | Run will not stop | `Waiting:` must name what you wait for; to abandon, set `Status: stopped (<reason>)` |
+| Run halted | Read the packet under the current step in `.factory/run.md`, decide, then run the guard with `clear` |
+| Gate line "has not passed" | Paste the checker's line with its id and commit; Gate C needs the pushed HEAD |
 | Hook errors on Windows | Install Git for Windows; hooks need its `sh` |
 
 ## 🧰 Skills
