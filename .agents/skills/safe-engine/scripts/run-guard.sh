@@ -97,7 +97,8 @@ $(awk -v R="$run" -v fb=$fb -v nov=$nov -v head="$head" -v up="$up" -v night=$ni
   }' "$run" "$@")
 EOF
 [ "$gate" = - ] && gate=
-[ -f "$st" ] || [ "${ticks:-0}" -le 1 ] || [ -n "$g_ticks" ] || note='guard state was missing; counts restart from here.'
+[ -f "$st" ] || [ ! -d "$g" ] || [ "${ticks:-0}" -le 1 ] || [ -n "$g_ticks" ] || note='guard state was missing; counts restart from here.'  # no folder yet: hooks just added
+[ -n "$note" ] && g_idle=$(( ${FACTORY_IDLE_TURNS:-6} - 2 )) g_sig=$sig  # lost state buys no idle turns: one more without progress halts
 prev=${g_ticks:-$ticks}
 case $prev in '' | *[!0-9]*) prev=$ticks ;; esac
 [ "$finished" = 1 ] && g_end=done
