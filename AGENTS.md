@@ -32,6 +32,7 @@ git ls-tree -rl HEAD .agents/skills | awk '$5 ~ /\/(SKILL|references\/[^\/]+)\.m
 ```
 
 - A changed `run-guard.sh` runs on fixture run files (`improve-factory`, Proof). It stays POSIX `sh` with LF endings and one `awk` pass.
+- A changed `gh` or `git` command form in a method: update the night templates (`.agents/hooks/claude-settings.json` allow list, `codex.rules`) to match.
 - Every changed method gets a fresh-agent walkthrough before review.
 - Moving, adding or deleting a skill, reference, role or hook: update `README.md` and `docs/` in the same PR. Keep what they say (commands, paths, defaults) true by hand.
 - Each PR states method bytes before and after (the commands above, base and head). Net growth needs the owner's OK with the reason.

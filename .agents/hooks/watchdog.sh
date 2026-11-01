@@ -3,7 +3,8 @@
 #   sh watchdog.sh <claude|codex> <project>
 # Resumes a stalled run, waits out usage limits, starts a pending relay's fresh session, flags a guard that
 # stopped firing and notifies once per end (done, halted, waiting on the owner). Reads the guard's state, never
-# writes it. Overrides: FACTORY_RESUME, FACTORY_FRESH, FACTORY_NOTIFY (sh -c; $P project, $S session, $MSG text).
+# writes it. Overrides: FACTORY_RESUME, FACTORY_FRESH, FACTORY_NOTIFY (sh -c; $P project, $S session, $MSG text);
+# FACTORY_CLAUDE, FACTORY_CODEX name a CLI off PATH.
 host=$1 P=$2 here=$(cd "$(dirname "$0")" && pwd)
 run="$P/.factory/run.md" g="$P/.factory/guard"
 st="$g/state" w="$g/watch" now=$(date +%s)
@@ -40,13 +41,14 @@ if [ -n "$g_relay" ]; then old "$st" 10 || { say 'relay starting'; exit 0; }; mo
 elif old "$run" "$stall" && ! busy; then mode=resume
 else say running; exit 0; fi
 S=$g_session MSG='The factory watchdog found this run stalled. Read .factory/run.md and continue its Next step.'; export P S MSG
-tpl="$here/claude-settings.json"
+tpl="$here/claude-settings.json"; [ "$host" = codex ] && CLI=${FACTORY_CODEX:-codex} || CLI=${FACTORY_CLAUDE:-claude}; export CLI
+nf="-c 'approval_policy=\"never\"' -c 'sandbox_mode=\"workspace-write\"'" cf='--permission-mode dontAsk --settings "'"$tpl"'"'  # night flags
 if [ "$mode" = fresh ]; then
   say "starting a fresh session (relay)"
-  c=${FACTORY_FRESH:-$([ "$host" = codex ] && echo 'codex exec -s workspace-write -c '"'"'approval_policy="never"'"'"' "\$safe-engine Resume $P"' || echo 'claude -p --permission-mode dontAsk --settings "'"$tpl"'" "/safe-engine Resume $P"')}
+  c=${FACTORY_FRESH:-$([ "$host" = codex ] && echo '"$CLI" exec '"$nf"' "\$safe-engine Resume $P"' || echo '"$CLI" -p '"$cf"' "/safe-engine Resume $P"')}
 else
   say "resuming session $S"
-  c=${FACTORY_RESUME:-$([ "$host" = codex ] && echo 'codex exec resume "$S" "$MSG"' || echo 'claude -p -r "$S" --permission-mode dontAsk --settings "'"$tpl"'" "$MSG"')}
+  c=${FACTORY_RESUME:-$([ "$host" = codex ] && echo '"$CLI" exec resume '"$nf"' "$S" "$MSG"' || echo '"$CLI" -p -r "$S" '"$cf"' "$MSG"')}
 fi
 (cd "$P" && sh -c "$c") > "$g/watch.log" 2>&1
 # A usage limit ends the session at once: wait before the next try.
