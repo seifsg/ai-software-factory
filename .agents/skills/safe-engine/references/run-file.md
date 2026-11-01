@@ -17,6 +17,9 @@ Waiting: none
 ## 2 Recommend ✔
 <block>
 
+## 2b Challenge ✔
+<block>
+
 ## 3 Plan ✔
 <block>
 Gate A: PASS

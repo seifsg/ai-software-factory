@@ -93,7 +93,7 @@ Claude Code: `claude plugin uninstall safe-engine@ai-software-factory`. Codex: d
 
 | Skill | What it does |
 |---|---|
-| `safe-engine` | the nine-step coordinator, run file and gates |
+| `safe-engine` | the ten-step coordinator, run file and gates |
 | `ticketing` | backlog, epics, tickets, checklists and statuses |
 | `analyze-start` | analysis before any code |
 | `recommend` | three solutions, one pick |

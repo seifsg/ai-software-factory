@@ -22,7 +22,7 @@ $(awk '
   /^## 8 Review ✔/ { r = 1 }
   /^Gate [ABC]: (PASS|WAIVED)/ { p[substr($0, 6, 1)] = 1 }
   /^## [0-8] .*✔/ { t = substr($0, 4, 1) + 1; if (t > m) m = t }
-  n == "" && match($0, /^Next: *[0-8] [A-Za-z]+ · [a-z-]+/) { n = substr($0, RSTART, RLENGTH); sub(/^Next: */, "", n) }
+  n == "" && match($0, /^Next: *[0-8]b? [A-Za-z]+ · [a-z-]+/) { n = substr($0, RSTART, RLENGTH); sub(/^Next: */, "", n) }
   END {
     step = n == "" ? 0 : substr(n, 1, 1) + 0; if (m > step) step = m; g = "-"
     if ((step > 3 || r) && !p["A"]) g = "A"; else if ((step > 6 || r) && !p["B"]) g = "B"; else if (r && !p["C"]) g = "C"

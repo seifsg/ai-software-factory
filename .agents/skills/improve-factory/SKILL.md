@@ -7,7 +7,7 @@ description: "Repairs or improves the factory's own skills, hooks and adapters w
 
 Fix the factory, never the product. Any app run keeps using its installed factory; the repair never writes the app's files.
 
-Run it as a factory run of kind `change` on its maintenance ticket: the nine steps of `safe-engine`, in a factory repository checkout, never the installed copy. Fast by default; Safe on request (the owner's OK after the plan). An analysis or planning request stops at that phase. The sections below add only what factory work needs.
+Run it as a factory run of kind `change` on its maintenance ticket: the ten steps of `safe-engine`, in a factory repository checkout, never the installed copy. Fast by default; Safe on request (the owner's OK after the plan). An analysis or planning request stops at that phase. The sections below add only what factory work needs.
 
 ## Understand the report (steps 0 and 1)
 

@@ -1,6 +1,6 @@
 ---
 name: safe-engine
-description: "Delivers games, apps, services, tools and libraries end to end in nine visible steps: ticket, analyze, recommend, plan, Before proof, build, verify, PR and review. Fast by default, Safe on request. Use when asked to build, extend, fix or resume software with the factory."
+description: "Delivers games, apps, services, tools and libraries end to end in ten visible steps: ticket, analyze, recommend, challenge, plan, Before proof, build, verify, PR and review. Fast by default, Safe on request. Use when asked to build, extend, fix or resume software with the factory."
 ---
 
 # Safe Engine
@@ -30,7 +30,7 @@ Build systems that outlast their creator. Breakage is not acceptable.
 
 | Mode | Say | Difference |
 |---|---|---|
-| Fast | nothing or `fast` | runs all nine steps without stopping, except for owner-reserved choices |
+| Fast | nothing or `fast` | runs all ten steps without stopping, except for owner-reserved choices |
 | Safe | `safe` | also stops after step 3 for the owner's OK, and step 6 runs every `deep-review` lens |
 
 | Kind | When | Extra before step 1 |
@@ -62,6 +62,7 @@ Each step ends with its block: post the full block as its own chat message (neve
 | 0 Ticket | `ticketing` | ticket link, criteria, checklist |
 | 1 Analyze | `analyze-start` | its output contract |
 | 2 Recommend | `recommend` | three options, one pick |
+| 2b Challenge | `recommend`, Challenge | kept or changed pick |
 | 3 Plan | `get-ready-to-code` | five outputs and the proof list, then **Gate A** |
 | 4 Before | `how-to-make-a-pr`, Before proof | the saved Before files |
 | 5 Build | `get-ready-to-code`, 0–4 loop | one line per todo |
@@ -100,7 +101,7 @@ After steps 3, 6 and 8, start the [checker](references/checker.md): a fresh ligh
 
 ## Keep the owner posted
 
-- The blocks are the progress report. Put the nine steps on the host's task list at step 0; mark each as it starts and ends. The owner may type at any time.
+- The blocks are the progress report. Put the ten steps on the host's task list at step 0; mark each as it starts and ends. The owner may type at any time.
 - Updates and handbacks: [plain owner reports](references/owner-reports.md).
 - An owner message goes first: answer it or do it, then resume what still fits, unasked.
 - Waiting on the owner: the question first, then the options.
