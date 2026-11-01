@@ -19,7 +19,7 @@ Use the role's tier/edit access; keep method reports (UX, `deep-review`, checker
 - `left: <item>: <what it learned>` per unfinished item, when it stops early;
 - at most one refusal, as its last line: `too-big. split: <one-line jobs>`, `needs-confirm. op: <command>` or `ambiguous. ask: <one question>`.
 
-Read refusals first: split, confirm or clarify before briefing again. Owner handbacks use [plain reports](owner-reports.md).
+Read refusals first: split, confirm or clarify before briefing again.
 
 ## Brief
 

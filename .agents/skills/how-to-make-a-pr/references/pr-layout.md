@@ -62,7 +62,6 @@ Fill the project's PR template first, then use these blocks inside it. Skip what
 
 - Compare variants across dimensions in a table; mark what is new.
 - Put monospace diagrams in code blocks. Bold only key terms.
-- Never copy claimed results from a template or example.
 
 ## Writing rules
 

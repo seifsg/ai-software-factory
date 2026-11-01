@@ -18,7 +18,7 @@ Skip what does not apply. Keep each block separate. Never bury purpose, context 
 | ✅ Definition of done | One observable result per criterion, stable ID (A1, A2). A criterion that delivers a requested item names it: `**A1 (R2):**`. Cover success, failure, recovery, preserved behavior. No "works", "best" or "optimized" without a check. |
 | ☑️ Checklist | The plan's todos as task items in build order: `- [ ] T1 <todo> (A1)`, plus `needs #11 T1` when an item waits on another ticket's item. Every criterion has at least one item that names its ID; no ranges. Ticked `- [x]` with a short proof. Never deleted; an added or changed item records why. |
 | 🧱 Scope & guardrails | In, out, constraints, dependencies, decisions (approved, rejected, pending), optional wants, finish boundary. Each deferral of requested work: owner, destination ticket, revisit condition. POC skips: one list, in the epic. |
-| 🚦 Progress / next | Status, priority, assignee. Done, left, phase, next action, blockers, linked PR or branch. Checked, reviewed, merged, released stay separate. |
+| 🚦 Progress / next | Status, priority, assignee. Done, left, phase, next action, blockers, linked PR or branch. |
 | 📝 Activity | The ticket's lifetime timeline, entries per the skill's Activity rules. Trackers with comments: one comment per entry. |
 
 - **Epic:** overall outcome, shared constraints and decisions, one line per sub-issue (outcome + link), integration criteria as its definition of done. Checklist: one item per in-scope sub-issue (follow-ups stay out) plus the integration checks.

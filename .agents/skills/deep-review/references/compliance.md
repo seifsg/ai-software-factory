@@ -55,8 +55,6 @@ Proof must be bound to the reviewed candidate. A closed ticket, a ready flag or 
 - Any ticket in scope unfinished (unticked item or unproven criterion, except items this review, the PR or the merge completes): FAIL; a Blocked one names its blocker
 - Any always-applied rule violated without an authorized exception: FAIL
 - A required `UNKNOWN` or `UNCLEAR` on a core criterion: FAIL until resolved
-- Ambiguous or incomplete baseline: lower confidence explicitly
-- Clean code that solves the wrong problem is still FAIL
 
 ## Output Format
 

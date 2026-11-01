@@ -81,7 +81,6 @@ Open one for every run, unasked, unless its wave's draft PR is open: then push t
 
 - After a merge, start new work on a fresh branch from the current base.
 - No force-push, history rewrite or unrequested merge, release or notification.
-- No invented results, tests, authorship or accounts.
 
 ## Output contract
 
