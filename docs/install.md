@@ -67,6 +67,8 @@ Optional. Everything below is per project and stays on your machine. `<clone>` i
    sh <clone>/.agents/hooks/night.sh claude 8           # preflight, then start
    ```
 
+   A CLI installed off PATH (desktop apps): set `FACTORY_CLAUDE` or `FACTORY_CODEX` to its path. For Codex the preflight also runs one sandboxed command (up to `FACTORY_PROBE_S`, 180 s) and refuses when it does not run.
+
 4. **Watchdog** every 30 minutes, outside the session:
 
    ```text
