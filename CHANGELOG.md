@@ -8,6 +8,7 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ### Changed
 
+- `analyze-start` starts from its inputs (ticket ids, research, size, step position), covers users, jobs and non-functional needs for a new product, and ends with the decisions Recommend must make.
 - New step 2b Challenge: after the recommendation, the run tells itself "I don't think this is the best we could do. Do better. Make no mistake.", rechecks the options and posts `kept` or `changed` with the reason.
 - After rerun 3: Gate C runs once, after the step 8 review, on the final head, and checks only the `## 7 PR` contract lines plus ticked steps and the review verdict; anything else is a `note:`, never a fail. A brand-new surface's Before is `did not exist` everywhere. The owner can waive a gate (`Gate <X>: WAIVED by owner`), and the run guard accepts it. A solo owner gets no review request: the run ends by asking them to verify and merge. Each step posts its full block as its own chat message and ticks the host's task list.
 - After rerun 2: one step at a time, never batched, so analysis and recommendation each get a full pass; screenshots come from the host's built-in browser, never Playwright or headless scripts unless asked; step 0 asks once, up front, for host-blocked actions; the checker is read-only and the builder pastes its gate line; POC research uses one agent; proof ids per view or state; a plan change reruns Gate A only for what changed.

@@ -5,14 +5,15 @@ description: "Analyzes a feature, defect, refactor or PR before any coding: read
 
 # Analyze Start: understand it fully, write no code
 
-Deep, thorough, analysis-only phase. Educate yourself on the feature, task or PR until you understand it end to end, then explain it back so a teammate or a future agent could pick it up cold. Do not write or change code. Reading, searching and diagramming only.
+Deep, thorough, analysis-only phase. Educate yourself on the feature, task or PR until you understand it end to end, then explain it back so a teammate or a future agent could pick it up cold. Do not write or change code.
 
-> **Grounding rule.** Read the real code, never guess from a diff or a filename. A claim you only skimmed is a hypothesis until you have read enough to know what it means. Keep verified facts and hypotheses apart.
+> **Grounding rule.** Read the real code, never guess from a diff or a filename. A claim you only skimmed is a hypothesis until you have read enough to know what it means.
 
 ## Instructions
 
+0. **Start from the inputs.** Read the ticket (requested items, criteria), any kickoff research and the size; know where the run stands.
 1. **Educate yourself thoroughly.** Read the feature or PR and everything it touches. Follow the code, not the summary. Skim details that don't matter; focus hard on the core logic.
-2. **Explain it back in full detail.** In your own words: what it does and why it exists. Define what success means. If the why is stated nowhere, say so: a change with no rationale is itself a finding.
+2. **Explain it back in full detail:** what it does and why it exists. Define what success means. New product: its users and their jobs, what each requested item needs, non-functional needs (speed, accessibility, security). If the why is stated nowhere, say so: a change with no rationale is itself a finding.
 3. **Map every call site.** Find everywhere else this code is called, used or depended on: callers, consumers, route/DTO/schema references, event names, storage keys, tests. List them with paths. Regression review builds on this map. Prefer search and reading over assumption.
 4. **Draw ASCII charts.** Show the flow and the architecture, trigger → layers → data/persistence → result, and mark where the change sits.
 
@@ -40,14 +41,11 @@ Deep, thorough, analysis-only phase. Educate yourself on the feature, task or PR
 
 Docs or method changes: map readers, links and canonical owners instead of inventing code consumers.
 
-## Hard rule
-
-No code in this phase. No edits, no fixes, no quick changes. Coding happens only in a later, explicit build phase.
-
 ## Output contract
 
 The block `## 1 Analyze` holds, in this order:
 
+- [ ] **Inputs:** ticket link, requested-item and criteria ids, research summary, size; `step 1, next: Recommend`
 - [ ] **Purpose:** what it does, why it exists, what success means; a missing why is named as a finding
 - [ ] **Flow:** at least one ASCII diagram with the change located on it
 - [ ] **Used by:** every caller, consumer and dependent, with paths
@@ -55,6 +53,7 @@ The block `## 1 Analyze` holds, in this order:
 - [ ] **Claims:** the claim-vs-code table, or "no claims to check"
 - [ ] **Scope:** next complete useful result and its dependencies
 - [ ] **Unknowns:** open questions and labeled hypotheses, or "none"
+- [ ] **For Recommend:** the decisions step 2 must make
 - [ ] No file changed during this step
 
 A small `change` keeps every line, each one short.
