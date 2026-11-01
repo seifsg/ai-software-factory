@@ -88,7 +88,7 @@ Run `deep-review`'s analysis categories and every applicable lens it lists: secu
 
 ## 4. Question gate
 
-Before writing to the PR, ask the user the open questions in this session. Fold answers into fixes and report. Questions only a teammate can answer go into the PR comment. Nothing guessed silently. Zero questions: say so and continue.
+Before writing to the PR, ask the user the open questions in this session. Fold answers into fixes and report. Questions only a teammate can answer go into the PR comment. Nothing guessed silently. Zero questions: say so and continue. Fast factory run: hand them back; the coordinator decides the in-scope ones and records decision and reason on the ticket, and the owner can reverse them at merge.
 
 ## 5. Fixes
 

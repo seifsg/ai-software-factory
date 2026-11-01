@@ -38,7 +38,7 @@ T1 pre: <before> do: <change> post: <check> ✔
 ```
 
 - `Status:` `open`, `closed`, or `stopped (<owner's reason>)`.
-- `Next:` `<step number> <step name> · <skill>`: the first unticked step, or, while an earlier step is blocked, the step you continue with; the blocked step's block names its blocker.
+- `Next:` `<step number> <step name> · <skill>`: the first unticked step, or, while an earlier step is blocked, the step you continue with; the blocked step's block names its blocker. A closed run: `none (closed)`.
 - `Waiting:` `none`, `owner: <question>` or `jobs: <what runs and who reports back>`.
 - A heading gets `✔` only when its block meets its skill's output contract. A gate line is separate: an open gate never unticks a step.
 - `Gate A|B|C: PASS (checker <agent id>)` lines are a checker's handback pasted verbatim, under steps 3, 6 and 8. An owner waiver is `Gate <X>: WAIVED by owner ("<their words>")`. A failed check leaves `Gate <X>: FAIL <missing items>`; each rerun replaces the earlier line for that gate.
