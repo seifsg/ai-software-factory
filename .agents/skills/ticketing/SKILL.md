@@ -84,7 +84,7 @@ Every ticket, every mode: unfinished until both are complete.
 
 No contract or confirmation round. Same tracker, layout, backlog and authority rules.
 
-Product and feature runs list every requested item and approved addition as R1, R2, ...; an owner-deferred one stays listed as `R2 (owner-deferred: <decision link>)` and needs no criterion. The checker refuses gaps: at plan (gate A) and PR (gate C), a requested item no criterion names, and a criterion no checklist item names.
+Product and feature runs list every requested item and approved addition as R1, R2, ...; an owner-deferred one stays listed as `R2 (owner-deferred: <decision link>)` and needs no criterion. The checker refuses gaps: at plan (gate A), a requested item no criterion names, and a criterion no checklist item names.
 
 1. Product and feature runs: create the epic after the owner's kickoff answers with the owner's words, the answers and every layout section. Change runs update the ticket they follow up, create one only for a new outcome, none when trivial.
 2. Create the sub-issues in user-value order, linked as native sub-issues; optional ideas go to the follow-ups ticket.

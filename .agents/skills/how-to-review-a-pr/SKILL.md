@@ -53,7 +53,7 @@ Run `recommend` on the PR's approach: the implemented one against two credible a
 
 ## 1c. Run audit (factory PRs)
 
-The PR came from a factory run: read its `.factory/run.md` and ticket. Check every block of steps 0–7 against its skill's output contract, the checker's `Gate A/B/C: PASS` lines, and that each Before file predates the first source commit. A missing step, contract line or gate is a HIGH finding: the run is incomplete even when the code is right.
+The PR came from a factory run: read its `.factory/run.md` and ticket. Check every block of steps 0–7 against its skill's output contract, the `Gate A` and `Gate B` lines (PASS or owner WAIVED; Gate C runs after this review), and that each Before file predates the first source commit. A missing step, contract line or gate is a HIGH finding: the run is incomplete even when the code is right.
 
 ## 2. Lenses
 

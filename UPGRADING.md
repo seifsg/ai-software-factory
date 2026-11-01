@@ -10,7 +10,8 @@ The factory no longer runs any Python. Old runs cannot continue under 2.0.0.
 2. **Claude Code:** update the plugin (`claude plugin marketplace update ai-software-factory`, then update `safe-engine` in `/plugin`). The old gate hooks go with the old version.
 3. **Codex, Cursor and other copies:** delete the old launchers (`~/.agents/skills/safe-engine`, `~/.agents/skills/improve-factory`), remove every entry that runs `run-gate.sh` or `fast_gate` from `~/.codex/hooks.json` and `~/.cursor/hooks.json`, then install per [docs/install.md](docs/install.md). A leftover entry would call a script that no longer exists. Installs made with `--project <dir>` also wrote `<dir>/.agents/skills/` and `<dir>/.codex/hooks.json` or `<dir>/.cursor/hooks.json`; `--codex-home <dir>` wrote `<dir>/hooks.json`. Clean those the same way.
 4. **Delete `~/.safe-engine`** once no 1.x run needs it. It held run state, bundles, caches and the self-update clone.
-5. Factory clones: old commands (`python tests/run.py`, `scripts/release.py`, `python -m safe_engine`) are gone; checks are in `AGENTS.md`.
+5. Open 2.0 runs: the Gate C line now sits under `## 8 Review` and runs after the review; move an existing Gate C line there and rerun its checker once.
+6. Factory clones: old commands (`python tests/run.py`, `scripts/release.py`, `python -m safe_engine`) are gone; checks are in `AGENTS.md`.
 
 ## 1.3.0
 

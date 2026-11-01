@@ -1,6 +1,6 @@
 #!/bin/sh
 # Run guard for factory runs, one script for both hooks (Claude Code and Codex use the same JSON):
-#   stop     keeps an open run going until step 8 is ticked and gates A, B and C pass, in order;
+#   stop     keeps an open run going until step 8 is ticked and gates A, B and C pass or are waived, in order;
 #   compact  after compaction or a resume, re-injects the run's place, because compaction drops skill text.
 # Reads only the nearest .factory/run.md inside the current Git checkout, so other sessions exit at once.
 mode=${1:-stop}
@@ -20,14 +20,12 @@ $(awk '
   /^Status: stopped/ { s = 1 }
   /^Waiting: none/ { w = 1 }
   /^## 8 Review ✔/ { r = 1 }
-  /^Gate A: PASS/ { p["A"] = 1 }
-  /^Gate B: PASS/ { p["B"] = 1 }
-  /^Gate C: PASS/ { p["C"] = 1 }
+  /^Gate [ABC]: (PASS|WAIVED)/ { p[substr($0, 6, 1)] = 1 }
   /^## [0-8] .*✔/ { t = substr($0, 4, 1) + 1; if (t > m) m = t }
   n == "" && match($0, /^Next: *[0-8] [A-Za-z]+ · [a-z-]+/) { n = substr($0, RSTART, RLENGTH); sub(/^Next: */, "", n) }
   END {
     step = n == "" ? 0 : substr(n, 1, 1) + 0; if (m > step) step = m; g = "-"
-    if ((step > 3 || r) && !p["A"]) g = "A"; else if ((step > 6 || r) && !p["B"]) g = "B"; else if ((step > 7 || r) && !p["C"]) g = "C"
+    if ((step > 3 || r) && !p["A"]) g = "A"; else if ((step > 6 || r) && !p["B"]) g = "B"; else if (r && !p["C"]) g = "C"
     printf "%d %d %d %s %s\n", s, w, r && g == "-", g, n
   }' "$run")
 EOF

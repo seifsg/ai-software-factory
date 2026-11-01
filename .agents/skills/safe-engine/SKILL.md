@@ -47,7 +47,7 @@ Every run keeps project rules and never puts secrets in code or Git. Size (POC, 
 
 - After each step: write its block under the step's heading, tick the heading `✔` once its contract holds, set `Next:` to the next step and its skill.
 - `Waiting:` stays `none` while you work. Before ending a turn on purpose, set `owner: <question>` or `jobs: <what runs>`; set it back to `none` when you resume.
-- `Status: closed` only after step 8 and gates A, B and C PASS. Owner stop: `Status: stopped (<reason>)`.
+- `Status: closed` only after step 8 and gates A, B and C pass or the owner waives one. Owner stop: `Status: stopped (<reason>)`.
 
 The factory's hooks read this file. The Stop guard re-prompts `Next:` when a turn ends early; the compact hook re-injects it after context compaction. With no hooks installed, apply the same rules yourself at every turn.
 
@@ -55,7 +55,7 @@ The factory's hooks read this file. The Stop guard re-prompts `Next:` when a tur
 
 One step at a time: load its skill, do that step's own work with fresh reading, searching or running, print its block, then start the next. Never batch steps or write two blocks at once; analysis and recommendation each get their own full pass. Before each step, load its skill fresh, even one you read earlier: invoke it with your agent's skill command or read the file. Context compaction drops skill text; the fresh read keeps the method exact. When the previous step used the same skill, rereading this step's section is enough.
 
-Each step ends with its block: print the full block to the owner, never a summary, and write it to the run file. Before the next step reads it, fold in any owner reply that arrived; Fast never waits for one. The ticket gets a comment only on a status change (steps 0, 7 and 8), linking the run file's blocks.
+Each step ends with its block: post the full block as its own chat message (never a summary, never only a file or tool output), then write it to the run file. Before the next step reads it, fold in any owner reply that arrived; Fast never waits for one. The ticket gets a comment only on a status change (steps 0, 7 and 8), linking the run file's blocks.
 
 | Step | Skill | Block |
 |---|---|---|
@@ -66,8 +66,8 @@ Each step ends with its block: print the full block to the owner, never a summar
 | 4 Before | `how-to-make-a-pr`, Before proof | the saved Before files |
 | 5 Build | `get-ready-to-code`, 0–4 loop | one line per todo |
 | 6 Verify | `deep-review` | findings, suite result, After files, then **Gate B** |
-| 7 PR | `how-to-make-a-pr` | draft PR link, then **Gate C** |
-| 8 Review | `how-to-review-a-pr` | verdict |
+| 7 PR | `how-to-make-a-pr` | draft PR link |
+| 8 Review | `how-to-review-a-pr` | verdict, then **Gate C** |
 
 Only what those skills do not say:
 
@@ -77,16 +77,16 @@ Only what those skills do not say:
 - **5:** spike unknown capabilities first. After each todo's real use, run only the tests that cover its changed files; when those are the whole suite, that run is still only a build check. No separate full-suite run here. Commit by phase in the project's commit style.
 - **6:** verify is yours; independence comes from the checker and step 8. Order: the lenses (compliance always; change-guard when existing code, contracts or data changed, so never on a new project; others by `deep-review`'s scale), their fixes, then one final manual pass through every requested journey that captures After with the same ids, then the full suite once on that candidate; a proof id that is the full suite is that same run. Before captures of the base never count as that run. MVP and production slice: the secrets, dependency and static-analysis scans.
 - **7:** the ticket moves to Ready for QA with its PR.
-- **8:** a fresh agent that did not build it gets the PR, the ticket and the run file's absolute path. The reviewer hands back its fix-set and never pushes in a factory run: you apply it through the 0–4 loop, the same reviewer checks the delta, and Gate C reruns when the PR or its body changed. You write the final verdict as the step's block and tick it. The full suite runs again only after those fixes.
+- **8:** a fresh agent that did not build it gets the PR, the ticket and the run file's absolute path. The reviewer hands back its fix-set and never pushes in a factory run: you apply it through the 0–4 loop, the same reviewer checks the delta. You write the final verdict as the step's block and tick it. The full suite runs again only after those fixes. Then Gate C, once, on the final head; close the run and ask the owner to verify and merge.
 
 ## Gates
 
-After steps 3, 6 and 7, start the [checker](references/checker.md): a fresh light delegate that gets only the contracts and the outputs, never your reasoning. It is read-only and hands back `Gate A: PASS` (B, C) or the missing items; you paste its gate line verbatim into the run file with the checker's agent id.
+After steps 3, 6 and 8, start the [checker](references/checker.md): a fresh light delegate that gets only the contracts and the outputs, never your reasoning. It is read-only and hands back `Gate A: PASS` (B, C) or the missing items; you paste its gate line verbatim into the run file with the checker's agent id.
 
-- Gate A checks the blocks of steps 0–3; Gate B steps 4–6; Gate C step 7 and the whole run file.
+- Gate A checks the blocks of steps 0–3; Gate B steps 4–6; Gate C the PR and steps 7–8.
 - No source edit before Gate A passes (Before capture may run beside it); no PR before Gate B passes; no close before Gate C passes.
-- Missing items: fix them, then rerun the checker. The checker reports every missing item in one pass; only an item missing twice counts as a failed round. Two failed rounds: ask the owner with the list.
-- Never write or change a gate line yourself; paste only what a checker handed back. The run cannot close without all three.
+- Missing items: fix them, then rerun the checker. The checker reports every missing item in one pass; only an item missing twice counts as a failed round. Two failed rounds: ask the owner with the list, to fix more or waive the gate.
+- Paste only what a checker handed back; never write a gate line yourself, except an owner's waiver (run file).
 - A plan change after Gate A passed reruns the checker only when it adds or removes todos, criteria or proof ids, and only on that change.
 
 ## Every mode
@@ -100,7 +100,7 @@ After steps 3, 6 and 7, start the [checker](references/checker.md): a fresh ligh
 
 ## Keep the owner posted
 
-- The blocks are the progress report. Mirror the nine steps in the host's task list once.
+- The blocks are the progress report. Put the nine steps on the host's task list at step 0; mark each as it starts and ends. The owner may type at any time.
 - Updates and handbacks: [plain owner reports](references/owner-reports.md).
 - An owner message goes first: answer it or do it, then resume what still fits, unasked.
 - Waiting on the owner: the question first, then the options.
