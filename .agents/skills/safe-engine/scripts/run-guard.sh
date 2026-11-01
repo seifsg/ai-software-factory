@@ -21,25 +21,29 @@ st="$g/state"
 in=; [ "$mode" = clear ] || in=$(cat)
 val() { printf '%s' "$in" | sed -n "s/.*\"$1\": *\"\([^\"]*\)\".*/\1/p" | head -n 1; }  # one JSON string field
 sid=$(val session_id) tp=$(val transcript_path | sed 's/\\\\/\//g' | tr -d "'") now=$(date +%s)
-# State: single-quoted g_* lines only the guard writes. Anything else is reported and ignored, never trusted.
+# State: single-quoted g_* lines only the guard writes, counters digits only, no $ or backquote anywhere.
+# Anything else is never sourced: the run halts until the owner clears it (a lost state halts the same way).
 note=
+num='ticks|seen|night_until|sig|idle|base_[ABCR]|sstep|rstep|compacts|jobs_since|jobs_key|clear'
 if [ -f "$st" ]; then
-  if grep -qv "^g_[A-Za-z_]*='[^']*'\$" "$st"; then note='guard state was edited outside the guard; ignored.'; else . "$st"; fi
+  if grep -qvE "^g_($num)='[0-9]*'\$|^g_[a-z]+='[^'\$\`]*'\$" "$st"; then note='guard state was edited outside the guard'; else . "$st"; fi
 fi
 [ -f "$run.ticks" ] && { g_ticks=$(cat "$run.ticks"); rm -f "$run.ticks" "$run.nudge"; }  # state of an older guard
-keys='ticks session transcript seen night_until sig idle halt end clear base_A base_B base_C base_R sstep relay rstep compacts csession jobs_since jobs_key'
+case $sid in '' | *[!A-Za-z0-9_-]*) ;; *) case " $g_sessions " in *" $sid "*) ;; *) g_sessions="${g_sessions:+$g_sessions }$sid" ;; esac ;; esac
+keys='ticks session sessions transcript seen night_until sig idle halt end clear base_A base_B base_C base_R sstep relay rstep compacts csession jobs_since jobs_key'
 save() { mkdir -p "$g" && for k in $keys; do eval "printf \"g_%s='%s'\\n\" $k \"\$g_$k\""; done > "$st"; }
 if [ "$mode" = clear ]; then  # also ends night mode: the owner is back
   g_halt= g_end= g_idle=0 g_clear=1 g_night_until=0; save
   grep -v '^Night:' "$run" > "$run.n" && mv "$run.n" "$run"
   printf 'Factory run cleared: the guard drives it again, loop caps count from here, night mode is off.\n'; exit 0
 fi
-# Evidence: Claude Code keeps each subagent's transcript in <session>/subagents/agent-<id>.jsonl, its brief first.
-# Other hosts: the gate's agent id must appear in the session transcript. No transcript at all: text only.
-sub="${tp%.jsonl}/subagents" fb=0 nov=0
-ev=.; set -- "$sub"/agent-*.jsonl
-if [ -f "$1" ]; then ev=$sub; set -- $(cd "$sub" && ls -tr agent-*.jsonl)  # oldest first: rounds count in order
-else set --; if [ -d "$sub" ]; then :; elif [ -f "$tp" ]; then fb=1; set -- "$tp"; else nov=1; fi; fi
+# Evidence: Claude Code keeps each subagent's transcript in <session>/subagents/agent-<id>.jsonl, its brief first,
+# for every session of the run (relays). Other hosts: the gate's agent id must appear in the session transcript,
+# never in a Claude Code transcript (the model's own edits are in it). No transcript at all: text only.
+ev=${tp%/*} fb=0 nov=0
+set --; for s in $g_sessions; do for f in "$ev/$s"/subagents/agent-*.jsonl; do [ -f "$f" ] && set -- "$@" "$s/subagents/${f##*/}"; done; done
+if [ $# -gt 0 ]; then set -- $(cd "$ev" && ls -tr "$@")  # oldest first: rounds count in order
+else ev=.; if [ -f "$tp" ]; then fb=1; set -- "$tp"; else nov=1; fi; fi
 head=$(git -C "$d" rev-parse HEAD 2>/dev/null) up=$(git -C "$d" rev-parse '@{u}' 2>/dev/null)
 night=0; [ "${g_night_until:-0}" -gt 0 ] 2>/dev/null && night=1
 # One awk pass over the run file and the evidence files. Only a strict "<step> <name> · <skill>" Next value
@@ -51,13 +55,13 @@ $(cd "$ev" && awk -v R="$run" -v fb=$fb -v nov=$nov -v head="$head" -v up="$up" 
   function at(t) { sub(/.*@/, "", t); return t }
   function proven(id, k, sha) {
     if (nov) return 1
-    if (fb) return seen[id]
+    if (fb) return seen[id] && !cc  # a Claude Code transcript also holds the run-file edits of the model
     return kind[id] == k && pre(sha, at(last[id]))
   }
   function ok(x,  id) {
     id = gid[x]
     if (id == "") return wv[x] && !night  # an owner waiver; nobody waives at night
-    return proven(id, x, gsha[x]) && (nov || fb || last[id] ~ /PASS/) && (x != "C" || (pre(gsha[x], head) && head == up))
+    return proven(id, x, gsha[x]) && (nov || fb || last[id] ~ /^Gate .: PASS/) && (x != "C" || (pre(gsha[x], head) && head == up))
   }
   FILENAME == R {
     if (/^Status: stopped/) s = 1
@@ -74,8 +78,8 @@ $(cd "$ev" && awk -v R="$run" -v fb=$fb -v nov=$nov -v head="$head" -v up="$up" 
     if (/^Review: ready \(reviewer [^ )]+\) @[0-9a-f]+/) { rid = $4; sub(/\)$/, "", rid); rsha = at($5); want[rid] = 1 }
     next
   }
-  fb { for (x in want) if (index($0, x)) seen[x] = 1; next }
-  function done1(k) { k = kind[id]; if (k ~ /^[ABC]$/) f[k] = last[id] ~ /PASS/ ? 0 : f[k] + (last[id] ~ /FAIL/) }  # one checker per gate round
+  fb { if (index($0, "\"isSidechain\"")) cc = 1; for (x in want) if (index($0, x)) seen[x] = 1; next }
+  function done1(k) { k = kind[id]; if (k ~ /^[ABC]$/) f[k] = last[id] ~ /^Gate .: PASS/ ? 0 : f[k] + (last[id] ~ /FAIL/) }  # one checker per gate round
   FNR == 1 {  # a subagent, oldest first: its brief names its role; a PASS or ready verdict closes its loop
     done1(); id = FILENAME; sub(/.*agent-/, "", id); sub(/\.jsonl$/, "", id)
     if (match($0, /Role: checker\. Gate [ABC]/)) kind[id] = substr($0, RSTART + RLENGTH - 1, 1)
@@ -101,8 +105,8 @@ $(cd "$ev" && awk -v R="$run" -v fb=$fb -v nov=$nov -v head="$head" -v up="$up" 
   }' "$run" "$@")
 EOF
 [ "$gate" = - ] && gate=
-[ -f "$st" ] || [ ! -d "$g" ] || [ "${ticks:-0}" -le 1 ] || [ -n "$g_ticks" ] || note='guard state was missing; counts restart from here.'  # no folder yet: hooks just added
-[ -n "$note" ] && g_idle=$(( ${FACTORY_IDLE_TURNS:-6} - 2 )) g_sig=$sig  # lost state buys no idle turns: one more without progress halts
+[ -f "$st" ] || [ ! -d "$g" ] || [ "${ticks:-0}" -le 1 ] || [ -n "$g_ticks" ] || note='guard state was lost'  # no folder yet: hooks just added
+[ -n "$note" ] && g_halt="$note"  # never trusted, never reset: the owner looks, then clears
 prev=${g_ticks:-$ticks}
 case $prev in '' | *[!0-9]*) prev=$ticks ;; esac
 [ "$finished" = 1 ] && g_end=done
@@ -127,7 +131,7 @@ if [ "$mode" = compact ]; then
   [ "${g_compacts:-0}" -ge 2 ] && [ "$g_csession" = "$sid" ] && printf 'Relay due: this session was compacted %s times; at the next turn end the guard hands the run to a fresh session.\n' "$g_compacts"
   exit 0
 fi
-[ -n "$g_relay" ] && { save; printf '{"systemMessage":"Factory run relayed to a fresh session; this session no longer drives it."}\n'; exit 0; }
+[ -n "$g_relay" ] && { save; printf '{"systemMessage":"Factory run relayed to a fresh session; this session no longer drives it. Start one with: safe-engine Resume %s"}\n'; exit 0; }
 # More than one heading ticked since the last turn end: two steps shared a turn. Waits update the count too.
 batched=$(( ticks - prev > 1 ))
 # Loop caps count failed rounds from the host's subagent files, since the owner's last clear.
@@ -145,8 +149,22 @@ if [ "$jobs" = 1 ]; then
     todo="The job in Waiting: jobs: is past its deadline ($jmax min): check it, stop it if it hangs, record its result or failure in .factory/run.md, update Waiting, then end your turn."
   fi
 else g_jobs_since= g_jobs_key=; fi
+# Progress budget: blocked turns without a new tick or proven gate. Rounds 1-3 run; 4 and 5 only while the run
+# file names an open CRITICAL; after 5, idle too long or past the night budget: halt with one packet prompt.
+idle() { [ "$sig" = "$g_sig" ] && g_idle=$(( ${g_idle:-0} + 1 )) || g_idle=0; g_sig=$sig; }
+halt() {
+  [ "$loop" = R ] && loop='review' || loop="Gate $loop"
+  if [ "$night" = 1 ] && [ "$now" -gt "$g_night_until" ]; then g_halt='night time budget spent'
+  elif [ "$rounds" -ge 5 ] || { [ "$rounds" -ge 3 ] && [ "$crit" != 1 ]; }; then g_halt="$loop: $rounds failed rounds"
+  elif [ "$g_idle" -ge "${FACTORY_IDLE_TURNS:-6}" ]; then g_halt="no progress in $g_idle turns"
+  fi
+  [ -n "$g_halt" ] || return 0
+  g_end=halt; save
+  printf '{"decision":"block","reason":"HALT (%s): the guard stops driving this run. Start no new round. Write the owner packet under the current step: findings per round (new vs repeated), the shared cause, options (extend, defer with an owner record, amend scope, cancel). Set Waiting: owner: <question>, then end your turn. Only the owner resumes it: sh %s clear"}\n' "$g_halt" "$self"
+  exit 0
+}
 save
-[ -n "$todo" ] && { printf '{"decision":"block","reason":"If this session runs the factory run in .factory/run.md: %s"}\n' "$todo"; exit 0; }
+[ -n "$todo" ] && { idle; halt; save; printf '{"decision":"block","reason":"If this session runs the factory run in .factory/run.md: %s"}\n' "$todo"; exit 0; }
 [ "$waiting" = 1 ] || exit 0  # waiting on the owner or background jobs: stopping is right
 case $in in
   # The host reports a running subagent: its result wakes the session. A background shell (a dev server) never does.
@@ -159,20 +177,7 @@ case $in in
     fi ;;
 esac
 : > "$g/nudge"
-# Progress budget: turns that change the run file without a new tick or proven gate.
-[ "$sig" = "$g_sig" ] && g_idle=$(( ${g_idle:-0} + 1 )) || g_idle=0
-g_sig=$sig
-# Rounds 1-3 run; 4 and 5 only while the run file names an open CRITICAL; after 5, or idle too long: halt.
-[ "$loop" = R ] && loop='review' || loop="Gate $loop"
-if [ "$night" = 1 ] && [ "$now" -gt "$g_night_until" ]; then g_halt='night time budget spent'
-elif [ "$rounds" -ge 5 ] || { [ "$rounds" -ge 3 ] && [ "$crit" != 1 ]; }; then g_halt="$loop: $rounds failed rounds"
-elif [ "$g_idle" -ge "${FACTORY_IDLE_TURNS:-6}" ]; then g_halt="no progress in $g_idle turns"
-fi
-if [ -n "$g_halt" ]; then
-  g_end=halt; save
-  printf '{"decision":"block","reason":"HALT (%s): the guard stops driving this run. Start no new round. Write the owner packet under the current step: findings per round (new vs repeated), the shared cause, options (extend, defer with an owner record, amend scope, cancel). Set Waiting: owner: <question>, then end your turn. Only the owner resumes it: sh %s clear"}\n' "$g_halt" "$self"
-  exit 0
-fi
+idle; halt
 # Relay: a fresh session takes over after 2 compactions, and at night after plan, build and PR.
 why=
 [ "${g_compacts:-0}" -ge 2 ] && [ "$g_csession" = "$sid" ] && why="compacted $g_compacts times"

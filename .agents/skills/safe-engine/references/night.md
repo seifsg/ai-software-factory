@@ -12,6 +12,7 @@ The night command refuses to start unless the run is open, the guard is wired, t
 4. **Gates:** no waivers. A gate passes by its checker or its loop runs into the cap.
 5. **Relay:** the guard asks for one before steps 4, 6 and 8 and after two compactions. Make sure the run file and the ticket hold everything the next step needs, then end the session as the prompt says. The fresh session reads only those two.
 6. **Halt:** write the packet, set `Waiting: owner:`, end the turn. Never work around a halt.
+7. **Delegates:** run them in the foreground and wait for their result in the same turn: a print-mode session may end with its turn, before a background result arrives.
 
 ## Morning
 

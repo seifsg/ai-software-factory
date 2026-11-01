@@ -26,17 +26,17 @@ command -v "$host" >/dev/null && say ok "$host CLI" || say MISSING "$host CLI on
 # 3. Outward actions work without a prompt: own branch, pre-push hook installed, push dry run, tracker access.
 b=$(git -C "$P" branch --show-current 2>/dev/null)
 case $b in '' | main | master) say MISSING "a feature branch (on '${b:-detached}')" ;; *) say ok "branch $b" ;; esac
-hk="$(git -C "$P" rev-parse --git-common-dir 2>/dev/null)/hooks/pre-push"
+hk=$(cd "$P" && git rev-parse --git-path hooks/pre-push 2>/dev/null)  # honors core.hooksPath
 cmp -s "$here/pre-push" "$hk" && say ok 'pre-push hook' || say MISSING "pre-push hook at $hk"
 git -C "$P" push --dry-run origin HEAD >/dev/null 2>&1 && say ok 'push dry run' || say MISSING 'git push --dry-run origin HEAD'
 gh auth status >/dev/null 2>&1 && say ok 'gh signed in' || say MISSING 'gh auth status'
 [ "$bad" = 0 ] || { echo 'Night mode refused: fix the MISSING lines.' >&2; exit 1; }
+[ "$check" = --check ] && { echo "Preflight passed. Nothing written: start without --check."; exit 0; }
 # Budget: the guard halts the run at the deadline. The run file shows it to the owner.
 until=$(( $(date +%s) + hours * 3600 ))
 mkdir -p "${st%/*}"; { grep -sv '^g_night_until=' "$st"; printf "g_night_until='%s'\n" "$until"; } > "$st.n" && mv "$st.n" "$st"
 grep -v '^Night:' "$run" | awk -v n="Night: until $(date -d "@$until" '+%Y-%m-%d %H:%M' 2>/dev/null || date -r "$until" '+%Y-%m-%d %H:%M') ($hours h)" '{ print } /^Waiting:/ && !x { print n; x = 1 }' > "$run.n" && mv "$run.n" "$run"
 echo "Preflight passed. Night budget: $hours h."
-[ "$check" = --check ] && exit 0
 export P
 [ -n "$FACTORY_START" ] && exec sh -c "$FACTORY_START"
 [ "$host" = claude ] && exec claude -p --permission-mode dontAsk --settings "$here/claude-settings.json" "/safe-engine Resume $P"

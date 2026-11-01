@@ -54,12 +54,12 @@ Optional. Everything below is per project and stays on your machine. `<clone>` i
 1. **Push guard** (both hosts), from the project:
 
    ```text
-   cp <clone>/.agents/hooks/pre-push "$(git rev-parse --git-common-dir)/hooks/pre-push"
-   chmod +x "$(git rev-parse --git-common-dir)/hooks/pre-push"
+   cp <clone>/.agents/hooks/pre-push "$(git rev-parse --git-path hooks/pre-push)"
+   chmod +x "$(git rev-parse --git-path hooks/pre-push)"
    ```
 
    It blocks pushes to the default branch, force pushes, branch deletes and added token shapes. Pair it with your host's server-side rules (GitHub: a ruleset on the default branch that blocks force pushes and requires a pull request) and secret push protection: only those hold against a shell that skips local hooks.
-2. **Deny rules.** Claude Code: nothing to copy; `night.sh` passes `<clone>/.agents/hooks/claude-settings.json` with `--settings`. To use the same deny list by day, merge its `deny` array into `~/.claude/settings.json`. Add your project's test and build commands to its `allow` list. Codex: `cp <clone>/.agents/hooks/codex.rules ~/.codex/rules/factory.rules`.
+2. **Deny rules.** Claude Code: nothing to copy; `night.sh` passes `<clone>/.agents/hooks/claude-settings.json` with `--settings`. To use the same deny list by day, merge its `deny` array into `~/.claude/settings.json`. Add your project's test and build commands to the project's own `.claude/settings.json` `allow` list (plugin updates replace the template). Codex: `cp <clone>/.agents/hooks/codex.rules ~/.codex/rules/factory.rules`.
 3. **Start a night run** from the project, once the run is open and past any owner question:
 
    ```text
