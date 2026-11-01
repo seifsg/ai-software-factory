@@ -23,7 +23,7 @@ A change with only one sane path (a typo, a one-line fix): say "one path: <why>"
 
 ## Challenge (step 2b)
 
-A separate pass after the block is posted: "I don't think this is the best we could do. Do better. Make no mistake." Redo steps 2 to 4 against it: a missed option, a wrong cell, an underrated cost. Keep the pick only if it survives; never change for show.
+Its own pass, after step 2's block: "I don't think this is the best we could do. Do better. Make no mistake." Redo steps 2 to 4 against it: a missed option, a wrong cell, an underrated cost. Keep the pick only if it survives.
 
 ## Output contract
 

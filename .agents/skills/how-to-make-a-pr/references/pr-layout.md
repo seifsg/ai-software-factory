@@ -2,7 +2,7 @@
 
 Contents: sections · building blocks · writing rules · example
 
-Brief words, full meaning: a human or fresh agent must understand the PR without the chat or the diff. Priority: complete first (every relevant behavior, decision, file, guard, proof and gap), visual second (tables and ASCII before prose), fewest words third (one line where a table or diagram does not fit).
+Brief words, full meaning: a human or fresh agent must understand the PR without the chat or the diff. Complete first, visual second (tables and ASCII before prose), fewest words third.
 
 **Title:** concrete change + outcome, as `<type>(<scope>): <subject>`, in the reader's language; explain needed jargon.
 

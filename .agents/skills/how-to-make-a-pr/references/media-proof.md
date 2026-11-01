@@ -14,7 +14,7 @@ Every PR shows a skeptical owner truthful before/after proof: what failed or was
 | New visual surface | Before: "did not exist", no capture; After: new screenshot |
 
 - **Bug during capture:** stop, note it, fix it in scope, run affected checks, commit, reset the fixture and recapture the affected ids. Never edit a failure out to imply success. A fix needing new authority blocks the demo with its cause and next action.
-- **Keep it fast:** plan routes once; reuse builds and fixtures; batch uploads. No duplicate angles. Shortest complete demo; never drop required coverage for time.
+- **Keep it fast:** plan routes once; reuse builds and fixtures; batch uploads; no duplicate angles; never drop required coverage for time.
 - Inspect every screenshot/play every clip: readable, correct, no unexplained errors/secrets. Changed inputs invalidate affected After; never restamp stale media. Keep Before and unmatched conditions; a demo cannot rule out bugs.
 - Upload first (`github.md`); verify every image renders/video plays for reviewers in the PR. No localhost/local links; inaccessible media is missing proof.
 - Each outcome declares **Visual:**/**Journey:** (`pr-layout.md`). **Media waiver:** needs explicit scoped owner authority; tools, access, time or a host that cannot save images imply none. Missing media stays a visible gap with recovery action and blocks evidence completion. An incomplete draft preserves progress, not a completed handoff.
