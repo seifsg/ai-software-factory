@@ -96,7 +96,7 @@ The block `## 7 PR` holds the draft PR URL, and the PR itself has:
 - [ ] Title `<type>(<scope>): <subject>`; draft; the verified base
 - [ ] A clickable ticket link in the body, and the PR link in the ticket's activity
 - [ ] Purpose & goal, Before & after, Verification and Progress / next, in that order (other sections and their wording are never a FAIL)
-- [ ] One heading per outcome under Before & after, each with `**Visual:**`, `**Journey:**`, `**Before:**` and `**After:**`; Before and After are each an `https` image, fenced output or `pane:` observation; a new surface or output's Before is `did not exist`
+- [ ] One heading per outcome under Before & after, each with `**Visual:**`, `**Journey:**` and either `**Before:**` and `**After:**`, each an `https` image, fenced output or `pane:` observation, or one `**Before → After:**` with a two-column image table or a `diff` block; a new surface or output's Before is `did not exist`
 - [ ] Each After names the commit it was captured on
 - [ ] Verification: criterion → change → proof → gap, with each command and its result; unverified items named
 - [ ] Review requested from a review owner other than the author, or none (solo owner)
