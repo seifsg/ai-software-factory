@@ -182,8 +182,8 @@ Disposition decides the gate: `blocking`, `before-exposure` or `accepted-deferra
 ### Fixes and review rounds
 
 - When told to fix: smallest change that removes the cause, affected layer only, intent unchanged. Then a fresh independent reviewer, not the one who fixed, assesses the result. A clean review needs no edits.
-- One round = independent review, selected fixes, fresh review. Mandatory findings keep it open; optional fixes follow worth-it. At most 6 failed rounds per review loop.
-- After the sixth failed round, stop that loop. Give the owner one short packet: findings per round (new vs repeated), the shared cause, options (extend 1-3 rounds, defer with an owner record, amend scope, cancel).
+- One round = independent review, selected fixes, fresh review. Mandatory findings keep it open; optional fixes follow worth-it. Rounds 1-3 run; rounds 4 and 5 only while an open CRITICAL finding remains.
+- After round 5, or round 3 with no open CRITICAL, stop that loop. Give the owner one short packet: findings per round (new vs repeated), the shared cause, options (extend, defer with an owner record, amend scope, cancel).
 - Keep independent work moving while you wait.
 
 ## Output contract

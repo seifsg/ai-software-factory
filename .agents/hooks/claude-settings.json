@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "deny": [
+      "Bash(git push --force *)", "Bash(git push -f *)", "Bash(git push --force-with-lease *)",
+      "Bash(git push * --force*)", "Bash(git push * -f)", "Bash(git push * -f *)", "Bash(git push * +*)",
+      "Bash(git push * main)", "Bash(git push * main *)", "Bash(git push * *:main)", "Bash(git push * master)", "Bash(git push * *:master)",
+      "Bash(git push * --delete *)", "Bash(git * --no-verify*)", "Bash(git -c core.hooksPath*)", "Bash(git config *core.hooksPath*)",
+      "Bash(gh pr merge*)", "Bash(gh pr ready*)", "Bash(gh repo delete*)", "Bash(gh repo edit*)",
+      "Bash(gh api *merge*)", "Bash(gh api -X DELETE *)", "Bash(gh api --method DELETE *)",
+      "Bash(gh api repos/* -X*)", "Bash(gh api repos/* --method*)", "Bash(gh api repos/* -f*)", "Bash(gh api repos/* -F*)",
+      "Bash(gh api repos/* --field*)", "Bash(gh api repos/* --raw-field*)", "Bash(gh api repos/* --input*)",
+      "Bash(gh api --paginate * -f*)", "Bash(gh api --paginate * -F*)", "Bash(gh api --paginate * --field*)",
+      "Bash(gh api --paginate * --raw-field*)", "Bash(gh api --paginate * --input*)",
+      "Bash(gh * -R *)", "Bash(gh * --repo *)",
+      "Bash(rm -rf /*)", "Bash(rm -rf ~*)", "Bash(rm -rf ../*)", "Bash(rm -rf $HOME*)", "Bash(rm -r /*)", "Bash(rm -r ~*)", "Bash(rm -r ../*)",
+      "Bash(*run-guard.sh clear*)", "Bash(*.factory/guard*)",
+      "Edit(.claude/settings*.json)", "Edit(~/.claude/settings*.json)", "Edit(~/.codex/**)",
+      "Edit(//**/.factory/guard/**)", "Edit(//**/run-guard.sh)", "Edit(//**/hooks.json)", "Edit(//**/.git/hooks/**)",
+      "Edit(//**/.agents/hooks/**)"
+    ],
+    "allow": [
+      "Read", "Glob", "Grep", "Agent", "Skill", "WebSearch", "WebFetch", "Edit(./**)",
+      "Bash(git status*)", "Bash(git diff*)", "Bash(git log*)", "Bash(git show*)", "Bash(git rev-parse*)", "Bash(git ls-files*)",
+      "Bash(git ls-remote*)", "Bash(git fetch*)", "Bash(git add *)", "Bash(git commit *)", "Bash(git switch *)", "Bash(git branch*)",
+      "Bash(git push)", "Bash(git push -u origin HEAD)", "Bash(git push origin HEAD)", "Bash(git push --dry-run *)",
+      "Bash(gh auth status*)", "Bash(gh issue *)", "Bash(gh label *)", "Bash(gh api repos/*)", "Bash(gh api --paginate repos/*)",
+      "Bash(gh api -X POST repos/*/issues/*/sub_issues *)", "Bash(gh repo view*)", "Bash(gh pr checks*)",
+      "Bash(git push origin *:refs/heads/proof/*)", "Bash(git hash-object *)", "Bash(git mktree*)", "Bash(git commit-tree *)",
+      "Bash(gh pr create --draft *)", "Bash(gh pr view *)", "Bash(gh pr list*)", "Bash(gh pr diff *)", "Bash(gh pr edit *)", "Bash(gh pr comment *)"
+    ]
+  }
+}

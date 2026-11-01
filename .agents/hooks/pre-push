@@ -1,0 +1,22 @@
+#!/bin/sh
+# Factory pre-push hook: pushes stay on the run's own branch. Blocks a push to the default branch, a
+# non-fast-forward (force) push, a branch delete, and commits that add a likely secret. Git runs it with
+# <remote> <url> as arguments and one "<local ref> <local sha> <remote ref> <remote sha>" line per ref on stdin.
+remote=${1:-origin}
+main=$(git symbolic-ref --short "refs/remotes/$remote/HEAD" 2>/dev/null); main=${main#"$remote/"}
+fail() { printf 'pre-push blocked: %s\n' "$1" >&2; exit 1; }
+nonzero() { case $1 in *[!0]*) return 0 ;; esac; return 1; }  # an all-zero sha means "no such commit"
+# Token shapes with a fixed prefix; a match is reported by name only, never printed.
+secrets='AKIA[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{22,}|glpat-[0-9A-Za-z_-]{20}|xox[abposr]-[A-Za-z0-9-]{10,}|sk-ant-[A-Za-z0-9_-]{20,}|sk_live_[0-9A-Za-z]{20,}|AIza[0-9A-Za-z_-]{35}|-----BEGIN [A-Z ]*PRIVATE KEY-----'
+while read -r lref lsha rref rsha; do
+  b=${rref#refs/heads/}
+  case $b in main | master | "${main:-main}") fail "a push to $b is the owner's." ;; esac
+  nonzero "$lsha" || fail "deleting $b is the owner's."
+  if nonzero "$rsha"; then
+    git merge-base --is-ancestor "$rsha" "$lsha" 2>/dev/null || fail "a non-fast-forward push to $b (force) is the owner's."
+    set -- "$rsha..$lsha"
+  else set -- "$lsha" --not --remotes="$remote"; fi
+  n=$(git log -p --format= "$@" | grep '^+' | grep -cE -- "$secrets")
+  [ "$n" -eq 0 ] || fail "$n added line(s) look like a secret (token or private key) in $b. Remove it from the commits and rotate it."
+done
+exit 0

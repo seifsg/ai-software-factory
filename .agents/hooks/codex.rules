@@ -1,0 +1,14 @@
+# Factory deny rules for Codex: copy to ~/.codex/rules/factory.rules. Codex applies the most restrictive match.
+# Prefix rules match leading arguments only; the pre-push hook also blocks force, main and deletes at Git level.
+OWNER = "The owner's action: the factory never does it."
+
+prefix_rule(pattern = ["git", "push", ["--force", "-f", "--force-with-lease", "--delete", "--no-verify"]], decision = "forbidden", justification = OWNER,
+    match = ["git push --force origin x", "git push -f"], not_match = ["git push origin HEAD"])
+prefix_rule(pattern = ["git", "push", "origin", ["main", "master", "HEAD:main", "HEAD:master"]], decision = "forbidden", justification = OWNER,
+    match = ["git push origin main"], not_match = ["git push origin feat/x"])
+prefix_rule(pattern = ["git", "commit", "--no-verify"], decision = "forbidden", justification = OWNER)
+prefix_rule(pattern = ["git", "config", "core.hooksPath"], decision = "forbidden", justification = OWNER)
+prefix_rule(pattern = ["gh", "pr", ["merge", "ready"]], decision = "forbidden", justification = OWNER,
+    match = ["gh pr merge 3"], not_match = ["gh pr view 3"])
+prefix_rule(pattern = ["gh", "repo", ["delete", "edit"]], decision = "forbidden", justification = OWNER)
+prefix_rule(pattern = ["rm", ["-rf", "-r"], ["/", "~", ".."]], decision = "forbidden", justification = OWNER)

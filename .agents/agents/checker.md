@@ -12,4 +12,4 @@ Hand back only these lines, no story:
 
 - `<contract line>: met <where>` or `<contract line>: MISSING <what is absent or wrong>`, one per line;
 - `note: <concern>` for anything outside those lines, never counted;
-- `Gate <X>: PASS` or `Gate <X>: FAIL <n> missing`, as the last line, for the coordinator to paste into the run file.
+- `Gate <X>: PASS @<commit>` (the commit the brief names) or `Gate <X>: FAIL <n> missing`, as the last line, for the coordinator to paste into the run file.
