@@ -10,8 +10,8 @@ Contracts: the "Output contract" checklist of <skill paths for the gate's steps>
 Outputs: .factory/run.md, steps <range>; <PR URL for gate C>.
 Only those checklist lines (and Gate C's list below) count; any other concern is a "note:", never
 MISSING. For every line, find the output that meets it; open what it names. Be strict: unsure is
-MISSING with the reason. `DEFERRED (owner|hardware: <what>)` meets a line only when no agent here
-could do it; a stub, placeholder or "unverified" never meets one.
+MISSING with the reason. `DEFERRED (owner|hardware: <what>)` meets a line only for work that needs the
+owner (hands, approval, an install) or missing hardware; a stub, placeholder or "unverified" never meets one.
 Read-only. Check every line in one pass. Hand back "Gate <X>: PASS @<commit>" when all are met, else "Gate <X>:
 FAIL <n> missing" and the list. Do not fix anything. Do not read the builder's notes or chat.
 ```

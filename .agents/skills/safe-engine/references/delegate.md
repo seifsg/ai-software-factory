@@ -43,7 +43,7 @@ G3 MANUAL <outcome>: <what the reviewer judges>
 - Split briefs with over three outcomes, multiple commits or a whole unrelated document; one change across files counts once.
 - Large spec: an analyst returns focused briefs with required rules and affected paths.
 - Changes smaller than their brief stay local.
-- Only the coordinator spawns; extra agents need `too-big. split:`.
+- Only the coordinator spawns, and a reviewer its lens agents; extra agents need `too-big. split:`.
 - Preserve early groundwork (`left:`) in the next brief.
 
 ## Tier

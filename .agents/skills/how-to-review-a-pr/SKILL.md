@@ -60,7 +60,7 @@ The PR came from a factory run: read its `.factory/run.md` and ticket. Check eve
 Run `deep-review`'s analysis categories and every applicable lens it lists: security, performance, journey, change-guard, compliance.
 
 - Same candidate already passed a full local review: one reviewer covers all lenses on the delta plus a residual-risk check.
-- Otherwise, or for security, release or public-exposure scope: one isolated reviewer per lens, in parallel when your agent has subagents (waves if capacity is short), otherwise one lens at a time. Synthesize only after all return. Never call sequential work parallel or drop a lens. Brief each `Role: analyst. Lens: <name>.`; it hands back `<lens>: <APPROVE|…|BLOCK>`, never a `verdict:` line.
+- Otherwise, or for security, release or public-exposure scope: one isolated reviewer per lens, in parallel when your agent has subagents (waves if capacity is short), otherwise one lens at a time. Synthesize only after all return. Never call sequential work parallel or drop a lens. Brief each `Role: analyst. Lens: <name>.`; it hands back its `deep-review` lens report, never a `verdict:` line.
 - Each reviewer gets: PR card and claim, phase 1 analysis, changed files on the checked-out branch, applicable rules, confirmed criteria, target workload/platforms, raw evidence and its limits. Mark each item verified or hypothesis. Reviewers verify hypotheses and correct you.
 - Collect findings and lens verdicts. Fix nothing yet.
 
@@ -172,7 +172,7 @@ Show the draft before posting unless pre-authorized. The comment is the only aut
 
 ## Own draft PR
 
-For a draft PR your agent opened, the question gate, push and comment checkpoints are pre-authorized. Open questions go in the comment. Push only to that PR's branch, never force. Humans own ready, merge and release. Anyone else's PR keeps every checkpoint. A factory run's reviewer skips phases 5 to 7 and never pushes: it hands back the fix-set, and checks the delta once the builder applied it.
+A factory run's reviewer skips phases 5 to 7 and never pushes: it hands back the fix-set, and checks the delta once the builder applied it. Otherwise, for a draft PR your agent opened, the question gate, push and comment checkpoints are pre-authorized. Open questions go in the comment. Push only to that PR's branch, never force. Humans own ready, merge and release. Anyone else's PR keeps every checkpoint.
 
 ## Safety
 
