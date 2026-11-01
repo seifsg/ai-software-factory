@@ -191,7 +191,7 @@ Disposition decides the gate: `blocking`, `before-exposure` or `accepted-deferra
 In a factory run this is step 6, Verify: the builder runs this pass, and the independent review is step 8 (`how-to-review-a-pr`). The block `## 6 Verify` holds:
 
 - [ ] Every requested journey used through real controls, with observed results
-- [ ] compliance results, change-guard results when existing code, contracts or data changed, plus each other lens run, each with its findings table (possibly empty) and verdict
+- [ ] compliance results, change-guard results when existing code, contracts or data changed, plus each other lens run, each with its findings table (possibly empty) and verdict, e.g. `**compliance:** <its table, or "no findings"> · PASS`
 - [ ] An `after-<id>` file for every proof-list id, same ids as Before, captured in that same pass on the verified head, each naming that commit; a later edit recaptures the ids it touches; a full-suite id is that final run
 - [ ] The full suite: command and result, run once after manual use
 - [ ] The verdict; blocking findings fixed through the build loop before the gate

@@ -70,7 +70,8 @@ The block `## 3 Plan` holds:
 
 The block `## 5 Build` holds:
 
-- [ ] One `Tn pre: … do: … post: …` line per todo, each ticked
+- [ ] The ticket moved to In progress before T1
+- [ ] One `Tn pre: … do: … post: …` line per todo, each ticked, e.g. `T2 pre: reload lost the theme do: save it on change post: npm test theme: 4 passed; reload kept dark ✔`
 - [ ] Every todo ticked in the ticket checklist after its use-check
 - [ ] Only mapped tests ran; their commands and results are named
 - [ ] Commits staged by name, each `<type>(<scope>): <subject>`
