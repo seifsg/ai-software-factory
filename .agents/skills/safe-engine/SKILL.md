@@ -46,7 +46,7 @@ Every run keeps project rules and never puts secrets in code or Git. Size (POC, 
 `.factory/run.md` in the project holds the run: [format](references/run-file.md). Create it at step 0; Git ignores `.factory/`.
 
 - After each step: write its block under the step's heading, tick the heading `✔` once its contract holds, set `Next:` to the next step and its skill.
-- `Waiting:` stays `none` while you work. Before ending a turn on purpose, set `owner: <question>` or `jobs: <what runs>`; set it back to `none` when you resume.
+- `Waiting:` stays `none` while you work. Before ending a turn on purpose, set `owner: <question>` or `jobs: <what runs> (max <minutes> min)`; set it back to `none` when you resume.
 - `Status: closed` only after step 8 and gates A, B and C pass or the owner waives one. Owner stop: `Status: stopped (<reason>)`.
 
 The factory's hooks read this file. The Stop guard sends `Next:`'s step prompt when a turn ends; the compact hook re-injects it after context compaction. With no hooks installed, apply the same rules yourself at every turn.
@@ -78,15 +78,15 @@ Only what those skills do not say:
 - **5:** spike unknown capabilities first. After each todo's real use, run only the tests that cover its changed files; when those are the whole suite, that run is still only a build check. No separate full-suite run here. Commit by phase in the project's commit style.
 - **6:** verify is yours; independence comes from the checker and step 8. Order: the lenses (compliance always; change-guard when existing code, contracts or data changed, so never on a new project; others by `deep-review`'s scale), their fixes, then one final manual pass through every requested journey that captures After with the same ids, then the full suite once on that candidate; a proof id that is the full suite is that same run. Before captures of the base never count as that run. MVP and production slice: the secrets, dependency and static-analysis scans.
 - **7:** the ticket moves to Ready for QA with its PR.
-- **8:** a fresh agent that did not build it gets the PR, the ticket and the run file's absolute path. The reviewer hands back its fix-set and never pushes in a factory run: you apply it through the 0–4 loop, recapturing the After of every proof id a fix touches, and the same reviewer checks the delta. You write the final verdict as the step's block and tick it. The full suite runs again only after those fixes. Then Gate C, once, on the final head; close the run and ask the owner to verify and merge.
+- **8:** a fresh agent that did not build it gets the PR, the ticket and the run file's absolute path. The reviewer hands back its fix-set and never pushes in a factory run: you apply it through the 0–4 loop, recapturing the After of every proof id a fix touches, and the same reviewer checks the delta. Its brief starts `Role: reviewer.` and names the pushed head; each handback ends `verdict: <ready|ready after fixes|not ready> @<sha>`. Paste the last as `Review: ready (reviewer <id>) @<sha>`. You write the final verdict as the step's block and tick it. The full suite runs again only after those fixes. Then Gate C, once, on the final head; close the run and ask the owner to verify and merge.
 
 ## Gates
 
-After steps 3, 6 and 8, start the [checker](references/checker.md): a fresh light delegate that gets only the contracts and the outputs, never your reasoning. It is read-only and hands back `Gate A: PASS` (B, C) or the missing items; you paste its gate line verbatim into the run file with the checker's agent id.
+After steps 3, 6 and 8, start the [checker](references/checker.md): a fresh light delegate that gets only the contracts and the outputs, never your reasoning. It is read-only, checks the commit its brief names and hands back `Gate A: PASS @<sha>` (B, C) or the missing items; you paste it as `Gate A: PASS (checker <agent id>) @<sha>`. The guard accepts the line only when that checker's own handback says so; Gate C's commit is the pushed HEAD.
 
 - Gate A checks the blocks of steps 0–3; Gate B steps 4–6; Gate C the PR and steps 7–8.
 - No source edit before Gate A passes (a background delegate may start Before captures during the Gate A turn); no PR before Gate B passes; no close before Gate C passes.
-- Missing items: fix them, then rerun the checker. The checker reports every missing item in one pass; only an item missing twice counts as a failed round. Two failed rounds: ask the owner with the list, to fix more or waive the gate.
+- Missing items: fix them, then rerun the checker. The checker reports every missing item in one pass; each FAIL is a round, capped like [review loops](references/run-cases.md#review-loops).
 - Paste only what a checker handed back; never write a gate line yourself, except an owner's waiver (run file).
 - A plan change after Gate A passed reruns the checker only when it adds or removes todos, criteria or proof ids, and only on that change.
 

@@ -5,13 +5,13 @@ The gate after steps 3, 6 and 8. A fresh light read-only delegate (role `checker
 ## Brief
 
 ```text
-Role: checker. Gate <A|B|C>. Project: <absolute path>.
+Role: checker. Gate <A|B|C>. Project: <absolute path>. Commit: <HEAD sha>.
 Contracts: the "Output contract" checklist of <skill paths for the gate's steps>.
 Outputs: .factory/run.md, steps <range>; <PR URL for gate C>.
 Only those checklist lines (and Gate C's list below) count; any other concern is a "note:", never
 MISSING. For every line, find the output that meets it; open what it names.
-Read-only. Check every line in one pass. Hand back "Gate <X>: PASS" when all are met, else "Gate <X>: FAIL <n>
-missing" and the list. Do not fix anything. Do not read the builder's notes or chat.
+Read-only. Check every line in one pass. Hand back "Gate <X>: PASS @<commit>" when all are met, else "Gate <X>:
+FAIL <n> missing" and the list. Do not fix anything. Do not read the builder's notes or chat.
 ```
 
 | Gate | Steps | Contracts from |
@@ -31,9 +31,9 @@ Gate C's list, besides `## 7 PR`:
 ```text
 <contract line>: met <where> | MISSING <what is absent or wrong>
 note: <concern outside the contract lines, never counted>
-Gate <X>: PASS | FAIL <n> missing
+Gate <X>: PASS @<commit> | FAIL <n> missing
 ```
 
 ## After a FAIL
 
-Fix each missing item at its step, then brief a fresh checker for the same gate. Only an item missing again counts as a failed round; two failed rounds: ask the owner with the repeated items, to fix more or waive.
+Fix each missing item at its step, then brief a fresh checker for the same gate. Each FAIL is a round, capped like [review loops](run-cases.md#review-loops); the packet lists the repeated items.
