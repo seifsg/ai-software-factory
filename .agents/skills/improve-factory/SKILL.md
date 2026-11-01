@@ -46,7 +46,7 @@ Capture Before at step 4: the old behavior in the same form as the After.
 | Change | Proof |
 |---|---|
 | Instructions | A fresh agent gets the changed skill, a realistic request and raw fixtures, never the expected outcome. Judge its decisions and artifacts, not word matches. |
-| Hook script | Run it on fixture run files: no run, open, waiting, idle after a nudge, closed with a gate missing, finished. |
+| Hook script | Run it on fixture run files: no run, open, waiting, idle after a nudge, closed with a gate missing, finished. A hook that drives this session: edit and test a copy, replace the live file only once the fixtures pass. |
 | Both | Both, each proves only itself. |
 
 - Pick the cases the change touches: the domain it governs (game, mobile, desktop, server, CLI) with its real tooling; an interrupted run; a compaction; a broken output contract the checker must catch.
