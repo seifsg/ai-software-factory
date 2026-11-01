@@ -26,7 +26,7 @@ if [ -f "$st" ]; then
   if grep -qv "^g_[A-Za-z_]*='[^']*'\$" "$st"; then note='guard state was edited outside the guard; ignored.'; else . "$st"; fi
 fi
 [ -f "$run.ticks" ] && { g_ticks=$(cat "$run.ticks"); rm -f "$run.ticks" "$run.nudge"; }  # state of an older guard
-keys='ticks session transcript seen night_until sig idle halt end clear base_A base_B base_C base_R'
+keys='ticks session transcript seen night_until sig idle halt end clear base_A base_B base_C base_R sstep relay rstep compacts csession jobs_since'
 save() { mkdir -p "$g" && for k in $keys; do eval "printf \"g_%s='%s'\\n\" $k \"\$g_$k\""; done > "$st"; }
 if [ "$mode" = clear ]; then
   g_halt= g_end= g_idle=0 g_clear=1; save
@@ -42,7 +42,7 @@ night=0; [ "${g_night_until:-0}" -gt 0 ] 2>/dev/null && night=1
 # One awk pass over the run file and the evidence files. Only a strict "<step> <name> · <skill>" Next value
 # is kept for the reply. The step is the later of Next and the last ticked heading, so a malformed Next never
 # skips a gate. gate: the first gate the run has reached without proof; R: step 8 without a proven review.
-read -r stopped waiting finished ticks gate sig jobs jmax crit fA fB fC fR next <<EOF
+read -r stopped waiting finished ticks gate sig jobs jmax crit fA fB fC fR step next <<EOF
 $(awk -v R="$run" -v fb=$fb -v nov=$nov -v head="$head" -v up="$up" -v night=$night '
   function pre(a, b,  n) { n = length(a) < length(b) ? length(a) : length(b); return n >= 7 && substr(a, 1, n) == substr(b, 1, n) }
   function at(t) { sub(/.*@/, "", t); return t }
@@ -90,15 +90,19 @@ $(awk -v R="$run" -v fb=$fb -v nov=$nov -v head="$head" -v up="$up" -v night=$ni
     rok = rid != "" && pre(rsha, head) && head == up && proven(rid, "R", rsha) && (nov || fb || last[rid] ~ /^verdict: ready( @|$)/)
     if ((step > 3 || r) && !ok("A")) g = "A"; else if ((step > 6 || r) && !ok("B")) g = "B"; else if (r && !ok("C")) g = "C"; else if (r && !rok) g = "R"
     p += ok("A") + ok("B") + ok("C") + rok  # progress: ticks plus proven gates
-    printf "%d %d %d %d %s %d %d %d %d %d %d %d %d %s\n", s, w, r && g == "-", c, g, p, j, jm, cr, f["A"], f["B"], f["C"], f["R"], n
+    printf "%d %d %d %d %s %d %d %d %d %d %d %d %d %d %s\n", s, w, r && g == "-", c, g, p, j, jm, cr, f["A"], f["B"], f["C"], f["R"], step, n
   }' "$run" "$@")
 EOF
 [ "$gate" = - ] && gate=
 [ -f "$st" ] || [ "${ticks:-0}" -le 1 ] || [ -n "$g_ticks" ] || note='guard state was missing; counts restart from here.'
 prev=${g_ticks:-$ticks}
 case $prev in '' | *[!0-9]*) prev=$ticks ;; esac
-g_ticks=$ticks g_seen=$now; [ "$mode" = stop ] && g_session=$sid g_transcript=$tp
 [ "$finished" = 1 ] && g_end=done
+if [ "$mode" = stop ]; then
+  [ "$g_session" = "$sid" ] || g_sstep=$step  # a new session counts phase boundaries from here
+  [ -n "$g_relay" ] && [ "$g_relay" != "$sid" ] && g_relay=  # the fresh session took over
+  g_ticks=$ticks g_seen=$now g_session=$sid g_transcript=$tp
+fi
 [ "$stopped" = 1 ] || [ "$finished" = 1 ] && { [ "$mode" = stop ] && save; exit 0; }  # stopped by the owner, or finished
 if [ -n "$g_halt" ]; then  # halted: the guard drives nothing until the owner clears it
   [ "$mode" = compact ] && { printf 'Factory run halted (%s): wait for the owner; do not continue the run.\n' "$g_halt"; exit 0; }
@@ -106,17 +110,34 @@ if [ -n "$g_halt" ]; then  # halted: the guard drives nothing until the owner cl
   exit 0
 fi
 if [ "$mode" = compact ]; then
+  case $in in *'"source":"compact"'* | *'"source": "compact"'*)  # count this session's compactions
+    [ "$g_csession" = "$sid" ] && g_compacts=$(( ${g_compacts:-0} + 1 )) || g_compacts=1
+    g_csession=$sid; save ;;
+  esac
   case $gate in '') ;; R) next='8 Review: a proven reviewer verdict on HEAD' ;; *) next="Gate $gate checker" ;; esac
   printf 'Factory run open (.factory/run.md). Next: %s. Read the run file, load that skill fresh, do only that step, then end your turn.\n' "${next:-see the run file}"
+  [ "${g_compacts:-0}" -ge 2 ] && [ "$g_csession" = "$sid" ] && printf 'Relay due: this session was compacted %s times; at the next turn end the guard hands the run to a fresh session.\n' "$g_compacts"
   exit 0
 fi
+[ -n "$g_relay" ] && { save; printf '{"systemMessage":"Factory run relayed to a fresh session; this session no longer drives it."}\n'; exit 0; }
 # More than one heading ticked since the last turn end: two steps shared a turn. Waits update the count too.
 batched=$(( ticks - prev > 1 ))
 # Loop caps count failed rounds from the host's subagent files, since the owner's last clear.
 if [ "$g_clear" = 1 ]; then g_base_A=$fA g_base_B=$fB g_base_C=$fC g_base_R=$fR g_clear=; fi
 loop= rounds=0
 for x in A B C R; do eval "n=\$((f$x - \${g_base_$x:-0}))"; [ "$n" -gt "$rounds" ] && rounds=$n loop=$x; done
+# A jobs wait has a deadline; past it the guard wakes the run, even while a subagent still runs (it may hang).
+todo=
+if [ "$jobs" = 1 ]; then
+  [ -n "$g_jobs_since" ] || g_jobs_since=$now
+  [ "$jmax" -gt "${FACTORY_JOB_MAX:-120}" ] && jmax=${FACTORY_JOB_MAX:-120}
+  if [ "$jmax" = 0 ]; then todo='Waiting: jobs: needs a deadline: write it as `Waiting: jobs: <what runs> (max <minutes> min)`, then end your turn.'
+  elif [ $(( now - g_jobs_since )) -gt $(( jmax * 60 )) ]; then
+    todo="The job in Waiting: jobs: is past its deadline ($jmax min): check it, stop it if it hangs, record its result or failure in .factory/run.md, update Waiting, then end your turn."
+  fi
+else g_jobs_since=; fi
 save
+[ -n "$todo" ] && { printf '{"decision":"block","reason":"If this session runs the factory run in .factory/run.md: %s"}\n' "$todo"; exit 0; }
 [ "$waiting" = 1 ] || exit 0  # waiting on the owner or background jobs: stopping is right
 case $in in
   # The host reports a running subagent: its result wakes the session. A background shell (a dev server) never does.
@@ -134,12 +155,22 @@ esac
 g_sig=$sig
 # Rounds 1-3 run; 4 and 5 only while the run file names an open CRITICAL; after 5, or idle too long: halt.
 [ "$loop" = R ] && loop='review' || loop="Gate $loop"
-if [ "$rounds" -ge 5 ] || { [ "$rounds" -ge 3 ] && [ "$crit" != 1 ]; }; then g_halt="$loop: $rounds failed rounds"
+if [ "$night" = 1 ] && [ "$now" -gt "$g_night_until" ]; then g_halt='night time budget spent'
+elif [ "$rounds" -ge 5 ] || { [ "$rounds" -ge 3 ] && [ "$crit" != 1 ]; }; then g_halt="$loop: $rounds failed rounds"
 elif [ "$g_idle" -ge "${FACTORY_IDLE_TURNS:-6}" ]; then g_halt="no progress in $g_idle turns"
 fi
 if [ -n "$g_halt" ]; then
   g_end=halt; save
   printf '{"decision":"block","reason":"HALT (%s): the guard stops driving this run. Start no new round. Write the owner packet under the current step: findings per round (new vs repeated), the shared cause, options (extend, defer with an owner record, amend scope, cancel). Set Waiting: owner: <question>, then end your turn. Only the owner resumes it: sh %s clear"}\n' "$g_halt" "$self"
+  exit 0
+fi
+# Relay: a fresh session takes over after 2 compactions, and at night after plan, build and PR.
+why=
+[ "${g_compacts:-0}" -ge 2 ] && [ "$g_csession" = "$sid" ] && why="compacted $g_compacts times"
+[ "$night" = 1 ] && case $step in 4 | 6 | 8) [ "${g_sstep:-$step}" -lt "$step" ] && [ "$g_rstep" != "$step" ] && why="night phase boundary before step $step" ;; esac
+if [ -n "$why" ]; then
+  g_relay=$sid g_rstep=$step; save
+  printf '{"decision":"block","reason":"Relay (%s): this session stops driving the run. Make sure .factory/run.md and the ticket hold everything the next step needs: the next session reads only those. Start a fresh session with your session tool if you have one, prompt: safe-engine Resume %s; otherwise the watchdog starts it. Set Waiting: jobs: relay to a fresh session (max 30 min), then end your turn."}\n' "$why" "$d"
   exit 0
 fi
 save
