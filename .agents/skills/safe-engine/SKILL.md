@@ -93,6 +93,7 @@ After steps 3, 6 and 8, start the [checker](references/checker.md): a fresh ligh
 ## Every mode
 
 - Repair findings: [worth-it rounds](references/worth-it.md); loops: [review loops](references/run-cases.md#review-loops).
+- Run file shows `Night:`: the [night mode](references/night.md) rules apply.
 - One branch and draft PR per variation; an epic's wave: one integration branch and one draft PR its runs update.
 - Released app or release policy: [app releases](references/app-releases.md).
 - Never claim tested, reviewed or production ready without that evidence.
