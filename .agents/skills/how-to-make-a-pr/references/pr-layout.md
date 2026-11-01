@@ -2,7 +2,7 @@
 
 Contents: sections · building blocks · writing rules · example
 
-Brief words, full meaning: a human or fresh agent must understand the PR without the chat or the diff. Complete first, visual second (tables and ASCII before prose), fewest words third.
+Brief words, full meaning: a human or fresh agent must understand the PR without the chat or the diff. Priority: complete first (every relevant behavior, decision, file, guard, proof and gap), visual second (tables and ASCII before prose), fewest words third (one line where a table or diagram does not fit).
 
 **Title:** concrete change + outcome, as `<type>(<scope>): <subject>`, in the reader's language; explain needed jargon.
 
@@ -32,9 +32,10 @@ Fill the project's PR template first, then use these blocks inside it. Skip what
 - **Outcome declarations:** each outcome has `**Visual:** yes` or `**Visual:** no (<reason>)`, and `**Journey:** yes` or `**Journey:** no (<reason>)`, in these exact forms; extra explanation on the next line. A UI run needs a visual outcome. Never call a real user journey nonvisual merely because the diff changes shared logic.
 - **Screenshots:** Visual yes requires `**Before:**` and `**After:**`, each with a different screenshot or a `pane:` observation (what the built-in browser showed: view, state, viewport, time) when the host cannot save the image, or `**Before → After:**` with a two-column image table. Captions identify state, base/head and criterion. A new surface's Before is `**Before:** did not exist`, with no image or observation. Prose, video or a code block never replaces a screenshot pair.
 - **Video:** optional. Journey yes needs the journey's steps shown: screenshots, a GIF or a `**Video:**` link, as the owner asks; a shared clip gives that journey's start/end timestamps.
-- **Media waiver:** scoped to this outcome: `**Media waiver:** screenshots | <exact owner request> | <source>` (`screenshots`, `video` or `all`), only where that request applies; a screenshot waiver does not waive video. It waives that media, not the truthful description of both states or other proof.
+- **Media waiver:** scoped to this outcome: `**Media waiver:** screenshots | <exact owner request> | <source>` (first field `screenshots`, `video` or `all`). Repeat only where that request applies; a screenshot waiver does not waive video. It waives that media, not the truthful description of both states or other proof.
 - **Nonvisual proof:** matched request/response JSON, status, logs or command results: `**Before:**` then `**After:**` with fenced output, or `**Before → After:** <same input>, base <sha> → head <sha> (<criterion>)` and a `diff` block. Server-only, infrastructure or internal work with no affected interactive UI journey needs no media waiver.
-- **Cold start:** the original request and why, decisions with reasons, facts (IDs, paths, repos), current state, remaining steps and blockers.
+- **Demo context:** base and demonstrated candidate, isolated empty slot or seed/reset recipe, viewport/environment, covered journeys and limitations.
+- **Cold start:** the original request and why, decisions with reasons, facts (IDs, paths, repos), current state, remaining steps and blockers. Links are an audit trail, not a substitute.
 - **Verification:** one row per confirmed criterion, plus the ticket's checklist state: every item ticked, or the gap. Ticketed work: the ticket's confirmed criteria, dependencies and integration status. Proof is bound to the exact pushed candidate. Name what is **unverified**.
 - **Adjustment history:** append an entry per requested change; keep it for the PR's whole life.
 - **Progress:** checked, reviewed, merged and released stay separate; name the next visible result. Overall acceptance stays open.
