@@ -171,7 +171,7 @@ Disposition decides the gate: `blocking`, `before-exposure` or `accepted-deferra
 
 - Blocking: any CRITICAL or HIGH, an unmet core requirement, a broken existing journey, a required UNKNOWN, a mandatory rule violated without an authorized exception. Clean code that solves the wrong problem fails.
 - UNKNOWN is never N/A; N/A needs evidence. Missing required evidence stays UNKNOWN and blocks dependent judgment.
-- Deferral needs owner authority and a record: owner, reason, scope, its entry in the follow-ups ticket (one-ticket run: its Deferred section), revisit trigger. A note alone grants nothing.
+- Deferral needs owner authority and a record: owner, reason, scope, its entry in the follow-ups ticket, revisit trigger. A note alone grants nothing.
 - The owner may delegate in advance the deferral of LOW findings, and of MEDIUM while exposure stays local. MEDIUM and LOW left after round 3 are appended to the epic's one open follow-ups ticket in Backlog, never one ticket per finding. HIGH and CRITICAL are never deferred.
 - Before-exposure items resolve before public exposure or production. A MEDIUM is not automatically a failure, and never silently waived.
 - Mandatory rule exceptions need an authorized owner, scope and record. Explanation alone waives nothing.
@@ -192,6 +192,6 @@ In a factory run this is step 6, Verify: the builder runs this pass, and the ind
 
 - [ ] Every requested journey used through real controls, with observed results
 - [ ] compliance results, change-guard results when existing code, contracts or data changed, plus each other lens run, each with its findings table (possibly empty) and verdict
-- [ ] An `after-<id>` file for every proof-list id, same ids as Before, captured in that same pass after verify's last source edit (a later edit recaptures the ids it touches); every After file newer than the newest source file
+- [ ] An `after-<id>` file for every proof-list id, same ids as Before, captured in that same pass on the verified head, each naming that commit; a later edit recaptures the ids it touches; a full-suite id is that final run
 - [ ] The full suite: command and result, run once after manual use
 - [ ] The verdict; blocking findings fixed through the build loop before the gate

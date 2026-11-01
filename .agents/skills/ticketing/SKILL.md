@@ -63,7 +63,7 @@ Open tickets are the backlog, kept current in every mode, autonomously unless th
 ## Split the work
 
 - Ticket = one complete, user-visible outcome; epic and sub-issue contents: the layout.
-- One or more outcome sub-issues, plus the follow-ups ticket. A small product (one page, one screen, one tool) or a small change: one ticket, no epic; its follow-ups go to a `Deferred (pending owner)` section in that ticket. Never one per todo.
+- One or more outcome sub-issues, plus the follow-ups ticket. A small product (one page, one screen, one tool) or a small change: one ticket, no epic; its `Deferred (pending owner)` section is the follow-ups ticket wherever a method names one. Never one per todo.
 - Ticket comments only on status changes, each linking the run file's blocks; no comment per step.
 - Do not split risky work to dodge full checks.
 - Every requested item (feature, journey, integration, behavior) maps to an outcome ticket criterion. Only the owner's recorded decision moves it to the follow-ups ticket; unavailable capability keeps it Blocked in the run.

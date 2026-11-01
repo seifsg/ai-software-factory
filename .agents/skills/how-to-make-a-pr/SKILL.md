@@ -89,7 +89,7 @@ The block `## 4 Before` holds:
 
 - [ ] Every proof-list id with its `before-<id>` file under `.factory/proof/<ticket>/`, or "did not exist" for a new surface
 - [ ] Saved before the first source edit
-- [ ] Each capture inspected, or `no captures (new surfaces)`
+- [ ] Each capture inspected, or none to inspect: every id "did not exist"
 
 The block `## 7 PR` holds the draft PR URL, and the PR itself has:
 
