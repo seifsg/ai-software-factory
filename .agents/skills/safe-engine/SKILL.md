@@ -78,7 +78,7 @@ Only what those skills do not say:
 - **5:** spike unknown capabilities first. After each todo's real use, run only the tests that cover its changed files; when those are the whole suite, that run is still only a build check. No separate full-suite run here. Commit by phase in the project's commit style.
 - **6:** verify is yours; independence comes from the checker and step 8. Order: the lenses (compliance always; change-guard when existing code, contracts or data changed, so never on a new project; others by `deep-review`'s scale), their fixes, then one final manual pass through every requested journey that captures After with the same ids, then the full suite once on that candidate; a proof id that is the full suite is that same run. Before captures of the base never count as that run. MVP and production slice: the secrets, dependency and static-analysis scans.
 - **7:** the ticket moves to Ready for QA with its PR.
-- **8:** a fresh agent that did not build it gets the PR, the ticket and the run file's absolute path. The reviewer hands back its fix-set, never pushing: you apply it through the 0–4 loop, recapturing the After of every proof id a fix touches, and the same reviewer checks the delta. Its brief starts `Role: reviewer.` and names the pushed head; each handback ends with the skill's factory `verdict:` line. Paste the last as `Review: ready (reviewer <id>) @<sha>`. You write the final verdict as the step's block and tick it. The full suite runs again only after those fixes. Then Gate C, once, on the final head; close the run and ask the owner to verify and merge.
+- **8:** a fresh agent that did not build it gets the PR, the ticket and the run file's absolute path. The reviewer hands back its fix-set, never pushing: you apply it through the 0–4 loop, recapturing the After of every proof id a fix touches (named in the block), and the same reviewer checks the delta. Its brief starts `Role: reviewer.` and names the pushed head; each handback ends with the skill's factory `verdict:` line. Paste the last as `Review: ready (reviewer <id>) @<sha>`. You write the final verdict as the step's block and tick it. The full suite runs again only after those fixes. Then Gate C, once, on the final head; close the run and ask the owner to verify and merge.
 
 ## Gates
 
@@ -88,7 +88,7 @@ After steps 3, 6 and 8, start the [checker](references/checker.md): a fresh ligh
 - No source edit before Gate A passes (a background delegate may start Before captures during the Gate A turn); no PR before Gate B passes; no close before Gate C passes.
 - Missing items: fix them, then rerun the checker. The checker reports every missing item in one pass; each FAIL is a round, capped like [review loops](references/run-cases.md#review-loops).
 - Paste only what a checker handed back; never write a gate line yourself, except an owner's waiver (run file).
-- A plan change after Gate A passed reruns the checker only when it adds or removes todos, criteria or proof ids, and only on that change.
+- A plan change after Gate A passed reruns the checker only when it adds or removes todos, criteria or proof ids, and only on that change. Fixes after Gate B never rerun it; Gate C checks their recaptured After files.
 
 ## Every mode
 

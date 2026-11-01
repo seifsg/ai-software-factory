@@ -27,6 +27,7 @@ Gate C's list, besides `## 7 PR`:
 - [ ] Steps 0–8 ticked
 - [ ] Gates A and B: PASS or WAIVED
 - [ ] `## 8 Review` holds the reviewer's verdict on the PR's current head
+- [ ] Each After file `## 8 Review` names as recaptured names a commit at or after its fix
 
 ## Handback
 
