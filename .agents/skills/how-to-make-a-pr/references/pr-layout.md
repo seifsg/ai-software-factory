@@ -11,7 +11,7 @@ Brief words, full meaning: a human or fresh agent must understand the PR without
 Fill the project's PR template first, then use these blocks inside it. Skip what does not apply. Never bury purpose, context or progress inside Before.
 
 ```text
-<header: requester, deciders, real author, original vs adaptation>
+<header: requester, deciders, who wrote it, original vs adaptation>
 ## 🎯 Purpose & goal      short problem, intended result and clickable ticket link
 ## 🎬 Before & after      one ### per outcome: what it was, what it is, proof the reviewer can open
 ## 📍 Context             base/branch, code and sources, prior work; facts and unknowns
@@ -26,17 +26,17 @@ Fill the project's PR template first, then use these blocks inside it. Skip what
 <credit line>           the last line, exactly as in credit.md
 ```
 
-- **Header:** credit the requester, deciders and real human author; separate original work from a port or adaptation.
+- **Header:** credit the requester and deciders and say who wrote the code (a person, or the factory run for its owner); separate original work from a port or adaptation.
 - **Context:** link the discussion that triggered the PR; the ticket link stays visible, not hidden in a comment.
 - **Before & after:** never skipped; right after purpose, ahead of implementation detail. One `### <outcome>` per changed view/state or touched journey, named by its effect (`### 🧾 Invoice totals include tax`, never `### invoice.ts`). Every inventory item maps here; reuse shared proof with captions or timestamps.
 - **Outcome declarations:** each outcome has `**Visual:** yes` or `**Visual:** no (<reason>)`, and `**Journey:** yes` or `**Journey:** no (<reason>)`, in these exact forms; extra explanation on the next line. A UI run needs a visual outcome. Never call a real user journey nonvisual merely because the diff changes shared logic.
-- **Screenshots:** Visual yes requires `**Before:**` and `**After:**`, each with a different screenshot, or `**Before → After:**` with a two-column image table. Captions identify state, base/head and criterion. New UI includes the prior entry/empty-state screenshot labeled "did not exist". Prose, video or a code block never replaces a screenshot pair.
-- **Video:** Journey yes requires `**Video:** [<journey and result>](https://<host>/<clip>.mp4)` (or webm/mov, or an HTML video element for an extensionless upload); a shared clip gives that journey's start/end timestamps. A GIF or still image is only a preview.
+- **Screenshots:** Visual yes requires `**Before:**` and `**After:**`, each with a different screenshot or a `pane:` observation (what the built-in browser showed: view, state, viewport, time) when the host cannot save the image, or `**Before → After:**` with a two-column image table. Captions identify state, base/head and criterion. A new surface's Before is `**Before:** did not exist`, with no image or observation. Prose, video or a code block never replaces a screenshot pair.
+- **Video:** optional. Journey yes needs the journey's steps shown: screenshots, a GIF or a `**Video:**` link, as the owner asks; a shared clip gives that journey's start/end timestamps.
 - **Media waiver:** scoped to this outcome: `**Media waiver:** screenshots | <exact owner request> | <source>` (first field `screenshots`, `video` or `all`). Repeat only where that request applies; a screenshot waiver does not waive video. It waives that media, not the truthful description of both states or other proof.
 - **Nonvisual proof:** matched request/response JSON, status, logs or command results: `**Before:**` then `**After:**` with fenced output, or `**Before → After:** <same input>, base <sha> → head <sha> (<criterion>)` and a `diff` block. Server-only, infrastructure or internal work with no affected interactive UI journey needs no media waiver.
 - **Demo context:** base and demonstrated candidate, isolated empty slot or seed/reset recipe, viewport/environment, covered journeys and limitations.
 - **Cold start:** the original request and why, decisions with reasons, facts (IDs, paths, repos), current state, remaining steps and blockers. Links are an audit trail, not a substitute.
-- **Verification:** one row per confirmed criterion, plus the ticket's checklist state: every item ticked, or the gap. Ticketed work: the ticket's confirmed revision and digest, dependencies and integration status. Proof is bound to the exact pushed candidate. Name what is **unverified**.
+- **Verification:** one row per confirmed criterion, plus the ticket's checklist state: every item ticked, or the gap. Ticketed work: the ticket's confirmed criteria, dependencies and integration status. Proof is bound to the exact pushed candidate. Name what is **unverified**.
 - **Adjustment history:** append an entry per requested change; keep it for the PR's whole life.
 - **Progress:** checked, reviewed, merged and released stay separate; name the next visible result. Overall acceptance stays open.
 

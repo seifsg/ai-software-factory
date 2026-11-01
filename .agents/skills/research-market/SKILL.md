@@ -17,7 +17,7 @@ Research and planning only. Do not build or publish.
 
 ## Kickoff research
 
-Read the request, constraints and settled choices first. Run in parallel: one agent per competitor, one for stacks.
+Read the request, constraints and settled choices first. POC: one research agent for everything. MVP and up: in parallel, one agent per competitor, one for stacks.
 
 Depth follows the size. Before the size is known, research at MVP depth; a later POC answer moves the extra findings to the epic's follow-ups ticket in Backlog.
 - POC: how competitors deliver the requested items, plus the riskiest capability. Extra ideas go to that ticket, not the questions.
@@ -43,7 +43,7 @@ Record: a `### <competitor>` subsection per product with its URL, one feature-ma
 
 - New substantive choice: compare three credible options, recommend one with reason and tradeoff. Fewer than three viable: say why. Invent none. Record adopted, deferred and rejected ideas with reasons.
 - Delegated in-scope choices are yours. Reserved decisions go to the owner.
-- Route evidence once, no recursive research. Interface, interaction, media and public pages meant for search: `ux-quality`. New or materially changed persistence: `database-schema`.
+- Route evidence once, no recursive research. New or materially changed persistence: `database-schema`.
 - Naming: check credible options and obvious collisions. Search is not trademark clearance. A rejected name stays rejected.
 - During delivery, revise the `get-ready-to-code` plan outputs: `original item → evidence → keep / adapt / add / defer / reject → reason → acceptance impact`. Evidence may justify no change.
 - Requested items: keep, or adapt how they are built without changing what the owner gets. Defer, reject or replace needs the owner's recorded decision. An addition records its evidence and the owner's approval, apart from the requested items.

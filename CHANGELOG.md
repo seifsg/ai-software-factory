@@ -2,9 +2,37 @@
 
 Every notable change to the AI Software Factory, newest first. The format follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/) and versions follow [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html). This file and [UPGRADING.md](UPGRADING.md) are the only places for release history.
 
-The public surface is the `fast_gate.py` commands and flags, the work record format, the hook events and entries, and the skill names. A breaking change to any of them bumps MAJOR.
+The public surface is the skill names, the run file format, and the hook scripts and events. A breaking change to any of them bumps MAJOR.
 
 ## [Unreleased]
+
+### Changed
+
+- After rerun 4: each After names the verified head it was captured on, and any later fix (verify or review) recaptures the ids it touches; the live preview is shown to the owner with its URL; built-in browser captures scroll instantly, discard a warm-up shot and click by ref where the tool allows; a new surface has nothing to inspect at step 4; step 5 commits are staged by name with a scope; in Fast, the coordinator decides how review questions are fixed within scope, while deferrals stay the owner's; a one-ticket run's `Deferred (pending owner)` section is its follow-ups ticket; research and kickoff questions belong to step 0; a closed run's `Next:` is `none (closed)`.
+- One step per turn: each step ends its turn with its full block, and the Stop guard sends the next step's fixed prompt (step 2b gets "I don't think this is the best we could do. Do better. Make no mistake."), so no step starts until the previous answer is complete. Step 5 takes one todo per turn. The guard flags two step headings ticked in one turn. Without hooks, each step ends with `Say go for step <n>`.
+- `analyze-start` starts from its inputs (ticket ids, research, size, step position), covers users, jobs and non-functional needs for a new product, and ends with the decisions Recommend must make.
+- New step 2b Challenge: after the recommendation, the run tells itself "I don't think this is the best we could do. Do better. Make no mistake.", rechecks the options and posts `kept` or `changed` with the reason.
+- After rerun 3: Gate C runs once, after the step 8 review, on the final head, and checks only the `## 7 PR` contract lines plus ticked steps and the review verdict; anything else is a `note:`, never a fail. A brand-new surface's Before is `did not exist` everywhere. The owner can waive a gate (`Gate <X>: WAIVED by owner`), and the run guard accepts it. A solo owner gets no review request: the run ends by asking them to verify and merge. Each step posts its full block as its own chat message and ticks the host's task list.
+- After rerun 2: one step at a time, never batched, so analysis and recommendation each get a full pass; screenshots come from the host's built-in browser, never Playwright or headless scripts unless asked; step 0 asks once, up front, for host-blocked actions; the checker is read-only and the builder pastes its gate line; POC research uses one agent; proof ids per view or state; a plan change reruns Gate A only for what changed.
+- After the first real run: the checker reports every missing item in one pass and only a repeated item counts as a failed round; no Before capture for a brand-new surface, no mandatory journey video, a fix recaptures only its ids; a small product gets one ticket and ticket comments only on status changes; change-guard only when existing code changed; size sets scope, never quality, and Fast never waits for it; every step prints its full block, and owner replies are folded in before the next step; the reviewer hands fixes back to the builder and Gate C reruns when the PR changed.
+- **Breaking:** the factory is methods only. One pipeline of nine visible steps, ticket → analyze → recommend → plan → Before proof → build → verify → PR → review, each printing its block to the owner, the ticket and `.factory/run.md` (#231).
+- `analyze-start` and `get-ready-to-code` are restored to their full original outputs; `how-to-review-a-pr` is its own skill again; every step skill ends with an output contract.
+- Before proof is captured before the first edit with any host capture tool; After on the same server during verify. Builds run only tests mapped to changed files; the full suite runs once at verify.
+- The plugin root is `.agents/`; the delegate roles live in `.agents/agents/`.
+- `deep-review` opens with the owner's original method word for word; factory additions follow it. `ticketing` and the product bar are shorter: duplicate rules merged, rare cases (parallel tickets, speed checklist, external effects, release record) moved behind pointers. Read set 114,523 → 110,950 B (#233).
+
+### Added
+
+- New projects need no setup: with no folder named, the factory creates one beside the owner's other projects, runs `git init`, and with no remote creates a private GitHub repository and uses its Issues.
+- `recommend`: three solutions in one table, one pick.
+- Run guarantees: each step loads its skill fresh; a Stop guard re-prompts the next step until step 8 and three checker gates pass, and lets the stop through while the run waits on the owner or background jobs; a compact hook re-injects the next step after compaction. One `sh` script with one `awk` pass: about 0.07 s per turn end without a run, 0.15 s with one, nothing per tool call.
+- The `checker` role: a fresh light delegate that checks step outputs against their contracts after steps 3, 6 and 7.
+
+### Removed
+
+- The product bar (`product-bar.md`, `cases.md`, `quality-cases.md`) and the `ux-quality` skill. Security stays in `deep-review`'s security lens; the owner's words decide look, copy and placeholders.
+- All Python: the `fast_gate.py` gate and its per-tool-call hook (761 ms per call measured), the Safe controller, hidden checks, `shots`, metrics, the live view, bundle resolution, the installer and self-update, evals, release scripts and the 665-test suite.
+- Lucky mode, `verify` and `promote` of a Fast run, the optional Safe check, Show/Look/Prove/Ship phases and the owner-reply timer.
 
 ## [1.3.0] - 2026-10-31
 

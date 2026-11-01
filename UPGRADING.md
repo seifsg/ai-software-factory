@@ -2,10 +2,16 @@
 
 What installs and active runs must do for each release, newest first. What changed: [CHANGELOG.md](CHANGELOG.md).
 
-For every release:
+## 2.0.0
 
-- **Active and explicit pins never change automatically.** Ask `improve-factory` for a compatible pin change; never edit a selected bundle or receipt.
-- **Check what you run:** `fast_gate.py version` names the version, commit, channel and route; `fast_gate.py verify` lists every file that differs from the release manifest.
+The factory no longer runs any Python. Old runs cannot continue under 2.0.0.
+
+1. **Finish or abandon open runs first** on 1.x (`fast_gate.py close`, or `close --abandon` with a reason). New runs start fresh with `.factory/run.md`; old `.factory/` run records are not read.
+2. **Claude Code:** update the plugin (`claude plugin marketplace update ai-software-factory`, then update `safe-engine` in `/plugin`). The old gate hooks go with the old version.
+3. **Codex, Cursor and other copies:** delete the old launchers (`~/.agents/skills/safe-engine`, `~/.agents/skills/improve-factory`), remove every entry that runs `run-gate.sh` or `fast_gate` from `~/.codex/hooks.json` and `~/.cursor/hooks.json`, then install per [docs/install.md](docs/install.md). A leftover entry would call a script that no longer exists. Installs made with `--project <dir>` also wrote `<dir>/.agents/skills/` and `<dir>/.codex/hooks.json` or `<dir>/.cursor/hooks.json`; `--codex-home <dir>` wrote `<dir>/hooks.json`. Clean those the same way.
+4. **Delete `~/.safe-engine`** once no 1.x run needs it. It held run state, bundles, caches and the self-update clone.
+5. Open 2.0 runs: the Gate C line now sits under `## 8 Review` and runs after the review; move an existing Gate C line there and rerun its checker once.
+6. Factory clones: old commands (`python tests/run.py`, `scripts/release.py`, `python -m safe_engine`) are gone; checks are in `AGENTS.md`.
 
 ## 1.3.0
 
@@ -15,7 +21,7 @@ For every release:
 
 ## 1.2.0
 
-- After release, update launchers for `metrics` (`report`, `compare`, `export`, `delete`, `overhead`, `usage`, `task`). New Fast/Lucky/Safe runs write local analytics under `.factory/metrics/` (gitignored). Mark task boundaries only when observed; existing active pins stay unchanged and need no metrics migration. See [run metrics](docs/run-metrics.md).
+- After release, update launchers for `metrics` (`report`, `compare`, `export`, `delete`, `overhead`, `usage`, `task`). New Fast/Lucky/Safe runs write local analytics under `.factory/metrics/` (gitignored). Mark task boundaries only when observed; existing active pins stay unchanged and need no metrics migration. See [run metrics](https://github.com/seifsg/ai-software-factory/blob/v1.3.0/docs/run-metrics.md).
 
 - Fast methods now bound delegation and proof work; no command, record schema or frozen plan migration is required. Existing runs retain their pinned methods, coverage and stops. Use the revised methods after a human release/update or explicit compatible adoption; this change never resumes a paused project or installs itself. Cross-candidate Show reuse remains unsupported.
 - Selective CLI loading needs the updated bundle after release; no flags or schemas change. For local Windows factory tests, use `python tests/run.py` to select installed Git shells inside its processes. No global shell or host setting needs changing.
@@ -24,7 +30,7 @@ For every release:
 
 ## 1.1.2
 
-- After release, update the factory for scoped Show plans. New input defaults to light desktop and Before/After; mobile apps select light phone, and required extra variants are explicit. Existing stored plans and active pins retain their coverage. Design ports select design comparison and keep every frozen reference. No active-run migration is required; see [Show](docs/show-first.md).
+- After release, update the factory for scoped Show plans. New input defaults to light desktop and Before/After; mobile apps select light phone, and required extra variants are explicit. Existing stored plans and active pins retain their coverage. Design ports select design comparison and keep every frozen reference. No active-run migration is required; see [Show](https://github.com/seifsg/ai-software-factory/blob/v1.3.0/docs/show-first.md).
 
 ## 1.1.1
 
@@ -34,18 +40,18 @@ For every release:
 
 - Existing Claude Code installs: after release, update the factory and rerun `python skills/safe-engine/scripts/fast_gate.py install --host claude` if `claude plugin list --json` lacks the enabled `safe-engine@ai-software-factory` entry. The installer now installs and verifies the plugin, not only its settings. Start a new Claude Code session afterward. Keep active factory bundle pins unchanged.
 
-- Record refusals now collect independent problems, and quoted FAIL text no longer overrides an explicit verdict. Existing runs keep their pins. See [record diagnostics](docs/record-diagnostics.md).
+- Record refusals now collect independent problems, and quoted FAIL text no longer overrides an explicit verdict. Existing runs keep their pins. See [record diagnostics](https://github.com/seifsg/ai-software-factory/blob/v1.3.0/docs/record-diagnostics.md).
 
-After release, update launchers for `prove --plan` and `prove --suite --fresh`. New Fast plans declare their suite before plan completion; explicit `suite_inputs` enables reuse. New Safe states adopt the shared complete-suite queue automatically. Existing runs keep their saved policy and bundle. See [complete suites](docs/suite-checks.md).
+After release, update launchers for `prove --plan` and `prove --suite --fresh`. New Fast plans declare their suite before plan completion; explicit `suite_inputs` enables reuse. New Safe states adopt the shared complete-suite queue automatically. Existing runs keep their saved policy and bundle. See [complete suites](https://github.com/seifsg/ai-software-factory/blob/v1.3.0/docs/suite-checks.md).
 
-Journey checks should import the resolved bundle's fixed-clock helper, declare an explicit instant/timezone and list their files in the journey lint manifest. Update new plans with an affected-test command and mapping; complete suites still wait for Prove. Existing active pins stay unchanged. See [fixed browser time](docs/journey-clock.md).
+Journey checks should import the resolved bundle's fixed-clock helper, declare an explicit instant/timezone and list their files in the journey lint manifest. Update new plans with an affected-test command and mapping; complete suites still wait for Prove. Existing active pins stay unchanged. See [fixed browser time](https://github.com/seifsg/ai-software-factory/blob/v1.3.0/docs/journey-clock.md).
 
-- New Fast/Lucky runs record `checks --plan` before plan and current check receipts before completion. Existing runs retain their prior checks. After release update launchers for `checks`; keep active bundles pinned. See [hidden checks](docs/hidden-checks.md).
+- New Fast/Lucky runs record `checks --plan` before plan and current check receipts before completion. Existing runs retain their prior checks. After release update launchers for `checks`; keep active bundles pinned. See [hidden checks](https://github.com/seifsg/ai-software-factory/blob/v1.3.0/docs/hidden-checks.md).
 - New report publication checks picture content. Convert palette/interlaced/animated images to static 8-bit RGB/RGBA PNGs and inspect the result. Install updated launchers for `report`; supply honest per-ticket metrics or unavailable reasons. Existing saved reports are not fabricated from session totals.
 
-- Worth-it rounds: update the installed launchers to obtain `fix-round`; new Fast/Lucky runs record `**Findings:** none` or their final scored report path. New complete-cycle Safe runs require worth fields and explicit repair selections. Existing saved runs keep their prior checks/schema. Do not upgrade an active run's pinned bundle. See [worth-it rounds](docs/worth-it.md).
+- Worth-it rounds: update the installed launchers to obtain `fix-round`; new Fast/Lucky runs record `**Findings:** none` or their final scored report path. New complete-cycle Safe runs require worth fields and explicit repair selections. Existing saved runs keep their prior checks/schema. Do not upgrade an active run's pinned bundle. See [worth-it rounds](https://github.com/seifsg/ai-software-factory/blob/v1.3.0/docs/worth-it.md).
 
-New UI runs on the resolved current bundle freeze a Show plan and share current pictures before proof. Existing runs keep their recorded sequence; do not rewrite active ledgers. See [Show first](docs/show-first.md).
+New UI runs on the resolved current bundle freeze a Show plan and share current pictures before proof. Existing runs keep their recorded sequence; do not rewrite active ledgers. See [Show first](https://github.com/seifsg/ai-software-factory/blob/v1.3.0/docs/show-first.md).
 
 - New design-port runs use `start --design-port` and record reference coverage before plan. Existing runs keep their selected methods and obligations; do not add the flag or rewrite their ledger mid-run.
 

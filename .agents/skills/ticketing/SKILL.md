@@ -10,13 +10,12 @@ The remote ticket is the record; local notes are a cache. Write tickets with `re
 ## Tracker
 
 1. Use the project's tracker, an available tracker integration first.
-2. None set and not already answered: ask once, recommending Issues in a private GitHub repository (`references/github.md`).
+2. A new project without a remote: create a private repository on the owner's account, push the default branch and use its Issues (`references/github.md`). Otherwise, none set and not already answered: ask once, recommending Issues in a private GitHub repository.
 3. Resolve the real repository, access and visibility before writing. No credentials, customer data, private transcripts or runtime dumps in tickets. Sensitive original input stays private: the ticket gets a faithful safe summary, saying details were withheld.
-4. Search before creating: symptom, feature, area, files, PR title, branch. Reuse the same work: a bug, enhancement, QA note or review finding on an existing ticket's outcome updates that ticket as a change of intent, reopened if closed. A new ticket only for a new outcome or on the owner's ask. No duplicates.
-5. Uncertain response: read the tracker and reconcile before creating again.
-6. Record provider, project, native ID and URL.
-7. Access or a write fails: name the step and next action, keep a pending local record. No silent tracker switch, duplicate or success claim.
-8. Use only tools that exist. Installing, paid access and messaging need their own authority.
+4. Search before creating: symptom, feature, area, files, PR title, branch. Reuse the same work: a bug, enhancement, QA note or review finding on an existing ticket's outcome updates that ticket as a change of intent, reopened if closed. A new ticket only for a new outcome or on the owner's ask. No duplicates; after an uncertain response, read the tracker and reconcile before creating again.
+5. Record provider, project, native ID and URL.
+6. Access or a write fails: name the step and next action, keep a pending local record. No silent tracker switch, duplicate or success claim. Use only tools that exist; installing, paid access and messaging need their own authority.
+7. No tracker reachable, or none chosen yet while the run goes on: write the ticket to `.factory/ticket.md` in the same layout; `local: .factory/ticket.md` stands in for its link. Move it to the tracker once one is set.
 
 ## Backlog
 
@@ -39,14 +38,14 @@ Open tickets are the backlog, kept current in every mode, autonomously unless th
    - Close each open epic that meets Done (step 5).
    - In-app feedback the owner shares or the agent can read goes to its existing ticket, else the epic's follow-ups ticket.
    - Stale or duplicate tickets and PRs go to the owner as one short list, a proposed fate each (close, merge into #n, keep). Apply after the answer; a kept item notes it in its activity and is not proposed again until it changes.
-   - After the search, split open items in the same epic, area and topic: owned by this run, affected, untouched. One held by another run, session or person (To do through Ready for QA, or Blocked) is affected: ask the owner before taking it over. A run that asks nothing (Lucky) takes it over only when the request names it, and reports itself Blocked on it only when it cannot finish without it.
+   - After the search, split open items in the same epic, area and topic: owned by this run, affected, untouched. One held by another run, session or person (To do through Ready for QA, or Blocked) is affected: ask the owner before taking it over. A run that asks nothing takes it over only when the request names it, and reports itself Blocked on it only when it cannot finish without it.
 2. Move the run's tickets to To do. Sort by priority, then user value, then proven dependencies.
 3. Priority: P0 broken or blocking, P1 next, P2 planned, P3 later. Every ticket the run creates or owns has one; change it only on those, with the reason.
 4. Move at boundaries: build starts → In progress, every item ticked → Dev done, every criterion proven and the PR open → Ready for QA, PR merged → Done, check failed → In progress. Agents never set Done; the merge closes the ticket, or intake records a merge that did not. Blocked any time; back to the prior status once cleared.
 5. The epic follows its sub-issues. In progress: the first starts. Ready for QA: all still in the run are Ready for QA or Done, and no requested item outside the run is open unless owner-deferred. A sub-issue Blocked, moved to a later iteration or going back: [epic cases](references/epic-cases.md). Done: every in-scope sub-issue (not follow-ups, owner-deferred or cancelled) Done and its own checklist ticked; intake closes it, as PRs never use a closing keyword for an epic. A `change` run's single ticket moves like a sub-issue.
 6. In progress needs actionable criteria, authority, an assignee or session, a usable workspace and met dependencies for the items it starts; Safe also confirmed scope. Assign the builder at In progress; unassign only on return to Backlog or To do.
 7. Keep owned tickets' context, description, links and progress current; scope changes follow Refresh and drift.
-8. Done needs the required cycle, its evidence and the merge. Implemented, checked, independently reviewed, merged and released stay distinct. Owner stop or cancellation persists across sessions.
+8. Implemented, checked, independently reviewed, merged and released stay distinct. Owner stop or cancellation persists across sessions.
 
 ### Activity
 
@@ -64,7 +63,8 @@ Open tickets are the backlog, kept current in every mode, autonomously unless th
 ## Split the work
 
 - Ticket = one complete, user-visible outcome; epic and sub-issue contents: the layout.
-- One or more outcome sub-issues, plus the follow-ups ticket. A small change: one ticket at most. Never one per todo.
+- One or more outcome sub-issues, plus the follow-ups ticket. A small product (one page, one screen, one tool) or a small change: one ticket, no epic; its `Deferred (pending owner)` section is the follow-ups ticket wherever a method names one. Never one per todo.
+- Ticket comments only on status changes, each linking the run file's blocks; no comment per step.
 - Do not split risky work to dodge full checks.
 - Every requested item (feature, journey, integration, behavior) maps to an outcome ticket criterion. Only the owner's recorded decision moves it to the follow-ups ticket; unavailable capability keeps it Blocked in the run.
 - One open low-priority Backlog follow-ups sub-issue per epic, never per item: owner, reason and revisit condition. Include findings left after round 3, owner-deferred ideas, declined/unanswered MVP suggestions and the real version of owner-approved simplifications. Scored polish uses [Finishing touches](references/finishing-touches.md) in that same ticket.
@@ -75,24 +75,24 @@ Every ticket, every mode: unfinished until both are complete.
 
 1. Write the definition of done (criteria with IDs) at creation, the checklist (the plan's todos as task items) at plan time.
 2. Each item runs the `get-ready-to-code` 0–4 loop; tick it only after its check passed (its real effect used and seen working), proof beside the tick.
-3. Independent items and tickets run in parallel as far as files, dependencies and capacity allow; each item is ticked after its own check, each ticket keeps its own checklist loop. One writer per ticket body: the coordinator ticks, delegates report.
+3. Independent items and tickets run in parallel as far as files, dependencies and capacity allow; each item is ticked after its own check, each ticket keeps its own checklist loop. One writer per ticket body: the coordinator ticks, delegates report. Parallel tickets, handoffs to other sessions and dependencies between tickets: [parallel work](references/parallel-work.md).
 4. Finished: every item ticked and every criterion proven; otherwise loop on the failing item until it passes. Blocked only when the run cannot clear it (access, capability, owner decision): reason, next action, who unblocks; its independent items continue.
 5. An owner-deferred item is ticked as `Deferred by the owner: <decision link>`; its criteria leave the ticket with it. It counts as resolved, never as delivered.
-6. An item only the owner or missing hardware can finish stays unticked, ending `DEFERRED (owner|hardware: <what is needed>)` (safe-engine fast-run, Briefs). Not Blocked: the rest finishes, the ticket reaches Ready for QA naming it, the owner ticks it once done.
+6. An item only the owner or missing hardware can finish stays unticked, ending `DEFERRED (owner|hardware: <what is needed>)`. Not Blocked: the rest finishes, the ticket reaches Ready for QA naming it, the owner ticks it once done.
 
-## Fast and Lucky
+## Fast
 
-No contract, confirmation round or capture. Same tracker, layout, backlog and authority rules.
+No contract or confirmation round. Same tracker, layout, backlog and authority rules.
 
-Product and feature runs list every requested item and approved addition as R1, R2, ...; an owner-deferred one stays listed as `R2 (owner-deferred: <decision link>)` and needs no criterion. The gate refuses gaps: at tickets, plan and handoff, a requested item no criterion names; at plan and handoff, a criterion no checklist item names.
+Product and feature runs list every requested item and approved addition as R1, R2, ...; an owner-deferred one stays listed as `R2 (owner-deferred: <decision link>)` and needs no criterion. The checker refuses gaps: at plan (gate A), a requested item no criterion names, and a criterion no checklist item names.
 
-1. Product and feature runs: create the epic after the owner's kickoff answers (Lucky: from the request), with the owner's words, the answers and every layout section, the definition of done with IDs included. Change runs update the ticket they follow up, create one only for a new outcome, none when trivial.
-2. Create the sub-issues in user-value order, linked as native sub-issues. Optional ideas go to the epic's follow-ups ticket.
-3. Write into the run's work record: `**Epic:** <url>` (a `change` run: `**Ticket:** <url>`, or `**Ticket:** none (<why>)`), `**Sub-issue:** <url>` for each sub-issue in the run, `**Requested:**` R-ids (product and feature runs), `**Backlog:**` owned, affected and untouched items, follow-ups included. At handoff: `**Statuses:**` each owned ticket's final status: Ready for QA with its PR (naming items deferred to the owner or hardware), Blocked, or Backlog when owner-deferred.
+1. Product and feature runs: create the epic after the owner's kickoff answers with the owner's words, the answers and every layout section. Change runs update the ticket they follow up, create one only for a new outcome, none when trivial.
+2. Create the sub-issues in user-value order, linked as native sub-issues; optional ideas go to the follow-ups ticket.
+3. Write into the step 0 block of the run file (`.factory/run.md`): the epic URL (a `change` run: the ticket URL, or `none (<why>)`), each sub-issue URL in the run, the R-ids (product and feature runs), the owned, affected and untouched backlog items, follow-ups included. At the PR step, add each owned ticket's final status: Ready for QA with its PR (naming items deferred to the owner or hardware), Blocked, or Backlog when owner-deferred.
 
 ## Safe
 
-Safe runs, or moving an epic to Safe: [the contract](references/safe-contract.md).
+Safe runs, or moving an epic to Safe: [the contract](references/safe-contract.md), confirmed before implementation.
 
 ## Refresh and drift
 
@@ -103,20 +103,20 @@ Safe runs, or moving an epic to Safe: [the contract](references/safe-contract.md
 - Later input: preserve it, resolve authority, confirm or leave pending, record the reason, reassess affected plans and consumers.
 - The ticket is the spec: code and ticket never disagree. A change of intent (an owner or QA note, a fix the review requires, a need found while building) updates the definition of done and checklist before the code, with one activity entry. Safe: a scope change is a new revision, reviewed independently against the old one. Never edit state, weaken acceptance or revive a cancelled ticket; a changed goal may need a linked replacement ticket.
 
-## Sessions and workspaces
-
-- One dedicated builder session per ticket, full cycle, small fixes included. The parent owns scheduling, shared decisions and tracker updates.
-- Hand over the contract, authority and stops, decisions, current scope, checkout state, dependencies, evidence, unfinished phase and pending operations.
-- Record the real session, ticket revision, absolute checkout and base/head. A label is not a dispatched session. Missing capability stays explicit.
-- Parallel tickets need disjoint files, runtime effects, acceptance and decisions; isolate or serialize shared ports, databases, caches, services and build output.
-- A Fast or Lucky run's tickets share its checkout, one writer per file. Parallel runs (lanes) on one epic each take their own worktree, branch and dev ports and merge into the wave's integration branch. Safe tickets take their own worktrees. Stop prior operations before handoff. Never overwrite or delete another ticket's state.
-- A dependency in the same run and branch (Fast, Lucky) is met once the items it needs are ticked there; across branches (every Safe ticket), by its handed-off result: its checked and reviewed commit in this ticket's base (branch from it or, with several dependencies, merge their delivered commits into this branch locally first) and its recorded delivery; no owner merge is needed. A dependent ticket waits only for that, never for the final proof of its criteria, which comes at the end. Closed status alone proves nothing. Parts without the dependency form their own tickets and start at once. Changed dependency scope: revalidate affected analysis and evidence.
-
 ## Review and deliver
 
 1. Refresh the ticket.
-2. Map every latest confirmed expectation and original input item to its implementation and actual evidence. Every checklist item is ticked with its proof. Compare actual before with delivered after. List missing or partial results, unintended behavior, deviations.
+2. Map every latest confirmed expectation and original input item to its implementation and actual evidence. Compare actual before with delivered after. List missing or partial results, unintended behavior, deviations.
 3. Approved deviations keep authority and reason. Pending changes cannot redefine a pass. Unresolved drift, unknown required scope or missing evidence blocks dependent acceptance.
-4. PRs and reviews carry ticket and epic links, confirmed revision and digest, before/after proof, decisions, unresolved findings, resume step.
+4. PRs and reviews carry ticket and epic links, confirmed criteria, before/after proof, decisions, unresolved findings, resume step.
 5. Update the ticket with the actual outcome and openable, sanitized proof. Preserve blocked and cancelled work and open human decisions.
-6. A closed child list does not certify the epic: it needs combined journey evidence, and combined QA waits until its tickets finish implementation. A draft PR is not merge or release.
+6. A closed child list does not certify the epic: it needs combined journey evidence, and combined QA waits until its tickets finish implementation.
+
+## Output contract
+
+In a factory run this is step 0. The block `## 0 Ticket` holds:
+
+- [ ] The ticket link, or `local: .factory/ticket.md` with the reason
+- [ ] Reused or new, with the search terms used
+- [ ] The definition of done as labelled criteria
+- [ ] The checklist (filled from the plan's todos at step 3) and the status

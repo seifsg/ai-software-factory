@@ -7,7 +7,7 @@ Use when the app has prior releases or a declared release policy, and for releas
 1. Before planning, find the app's process: release guide, scripts, version files and their copies, changelog, notes source or generator, automation and its triggers. Cross-check the latest release. Unreadable history is unverified, never absent.
 2. Follow it exactly: changelog format, section, order and timing; per-change entries or fragments versus generated files; version bump stage; tag, branch and channel rules. Never impose factory conventions, hand-edit generated output or bump a version early.
 3. Conflicting sources, or neither history nor policy: ask before dependent work. Never invent a previous release or version.
-4. Plan, briefs, PR checks and handoff carry the process source paths and the remaining release steps. On resume, re-read sources that changed. Reusable steps live in the project's own release guide; fill verified gaps there during authorized work. No new gate or controller fields.
+4. Plan, briefs, PR checks and handoff carry the process source paths and the remaining release steps. On resume, re-read sources that changed. Reusable steps live in the project's own release guide; fill verified gaps there during authorized work.
 
 ## Release work
 

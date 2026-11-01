@@ -30,10 +30,10 @@ Trust nothing until traced. Follow the user's or consumer's first action to the 
 - Remote effects: operation identity, pending/success/failure/unknown outcomes, ambiguous timeouts, duplicate or out-of-order delivery, safe retry. A commit, sent request or webhook alone proves no completed effect.
 - Headless systems: API/CLI contracts, errors, job status, recovery and observability. Missing UI is not a defect when none is required.
 
-## UX and public pages
+## Public pages
 
-- UI/interaction changes: apply `ux-quality` to the affected journey: a verdict for each of its rules U1 to U10 (map, navigation, hierarchy, disclosure, labels, interaction cost against the recorded minimum, states, access, look, performance), rendered visuals, auditioned sounds. Missing interaction or listening evidence stays UNKNOWN.
-- Public pages meant for search: apply the `ux-quality` SEO checks with actual crawl/render evidence. Keep private and staging pages excluded.
+- UI/interaction changes: judge the affected journey as its user: findable, clear labels and states, few steps, readable and accessible, consistent look. Missing interaction evidence stays UNKNOWN.
+- Public pages meant for search: check titles, descriptions, headings and crawlable content with actual render evidence. Keep private and staging pages excluded.
 
 ## Calibrate
 

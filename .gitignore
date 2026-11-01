@@ -14,11 +14,6 @@ logs/
 
 # Dependencies and caches
 node_modules/
-.venv/
-venv/
-__pycache__/
-*.pyc
-.pytest_cache/
 
 # Local editor and OS state
 .vscode/
