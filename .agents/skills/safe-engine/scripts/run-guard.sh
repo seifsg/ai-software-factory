@@ -8,6 +8,7 @@
 #   clear    the owner's command after a halt: the guard drives the run again, loop caps count from here.
 mode=${1:-stop}
 self=$0; case $self in *run-guard.sh) ;; *) self=${g:-run-guard.sh} ;; esac  # the plugin hook sources it from $g
+self=$(printf '%s' "$self" | tr '\\' /)  # a Windows path's backslashes would break the JSON replies
 d=$PWD
 while [ ! -f "$d/.factory/run.md" ]; do
   { [ -e "$d/.git" ] || [ -z "$d" ]; } && exit 0  # checkout root reached: no run here
@@ -26,7 +27,7 @@ if [ -f "$st" ]; then
   if grep -qv "^g_[A-Za-z_]*='[^']*'\$" "$st"; then note='guard state was edited outside the guard; ignored.'; else . "$st"; fi
 fi
 [ -f "$run.ticks" ] && { g_ticks=$(cat "$run.ticks"); rm -f "$run.ticks" "$run.nudge"; }  # state of an older guard
-keys='ticks session transcript seen night_until sig idle halt end clear base_A base_B base_C base_R sstep relay rstep compacts csession jobs_since'
+keys='ticks session transcript seen night_until sig idle halt end clear base_A base_B base_C base_R sstep relay rstep compacts csession jobs_since jobs_key'
 save() { mkdir -p "$g" && for k in $keys; do eval "printf \"g_%s='%s'\\n\" $k \"\$g_$k\""; done > "$st"; }
 if [ "$mode" = clear ]; then  # also ends night mode: the owner is back
   g_halt= g_end= g_idle=0 g_clear=1 g_night_until=0; save
@@ -91,6 +92,7 @@ $(awk -v R="$run" -v fb=$fb -v nov=$nov -v head="$head" -v up="$up" -v night=$ni
     rok = rid != "" && pre(rsha, head) && head == up && proven(rid, "R", rsha) && (nov || fb || last[rid] ~ /^verdict: ready( @|$)/)
     if ((step > 3 || r) && !ok("A")) g = "A"; else if ((step > 6 || r) && !ok("B")) g = "B"; else if (r && !ok("C")) g = "C"; else if (r && !rok) g = "R"
     p += ok("A") + ok("B") + ok("C") + rok  # progress: ticks plus proven gates
+    for (x in f) if (x == "R" ? rok : ok(x)) f[x] = 0  # a loop that converged has no rounds left to cap
     printf "%d %d %d %d %s %d %d %d %d %d %d %d %d %d %s\n", s, w, r && g == "-", c, g, p, j, jm, cr, f["A"], f["B"], f["C"], f["R"], step, n
   }' "$run" "$@")
 EOF
@@ -130,13 +132,14 @@ for x in A B C R; do eval "n=\$((f$x - \${g_base_$x:-0}))"; [ "$n" -gt "$rounds"
 # A jobs wait has a deadline; past it the guard wakes the run, even while a subagent still runs (it may hang).
 todo=
 if [ "$jobs" = 1 ]; then
-  [ -n "$g_jobs_since" ] || g_jobs_since=$now
+  k=$(grep '^Waiting: jobs:' "$run" | cksum | cut -d ' ' -f 1)  # a new job text starts a new deadline
+  [ -n "$g_jobs_since" ] && [ "$g_jobs_key" = "$k" ] || g_jobs_since=$now g_jobs_key=$k
   [ "$jmax" -gt "${FACTORY_JOB_MAX:-120}" ] && jmax=${FACTORY_JOB_MAX:-120}
   if [ "$jmax" = 0 ]; then todo='Waiting: jobs: needs a deadline: write it as `Waiting: jobs: <what runs> (max <minutes> min)`, then end your turn.'
   elif [ $(( now - g_jobs_since )) -gt $(( jmax * 60 )) ]; then
     todo="The job in Waiting: jobs: is past its deadline ($jmax min): check it, stop it if it hangs, record its result or failure in .factory/run.md, update Waiting, then end your turn."
   fi
-else g_jobs_since=; fi
+else g_jobs_since= g_jobs_key=; fi
 save
 [ -n "$todo" ] && { printf '{"decision":"block","reason":"If this session runs the factory run in .factory/run.md: %s"}\n' "$todo"; exit 0; }
 [ "$waiting" = 1 ] || exit 0  # waiting on the owner or background jobs: stopping is right

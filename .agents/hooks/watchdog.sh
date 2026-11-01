@@ -30,6 +30,9 @@ grep -q '^Waiting: owner' "$run" && { notify owner "waiting on the owner: $(sed 
 # A guard that stopped firing while the run file moves: the hooks are off.
 [ -f "$st" ] && [ "$run" -nt "$st" ] && old "$st" "$silent" && ! old "$run" "$stall" && { notify hooks "the run file changes but the guard has not run for $silent min: check the hooks."; exit 0; }
 [ "$now" -lt "${w_backoff_until:-0}" ] && { say "backing off until $(date -d "@$w_backoff_until" '+%H:%M' 2>/dev/null || echo "$w_backoff_until")"; exit 0; }
+# A background job inside its deadline: its result wakes the session; past it, the resume asks about it.
+max=$(sed -n 's/^Waiting: jobs:.*(max \([0-9][0-9]*\) min).*/\1/p' "$run" | head -n 1)
+[ -n "$max" ] && [ "$now" -lt $(( ${g_jobs_since:-0} + max * 60 )) ] && { say 'waiting on a job inside its deadline'; exit 0; }
 # Still working: the transcript or the run file moved recently.
 if [ -n "$g_relay" ]; then old "$st" 10 || { say 'relay starting'; exit 0; }; mode=fresh
 elif old "$run" "$stall" && { [ -z "$g_transcript" ] || old "$g_transcript" "$stall"; }; then mode=resume
