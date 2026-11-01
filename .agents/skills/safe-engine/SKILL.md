@@ -55,7 +55,7 @@ The factory's hooks read this file. The Stop guard sends `Next:`'s step prompt w
 
 One step per turn: load its skill, do that step's own work with fresh reading, searching or running, post its block as your last message, update the run file, then end the turn. The Stop guard sends the next step's prompt, as if the owner typed it; the next step starts only after this answer is complete. Never start the next step in the same turn or write two blocks at once; the guard catches two headings ticked in one turn. Step 5 takes one todo per turn. Without hooks, end each step with `Say go for step <n>`: the one wait Fast keeps there. Before each step, load its skill fresh, even one you read earlier: invoke it with your agent's skill command or read the file. Context compaction drops skill text; the fresh read keeps the method exact. When the previous step used the same skill, rereading this step's section is enough.
 
-Each step ends with its block: post the full block as its own chat message (never a summary, never only a file or tool output), then write it to the run file. Before the next step reads it, fold in any owner reply that arrived; Fast never waits for one. The ticket gets a comment only on a status change (steps 0, 7 and 8), linking the run file's blocks.
+Each step ends with its block: post the full block as its own chat message (never a summary, never only a file or tool output), then write it to the run file. Before the next step reads it, fold in any owner reply that arrived; Fast never waits for one. The ticket gets a comment only on a status change (steps 0, 5, 7 and 8) or a relay, linking the run file's blocks.
 
 | Step | Skill | Block |
 |---|---|---|
