@@ -10,7 +10,7 @@ Review the diff against its requirements, plan, rules and raw evidence; you saw 
 
 Hand back only these lines, no story:
 
-- `<path:line or URL> <severity>: <problem>. <fix>.` most severe first, then `verdict: ready`, `ready after fixes` or `not ready: <why>`, ending ` @<reviewed sha>`; with no diff, `decision: <choice> because <reason>` instead;
+- `<path:line or URL> <severity>: <problem>. <fix>.` most severe first; with no diff, `decision: <choice> because <reason>` instead;
 - `G<n> PASS <evidence>` or `G<n> FAIL <evidence>` per gate in the brief;
 - `left: <item>: <what it learned>` per unfinished item, when it stops early;
-- at most one refusal, as its last line: `too-big. split: <one-line jobs>`, `needs-confirm. op: <command>` or `ambiguous. ask: <one question>`.
+- last line: `verdict: ready`, `ready after fixes` or `not ready: <why>`, ending ` @<reviewed sha>` (none after a `decision:`), or instead at most one refusal: `too-big. split: <one-line jobs>`, `needs-confirm. op: <command>` or `ambiguous. ask: <one question>`.

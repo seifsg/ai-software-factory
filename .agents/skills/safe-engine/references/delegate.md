@@ -11,7 +11,7 @@ Use the cheapest capable role; host models/overrides: `docs/hosts.md`.
 | maker | standard | yes | planned or mechanical edits, fix rounds that spell out each fix, walkthroughs that run the change | `<path:lines>: <change>` per change, then `T<n> pre: <before> do: <change> post: <check>` per todo |
 | builder | deep | yes | edits that need design calls: architecture, schema, security, unclear bugs | `<path:lines>: <change>` per change, then `decision: <choice> because <reason>` per call made and `T<n> pre: <before> do: <change> post: <check>` per todo |
 | checker | light | its gate line only | gate checks against output contracts ([checker](checker.md)) | `<contract line>: met <where>` or `MISSING <what>`, then `Gate <X>: PASS @<commit>` or `FAIL <n> missing` |
-| reviewer | deep | no | final and independent review (`deep-review`), judgement calls that change no file: unclear bugs, architecture | `<path:line or URL> <severity>: <problem>. <fix>.` most severe first, then the factory `verdict:` line of `how-to-review-a-pr`; with no diff, `decision: <choice> because <reason>` instead |
+| reviewer | deep | no | final and independent review (`deep-review`), judgement calls that change no file: unclear bugs, architecture | `<path:line or URL> <severity>: <problem>. <fix>.` most severe first, the factory `verdict:` line of `how-to-review-a-pr` last; with no diff, `decision: <choice> because <reason>` instead |
 
 Use the role's tier/edit access; keep method reports (UX, `deep-review`, checker). Every handback except the checker's (its lines only) then adds:
 
