@@ -36,7 +36,7 @@ Run it as a factory run of kind `change` on its maintenance ticket: the ten step
 
 - Record the invariants: project goal, selected decisions, complete methods, owner stops, human release. Changing one needs the owner. Never weaken a check that failed.
 - Exclude unrelated improvements. A new skill, hook, rule or reference needs a demonstrated gap; no universal rule for an isolated complaint.
-- Shorter and faster is the goal. The plan states method bytes before and after for each changed file and in total (`wc -c`). Net growth needs the owner's OK with the reason.
+- Shorter and faster is the goal. The plan states method bytes before and after for each changed file and in total, from Git blobs (`git ls-tree -l <ref>`). Net growth needs the owner's OK with the reason.
 - Lasting rules go in the skill that owns them, once. Remove stale or duplicate prose.
 
 ## Proof (steps 4 to 6)
