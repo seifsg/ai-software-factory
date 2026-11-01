@@ -23,11 +23,13 @@ else
   has OWNER "$HOME/.codex/rules/factory.rules" && say ok 'forbidden rules' || say MISSING "$HOME/.codex/rules/factory.rules"
 fi
 command -v "$cli" >/dev/null && say ok "$host CLI" || say MISSING "$host CLI: on PATH, or set FACTORY_CLAUDE / FACTORY_CODEX"
-probe() {  # codex: one sandboxed command must really run; a dead sandbox (seen on Windows) stalls every step
-  o=$(mktemp) h=$(git -C "$P" rev-parse HEAD)
-  "$cli" exec -s workspace-write -c 'approval_policy="never"' "Run the shell command git rev-parse HEAD and reply with its output only." > "$o" 2>&1 < /dev/null & p=$!
+probe() {  # codex: one sandboxed command must really run; a dead sandbox (seen on Windows) stalls every step.
+  # A scratch repo inside the project: same sandbox as the run, and its own .git hides the run from the guard.
+  t="$P/.factory/probe"; rm -rf "$t"; mkdir -p "$t" && git -C "$t" init -q && git -C "$t" -c user.name=f -c user.email=f@f commit -q --allow-empty -m probe || return 1
+  h=$(git -C "$t" rev-parse HEAD)
+  (cd "$t" && exec "$cli" exec -s workspace-write -c 'approval_policy="never"' "Run the shell command git rev-parse HEAD and reply with its output only.") > "$t.out" 2>&1 < /dev/null & p=$!
   ( sleep "${FACTORY_PROBE_S:-180}"; kill $p ) > /dev/null 2>&1 & k=$!
-  wait $p; kill $k 2> /dev/null; grep -q "$h" "$o"; r=$?; rm -f "$o"; return $r
+  wait $p; kill $k 2> /dev/null; grep -q "$h" "$t.out"; r=$?; rm -rf "$t" "$t.out"; return $r
 }
 [ "$host" = codex ] && command -v "$cli" >/dev/null && { probe && say ok 'a sandboxed command runs' || say MISSING 'a sandboxed codex command: codex exec -s workspace-write ran nothing'; }
 # 3. Outward actions work without a prompt: own branch, pre-push hook installed, push dry run, tracker access.

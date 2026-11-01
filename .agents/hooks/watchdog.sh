@@ -42,10 +42,10 @@ elif old "$run" "$stall" && ! busy; then mode=resume
 else say running; exit 0; fi
 S=$g_session MSG='The factory watchdog found this run stalled. Read .factory/run.md and continue its Next step.'; export P S MSG
 tpl="$here/claude-settings.json"; [ "$host" = codex ] && CLI=${FACTORY_CODEX:-codex} || CLI=${FACTORY_CLAUDE:-claude}; export CLI
-nf="-c 'approval_policy=\"never\"' -c 'sandbox_mode=\"workspace-write\"'" cf='--permission-mode dontAsk --settings "'"$tpl"'"'  # night flags
+nf="-c 'approval_policy=\"never\"' -c 'sandbox_mode=\"workspace-write\"'" cf='--permission-mode dontAsk --settings "'"$tpl"'"'  # night flags (resume takes no -s)
 if [ "$mode" = fresh ]; then
   say "starting a fresh session (relay)"
-  c=${FACTORY_FRESH:-$([ "$host" = codex ] && echo '"$CLI" exec '"$nf"' "\$safe-engine Resume $P"' || echo '"$CLI" -p '"$cf"' "/safe-engine Resume $P"')}
+  c=${FACTORY_FRESH:-$([ "$host" = codex ] && echo '"$CLI" exec -s workspace-write -c '"'"'approval_policy="never"'"'"' "\$safe-engine Resume $P"' || echo '"$CLI" -p '"$cf"' "/safe-engine Resume $P"')}
 else
   say "resuming session $S"
   c=${FACTORY_RESUME:-$([ "$host" = codex ] && echo '"$CLI" exec resume '"$nf"' "$S" "$MSG"' || echo '"$CLI" -p -r "$S" '"$cf"' "$MSG"')}

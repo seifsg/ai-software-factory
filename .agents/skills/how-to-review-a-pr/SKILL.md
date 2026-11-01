@@ -84,7 +84,7 @@ Run `deep-review`'s analysis categories and every applicable lens it lists: secu
 | `REQUEST-CHANGES` | HIGH remains that we cannot safely fix, or open questions block correctness. | `not ready` |
 | `BLOCK` | CRITICAL unresolved: claim not delivered, existing behavior or supported runtime broken, secret shipped, or required gates cannot pass. | `not ready` |
 
-A factory run's handback (the PR has a `.factory/run.md`) ends `verdict: <factory line> @<reviewed head sha>`.
+A factory run's handback (its brief names a run file) ends `verdict: <factory line> @<reviewed head sha>`.
 
 6. Compile open questions.
 
@@ -172,7 +172,7 @@ Show the draft before posting unless pre-authorized. The comment is the only aut
 
 ## Own draft PR
 
-A factory run's reviewer skips phases 5 to 7 and never pushes: it hands back the fix-set, and checks the delta once the builder applied it. Otherwise, for a draft PR your agent opened, the question gate, push and comment checkpoints are pre-authorized. Open questions go in the comment. Push only to that PR's branch, never force. Humans own ready, merge and release. Anyone else's PR keeps every checkpoint.
+A factory run's reviewer skips phases 5 to 7, never pushes and may post the phase 8 comment: it hands back the fix-set, and checks the delta once the builder applied it. Otherwise, for a draft PR your agent opened, the question gate, push and comment checkpoints are pre-authorized. Open questions go in the comment. Push only to that PR's branch, never force. Humans own ready, merge and release. Anyone else's PR keeps every checkpoint.
 
 ## Safety
 
