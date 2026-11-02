@@ -64,14 +64,11 @@ Open tickets are the backlog, kept current in every mode, autonomously unless th
 
 - Ticket = one complete, user-visible outcome; epic and sub-issue contents: the layout.
 - One or more outcome sub-issues, plus the follow-ups ticket. A small product (one page, one screen, one tool) or a small change: one ticket, no epic; its `Deferred (pending owner)` section is the follow-ups ticket wherever a method names one. Never one per todo.
-- Ticket comments only on status changes, each linking the run file's blocks; no comment per step.
 - Do not split risky work to dodge full checks.
 - Every requested item (feature, journey, integration, behavior) maps to an outcome ticket criterion. Only the owner's recorded decision moves it to the follow-ups ticket; unavailable capability keeps it Blocked in the run.
 - One open low-priority Backlog follow-ups sub-issue per epic, never per item: owner, reason and revisit condition. Include findings left after round 3, owner-deferred ideas, declined/unanswered MVP suggestions and the real version of owner-approved simplifications. Scored polish uses [Finishing touches](references/finishing-touches.md) in that same ticket.
 
 ## Definition of done and checklist
-
-Every ticket, every mode: unfinished until both are complete.
 
 1. Write the definition of done (criteria with IDs) at creation, the checklist (the plan's todos as task items) at plan time.
 2. Each item runs the `get-ready-to-code` 0–4 loop; tick it only after its check passed (its real effect used and seen working), proof beside the tick.

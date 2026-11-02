@@ -22,19 +22,20 @@ The `## Work rules` section of `.agents/skills/safe-engine/SKILL.md` applies to 
 
 ## Keep it working
 
-No Python, test suite or build. The checks are commands and a fresh agent:
+No Python, test suite or build. The checks are commands and a fresh agent. Byte counts come from Git blobs, the same on every checkout and line ending: commit first, or name the base (`origin/main`) in place of `HEAD`.
 
 ```text
 grep -rnE '\]\(\.\./' .agents/skills                 # no links out of a skill's folder: expect nothing
-wc -c .agents/skills/*/SKILL.md                      # each under 17000
-cat .agents/skills/*/SKILL.md .agents/skills/*/references/*.md | wc -c   # under 170000
-(cd .agents/skills && cat safe-engine/SKILL.md safe-engine/references/run-file.md safe-engine/references/checker.md safe-engine/references/sizes.md safe-engine/references/delegate.md safe-engine/references/owner-reports.md safe-engine/references/worth-it.md ticketing/SKILL.md ticketing/references/ticket-layout.md analyze-start/SKILL.md recommend/SKILL.md get-ready-to-code/SKILL.md how-to-make-a-pr/SKILL.md how-to-make-a-pr/references/media-proof.md how-to-make-a-pr/references/pr-layout.md how-to-make-a-pr/references/github.md how-to-make-a-pr/references/credit.md deep-review/SKILL.md deep-review/references/change-guard.md deep-review/references/compliance.md | wc -c)   # read set: under 105000
+git ls-tree -rl HEAD .agents/skills | awk '$5 ~ /\/SKILL\.md$/ && $4 >= 17000'   # a SKILL.md at 17000 or over: expect nothing
+git ls-tree -rl HEAD .agents/skills | awk '$5 ~ /\/(SKILL|references\/[^\/]+)\.md$/ {s += $4} END {print s}'   # under 170000
+(cd .agents/skills && git ls-tree -l HEAD safe-engine/SKILL.md safe-engine/references/run-file.md safe-engine/references/checker.md safe-engine/references/sizes.md safe-engine/references/delegate.md safe-engine/references/owner-reports.md safe-engine/references/worth-it.md ticketing/SKILL.md ticketing/references/ticket-layout.md analyze-start/SKILL.md recommend/SKILL.md get-ready-to-code/SKILL.md how-to-make-a-pr/SKILL.md how-to-make-a-pr/references/media-proof.md how-to-make-a-pr/references/pr-layout.md how-to-make-a-pr/references/github.md how-to-make-a-pr/references/credit.md deep-review/SKILL.md deep-review/references/change-guard.md deep-review/references/compliance.md | awk '{s += $4} END {print s}')   # read set: under 105000
 ```
 
 - A changed `run-guard.sh` runs on fixture run files (`improve-factory`, Proof). It stays POSIX `sh` with LF endings and one `awk` pass.
+- A changed `gh` or `git` command form in a method: update the night templates (`.agents/hooks/claude-settings.json` allow list, `codex.rules`) to match.
 - Every changed method gets a fresh-agent walkthrough before review.
 - Moving, adding or deleting a skill, reference, role or hook: update `README.md` and `docs/` in the same PR. Keep what they say (commands, paths, defaults) true by hand.
-- Each PR states method bytes before and after (`wc -c`). Net growth needs the owner's OK with the reason.
+- Each PR states method bytes before and after (the commands above, base and head). Net growth needs the owner's OK with the reason.
 - Keep secrets, client data, transcripts and `.factory/` run files out of Git.
 
 ## PRs

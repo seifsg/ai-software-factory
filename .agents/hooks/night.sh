@@ -2,11 +2,12 @@
 # Night mode: preflight, then start an unattended factory session that denies instead of prompting.
 #   sh night.sh <claude|codex> <hours> [--check]     run from the project; --check stops after the preflight
 # Refuses to start when anything the run needs would prompt, fail or go unguarded. FACTORY_START overrides
-# the start command (run with sh -c; $P is the project).
+# the start command (run with sh -c; $P is the project); FACTORY_CLAUDE and FACTORY_CODEX name a CLI off PATH.
 host=$1 hours=$2 check=$3 here=$(cd "$(dirname "$0")" && pwd) P=$PWD
 run="$P/.factory/run.md" st="$P/.factory/guard/state" bad=0
 say() { printf '%-8s %s\n' "$1" "$2"; [ "$1" = ok ] || bad=1; }
-case $host in claude | codex) ;; *) echo 'usage: sh night.sh <claude|codex> <hours> [--check]' >&2; exit 2 ;; esac
+case $host in claude) cli=${FACTORY_CLAUDE:-claude} ;; codex) cli=${FACTORY_CODEX:-codex} ;; *) echo 'usage: sh night.sh <claude|codex> <hours> [--check]' >&2; exit 2 ;; esac
+case $cli in /* | ?:*) ;; */*) cli=$P/$cli ;; esac  # a relative override must survive the probe's cd
 case $hours in '' | *[!0-9]*) echo 'hours: a whole number' >&2; exit 2 ;; esac
 has() { t=$1; shift; grep -qs -- "$t" "$@"; }  # has <text> <files...>: any file contains the text
 cfg=${CLAUDE_CONFIG_DIR:-$HOME/.claude}
@@ -22,7 +23,16 @@ else
   has run-guard.sh "$HOME/.codex/hooks.json" && say ok 'guard hooks wired' || say MISSING "guard hooks in $HOME/.codex/hooks.json"
   has OWNER "$HOME/.codex/rules/factory.rules" && say ok 'forbidden rules' || say MISSING "$HOME/.codex/rules/factory.rules"
 fi
-command -v "$host" >/dev/null && say ok "$host CLI" || say MISSING "$host CLI on PATH"
+command -v "$cli" >/dev/null && say ok "$host CLI" || say MISSING "$host CLI: on PATH, or set FACTORY_CLAUDE / FACTORY_CODEX"
+probe() {  # codex: one sandboxed command must really run; a dead sandbox (seen on Windows) stalls every step.
+  # A scratch repo inside the project: same sandbox as the run, and its own .git hides the run from the guard.
+  t="$P/.factory/probe"; rm -rf "$t"; mkdir -p "$t" && git -C "$t" init -q && git -C "$t" -c user.name=f -c user.email=f@f -c commit.gpgsign=false commit -q --no-verify --allow-empty -m probe || { rm -rf "$t"; return 2; }
+  h=$(git -C "$t" rev-parse HEAD)
+  (cd "$t" && exec "$cli" exec -s workspace-write -c 'approval_policy="never"' "Run the shell command git rev-parse HEAD and reply with its output only.") > "$t.out" 2>&1 < /dev/null & p=$!
+  ( sleep "${FACTORY_PROBE_S:-180}"; kill $p ) > /dev/null 2>&1 & k=$!
+  wait $p; kill $k 2> /dev/null; r=1; grep -q "$h" "$t.out" && r=0; rm -rf "$t" "$t.out"; return $r
+}
+[ "$host" = codex ] && command -v "$cli" >/dev/null && { probe; case $? in 0) say ok 'a sandboxed command runs' ;; 2) say MISSING "a scratch Git commit in $P/.factory/probe" ;; *) say MISSING 'a sandboxed codex command: codex exec -s workspace-write ran nothing' ;; esac; }
 # 3. Outward actions work without a prompt: own branch, pre-push hook installed, push dry run, tracker access.
 b=$(git -C "$P" branch --show-current 2>/dev/null)
 case $b in '' | main | master) say MISSING "a feature branch (on '${b:-detached}')" ;; *) say ok "branch $b" ;; esac
@@ -39,5 +49,5 @@ grep -v '^Night:' "$run" | awk -v n="Night: until $(date -d "@$until" '+%Y-%m-%d
 echo "Preflight passed. Night budget: $hours h."
 export P
 [ -n "$FACTORY_START" ] && exec sh -c "$FACTORY_START"
-[ "$host" = claude ] && exec claude -p --permission-mode dontAsk --settings "$here/claude-settings.json" "/safe-engine Resume $P"
-exec codex exec -s workspace-write -c 'approval_policy="never"' "\$safe-engine Resume $P"
+[ "$host" = claude ] && exec "$cli" -p --permission-mode dontAsk --settings "$here/claude-settings.json" "/safe-engine Resume $P"
+exec "$cli" exec -s workspace-write -c 'approval_policy="never"' "\$safe-engine Resume $P"

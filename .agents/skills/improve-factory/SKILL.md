@@ -36,7 +36,7 @@ Run it as a factory run of kind `change` on its maintenance ticket: the ten step
 
 - Record the invariants: project goal, selected decisions, complete methods, owner stops, human release. Changing one needs the owner. Never weaken a check that failed.
 - Exclude unrelated improvements. A new skill, hook, rule or reference needs a demonstrated gap; no universal rule for an isolated complaint.
-- Shorter and faster is the goal. The plan states method bytes before and after for each changed file and in total (`wc -c`). Net growth needs the owner's OK with the reason.
+- Shorter and faster is the goal. The plan states method bytes before and after for each changed file and in total, from Git blobs (`git ls-tree -l <ref>`). Net growth needs the owner's OK with the reason.
 - Lasting rules go in the skill that owns them, once. Remove stale or duplicate prose.
 
 ## Proof (steps 4 to 6)
@@ -46,7 +46,7 @@ Capture Before at step 4: the old behavior in the same form as the After.
 | Change | Proof |
 |---|---|
 | Instructions | A fresh agent gets the changed skill, a realistic request and raw fixtures, never the expected outcome. Judge its decisions and artifacts, not word matches. |
-| Hook script | Run it on fixture run files: no run, open, waiting, idle after a nudge, closed with a gate missing, finished. |
+| Hook script | Run it on fixture run files: no run, open, waiting, idle after a nudge, closed with a gate missing, finished. A hook that drives this session: edit and test a copy, replace the live file only once the fixtures pass. |
 | Both | Both, each proves only itself. |
 
 - Pick the cases the change touches: the domain it governs (game, mobile, desktop, server, CLI) with its real tooling; an interrupted run; a compaction; a broken output contract the checker must catch.

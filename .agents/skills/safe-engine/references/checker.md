@@ -9,7 +9,9 @@ Role: checker. Gate <A|B|C>. Project: <absolute path>. Commit: <HEAD sha>.
 Contracts: the "Output contract" checklist of <skill paths for the gate's steps>.
 Outputs: .factory/run.md, steps <range>; <PR URL for gate C>.
 Only those checklist lines (and Gate C's list below) count; any other concern is a "note:", never
-MISSING. For every line, find the output that meets it; open what it names.
+MISSING. For every line, find the output that meets it; open what it names. Be strict: unsure is
+MISSING with the reason. `DEFERRED (owner|hardware: <what>)` meets a line only for work that needs the
+owner (hands, approval, an install) or missing hardware; a stub or placeholder never does, and "unverified" only as that DEFERRED.
 Read-only. Check every line in one pass. Hand back "Gate <X>: PASS @<commit>" when all are met, else "Gate <X>:
 FAIL <n> missing" and the list. Do not fix anything. Do not read the builder's notes or chat.
 ```
@@ -25,6 +27,7 @@ Gate C's list, besides `## 7 PR`:
 - [ ] Steps 0–8 ticked
 - [ ] Gates A and B: PASS or WAIVED
 - [ ] `## 8 Review` holds the reviewer's verdict on the PR's current head
+- [ ] Each After file `## 8 Review` names as recaptured names a commit at or after its fix
 
 ## Handback
 

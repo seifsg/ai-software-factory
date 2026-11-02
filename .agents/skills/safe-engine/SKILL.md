@@ -39,7 +39,7 @@ Build systems that outlast their creator. Breakage is not acceptable.
 | `feature` | big feature with product choices | same |
 | `change` | bug fix, small change, follow-up, factory maintenance | none; every block stays short |
 
-Every run keeps project rules and never puts secrets in code or Git. Size (POC, MVP, production slice) sets scope, never quality: [sizes](references/sizes.md). Fast never waits for the size answer: it takes the size the request fits, records it and goes on.
+Every run keeps project rules and never puts secrets in code or Git. Size (POC, MVP, production slice) sets scope, never quality: [sizes](references/sizes.md).
 
 ## The run file
 
@@ -49,13 +49,13 @@ Every run keeps project rules and never puts secrets in code or Git. Size (POC, 
 - `Waiting:` stays `none` while you work. Before ending a turn on purpose, set `owner: <question>` or `jobs: <what runs> (max <minutes> min)`; set it back to `none` when you resume.
 - `Status: closed` only after step 8 and gates A, B and C pass or the owner waives one. Owner stop: `Status: stopped (<reason>)`.
 
-The factory's hooks read this file. The Stop guard sends `Next:`'s step prompt when a turn ends; the compact hook re-injects it after context compaction. With no hooks installed, apply the same rules yourself at every turn.
+The factory's hooks read this file. With no hooks installed, apply the same rules yourself at every turn.
 
 ## Steps
 
-One step per turn: load its skill, do that step's own work with fresh reading, searching or running, post its block as your last message, update the run file, then end the turn. The Stop guard sends the next step's prompt, as if the owner typed it; the next step starts only after this answer is complete. Never start the next step in the same turn or write two blocks at once; the guard catches two headings ticked in one turn. Step 5 takes one todo per turn. Without hooks, end each step with `Say go for step <n>`: the one wait Fast keeps there. Before each step, load its skill fresh, even one you read earlier: invoke it with your agent's skill command or read the file. Context compaction drops skill text; the fresh read keeps the method exact. When the previous step used the same skill, rereading this step's section is enough.
+One step per turn: load its skill, do that step's own work with fresh reading, searching or running, post its block as your last message, update the run file, then end the turn. The Stop guard sends the next step's prompt, as if the owner typed it. Never start the next step in the same turn or write two blocks at once; the guard catches two headings ticked in one turn. Step 5 takes one todo per turn. Without hooks, end each step with `Say go for step <n>`: the one wait Fast keeps there. Before each step, load its skill fresh, even one you read earlier: invoke it with your agent's skill command or read the file. When the previous step used the same skill, rereading this step's section is enough.
 
-Each step ends with its block: post the full block as its own chat message (never a summary, never only a file or tool output), then write it to the run file. Before the next step reads it, fold in any owner reply that arrived; Fast never waits for one. The ticket gets a comment only on a status change (steps 0, 7 and 8), linking the run file's blocks.
+Each step ends with its block: post the full block as its own chat message (never a summary, never only a file or tool output), then write it to the run file. Before the next step reads it, fold in any owner reply that arrived; Fast never waits for one. The ticket gets a comment only on a status change (steps 0, 5, 7 and 8) or a relay, linking the run file's blocks.
 
 | Step | Skill | Block |
 |---|---|---|
@@ -75,10 +75,10 @@ Only what those skills do not say:
 - **0:** before any work, check tracker and push access (`ticketing`) and ask the owner once, up front, for every action the host may block (creating a repository, pushing). No project folder named: create one beside the owner's other projects (the parent of the current project, else the current folder), named for the product in kebab-case, and report its absolute path. No Git: `git init`, a first commit on the default branch, then a feature branch. Every commit, the first included, follows `how-to-make-a-pr`'s commit rules: no AI attribution lines. No remote: `ticketing` creates a private repository on the owner's account and pushes the default branch. Product and feature: research and the kickoff questions belong to step 0, after the ticket, in its block; Fast goes on without the answers, which feed step 1.
 - **3:** new or changed persistence adds `database-schema`. A `change` uses the light plan. Fast passes the file-summary stop. Safe runs Gate A, then stops: `Waiting: owner: plan OK?`.
 - **4:** starts as soon as the plan names the views and commands. Up to three items: capture them yourself. More: one light delegate captures while you finish the plan. No source edit until every Before file is saved. Open the host's live preview when it has one, bring it in front of the owner and name its URL in the block.
-- **5:** spike unknown capabilities first. After each todo's real use, run only the tests that cover its changed files; when those are the whole suite, that run is still only a build check. No separate full-suite run here. Commit by phase in the project's commit style.
+- **5:** spike unknown capabilities first. A run of mapped tests that is the whole suite is still only a build check. Commit by phase in the project's commit style.
 - **6:** verify is yours; independence comes from the checker and step 8. Order: the lenses (compliance always; change-guard when existing code, contracts or data changed, so never on a new project; others by `deep-review`'s scale), their fixes, then one final manual pass through every requested journey that captures After with the same ids, then the full suite once on that candidate; a proof id that is the full suite is that same run. Before captures of the base never count as that run. MVP and production slice: the secrets, dependency and static-analysis scans.
 - **7:** the ticket moves to Ready for QA with its PR.
-- **8:** a fresh agent that did not build it gets the PR, the ticket and the run file's absolute path. The reviewer hands back its fix-set and never pushes in a factory run: you apply it through the 0–4 loop, recapturing the After of every proof id a fix touches, and the same reviewer checks the delta. Its brief starts `Role: reviewer.` and names the pushed head; each handback carries `verdict: <ready|ready after fixes|not ready> @<sha>` (APPROVE, APPROVE-WITH-FIXES, REQUEST-CHANGES or BLOCK: not ready). Paste the last as `Review: ready (reviewer <id>) @<sha>`. You write the final verdict as the step's block and tick it. The full suite runs again only after those fixes. Then Gate C, once, on the final head; close the run and ask the owner to verify and merge.
+- **8:** a fresh agent that did not build it gets the PR, the ticket and the run file's absolute path. The reviewer hands back its fix-set, never pushing: you apply it through the 0–4 loop, recapturing the After of every proof id a fix touches (named in the block), and the same reviewer checks the delta. Its brief starts `Role: reviewer.` and names the pushed head; each reviewer handback ends with the skill's factory `verdict:` line. Paste the last as `Review: ready (reviewer <id>) @<sha>`. You write the final verdict as the step's block and tick it. The full suite runs again only after those fixes. Then Gate C, once, on the final head; close the run and ask the owner to verify and merge.
 
 ## Gates
 
@@ -88,17 +88,15 @@ After steps 3, 6 and 8, start the [checker](references/checker.md): a fresh ligh
 - No source edit before Gate A passes (a background delegate may start Before captures during the Gate A turn); no PR before Gate B passes; no close before Gate C passes.
 - Missing items: fix them, then rerun the checker. The checker reports every missing item in one pass; each FAIL is a round, capped like [review loops](references/run-cases.md#review-loops).
 - Paste only what a checker handed back; never write a gate line yourself, except an owner's waiver (run file).
-- A plan change after Gate A passed reruns the checker only when it adds or removes todos, criteria or proof ids, and only on that change.
+- A plan change after Gate A passed reruns the checker only when it adds or removes todos, criteria or proof ids, and only on that change. Fixes after Gate B never rerun it; Gate C checks their recaptured After files.
 
 ## Every mode
 
 - Repair findings: [worth-it rounds](references/worth-it.md); loops: [review loops](references/run-cases.md#review-loops).
 - Run file shows `Night:`: the [night mode](references/night.md) rules apply.
-- One branch and draft PR per variation; an epic's wave: one integration branch and one draft PR its runs update.
 - Released app or release policy: [app releases](references/app-releases.md).
 - Never claim tested, reviewed or production ready without that evidence.
 - Backlog: `ticketing` moves each ticket through its statuses and logs every change in its activity. Deferred work appends to the epic's one open follow-ups ticket in Backlog.
-- A ticket is finished only when every item is ticked and every criterion proven; Done comes with the PR merge.
 
 ## Keep the owner posted
 

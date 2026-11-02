@@ -2,7 +2,7 @@
 
 An unattended run: the owner starts it with the host's night command and reads the result in the morning. The run file's header shows `Night: until <time>`; the guard holds the deadline and halts the run there.
 
-The night command refuses to start unless the run is open, the guard is wired, the deny rules are in force, the branch is the run's own, the pre-push hook is installed and a push dry run and tracker sign-in work. The session it starts denies instead of prompting: a command the rules do not allow fails, it never waits.
+The night command refuses to start unless the run is open, the guard is wired, the deny rules are in force, the branch is the run's own, the pre-push hook is installed, a push dry run and tracker sign-in work and, for Codex, one sandboxed command runs. The session it starts denies instead of prompting: a command the rules do not allow fails, it never waits.
 
 ## While it runs
 

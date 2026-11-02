@@ -174,7 +174,6 @@ Disposition decides the gate: `blocking`, `before-exposure` or `accepted-deferra
 - Deferral needs owner authority and a record: owner, reason, scope, its entry in the follow-ups ticket, revisit trigger. A note alone grants nothing.
 - The owner may delegate in advance the deferral of LOW findings, and of MEDIUM while exposure stays local. MEDIUM and LOW left after round 3 are appended to the epic's one open follow-ups ticket in Backlog, never one ticket per finding. HIGH and CRITICAL are never deferred.
 - Before-exposure items resolve before public exposure or production. A MEDIUM is not automatically a failure, and never silently waived.
-- Mandatory rule exceptions need an authorized owner, scope and record. Explanation alone waives nothing.
 - A verdict that depends on fixes not yet applied is **conditional**. Judge the actual candidate.
 
 `PASS`: no blocking finding; every other finding listed with its disposition. `FAIL`: any blocking finding. PR verdicts: `how-to-review-a-pr`.
@@ -191,7 +190,7 @@ Disposition decides the gate: `blocking`, `before-exposure` or `accepted-deferra
 In a factory run this is step 6, Verify: the builder runs this pass, and the independent review is step 8 (`how-to-review-a-pr`). The block `## 6 Verify` holds:
 
 - [ ] Every requested journey used through real controls, with observed results
-- [ ] compliance results, change-guard results when existing code, contracts or data changed, plus each other lens run, each with its findings table (possibly empty) and verdict
+- [ ] compliance results, change-guard results when existing code, contracts or data changed, plus each other lens run, each with its findings table (possibly empty) and verdict, e.g. `**compliance:** <its table, or "no findings"> · PASS`
 - [ ] An `after-<id>` file for every proof-list id, same ids as Before, captured in that same pass on the verified head, each naming that commit; a later edit recaptures the ids it touches; a full-suite id is that final run
 - [ ] The full suite: command and result, run once after manual use
 - [ ] The verdict; blocking findings fixed through the build loop before the gate

@@ -60,7 +60,7 @@ The PR came from a factory run: read its `.factory/run.md` and ticket. Check eve
 Run `deep-review`'s analysis categories and every applicable lens it lists: security, performance, journey, change-guard, compliance.
 
 - Same candidate already passed a full local review: one reviewer covers all lenses on the delta plus a residual-risk check.
-- Otherwise, or for security, release or public-exposure scope: one isolated reviewer per lens, in parallel when your agent has subagents (waves if capacity is short), otherwise one lens at a time. Synthesize only after all return. Never call sequential work parallel or drop a lens.
+- Otherwise, or for security, release or public-exposure scope: one isolated reviewer per lens, in parallel when your agent has subagents (waves if capacity is short), otherwise one lens at a time. Synthesize only after all return. Never call sequential work parallel or drop a lens. Brief each `Role: analyst. Lens: <name>.`; it hands back its `deep-review` lens report, never a `verdict:` line.
 - Each reviewer gets: PR card and claim, phase 1 analysis, changed files on the checked-out branch, applicable rules, confirmed criteria, target workload/platforms, raw evidence and its limits. Mark each item verified or hypothesis. Reviewers verify hypotheses and correct you.
 - Collect findings and lens verdicts. Fix nothing yet.
 
@@ -77,12 +77,14 @@ Run `deep-review`'s analysis categories and every applicable lens it lists: secu
    - **Flag only** when any holds: changes intended behavior or scope; needs a product, team or external decision; large refactor; low confidence or touches necessary complexity; needs a platform, service or release change no authorized check can validate.
 5. Verdict, one line with the single most important reason. A verdict that depends on unapplied fixes is conditional.
 
-| Verdict | When |
-|---|---|
-| `APPROVE` | Delivers the claim; no blocking finding; nothing to fix. |
-| `APPROVE-WITH-FIXES` | Delivers the claim; the fix-set clears every blocking finding; only flags remain. |
-| `REQUEST-CHANGES` | HIGH remains that we cannot safely fix, or open questions block correctness. |
-| `BLOCK` | CRITICAL unresolved: claim not delivered, existing behavior or supported runtime broken, secret shipped, or required gates cannot pass. |
+| Verdict | When | Factory line |
+|---|---|---|
+| `APPROVE` | Delivers the claim; no blocking finding; nothing to fix. | `ready` |
+| `APPROVE-WITH-FIXES` | Delivers the claim; the fix-set clears every blocking finding; only flags remain. | `ready after fixes` |
+| `REQUEST-CHANGES` | HIGH remains that we cannot safely fix, or open questions block correctness. | `not ready` |
+| `BLOCK` | CRITICAL unresolved: claim not delivered, existing behavior or supported runtime broken, secret shipped, or required gates cannot pass. | `not ready` |
+
+A factory run's handback (its brief names a run file) ends `verdict: <factory line> @<reviewed head sha>`.
 
 6. Compile open questions.
 
@@ -170,7 +172,7 @@ Show the draft before posting unless pre-authorized. The comment is the only aut
 
 ## Own draft PR
 
-For a draft PR your agent opened, the question gate, push and comment checkpoints are pre-authorized. Open questions go in the comment. Push only to that PR's branch, never force. Humans own ready, merge and release. Anyone else's PR keeps every checkpoint.
+A factory run's reviewer skips phases 5 to 7, never pushes and may post the phase 8 comment: it hands back the fix-set, and checks the delta once the builder applied it. Otherwise, for a draft PR your agent opened, the question gate, push and comment checkpoints are pre-authorized. Open questions go in the comment. Push only to that PR's branch, never force. Humans own ready, merge and release. Anyone else's PR keeps every checkpoint.
 
 ## Safety
 
