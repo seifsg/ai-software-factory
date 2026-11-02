@@ -51,7 +51,7 @@ night=0; [ "${g_night_until:-0}" -gt 0 ] 2>/dev/null && night=1
 # is kept for the reply. The step is the later of Next and the last ticked heading, so a malformed Next never
 # skips a gate. gate: the first gate the run has reached without proof; R: step 8 without a proven review.
 read -r stopped waiting finished ticks gate sig jobs jmax crit fA fB fC fR step next <<EOF
-$(cd "$ev" && awk -v R="$run" -v fb=$fb -v nov=$nov -v head="$head" -v up="$up" -v night=$night -v bs="${g_base_A:-0} ${g_base_B:-0} ${g_base_C:-0} ${g_base_R:-0}" '
+$(cd "$ev" && awk -v R="$run" -v fb=$fb -v nov=$nov -v head="$head" -v up="$up" -v night=$night -v clr="$g_clear" -v bs="${g_base_A:-0} ${g_base_B:-0} ${g_base_C:-0} ${g_base_R:-0}" '
   BEGIN { split(bs, b); split("A B C R", k); split("3 6 8 8", sp); for (i = 1; i <= 4; i++) { base[k[i]] = b[i]; st[k[i]] = sp[i] } }  # the step of each loop; rounds count since the last clear
   function pre(a, b,  n) { n = length(a) < length(b) ? length(a) : length(b); return n >= 7 && substr(a, 1, n) == substr(b, 1, n) }
   function at(t) { sub(/.*@/, "", t); return t }
@@ -104,7 +104,7 @@ $(cd "$ev" && awk -v R="$run" -v fb=$fb -v nov=$nov -v head="$head" -v up="$up" 
     } else if ((v = final($0, "Gate " kind[id] ": (PASS|FAIL)[^\"\\\\]*")) != "") last[id] = v
   }
   END {
-    done1()
+    done1(); if (clr) for (x in base) base[x] = f[x]  # the owner just cleared: caps count from here
     step = n == "" ? 0 : substr(n, 1, 1) + 0; if (m > step) step = m; g = "-"
     rok = capped("R") || rid != "" &&pre(rsha, head) && head == up && proven(rid, "R", rsha) && (nov || fb || last[rid] ~ /^verdict: ready( @|$)/)
     if ((step > 3 || r) && !ok("A")) g = "A"; else if ((step > 6 || r) && !ok("B")) g = "B"; else if (r && !ok("C")) g = "C"; else if (r && !rok) g = "R"

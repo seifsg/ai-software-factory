@@ -83,7 +83,7 @@ Only what those skills leave out:
 After steps 3, 6 and 8, start the [checker](references/checker.md): a fresh light read-only delegate that gets only contracts and outputs, never your reasoning. Paste its PASS as `Gate A: PASS (checker <agent id>) @<sha>` (B, C); guard accepts it only when that checker's own handback says so; Gate C's commit is the pushed HEAD.
 
 - No source edit before Gate A passes (a background delegate may start Before captures during the Gate A turn); no PR before Gate B passes; no close before Gate C passes.
-- Missing items: fix, rerun checker on round 1's list. Each FAIL is a round, capped like [review loops](references/run-cases.md#review-loops)).
+- Missing items: fix, rerun checker on round 1's list. Each FAIL is a round, capped like [review loops](references/run-cases.md#review-loops).
 - Paste only what a checker handed back; never write a gate line yourself, except a cap line or an owner's waiver (run file).
 - Plan change after Gate A passed reruns checker only when it adds or removes todos, criteria or proof ids, and only on that change. Fixes after Gate B never rerun it; Gate C checks their recaptured After files.
 
