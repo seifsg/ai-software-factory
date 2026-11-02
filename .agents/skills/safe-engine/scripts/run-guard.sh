@@ -51,7 +51,8 @@ night=0; [ "${g_night_until:-0}" -gt 0 ] 2>/dev/null && night=1
 # is kept for the reply. The step is the later of Next and the last ticked heading, so a malformed Next never
 # skips a gate. gate: the first gate the run has reached without proof; R: step 8 without a proven review.
 read -r stopped waiting finished ticks gate sig jobs jmax crit fA fB fC fR step next <<EOF
-$(cd "$ev" && awk -v R="$run" -v fb=$fb -v nov=$nov -v head="$head" -v up="$up" -v night=$night '
+$(cd "$ev" && awk -v R="$run" -v fb=$fb -v nov=$nov -v head="$head" -v up="$up" -v night=$night -v bs="${g_base_A:-0} ${g_base_B:-0} ${g_base_C:-0} ${g_base_R:-0}" '
+  BEGIN { split(bs, b); split("A B C R", k); split("3 6 8 8", sp); for (i = 1; i <= 4; i++) { base[k[i]] = b[i]; st[k[i]] = sp[i] } }  # the step of each loop; rounds count since the last clear
   function pre(a, b,  n) { n = length(a) < length(b) ? length(a) : length(b); return n >= 7 && substr(a, 1, n) == substr(b, 1, n) }
   function at(t) { sub(/.*@/, "", t); return t }
   function proven(id, k, sha) {
@@ -59,8 +60,9 @@ $(cd "$ev" && awk -v R="$run" -v fb=$fb -v nov=$nov -v head="$head" -v up="$up" 
     if (fb) return seen[id] && !cc  # a Claude Code transcript also holds the run-file edits of the model
     return kind[id] == k && pre(sha, at(last[id]))
   }
+  function opn(x) { return crs[st[x]] || x == "R" && rcr }  # an open CRITICAL in the own step of the loop, or in the last review
   function capped(x) {  # a cap line: 3 failed rounds and no open CRITICAL in its step pass the loop; C and R on the pushed HEAD
-    return cs[x] != "" && !crs[csec[x]] && (nov || fb && !cc || f[x] >= 3) && (x ~ /[AB]/ || pre(cs[x], head) && head == up)
+    return cs[x] != "" && !opn(x) && (nov || fb && !cc || f[x] - base[x] >= 3) && (x ~ /[AB]/ || pre(cs[x], head) && head == up)
   }
   function ok(x,  id) {
     if (capped(x)) return 1
@@ -79,8 +81,8 @@ $(cd "$ev" && awk -v R="$run" -v fb=$fb -v nov=$nov -v head="$head" -v up="$up" 
     if (n == "" && match($0, /^Next: *[0-8]b? [A-Za-z]+ · [a-z-]+/)) { n = substr($0, RSTART, RLENGTH); sub(/^Next: */, "", n) }
     if (/^Gate [ABC]: PASS \(checker [^ )]+\) @[0-9a-f]+/) { x = substr($0, 6, 1); gid[x] = $5; sub(/\)$/, "", gid[x]); gsha[x] = at($6); want[gid[x]] = 1 }
     if (/^## /) sec = $2
-    if (/^CRITICAL: /) cr = crs[sec] = 1
-    if (match($0, /^(Gate [ABC]: PASS|Review: ready) \(cap, 3 rounds, no CRITICAL\) @[0-9a-f]+/)) { x = /^R/ ? "R" : substr($0, 6, 1); cs[x] = at(substr($0, 1, RLENGTH)); csec[x] = sec }
+    if (/^CRITICAL: /) crs[sec] = 1
+    if (match($0, /^(Gate [ABC]: PASS|Review: ready) \(cap, 3 rounds, no CRITICAL\) @[0-9a-f]+/)) { x = /^R/ ? "R" : substr($0, 6, 1); cs[x] = at(substr($0, 1, RLENGTH)) }
     if (/^Gate [ABC]: WAIVED by owner/) wv[substr($0, 6, 1)] = 1
     if (/^Review: ready \(reviewer [^ )]+\) @[0-9a-f]+/) { rid = $4; sub(/\)$/, "", rid); rsha = at($5); want[rid] = 1 }
     next
@@ -98,7 +100,7 @@ $(cd "$ev" && awk -v R="$run" -v fb=$fb -v nov=$nov -v head="$head" -v up="$up" 
   /"role":"assistant"/ && !/api-request-blob/ {  # its own handback; the last one counts, every failed one is a round
     if (kind[id] == "R") {
       v = final($0, "verdict: (not ready|ready after fixes|ready)( @[0-9a-f]+)?")
-      if (v != "") { last[id] = v; f["R"] = v ~ /^verdict: ready( @|$)/ ? 0 : f["R"] + 1 }
+      if (v != "") { last[id] = v; rcr = index($0, "CRITICAL:") > 0; f["R"] = v ~ /^verdict: ready( @|$)/ ? 0 : f["R"] + 1 }
     } else if ((v = final($0, "Gate " kind[id] ": (PASS|FAIL)[^\"\\\\]*")) != "") last[id] = v
   }
   END {
@@ -107,8 +109,9 @@ $(cd "$ev" && awk -v R="$run" -v fb=$fb -v nov=$nov -v head="$head" -v up="$up" 
     rok = capped("R") || rid != "" &&pre(rsha, head) && head == up && proven(rid, "R", rsha) && (nov || fb || last[rid] ~ /^verdict: ready( @|$)/)
     if ((step > 3 || r) && !ok("A")) g = "A"; else if ((step > 6 || r) && !ok("B")) g = "B"; else if (r && !ok("C")) g = "C"; else if (r && !rok) g = "R"
     p += ok("A") + ok("B") + ok("C") + rok  # progress: ticks plus proven gates
+    for (x in st) if (opn(x)) oc = oc x
     for (x in f) if (x == "R" ? rok : ok(x)) f[x] = 0  # a loop that converged has no rounds left to cap
-    printf "%d %d %d %d %s %d %d %d %d %d %d %d %d %d %s\n", s, w, r && g == "-", c, g, p, j, jm, cr, f["A"], f["B"], f["C"], f["R"], step, n
+    printf "%d %d %d %d %s %d %d %d %s %d %d %d %d %d %s\n", s, w, r && g == "-", c, g, p, j, jm, oc == "" ? "-" : oc, f["A"], f["B"], f["C"], f["R"], step, n
   }' "$run" "$@")
 EOF
 [ "$gate" = - ] && gate=
@@ -144,7 +147,7 @@ batched=$(( ticks - prev > 1 ))
 # Loop caps count failed rounds from the host's subagent files, since the owner's last clear.
 if [ "$g_clear" = 1 ]; then g_base_A=$fA g_base_B=$fB g_base_C=$fC g_base_R=$fR g_clear=; fi
 loop= rounds=0
-for x in A B C R; do eval "n=\$((f$x - \${g_base_$x:-0}))"; [ "$n" -gt "$rounds" ] && rounds=$n loop=$x; done
+for x in A B C R; do eval "n=\$((f$x - \${g_base_$x:-0}))"; [ "$n" -gt "$rounds" ] && rounds=$n loop=$x lx=$x; done
 # A jobs wait has a deadline; past it the guard wakes the run, even while a subagent still runs (it may hang).
 todo=
 if [ "$jobs" = 1 ]; then
@@ -167,7 +170,7 @@ halt() {
   fi
   [ -n "$g_halt" ] || return 0
   g_end=halt; save
-  printf '{"decision":"block","reason":"HALT (%s): the guard stops driving this run. Start no new round. Write the owner packet under the current step: findings per round (new vs repeated), the shared cause, options (extend, defer with an owner record, amend scope, cancel). Set Waiting: owner: <question>, then end your turn. Only the owner resumes it: sh %s clear"}\n' "$g_halt" "$self"
+  printf '{"decision":"block","reason":"HALT (%s): the guard stops driving this run. Start no new round. Write the owner packet under the current step: findings per round (new vs repeated), the shared cause, options (extend, amend scope, cancel). Set Waiting: owner: <question>, then end your turn. Only the owner resumes it: sh %s clear"}\n' "$g_halt" "$self"
   exit 0
 }
 save
@@ -198,9 +201,9 @@ save
 # One step per turn: the next step's prompt arrives only after the last answer is complete, as if the owner typed it.
 if [ "$batched" = 1 ]; then
   todo="Batched: more than one step heading was ticked in one turn. Redo the last ticked step as its own fresh pass, run any open gate, then end your turn."
-elif [ "$rounds" -ge 3 ] && [ "$crit" != 1 ]; then
-  [ "$loop" = review ] && cl='Review: ready' || cl="$loop: PASS"
-  todo="$loop: $rounds failed rounds, no open CRITICAL: the loop passes by cap. Write \`$cl (cap, 3 rounds, no CRITICAL) @<sha>\` under its step (Gate C and review: on the pushed HEAD), move what is left to the ticket's follow-ups, then go on with the run."
+elif [ "$rounds" -ge 3 ] && case $crit in *"$lx"*) false ;; *) true ;; esac; then  # the max-rounds loop, no open CRITICAL in its step
+  [ "$lx" = R ] && cl='Review: ready' ln=review || cl="Gate $lx: PASS" ln="Gate $lx"
+  todo="$ln: $rounds failed rounds, no open CRITICAL: the loop passes by cap. Write \`$cl (cap, 3 rounds, no CRITICAL) @<sha>\` under its step (Gate C and review: on the pushed HEAD), move what is left to the ticket's follow-ups, then go on with the run."
 elif [ "$gate" = R ]; then
   todo='Step 8 has no verified reviewer verdict on the pushed HEAD: brief a fresh reviewer on that head, paste its line as `Review: ready (reviewer <id>) @<sha>`, then end your turn.'
 elif [ -n "$gate" ]; then
