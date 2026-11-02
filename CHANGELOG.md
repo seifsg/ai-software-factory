@@ -8,7 +8,7 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ### Fixed
 
-- Fix step blocks (Recommend, Plan and the rest) missing from chat when steps chain in one turn or your own instructions ask for short replies ([#267])
+- Fix step blocks (Recommend, Plan and the rest) missing from chat when steps chain in one turn or your own instructions ask for short replies ([#269])
 
 ## [0.4.0] - 2026-11-02
 
