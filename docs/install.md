@@ -31,6 +31,8 @@ codex plugin add safe-factory@ai-software-factory
 
 Or pick it in `/plugins`. Start a new session, trust its hooks in `/hooks` (again after each update: trust follows each hook's hash). Update: `codex plugin marketplace upgrade ai-software-factory`. Remove: `codex plugin remove safe-factory@ai-software-factory`. Codex reads the repo's `.claude-plugin/marketplace.json`; the plugin root is `.agents/` (`.codex-plugin/plugin.json`, `skills/`, `hooks/hooks.json`). Plugin hooks run only for manual installs.
 
+On Windows, `commandWindows` uses `hooks/windows.cmd` to find Git Bash beside `git.exe` on `PATH`, then runs the same Stop, compact and startup scripts. No PowerShell execution-policy change or extra runtime is needed. Missing Git Bash produces a notice with the install and restart action; the factory does not automatically continue. Check a new run advances from the ticket response to a separate analysis prompt and full response. An installed skill or trusted hook entry alone does not prove that chain.
+
 Without plugins, copy by hand:
 
 1. Clone factory: `git clone https://github.com/seifsg/ai-software-factory.git <clone>`.

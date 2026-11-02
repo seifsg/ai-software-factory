@@ -52,6 +52,8 @@ Before is captured before the first edit, After during verify, and both land in 
 
 Start a new session; your agent should list `safe-factory`. Other agents: copy the skills ([other agents](docs/install.md#other-agents)). You need Git, the GitHub CLI signed in (`gh auth login`) for tickets and draft PRs, and on Windows Git Bash (part of Git for Windows) for the hooks. To try unreleased `main`, run `claude --plugin-dir <clone>/.agents`.
 
+The Codex Windows plugin locates Git Bash beside `git.exe` on `PATH`; its native launcher preserves the hook input and output. After updating, review the changed hooks in `/hooks` before relying on automatic turns.
+
 **2. Ask** (`/safe-factory` in Claude Code and Cursor, `$safe-factory` in Codex):
 
 ```text
