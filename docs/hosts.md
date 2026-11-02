@@ -8,7 +8,7 @@ Methods are host-neutral. This page = what differs per agent: where skills live,
 
 | | Claude Code | Codex |
 |---|---|---|
-| Install | plugin, root `.agents/` ([install](install.md#claude-code)) | copied skills + `~/.codex/hooks.json` ([install](install.md#codex)) |
+| Install | plugin, root `.agents/` ([install](install.md#claude-code)) | plugin, root `.agents/`, or copied skills + `~/.codex/hooks.json` ([install](install.md#codex)) |
 | Invoke | `/safe-engine …` | `$safe-engine …` |
 | Load a step's skill fresh | the Skill tool, `safe-engine:<name>` | `$<name>`, or read its `SKILL.md` |
 | What compaction keeps | the first 5k tokens of each recently used skill, 25k in total; CLAUDE.md is re-read | AGENTS.md and the skill list; skill bodies are dropped |
@@ -44,7 +44,7 @@ Pass request, decisions, interfaces, stops and artifact paths explicitly; full h
 
 | Agent | Skills | Hooks |
 |---|---|---|
-| Cursor | reads `.agents/skills` | its `stop` hook expects a different reply; not wired yet: apply the run-file rules by hand |
+| Cursor | plugin, root `.agents/` (`.cursor-plugin/plugin.json`: skills, agents), [install](install.md#cursor) | runs Claude Code hooks from a project's `.claude/settings.json`; the plugin's `hooks/hooks.json` loads but finds no root (`CURSOR_PLUGIN_ROOT` only): no hooks run |
 | GitHub Copilot, Gemini CLI, OpenCode | read `.agents/skills` | none wired: apply the run-file rules by hand |
 | Anything else | point it at `.agents/skills/safe-engine/SKILL.md` | none |
 

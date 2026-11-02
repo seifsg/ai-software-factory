@@ -9,7 +9,7 @@ claude plugin marketplace add https://github.com/seifsg/ai-software-factory.git
 claude plugin install safe-engine@ai-software-factory
 ```
 
-Use the HTTPS URL; `owner/repo` shorthand tries SSH first. Auto mode: new projects need `gh repo create` and `git push` allowed. Add `Bash(gh repo create:*)` and `Bash(git push:*)` to your permission allow rules, or approve once when step 0 asks. Plugin brings every skill, delegate roles and both hooks, follows release tags. Start a new session.
+Use the HTTPS URL; `owner/repo` shorthand tries SSH first. Auto mode: new projects need `gh repo create` and `git push` allowed. Add `Bash(gh repo create:*)` and `Bash(git push:*)` to your permission allow rules, or approve once when step 0 asks. Plugin brings every skill, delegate roles, the run hooks and the update check; follows release tags. Start a new session.
 
 Desktop app without terminal: add to `~/.claude/settings.json`, start a new session, then install from `/plugin` if missing:
 
@@ -21,6 +21,16 @@ Desktop app without terminal: add to `~/.claude/settings.json`, start a new sess
 Try unreleased checkout: `claude --plugin-dir <clone>/.agents`.
 
 ## Codex
+
+Plugin (not yet run live):
+
+```text
+codex plugin marketplace add seifsg/ai-software-factory
+```
+
+Then `/plugins`, install `safe-engine`, start a new session, trust its hooks once in `/hooks`. Update: `codex plugin marketplace upgrade ai-software-factory`. Codex reads the repo's `.claude-plugin/marketplace.json`; the plugin root is `.agents/` (`.codex-plugin/plugin.json`, `skills/`, `hooks/hooks.json`). Plugin hooks run only for manual installs.
+
+Without plugins, copy by hand:
 
 1. Clone factory: `git clone https://github.com/seifsg/ai-software-factory.git <clone>`.
 2. Copy skills where Codex finds them (all users of this machine: `~/.agents/skills`; one project: `<project>/.agents/skills`):
@@ -46,6 +56,14 @@ Try unreleased checkout: `claude --plugin-dir <clone>/.agents`.
    ```
 
 4. Start Codex, trust both hooks once in `/hooks`.
+
+## Cursor
+
+Plugin (not yet run live): Customize, Plugins, add marketplace `https://github.com/seifsg/ai-software-factory` (reads `.cursor-plugin/marketplace.json`), install `safe-engine`. Brings skills and delegate roles; no hooks yet, so each step ends with `Say go for step <n>`. For the Stop guard, Cursor runs Claude Code hooks from a project's `.claude/settings.json`: copy the `Stop` entry from `.agents/hooks/hooks.json` there with `r=` set to the absolute path of the plugin's `.agents/` folder. Update: Cursor refreshes the marketplace; reinstall `safe-engine` when a new version shows.
+
+## Update check
+
+At session start the plugin hook reads a cached latest release (no network, about 0.1 s on Windows) and refreshes that cache in the background once a day with `gh api`. A newer release: the agent tells you before any run and links what's new. Off: `FACTORY_NO_UPDATE_CHECK=1`.
 
 ## Overnight runs
 

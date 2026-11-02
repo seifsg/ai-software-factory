@@ -2,17 +2,17 @@
 
 What installs and active runs must do for each release, newest first. What changed: [CHANGELOG.md](CHANGELOG.md).
 
-## 2.0.0
+## 0.1.0
 
-The factory no longer runs any Python. Old runs cannot continue under 2.0.0.
+A fresh start: 0.1.0 replaces the deprecated 1.x line. The factory no longer runs any Python. Old runs cannot continue under 0.1.0.
 
 1. **Finish or abandon open runs first** on 1.x (`fast_gate.py close`, or `close --abandon` with a reason). New runs start fresh with `.factory/run.md`; old `.factory/` run records are not read.
-2. **Claude Code:** update the plugin (`claude plugin marketplace update ai-software-factory`, then update `safe-engine` in `/plugin`). The old gate hooks go with the old version.
+2. **Claude Code:** reinstall once, since 0.1.0 is a lower number than 1.3.0: `claude plugin marketplace update ai-software-factory`, `claude plugin uninstall safe-engine@ai-software-factory`, `claude plugin install safe-engine@ai-software-factory`. The old gate hooks go with the old version. Later releases update normally.
 3. **Codex, Cursor and other copies:** delete the old launchers (`~/.agents/skills/safe-engine`, `~/.agents/skills/improve-factory`), remove every entry that runs `run-gate.sh` or `fast_gate` from `~/.codex/hooks.json` and `~/.cursor/hooks.json`, then install per [docs/install.md](docs/install.md). A leftover entry would call a script that no longer exists. Installs made with `--project <dir>` also wrote `<dir>/.agents/skills/` and `<dir>/.codex/hooks.json` or `<dir>/.cursor/hooks.json`; `--codex-home <dir>` wrote `<dir>/hooks.json`. Clean those the same way.
 4. **Delete `~/.safe-engine`** once no 1.x run needs it. It held run state, bundles, caches and the self-update clone.
-5. Open 2.0 runs: the Gate C line now sits under `## 8 Review` and runs after the review; move an existing Gate C line there and rerun its checker once.
+5. Runs opened on main before 0.1.0: the Gate C line now sits under `## 8 Review` and runs after the review; move an existing Gate C line there and rerun its checker once.
 6. Factory clones: old commands (`python tests/run.py`, `scripts/release.py`, `python -m safe_engine`) are gone; checks are in `AGENTS.md`.
-7. Open 2.0 runs and the guarded relay: a gate line now needs its commit (`Gate X: PASS (checker <id>) @<sha>`) and a checker brief that names it; a finished run also needs `Review: ready (reviewer <id>) @<sha>` on the pushed HEAD. Rerun the checker of each gate the run already passed, and the step 8 reviewer if step 8 is ticked. Give every `Waiting: jobs:` a `(max <n> min)`. The guard moves `.factory/run.md.ticks` and `.nudge` into `.factory/guard/` by itself.
+7. Runs opened on main before 0.1.0, and the guarded relay: a gate line now needs its commit (`Gate X: PASS (checker <id>) @<sha>`) and a checker brief that names it; a finished run also needs `Review: ready (reviewer <id>) @<sha>` on the pushed HEAD. Rerun the checker of each gate the run already passed, and the step 8 reviewer if step 8 is ticked. Give every `Waiting: jobs:` a `(max <n> min)`. The guard moves `.factory/run.md.ticks` and `.nudge` into `.factory/guard/` by itself.
 8. Open runs with a size the owner never named (Fast's old "POC when unsure"): drop the label, and give logic a small test map entry.
 9. Overnight runs are opt-in: [install](docs/install.md#overnight-runs). Nothing changes until you install the `pre-push` hook or start `night.sh`.
 

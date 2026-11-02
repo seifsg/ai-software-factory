@@ -78,8 +78,10 @@ Details: [run file](.agents/skills/safe-engine/references/run-file.md), [checker
 
 ## 🔄 Update
 
+- Each session start checks for a newer release (cached, about 0.1 s) and says so before a run ([update check](docs/install.md#update-check)).
 - **Claude Code:** `claude plugin marketplace update ai-software-factory`, then `/plugin` to update `safe-engine`, or keep auto-update on.
-- **Codex and others:** `git -C <clone> pull`, then copy the skills again ([install](docs/install.md)).
+- **Codex:** `codex plugin marketplace upgrade ai-software-factory`; copied skills: `git -C <clone> pull`, copy again.
+- **Cursor:** reinstall `safe-engine` from Customize, Plugins when a new version shows.
 - What changed: [CHANGELOG.md](CHANGELOG.md). What to do: [UPGRADING.md](UPGRADING.md).
 
 ## 🧹 Uninstall
@@ -119,9 +121,10 @@ Rules: [AGENTS.md](AGENTS.md). Changes go through `improve-factory`. Releases: [
 ```text
 .agents/skills/                  the skills (canonical methods)
 .agents/agents/                  delegate roles for Claude Code (runner, analyst, maker, builder, reviewer, checker)
-.agents/hooks/hooks.json         the Stop guard and compact hook for Claude Code
-.agents/.claude-plugin/          the plugin manifest; the plugin root is .agents/
-.claude-plugin/marketplace.json  the marketplace, pinned to the release tag
+.agents/hooks/hooks.json         the Stop guard, compact hook and update check (Claude Code, Codex)
+.agents/.claude-plugin/          plugin manifests (also .codex-plugin/, .cursor-plugin/); the plugin root is .agents/
+.claude-plugin/marketplace.json  the marketplace (Claude Code, Codex), pinned to the release tag
+.cursor-plugin/marketplace.json  the Cursor marketplace
 docs/                            install, hosts, releasing
 CHANGELOG.md, UPGRADING.md       what changed per release, and what to do
 ```
