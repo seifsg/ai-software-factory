@@ -6,6 +6,10 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-02
+
+_Upgrade needed: run `doctor.sh --fix` once and add `Left running:` to open runs; follow [UPGRADING.md](UPGRADING.md#040)._
+
 ### Changed
 
 - **Breaking:** Make every run stop what it started (servers, watchers, schedules, worktrees, hooks) before Gate C and list what stays in `Left running:` ([#262])
@@ -186,7 +190,8 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 - Leaner runs (#137): product, feature and change runs each read 24% less method text, every gate message is shorter with the same facts, `scripts/token_report.py` measures both, and tests hold every method file and the gate's fixture messages to a byte budget and the product and change loads to 80% of their earlier size.
 - Self-update (#139): a clone install moves only to a release tag on `main` whose files match its manifest, records the previous revision, rolls back a failed install and shows a one-time notice naming both versions.
 
-[Unreleased]: https://github.com/seifsg/ai-software-factory/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/seifsg/ai-software-factory/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/seifsg/ai-software-factory/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/seifsg/ai-software-factory/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/seifsg/ai-software-factory/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/seifsg/ai-software-factory/releases/tag/v0.1.0
