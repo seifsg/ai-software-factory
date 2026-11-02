@@ -76,14 +76,13 @@ Only what those skills leave out:
 - **5:** spike unknown capabilities first. A run of mapped tests that is the whole suite is still only a build check. Commit by phase in project's commit style.
 - **6:** verify is yours; independence comes from checker and step 8. Order: lenses (compliance always; change-guard when existing code, contracts or data changed, so never on a new project; others by `deep-review`'s scale) and UI pass, their fixes, then one final manual pass through every requested journey that captures After with same ids, then full suite once on that candidate; a proof id that is the full suite is that same run. Before captures of the base never count as that run. UI pass (step 2 look): fresh `analyst` lists each miss vs that look + refs on the primary platform, with the capture. A miss of the picked look = HIGH. Run secrets, dependency and static-analysis scans for an MVP, a production slice, or any run with dependencies or a server.
 - **7:** the ticket moves to Ready for QA with its PR.
-- **8:** fresh agent that did not build it gets PR, ticket and run file's absolute path. The reviewer hands back its fix-set, never pushing: you apply it through the 0–4 loop, recapturing After of every proof id a fix touches (named in block), and same reviewer checks the delta. Its brief starts `Role: reviewer.` and names pushed head; each reviewer handback ends with skill's factory `verdict:` line. Paste the last as `Review: ready (reviewer <id>) @<sha>`. You write final verdict as step's block and tick it. Full suite runs again only after those fixes. Then end what run started beyond code (servers, watchers, schedules, worktrees, hooks) but owner's preview; block ends `Left running: <item, stop command>` or `none`. Then Gate C, once, on final head; close run and ask owner to verify and merge.
+- **8:** fresh agent that did not build it gets PR, ticket and run file's absolute path. The reviewer hands back its fix-set, never pushing: you apply it through the 0–4 loop, recapturing After of every proof id a fix touches (named in block), and same reviewer checks the delta. Its brief starts `Role: reviewer.` and names pushed head; each reviewer handback ends with skill's factory `verdict:` line. Paste the last as `Review: ready (reviewer <id>) @<sha>`. You write final verdict as step's block and tick it. Full suite runs again only after those fixes. Then stop what run itself started (servers, watchers, schedules, worktrees, its hooks) except owner's preview; block ends `Left running:` with each, preview too, and stop command, or `none`. Then Gate C, once, on final head; on PASS close run and ask owner to verify and merge.
 
 ## Gates
 
 After steps 3, 6 and 8, start the [checker](references/checker.md): a fresh light read-only delegate that gets only contracts and outputs, never your reasoning. Paste its PASS as `Gate A: PASS (checker <agent id>) @<sha>` (B, C); guard accepts it only when that checker's own handback says so; Gate C's commit is the pushed HEAD.
 
 - No source edit before Gate A passes (a background delegate may start Before captures during the Gate A turn); no PR before Gate B passes.
-- Missing items: fix, rerun checker on round 1's list. Each FAIL is a round, capped like [review loops](references/run-cases.md#review-loops).
 - Paste only what a checker handed back; never write a gate line yourself, except a cap line or an owner's waiver (run file).
 - Plan change after Gate A passed reruns checker only when it adds or removes todos, criteria or proof ids, and only on that change. Fixes after Gate B never rerun it; Gate C checks their recaptured After files.
 
@@ -97,7 +96,7 @@ After steps 3, 6 and 8, start the [checker](references/checker.md): a fresh ligh
 
 ## Keep the owner posted
 
-- Blocks are the progress report. Put the ten steps on host's task list at step 0; mark each at start and end. Owner may type at any time.
+- Blocks are the progress report. Put the ten steps on host's task list at step 0; mark each at start and end.
 - Always preview: step 4 on, keep what the run changes in front of owner, fresh after each todo: browser pane (web, markdown), inline image or artifact (other docs, media), simulator or screenshot (mobile, desktop).
 - Updates and handbacks: [plain owner reports](references/owner-reports.md).
 - An owner message goes first: answer it or do it, then resume what still fits, unasked.
@@ -130,7 +129,7 @@ After steps 3, 6 and 8, start the [checker](references/checker.md): a fresh ligh
 
 ## Resume
 
-Read run file and ticket, load `Next:` skill fresh, continue there. Run file and ticket disagree: test both against checkout, keep what holds; log correction in ticket's activity. `Next:` past a gate without its PASS: run that gate's checker first. Never restart a run or invent artifacts.
+Read run file and ticket, load `Next:` skill fresh, continue there. Run file and ticket disagree: test both against checkout, keep what holds; log correction in ticket's activity. `Next:` past a gate without its PASS: run that gate's checker first. Never restart a run.
 
 ## Factory fault
 

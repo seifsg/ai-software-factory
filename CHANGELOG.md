@@ -6,11 +6,13 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking:** Make every run stop what it started (servers, watchers, schedules, worktrees, hooks) before Gate C and list what stays in `Left running:` ([#262])
+
 ### Added
 
-- Add `doctor.sh`, which lists hooks, launchers and copies left by old factory versions and moves them to a backup with `--fix` ([#262])
-- Let each session start list those leftovers, so the agent offers to clean them without stopping the run ([#262])
-- Make every run stop what it started (servers, watchers, schedules, worktrees, hooks) before Gate C and name what stays in `Left running:` ([#262])
+- Add `doctor.sh`, which lists leftovers of old factory versions at each session start and moves them to a backup with `--fix` ([#262])
 
 ## [0.3.0] - 2026-11-02
 

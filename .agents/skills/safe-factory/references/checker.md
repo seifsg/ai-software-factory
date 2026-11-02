@@ -30,7 +30,7 @@ Gate C's list, besides `## 7 PR`:
 - [ ] Gates A and B: PASS or WAIVED
 - [ ] `## 8 Review` holds the reviewer's verdict, or its cap line, on the PR's current head
 - [ ] Each After file `## 8 Review` names as recaptured names a commit at or after its fix
-- [ ] `## 8 Review` has `Left running:`
+- [ ] `## 8 Review` ends `Left running:` with each item's stop command, or `none`
 
 ## Handback
 
