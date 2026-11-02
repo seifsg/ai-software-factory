@@ -5,7 +5,7 @@
 ### Your coding agent, run like a software team.
 **One request in. Ten checked steps. A reviewed draft PR out.**
 
-<img src="docs/assets/badges.svg" alt="Version 0.2.0 · Claude Code live · Codex plugin and Cursor not yet run live · Fast and Safe modes · any OS with Git and sh, no runtime" height="28">
+<a href="https://github.com/seifsg/ai-software-factory/releases/latest"><img src="https://img.shields.io/github/v/release/seifsg/ai-software-factory?label=version&color=6E56CF&style=flat-square" alt="Latest version" height="28"></a> <img src="docs/assets/badges.svg" alt="Claude Code live · Codex plugin and Cursor not yet run live · Fast and Safe modes · any OS with Git and sh, no runtime" height="28">
 
 **[Quick start](#-quick-start) · [A run](#-a-run) · [How it stays on track](#%EF%B8%8F-how-it-stays-on-track) · [Update](#-update) · [Troubleshooting](#-troubleshooting)**
 

@@ -8,7 +8,8 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ### Fixed
 
-- Fix the README version badge, which still showed 0.1.0 after the 0.2.0 release ([#258])
+- Fix the README version badge, which still showed 0.1.0 after the 0.2.0 release; it now reads the Latest release ([#258])
+- Fix the update check staying silent without a signed-in GitHub CLI; it falls back to `curl` ([#258])
 
 ## [0.2.0] - 2026-11-02
 
