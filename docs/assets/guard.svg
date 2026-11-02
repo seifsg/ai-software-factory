@@ -5,7 +5,7 @@
 text{font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;fill:#c9d1d9;text-anchor:middle}
 .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 .h{font-size:20px;font-weight:700;fill:#fff}
-.s{font-size:16px;fill:#8b949e}
+.s{font-size:18px;fill:#8b949e}
 .box{fill:#161b22;stroke:#30363d;stroke-width:2}
 .hot{fill:#161b22;stroke:#6E56CF;stroke-width:2}
 .ok{fill:#161b22;stroke:#2EA44F;stroke-width:2}
@@ -23,9 +23,9 @@ text{font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;fill:#c9d1d
 <rect x="340" y="40" width="240" height="84" rx="12" class="box"/>
 <text x="460" y="76" class="h">Do the step</text><text x="460" y="100" class="s">print its block to you</text>
 <rect x="640" y="40" width="240" height="84" rx="12" class="box"/>
-<text x="760" y="76" class="h mono">.factory/run.md</text><text x="760" y="100" class="s">block, tick, Next: step + skill</text>
+<text x="760" y="76" class="h mono">.factory/run.md</text><text x="760" y="100" class="s">block, tick, Next: step</text>
 <rect x="940" y="40" width="220" height="84" rx="12" class="hot"/>
-<text x="1050" y="76" class="h">Stop guard</text><text x="1050" y="100" class="s">turn ends: sends the next step</text>
+<text x="1050" y="76" class="h">Stop guard</text><text x="1050" y="100" class="s">sends the next step</text>
 <path d="M280 82H334" class="a" marker-end="url(#m)"/>
 <path d="M580 82H634" class="a" marker-end="url(#m)"/>
 <path d="M880 82H934" class="a" marker-end="url(#m)"/>
@@ -34,5 +34,5 @@ text{font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;fill:#c9d1d
 <rect x="40" y="190" width="520" height="64" rx="12" class="box"/>
 <text x="300" y="218" class="h">Context compacted?</text><text x="300" y="240" class="s">compact hook re-injects Next: from the run file</text>
 <rect x="640" y="190" width="520" height="64" rx="12" class="ok"/>
-<text x="900" y="218" class="h">Gates A · B · C after steps 3, 6, 8</text><text x="900" y="240" class="s">fresh checker's PASS on that commit, or the run cannot close</text>
+<text x="900" y="218" class="h">Gates A · B · C after steps 3, 6, 8</text><text x="900" y="240" class="s">a fresh checker's PASS on the commit</text>
 </svg>
