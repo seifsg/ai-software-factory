@@ -98,7 +98,7 @@ Safe runs, or moving an epic to Safe: [the contract](references/safe-contract.md
 - Read before every write; reuse unchanged reads within a batch.
 - New owner input, conflict, failed refresh or changed dependencies need reconciliation before dependent work; cache never proves current scope. Failed refresh: keep last confirmed snapshot, report blocker, continue independent work.
 - Later input: preserve it, resolve authority, confirm or leave pending, record reason, reassess affected plans and consumers.
-- Ticket is the spec: code and ticket never disagree. Change of intent (owner or QA note, fix review requires, need found while building) updates definition of done and checklist before the code, with one activity entry. Safe: scope change = new revision, reviewed independently against the old one. Never edit state, weaken acceptance or revive a cancelled ticket; changed goal may need linked replacement ticket.
+- Ticket is the spec: code and ticket never disagree. Change of intent (owner or QA note, fix the review requires, need found while building) updates definition of done and checklist before the code, with one activity entry. Safe: scope change = new revision, reviewed independently against the old one. Never edit state, weaken acceptance or revive a cancelled ticket; changed goal may need linked replacement ticket.
 
 ## Review and deliver
 

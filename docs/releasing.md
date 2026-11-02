@@ -13,7 +13,7 @@ Humans release. Never move or delete a published tag, never re-publish a version
 1. Branch from up-to-date `main`: `git fetch origin`, then `git switch -c release/vX.Y.Z origin/main`.
 2. Write upgrade steps under `## X.Y.Z` in `UPGRADING.md`.
 3. Set `version` in `.agents/.claude-plugin/plugin.json` to `X.Y.Z`. In `.claude-plugin/marketplace.json`, set the plugin's `source.ref` to `vX.Y.Z` and its `source.path` to plugin root at that tag (`.agents` from 2.0.0); refresh both descriptions to match that release.
-4. In `CHANGELOG.md`, move `## [Unreleased]` into `## [X.Y.Z] - <today>` keep an empty `## [Unreleased]` above it.
+4. In `CHANGELOG.md`, move `## [Unreleased]` into `## [X.Y.Z] - <today>`; keep an empty `## [Unreleased]` above it.
 5. Run repository checks in `AGENTS.md`, commit, open release PR, merge it.
 6. Tag merge commit, push tag right away: Claude Code installs fetch the tag marketplace names; until it exists a new install fails.
 

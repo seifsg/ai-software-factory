@@ -9,7 +9,7 @@ Run after `analyze-start`, before planning. No code in this step.
 
 1. **Restate the goal** in one line, from original request and approved decisions.
 2. **Find three strong alternatives.** Real, distinct approaches that each could ship. No padded weak options to make pick look good. Existing or already approved design: assess it against two credible alternatives; keeping it can be the best answer. Never manufacture a defect or a rewrite to justify this step.
-3. **Compare in one table**, best evidence first:
+3. **Compare them in one table**, best evidence first:
 
    | Option | Approach | Correct | Simple | Performance | UX / look | Fits goal | Coupling / cycles | Cost |
    |---|---|---|---|---|---|---|---|---|
