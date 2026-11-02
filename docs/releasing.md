@@ -25,13 +25,13 @@ Humans release. Never move or delete a published tag, never re-publish a version
 
 Written for the person who installs or runs the factory: what changed for them, never how it was built. [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/) layout, [Common Changelog](https://common-changelog.org/) lines.
 
-1. Each PR adds its lines under `## [Unreleased]`, in its group. Groups in this order, empty ones left out: `Changed`, `Added`, `Deprecated`, `Removed`, `Fixed`, `Security`.
-2. One line per change, one sentence, under 30 words. Starts with an imperative verb (Add, Make, Let, Stop, Fix, Remove). Says the effect the reader sees, readable without its group heading.
-3. Ends with its PR as `([#254])`, and `[#254]: <PR URL>` joins the link list at the file bottom.
-4. Breaking line starts `**Breaking:**`, goes first in its group, and has its `UPGRADING.md` step.
+1. Each PR adds its lines under `## [Unreleased]`, in its group; a PR no reader notices (rule 5), such as a release-guide change, adds none. Groups in this order, empty ones left out: `Changed`, `Added`, `Deprecated`, `Removed`, `Fixed`, `Security` (Common Changelog order, plus Keep a Changelog's `Deprecated` before removals and `Security` last).
+2. One line per change, one sentence, under 30 words. Starts with an imperative verb (Add, Make, Let, Rename, Fix, Remove, ...). Says the effect the reader sees, readable without its group heading.
+3. Ends with its PR as `([#254])`, and `[#254]: https://github.com/seifsg/ai-software-factory/pull/254` joins the link list at the file bottom.
+4. Breaking line starts `**Breaking:**`, goes first in its group, then the rest by importance. Each has a numbered `UPGRADING.md` step under `## X.Y.Z`: what to run or change, in order.
 5. Leave out what no reader notices: wording trims, byte counts, typos, CI, internal script structure, review rounds. Merge related lines; drop changes undone before the release.
 6. No internal mechanics (file names inside skills, guard internals) unless the reader types or reads them.
-7. Release header `## [X.Y.Z] - YYYY-MM-DD`; at most one notice under it, one italic sentence (first release, yanked, upgrade needed).
+7. Release header `## [X.Y.Z] - YYYY-MM-DD`; at most one notice under it, one italic sentence (first release, yanked, upgrade needed, renumbered).
 
 Example:
 

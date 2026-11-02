@@ -6,13 +6,9 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
-### Added
-
-- Add a changelog method and a version bump table to the release guide, so every entry and version number follows one rule ([#257])
-
 ## [0.2.0] - 2026-11-02
 
-_Under the bump table added in 0.2.1 this release would be 0.1.1; published versions stay, numbering continues from 0.2.0._
+_Renumbered: under the bump table adopted after this release it would be 0.1.1; published versions stay._
 
 ### Changed
 
@@ -32,11 +28,18 @@ _Fresh start replacing the deprecated 1.x line; Claude Code installs reinstall o
 
 - **Breaking:** Run every task as ten visible steps (ticket, analyze, recommend, challenge, plan, Before proof, build, verify, PR, review), each posted to the owner, the ticket and `.factory/run.md` ([#232])
 - **Breaking:** Count a gate or review line only when the named checker or reviewer's own transcript holds it on that commit ([#241])
+- **Breaking:** Write `Gate C` under `## 8 Review` and run it once, after the review, on the final head ([#232])
+- **Breaking:** Give every `Waiting: jobs:` line a deadline, `(max <n> min)` ([#241])
+- **Breaking:** Build at the size the owner names, with no default; open runs drop an unnamed size label ([#244])
 - **Breaking:** Move the plugin root to `.agents/` and the delegate roles to `.agents/agents/` ([#232])
 - Run one step per turn: a Stop guard sends the next step's prompt and catches two steps ticked at once ([#232])
 - Cap every review, gate and fix loop at 3 rounds, 5 with an open critical finding, then halt with one owner packet; resume with `run-guard.sh clear` ([#241])
-- Build what the owner asked at the best UI and look: no default size, one of three looks picked at step 2, a UI pass at verify, primary platform first ([#244])
-- Say every rule in fewer words across skills, agents and docs ([#246])
+- Hand a run to a fresh session after two compactions, and repeat the next step after each one ([#241])
+- Make `recommend` show three solutions in one table with one pick, and pick one of three looks at step 2 ([#232], [#244])
+- Add a UI pass at verify and polish the primary platform first, the secondary after the owner confirms it ([#244])
+- Take screenshots from the host's built-in browser, never headless scripts unless asked ([#232])
+- End a solo owner's run by asking them to verify and merge, with no review request ([#232])
+- Make `how-to-review-a-pr` its own skill again ([#232])
 - Rework the README with a run card, a three-point why and a 3-step quick start per host ([#251])
 
 ### Added
@@ -44,20 +47,16 @@ _Fresh start replacing the deprecated 1.x line; Claude Code installs reinstall o
 - Add plugins for Claude Code, Codex and Cursor from one `.agents/` root; Codex and Cursor not yet run live ([#248])
 - Add an update check that tells the owner at step 0 when a newer release is out; off with `FACTORY_NO_UPDATE_CHECK=1` ([#248])
 - Add step 2b Challenge, which rechecks the recommendation and posts `kept` or `changed` with the reason ([#232])
-- Add overnight runs: `night.sh` starts only a run that can finish unattended, and `watchdog.sh` resumes stalled ones ([#241])
-- Add the checker role, which checks step outputs against their contracts at gates A, B and C ([#232])
+- Add overnight runs: `night.sh` starts only a run that can finish unattended, also with a CLI off PATH (`FACTORY_CLAUDE`, `FACTORY_CODEX`), and `watchdog.sh` resumes stalled ones ([#241], [#242])
+- Add a `pre-push` hook that blocks pushes to the default branch, force pushes and token shapes ([#241])
+- Add the checker role, which checks step outputs against their contracts at gates A, B and C; lens reviewers never count as review rounds ([#232], [#242])
 - Let a new project start with no setup: folder, `git init` and a private GitHub repository are created for it ([#232])
 - Let the owner waive a gate with `Gate <X>: WAIVED by owner` ([#232])
 
 ### Removed
 
 - **Breaking:** Remove all Python: the `fast_gate.py` gate, Safe controller, installer, self-update, metrics and test suite ([#232])
-- **Breaking:** Remove Lucky mode, the Show, Look, Prove and Ship phases, and the `ux-quality` skill ([#232])
-
-### Fixed
-
-- Fix night runs on a CLI outside PATH: `FACTORY_CLAUDE` and `FACTORY_CODEX` name it, and Codex is refused when its sandbox cannot run ([#242])
-- Fix lens reviewers counting as review rounds; they now hand back a lens report, never a verdict ([#242])
+- **Breaking:** Remove Lucky mode, the Show, Look, Prove and Ship phases, the product bar and the `ux-quality` skill ([#232])
 
 ## [1.3.0] - 2026-10-31
 
@@ -183,4 +182,3 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 [#248]: https://github.com/seifsg/ai-software-factory/pull/248
 [#251]: https://github.com/seifsg/ai-software-factory/pull/251
 [#254]: https://github.com/seifsg/ai-software-factory/pull/254
-[#257]: https://github.com/seifsg/ai-software-factory/pull/257
