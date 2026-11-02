@@ -22,7 +22,7 @@ Find real repository, branches, release policy, PR template, signing rule, check
 ## 3. Branch from the right base
 
 - Work on own branch, `<scope>/<short-name>` (`fix`, `feat`, `docs`, `chore`) or project convention; never commit to base. Protect dirty and foreign work: new branch or isolated checkout.
-- Base = project integration branch, else default branch. Differs: say so in PR.
+- Base = project integration branch, else default branch. Base differs from default branch: say so in PR.
 - **Epic waves:** share one integration branch and draft PR. Finished lanes incorporate it, resolve/recheck, then integrate and push without force. Exception: independently complete UI ticket ships own draft after its verify; dependencies included and checked. Never wait on unrelated wave tickets.
 - Dependent ticket, wrong base or hotfix: `references/pr-cases.md`.
 - Check remote, not local list: shallow and single-branch clones hide branches.
@@ -36,12 +36,12 @@ git switch -c <scope>/<short-name> origin/<base>
 
 ## 4. Before proof, before the first edit
 
-Every PR shows observed Before/After per outcome; prose or illustrative diagrams never replace results. In a `diff`: API proof = one request's status and body; CLI/script proof = one command's output; method/prose proof = fresh walkthrough's changed result and key text. Speed/size/cost proof measures same workload. Internal module proves its changed screen, endpoint or command. New nonvisual result: prior output = "did not exist". Name `**Visual:**` and `**Journey:**` under each outcome (`references/pr-layout.md`), with reason when no. Map shared backend effects to UI journeys.
+Every PR shows observed Before/After per outcome; prose or illustrative diagrams never replace results. In a `diff`: API proof is one request's status and body; CLI/script proof = one command's output; method/prose proof = fresh walkthrough's changed result and key text. Speed/size/cost proof measures same workload. Internal module proves its changed screen, endpoint or command. New nonvisual result: prior output = "did not exist". Name `**Visual:**` and `**Journey:**` under each outcome (`references/pr-layout.md`), with reason when no. Map shared backend effects to UI journeys.
 
 1. Take plan's proof list. Changed views, states, motion, interactions or affected UI journeys: read [visual and journey proof](references/media-proof.md) now; its rules apply in full.
 2. Brand-new surface: no Before capture, Before = "did not exist". Capture every other Before now, before any source edit, into `.factory/proof/<ticket>/before-<id>.png` (screens) or `before-<id>.txt` (commands, responses, text). Screens: use host's built-in browser, the preview owner watches; keep that one server for After. No Playwright, headless browsers or capture scripts unless owner asks. Host cannot save screenshot as file: write what it shows into `before-<id>.txt` as `pane:` observation; valid proof, no waiver needed.
 3. Inspect every capture: right screen, readable, no secrets.
-4. Missed a Before after editing: text and command proof come from base (`git show <base>:<path>`, base build output); screenshot no longer takeable = state missing in PR. Never a second checkout or server just for a picture.
+4. Missed a Before after editing: text and command proof come from base (`git show <base>:<path>`, base build output); screenshot no longer takeable: state it as missing in PR. Never a second checkout or server just for a picture.
 5. Capture After during verify's manual pass, same server, same ids: `after-<id>.*`. Later fix recaptures only ids it affects.
 
 ## 5. Make the change

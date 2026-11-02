@@ -27,7 +27,7 @@ Rules:
 ## Check Order
 
 1. **Requirements**: map each requirement/criterion to the code and proof that satisfy it.
-   - Inventory the user request first. A requested item absent from every ticket, or replaced by a substitute, without owner's recorded decision = core `MISSING`. One open in its own ticket outside the confirmed iteration is not an iteration requirement: list as open, and verdict states product incomplete
+   - Inventory the user request first. A requested item absent from every ticket, or replaced by a substitute, without owner's recorded decision is core `MISSING`. One open in its own ticket outside the confirmed iteration is not an iteration requirement: list as open, and verdict states product incomplete
    - `MET`, `PARTIAL`, `MISSING`, `INCORRECT`, `CONTRADICTED`, `UNCLEAR`
    - Code exists but misses intended behavior: not `MET`
    - Behavior never requested or planned: `DRIFT`

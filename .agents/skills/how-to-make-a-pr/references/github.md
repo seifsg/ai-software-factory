@@ -16,7 +16,7 @@ gh pr create --draft --base <base> --head <branch> --title "<type>(<scope>): <su
 
 ## Attach proof media
 
-`gh` cannot upload images: put screenshots and recordings in a proof commit on own branch. Never touches working tree, index or PR diff; works in private repositories for everyone who can read them.
+`gh` cannot upload images: put screenshots and recordings in a proof commit on own branch. The proof commit never touches working tree, index or PR diff; works in private repositories for everyone who can read them.
 
 ```text
 printf '100644 blob %s\t%s\n' "$(git hash-object -w <before.png>)" <outcome>-before.png "$(git hash-object -w <after.png>)" <outcome>-after.png | git mktree

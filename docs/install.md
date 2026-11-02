@@ -1,6 +1,6 @@
 # Install
 
-Needs Git, read access to the repository (`gh auth login` lets Git use your GitHub credentials over HTTPS) on Windows Git Bash for the hooks.
+Needs Git, read access to the repository (`gh auth login` lets Git use your GitHub credentials over HTTPS) and, on Windows, Git Bash for the hooks.
 
 ## Claude Code
 

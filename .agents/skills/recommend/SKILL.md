@@ -24,7 +24,7 @@ Only one sane path (typo, one-line fix): say "one path: <why>", name two rejecte
 
 ## Challenge (step 2b)
 
-Own pass, after step 2's block: "I don't think this is the best we could do. Do better. Make no mistake." Redo steps 2 to 4 against it: missed option, wrong cell, underrated cost. Keep pick only if it survives.
+Challenge's own pass, after step 2's block: "I don't think this is the best we could do. Do better. Make no mistake." Redo steps 2 to 4 against it: missed option, wrong cell, underrated cost. Keep pick only if it survives.
 
 ## Output contract
 

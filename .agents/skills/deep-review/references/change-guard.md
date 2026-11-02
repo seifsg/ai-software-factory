@@ -36,7 +36,7 @@ Change Guard Report:
 
 ### Step 2: Unintended Logic Changes
 
-- Verify conditional branches not accidentally altered
+- Verify conditional branches are not accidentally altered
 - Check default values, fallbacks, edge cases preserved
 - Confirm loop boundaries, iteration order, early returns, termination conditions
 - Verify type coercions, null checks and guard clauses remain, unless a stronger guarantee replaces them in the same change (defense in depth stays)

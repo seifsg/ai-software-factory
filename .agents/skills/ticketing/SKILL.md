@@ -15,7 +15,7 @@ Remote ticket = record; local notes = cache. Write tickets with `references/tick
 4. Search before creating: symptom, feature, area, files, PR title, branch. Reuse same work: bug, enhancement, QA note or review finding on an existing ticket's outcome updates that ticket as change of intent, reopened if closed. New ticket only for new outcome or on owner's ask. No duplicates; after uncertain response, read tracker and reconcile before creating again.
 5. Record provider, project, native ID, URL.
 6. Access or write fails: name step and next action, keep pending local record. No silent tracker switch, duplicate or success claim. Use only tools that exist; installing, paid access, messaging need own authority.
-7. No tracker reachable, or none chosen yet while run goes on: write ticket to `.factory/ticket.md`, same layout; `local: .factory/ticket.md` stands in for its link. Move to tracker once one is set.
+7. No tracker reachable, or none chosen yet while run goes on: write ticket to `.factory/ticket.md` in the ticket layout; `local: .factory/ticket.md` stands in for its link. Move to tracker once one is set.
 
 ## Backlog
 

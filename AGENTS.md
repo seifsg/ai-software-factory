@@ -22,7 +22,7 @@ Factory changes use `improve-factory` (`.agents/skills/improve-factory/SKILL.md`
 
 ## Keep it working
 
-No Python, test suite or build. Checks = commands and a fresh agent. Byte counts come from Git blobs, same on every checkout and line ending: commit first, or name the base (`origin/main`) in place of `HEAD`.
+No Python, test suite or build. Checks are commands and a fresh agent. Byte counts come from Git blobs, same on every checkout and line ending: commit first, or name the base (`origin/main`) in place of `HEAD`.
 
 ```text
 grep -rnE '\]\(\.\./' .agents/skills                 # no links out of a skill's folder: expect nothing

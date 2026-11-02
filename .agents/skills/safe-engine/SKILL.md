@@ -17,7 +17,7 @@ Build systems that outlast their creator. No breakage.
 - UI/UX: no code-size limit; still fast. Best look and feel, any size. Responsive from start.
 - SOLID, KISS, DRY, SRP; Gang of Four patterns where they fit, never for show.
 - Many small functions and files, no long functions; split a file before 1000 lines. Reuse existing functions first; build new ones for reuse.
-- Fix design at root cause of a bug or edge case, not symptom; lean to refactoring. Big or regression-risky root fix (shared contracts, schema, stored data, consumers outside task): owner's yes first.
+- Fix design at root cause of a bug or edge case, not symptom; lean to refactoring. Big or regression-risky root fix (shared contracts, schema, stored data, consumers outside task) needs owner's yes first.
 - Guarantees, not guards. Each real edge case gets the first that fits: impossible by design; normalized or rejected loudly where data enters (undefined, null, wrong values, exceptions); specified, logged behavior. A state beyond data, config and platform in use: one loud assertion, never new code paths. No silent defaults or swallowed errors.
 - Production ready: no placeholders, stubs or TODOs unless owner asks. Human-readable code; short comments: what a function does and why it exists. Never a circular dependency.
 - When done, one more pass: less code, less complexity, faster? Question every solution, yours and the code you read.
@@ -45,7 +45,7 @@ Every run keeps project rules and never puts secrets in code or Git. Build what 
 
 `.factory/run.md` in project holds the run: [format](references/run-file.md). Create at step 0; Git ignores `.factory/`.
 
-- After each step: write its block under its heading, tick heading `✔` once contract holds, set `Next:` to next step and its skill.
+- After each step: write its block under the step's heading, tick heading `✔` once contract holds, set `Next:` to next step and its skill.
 - `Waiting:` stays `none` while you work. Before ending a turn on purpose, set `owner: <question>` or `jobs: <what runs> (max <minutes> min)`; back to `none` on resume.
 - `Status: closed` only after step 8 and gates A, B and C pass or owner waives one. Owner stop: `Status: stopped (<reason>)`.
 
@@ -53,7 +53,7 @@ Factory hooks read this file. No hooks installed: apply same rules yourself ever
 
 ## Steps
 
-One step per turn: load its skill, do that step's own work with fresh reading, searching or running, post its block as last message, update run file, end turn. Stop guard sends next step's prompt, as if owner typed it. Never start next step in same turn or write two blocks at once; guard catches two headings ticked in one turn. Step 5 takes one todo per turn. No hooks: end each step with `Say go for step <n>`: the one wait Fast keeps there. Before each step load its skill fresh, even one read earlier: invoke with your agent's skill command or read the file. Same skill as last step: reread this step's section only.
+One step per turn: load its skill, do that step's own work with fresh reading, searching or running, post its block as last message, update run file, end turn. Stop guard sends next step's prompt, as if owner typed it. Never start next step in same turn or write two blocks at once; guard catches two headings ticked in one turn. Step 5 takes one todo per turn. No hooks: end each step with `Say go for step <n>`: the one wait Fast keeps there. Before each step load its skill fresh, even one read earlier: invoke with your agent's skill command or read the file. Same skill as last step: rereading this step's section is enough.
 
 Each step ends with its block: post full block as its own chat message (never summary, never only a file or tool output), then write to run file. Before next step reads it, fold in any owner reply that arrived; Fast never waits for one. Ticket gets a comment only on status change (steps 0, 5, 7 and 8) or relay, linking run file's blocks.
 
@@ -115,7 +115,7 @@ After steps 3, 6 and 8, start the [checker](references/checker.md): a fresh ligh
 
 ## Authority and stops
 
-1. Continue to agreed outcome. Defer only what needs owner's hands or missing hardware. Pause dependent work only for: missing access or tools after real discovery, owner-reserved decisions, a gate you cannot repair, explicit owner stop. Keep independent work moving.
+1. Continue to agreed outcome. Defer only what needs owner's hands or missing hardware. Pause dependent work only for: missing access or tools after real discovery, owner-reserved decisions, a gate you cannot repair, or an explicit owner stop. Keep independent work moving.
 2. Discover before asking: files, config, run files, integrations, current docs.
 3. Never invent identities, commands, access, status or evidence. A host, path, command, version or status written anywhere is a claim: test it before you use or report it. A stand-in proves only itself. Unverified means this machine cannot run the check, never that you skipped it.
 4. Retry only with diagnosed cause or new evidence. Second related failure: find shared cause and why last fix failed, fix cause and its consumers, state what prevents recurrence.
@@ -133,7 +133,7 @@ After steps 3, 6 and 8, start the [checker](references/checker.md): a fresh ligh
 
 ## Resume
 
-Read run file and ticket, load `Next:` skill fresh, continue there. Disagree: test both against checkout, keep what holds; log correction in ticket's activity. `Next:` past a gate without its PASS: run that gate's checker first. Never restart a run or invent artifacts.
+Read run file and ticket, load `Next:` skill fresh, continue there. Run file and ticket disagree: test both against checkout, keep what holds; log correction in ticket's activity. `Next:` past a gate without its PASS: run that gate's checker first. Never restart a run or invent artifacts.
 
 ## Factory fault
 

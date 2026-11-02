@@ -18,7 +18,7 @@ Coding agents jump straight to code, forget the method as context grows, tell yo
 
 ## ⚡ Quick start
 
-**Need:** a coding agent (Claude Code and Codex first-class; any agent that reads `SKILL.md` works), Git, GitHub CLI signed in (`gh auth login`) for tickets and draft PRs, on Windows Git Bash (part of Git for Windows) for the hooks.
+**You need:** a coding agent (Claude Code and Codex first-class; any agent that reads `SKILL.md` works), Git, GitHub CLI signed in (`gh auth login`) for tickets and draft PRs, on Windows Git Bash (part of Git for Windows) for the hooks.
 
 1. **Install:** [docs/install.md](docs/install.md). Claude Code:
 
@@ -54,7 +54,7 @@ Products and big features add `research-market` and kickoff questions before ste
 
 ## 🛡️ How it stays on track
 
-Long runs lose skill text when host compacts context. Factory works around it, no hoping:
+Long runs lose skill text when host compacts context. Factory works around it instead of hoping:
 
 ```text
 each step:  load its skill fresh → do it → write its block to .factory/run.md

@@ -13,7 +13,7 @@ Review any PR (teammate, customer, agent) end to end. Every factory-opened PR ge
 
 - Review-only or analysis-only request: stop after phase 4 with the report. Fixes, pushes, comments need request or authorization covering them.
 - Run review in a separate fresh-context agent, on a fresh checkout of exact remote base and head; remote or cloud when delivery requires. Record provider/task identity, base/head, evidence, verdict.
-- Asked to review a PR: you are the reviewer. Delivery requires remote or cloud review: local pass does not replace it. Missing remote access blocks that review and merge, not independent local work.
+- Asked to review a PR: you are the reviewer. If delivery requires remote or cloud review, local pass does not replace it. Missing remote access blocks that review and merge, not independent local work.
 - Clean checkout. Dirty work: keep in an isolated checkout; never silently stash or switch.
 - Learn product, architecture, rules, checks, authority from the project. Use existing toolchain; install nothing unrelated. Review the real system, incl. consumers outside the repo.
 
