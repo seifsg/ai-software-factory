@@ -1,0 +1,226 @@
+Codex Windows automatic phase-chain proof
+Candidate: 76aa033a02cf8036e2e48a0d257028f202ff500a
+Installed source: reviewed local trial; unchanged adapter hashes.
+Observed: four full assistant final messages, three actual role:user hook prompts, no parent-sent phase continuation.
+Codex semantics: one outer native turn contains four separate hook-driven prompt/response rounds.
+Final state: stopped after Challenge; thread completed and went idle.
+
+--- 1. assistant ---
+## 0 Ticket ✔
+
+**Ticket:** Local diagnostic fixture for the trusted Safe Factory 0.4.0 trial.
+
+**Proposed task:** A CLI sums a nonempty list of integers, rejects invalid input, and returns a useful error.
+
+**Test acceptance criteria:**
+
+- Display Analyze, Recommend, and Challenge as separate, complete final responses.
+- Continue only upon prompts injected by the installed Stop hook.
+- Stop after Challenge; create no implementation, external issues, PRs, or remote repositories.
+- Report any actual hook error without simulating continuation.
+
+**Control-turn result:**
+
+- [x] Reset only `.factory/run.md`.
+- [x] Preserve the existing Git fixture.
+- [x] Leave guard state untouched.
+- [ ] Analyze upon automatic continuation.
+- [ ] Recommend upon automatic continuation.
+- [ ] Challenge upon automatic continuation, then stop.
+
+**Run state:** `Status: open`; `Waiting: none`; `Next: 1 Analyze · analyze-start`.
+
+LIVE_TICKET_COMPLETE
+
+--- 2. automatic user prompt ---
+If this session runs the factory run in .factory/run.md: Step 1 Analyze: load `analyze-start` fresh. Analyze the request and everything it touches, then teach the owner what exists and what we want: visual (tables, ASCII diagrams, emojis), no code. Do only this step: post its full block as your last message, update .factory/run.md (tick, Next), then end your turn. Ending on purpose? Set Waiting: owner: &lt;question&gt; or Waiting: jobs: &lt;what runs&gt; (max &lt;minutes&gt; min).
+
+--- 3. assistant ---
+## 1 Analyze ✔
+
+**Inputs**
+
+- Ticket: local diagnostic ticket in `.factory/run.md`; no external ticket.
+- R1: sum a nonempty list of integers. R2: reject invalid input. R3: return a useful error.
+- C1: one complete phase per automatic hook prompt. C2: no implementation or external artifacts. C3: stop after Challenge.
+- Research: none; bounded lifecycle fixture. Owner-named product size: none.
+- Step 1; next: Recommend.
+
+**Purpose**
+
+The proposed CLI lets a person or shell script obtain an exact integer sum and distinguish invalid input from success.
+
+The authorized outcome is to observe separate native factory turns, ending after Challenge. A Step 1 hook prompt was received; later continuations remain unproven.
+
+**Flow**
+
+```text
+Current:
+local ticket -> installed Stop hook -> Analyze
+                                     -> run state + final response
+
+Proposed CLI, not implemented:
+person / shell script
+        |
+        v
+command-line argument tokens
+        |
+        v
+[NEW: require nonempty input; validate every integer]
+        | valid                    | invalid
+        v                          v
+exact running sum           useful stderr error
+        |                          |
+        v                          v
+stdout: sum + newline       nonzero exit; no result
+        |
+        v
+successful exit
+
+No storage or external service required.
+```
+
+**Used by**
+
+- `.factory/run.md`: local ticket and phase state consumed by this diagnostic workflow.
+- Git contains empty fixture commit `36b1b46`; no tracked files or configured remote.
+- File discovery, excluding Git internals and guard state, found only `.factory/run.md`. `work/` and `outputs/` contain no application files.
+- No implementation, call sites, imports, routes, schemas, storage keys, application events, or tests exist.
+- Proposed consumers: terminal users and shell scripts reading stdout, stderr, and exit status. No consumer source paths exist yet.
+
+**Edges and proposed contracts**
+
+These are analysis assumptions for comparison, not implemented guarantees.
+
+| Boundary or case | Proposed behavior |
+|---|---|
+| Input transport | Positional arguments; no stdin or file input |
+| Integer grammar | ASCII decimal digits, optional single leading `+` or `-`; leading zeros accepted |
+| Nonempty list | Require at least one token |
+| Arithmetic | Exact sum; support negatives, zero, and cancellation |
+| Success | Decimal sum plus newline on stdout, exit `0`, no stderr |
+| Invalid input | Brief reason, argument position when applicable, and usage on stderr; exit `2`; no stdout result |
+| Invalid tokens | Reject empty tokens, embedded whitespace, bare signs, decimals, exponent notation, hexadecimal, Unicode digits, and option-like tokens |
+| Mixed input | Reject the whole invocation if any token is invalid; no partial result |
+| Large integers | Never silently round, overflow, or truncate |
+| Execution failure | Distinct nonzero failure; never fabricate a numeric result |
+
+No CLI invariants are enforced today because no CLI exists. Validation belongs at the token boundary before arithmetic. Parsing must consume each entire token, and negative integers must remain valid arguments. Shell tokenization and operating-system argument limits precede the application.
+
+Processing requires reading all input. A running accumulator avoids retaining another parsed list, but its memory grows with numeric precision. Arbitrary-precision arithmetic is not constant-cost. No cache, persistence, or background process is justified.
+
+Diagnostics should use actionable stderr and stable exit behavior without echoing raw supplied content or stack traces. A separate log store is unnecessary for this proposed one-shot CLI.
+
+**Claims**
+
+| Claimed behavior | Where in the code | Delivered? | Note |
+|---|---|---|---|
+| Sum a nonempty integer list | No source exists | NO | Proposed task only |
+| Reject invalid input | No source exists | NO | Proposed task only |
+| Return a useful error | No source exists | NO | Proposed task only |
+| Separate automatic Analyze turn | Received Step 1 hook prompt | PARTIAL | This turn is observed; remaining chain is unproven |
+
+**Scope**
+
+The next authorized result is a three-option recommendation, followed by a separate Challenge and stopped status. No build, dependency installation, tests, remote repository, issue, or PR is in scope.
+
+A future CLI would require a runtime and entry point. Inputs could vary through arguments; grammar, transport, exit codes, and precision policy would require code changes.
+
+Future proof should use independently selected inputs: ordinary sums, signs and zeros, cancellation, large integers, missing input, and malformed tokens. Check both output streams and exit codes. No CLI execution proof is possible in this analysis-only fixture.
+
+**Unknowns**
+
+- Runtime, executable name, packaging, and deployment target are unspecified.
+- Transport, grammar, exact precision, and exit `2` are proposed defaults.
+- Hypothesis: a standard-library CLI can satisfy the task without third-party dependencies; runtime selection must confirm it.
+- No missing owner decision blocks this bounded analysis. Automatic continuation remains under observation.
+
+**For Recommend**
+
+Compare three approaches for exact arithmetic, strict parsing, negative arguments, code size, runtime availability, CPU/memory cost, and coupling. Pick one without building it.
+
+Only the required `.factory/run.md` record changed; guard state was untouched. Run state: `Status: open`, `Waiting: none`, `Next: 2 Recommend · recommend`.
+
+LIVE_ANALYSIS_COMPLETE
+
+--- 4. automatic user prompt ---
+If this session runs the factory run in .factory/run.md: Step 2 Recommend: load `recommend` fresh. The three best real solutions, no fillers or placeholders, compared in one table; pick one and say why not the others. Do only this step: post its full block as your last message, update .factory/run.md (tick, Next), then end your turn. Ending on purpose? Set Waiting: owner: &lt;question&gt; or Waiting: jobs: &lt;what runs&gt; (max &lt;minutes&gt; min).
+
+--- 5. assistant ---
+## 2 Recommend ✔
+
+**Goal:** Recommend a small CLI that exactly sums a nonempty integer argument list and rejects invalid input with useful errors. Implement nothing in this bounded test.
+
+**Evidence:** Local version commands reported Node.js `v22.11.0`, Python `3.13.5` through `py`, and PowerShell `7.6.5`. No CLI behavior or performance was tested.
+
+| Option | Approach | Correct | Simple | Performance | UX / look | Fits goal | Coupling / cycles | Cost |
+|---|---|---|---|---|---|---|---|---|
+| A | Node.js; direct arguments, strict ASCII validation, `BigInt` accumulator | Exact arithmetic; validate before conversion | Small script; no option parser | One traversal; no parsed-value list; arithmetic depends on precision | Explicit stdout/stderr and exit codes | Covers proposed contract with little machinery | Node only; no packages or cycles | Handle conversion/output failures; runtime required |
+| B | Python; direct arguments, strict ASCII validation, `int` accumulator | Exact arithmetic; needs decimal-conversion limit policy | Small standard-library script | Same traversal; startup and conversion costs unmeasured | Same stream/exit contract | Strong fit where Python is the deployment runtime | Python only; no packages or cycles | Reconcile input/output digit limits with accepted range |
+| C | PowerShell; raw arguments, strict validation, .NET `BigInteger` | Exact arithmetic; use invariant conversion | Small script; additional .NET interop | Same traversal; shell startup and interop unmeasured | Natural PowerShell invocation; deliberate stream handling | Strong fit for a PowerShell-managed environment | PowerShell and .NET; no packages or cycles | Preserve raw tokens and manage shell output/error semantics |
+
+All three require whole-token validation. ECMAScript permits whitespace and nondecimal forms in its conversion grammar; Python documents decimal conversion limits; .NET provides parsing overloads with styles and format providers. Sources: [ECMAScript](https://tc39.es/ecma262/multipage/abstract-operations.html#sec-stringtobigint), [Python](https://docs.python.org/3.13/library/stdtypes.html#integer-string-conversion-length-limitation), [Microsoft](https://learn.microsoft.com/en-us/dotnet/api/system.numerics.biginteger.tryparse?view=net-9.0).
+
+**Pick: A, Node.js with `BigInt`.**
+
+It combines an available runtime, exact arithmetic, and explicit argument handling without dependencies or a separate decimal digit-limit configuration policy. Strict validation and clean failure behavior remain necessary.
+
+B adds a conversion-limit decision absent from this brief. C adds shell-specific argument, stream, and conversion handling without a stated PowerShell distribution requirement. Both remain credible alternatives. No performance winner is claimed.
+
+Every approach must inspect the input. Use a running accumulator without caching or retaining another parsed list. Memory still includes arguments, numeric values, and output representation; arbitrary-precision arithmetic is not constant-cost. Delivery would require an explicit supported-size policy.
+
+**Look:** no UI; plain terminal output.
+
+**Decider:** picked (delegated), solely for this disposable recommendation. No production platform or dependency pin changed.
+
+Only the required `.factory/run.md` record changed. Guard state was untouched. Run state: `Status: open`, `Waiting: none`, `Next: 2b Challenge · recommend`.
+
+LIVE_RECOMMENDATION_COMPLETE
+
+--- 6. automatic user prompt ---
+If this session runs the factory run in .factory/run.md: Step 2b Challenge: I don't think this is the best we could do. Do better. Make no mistake. Use the Challenge section of `recommend` and stay neutral: keep the pick and make it stronger if it truly is the best, else replace it and say why. Do only this step: post its full block as your last message, update .factory/run.md (tick, Next), then end your turn. Ending on purpose? Set Waiting: owner: &lt;question&gt; or Waiting: jobs: &lt;what runs&gt; (max &lt;minutes&gt; min).
+
+--- 7. assistant ---
+## 2b Challenge ✔
+
+**Challenge:** I don't think this is the best we could do. Do better. Make no mistake.
+
+**Goal:** Recheck the smallest reliable design for exact integer summation and useful errors, without implementing it.
+
+**Found**
+
+- Python’s conversion-limit cost was overstated. Its standard library provides a setting; this is a modest policy decision, not a blocker. Every option needs a supported-size policy. [Python documentation](https://docs.python.org/3.13/library/sys.html#sys.set_int_max_str_digits).
+- Node’s output handling deserved an explicit cost: forced termination can truncate pending output. Set the exit status and allow writes to finish; handle output failures separately. [Node.js documentation](https://nodejs.org/download/release/v22.11.0/docs/api/process.html#process_exitcode).
+- Runtime availability proves neither deployment suitability nor superior performance. No speed or memory benchmarks exist here.
+- Rechecked signs, leading zeros, negative zero, malformed late arguments, exact large values, and no partial result. Validation must consume the entire token, including rejecting trailing newlines.
+
+| Option | Approach | Correct | Simple | Performance | UX / look | Fits goal | Coupling / cycles | Cost |
+|---|---|---|---|---|---|---|---|---|
+| A | Node arguments, strict validation, `BigInt` | Exact sum after validation | Small script | One traversal; no measured advantage | Decimal text; explicit streams/status | Direct fit | Node only; no packages/cycles | Output-failure and size policy |
+| B | Python arguments, strict validation, `int` | Exact sum; configurable conversion limits | Equally credible small script | One traversal; precision-dependent cost | Same terminal contract | Strong fit | Python only; no packages/cycles | Modest conversion-limit policy |
+| C | PowerShell arguments, strict validation, `BigInteger` | Exact sum with deliberate parsing | Additional shell/.NET handling | One traversal; startup unmeasured | Natural for PowerShell users | Strongest with required PowerShell integration | PowerShell/.NET; no packages/cycles | Token and stream handling |
+
+**Result: kept A, Node.js with `BigInt`.**
+
+It remains reasonable for this fixture: an available runtime, direct string arguments, exact arithmetic, and no dependencies. Its lead over Python is narrow; Python’s conversion limit alone does not establish superiority. An existing Python deployment would favor B, but this empty repository supplies no such constraint. C has no required PowerShell integration advantage.
+
+The strengthened design uses one accumulator, validates complete tokens, emits decimal output only after all input succeeds, allows output to finish, and documents resource limits. No cache or framework is justified. No performance or production-readiness claim is made.
+
+**Look:** no UI. **Decider:** kept (delegated) for this fixture.
+
+**Observed test result:** Separate Analyze, Recommend, and Challenge hook prompts arrived and were handled in separate turns. No manual hook invocation or self-messaging was used. No hook error was received. Post-stop hook behavior has not yet been observed.
+
+The run file now contains:
+
+```text
+Status: stopped (bounded live integration completed)
+Waiting: none
+Next: 3 Plan · get-ready-to-code
+```
+
+Challenge is ticked. Guard state is untouched. No implementation or external artifacts were created. The next-phase pointer is retained; this bounded test ends here.
+
+LIVE_CHALLENGE_COMPLETE
+
+Verified final candidate: 1fbd176d5cfdd4cb1fc06756a96565c91103c243
+Adapter inputs unchanged from tested implementation commit 76aa033a02cf8036e2e48a0d257028f202ff500a. Later commit changes documentation only.

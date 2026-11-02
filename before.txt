@@ -1,0 +1,3 @@
+Before: Windows native startup and Stop hooks were invoked and both exited with code 1. The ticket response completed, chat remained idle, no automatic analysis prompt or guard state appeared.
+Base: 4ce817c0d1d55c96b6f5c72f1a4a04a84b0f475f
+The Windows launcher did not exist at this base (git tree lookup). Existing POSIX guard fixtures passed only when explicitly launched in Git Bash; that was not native lifecycle proof.
