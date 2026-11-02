@@ -16,7 +16,7 @@ Run after `analyze-start`, before planning. No code in this step.
    | A | ... | ... | ... | ... | ... | ... | ... | ... |
 
    Fill each cell with a fact or a short reason, not a score alone. Performance is judged against the real workload, not a universal target. UI: look beats simple.
-   UI work: also 3 looks (type, color, layout, motion, refs). Pick best. Bar: best in class, any size.
+   UI work: second table, 3 looks (type, color, layout, motion, refs). Pick best, delegated, no owner wait. Bar: best in class, any size.
 4. **Pick exactly one** and say why in two or three lines: what it wins, what it costs, why the others lose.
 5. **Who decides.** In-scope choices already delegated to you: pick and record the reason. A new product, design, naming or other owner-reserved choice: present the pick as a recommendation, set `Waiting: owner: <question>` in the run file and keep independent work moving.
 

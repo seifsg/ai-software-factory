@@ -9,7 +9,8 @@ Every feature, journey, integration and behavior the owner asked for, plus what 
 - A requested item leaves scope only by the owner's recorded decision: source, reason, revisit condition, and its entry in the epic's follow-ups ticket.
 - Without that decision, nothing removes or replaces a requested item: no size label, research finding, generic follow-up, later iteration's focus or substitute (mock, sample data, a sandbox that cannot reach the real target, manual step). Seeded data fills content, never a requested integration. A provider's test mode on the real integration counts; live keys come with deployment.
 - Capability unavailable: keep the item Blocked with its reason, build the rest, report the outcome unfinished.
-- Extras, no ask: better UI/UX, small enhancements of asked items, critical or recommended additions an asked item needs. Nothing else: no unasked features or pages (sign-in, payments, analytics, onboarding). Other ideas: suggestions to owner (gap, evidence, cost), never built.
+- Extras, no ask: better UI/UX, small enhancements of asked items, critical or recommended additions an asked item needs. Nothing else: no unasked features or pages (sign-in, payments, analytics, onboarding), except an owner-named MVP's launch needs. Other ideas: suggestions in the follow-ups ticket (gap, evidence, cost), never built.
+- Logic gets small tests, any run, except owner-named POC.
 
 ## Owner-named size
 
@@ -45,7 +46,7 @@ Owner publishes it to real test users. Research what MVP means for this product:
 - automated tests, written after the journeys work, run by one local command;
 - a release record ready to deploy.
 
-Each need: gap, evidence, cost in the block. Paid, risky or product-changing ones: owner approves; declined or unanswered go to the follow-ups ticket. Deploying needs the owner's authority.
+Each need: gap, evidence, cost in the block. Paid ones: owner approves; declined or unanswered go to the follow-ups ticket. Deploying needs the owner's authority.
 
 ## Production slice
 

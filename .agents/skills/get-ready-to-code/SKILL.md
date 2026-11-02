@@ -65,7 +65,7 @@ The block `## 3 Plan` holds:
 - [ ] **Todos:** `T1..Tn`, each an outcome with ticket and criteria; every criterion maps to at least one todo; the ticket checklist matches
 - [ ] **Plan:** interfaces and ports (product, feature, new UI or delegated work; a `change` omits it)
 - [ ] **Proof list:** every changed view, state, journey or command with an id
-- [ ] **Test map:** per-file test command and the full-suite command, or `none (<reason>: no logic, owner-named POC)`
+- [ ] **Test map:** per-file test command and the full-suite command, or `none (<reason>)`: no logic, or owner-named POC
 - [ ] No source file changed during this step
 
 The block `## 5 Build` holds:

@@ -96,7 +96,7 @@ After steps 3, 6 and 8, start the [checker](references/checker.md): a fresh ligh
 - Run file shows `Night:`: the [night mode](references/night.md) rules apply.
 - Released app or release policy: [app releases](references/app-releases.md).
 - Never claim tested, reviewed or production ready without that evidence.
-- Effort on confirmed work only. Primary platform first (existing app: its lead; else web = desktop, mobile app = phone): verify, fix, polish. Secondary: after owner confirms primary.
+- Effort on confirmed work only. Primary platform first (existing app: its lead; else web = desktop, mobile app = phone): verify, fix, polish. Secondary: after owner confirms primary; until then the PR names it pending, never a blocking UNKNOWN.
 - Backlog: `ticketing` moves each ticket through its statuses and logs every change in its activity. Deferred work appends to the epic's one open follow-ups ticket in Backlog.
 
 ## Keep the owner posted
