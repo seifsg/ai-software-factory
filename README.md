@@ -5,7 +5,7 @@
 ### Your coding agent, run like a software team.
 **One request in. Ten checked steps. A reviewed draft PR out.**
 
-<a href="https://github.com/seifsg/ai-software-factory/releases/latest"><img src="https://img.shields.io/github/v/release/seifsg/ai-software-factory?label=version&color=6E56CF&style=flat-square" alt="Latest version" height="28"></a> <img src="docs/assets/badges.svg" alt="Claude Code live · Codex plugin and Cursor not yet run live · Fast and Safe modes · any OS with Git and sh, no runtime" height="28">
+<a href="https://github.com/seifsg/ai-software-factory/releases/latest"><img src="https://img.shields.io/github/v/release/seifsg/ai-software-factory?label=version&color=6E56CF&style=flat-square" alt="Latest version" height="24"></a> <img src="docs/assets/badges.svg" alt="Claude Code live · Codex plugin and Cursor not yet run live · Fast and Safe modes · any OS with Git and sh, no runtime" height="28">
 
 **[Quick start](#-quick-start) · [A run](#-a-run) · [How it stays on track](#%EF%B8%8F-how-it-stays-on-track) · [Update](#-update) · [Troubleshooting](#-troubleshooting)**
 
@@ -40,26 +40,28 @@ Before is captured before the first edit, After during verify, and both land in 
 
 ## ⚡ Quick start
 
-**1. Install** in your agent ([all options](docs/install.md)):
+**1. Install**: Claude Code and Cursor in a session, Codex in a terminal ([all options](docs/install.md)):
 
-| Agent | Install |
-|---|---|
-| **Claude Code** | `claude plugin marketplace add https://github.com/seifsg/ai-software-factory.git`<br>`claude plugin install safe-engine@ai-software-factory` |
-| **Codex** (plugin, not yet run live) | `codex plugin marketplace add seifsg/ai-software-factory`, then `/plugins`, install `safe-engine`, trust its hooks in `/hooks` |
-| **Cursor** (plugin, not yet run live; no hooks yet, so say go per step) | Customize, Plugins, add marketplace `https://github.com/seifsg/ai-software-factory`, install `safe-engine` |
+| | **Claude Code** | **Codex** (not yet run live) | **Cursor** (not yet run live) |
+|---|---|---|---|
+| Add marketplace | `/plugin marketplace add https://github.com/seifsg/ai-software-factory.git` | `codex plugin marketplace add https://github.com/seifsg/ai-software-factory.git` | `/plugin marketplace add https://github.com/seifsg/ai-software-factory.git` |
+| Install | `/plugin install safe-factory@ai-software-factory` | `codex plugin add safe-factory@ai-software-factory`, then trust its hooks in `/hooks` | `/plugin`, install `safe-factory` |
+| Run | `/safe-factory` | `$safe-factory` | `/safe-factory` |
+| One skill alone | `/safe-factory:analyze-start` | type `$`, pick `analyze-start` | `/analyze-start` |
+| Hooks | built in | built in; trust again in `/hooks` after each update | none yet: steps chain in Fast; Stop guard by hand ([Cursor](docs/install.md#cursor)) |
 
-Start a new session; your agent should list `safe-engine`. Other agents: copy the skills ([other agents](docs/install.md#other-agents)). You need Git, the GitHub CLI signed in (`gh auth login`) for tickets and draft PRs, and on Windows Git Bash (part of Git for Windows) for the hooks. To try unreleased `main`, run `claude --plugin-dir <clone>/.agents`.
+Start a new session; your agent should list `safe-factory`. Other agents: copy the skills ([other agents](docs/install.md#other-agents)). You need Git, the GitHub CLI signed in (`gh auth login`) for tickets and draft PRs, and on Windows Git Bash (part of Git for Windows) for the hooks. To try unreleased `main`, run `claude --plugin-dir <clone>/.agents`.
 
-**2. Ask** (`/safe-engine` in Claude Code, `$safe-engine` in Codex):
+**2. Ask** (`/safe-factory` in Claude Code and Cursor, `$safe-factory` in Codex):
 
 ```text
-safe-engine Build [app or feature] in [absolute project directory, or leave it out for a new project]. Success means [observable outcome].
+safe-factory Build [app or feature] in [absolute project directory, or leave it out for a new project]. Success means [observable outcome].
 ```
 
 **3. Watch, answer, merge.** A ticket link comes first, then one block per step. Answer questions when asked. You end with a draft PR that carries Before/After proof and a reviewer's verdict: review it and merge it.
 
 ```text
-safe-engine Resume [absolute project directory].
+safe-factory Resume [absolute project directory].
 ```
 
 ## 🎬 A run
@@ -95,25 +97,29 @@ Long runs lose skill text when the host compacts context. The factory works arou
 
 `night.sh` refuses to start unless the run can finish unattended (guard wired, deny rules, own branch, `pre-push` hook, push dry run, tracker sign-in), then starts a session that denies instead of prompting. Owner questions get recorded defaults, owner-only items are parked, and nothing leaves the machine but the run's branch, draft PR and tickets. A watchdog from the OS scheduler resumes a stalled run, waits out usage limits, starts relays and tells you once how it ended. Setup: [install](docs/install.md#overnight-runs).
 
-Details: [run file](.agents/skills/safe-engine/references/run-file.md), [checker](.agents/skills/safe-engine/references/checker.md), [night mode](.agents/skills/safe-engine/references/night.md), [hosts](docs/hosts.md).
+Details: [run file](.agents/skills/safe-factory/references/run-file.md), [checker](.agents/skills/safe-factory/references/checker.md), [night mode](.agents/skills/safe-factory/references/night.md), [hosts](docs/hosts.md).
 
 ## 🔄 Update
 
 - Each session start checks for a newer release (cached, about 0.1 s) and says so before a run ([update check](docs/install.md#update-check)).
-- **Claude Code:** `claude plugin marketplace update ai-software-factory`, then `/plugin` to update `safe-engine`, or keep auto-update on.
-- **Codex:** `codex plugin marketplace upgrade ai-software-factory`; copied skills: `git -C <clone> pull`, copy again.
-- **Cursor:** reinstall `safe-engine` from Customize, Plugins when a new version shows.
+- **Claude Code:** `claude plugin update safe-factory@ai-software-factory`. Auto-update is off for third-party marketplaces: turn it on in `/plugin`, Marketplaces, `ai-software-factory`, Enable auto-update.
+- **Codex:** `codex plugin marketplace upgrade ai-software-factory`, then trust the hooks again in `/hooks`. Copied skills: `git -C <clone> pull`, copy again.
+- **Cursor:** in `/plugin`, uninstall `safe-factory` and install it again; Cursor keeps GitHub installs on their first commit.
 - What changed: [CHANGELOG.md](CHANGELOG.md). What to do: [UPGRADING.md](UPGRADING.md).
 
 ## 🧹 Uninstall
 
-Claude Code: `claude plugin uninstall safe-engine@ai-software-factory`. Codex: delete the copied skill folders and the two hook entries from `~/.codex/hooks.json`. Projects keep `.factory/` folders until you delete them.
+- **Claude Code:** `/plugin uninstall safe-factory@ai-software-factory`, or `claude plugin marketplace remove ai-software-factory` to drop the marketplace too.
+- **Codex:** `codex plugin remove safe-factory@ai-software-factory`. Copied skills: delete the skill folders and the two hook entries from `~/.codex/hooks.json`.
+- **Cursor:** `/plugin`, uninstall `safe-factory`.
+
+Projects keep `.factory/` folders until you delete them.
 
 ## 🩺 Troubleshooting
 
 | Symptom | Fix |
 |---|---|
-| `safe-engine` not listed | Start a new session; check `/plugin` (Claude Code) or the copied folder under `~/.agents/skills` (Codex) |
+| `safe-factory` not listed | Start a new session; check `/plugin` (Claude Code) or the copied folder under `~/.agents/skills` (Codex) |
 | Agent stops mid-run | Check hooks are installed and trusted (Codex: `/hooks`); read `.factory/run.md`; say "resume" |
 | Run will not stop | `Waiting:` must name what you wait for; to abandon, set `Status: stopped (<reason>)` |
 | Run halted | Read the packet under the current step in `.factory/run.md`, decide, then run the guard with `clear` |
@@ -124,7 +130,7 @@ Claude Code: `claude plugin uninstall safe-engine@ai-software-factory`. Codex: d
 
 | Skill | What it does |
 |---|---|
-| `safe-engine` | the ten-step coordinator, run file and gates |
+| `safe-factory` | the ten-step coordinator, run file and gates |
 | `ticketing` | backlog, epics, tickets, checklists and statuses |
 | `analyze-start` | analysis before any code |
 | `recommend` | three solutions, one pick, and the step 2b challenge |

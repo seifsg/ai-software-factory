@@ -6,6 +6,15 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-02
+
+_Upgrade needed: the plugin is now `safe-factory`; follow [UPGRADING.md](UPGRADING.md#030)._
+
+### Changed
+
+- **Breaking:** Rename the plugin and its entry skill from `safe-engine` to `safe-factory`: run `/safe-factory`, or `$safe-factory` in Codex ([#260])
+- Give the README one setup table per host: install, run, one skill alone, update and uninstall for Claude Code, Codex and Cursor ([#260])
+
 ### Fixed
 
 - Fix the README version badge, which still showed 0.1.0 after the 0.2.0 release; it now reads the Latest release ([#258])
@@ -169,7 +178,8 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 - Leaner runs (#137): product, feature and change runs each read 24% less method text, every gate message is shorter with the same facts, `scripts/token_report.py` measures both, and tests hold every method file and the gate's fixture messages to a byte budget and the product and change loads to 80% of their earlier size.
 - Self-update (#139): a clone install moves only to a release tag on `main` whose files match its manifest, records the previous revision, rolls back a failed install and shows a one-time notice naming both versions.
 
-[Unreleased]: https://github.com/seifsg/ai-software-factory/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/seifsg/ai-software-factory/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/seifsg/ai-software-factory/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/seifsg/ai-software-factory/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/seifsg/ai-software-factory/releases/tag/v0.1.0
 [1.3.0]: https://github.com/seifsg/ai-software-factory/compare/v1.2.0...v1.3.0
@@ -187,3 +197,4 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 [#251]: https://github.com/seifsg/ai-software-factory/pull/251
 [#254]: https://github.com/seifsg/ai-software-factory/pull/254
 [#258]: https://github.com/seifsg/ai-software-factory/pull/258
+[#260]: https://github.com/seifsg/ai-software-factory/pull/260

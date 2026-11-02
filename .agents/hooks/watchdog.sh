@@ -45,7 +45,7 @@ tpl="$here/claude-settings.json"; [ "$host" = codex ] && CLI=${FACTORY_CODEX:-co
 nf="-c 'approval_policy=\"never\"' -c 'sandbox_mode=\"workspace-write\"'" cf='--permission-mode dontAsk --settings "'"$tpl"'"'  # night flags (resume takes no -s)
 if [ "$mode" = fresh ]; then
   say "starting a fresh session (relay)"
-  c=${FACTORY_FRESH:-$([ "$host" = codex ] && echo '"$CLI" exec -s workspace-write -c '"'"'approval_policy="never"'"'"' "\$safe-engine Resume $P"' || echo '"$CLI" -p '"$cf"' "/safe-engine Resume $P"')}
+  c=${FACTORY_FRESH:-$([ "$host" = codex ] && echo '"$CLI" exec -s workspace-write -c '"'"'approval_policy="never"'"'"' "\$safe-factory Resume $P"' || echo '"$CLI" -p '"$cf"' "/safe-factory Resume $P"')}
 else
   say "resuming session $S"
   c=${FACTORY_RESUME:-$([ "$host" = codex ] && echo '"$CLI" exec resume '"$nf"' "$S" "$MSG"' || echo '"$CLI" -p -r "$S" '"$cf"' "$MSG"')}

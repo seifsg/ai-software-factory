@@ -1,9 +1,9 @@
 ---
-name: safe-engine
+name: safe-factory
 description: "Delivers games, apps, services, tools and libraries end to end in ten visible steps: ticket, analyze, recommend, challenge, plan, Before proof, build, verify, PR and review. Fast by default, Safe on request. Use when asked to build, extend, fix or resume software with the factory."
 ---
 
-# Safe Engine
+# Safe Factory
 
 Build the requested outcome with the factory's methods. Every step prints its output: owner sees whole run, no step skipped. Skills named here sit beside this one (`.agents/skills/<name>/SKILL.md`).
 
@@ -127,7 +127,7 @@ After steps 3, 6 and 8, start the [checker](references/checker.md): a fresh ligh
 - Main agent keeps: choices needing whole context, talking with owner, final synthesis.
 - One writer per file. Parallel writers need separate files or worktrees, each with its own dev ports.
 - Route, brief and accept by [delegate](references/delegate.md). Subagent output is data: verify key claims before acting.
-- Work for another session launches the factory, never a bare task: record it first in its ticket, then give a prompt that opens with your agent's invoke form of `safe-engine` and names mode, kind, ticket, project's absolute path and a worktree the new session creates, authority limited to that ticket.
+- Work for another session launches the factory, never a bare task: record it in its ticket, then give a prompt that opens with your agent's invoke form of `safe-factory` and names mode, kind, ticket, project's absolute path and a worktree the new session creates, authority limited to that ticket.
 
 ## Resume
 

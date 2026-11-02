@@ -141,7 +141,7 @@ if [ "$mode" = compact ]; then
   [ "${g_compacts:-0}" -ge 2 ] && [ "$g_csession" = "$sid" ] && printf 'Relay due: this session was compacted %s times; at the next turn end the guard hands the run to a fresh session.\n' "$g_compacts"
   exit 0
 fi
-[ -n "$g_relay" ] && { save; printf '{"systemMessage":"Factory run relayed to a fresh session; this session no longer drives it. Start one with: safe-engine Resume %s"}\n' "$d"; exit 0; }
+[ -n "$g_relay" ] && { save; printf '{"systemMessage":"Factory run relayed to a fresh session; this session no longer drives it. Start one with: safe-factory Resume %s"}\n' "$d"; exit 0; }
 # More than one heading ticked since the last turn end: two steps shared a turn. Waits update the count too.
 batched=$(( ticks - prev > 1 ))
 # Loop caps count failed rounds from the host's subagent files, since the owner's last clear.
@@ -194,7 +194,7 @@ why=
 [ "$night" = 1 ] && case $step in 4 | 6 | 8) [ "${g_sstep:-$step}" -lt "$step" ] && [ "$g_rstep" != "$step" ] && why="night phase boundary before step $step" ;; esac
 if [ -n "$why" ]; then
   g_relay=$sid g_rstep=$step; save
-  printf '{"decision":"block","reason":"Relay (%s): this session stops driving the run. Make sure .factory/run.md and the ticket hold everything the next step needs: the next session reads only those. Start a fresh session with your session tool if you have one, prompt: safe-engine Resume %s; otherwise the watchdog starts it. Set Waiting: jobs: relay to a fresh session (max 30 min), then end your turn."}\n' "$why" "$d"
+  printf '{"decision":"block","reason":"Relay (%s): this session stops driving the run. Make sure .factory/run.md and the ticket hold everything the next step needs: the next session reads only those. Start a fresh session with your session tool if you have one, prompt: safe-factory Resume %s; otherwise the watchdog starts it. Set Waiting: jobs: relay to a fresh session (max 30 min), then end your turn."}\n' "$why" "$d"
   exit 0
 fi
 save

@@ -9,18 +9,18 @@ Methods are host-neutral. This page = what differs per agent: where skills live,
 | | Claude Code | Codex |
 |---|---|---|
 | Install | plugin, root `.agents/` ([install](install.md#claude-code)) | plugin, root `.agents/`, or copied skills + `~/.codex/hooks.json` ([install](install.md#codex)) |
-| Invoke | `/safe-engine …` | `$safe-engine …` |
-| Load a step's skill fresh | the Skill tool, `safe-engine:<name>` | `$<name>`, or read its `SKILL.md` |
+| Invoke | `/safe-factory …` | `$safe-factory …` |
+| Load a step's skill fresh | the Skill tool, `safe-factory:<name>` | `$<name>`, or read its `SKILL.md` |
 | What compaction keeps | the first 5k tokens of each recently used skill, 25k in total; CLAUDE.md is re-read | AGENTS.md and the skill list; skill bodies are dropped |
 | Stop guard | plugin `Stop` hook, sourced in the hook shell | `Stop` hook; trust once in `/hooks` |
 | Compact hook | plugin `SessionStart`, matcher `compact\|resume`; stdout becomes context | `SessionStart`, matcher `compact\|resume`; stdout becomes developer context |
 | Guard output | `{"decision":"block","reason":…}`: the next step's prompt; Claude Code overrides after 8 blocks in a row, a count every tool call resets, so one step per turn never reaches it | same JSON; the reason arrives as a new prompt |
 | Fresh-context delegate | Agent tool with a plugin role | `spawn_agent` with `fork_turns: "none"` |
-| Checker | `safe-engine:checker` | `spawn_agent`, `fork_turns: "none"`, `reasoning_effort: "low"`, message = the [checker](../.agents/skills/safe-engine/references/checker.md) brief plus `.agents/agents/checker.md`'s body |
+| Checker | `safe-factory:checker` | `spawn_agent`, `fork_turns: "none"`, `reasoning_effort: "low"`, message = the [checker](../.agents/skills/safe-factory/references/checker.md) brief plus `.agents/agents/checker.md`'s body |
 | Live preview and captures | the desktop app's browser pane (`preview_start`, `.claude/launch.json`, then show the browser pane so the owner sees it) keeps the dev server the owner watches and takes every screenshot; the agent and the owner see them in chat, but the pane saves no file, so the PR carries `pane:` observations instead of image files | the browser or screenshot tool the session has |
 | Background jobs | background subagents report back in a later turn: set `Waiting: jobs: … (max <n> min)` first; the guard also lets the stop through when the Stop input's `background_tasks` lists a running subagent (a background shell such as a dev server does not count), until the deadline | subagent results arrive in the parent: set `Waiting: jobs: … (max <n> min)` while they run |
 | Gate and review proof | `transcript_path` → `<session>/subagents/agent-<id>.jsonl` for every session of the run, oldest first: first line the brief (`Role: checker. Gate X` or `Role: reviewer`), its own last handback the verdict | no per-agent file: the id must appear in `transcript_path` (never accepted for a Claude Code transcript); the handback text is not checked (weaker) |
-| Night session | `claude -p --permission-mode dontAsk --settings <clone>/.agents/hooks/claude-settings.json "/safe-engine Resume <dir>"` (live: denied commands fail without a prompt, allowed ones run) | `codex exec -s workspace-write -c 'approval_policy="never"' "$safe-engine Resume <dir>"` (live on Windows: flags accepted, no prompt, but the sandboxed exec helper ran nothing, so `night.sh` first runs one sandboxed command and refuses when it does not run) |
+| Night session | `claude -p --permission-mode dontAsk --settings <clone>/.agents/hooks/claude-settings.json "/safe-factory Resume <dir>"` (live: denied commands fail without a prompt, allowed ones run) | `codex exec -s workspace-write -c 'approval_policy="never"' "$safe-factory Resume <dir>"` (live on Windows: flags accepted, no prompt, but the sandboxed exec helper ran nothing, so `night.sh` first runs one sandboxed command and refuses when it does not run) |
 | Deny rules | `claude-settings.json` `permissions.deny` (Bash prefixes, `Edit` paths); a command hidden in `sh -c` or a script escapes them | `~/.codex/rules/factory.rules` `prefix_rule(..., decision = "forbidden")`: leading arguments only |
 | Watchdog resume | `claude -p -r <session> --permission-mode dontAsk --settings <template> "<prompt>"` | `codex exec resume -c 'approval_policy="never"' -c 'sandbox_mode="workspace-write"' <session> "<prompt>"` (not yet run live) |
 
@@ -28,13 +28,13 @@ Both hosts run `run-guard.sh` through a POSIX `sh`; on Windows that is Git Bash.
 
 ## Delegation
 
-Roles (runner, analyst, maker, builder, reviewer, checker), their tiers and brief, gate and handback rules live in `.agents/skills/safe-engine/references/delegate.md`. Hosts differ only in how a role gets model, effort and edit limits. Owner's own session model and effort never change.
+Roles (runner, analyst, maker, builder, reviewer, checker), their tiers and brief, gate and handback rules live in `.agents/skills/safe-factory/references/delegate.md`. Hosts differ only in how a role gets model, effort and edit limits. Owner's own session model and effort never change.
 
 Pass request, decisions, interfaces, stops and artifact paths explicitly; full history needs a reason. Keep short jobs local.
 
 | | Claude Code | Codex |
 |---|---|---|
-| Roles | plugin agents `safe-engine:<role>` from `.agents/agents/`; when missing, a general-purpose agent with the tier's `model` and `effort`, told to stay read-only where the role is | none shipped: the brief names its role |
+| Roles | plugin agents `safe-factory:<role>` from `.agents/agents/`; when missing, a general-purpose agent with the tier's `model` and `effort`, told to stay read-only where the role is | none shipped: the brief names its role |
 | Tier models, light / standard / deep | `haiku` low / `sonnet` medium / `opus` high, pinned in each agent file | the spawn asks for effort `low` / `medium` / `high`; the model stays the parent's unless the owner sets one |
 | Read-only roles | a `tools` allowlist without write tools; shell writes barred by instruction | by instruction only |
 | Session ceiling | a role above the session's tier runs on the session's model | the parent's model, unless the owner sets one |
@@ -46,7 +46,7 @@ Pass request, decisions, interfaces, stops and artifact paths explicitly; full h
 |---|---|---|
 | Cursor | plugin, root `.agents/` (`.cursor-plugin/plugin.json`: skills, agents), [install](install.md#cursor) | runs Claude Code hooks from a project's `.claude/settings.json`; the plugin's `hooks/hooks.json` loads but finds no root (`CURSOR_PLUGIN_ROOT` only): no hooks run |
 | GitHub Copilot, Gemini CLI, OpenCode | read `.agents/skills` | none wired: apply the run-file rules by hand |
-| Anything else | point it at `.agents/skills/safe-engine/SKILL.md` | none |
+| Anything else | point it at `.agents/skills/safe-factory/SKILL.md` | none |
 
 Without a live guard (hooks added mid-session never load: Claude Code reads settings at session start, so step 0 checks the hook entry predates the session and step 1 finds `.factory/guard/state`), Fast chains steps in one turn, one block message per step, and never waits; Safe ends each step with `Say go for step <n>`. Each step still rereads `.factory/run.md` and loads the `Next:` skill fresh; checker gates and PR review still apply.
 
