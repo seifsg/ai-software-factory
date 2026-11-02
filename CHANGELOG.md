@@ -6,6 +6,10 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+### Changed
+
+- README reworked to sell and start fast (#250): animated run card, badge strip and guard loop as committed SVGs under `docs/assets/`, a three-point "why", a 3-step quick start with one install row per host (Codex and Cursor marked not yet run live, a pre-tag `--plugin-dir` line), all ten steps in the run table including 2b, and a fixed anchor for "How it stays on track".
+
 ## [0.1.0] - 2026-11-02
 
 A fresh start: 0.1.0 replaces the deprecated 1.x line. Claude Code installs reinstall once (UPGRADING.md).

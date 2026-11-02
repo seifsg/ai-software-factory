@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 280" width="1200" height="280" role="img" aria-labelledby="t d">
+<title id="t">How a run stays on track</title>
+<desc id="d">Each step loads its skill fresh, does the work and writes its block to .factory/run.md. When the turn ends the Stop guard reads the run file and sends the next step's prompt. After compaction the compact hook re-injects the next step. Gates A, B and C need a fresh checker's pass on the commit.</desc>
+<style>
+text{font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;fill:#c9d1d9;text-anchor:middle}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.h{font-size:20px;font-weight:700;fill:#fff}
+.s{font-size:18px;fill:#8b949e}
+.box{fill:#161b22;stroke:#30363d;stroke-width:2}
+.hot{fill:#161b22;stroke:#6E56CF;stroke-width:2}
+.ok{fill:#161b22;stroke:#2EA44F;stroke-width:2}
+.a{stroke:#6E56CF;stroke-width:3;fill:none;stroke-dasharray:8 8;animation:flow 1.2s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-16}}
+@media (prefers-reduced-motion:reduce){.a{animation:none}}
+</style>
+<defs>
+<marker id="m" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#6E56CF"/></marker>
+</defs>
+<rect width="1200" height="280" rx="20" fill="#0d1117"/>
+<rect x="1" y="1" width="1198" height="278" rx="19" fill="none" stroke="#30363d" stroke-width="2"/>
+<rect x="40" y="40" width="240" height="84" rx="12" class="hot"/>
+<text x="160" y="76" class="h">Load the step's skill</text><text x="160" y="100" class="s">fresh, every step</text>
+<rect x="340" y="40" width="240" height="84" rx="12" class="box"/>
+<text x="460" y="76" class="h">Do the step</text><text x="460" y="100" class="s">print its block to you</text>
+<rect x="640" y="40" width="240" height="84" rx="12" class="box"/>
+<text x="760" y="76" class="h mono">.factory/run.md</text><text x="760" y="100" class="s">block, tick, Next: step</text>
+<rect x="940" y="40" width="220" height="84" rx="12" class="hot"/>
+<text x="1050" y="76" class="h">Stop guard</text><text x="1050" y="100" class="s">sends the next step</text>
+<path d="M280 82H334" class="a" marker-end="url(#m)"/>
+<path d="M580 82H634" class="a" marker-end="url(#m)"/>
+<path d="M880 82H934" class="a" marker-end="url(#m)"/>
+<path d="M1050 124V160H160V130" class="a" marker-end="url(#m)"/>
+<text x="600" y="152" class="s">next turn</text>
+<rect x="40" y="190" width="520" height="64" rx="12" class="box"/>
+<text x="300" y="218" class="h">Context compacted?</text><text x="300" y="240" class="s">compact hook re-injects Next: from the run file</text>
+<rect x="640" y="190" width="520" height="64" rx="12" class="ok"/>
+<text x="900" y="218" class="h">Gates A · B · C after steps 3, 6, 8</text><text x="900" y="240" class="s">a fresh checker's PASS on the commit</text>
+</svg>
