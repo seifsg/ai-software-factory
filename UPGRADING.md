@@ -2,6 +2,11 @@
 
 What installs and active runs must do for each release, newest first. What changed: [CHANGELOG.md](CHANGELOG.md).
 
+## Unreleased (next)
+
+1. **Product checkouts created before this release** (Cursor especially): from the factory plugin root, run `sh <plugin root>/skills/safe-factory/scripts/wire-product-hooks.sh <product-root>` once per product, commit the wired files if the product tracks them, then start a **new** session in that product root so Stop loads.
+2. **Open Fast runs with no live guard:** do not wait for a human nudge; the agent must self-resume `Next:` in the same turn while `Waiting: none`.
+
 ## 0.4.0
 
 1. **Every install, once:** from each project that had factory hooks, run `sh <plugin root>/skills/safe-factory/scripts/doctor.sh --fix` ([clean up](docs/install.md#clean-up-and-uninstall)). It moves 1.x hooks and launchers, `~/.safe-engine`, old-path project hooks and stale `pre-push` and `codex.rules` copies to a backup, and names what needs a hand edit (the old `safe-engine@` id, hook files holding other settings). Not covered: `--codex-home <dir>` installs and a Codex `safe-engine@` plugin: clean those per 0.1.0 and 0.3.0.

@@ -6,6 +6,10 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+### Added
+
+- Wire Stop guard and `.agents` hooks into every new product checkout at step 0, and self-resume Fast when no guard is live so the loop never stalls after Analyze ([#265])
+
 ## [0.4.0] - 2026-11-02
 
 _Upgrade needed: run `doctor.sh --fix` once and add `Left running:` to open runs; follow [UPGRADING.md](UPGRADING.md#040)._

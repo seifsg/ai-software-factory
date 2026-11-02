@@ -44,11 +44,11 @@ Pass request, decisions, interfaces, stops and artifact paths explicitly; full h
 
 | Agent | Skills | Hooks |
 |---|---|---|
-| Cursor | plugin, root `.agents/` (`.cursor-plugin/plugin.json`: skills, agents), [install](install.md#cursor) | runs Claude Code hooks from a project's `.claude/settings.json`; the plugin's `hooks/hooks.json` loads but finds no root (`CURSOR_PLUGIN_ROOT` only): no hooks run |
-| GitHub Copilot, Gemini CLI, OpenCode | read `.agents/skills` | none wired: apply the run-file rules by hand |
+| Cursor | plugin, root `.agents/` (`.cursor-plugin/plugin.json`: skills, agents), [install](install.md#cursor) | plugin `hooks/hooks.json` finds no root (`CURSOR_PLUGIN_ROOT` only). Step 0 runs `wire-product-hooks.sh` so the product gets `.claude/settings.json`, `.agents/hooks/` and a local `run-guard.sh`; Cursor then runs those Claude Code project hooks |
+| GitHub Copilot, Gemini CLI, OpenCode | read `.agents/skills` | none wired: Fast self-resumes when no guard; Safe says go |
 | Anything else | point it at `.agents/skills/safe-factory/SKILL.md` | none |
 
-Without a live guard (hooks added mid-session never load: Claude Code reads settings at session start, so step 0 checks the hook entry predates the session and step 1 finds `.factory/guard/state`), Fast chains steps in one turn, one block message per step, and never waits; Safe ends each step with `Say go for step <n>`. Each step still rereads `.factory/run.md` and loads the `Next:` skill fresh; checker gates and PR review still apply.
+Without a live guard (hooks added mid-session never load: Claude Code reads settings at session start, so step 0 checks the hook entry predates the session and step 1 finds `.factory/guard/state`), Fast self-resumes in the same turn while the run is open and `Waiting: none`, one block message per step, and never waits; Safe ends each step with `Say go for step <n>`. Product and feature step 0 always wires product hooks ([product-hooks](../.agents/skills/safe-factory/references/product-hooks.md)). Each step still rereads `.factory/run.md` and loads the `Next:` skill fresh; checker gates and PR review still apply.
 
 ## Sources
 

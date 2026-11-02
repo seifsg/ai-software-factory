@@ -48,7 +48,7 @@ Before is captured before the first edit, After during verify, and both land in 
 | Install | `/plugin install safe-factory@ai-software-factory` | `codex plugin add safe-factory@ai-software-factory`, then trust its hooks in `/hooks` | `/plugin`, install `safe-factory` |
 | Run | `/safe-factory` | `$safe-factory` | `/safe-factory` |
 | One skill alone | `/safe-factory:analyze-start` | type `$`, pick `analyze-start` | `/analyze-start` |
-| Hooks | built in | built in; trust again in `/hooks` after each update | none yet: steps chain in Fast; Stop guard by hand ([Cursor](docs/install.md#cursor)) |
+| Hooks | built in | built in; trust again in `/hooks` after each update | product step 0 wires Stop into the project ([Cursor](docs/install.md#cursor)); Fast self-resumes until a new session loads them |
 
 Start a new session; your agent should list `safe-factory`. Other agents: copy the skills ([other agents](docs/install.md#other-agents)). You need Git, the GitHub CLI signed in (`gh auth login`) for tickets and draft PRs, and on Windows Git Bash (part of Git for Windows) for the hooks. To try unreleased `main`, run `claude --plugin-dir <clone>/.agents`.
 

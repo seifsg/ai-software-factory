@@ -48,7 +48,7 @@ T1 pre: <before> do: <change> post: <check> ✔
 
 ## What the hooks do
 
-Both run `scripts/run-guard.sh` (`stop` or `compact`) on nearest run file inside current checkout. The Stop guard ignores a run file untouched for 12 hours; both ignore `Status: stopped` and a finished run (step 8 ticked, gates A, B and C and the review proven). Run-guard state lives in `.factory/guard/`: never edit it.
+Both run `scripts/run-guard.sh` (`stop` or `compact`) on nearest run file inside current checkout. Product checkouts get that script and host hook files from step 0's `wire-product-hooks.sh`. The Stop guard ignores a run file untouched for 12 hours; both ignore `Status: stopped` and a finished run (step 8 ticked, gates A, B and C and the review proven). Run-guard state lives in `.factory/guard/`: never edit it. No live guard: Fast self-resumes `Next:` in the same turn.
 
 | Hook | When | Does |
 |---|---|---|

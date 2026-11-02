@@ -47,7 +47,12 @@ while IFS= read -r f; do
       END { exit !(NR > 2 && n && n == k && !o) }' "$f"; then move "$f" "hooks of an old factory version (Cursor: copy the Stop entry again, install.md#cursor)"
     else todo "$f" "hooks of an old factory version; delete entries naming fast_gate, run-gate.sh or skills/safe-engine/"; fi
   elif [ -n "$on" ] && case $f in */.claude/*) grep -q 'run-guard[.]sh' "$f" ;; *) false ;; esac; then
-    todo "$f" "second Stop guard: the plugin already runs it; delete that entry unless Cursor uses this project"
+    # Product wire-product-hooks.sh leaves a local run-guard; keep it for Cursor / bare checkouts.
+    if [ -f "$P/.agents/skills/safe-factory/scripts/run-guard.sh" ]; then
+      :
+    else
+      todo "$f" "second Stop guard: the plugin already runs it; delete that entry unless Cursor uses this project"
+    fi
   fi
 done <<EOF
 $hits
