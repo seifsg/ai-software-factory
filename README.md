@@ -5,7 +5,7 @@
 ### Your coding agent, run like a software team.
 **One request in. Ten checked steps. A reviewed draft PR out.**
 
-<img src="docs/assets/badges.svg" alt="Version 0.1.0 · Claude Code live · Codex plugin and Cursor not yet run live · Fast and Safe modes · any OS with Git and sh, no runtime" height="28">
+<img src="docs/assets/badges.svg" alt="Version 0.2.0 · Claude Code live · Codex plugin and Cursor not yet run live · Fast and Safe modes · any OS with Git and sh, no runtime" height="28">
 
 **[Quick start](#-quick-start) · [A run](#-a-run) · [How it stays on track](#%EF%B8%8F-how-it-stays-on-track) · [Update](#-update) · [Troubleshooting](#-troubleshooting)**
 
@@ -48,7 +48,7 @@ Before is captured before the first edit, After during verify, and both land in 
 | **Codex** (plugin, not yet run live) | `codex plugin marketplace add seifsg/ai-software-factory`, then `/plugins`, install `safe-engine`, trust its hooks in `/hooks` |
 | **Cursor** (plugin, not yet run live; no hooks yet, so say go per step) | Customize, Plugins, add marketplace `https://github.com/seifsg/ai-software-factory`, install `safe-engine` |
 
-Start a new session; your agent should list `safe-engine`. Other agents: copy the skills ([other agents](docs/install.md#other-agents)). You need Git, the GitHub CLI signed in (`gh auth login`) for tickets and draft PRs, and on Windows Git Bash (part of Git for Windows) for the hooks. Before the `v0.1.0` tag is cut, try a checkout with `claude --plugin-dir <clone>/.agents`.
+Start a new session; your agent should list `safe-engine`. Other agents: copy the skills ([other agents](docs/install.md#other-agents)). You need Git, the GitHub CLI signed in (`gh auth login`) for tickets and draft PRs, and on Windows Git Bash (part of Git for Windows) for the hooks. To try unreleased `main`, run `claude --plugin-dir <clone>/.agents`.
 
 **2. Ask** (`/safe-engine` in Claude Code, `$safe-engine` in Codex):
 

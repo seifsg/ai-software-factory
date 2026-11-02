@@ -6,6 +6,10 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+### Fixed
+
+- Fix the README version badge, which still showed 0.1.0 after the 0.2.0 release ([#258])
+
 ## [0.2.0] - 2026-11-02
 
 _Renumbered: under the bump table adopted after this release it would be 0.1.1; published versions stay._
@@ -181,3 +185,4 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 [#248]: https://github.com/seifsg/ai-software-factory/pull/248
 [#251]: https://github.com/seifsg/ai-software-factory/pull/251
 [#254]: https://github.com/seifsg/ai-software-factory/pull/254
+[#258]: https://github.com/seifsg/ai-software-factory/pull/258
