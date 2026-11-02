@@ -13,7 +13,8 @@ todo() { left=1; say "$1" "$2"; }
 # Moves $1 into the backup with --fix, else reports it.
 move() {
   [ -n "$fix" ] || { todo "$1" "$2; --fix moves it to a backup"; return 0; }
-  n=$((n + 1)); b=$bak/$stamp; t=$b/$n-${1##*/}  # numbered: two settings.json never collide; index maps back
+  b=$bak/$stamp; t=  # numbered: two settings.json, or two runs in one second, never collide; index maps back
+  while [ -z "$t" ] || [ -e "$t" ]; do n=$((n + 1)); t=$b/$n-${1##*/}; done
   mkdir -p "$b" && mv "$1" "$t" && printf '%s\t%s\n' "$t" "$1" >> "$b/index" && say "$1" "$2; moved to $t" \
     || { todo "$1" "$2; move failed"; return 1; }
 }
