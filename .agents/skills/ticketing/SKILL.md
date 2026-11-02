@@ -5,7 +5,7 @@ description: "Creates and maintains the project backlog, its epics and tickets i
 
 # Ticketing
 
-Remote ticket = record; local notes = cache. Write tickets with `references/ticket-layout.md`. Analysis, planning or review-only requests grant no tracker writes; explicit ticket request does.
+Remote ticket is the record; local notes are a cache. Write tickets with `references/ticket-layout.md`. Analysis, planning or review-only requests grant no tracker writes; explicit ticket request does.
 
 ## Tracker
 
@@ -19,7 +19,7 @@ Remote ticket = record; local notes = cache. Write tickets with `references/tick
 
 ## Backlog
 
-Open tickets = backlog, kept current in every mode, autonomously unless owner asks for checkpoints. Other tracker or board states: map each status to nearest existing one, name factory status in activity entry. Never create, rename or delete workflow states.
+Open tickets are the backlog, kept current in every mode, autonomously unless owner asks for checkpoints. Other tracker or board states: map each status to nearest existing one, name factory status in activity entry. Never create, rename or delete workflow states.
 
 | Status | Means | Carries on entry |
 |---|---|---|
@@ -62,7 +62,7 @@ Open tickets = backlog, kept current in every mode, autonomously unless owner as
 
 ## Split the work
 
-- Ticket = one complete, user-visible outcome; epic and sub-issue contents: the layout.
+- A ticket is one complete, user-visible outcome; epic and sub-issue contents: the layout.
 - One or more outcome sub-issues, plus follow-ups ticket. Small product (one page, one screen, one tool) or small change: one ticket, no epic; its `Deferred (pending owner)` section is the follow-ups ticket wherever a method names one. Never one per todo.
 - Never split risky work to dodge full checks.
 - Every requested item (feature, journey, integration, behavior) maps to an outcome ticket criterion. Only owner's recorded decision moves it to follow-ups ticket; unavailable capability keeps it Blocked in the run.
