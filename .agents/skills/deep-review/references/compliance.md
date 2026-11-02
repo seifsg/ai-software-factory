@@ -9,35 +9,35 @@ Prove the confirmed iteration. Keep full-product criteria delivered, incomplete 
 Gather before judging:
 
 - **User request**: the original ask
-- **Confirmed criteria**: refresh the project's tracker ticket first. Use the latest owner-confirmed criteria, approved scope changes and their owner source. PR claims and old plans cannot override them. Proposed changes stay pending
+- **Confirmed criteria**: refresh the project's tracker ticket first. Use latest owner-confirmed criteria, approved scope changes and their owner source. PR claims and old plans cannot override them. Proposed changes stay pending
 - **Accepted plan**: agreed intended behavior
 - **Specs / constraints**: issue text, documented requirements
-- **Project rules**: discover and read every applicable instruction/rule file; follow the host's precedence
+- **Project rules**: discover and read every applicable instruction/rule file; follow host precedence
 - **User rules**: active session rules
 - **Assumptions**: anything unclear, missing or inferred
 
 Rules:
 
-- Do not invent requirements. Use only what is requested, confirmed, planned, documented or rule-constrained.
+- Invent no requirements. Use only what is requested, confirmed, planned, documented or rule-constrained.
 - Ambiguous requirement or plan detail: `UNCLEAR`, lower confidence.
 - Always-applied rules are mandatory. Conditional rules apply when the change touches their domain. Relevant user rules are mandatory.
-- Unsure whether a rule applies: `UNKNOWN`, never `N/A`. `N/A` needs evidence.
-- If the implementation fundamentally misses the requirements, say so first. Do not sugarcoat it.
+- Unsure a rule applies: `UNKNOWN`, never `N/A`. `N/A` needs evidence.
+- Implementation fundamentally misses requirements: say so first. No sugarcoating.
 
 ## Check Order
 
-1. **Requirements**: map each requirement/criterion to the code and the proof that satisfy it.
-   - Inventory the user request first. A requested item absent from every ticket, or replaced by a substitute, without the owner's recorded decision is a core `MISSING`. One open in its own ticket outside the confirmed iteration is not an iteration requirement: list it as open, and the verdict states the product incomplete
+1. **Requirements**: map each requirement/criterion to the code and proof that satisfy it.
+   - Inventory the user request first. A requested item absent from every ticket, or replaced by a substitute, without owner's recorded decision is core `MISSING`. One open in its own ticket outside the confirmed iteration is not an iteration requirement: list as open, and verdict states product incomplete
    - `MET`, `PARTIAL`, `MISSING`, `INCORRECT`, `CONTRADICTED`, `UNCLEAR`
-   - Code that exists but misses the intended behavior is not `MET`
+   - Code exists but misses intended behavior: not `MET`
    - Behavior never requested or planned: `DRIFT`
-   - Each ticket's checklist: a missing checklist, an unticked item or a tick without its check keeps the ticket unfinished
-2. **Rules**: cross-reference each applicable rule against the changed code.
-   - Cite the rule source, rule text and offending location
-   - An intentional violation needs an authorized exception: owner, scope, record. Explanation alone waives nothing
+   - Each ticket's checklist: missing checklist, unticked item or tick without its check = ticket unfinished
+2. **Rules**: cross-reference each applicable rule against changed code.
+   - Cite rule source, rule text, offending location
+   - Intentional violation needs authorized exception: owner, scope, record. Explanation alone waives nothing
 3. **Plan vs result**: `MATCHED`, `PARTIAL`, `MISSING`, `EXTRA`, `DEVIATION`. Say whether each deviation is justified, risky or accidental.
 
-Proof must be bound to the reviewed candidate. A closed ticket, a ready flag or a green suite does not prove delivery. Pending scope changes, drift, missing proof or a failed ticket refresh block dependent acceptance.
+Proof must be bound to the reviewed candidate. Closed ticket, ready flag or green suite does not prove delivery. Pending scope changes, drift, missing proof or failed ticket refresh block dependent acceptance.
 
 ## Severity
 
@@ -53,8 +53,8 @@ Proof must be bound to the reviewed candidate. A closed ticket, a ready flag or 
 
 - Any core requirement `MISSING` or `INCORRECT`: FAIL
 - Any ticket in scope unfinished (unticked item or unproven criterion, except items this review, the PR or the merge completes): FAIL; a Blocked one names its blocker
-- Any always-applied rule violated without an authorized exception: FAIL
-- A required `UNKNOWN` or `UNCLEAR` on a core criterion: FAIL until resolved
+- Any always-applied rule violated without authorized exception: FAIL
+- Required `UNKNOWN` or `UNCLEAR` on a core criterion: FAIL until resolved
 
 ## Output Format
 

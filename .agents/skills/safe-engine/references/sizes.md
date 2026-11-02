@@ -6,9 +6,9 @@ Build what asked + what it needs to work. Best quality, best UI/UX. No size defa
 
 Every feature, journey, integration and behavior the owner asked for, plus what each needs to work end to end (if the item fails for a real user without it, it is part of the item).
 
-- A requested item leaves scope only by the owner's recorded decision: source, reason, revisit condition, and its entry in the epic's follow-ups ticket.
+- A requested item leaves scope only by owner's recorded decision: source, reason, revisit condition, and its entry in the epic's follow-ups ticket.
 - Without that decision, nothing removes or replaces a requested item: no size label, research finding, generic follow-up, later iteration's focus or substitute (mock, sample data, a sandbox that cannot reach the real target, manual step). Seeded data fills content, never a requested integration. A provider's test mode on the real integration counts; live keys come with deployment.
-- Capability unavailable: keep the item Blocked with its reason, build the rest, report the outcome unfinished.
+- Capability unavailable: keep item Blocked with its reason, build rest, report outcome unfinished.
 - Extras, no ask: better UI/UX, small enhancements of asked items, critical additions an asked item needs. Nothing else: no unasked features or pages (sign-in, payments, analytics, onboarding) unless an asked item needs it (roles, per-user data: real sign-in) or an owner-named MVP's launch needs it. Other ideas: suggestions in the follow-ups ticket (gap, evidence, cost), never built.
 - Logic gets small tests, any run, except owner-named POC.
 
@@ -46,4 +46,4 @@ Owner publishes it to real test users. Research what MVP means for this product:
 - automated tests, written after the journeys work, run by one local command;
 - a release record ready to deploy.
 
-Each need: gap, evidence, cost in step 0's block. Paid ones: owner approves; declined or unanswered go to the follow-ups ticket. Deploying needs the owner's authority.
+Each need: gap, evidence, cost in step 0's block. Paid ones: owner approves; declined or unanswered go to the follow-ups ticket. Deploying needs owner's authority.

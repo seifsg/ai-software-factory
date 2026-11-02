@@ -1,4 +1,4 @@
 # Epic cases
 
-- A Blocked sub-issue, or in-scope sub-issues the owner moved to a later iteration (still in scope, unlike owner-deferred ones), make the epic Blocked once the rest are finished: reason, what waits, who decides.
-- A sub-issue going back unticks its epic item and the integration checks and pulls the epic back to In progress; none left in the run returns it to Backlog.
+- Blocked sub-issue, or in-scope sub-issues owner moved to later iteration (still in scope, unlike owner-deferred): epic Blocked once rest finished. Record reason, what waits, who decides.
+- Sub-issue going back: unticks its epic item and integration checks, pulls epic back to In progress. None left in run: epic returns to Backlog.

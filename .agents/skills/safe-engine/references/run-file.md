@@ -1,6 +1,6 @@
 # Run file
 
-`.factory/run.md`, one per checkout. The hooks read only the four header lines, the step headings and the gate lines, so keep their exact spelling.
+`.factory/run.md`, one per checkout. Hooks read only the four header lines, step headings and gate lines: keep exact spelling.
 
 ```text
 # Run: <ticket link> · <mode> · <kind>
@@ -48,7 +48,7 @@ T1 pre: <before> do: <change> post: <check> ✔
 
 ## What the hooks do
 
-Both run `scripts/run-guard.sh` (`stop` or `compact`) on the nearest run file inside the current checkout. The Stop guard ignores a run file untouched for 12 hours; both ignore `Status: stopped` and a finished run (step 8 ticked, gates A, B and C and the review proven). Its own state lives in `.factory/guard/`: never edit it.
+Both run `scripts/run-guard.sh` (`stop` or `compact`) on nearest run file inside current checkout. The Stop guard ignores a run file untouched for 12 hours; both ignore `Status: stopped` and a finished run (step 8 ticked, gates A, B and C and the review proven). Run-guard state lives in `.factory/guard/`: never edit it.
 
 | Hook | When | Does |
 |---|---|---|

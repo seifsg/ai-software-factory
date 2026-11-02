@@ -1,6 +1,6 @@
 # GitHub Commands
 
-Use when the PR host is GitHub. Check access first: `gh auth status`.
+Use when PR host is GitHub. Check access first: `gh auth status`.
 
 | Step | Command |
 |---|---|
@@ -14,5 +14,5 @@ Use when the PR host is GitHub. Check access first: `gh auth status`.
 | Comment | Write the body to a temp file, then `gh pr comment <n> --body-file <file>` |
 
 - Record `baseRefOid` and `headRefOid` as the exact reviewed candidate.
-- Fork PRs: `gh pr checkout` tracks the fork. Pushing back needs "allow maintainer edits". If the push is rejected, put the patch in the comment.
+- Fork PRs: `gh pr checkout` tracks the fork. Pushing back needs "allow maintainer edits". Push rejected: put patch in comment.
 - `--body-file` avoids shell-escaping problems with markdown.

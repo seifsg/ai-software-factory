@@ -2,13 +2,13 @@
 
 Contents: sections · building blocks · writing rules · example
 
-Brief words, full meaning: a human or fresh agent must understand the PR without the chat or the diff. Priority: complete first (every relevant behavior, decision, file, guard, proof and gap), visual second (tables and ASCII before prose), fewest words third (one line where a table or diagram does not fit).
+Brief words, full meaning: human or fresh agent must understand PR without chat or diff. Priority: complete first (every relevant behavior, decision, file, guard, proof, gap), visual second (tables and ASCII before prose), fewest words third (one line where table or diagram does not fit).
 
-**Title:** concrete change + outcome, as `<type>(<scope>): <subject>`, in the reader's language; explain needed jargon.
+**Title:** concrete change + outcome, as `<type>(<scope>): <subject>`, in reader's language; explain needed jargon.
 
 ## Sections
 
-Fill the project's PR template first, then use these blocks inside it. Skip what does not apply. Never bury purpose, context or progress inside Before.
+Fill project's PR template first, then use these blocks inside it. Skip what does not apply. Never bury purpose, context or progress inside Before.
 
 ```text
 <header: requester, deciders, who wrote it, original vs adaptation>
@@ -26,19 +26,19 @@ Fill the project's PR template first, then use these blocks inside it. Skip what
 <credit line>           the last line, exactly as in credit.md
 ```
 
-- **Header:** credit the requester and deciders and say who wrote the code (a person, or the factory run for its owner); separate original work from a port or adaptation.
-- **Context:** link the discussion that triggered the PR; the ticket link stays visible, not hidden in a comment.
+- **Header:** credit requester and deciders; say who wrote the code (a person, or factory run for its owner); separate original work from port or adaptation.
+- **Context:** link discussion that triggered PR; ticket link stays visible, not hidden in a comment.
 - **Before & after:** never skipped; right after purpose, ahead of implementation detail. One `### <outcome>` per changed view/state or touched journey, named by its effect (`### 🧾 Invoice totals include tax`, never `### invoice.ts`). Every inventory item maps here; reuse shared proof with captions or timestamps.
-- **Outcome declarations:** each outcome has `**Visual:** yes` or `**Visual:** no (<reason>)`, and `**Journey:** yes` or `**Journey:** no (<reason>)`, in these exact forms; extra explanation on the next line. A UI run needs a visual outcome. Never call a real user journey nonvisual merely because the diff changes shared logic.
-- **Screenshots:** Visual yes requires `**Before:**` and `**After:**`, each with a different screenshot or a `pane:` observation (what the built-in browser showed: view, state, viewport, time) when the host cannot save the image, or `**Before → After:**` with a two-column image table. Captions identify state, base/head and criterion. A new surface's Before is `**Before:** did not exist`, with no image or observation. Prose, video or a code block never replaces a screenshot pair.
-- **Video:** optional. Journey yes needs the journey's steps shown: screenshots, a GIF or a `**Video:**` link, as the owner asks; a shared clip gives that journey's start/end timestamps.
-- **Media waiver:** scoped to this outcome: `**Media waiver:** screenshots | <exact owner request> | <source>` (first field `screenshots`, `video` or `all`). Repeat only where that request applies; a screenshot waiver does not waive video. It waives that media, not the truthful description of both states or other proof.
-- **Nonvisual proof:** matched request/response JSON, status, logs or command results: `**Before:**` then `**After:**` with fenced output, or `**Before → After:** <same input>, base <sha> → head <sha> (<criterion>)` and a `diff` block. Server-only, infrastructure or internal work with no affected interactive UI journey needs no media waiver.
-- **Demo context:** base and demonstrated candidate, isolated empty slot or seed/reset recipe, viewport/environment, covered journeys and limitations.
-- **Cold start:** the original request and why, decisions with reasons, facts (IDs, paths, repos), current state, remaining steps and blockers. Links are an audit trail, not a substitute.
-- **Verification:** one row per confirmed criterion, plus the ticket's checklist state: every item ticked, or the gap. Ticketed work: the ticket's confirmed criteria, dependencies and integration status. Proof is bound to the exact pushed candidate. Name what is **unverified**.
-- **Adjustment history:** append an entry per requested change; keep it for the PR's whole life.
-- **Progress:** checked, reviewed, merged and released stay separate; name the next visible result. Overall acceptance stays open.
+- **Outcome declarations:** each outcome has `**Visual:** yes` or `**Visual:** no (<reason>)`, and `**Journey:** yes` or `**Journey:** no (<reason>)`, in these exact forms; extra explanation on next line. UI run needs a visual outcome. Never call a real user journey nonvisual merely because diff changes shared logic.
+- **Screenshots:** Visual yes requires `**Before:**` and `**After:**`, each with a different screenshot, or a `pane:` observation (what built-in browser showed: view, state, viewport, time) when host cannot save the image, or `**Before → After:**` with a two-column image table. Captions identify state, base/head, criterion. New surface's Before = `**Before:** did not exist`, no image or observation. Prose, video or code block never replaces a screenshot pair.
+- **Video:** optional. Journey yes needs journey's steps shown: screenshots, GIF or `**Video:**` link, as owner asks; shared clip gives that journey's start/end timestamps.
+- **Media waiver:** scoped to this outcome: `**Media waiver:** screenshots | <exact owner request> | <source>` (first field `screenshots`, `video` or `all`). Repeat only where that request applies; screenshot waiver does not waive video. Waives that media only, not truthful description of both states or other proof.
+- **Nonvisual proof:** matched request/response JSON, status, logs or command results: `**Before:**` then `**After:**` with fenced output, or `**Before → After:** <same input>, base <sha> → head <sha> (<criterion>)` and a `diff` block. Server-only, infrastructure or internal work with no affected interactive UI journey: no media waiver needed.
+- **Demo context:** base and demonstrated candidate, isolated empty slot or seed/reset recipe, viewport/environment, covered journeys, limitations.
+- **Cold start:** original request and why, decisions with reasons, facts (IDs, paths, repos), current state, remaining steps, blockers. Links = audit trail, not substitute.
+- **Verification:** one row per confirmed criterion, plus ticket's checklist state: every item ticked, or the gap. Ticketed work: ticket's confirmed criteria, dependencies, integration status. Proof bound to exact pushed candidate. Name what is **unverified**.
+- **Adjustment history:** append entry per requested change; keep for PR's whole life.
+- **Progress:** checked, reviewed, merged, released stay separate; name next visible result. Overall acceptance stays open.
 
 ## Building blocks
 
@@ -61,15 +61,15 @@ Fill the project's PR template first, then use these blocks inside it. Skip what
 ```
 
 - Compare variants across dimensions in a table; mark what is new.
-- Put monospace diagrams in code blocks. Bold only key terms.
+- Monospace diagrams in code blocks. Bold only key terms.
 
 ## Writing rules
 
 - No em dashes. Use a period, comma, colon or parentheses.
-- Cut generic openers, canned summaries, buzzwords, inflated adjectives, filler transitions, "not X, but Y" and slogans. State the point, key facts first.
-- Specific nouns, active verbs, consistent terms, short bullets, narrow tables. Emojis only to label sections and aid scanning.
+- Cut generic openers, canned summaries, buzzwords, inflated adjectives, filler transitions, "not X, but Y", slogans. State point, key facts first.
+- Specific nouns, active verbs, consistent terms, short bullets, narrow tables. Emojis only to label sections, aid scanning.
 - No invented facts, metrics, benefits, tests, visuals, authorship or consent; charts need measured values; screenshots show real, relevant proof. Label illustrative examples. Verify names, numbers, units, dates.
-- Fold long machine data; keep purpose, outcome, proof, gaps and next action visible.
+- Fold long machine data; keep purpose, outcome, proof, gaps, next action visible.
 - Finishing pass: can a cold reader say what, why, before, after and next, open every outcome's proof, and find every requested detail?
 
 ## Example

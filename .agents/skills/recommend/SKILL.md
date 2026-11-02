@@ -7,37 +7,37 @@ description: "Compares three strong solutions for a change in one table and reco
 
 Run after `analyze-start`, before planning. No code in this step.
 
-1. **Restate the goal** in one line, from the original request and approved decisions.
-2. **Find three strong alternatives.** Real, distinct approaches that each could ship. No padded weak options to make the pick look good. For an existing or already approved design, assess it against two credible alternatives; keeping it can be the best answer. Never manufacture a defect or a rewrite to justify this step.
+1. **Restate the goal** in one line, from original request and approved decisions.
+2. **Find three strong alternatives.** Real, distinct approaches that each could ship. No padded weak options to make pick look good. Existing or already approved design: assess it against two credible alternatives; keeping it can be the best answer. Never manufacture a defect or a rewrite to justify this step.
 3. **Compare them in one table**, best evidence first:
 
    | Option | Approach | Correct | Simple | Performance | UX / look | Fits goal | Coupling / cycles | Cost |
    |---|---|---|---|---|---|---|---|---|
    | A | ... | ... | ... | ... | ... | ... | ... | ... |
 
-   Fill each cell with a fact or a short reason, not a score alone. Performance is judged against the real workload, not a universal target. UI: look beats simple.
+   Each cell: a fact or short reason, not a score alone. Judge performance against real workload, not a universal target. UI: look beats simple.
    New UI (product, feature, new view) in a factory run: second table, 3 looks (type, color, layout, motion, refs). Pick best, delegated, no owner wait. Bar: best in class, any size. Existing look kept: `Look: existing`.
-4. **Pick exactly one** and say why in two or three lines: what it wins, what it costs, why the others lose.
-5. **Who decides.** In-scope choices already delegated to you: pick and record the reason. A new product, design (except the look above), naming or other owner-reserved choice: present the pick as a recommendation, set `Waiting: owner: <question>` in the run file and keep independent work moving.
+4. **Pick exactly one**, why in two or three lines: what it wins, what it costs, why others lose.
+5. **Who decides.** In-scope choices already delegated to you: pick, record reason. New product, design (except look above), naming or other owner-reserved choice: present pick as recommendation, set `Waiting: owner: <question>` in run file, keep independent work moving.
 
-A change with only one sane path (a typo, a one-line fix): say "one path: <why>" and name the two rejected ideas in a line each. Never skip the step.
+Only one sane path (typo, one-line fix): say "one path: <why>", name two rejected ideas, a line each. Never skip the step.
 
 ## Challenge (step 2b)
 
-Its own pass, after step 2's block: "I don't think this is the best we could do. Do better. Make no mistake." Redo steps 2 to 4 against it: a missed option, a wrong cell, an underrated cost. Keep the pick only if it survives.
+Challenge's own pass, after step 2's block: "I don't think this is the best we could do. Do better. Make no mistake." Redo steps 2 to 4 against it: missed option, wrong cell, underrated cost. Keep pick only if it survives.
 
 ## Output contract
 
-The block `## 2 Recommend` holds:
+Block `## 2 Recommend` holds:
 
 - [ ] **Goal:** one line, traceable to the request
-- [ ] **Table:** three options with every column filled, or "one path" with two rejected ideas
+- [ ] **Table:** three options, every column filled, or "one path" with two rejected ideas
 - [ ] **Pick:** exactly one option, with reasons
 - [ ] **Look:** new UI: 3 looks, one pick; `existing` or `no UI`
 - [ ] **Decider:** "picked (delegated)" or "waiting on the owner: <question>"
 - [ ] No file changed during this step
 
-The block `## 2b Challenge` holds:
+Block `## 2b Challenge` holds:
 
 - [ ] **Challenge:** the sentence above, verbatim
 - [ ] **Found:** each new option, wrong cell or missed cost, or "nothing new" with what was rechecked

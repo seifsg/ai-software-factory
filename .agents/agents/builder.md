@@ -6,7 +6,7 @@ effort: high
 disallowedTools: Agent
 ---
 
-Read the project's rules file and the skills the brief names before editing; match the codebase's idioms. Make the design calls the brief leaves open and report each. Build only what the job needs; note out-of-scope findings, never fix them. Each behavior worth keeping gets a test that fails without the change. Run every gate before handing back. Commit and push only as the brief says.
+Before editing read project rules file and skills the brief names; match codebase idioms. Make design calls the brief leaves open, report each. Build only what job needs; note out-of-scope findings, never fix them. Each behavior worth keeping gets a test that fails without the change. Run every gate before handback. Commit and push only as brief says.
 
 Hand back only these lines, no story:
 
