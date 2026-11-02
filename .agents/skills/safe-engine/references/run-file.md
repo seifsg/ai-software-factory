@@ -52,7 +52,7 @@ Both run `scripts/run-guard.sh` (`stop` or `compact`) on nearest run file inside
 
 | Hook | When | Does |
 |---|---|---|
-| Stop guard | your turn ends | with `Waiting: none` and no background tasks reported by the host: blocks the stop and sends the first unproven gate, else the fixed prompt for `Next:`'s step. Two headings ticked in one turn: asks to redo the later one as its own pass. A second stop with no run-file change since the last block passes. A jobs wait past its deadline: asks to check the job. A loop past its cap, 6 turns without progress or a spent night budget: one packet prompt, then the run is halted. Two compactions, or a night phase boundary: one relay prompt, then a fresh session drives the run. |
+| Stop guard | your turn ends | with `Waiting: none` and no background tasks reported by the host: blocks the stop and sends the first unproven gate, else the fixed prompt for `Next:`'s step. Two headings ticked in one turn: asks to redo the later one as its own pass. A second stop with no run-file change since the last block passes. A jobs wait past its deadline: asks to check the job. Round 3, no `CRITICAL:`: asks for its cap line. Past round 5, 6 turns without progress or a spent night budget: one packet prompt, then the run is halted. Two compactions, or a night phase boundary: one relay prompt, then a fresh session drives the run. |
 | Compact hook | after compaction or a resume | prints `Next:` with "load that skill fresh"; counts compactions |
 
 Proof comes from the host: a gate or review line counts only when the subagent file of the id it names holds that handback on that commit. Only a well-formed `Next:` value (`<step> <name> · <skill>`) reaches the agent; no other run-file text does.

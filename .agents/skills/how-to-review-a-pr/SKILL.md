@@ -111,7 +111,7 @@ Apply only agreed fix-set, each through the `get-ready-to-code` 0-4 loop.
 
 Remote builds, paid services, signing or publishing without authority: report the gap. Never substitute an unrelated green check. Unknown applicability = UNKNOWN; justify real N/A.
 
-Fresh independent reviewer then assesses fixes; rounds 4 and 5 only while an open CRITICAL remains, then owner decides.
+Fresh independent reviewer then assesses fixes; 3 rounds without open CRITICAL pass by cap, rest to follow-ups; 4 and 5 only while one remains, then owner decides.
 
 ## 7. Push (checkpoint)
 
