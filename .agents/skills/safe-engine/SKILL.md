@@ -72,7 +72,7 @@ Each step ends with its block: post full block as its own chat message (never su
 
 Only what those skills leave out:
 
-- **0:** update notice in context, new run: before the run file, tell owner, link what's new, ask update or continue (owner-reserved); end turn, no block. Update: notice's command, new session. Resume or night: one line in current block; never wait or update mid-run. Guard live only if its hook entry predates this session and step 1 finds `.factory/guard/state`; name which in block. Then, before any work, check tracker and push access (`ticketing`); ask owner once, up front, for every action host may block (creating a repository, pushing). No project folder named: create one beside owner's other projects (parent of current project, else current folder), named for product in kebab-case, report its absolute path. No Git: `git init`, first commit on default branch, then feature branch. Every commit, first included, follows `how-to-make-a-pr`'s commit rules: no AI attribution lines. No remote: `ticketing` creates private repository on owner's account and pushes default branch. Product and feature: research and kickoff questions belong to step 0, after the ticket, in its block; Fast goes on without answers, which feed step 1.
+- **0:** update notice in context, new run: before the run file, tell owner, link what's new, ask update or continue (owner-reserved); end turn, no block. Update: notice's command, new session. Resume or night: one line in current block; never wait or update mid-run. Guard live only if its hook entry predates this session; name which in block. Step 1 finds no `.factory/guard/state`: not live. Then, before any work, check tracker and push access (`ticketing`); ask owner once, up front, for every action host may block (creating a repository, pushing). No project folder named: create one beside owner's other projects (parent of current project, else current folder), named for product in kebab-case, report its absolute path. No Git: `git init`, first commit on default branch, then feature branch. Every commit, first included, follows `how-to-make-a-pr`'s commit rules: no AI attribution lines. No remote: `ticketing` creates private repository on owner's account and pushes default branch. Product and feature: research and kickoff questions belong to step 0, after the ticket, in its block; Fast goes on without answers, which feed step 1.
 - **3:** new or changed persistence adds `database-schema`. A `change` uses the light plan. Fast does not stop at the file summary. Safe runs Gate A, then stops: `Waiting: owner: plan OK?`.
 - **4:** starts once plan names views and commands. Up to three items: capture yourself. More: one light delegate captures while you finish plan. No source edit until every Before file saved.
 - **5:** spike unknown capabilities first. A run of mapped tests that is the whole suite is still only a build check. Commit by phase in project's commit style.
@@ -85,7 +85,7 @@ Only what those skills leave out:
 After steps 3, 6 and 8, start the [checker](references/checker.md): a fresh light read-only delegate that gets only contracts and outputs, never your reasoning. Paste its PASS as `Gate A: PASS (checker <agent id>) @<sha>` (B, C); guard accepts it only when that checker's own handback says so; Gate C's commit is the pushed HEAD.
 
 - No source edit before Gate A passes (a background delegate may start Before captures during the Gate A turn); no PR before Gate B passes; no close before Gate C passes.
-- Missing items: fix, rerun checker on its first list. Each FAIL is a round; 3 with no open CRITICAL pass by cap, never a stop ([review loops](references/run-cases.md#review-loops)).
+- Missing items: fix, rerun checker on round 1's list. Each FAIL is a round; 3 with no open CRITICAL pass by cap, never a stop ([review loops](references/run-cases.md#review-loops)).
 - Paste only what a checker handed back; never write a gate line yourself, except a cap line or an owner's waiver (run file).
 - Plan change after Gate A passed reruns checker only when it adds or removes todos, criteria or proof ids, and only on that change. Fixes after Gate B never rerun it; Gate C checks their recaptured After files.
 
@@ -101,7 +101,7 @@ After steps 3, 6 and 8, start the [checker](references/checker.md): a fresh ligh
 ## Keep the owner posted
 
 - Blocks are the progress report. Put the ten steps on host's task list at step 0; mark each at start and end. Owner may type at any time.
-- Always preview: step 4 on, keep what the run changes in front of owner, fresh after each todo: browser pane (web, pushed markdown), inline image or artifact (docs, media), simulator or screenshot (mobile, desktop).
+- Always preview: step 4 on, keep what the run changes in front of owner, fresh after each todo: browser pane (web, markdown), inline image or artifact (other docs, media), simulator or screenshot (mobile, desktop).
 - Updates and handbacks: [plain owner reports](references/owner-reports.md).
 - An owner message goes first: answer it or do it, then resume what still fits, unasked.
 - Waiting on the owner: the question first, then the options.
