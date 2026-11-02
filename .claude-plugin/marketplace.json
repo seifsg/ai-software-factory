@@ -1,6 +1,6 @@
 {
   "name": "ai-software-factory",
-  "description": "AI Software Factory skills and gate hooks.",
+  "description": "AI Software Factory skills, delegate roles and run hooks.",
   "owner": {
     "name": "AI Software Factory"
   },
@@ -10,10 +10,10 @@
       "source": {
         "source": "git-subdir",
         "url": "https://github.com/seifsg/ai-software-factory.git",
-        "path": "skills",
-        "ref": "v1.3.0"
+        "path": ".agents",
+        "ref": "v0.1.0"
       },
-      "description": "Safe Engine delivery and Improve Factory maintenance skills, plus the Fast run gate hooks."
+      "description": "AI Software Factory: Safe Engine delivery and Improve Factory maintenance skills, delegate roles, the Stop guard and the update check."
     }
   ]
 }

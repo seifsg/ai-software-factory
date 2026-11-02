@@ -6,6 +6,10 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-02
+
+A fresh start: 0.1.0 replaces the deprecated 1.x line. Claude Code installs reinstall once (UPGRADING.md).
+
 ### Changed
 
 - Caveman wording (#245): skills, references, agents and docs say the same rules in fewer words; the owner's own `analyze-start`, `get-ready-to-code` and `deep-review` opening are unchanged. Read set now under 105,000 B.
@@ -27,6 +31,9 @@ The public surface is the skill names, the run file format, and the hook scripts
 - `deep-review` opens with the owner's original method word for word; factory additions follow it. `ticketing` and the product bar are shorter: duplicate rules merged, rare cases (parallel tickets, speed checklist, external effects, release record) moved behind pointers. Read set 114,523 → 110,950 B (#233).
 
 ### Added
+
+- Plugins for three hosts from one `.agents/` root: Claude Code (`.claude-plugin`), Codex (`.codex-plugin`, read through the existing marketplace; not yet run live) and Cursor (`.cursor-plugin` plus `.cursor-plugin/marketplace.json`: skills and delegate roles; not yet run live). Hooks find their root through `CLAUDE_PLUGIN_ROOT` or Codex's `PLUGIN_ROOT`.
+- Update check (#247): at session start the plugin reads a cached latest release (about 0.1 s on Windows, no network) and refreshes it in the background once a day; a newer release makes step 0 tell the owner, link what's new and ask update now or continue. Off: `FACTORY_NO_UPDATE_CHECK=1`.
 
 - Overnight runs (#236): `.agents/hooks/night.sh` refuses to start unless the run can finish unattended, then starts a session that denies instead of prompting, with a time budget the guard enforces; `night.md` holds the night rules (recorded defaults, parked owner-only items, own-branch outward actions, no waivers). `watchdog.sh` runs from the OS scheduler: resumes stalled runs, backs off on usage limits, starts pending relays, flags silent hooks, notifies once per end. Host template: `claude-settings.json` deny and night allow rules, `codex.rules`, and a `pre-push` hook that blocks pushes to the default branch, force pushes, deletes and added token shapes.
 - New projects need no setup: with no folder named, the factory creates one beside the owner's other projects, runs `git init`, and with no remote creates a private GitHub repository and uses its Issues.
@@ -146,7 +153,8 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 - Leaner runs (#137): product, feature and change runs each read 24% less method text, every gate message is shorter with the same facts, `scripts/token_report.py` measures both, and tests hold every method file and the gate's fixture messages to a byte budget and the product and change loads to 80% of their earlier size.
 - Self-update (#139): a clone install moves only to a release tag on `main` whose files match its manifest, records the previous revision, rolls back a failed install and shows a one-time notice naming both versions.
 
-[Unreleased]: https://github.com/seifsg/ai-software-factory/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/seifsg/ai-software-factory/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/seifsg/ai-software-factory/releases/tag/v0.1.0
 [1.3.0]: https://github.com/seifsg/ai-software-factory/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/seifsg/ai-software-factory/compare/v1.1.2...v1.2.0
 [1.1.2]: https://github.com/seifsg/ai-software-factory/compare/v1.1.1...v1.1.2

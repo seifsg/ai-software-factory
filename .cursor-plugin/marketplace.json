@@ -1,0 +1,13 @@
+{
+  "name": "ai-software-factory",
+  "owner": {
+    "name": "AI Software Factory"
+  },
+  "plugins": [
+    {
+      "name": "safe-engine",
+      "source": ".agents",
+      "description": "AI Software Factory skills and delegate roles."
+    }
+  ]
+}

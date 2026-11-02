@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "g=\"${CLAUDE_PLUGIN_ROOT}/skills/safe-engine/scripts/run-guard.sh\"; [ -f \"$g\" ] && { set -- stop; . \"$g\"; }; exit 0",
+            "command": "r=\"${CLAUDE_PLUGIN_ROOT}\"; [ -n \"$r\" ] || r=\"$PLUGIN_ROOT\"; g=\"$r/skills/safe-engine/scripts/run-guard.sh\"; [ -f \"$g\" ] && { set -- stop; . \"$g\"; }; exit 0",
             "timeout": 10
           }
         ]
@@ -17,8 +17,18 @@
         "hooks": [
           {
             "type": "command",
-            "command": "g=\"${CLAUDE_PLUGIN_ROOT}/skills/safe-engine/scripts/run-guard.sh\"; [ -f \"$g\" ] && { set -- compact; . \"$g\"; }; exit 0",
+            "command": "r=\"${CLAUDE_PLUGIN_ROOT}\"; [ -n \"$r\" ] || r=\"$PLUGIN_ROOT\"; g=\"$r/skills/safe-engine/scripts/run-guard.sh\"; [ -f \"$g\" ] && { set -- compact; . \"$g\"; }; exit 0",
             "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "r=\"${CLAUDE_PLUGIN_ROOT}\"; [ -n \"$r\" ] || r=\"$PLUGIN_ROOT\"; [ -f \"$r/skills/safe-engine/scripts/update-check.sh\" ] && sh \"$r/skills/safe-engine/scripts/update-check.sh\" \"$r\"; exit 0",
+            "timeout": 5
           }
         ]
       }
