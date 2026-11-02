@@ -60,7 +60,7 @@ PR came from a factory run: read its `.factory/run.md` and ticket. Check every b
 Run `deep-review`'s analysis categories and every applicable lens it lists: security, performance, journey, change-guard, compliance.
 
 - Same candidate already passed full local review: one reviewer covers all lenses on the delta plus residual-risk check.
-- Otherwise, or security, release, public-exposure scope: one isolated reviewer per lens, parallel when your agent has subagents (waves if capacity short), else one lens at a time. Synthesize only after all return. Never call sequential work parallel or drop a lens. Brief each `Role: analyst. Lens: <name>.`; it hands back its `deep-review` lens report, never a `verdict:` line.
+- Otherwise, or for security, release or public-exposure scope: one isolated reviewer per lens, parallel when your agent has subagents (waves if capacity short), else one lens at a time. Synthesize only after all return. Never call sequential work parallel or drop a lens. Brief each `Role: analyst. Lens: <name>.`; it hands back its `deep-review` lens report, never a `verdict:` line.
 - Each reviewer gets: PR card and claim, phase 1 analysis, changed files on checked-out branch, applicable rules, confirmed criteria, target workload/platforms, raw evidence and its limits. Mark each item verified or hypothesis. Reviewers verify hypotheses and correct you.
 - Collect findings and lens verdicts. Fix nothing yet.
 
