@@ -59,7 +59,7 @@ Without plugins, copy by hand:
 
 ## Cursor
 
-Plugin (not yet run live): Customize, Plugins, add marketplace `https://github.com/seifsg/ai-software-factory` (reads `.cursor-plugin/marketplace.json`), install `safe-engine`. Brings skills and delegate roles; no hooks yet, so each step ends with `Say go for step <n>`. For the Stop guard, Cursor runs Claude Code hooks from a project's `.claude/settings.json`: copy the `Stop` entry from `.agents/hooks/hooks.json` there with `r=` set to the absolute path of the plugin's `.agents/` folder. Update: Cursor refreshes the marketplace; reinstall `safe-engine` when a new version shows.
+Plugin (not yet run live): Customize, Plugins, add marketplace `https://github.com/seifsg/ai-software-factory` (reads `.cursor-plugin/marketplace.json`), install `safe-engine`. Brings skills and delegate roles; no hooks yet, so Fast chains steps in one turn (Safe: `Say go for step <n>`). For the Stop guard, Cursor runs Claude Code hooks from a project's `.claude/settings.json`: copy the `Stop` entry from `.agents/hooks/hooks.json` there with `r=` set to the absolute path of the plugin's `.agents/` folder. Update: Cursor refreshes the marketplace; reinstall `safe-engine` when a new version shows.
 
 ## Update check
 

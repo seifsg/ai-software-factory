@@ -65,7 +65,7 @@ compaction: compact hook reads run.md → re-injects the next step
 ```
 
 - Run cannot close without step 8, three gates and a review, each proven by the host's record of that checker or reviewer on that commit; Gate C and review on the pushed HEAD.
-- Loops stop: rounds 1-3 run, 4-5 only with an open `CRITICAL:` line; then, or after 6 turns without progress, guard halts the run with one packet for you. `sh run-guard.sh clear` resumes it.
+- Loops never stall: after 3 failed rounds with no open `CRITICAL:` line the gate or review passes by cap (`Gate X: PASS (cap, 3 rounds, no CRITICAL)`) and leftovers go to follow-ups; rounds 4-5 only while a `CRITICAL:` is open. After round 5, or 6 turns without progress, guard halts the run with one packet for you. `sh run-guard.sh clear` resumes it.
 - Waiting on you is allowed (`Waiting: owner:`); waiting on background jobs needs a deadline (`(max <n> min)`), past which guard wakes the run.
 - After two compactions run moves to a fresh session that reads only run file and ticket.
 - Guard reads run file and the run's subagent files: about 0.4 s per turn end with a run on Windows, nothing per tool call.

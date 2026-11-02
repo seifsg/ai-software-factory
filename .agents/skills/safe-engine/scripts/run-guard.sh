@@ -59,7 +59,11 @@ $(cd "$ev" && awk -v R="$run" -v fb=$fb -v nov=$nov -v head="$head" -v up="$up" 
     if (fb) return seen[id] && !cc  # a Claude Code transcript also holds the run-file edits of the model
     return kind[id] == k && pre(sha, at(last[id]))
   }
+  function capped(x) {  # a cap line: 3 failed rounds and no open CRITICAL in its step pass the loop; C and R on the pushed HEAD
+    return cs[x] != "" && !crs[csec[x]] && (nov || fb && !cc || f[x] >= 3) && (x ~ /[AB]/ || pre(cs[x], head) && head == up)
+  }
   function ok(x,  id) {
+    if (capped(x)) return 1
     id = gid[x]
     if (id == "") return wv[x] && !night  # an owner waiver; nobody waives at night
     return proven(id, x, gsha[x]) && (nov || fb || last[id] ~ /^Gate .: PASS/) && (x != "C" || (pre(gsha[x], head) && head == up))
@@ -74,7 +78,9 @@ $(cd "$ev" && awk -v R="$run" -v fb=$fb -v nov=$nov -v head="$head" -v up="$up" 
     if (/^## [0-8] .*✔/) { t = substr($0, 4, 1) + 1; if (t > m) m = t }
     if (n == "" && match($0, /^Next: *[0-8]b? [A-Za-z]+ · [a-z-]+/)) { n = substr($0, RSTART, RLENGTH); sub(/^Next: */, "", n) }
     if (/^Gate [ABC]: PASS \(checker [^ )]+\) @[0-9a-f]+/) { x = substr($0, 6, 1); gid[x] = $5; sub(/\)$/, "", gid[x]); gsha[x] = at($6); want[gid[x]] = 1 }
-    if (/^CRITICAL: /) cr = 1
+    if (/^## /) sec = $2
+    if (/^CRITICAL: /) cr = crs[sec] = 1
+    if (match($0, /^(Gate [ABC]: PASS|Review: ready) \(cap, 3 rounds, no CRITICAL\) @[0-9a-f]+/)) { x = /^R/ ? "R" : substr($0, 6, 1); cs[x] = at(substr($0, 1, RLENGTH)); csec[x] = sec }
     if (/^Gate [ABC]: WAIVED by owner/) wv[substr($0, 6, 1)] = 1
     if (/^Review: ready \(reviewer [^ )]+\) @[0-9a-f]+/) { rid = $4; sub(/\)$/, "", rid); rsha = at($5); want[rid] = 1 }
     next
@@ -98,7 +104,7 @@ $(cd "$ev" && awk -v R="$run" -v fb=$fb -v nov=$nov -v head="$head" -v up="$up" 
   END {
     done1()
     step = n == "" ? 0 : substr(n, 1, 1) + 0; if (m > step) step = m; g = "-"
-    rok = rid != "" && pre(rsha, head) && head == up && proven(rid, "R", rsha) && (nov || fb || last[rid] ~ /^verdict: ready( @|$)/)
+    rok = capped("R") || rid != "" &&pre(rsha, head) && head == up && proven(rid, "R", rsha) && (nov || fb || last[rid] ~ /^verdict: ready( @|$)/)
     if ((step > 3 || r) && !ok("A")) g = "A"; else if ((step > 6 || r) && !ok("B")) g = "B"; else if (r && !ok("C")) g = "C"; else if (r && !rok) g = "R"
     p += ok("A") + ok("B") + ok("C") + rok  # progress: ticks plus proven gates
     for (x in f) if (x == "R" ? rok : ok(x)) f[x] = 0  # a loop that converged has no rounds left to cap
@@ -150,13 +156,13 @@ if [ "$jobs" = 1 ]; then
     todo="The job in Waiting: jobs: is past its deadline ($jmax min): check it, stop it if it hangs, record its result or failure in .factory/run.md, update Waiting, then end your turn."
   fi
 else g_jobs_since= g_jobs_key=; fi
-# Progress budget: blocked turns without a new tick or proven gate. Rounds 1-3 run; 4 and 5 only while the run
-# file names an open CRITICAL; after 5, idle too long or past the night budget: halt with one packet prompt.
+# Progress budget: blocked turns without a new tick or proven gate. Rounds 1-3 run, then a cap line passes the loop;
+# 4 and 5 only while the run file names an open CRITICAL; after 5, idle too long or past the night budget: halt.
 idle() { [ "$sig" = "$g_sig" ] && g_idle=$(( ${g_idle:-0} + 1 )) || g_idle=0; g_sig=$sig; }
 halt() {
   [ "$loop" = R ] && loop='review' || loop="Gate $loop"
   if [ "$night" = 1 ] && [ "$now" -gt "$g_night_until" ]; then g_halt='night time budget spent'
-  elif [ "$rounds" -ge 5 ] || { [ "$rounds" -ge 3 ] && [ "$crit" != 1 ]; }; then g_halt="$loop: $rounds failed rounds"
+  elif [ "$rounds" -ge 5 ]; then g_halt="$loop: $rounds failed rounds"
   elif [ "$g_idle" -ge "${FACTORY_IDLE_TURNS:-6}" ]; then g_halt="no progress in $g_idle turns"
   fi
   [ -n "$g_halt" ] || return 0
@@ -192,6 +198,9 @@ save
 # One step per turn: the next step's prompt arrives only after the last answer is complete, as if the owner typed it.
 if [ "$batched" = 1 ]; then
   todo="Batched: more than one step heading was ticked in one turn. Redo the last ticked step as its own fresh pass, run any open gate, then end your turn."
+elif [ "$rounds" -ge 3 ] && [ "$crit" != 1 ]; then
+  [ "$loop" = review ] && cl='Review: ready' || cl="$loop: PASS"
+  todo="$loop: $rounds failed rounds, no open CRITICAL: the loop passes by cap. Write \`$cl (cap, 3 rounds, no CRITICAL) @<sha>\` under its step (Gate C and review: on the pushed HEAD), move what is left to the ticket's follow-ups, then go on with the run."
 elif [ "$gate" = R ]; then
   todo='Step 8 has no verified reviewer verdict on the pushed HEAD: brief a fresh reviewer on that head, paste its line as `Review: ready (reviewer <id>) @<sha>`, then end your turn.'
 elif [ -n "$gate" ]; then
