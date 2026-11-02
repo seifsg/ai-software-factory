@@ -2,6 +2,10 @@
 
 What installs and active runs must do for each release, newest first. What changed: [CHANGELOG.md](CHANGELOG.md).
 
+## 0.2.0
+
+Nothing to do: update the plugin. Open runs keep going; the guard applies round caps and step chaining from its next stop.
+
 ## 0.1.0
 
 A fresh start: 0.1.0 replaces the deprecated 1.x line. The factory no longer runs any Python. Old runs cannot continue under 0.1.0.
