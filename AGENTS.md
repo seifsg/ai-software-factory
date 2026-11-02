@@ -44,5 +44,5 @@ Draft PRs, through `how-to-make-a-pr`, linked to their ticket, unless owner says
 
 ## Releases
 
-- Every PR adds a line under `## [Unreleased]` in `CHANGELOG.md` (Keep a Changelog), and steps under next version in `UPGRADING.md` when installs or open runs must act.
-- One canonical version: `version` in `.agents/.claude-plugin/plugin.json`, SemVer; `.agents/.codex-plugin/plugin.json` and `.agents/.cursor-plugin/plugin.json` match it. Humans cut, tag and publish releases ([releasing](docs/releasing.md)); never move or re-publish a tag.
+- Every PR adds its lines under `## [Unreleased]` in `CHANGELOG.md` per [releasing](docs/releasing.md#changelog), and steps under next version in `UPGRADING.md` when installs or open runs must act.
+- One canonical version: `version` in `.agents/.claude-plugin/plugin.json`, SemVer by the bump table in [releasing](docs/releasing.md#versions); `.agents/.codex-plugin/plugin.json` and `.agents/.cursor-plugin/plugin.json` match it. Humans cut, tag and publish releases ([releasing](docs/releasing.md)); never move or re-publish a tag.
