@@ -14,11 +14,11 @@ Ticket, analyze, recommend, plan, Before proof, build, verify, PR, review. In th
 
 </div>
 
-Coding agents jump straight to code, forget the method as the context grows and tell you it works. The factory is a set of skills that gives your agent a team's process, plus one small hook script that keeps a run going until every step is done and checked. No runtime, no Python, nothing on every tool call.
+Coding agents jump straight to code, forget the method as context grows, tell you it works. Factory = skills that give your agent a team's process, plus one small hook script that keeps a run going until every step is done and checked. No runtime, no Python, nothing on every tool call.
 
 ## ⚡ Quick start
 
-**You need:** a coding agent (Claude Code and Codex are first-class; any agent that reads `SKILL.md` works), Git, the GitHub CLI signed in (`gh auth login`) for tickets and draft PRs, and on Windows Git Bash (part of Git for Windows) for the hooks.
+**Need:** a coding agent (Claude Code and Codex first-class; any agent that reads `SKILL.md` works), Git, GitHub CLI signed in (`gh auth login`) for tickets and draft PRs, on Windows Git Bash (part of Git for Windows) for the hooks.
 
 1. **Install:** [docs/install.md](docs/install.md). Claude Code:
 
@@ -27,14 +27,14 @@ Coding agents jump straight to code, forget the method as the context grows and 
    claude plugin install safe-engine@ai-software-factory
    ```
 
-2. **Check it:** start a new session; your agent should list `safe-engine`.
+2. **Check it:** start a new session; agent should list `safe-engine`.
 3. **Build:** in your agent's chat (`/safe-engine` in Claude Code, `$safe-engine` in Codex):
 
    ```text
    safe-engine Build [app or feature] in [absolute project directory, or leave it out for a new project]. Success means [observable outcome].
    ```
 
-4. **Watch, answer, merge.** Every step prints its output. Answer its questions, review the draft PR, merge it.
+4. **Watch, answer, merge.** Every step prints its output. Answer questions, review the draft PR, merge it.
 
 ## 🎬 A run
 
@@ -54,7 +54,7 @@ Products and big features add `research-market` and kickoff questions before ste
 
 ## 🛡️ How it stays on track
 
-Long runs lose skill text when the host compacts context. The factory works around it instead of hoping:
+Long runs lose skill text when host compacts context. Factory works around it, no hoping:
 
 ```text
 each step:  load its skill fresh → do it → write its block to .factory/run.md
@@ -64,15 +64,15 @@ turn ends:  Stop guard reads run.md + the host's subagent files → "Next: step 
 compaction: compact hook reads run.md → re-injects the next step
 ```
 
-- The run cannot close without step 8, three gates and a review, each proven by the host's record of that checker or reviewer on that commit; Gate C and the review on the pushed HEAD.
-- Loops stop: rounds 1-3 run, 4-5 only with an open `CRITICAL:` line; then, or after 6 turns without progress, the guard halts the run with one packet for you. `sh run-guard.sh clear` resumes it.
-- Waiting on you is allowed (`Waiting: owner:`); waiting on background jobs needs a deadline (`(max <n> min)`), past which the guard wakes the run.
-- After two compactions the run moves to a fresh session that reads only the run file and the ticket.
-- The guard reads the run file and the run's subagent files: about 0.4 s per turn end with a run on Windows, nothing per tool call.
+- Run cannot close without step 8, three gates and a review, each proven by the host's record of that checker or reviewer on that commit; Gate C and review on the pushed HEAD.
+- Loops stop: rounds 1-3 run, 4-5 only with an open `CRITICAL:` line; then, or after 6 turns without progress, guard halts the run with one packet for you. `sh run-guard.sh clear` resumes it.
+- Waiting on you is allowed (`Waiting: owner:`); waiting on background jobs needs a deadline (`(max <n> min)`), past which guard wakes the run.
+- After two compactions run moves to a fresh session that reads only run file and ticket.
+- Guard reads run file and the run's subagent files: about 0.4 s per turn end with a run on Windows, nothing per tool call.
 
 ### 🌙 Overnight runs
 
-`night.sh` refuses to start unless the run can finish unattended (guard wired, deny rules, own branch, `pre-push` hook, push dry run, tracker sign-in), then starts a session that denies instead of prompting. Owner questions get recorded defaults, owner-only items are parked, nothing leaves the machine but the run's branch, draft PR and tickets. A watchdog from the OS scheduler resumes a stalled run, waits out usage limits, starts relays and tells you once how it ended. Setup: [install](docs/install.md#overnight-runs).
+`night.sh` refuses to start unless run can finish unattended (guard wired, deny rules, own branch, `pre-push` hook, push dry run, tracker sign-in), then starts a session that denies instead of prompting. Owner questions get recorded defaults, owner-only items parked, nothing leaves the machine but the run's branch, draft PR and tickets. Watchdog from the OS scheduler resumes a stalled run, waits out usage limits, starts relays, tells you once how it ended. Setup: [install](docs/install.md#overnight-runs).
 
 Details: [run file](.agents/skills/safe-engine/references/run-file.md), [checker](.agents/skills/safe-engine/references/checker.md), [night mode](.agents/skills/safe-engine/references/night.md), [hosts](docs/hosts.md).
 
@@ -84,17 +84,17 @@ Details: [run file](.agents/skills/safe-engine/references/run-file.md), [checker
 
 ## 🧹 Uninstall
 
-Claude Code: `claude plugin uninstall safe-engine@ai-software-factory`. Codex: delete the copied skill folders and the two hook entries from `~/.codex/hooks.json`. Projects keep their `.factory/` folders until you delete them.
+Claude Code: `claude plugin uninstall safe-engine@ai-software-factory`. Codex: delete copied skill folders and the two hook entries from `~/.codex/hooks.json`. Projects keep `.factory/` folders until you delete them.
 
 ## 🩺 Troubleshooting
 
 | Symptom | Fix |
 |---|---|
-| `safe-engine` not listed | Start a new session; check `/plugin` (Claude Code) or the copied folder under `~/.agents/skills` (Codex) |
-| Agent stops mid-run | Check the hooks are installed and trusted (Codex: `/hooks`); read `.factory/run.md`; say "resume" |
-| Run will not stop | `Waiting:` must name what you wait for; to abandon, set `Status: stopped (<reason>)` |
-| Run halted | Read the packet under the current step in `.factory/run.md`, decide, then run the guard with `clear` |
-| Gate line "has not passed" | Paste the checker's line with its id and commit; Gate C needs the pushed HEAD |
+| `safe-engine` not listed | Start a new session; check `/plugin` (Claude Code) or copied folder under `~/.agents/skills` (Codex) |
+| Agent stops mid-run | Check hooks installed and trusted (Codex: `/hooks`); read `.factory/run.md`; say "resume" |
+| Run will not stop | `Waiting:` must name what you wait for; to abandon set `Status: stopped (<reason>)` |
+| Run halted | Read packet under current step in `.factory/run.md`, decide, then run guard with `clear` |
+| Gate line "has not passed" | Paste checker's line with its id and commit; Gate C needs pushed HEAD |
 | Hook errors on Windows | Install Git for Windows; hooks need its `sh` |
 
 ## 🧰 Skills

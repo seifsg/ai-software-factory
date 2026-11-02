@@ -118,14 +118,14 @@ Ruthless code review. No mercy, no shortcuts. Find every damn problem.
 
 ## Additions for every review
 
-Read-only: do not fix unless told to. Does the journey work? Keep the overall requirements open. Size or code style prompts inspection; prove impact before blocking. UI below journey's look bar blocks.
+Read-only: no fixes unless told. Does the journey work? Keep overall requirements open. Size or code style prompts inspection; prove impact before blocking. UI below journey's look bar blocks.
 
-- Scope adds the callers and consumers. Before reading, gather the baseline: request, confirmed criteria, plan, project rules, raw evidence (logs, manual QA observations, check results).
-- Read the code around each file too; the diff alone is insufficient. Then run the lenses below.
-- Run no test suites during review unless told.
-- Label every claim verified (read or observed) or hypothesis. A raw count is a hypothesis about impact until you read what it means.
+- Scope adds callers and consumers. First gather baseline: request, confirmed criteria, plan, project rules, raw evidence (logs, manual QA notes, check results).
+- Read code around each file too; diff alone is not enough. Then run lenses below.
+- No test suites during review unless told.
+- Label every claim verified (read or observed) or hypothesis. A raw count = hypothesis about impact until you read what it means.
 - Any language: its debug output and loose types count in categories 5 and 8.
-- Also hunt: non-critical integrations (analytics, history, messaging) breaking the main logic when they fail; valid actions that leave unrecoverable state (creation, update, save and load limits must agree); bypassing the project's wrapper for config or shared integrations; guards for states the design rules out (not defense in depth).
+- Also hunt: non-critical integrations (analytics, history, messaging) breaking main logic when they fail; valid actions that leave unrecoverable state (creation, update, save and load limits must agree); bypassing project's wrapper for config or shared integrations; guards for states the design rules out (not defense in depth).
 - Factory rules, for our own work (someone else's project: judge by its rules): extra code or over-engineering (least code that fully solves the problem; logic only, UI: best look); not O(1) or as close as the real workload allows, wasted CPU or memory; new code where an existing function fits; placeholders, stubs or TODOs; files at 1000 lines or more not split; functions without a short comment saying what they do and why; one more pass: less code? less complexity? faster?
 
 ### Lenses
@@ -138,56 +138,56 @@ Read-only: do not fix unless told to. Does the journey work? Keep the overall re
 | [performance](references/performance.md) | Loops, rendering, queries, I/O, caching, concurrency, memory, assets or startup touched. |
 | [journey](references/journey.md) | User- or consumer-visible behavior changed. |
 
-Lenses may run as isolated parallel reviewers. Give each the scope, baseline, raw evidence, its lens and the finding format below. Reviewers verify hypotheses and request missing evidence; an omission cannot hide a risk.
+Lenses may run as isolated parallel reviewers. Give each: scope, baseline, raw evidence, its lens, finding format below. Reviewers verify hypotheses and request missing evidence; an omission cannot hide a risk.
 
 ### Scale to the change
 
-- Bounded fix: one independent reviewer covers changed lines, surrounding code, consumers and the applicable lenses together. No whole-project audit, alternative designs or unrelated fixes.
-- Update to a reviewed change: review the delta and its consumers; carry unresolved earlier findings. Do not re-audit accepted code.
+- Bounded fix: one independent reviewer covers changed lines, surrounding code, consumers and applicable lenses together. No whole-project audit, alternative designs or unrelated fixes.
+- Update to reviewed change: review delta and its consumers; carry unresolved earlier findings. Do not re-audit accepted code.
 - Repeat checks only for changed code or inputs, failures or unresolved concerns.
-- State the exact verdict scope. A narrow review never approves an unreviewed whole.
+- State exact verdict scope. Narrow review never approves an unreviewed whole.
 
 ### Findings
 
-The report is the Output Format template; lens reports go inside it. Finding format, rows most severe first:
+Report = Output Format template; lens reports go inside it. Finding format, rows most severe first:
 
 | # | Category | Severity | File:Line | Finding | Impact | Layer | Evidence | Fix | Confidence |
 |---|---|---|---|---|---|---|---|---|---|
 | 1 | Bug | HIGH | file.ts:42 | Description | What breaks, for whom | product | Raw proof: code, log, observation | Clear fix | HIGH |
 
-Scope also names the baseline, lenses run and verdict scope; `### Unknowns` (required evidence still missing) follows the Summary Table; the verdict starts with PASS, FAIL or CONDITIONAL.
+Scope also names baseline, lenses run and verdict scope; `### Unknowns` (required evidence still missing) follows the Summary Table; verdict starts with PASS, FAIL or CONDITIONAL.
 
 - Score every finding with [worth-it](references/worth-it.md).
-- Layer: `product` (code or behavior), `evidence` (proof missing or wrong), `report` (claim does not match result). Fix the affected layer. A proof gap needs actual verification, not a label.
+- Layer: `product` (code or behavior), `evidence` (proof missing or wrong), `report` (claim does not match result). Fix the affected layer. Proof gap needs actual verification, not a label.
 - Confidence: HIGH / MED / LOW.
-- Load-bearing code is not over-engineering: mark it **KEEP** with the reason.
-- Edge-case fix: at the root cause, first rung that fits (impossible by design; normalized or rejected loudly at entry; specified, logged behavior); a state beyond the data, config and platform in use: one loud assertion. One cause, one finding.
+- Load-bearing code is not over-engineering: mark **KEEP** with reason.
+- Edge-case fix: at root cause, first rung that fits (impossible by design; normalized or rejected loudly at entry; specified, logged behavior); state beyond data, config and platform in use: one loud assertion. One cause, one finding.
 - Out-of-scope opportunities: list as notes, not findings.
-- A clean pass is valid. Invent no findings.
+- Clean pass is valid. Invent no findings.
 
 ### Verdict
 
 Disposition decides the gate: `blocking`, `before-exposure` or `accepted-deferral`.
 
-- Blocking: any CRITICAL or HIGH, an unmet core requirement, a broken existing journey, a required UNKNOWN, a mandatory rule violated without an authorized exception. Clean code that solves the wrong problem fails.
+- Blocking: any CRITICAL or HIGH, unmet core requirement, broken existing journey, required UNKNOWN, mandatory rule violated without authorized exception. Clean code that solves the wrong problem fails.
 - UNKNOWN is never N/A; N/A needs evidence. Missing required evidence stays UNKNOWN and blocks dependent judgment.
-- Deferral needs owner authority and a record: owner, reason, scope, its entry in the follow-ups ticket, revisit trigger. A note alone grants nothing.
-- The owner may delegate in advance the deferral of LOW findings, and of MEDIUM while exposure stays local. MEDIUM and LOW left after round 3 are appended to the epic's one open follow-ups ticket in Backlog, never one ticket per finding. HIGH and CRITICAL are never deferred.
-- Before-exposure items resolve before public exposure or production. A MEDIUM is not automatically a failure, and never silently waived.
-- A verdict that depends on fixes not yet applied is **conditional**. Judge the actual candidate.
+- Deferral needs owner authority and a record: owner, reason, scope, its entry in follow-ups ticket, revisit trigger. A note alone grants nothing.
+- Owner may delegate in advance deferral of LOW findings, and of MEDIUM while exposure stays local. MEDIUM and LOW left after round 3 go to the epic's one open follow-ups ticket in Backlog, never one ticket per finding. HIGH and CRITICAL never deferred.
+- Before-exposure items resolve before public exposure or production. MEDIUM is not automatically a failure, and never silently waived.
+- Verdict that depends on fixes not yet applied = **conditional**. Judge the actual candidate.
 
 `PASS`: no blocking finding; every other finding listed with its disposition. `FAIL`: any blocking finding. PR verdicts: `how-to-review-a-pr`.
 
 ### Fixes and review rounds
 
-- When told to fix: smallest change that removes the cause, affected layer only, intent unchanged. Then a fresh independent reviewer, not the one who fixed, assesses the result. A clean review needs no edits.
+- When told to fix: smallest change that removes the cause, affected layer only, intent unchanged. Then a fresh independent reviewer, not the fixer, assesses the result. Clean review needs no edits.
 - One round = independent review, selected fixes, fresh review. Mandatory findings keep it open; optional fixes follow worth-it. Rounds 1-3 run; rounds 4 and 5 only while an open CRITICAL finding remains.
-- After round 5, or round 3 with no open CRITICAL, stop that loop. Give the owner one short packet: findings per round (new vs repeated), the shared cause, options (extend, defer with an owner record, amend scope, cancel).
+- After round 5, or round 3 with no open CRITICAL, stop that loop. Give owner one short packet: findings per round (new vs repeated), shared cause, options (extend, defer with owner record, amend scope, cancel).
 - Keep independent work moving while you wait.
 
 ## Output contract
 
-In a factory run this is step 6, Verify: the builder runs this pass, and the independent review is step 8 (`how-to-review-a-pr`). The block `## 6 Verify` holds:
+In a factory run this is step 6, Verify: builder runs this pass, independent review is step 8 (`how-to-review-a-pr`). The block `## 6 Verify` holds:
 
 - [ ] Every requested journey used through real controls, with observed results
 - [ ] compliance results, change-guard results when existing code, contracts or data changed, plus each other lens run, each with its findings table (possibly empty) and verdict, e.g. `**compliance:** <its table, or "no findings"> · PASS`

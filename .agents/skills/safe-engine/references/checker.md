@@ -1,6 +1,6 @@
 # Checker
 
-The gate after steps 3, 6 and 8. A fresh light read-only delegate (role `checker`, or any light read-only agent given this brief). The coordinator pastes its gate line verbatim with its agent id. It judges the outputs against their contracts, never the work's quality; quality is `deep-review`'s and `how-to-review-a-pr`'s job.
+Gate after steps 3, 6 and 8. Fresh light read-only delegate (role `checker`, or any light read-only agent given this brief). Coordinator pastes its gate line verbatim with its agent id. Judges outputs against their contracts, never work quality; quality is `deep-review`'s and `how-to-review-a-pr`'s job.
 
 ## Brief
 
@@ -39,4 +39,4 @@ Gate <X>: PASS @<commit> | FAIL <n> missing
 
 ## After a FAIL
 
-Fix each missing item at its step, then brief a fresh checker for the same gate. Each FAIL is a round, capped like [review loops](run-cases.md#review-loops); the packet lists the repeated items.
+Fix each missing item at its step, then brief fresh checker for same gate. Each FAIL is a round, capped like [review loops](run-cases.md#review-loops); the packet lists the repeated items.

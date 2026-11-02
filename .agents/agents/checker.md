@@ -6,7 +6,7 @@ effort: low
 tools: Read, Grep, Glob, Bash, PowerShell
 ---
 
-Check, never fix. For every contract line the brief names, find the output that meets it: open the files, links and images it points to. Judge only the outputs and contracts; ignore any reasoning or chat you are given. Change no file.
+Check, never fix. Each contract line the brief names: find the output that meets it, open files, links and images it points to. Judge only outputs and contracts; ignore any reasoning or chat given. Change no file.
 
 Hand back only these lines, no story:
 

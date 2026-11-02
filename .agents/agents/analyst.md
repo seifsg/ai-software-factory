@@ -6,7 +6,7 @@ effort: medium
 tools: Read, Grep, Glob, Bash, PowerShell, WebFetch, WebSearch, ToolSearch
 ---
 
-Read only what the job needs: ranged reads, quoted sources. Never change files. Cite a path:line or URL for every finding; label guesses and unknowns. A method the brief names with its own report (UX verdicts) keeps it.
+Read only what job needs: ranged reads, quoted sources. Never change files. Every finding cites path:line or URL; label guesses and unknowns. Method the brief names with its own report (UX verdicts) keeps it.
 
 Hand back only these lines, no story:
 

@@ -1,6 +1,6 @@
 # GitHub PR commands
 
-Load when the project's host is GitHub. Write bodies to a file; skip shell escaping.
+Load when project host is GitHub. Write bodies to a file; skip shell escaping.
 
 ## Open the draft
 
@@ -9,14 +9,14 @@ git push -u origin <branch>
 gh pr create --draft --base <base> --head <branch> --title "<type>(<scope>): <subject>" --body-file <file>
 ```
 
-- `--body-file` replaces the repository template: copy the structure of `.github/pull_request_template.md` or `.github/PULL_REQUEST_TEMPLATE/` into the body file.
+- `--body-file` replaces repository template: copy structure of `.github/pull_request_template.md` or `.github/PULL_REQUEST_TEMPLATE/` into body file.
 - Always `--draft`. Never run `gh pr ready` or `gh pr merge`.
-- Link every ticket in the body: `Closes #<n>` where SKILL.md step 6 allows a closing keyword, else `Refs #<n>`; the epic always `Refs #<epic>`.
-- Closing keywords act only on PRs into the default branch; elsewhere they are ignored and link nothing. Keep them for the record: the next intake closes those tickets after the merge. After a base change, check the PR's linked issues.
+- Link every ticket in body: `Closes #<n>` where SKILL.md step 6 allows a closing keyword, else `Refs #<n>`; epic always `Refs #<epic>`.
+- Closing keywords act only on PRs into default branch; elsewhere ignored, link nothing. Keep them for the record: next intake closes those tickets after merge. After base change, check PR's linked issues.
 
 ## Attach proof media
 
-`gh` cannot upload images: put screenshots and recordings in a proof commit on its own branch. It never touches the working tree, index or PR diff, and works in private repositories for everyone who can read them.
+`gh` cannot upload images: put screenshots and recordings in a proof commit on own branch. Never touches working tree, index or PR diff; works in private repositories for everyone who can read them.
 
 ```text
 printf '100644 blob %s\t%s\n' "$(git hash-object -w <before.png>)" <outcome>-before.png "$(git hash-object -w <after.png>)" <outcome>-after.png | git mktree
@@ -24,10 +24,10 @@ git commit-tree <tree id> -m "proof: <branch>"
 git push origin <commit id>:refs/heads/proof/<branch>
 ```
 
-- Later uploads to the same branch: `git fetch origin proof/<branch>`, then add `-p FETCH_HEAD` to `commit-tree`; earlier links keep working. Required signing: add `-S`.
-- Link pinned to the commit: `![<outcome> before](https://github.com/{owner}/{repo}/blob/<commit id>/<name>?raw=true)`. GIFs play inline. A video over 10 MB: link it, with a GIF or screenshot beside it.
-- Check each file landed: `gh api "repos/{owner}/{repo}/contents/<name>?ref=<commit id>" --jq .size`, then rendering and playback in the PR from a signed-in browser.
-- Keep proof branches after the merge: the PR links to them.
+- Later uploads to same branch: `git fetch origin proof/<branch>`, then add `-p FETCH_HEAD` to `commit-tree`; earlier links keep working. Required signing: add `-S`.
+- Link pinned to commit: `![<outcome> before](https://github.com/{owner}/{repo}/blob/<commit id>/<name>?raw=true)`. GIFs play inline. Video over 10 MB: link it, with GIF or screenshot beside it.
+- Check each file landed: `gh api "repos/{owner}/{repo}/contents/<name>?ref=<commit id>" --jq .size`, then rendering and playback in PR from signed-in browser.
+- Keep proof branches after merge: PR links to them.
 
 ## Fix the base or body
 
@@ -36,7 +36,7 @@ gh pr edit <n> --base <base>
 gh pr edit <n> --body-file <file>
 ```
 
-Read the current body first (`gh pr view <n> --json body`). An edit replaces the whole body; keep the adjustment history.
+Read current body first (`gh pr view <n> --json body`). Edit replaces whole body; keep adjustment history.
 
 ## Inspect
 
@@ -45,7 +45,7 @@ gh pr view <n> --json url,isDraft,baseRefName,headRefName,headRefOid,reviewDecis
 gh pr checks <n>
 ```
 
-`headRefOid` is the exact candidate for proof and remote review.
+`headRefOid` = exact candidate for proof and remote review.
 
 ## Request review and comment
 
@@ -54,7 +54,7 @@ gh pr edit <n> --add-reviewer <login>
 gh pr comment <n> --body-file <file>
 ```
 
-Never guess logins. Comment only where authorized: your own draft, or a reviewer checkpoint someone approved.
+Never guess logins. Comment only where authorized: own draft, or reviewer checkpoint someone approved.
 
 ## Update the ticket
 

@@ -2,7 +2,7 @@
 
 Contents: first-class hosts · delegation · other agents · sources
 
-The methods are host-neutral. This page holds what differs per agent: where skills live, how a step loads its skill fresh, how the hooks are wired and how delegates get their model.
+Methods are host-neutral. This page = what differs per agent: where skills live, how a step loads its skill fresh, how hooks are wired, how delegates get their model.
 
 ## First-class hosts
 
@@ -24,13 +24,13 @@ The methods are host-neutral. This page holds what differs per agent: where skil
 | Deny rules | `claude-settings.json` `permissions.deny` (Bash prefixes, `Edit` paths); a command hidden in `sh -c` or a script escapes them | `~/.codex/rules/factory.rules` `prefix_rule(..., decision = "forbidden")`: leading arguments only |
 | Watchdog resume | `claude -p -r <session> --permission-mode dontAsk --settings <template> "<prompt>"` | `codex exec resume -c 'approval_policy="never"' -c 'sandbox_mode="workspace-write"' <session> "<prompt>"` (not yet run live) |
 
-Both hosts run `run-guard.sh` through a POSIX `sh`; on Windows that is Git Bash. It reads only the nearest `.factory/run.md` inside the session's current checkout, so a worktree's run stays separate from its parent's, plus that session's subagent files. Its state is `.factory/guard/state` (single-quoted `g_*` lines; anything else is reported and ignored). It ignores runs untouched for 12 hours and costs about 65 ms with no run and 0.4 s with one on Windows (process starts dominate), once per turn end. `night.sh` and `watchdog.sh` in `.agents/hooks/` call the host CLIs above; `FACTORY_CLAUDE` and `FACTORY_CODEX` name a CLI off PATH (desktop installs), `FACTORY_START`, `FACTORY_RESUME`, `FACTORY_FRESH` and `FACTORY_NOTIFY` replace the commands, `FACTORY_IDLE_TURNS` (6) and `FACTORY_JOB_MAX` (120 min) tune the guard.
+Both hosts run `run-guard.sh` through a POSIX `sh`; on Windows that is Git Bash. Reads only nearest `.factory/run.md` inside session's current checkout, so a worktree's run stays separate from its parent's, plus that session's subagent files. State: `.factory/guard/state` (single-quoted `g_*` lines; anything else reported and ignored). Ignores runs untouched for 12 hours. Costs about 65 ms with no run, 0.4 s with one on Windows (process starts dominate), once per turn end. `night.sh` and `watchdog.sh` in `.agents/hooks/` call the host CLIs above; `FACTORY_CLAUDE` and `FACTORY_CODEX` name a CLI off PATH (desktop installs), `FACTORY_START`, `FACTORY_RESUME`, `FACTORY_FRESH` and `FACTORY_NOTIFY` replace the commands, `FACTORY_IDLE_TURNS` (6) and `FACTORY_JOB_MAX` (120 min) tune the guard.
 
 ## Delegation
 
-The roles (runner, analyst, maker, builder, reviewer, checker), their tiers and the brief, gate and handback rules live in `.agents/skills/safe-engine/references/delegate.md`. Hosts differ only in how a role gets its model, effort and edit limits. The owner's own session model and effort never change.
+Roles (runner, analyst, maker, builder, reviewer, checker), their tiers and brief, gate and handback rules live in `.agents/skills/safe-engine/references/delegate.md`. Hosts differ only in how a role gets model, effort and edit limits. Owner's own session model and effort never change.
 
-Pass the request, decisions, interfaces, stops and artifact paths explicitly; full history needs a reason. Keep short jobs local.
+Pass request, decisions, interfaces, stops and artifact paths explicitly; full history needs a reason. Keep short jobs local.
 
 | | Claude Code | Codex |
 |---|---|---|
@@ -48,7 +48,7 @@ Pass the request, decisions, interfaces, stops and artifact paths explicitly; fu
 | GitHub Copilot, Gemini CLI, OpenCode | read `.agents/skills` | none wired: apply the run-file rules by hand |
 | Anything else | point it at `.agents/skills/safe-engine/SKILL.md` | none |
 
-Without hooks, the agent ends each step with `Say go for step <n>`; the owner's `go` starts the next turn, which rereads `.factory/run.md` and loads the `Next:` skill fresh; the checker gates and the PR review still apply.
+Without hooks, agent ends each step with `Say go for step <n>`; owner's `go` starts next turn, which rereads `.factory/run.md` and loads the `Next:` skill fresh; checker gates and PR review still apply.
 
 ## Sources
 
