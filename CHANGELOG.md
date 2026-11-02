@@ -34,7 +34,7 @@ _Fresh start replacing the deprecated 1.x line; Claude Code installs reinstall o
 - **Breaking:** Move the plugin root to `.agents/` and the delegate roles to `.agents/agents/` ([#232])
 - Run one step per turn: a Stop guard sends the next step's prompt and catches two steps ticked at once ([#232])
 - Cap every review, gate and fix loop at 3 rounds, 5 with an open critical finding, then halt with one owner packet; resume with `run-guard.sh clear` ([#241])
-- Hand a run to a fresh session after two compactions, and repeat the next step after each one ([#241])
+- Hand a run to a fresh session after two compactions, and repeat the next step after each one ([#232], [#241])
 - Make `recommend` show three solutions in one table with one pick, and pick one of three looks at step 2 ([#232], [#244])
 - Add a UI pass at verify and polish the primary platform first, the secondary after the owner confirms it ([#244])
 - Take screenshots from the host's built-in browser, never headless scripts unless asked ([#232])
@@ -178,7 +178,6 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 [#241]: https://github.com/seifsg/ai-software-factory/pull/241
 [#242]: https://github.com/seifsg/ai-software-factory/pull/242
 [#244]: https://github.com/seifsg/ai-software-factory/pull/244
-[#246]: https://github.com/seifsg/ai-software-factory/pull/246
 [#248]: https://github.com/seifsg/ai-software-factory/pull/248
 [#251]: https://github.com/seifsg/ai-software-factory/pull/251
 [#254]: https://github.com/seifsg/ai-software-factory/pull/254
