@@ -48,7 +48,7 @@ Pass request, decisions, interfaces, stops and artifact paths explicitly; full h
 | GitHub Copilot, Gemini CLI, OpenCode | read `.agents/skills` | none wired: apply the run-file rules by hand |
 | Anything else | point it at `.agents/skills/safe-factory/SKILL.md` | none |
 
-Without a live guard (hooks added mid-session never load: Claude Code reads settings at session start, so step 0 checks the hook entry predates the session and step 1 finds `.factory/guard/state`), Fast chains steps in one turn, one block message per step, never waits and never ends a turn with the run open and `Waiting: none`; Safe ends each step with `Say go for step <n>`. Each step still rereads `.factory/run.md` and loads the `Next:` skill fresh; checker gates and PR review still apply.
+Without a live guard (hooks added mid-session never load: Claude Code reads settings at session start, so step 0 checks the hook entry predates the session, unsure counting as not live, and step 1 finds `.factory/guard/state`), Fast chains steps in one turn, one block message per step, never waits and never ends a turn with the run open and `Waiting: none`; Safe ends each step with `Say go for step <n>`. Each step still rereads `.factory/run.md` and loads the `Next:` skill fresh; checker gates and PR review still apply.
 
 ## Sources
 
