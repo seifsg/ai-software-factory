@@ -17,10 +17,10 @@ Research and planning only. Do not build or publish.
 
 ## Kickoff research
 
-Read the request, constraints and settled choices first. Parallel agents: competitors split in groups, one for stacks. Same depth every run. Covers asked items, the riskiest capability, how best products look. Owner said MVP: also what MVP means for this product (launch needs users expect). Extra ideas: suggestions in the follow-ups ticket, not the questions.
+Read the request, constraints and settled choices first. Parallel agents: competitors in groups, one for stacks. Same depth every run: asked items, riskiest capability. Owner said MVP: also its launch needs. Extra ideas: follow-ups ticket, not the questions.
 
 1. **Competitors:** top 10 for this job (leaders, fastest growing, closest fit; why each). Per competitor: source URL, product, core loop, standout features, pricing and positioning, look (type, color, layout, motion), UX patterns worth reusing, nav labels and structure, weak spots.
-2. **Market:** trends, user opinions (reviews, forums), common features, loved features, features users hate. Source each.
+2. **Market:** trends, user opinions (reviews, forums), common features, loved features, features users hate.
 3. **Feature matrix:** features × competitors. Mark requested items, must-haves and gaps.
 4. **UI refs:** 3 best-looking in category, what makes each good. Feeds step 2 looks.
 5. **Opportunities:** gaps, underserved segments, pricing angles, quick wins that make money. One line each.
