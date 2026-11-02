@@ -6,6 +6,8 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-02
+
 ### Changed
 
 - Continuous runs (#253): a gate or review loop with 3 failed rounds and no open `CRITICAL:` passes by cap (`Gate X: PASS (cap, 3 rounds, no CRITICAL) @<sha>`), leftovers to follow-ups; the guard accepts the cap line only after 3 failed handbacks in the host's subagent files with no `CRITICAL:` in its step, and halts only after round 5 or 6 idle turns. Checker round 1 is the full list, checking form too; later rounds recheck only it. Fast with no live guard chains steps in one turn instead of `Say go`; step 0 checks the guard loads. Every run keeps a preview in front of the owner from step 4.
