@@ -118,7 +118,7 @@ Ruthless code review. No mercy, no shortcuts. Find every damn problem.
 
 ## Additions for every review
 
-Read-only: do not fix unless told to. Does the journey work? Keep the overall requirements open. Size or style prompts inspection; prove impact before blocking.
+Read-only: do not fix unless told to. Does the journey work? Keep the overall requirements open. Size or code style prompts inspection; prove impact before blocking. UI below journey's look bar blocks.
 
 - Scope adds the callers and consumers. Before reading, gather the baseline: request, confirmed criteria, plan, project rules, raw evidence (logs, manual QA observations, check results).
 - Read the code around each file too; the diff alone is insufficient. Then run the lenses below.
@@ -126,7 +126,7 @@ Read-only: do not fix unless told to. Does the journey work? Keep the overall re
 - Label every claim verified (read or observed) or hypothesis. A raw count is a hypothesis about impact until you read what it means.
 - Any language: its debug output and loose types count in categories 5 and 8.
 - Also hunt: non-critical integrations (analytics, history, messaging) breaking the main logic when they fail; valid actions that leave unrecoverable state (creation, update, save and load limits must agree); bypassing the project's wrapper for config or shared integrations; guards for states the design rules out (not defense in depth).
-- Factory rules, for our own work (someone else's project: judge by its rules): extra code or over-engineering (least code that fully solves the problem); not O(1) or as close as the real workload allows, wasted CPU or memory; new code where an existing function fits; placeholders, stubs or TODOs; files at 1000 lines or more not split; functions without a short comment saying what they do and why; one more pass: less code? less complexity? faster?
+- Factory rules, for our own work (someone else's project: judge by its rules): extra code or over-engineering (least code that fully solves the problem; logic only, UI: best look); not O(1) or as close as the real workload allows, wasted CPU or memory; new code where an existing function fits; placeholders, stubs or TODOs; files at 1000 lines or more not split; functions without a short comment saying what they do and why; one more pass: less code? less complexity? faster?
 
 ### Lenses
 
@@ -192,5 +192,6 @@ In a factory run this is step 6, Verify: the builder runs this pass, and the ind
 - [ ] Every requested journey used through real controls, with observed results
 - [ ] compliance results, change-guard results when existing code, contracts or data changed, plus each other lens run, each with its findings table (possibly empty) and verdict, e.g. `**compliance:** <its table, or "no findings"> · PASS`
 - [ ] An `after-<id>` file for every proof-list id, same ids as Before, captured in that same pass on the verified head, each naming that commit; a later edit recaptures the ids it touches; a full-suite id is that final run
+- [ ] UI pass (new UI): analyst misses vs step 2 look + refs, primary platform; else `existing` or `no UI`
 - [ ] The full suite: command and result, run once after manual use
 - [ ] The verdict; blocking findings fixed through the build loop before the gate

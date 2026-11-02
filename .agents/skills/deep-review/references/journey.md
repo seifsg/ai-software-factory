@@ -33,6 +33,7 @@ Trust nothing until traced. Follow the user's or consumer's first action to the 
 ## Public pages
 
 - UI/interaction changes: judge the affected journey as its user: findable, clear labels and states, few steps, readable and accessible, consistent look. Missing interaction evidence stays UNKNOWN.
+- Look bar: factory UI work with a step 2 look: best in class vs that pick + refs (type, spacing, hierarchy, color, motion), primary platform; dated, plain or generic = HIGH. Otherwise: the project's design system, consistent look.
 - Public pages meant for search: check titles, descriptions, headings and crawlable content with actual render evidence. Keep private and staging pages excluded.
 
 ## Calibrate
@@ -41,6 +42,7 @@ Trust nothing until traced. Follow the user's or consumer's first action to the 
 - Read the final manual QA observations for manual criteria. An unrelated green command certifies nothing.
 - Judge against the claim, not what you would have built. Don't replace the author's goal.
 - Distinguish "missing because broken" from "missing because out of scope".
+- Secondary platform before owner confirms primary: pending, not UNKNOWN.
 - Separate code-traced behavior from behavior observed in the target environment. Source alone cannot certify unseen or unheard output. One desktop browser proves no mobile, audio or assistive behavior.
 
 ## Output
@@ -50,6 +52,6 @@ Trust nothing until traced. Follow the user's or consumer's first action to the 
 |------------------|--------|----------|-------------------|-------------------------------|
 ```
 
-Then findings in the SKILL.md format. Severity: CRITICAL claim not delivered, existing journey broken, crash. HIGH happy path only, real scenario fails. MEDIUM rough edge, poor feedback. LOW polish. Impact: which user or consumer, doing what, gets what wrong outcome.
+Then findings in the SKILL.md format. Severity: CRITICAL claim not delivered, existing journey broken, crash. HIGH happy path only, real scenario fails. MEDIUM rough edge, poor feedback. LOW polish, never a look miss. Impact: which user or consumer, doing what, gets what wrong outcome.
 
 End with: `JOURNEY VERDICT: <delivers | partial | does-not-deliver | breaks-existing> - <one sentence>`

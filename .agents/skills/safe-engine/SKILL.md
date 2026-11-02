@@ -13,8 +13,8 @@ Analysis, planning or review requests stay in that phase. Do not code unless tol
 
 Build systems that outlast their creator. Breakage is not acceptable.
 
-- Least code that fully solves the problem: no one-off wrappers, duplicate checks or over-engineering.
-- Least CPU and memory: O(1) or as close as the workload allows; measure before claiming speed.
+- Least code, least CPU and memory: logic only (backend, frontend logic). No one-off wrappers, duplicate checks or over-engineering; O(1) or as close as the workload allows; measure before claiming speed.
+- UI/UX: no code-size limit; still fast. Best look and feel, any size. Responsive from start.
 - SOLID, KISS, DRY, SRP; Gang of Four patterns where they fit, never for show.
 - Many small functions and files, no long functions; split a file before 1000 lines. Reuse existing functions first; build new ones to be reused.
 - Fix the design at the root cause of a bug or edge case, not the symptom; lean to refactoring. A big or regression-risky root fix (shared contracts, schema, stored data, consumers outside the task) needs the owner's yes first.
@@ -35,11 +35,11 @@ Build systems that outlast their creator. Breakage is not acceptable.
 
 | Kind | When | Extra before step 1 |
 |---|---|---|
-| `product` | new app, game, site, tool, service or library | `research-market` kickoff research, kickoff questions for its [size](references/sizes.md) |
+| `product` | new app, game, site, tool, service or library | `research-market` kickoff research, kickoff questions |
 | `feature` | big feature with product choices | same |
 | `change` | bug fix, small change, follow-up, factory maintenance | none; every block stays short |
 
-Every run keeps project rules and never puts secrets in code or Git. Size (POC, MVP, production slice) sets scope, never quality: [sizes](references/sizes.md).
+Every run keeps project rules and never puts secrets in code or Git. Build what asked, best quality. No size default: [sizes](references/sizes.md).
 
 ## The run file
 
@@ -61,12 +61,12 @@ Each step ends with its block: post the full block as its own chat message (neve
 |---|---|---|
 | 0 Ticket | `ticketing` | ticket link, criteria, checklist |
 | 1 Analyze | `analyze-start` | its output contract |
-| 2 Recommend | `recommend` | three options, one pick |
+| 2 Recommend | `recommend` | three options, one pick; UI: three looks, one pick |
 | 2b Challenge | `recommend`, Challenge | kept or changed pick |
 | 3 Plan | `get-ready-to-code` | five outputs and the proof list, then **Gate A** |
 | 4 Before | `how-to-make-a-pr`, Before proof | the saved Before files |
 | 5 Build | `get-ready-to-code`, 0–4 loop | one line per todo |
-| 6 Verify | `deep-review` | findings, suite result, After files, then **Gate B** |
+| 6 Verify | `deep-review` | findings, UI pass, suite result, After files, then **Gate B** |
 | 7 PR | `how-to-make-a-pr` | draft PR link |
 | 8 Review | `how-to-review-a-pr` | verdict, then **Gate C** |
 
@@ -76,7 +76,7 @@ Only what those skills do not say:
 - **3:** new or changed persistence adds `database-schema`. A `change` uses the light plan. Fast passes the file-summary stop. Safe runs Gate A, then stops: `Waiting: owner: plan OK?`.
 - **4:** starts as soon as the plan names the views and commands. Up to three items: capture them yourself. More: one light delegate captures while you finish the plan. No source edit until every Before file is saved. Open the host's live preview when it has one, bring it in front of the owner and name its URL in the block.
 - **5:** spike unknown capabilities first. A run of mapped tests that is the whole suite is still only a build check. Commit by phase in the project's commit style.
-- **6:** verify is yours; independence comes from the checker and step 8. Order: the lenses (compliance always; change-guard when existing code, contracts or data changed, so never on a new project; others by `deep-review`'s scale), their fixes, then one final manual pass through every requested journey that captures After with the same ids, then the full suite once on that candidate; a proof id that is the full suite is that same run. Before captures of the base never count as that run. MVP and production slice: the secrets, dependency and static-analysis scans.
+- **6:** verify is yours; independence comes from the checker and step 8. Order: the lenses (compliance always; change-guard when existing code, contracts or data changed, so never on a new project; others by `deep-review`'s scale) and the UI pass, their fixes, then one final manual pass through every requested journey that captures After with the same ids, then the full suite once on that candidate; a proof id that is the full suite is that same run. Before captures of the base never count as that run. UI pass (step 2 look): fresh `analyst` lists each miss vs that look + refs on the primary platform, with the capture. A miss of the picked look = HIGH. Secrets, dependency, static-analysis scans: MVP, production slice, or any run with dependencies or a server.
 - **7:** the ticket moves to Ready for QA with its PR.
 - **8:** a fresh agent that did not build it gets the PR, the ticket and the run file's absolute path. The reviewer hands back its fix-set, never pushing: you apply it through the 0–4 loop, recapturing the After of every proof id a fix touches (named in the block), and the same reviewer checks the delta. Its brief starts `Role: reviewer.` and names the pushed head; each reviewer handback ends with the skill's factory `verdict:` line. Paste the last as `Review: ready (reviewer <id>) @<sha>`. You write the final verdict as the step's block and tick it. The full suite runs again only after those fixes. Then Gate C, once, on the final head; close the run and ask the owner to verify and merge.
 
@@ -96,6 +96,7 @@ After steps 3, 6 and 8, start the [checker](references/checker.md): a fresh ligh
 - Run file shows `Night:`: the [night mode](references/night.md) rules apply.
 - Released app or release policy: [app releases](references/app-releases.md).
 - Never claim tested, reviewed or production ready without that evidence.
+- Effort on confirmed work only. Primary platform first (existing app: its lead; else web = desktop, mobile app = phone): verify, fix, polish. Secondary: after owner confirms primary; until then the PR names it pending, never a blocking UNKNOWN.
 - Backlog: `ticketing` moves each ticket through its statuses and logs every change in its activity. Deferred work appends to the epic's one open follow-ups ticket in Backlog.
 
 ## Keep the owner posted
