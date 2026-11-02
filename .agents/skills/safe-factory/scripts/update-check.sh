@@ -1,7 +1,9 @@
 #!/bin/sh
 # Update check at session start: reads a cached latest version (no network, few forks), refreshes it in the background once a day.
-# Prints one context line when a newer factory release exists. FACTORY_NO_UPDATE_CHECK=1 turns it off.
+# Prints one context line when a newer factory release exists, and the leftovers doctor.sh finds. FACTORY_NO_UPDATE_CHECK=1 turns both off.
 [ -n "$FACTORY_NO_UPDATE_CHECK" ] && exit 0
+# Leftovers of old versions and copies (doctor.sh, read-only here): one notice, never a stop.
+o=$(set -- ${1:+"$1"}; . "${0%/*}/doctor.sh" 2>/dev/null) || [ -z "$o" ] || printf 'Factory leftovers on this machine:\n%s\nTell the owner in one line and offer `sh "%s/doctor.sh" --fix` (moves them to a backup; owner'"'"'s OK). Never stop or wait for it.\n' "$o" "${0%/*}"
 m="${1:-${0%/*}/../../..}/.claude-plugin/plugin.json"; have=  # $1: plugin root
 [ -f "$m" ] || exit 0  # a skills-only copy has no manifest: nothing to compare
 while IFS= read -r l; do case $l in *'"version"'*) have=${l#*'"version"'*\"}; have=${have%%\"*}; break;; esac; done < "$m"

@@ -2,6 +2,11 @@
 
 What installs and active runs must do for each release, newest first. What changed: [CHANGELOG.md](CHANGELOG.md).
 
+## 0.4.0
+
+1. **Every install, once:** from each project that had factory hooks, run `sh <plugin root>/skills/safe-factory/scripts/doctor.sh --fix` ([clean up](docs/install.md#clean-up-and-uninstall)). It moves 1.x hooks and launchers, `~/.safe-engine`, old-path project hooks and stale `pre-push` and `codex.rules` copies to a backup, and names what needs a hand edit (the old `safe-engine@` id, hook files holding other settings). Not covered: `--codex-home <dir>` installs and a Codex `safe-engine@` plugin: clean those per 0.1.0 and 0.3.0.
+2. **Open runs before Gate C:** add `Left running: <item, stop command>` or `Left running: none` to `## 8 Review` before Gate C.
+
 ## 0.3.0
 
 The plugin and its entry skill are now `safe-factory`.

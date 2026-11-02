@@ -6,6 +6,14 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking:** Make every run stop what it started (servers, watchers, schedules, worktrees, hooks) before Gate C and list what stays in `Left running:` ([#262])
+
+### Added
+
+- Add `doctor.sh`, which lists leftovers of old factory versions at each session start and moves them to a backup with `--fix` ([#262])
+
 ## [0.3.0] - 2026-11-02
 
 _Upgrade needed: the plugin is now `safe-factory`; follow [UPGRADING.md](UPGRADING.md#030)._
@@ -198,3 +206,4 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 [#254]: https://github.com/seifsg/ai-software-factory/pull/254
 [#258]: https://github.com/seifsg/ai-software-factory/pull/258
 [#260]: https://github.com/seifsg/ai-software-factory/pull/260
+[#262]: https://github.com/seifsg/ai-software-factory/pull/262
