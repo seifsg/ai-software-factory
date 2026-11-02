@@ -2,57 +2,61 @@
 
 Every notable change to the AI Software Factory, newest first. The format follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/) and versions follow [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html). This file and [UPGRADING.md](UPGRADING.md) are the only places for release history.
 
-The public surface is the skill names, the run file format, and the hook scripts and events. A breaking change to any of them bumps MAJOR.
+The public surface is the skill names, the run file format, and the hook scripts and events. How to write an entry and pick a version: [releasing](docs/releasing.md#changelog).
 
 ## [Unreleased]
 
 ## [0.2.0] - 2026-11-02
 
+_Renumbered: under the bump table adopted after this release it would be 0.1.1; published versions stay._
+
 ### Changed
 
-- Continuous runs (#253): a gate or review loop with 3 failed rounds and no open `CRITICAL:` passes by cap (`Gate X: PASS (cap, 3 rounds, no CRITICAL) @<sha>`), leftovers to follow-ups; the guard accepts the cap line only after 3 failed handbacks in the host's subagent files with no `CRITICAL:` in its step, and halts only after round 5 or 6 idle turns. Checker round 1 is the full list, checking form too; later rounds recheck only it. Fast with no live guard chains steps in one turn instead of `Say go`; step 0 checks the guard loads. Every run keeps a preview in front of the owner from step 4.
+- Let a gate or review loop pass after 3 rounds with no open critical finding, so runs never stall on nits; leftovers go to follow-ups ([#254])
+- Make the checker list every miss, form included, in its first round, and recheck only that list after ([#254])
+- Keep a live preview of the work in front of the owner from step 4 on, for every kind of project ([#254])
+
+### Fixed
+
+- Fix Fast runs waiting for `Say go` after every step when the Stop hook is not loaded; steps now chain, and step 0 says whether the guard is live ([#254])
 
 ## [0.1.0] - 2026-11-02
 
-A fresh start: 0.1.0 replaces the deprecated 1.x line. Claude Code installs reinstall once (UPGRADING.md).
+_Fresh start replacing the deprecated 1.x line; Claude Code installs reinstall once (see [UPGRADING.md](UPGRADING.md#010))._
 
 ### Changed
 
-- README reworked to sell and start fast (#250): animated run card, badge strip and guard loop as committed SVGs under `docs/assets/`, a three-point "why", a 3-step quick start with one install row per host (Codex and Cursor marked not yet run live, a pre-tag `--plugin-dir` line), all ten steps in the run table including 2b, and a fixed anchor for "How it stays on track".
-- Caveman wording (#245): skills, references, agents and docs say the same rules in fewer words; the owner's own `analyze-start`, `get-ready-to-code` and `deep-review` opening are unchanged. Read set now under 105,000 B.
-- Build what asked, best UI/UX (#243): no size default (POC, MVP only when the owner names one; MVP researches what this product needs to launch); extras only better UI/UX, small enhancements and critical additions; least code and CPU apply to logic only; step 2 also picks one of three looks and `recommend` gains a `UX / look` column; kickoff research covers the top 10 competitors, market opinions and UI references; step 6 adds a UI pass and a look below the bar is HIGH and required; verify and polish the primary platform first, the secondary after the owner confirms it.
-- Relay-run frictions (#240): the PR contract accepts the layout's `**Before → After:**` form; lens reviewers are briefed `Role: analyst` and hand back their `deep-review` lens report, never a `verdict:` line, so they never count as review rounds; `how-to-review-a-pr` owns the factory verdict mapping and its reviewer never pushes in a factory run; the checker brief settles `DEFERRED`, stub and owner-only evidence, and its handback adds no `G<n>` lines; fixes after Gate B never rerun it, Gate C checks their recaptured After files; step 5 moves the ticket to In progress and steps 5 and 6 show an example line; a relay may add one ticket comment; byte checks read Git blobs; `improve-factory` changes a hook that drives the live session on a copy first. `night.sh` and `watchdog.sh` read `FACTORY_CLAUDE`/`FACTORY_CODEX` for a CLI off PATH, `night.sh` refuses Codex when one sandboxed command, run in a scratch repo the guard ignores, does not run (its scratch commit ignores the owner's Git signing and hooks, a relative override still resolves), the watchdog resumes Codex with the night flags, and the reviewer agent ends its handback with the verdict line. The stray empty `pr-layout.md.orig` is gone.
-- Guarded relay (#236): gate and review lines count only when the host's subagent file of the named checker or reviewer holds that verdict on that commit (`Gate X: PASS (checker <id>) @<sha>`, `Review: ready (reviewer <id>) @<sha>`); Gate C and the review need the pushed HEAD. One round cap for review, gate and fix loops: rounds 1-3, 4-5 only with an open `CRITICAL:` line, then the guard halts the run with one owner packet; 6 turns without progress halt it too; the owner resumes with `run-guard.sh clear`. `Waiting: jobs:` needs `(max <n> min)`. Two compactions relay the run to a fresh session. Guard state moves to `.factory/guard/state`. The 6-round and 2-gate-round rules are gone.
-
-- After rerun 4: each After names the verified head it was captured on, and any later fix (verify or review) recaptures the ids it touches; the live preview is shown to the owner with its URL; built-in browser captures scroll instantly, discard a warm-up shot and click by ref where the tool allows; a new surface has nothing to inspect at step 4; step 5 commits are staged by name with a scope; in Fast, the coordinator decides how review questions are fixed within scope, while deferrals stay the owner's; a one-ticket run's `Deferred (pending owner)` section is its follow-ups ticket; research and kickoff questions belong to step 0; a closed run's `Next:` is `none (closed)`.
-- One step per turn: each step ends its turn with its full block, and the Stop guard sends the next step's fixed prompt (step 2b gets "I don't think this is the best we could do. Do better. Make no mistake."), so no step starts until the previous answer is complete. Step 5 takes one todo per turn. The guard flags two step headings ticked in one turn. Without hooks, each step ends with `Say go for step <n>`.
-- `analyze-start` starts from its inputs (ticket ids, research, size, step position), covers users, jobs and non-functional needs for a new product, and ends with the decisions Recommend must make.
-- New step 2b Challenge: after the recommendation, the run tells itself "I don't think this is the best we could do. Do better. Make no mistake.", rechecks the options and posts `kept` or `changed` with the reason.
-- After rerun 3: Gate C runs once, after the step 8 review, on the final head, and checks only the `## 7 PR` contract lines plus ticked steps and the review verdict; anything else is a `note:`, never a fail. A brand-new surface's Before is `did not exist` everywhere. The owner can waive a gate (`Gate <X>: WAIVED by owner`), and the run guard accepts it. A solo owner gets no review request: the run ends by asking them to verify and merge. Each step posts its full block as its own chat message and ticks the host's task list.
-- After rerun 2: one step at a time, never batched, so analysis and recommendation each get a full pass; screenshots come from the host's built-in browser, never Playwright or headless scripts unless asked; step 0 asks once, up front, for host-blocked actions; the checker is read-only and the builder pastes its gate line; POC research uses one agent; proof ids per view or state; a plan change reruns Gate A only for what changed.
-- After the first real run: the checker reports every missing item in one pass and only a repeated item counts as a failed round; no Before capture for a brand-new surface, no mandatory journey video, a fix recaptures only its ids; a small product gets one ticket and ticket comments only on status changes; change-guard only when existing code changed; size sets scope, never quality, and Fast never waits for it; every step prints its full block, and owner replies are folded in before the next step; the reviewer hands fixes back to the builder and Gate C reruns when the PR changed.
-- **Breaking:** the factory is methods only. One pipeline of nine visible steps, ticket → analyze → recommend → plan → Before proof → build → verify → PR → review, each printing its block to the owner, the ticket and `.factory/run.md` (#231).
-- `analyze-start` and `get-ready-to-code` are restored to their full original outputs; `how-to-review-a-pr` is its own skill again; every step skill ends with an output contract.
-- Before proof is captured before the first edit with any host capture tool; After on the same server during verify. Builds run only tests mapped to changed files; the full suite runs once at verify.
-- The plugin root is `.agents/`; the delegate roles live in `.agents/agents/`.
-- `deep-review` opens with the owner's original method word for word; factory additions follow it. `ticketing` and the product bar are shorter: duplicate rules merged, rare cases (parallel tickets, speed checklist, external effects, release record) moved behind pointers. Read set 114,523 → 110,950 B (#233).
+- **Breaking:** Run every task as ten visible steps (ticket, analyze, recommend, challenge, plan, Before proof, build, verify, PR, review), each posted to the owner, the ticket and `.factory/run.md` ([#232])
+- **Breaking:** Count a gate or review line only when the named checker or reviewer's own transcript holds it on that commit ([#241])
+- **Breaking:** Write `Gate C` under `## 8 Review` and run it once, after the review, on the final head ([#232])
+- **Breaking:** Give every `Waiting: jobs:` line a deadline, `(max <n> min)` ([#241])
+- **Breaking:** Build at the size the owner names, with no default; open runs drop an unnamed size label ([#244])
+- **Breaking:** Move the plugin root to `.agents/` and the delegate roles to `.agents/agents/` ([#232])
+- Run one step per turn: a Stop guard sends the next step's prompt and catches two steps ticked at once ([#232])
+- Cap every review, gate and fix loop at 3 rounds, 5 with an open critical finding, then halt with one owner packet; resume with `run-guard.sh clear` ([#241])
+- Hand a run to a fresh session after two compactions, and repeat the next step after each one ([#232], [#241])
+- Make `recommend` show three solutions in one table with one pick, and pick one of three looks at step 2 ([#232], [#244])
+- Add a UI pass at verify and polish the primary platform first, the secondary after the owner confirms it ([#244])
+- Take screenshots from the host's built-in browser, never headless scripts unless asked ([#232])
+- End a solo owner's run by asking them to verify and merge, with no review request ([#232])
+- Make `how-to-review-a-pr` its own skill again ([#232])
+- Rework the README with a run card, a three-point why and a 3-step quick start per host ([#251])
 
 ### Added
 
-- Plugins for three hosts from one `.agents/` root: Claude Code (`.claude-plugin`), Codex (`.codex-plugin`, read through the existing marketplace; not yet run live) and Cursor (`.cursor-plugin` plus `.cursor-plugin/marketplace.json`: skills and delegate roles; not yet run live). Hooks find their root through `CLAUDE_PLUGIN_ROOT` or Codex's `PLUGIN_ROOT`.
-- Update check (#247): at session start the plugin reads a cached latest release (about 0.1 s on Windows, no network) and refreshes it in the background once a day; a newer release makes step 0 tell the owner, link what's new and ask update now or continue. Off: `FACTORY_NO_UPDATE_CHECK=1`.
-
-- Overnight runs (#236): `.agents/hooks/night.sh` refuses to start unless the run can finish unattended, then starts a session that denies instead of prompting, with a time budget the guard enforces; `night.md` holds the night rules (recorded defaults, parked owner-only items, own-branch outward actions, no waivers). `watchdog.sh` runs from the OS scheduler: resumes stalled runs, backs off on usage limits, starts pending relays, flags silent hooks, notifies once per end. Host template: `claude-settings.json` deny and night allow rules, `codex.rules`, and a `pre-push` hook that blocks pushes to the default branch, force pushes, deletes and added token shapes.
-- New projects need no setup: with no folder named, the factory creates one beside the owner's other projects, runs `git init`, and with no remote creates a private GitHub repository and uses its Issues.
-- `recommend`: three solutions in one table, one pick.
-- Run guarantees: each step loads its skill fresh; a Stop guard re-prompts the next step until step 8 and three checker gates pass, and lets the stop through while the run waits on the owner or background jobs; a compact hook re-injects the next step after compaction. One `sh` script with one `awk` pass: about 0.07 s per turn end without a run, 0.15 s with one, nothing per tool call.
-- The `checker` role: a fresh light delegate that checks step outputs against their contracts after steps 3, 6 and 7.
+- Add plugins for Claude Code, Codex and Cursor from one `.agents/` root; Codex and Cursor not yet run live ([#248])
+- Add an update check that tells the owner at step 0 when a newer release is out; off with `FACTORY_NO_UPDATE_CHECK=1` ([#248])
+- Add step 2b Challenge, which rechecks the recommendation and posts `kept` or `changed` with the reason ([#232])
+- Add overnight runs: `night.sh` starts only a run that can finish unattended, also with a CLI off PATH (`FACTORY_CLAUDE`, `FACTORY_CODEX`), and `watchdog.sh` resumes stalled ones ([#241], [#242])
+- Add a `pre-push` hook that blocks pushes to the default branch, force pushes and token shapes ([#241])
+- Add the checker role, which checks step outputs against their contracts at gates A, B and C; lens reviewers never count as review rounds ([#232], [#242])
+- Let a new project start with no setup: folder, `git init` and a private GitHub repository are created for it ([#232])
+- Let the owner waive a gate with `Gate <X>: WAIVED by owner` ([#232])
 
 ### Removed
 
-- The product bar (`product-bar.md`, `cases.md`, `quality-cases.md`) and the `ux-quality` skill. Security stays in `deep-review`'s security lens; the owner's words decide look, copy and placeholders.
-- All Python: the `fast_gate.py` gate and its per-tool-call hook (761 ms per call measured), the Safe controller, hidden checks, `shots`, metrics, the live view, bundle resolution, the installer and self-update, evals, release scripts and the 665-test suite.
-- Lucky mode, `verify` and `promote` of a Fast run, the optional Safe check, Show/Look/Prove/Ship phases and the owner-reply timer.
+- **Breaking:** Remove all Python: the `fast_gate.py` gate, Safe controller, installer, self-update, metrics and test suite ([#232])
+- **Breaking:** Remove Lucky mode, the Show, Look, Prove and Ship phases, the product bar and the `ux-quality` skill ([#232])
 
 ## [1.3.0] - 2026-10-31
 
@@ -160,7 +164,8 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 - Leaner runs (#137): product, feature and change runs each read 24% less method text, every gate message is shorter with the same facts, `scripts/token_report.py` measures both, and tests hold every method file and the gate's fixture messages to a byte budget and the product and change loads to 80% of their earlier size.
 - Self-update (#139): a clone install moves only to a release tag on `main` whose files match its manifest, records the previous revision, rolls back a failed install and shows a one-time notice naming both versions.
 
-[Unreleased]: https://github.com/seifsg/ai-software-factory/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/seifsg/ai-software-factory/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/seifsg/ai-software-factory/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/seifsg/ai-software-factory/releases/tag/v0.1.0
 [1.3.0]: https://github.com/seifsg/ai-software-factory/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/seifsg/ai-software-factory/compare/v1.1.2...v1.2.0
@@ -168,3 +173,11 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 [1.1.1]: https://github.com/seifsg/ai-software-factory/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/seifsg/ai-software-factory/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/seifsg/ai-software-factory/releases/tag/v1.0.0
+
+[#232]: https://github.com/seifsg/ai-software-factory/pull/232
+[#241]: https://github.com/seifsg/ai-software-factory/pull/241
+[#242]: https://github.com/seifsg/ai-software-factory/pull/242
+[#244]: https://github.com/seifsg/ai-software-factory/pull/244
+[#248]: https://github.com/seifsg/ai-software-factory/pull/248
+[#251]: https://github.com/seifsg/ai-software-factory/pull/251
+[#254]: https://github.com/seifsg/ai-software-factory/pull/254
