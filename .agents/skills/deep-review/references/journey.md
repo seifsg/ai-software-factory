@@ -33,7 +33,7 @@ Trust nothing until traced. Follow the user's or consumer's first action to the 
 ## Public pages
 
 - UI/interaction changes: judge the affected journey as its user: findable, clear labels and states, few steps, readable and accessible, consistent look. Missing interaction evidence stays UNKNOWN.
-- Look: best in class vs step 2 pick + refs (type, spacing, hierarchy, color, motion), primary platform. Dated, plain or generic = HIGH.
+- Look bar: factory UI work with a step 2 look: best in class vs that pick + refs (type, spacing, hierarchy, color, motion), primary platform; dated, plain or generic = HIGH. Otherwise: the project's design system, consistent look.
 - Public pages meant for search: check titles, descriptions, headings and crawlable content with actual render evidence. Keep private and staging pages excluded.
 
 ## Calibrate
@@ -42,6 +42,7 @@ Trust nothing until traced. Follow the user's or consumer's first action to the 
 - Read the final manual QA observations for manual criteria. An unrelated green command certifies nothing.
 - Judge against the claim, not what you would have built. Don't replace the author's goal.
 - Distinguish "missing because broken" from "missing because out of scope".
+- Secondary platform before owner confirms primary: pending, not UNKNOWN.
 - Separate code-traced behavior from behavior observed in the target environment. Source alone cannot certify unseen or unheard output. One desktop browser proves no mobile, audio or assistive behavior.
 
 ## Output

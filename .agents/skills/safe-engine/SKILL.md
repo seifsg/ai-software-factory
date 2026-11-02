@@ -14,7 +14,7 @@ Analysis, planning or review requests stay in that phase. Do not code unless tol
 Build systems that outlast their creator. Breakage is not acceptable.
 
 - Least code, least CPU and memory: logic only (backend, frontend logic). No one-off wrappers, duplicate checks or over-engineering; O(1) or as close as the workload allows; measure before claiming speed.
-- UI/UX: no limit. Best look and feel, any size. Responsive from start.
+- UI/UX: no code-size limit; still fast. Best look and feel, any size. Responsive from start.
 - SOLID, KISS, DRY, SRP; Gang of Four patterns where they fit, never for show.
 - Many small functions and files, no long functions; split a file before 1000 lines. Reuse existing functions first; build new ones to be reused.
 - Fix the design at the root cause of a bug or edge case, not the symptom; lean to refactoring. A big or regression-risky root fix (shared contracts, schema, stored data, consumers outside the task) needs the owner's yes first.
@@ -66,7 +66,7 @@ Each step ends with its block: post the full block as its own chat message (neve
 | 3 Plan | `get-ready-to-code` | five outputs and the proof list, then **Gate A** |
 | 4 Before | `how-to-make-a-pr`, Before proof | the saved Before files |
 | 5 Build | `get-ready-to-code`, 0–4 loop | one line per todo |
-| 6 Verify | `deep-review` | findings, suite result, After files, then **Gate B** |
+| 6 Verify | `deep-review` | findings, UI pass, suite result, After files, then **Gate B** |
 | 7 PR | `how-to-make-a-pr` | draft PR link |
 | 8 Review | `how-to-review-a-pr` | verdict, then **Gate C** |
 
@@ -76,7 +76,7 @@ Only what those skills do not say:
 - **3:** new or changed persistence adds `database-schema`. A `change` uses the light plan. Fast passes the file-summary stop. Safe runs Gate A, then stops: `Waiting: owner: plan OK?`.
 - **4:** starts as soon as the plan names the views and commands. Up to three items: capture them yourself. More: one light delegate captures while you finish the plan. No source edit until every Before file is saved. Open the host's live preview when it has one, bring it in front of the owner and name its URL in the block.
 - **5:** spike unknown capabilities first. A run of mapped tests that is the whole suite is still only a build check. Commit by phase in the project's commit style.
-- **6:** verify is yours; independence comes from the checker and step 8. Order: the lenses (compliance always; change-guard when existing code, contracts or data changed, so never on a new project; others by `deep-review`'s scale) and the UI pass, their fixes, then one final manual pass through every requested journey that captures After with the same ids, then the full suite once on that candidate; a proof id that is the full suite is that same run. Before captures of the base never count as that run. UI pass (UI work): fresh `analyst` scores look vs step 2 pick + refs, primary platform. Below bar = HIGH, required. Secrets, dependency, static-analysis scans: MVP, production slice, or any run with dependencies or a server.
+- **6:** verify is yours; independence comes from the checker and step 8. Order: the lenses (compliance always; change-guard when existing code, contracts or data changed, so never on a new project; others by `deep-review`'s scale) and the UI pass, their fixes, then one final manual pass through every requested journey that captures After with the same ids, then the full suite once on that candidate; a proof id that is the full suite is that same run. Before captures of the base never count as that run. UI pass (step 2 look): fresh `analyst` lists each miss vs that look + refs (type, spacing, hierarchy, color, motion) on the primary platform, with the capture. A miss of the picked look = HIGH. Secrets, dependency, static-analysis scans: MVP, production slice, or any run with dependencies or a server.
 - **7:** the ticket moves to Ready for QA with its PR.
 - **8:** a fresh agent that did not build it gets the PR, the ticket and the run file's absolute path. The reviewer hands back its fix-set, never pushing: you apply it through the 0–4 loop, recapturing the After of every proof id a fix touches (named in the block), and the same reviewer checks the delta. Its brief starts `Role: reviewer.` and names the pushed head; each reviewer handback ends with the skill's factory `verdict:` line. Paste the last as `Review: ready (reviewer <id>) @<sha>`. You write the final verdict as the step's block and tick it. The full suite runs again only after those fixes. Then Gate C, once, on the final head; close the run and ask the owner to verify and merge.
 

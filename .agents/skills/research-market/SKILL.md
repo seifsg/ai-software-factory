@@ -10,7 +10,7 @@ Research and planning only. Do not build or publish.
 
 ## Pick the depth
 
-- New product or big feature: kickoff research. Minutes, not hours.
+- New product or big feature: kickoff research. Parallel agents keep it under an hour.
 - A material unknown blocks a decision (stack, architecture, pattern, UX): deep research, in `references/deep-research.md`. Run only the strands that can change that decision.
 - Routine fix: skip.
 - Standalone request: findings in the requested format. No files unless asked. No coding plan. Then stop.
@@ -27,7 +27,7 @@ Read the request, constraints and settled choices first. Parallel agents: compet
 6. **Stack options** (new products): three stacks with fit, speed, look and risk. Recommendation first. Apply the project's stack defaults.
 7. Show the owner a 5 to 10 line summary before asking anything.
 
-Record: one competitor table (10 rows: URL, why, standout, look, weak spot), a `**Market:**` line set, one feature-matrix table, a `**UI refs:**` list, an `**Opportunities:**` line, and for products a `### Stack options` subsection with a 3-row table.
+Record: one competitor table (10 rows, one column per step 1 field), a `**Market:**` line set, one feature-matrix table, a `**UI refs:**` list, an `**Opportunities:**` line, and for products a `### Stack options` subsection with a 3-row table.
 
 ## Evidence
 
@@ -44,5 +44,5 @@ Record: one competitor table (10 rows: URL, why, standout, look, weak spot), a `
 - Route evidence once, no recursive research. New or materially changed persistence: `database-schema`.
 - Naming: check credible options and obvious collisions. Search is not trademark clearance. A rejected name stays rejected.
 - During delivery, revise the `get-ready-to-code` plan outputs: `original item → evidence → keep / adapt / add / defer / reject → reason → acceptance impact`. Evidence may justify no change.
-- Requested items: keep, or adapt how they are built without changing what the owner gets. Defer, reject or replace needs the owner's recorded decision. An addition records its evidence and the owner's approval, apart from the requested items.
+- Requested items: keep, or adapt how they are built without changing what the owner gets. Defer, reject or replace needs the owner's recorded decision. An addition beyond better UI/UX, small enhancements and critical additions records its evidence and the owner's approval, apart from the requested items.
 - Report: sources, comparisons, decisions, failed attempts, unknowns, limits. Research proves neither market success nor working software.
