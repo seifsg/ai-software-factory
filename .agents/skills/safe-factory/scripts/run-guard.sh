@@ -12,7 +12,7 @@ self=$(printf '%s' "$self" | tr '\\' /)  # a Windows path's backslashes would br
 in=; [ "$mode" = clear ] || in=$(cat)
 val() { printf '%s' "$in" | sed -n "s/.*\"$1\": *\"\([^\"]*\)\".*/\1/p" | head -n 1; }  # one JSON string field
 # Walk from the session's folder (input cwd), else $PWD: a hook may start elsewhere, as in desktop worktree sessions.
-c=$(val cwd | sed 's/\\\\/\//g'); [ -n "$c" ] && cd "$c" 2>/dev/null
+c=${in#*\"cwd\":}; [ "$c" = "$in" ] || { c=${c#*\"}; c=${c%%\"*}; cd "$c" 2>/dev/null; }  # no fork: runs at every turn end; Git Bash cd takes JSON's G:\\x
 d=$PWD
 while [ ! -f "$d/.factory/run.md" ]; do
   { [ -e "$d/.git" ] || [ -z "$d" ]; } && exit 0  # checkout root reached: no run here
