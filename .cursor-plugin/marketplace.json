@@ -6,7 +6,7 @@
   "plugins": [
     {
       "name": "safe-factory",
-      "source": "./.agents",
+      "source": ".agents",
       "description": "AI Software Factory skills and delegate roles."
     }
   ]

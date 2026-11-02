@@ -16,11 +16,11 @@ grep -q '^Status: open' "$run" 2>/dev/null && say ok 'run file open' || say MISS
 grep -q '^Waiting: owner' "$run" 2>/dev/null && say MISSING 'the run waits on the owner: answer first'
 # 2. The guard is wired for this host.
 if [ "$host" = claude ]; then
-  { has run-guard.sh "$cfg/settings.json" "$P/.claude/settings.json" "$P/.claude/settings.local.json" || has 'safe-factory@' "$cfg/settings.json"; } \
+  { has safe-factory/scripts/run-guard.sh "$cfg/settings.json" "$P/.claude/settings.json" "$P/.claude/settings.local.json" || has 'safe-factory@' "$cfg/settings.json"; } \
     && say ok 'guard hooks wired' || say MISSING 'guard hooks (plugin or settings)'
   [ -f "$here/claude-settings.json" ] && say ok 'deny/allow template' || say MISSING "$here/claude-settings.json"
 else
-  has run-guard.sh "$HOME/.codex/hooks.json" && say ok 'guard hooks wired' || say MISSING "guard hooks in $HOME/.codex/hooks.json"
+  has safe-factory/scripts/run-guard.sh "$HOME/.codex/hooks.json" && say ok 'guard hooks wired' || say MISSING "guard hooks in $HOME/.codex/hooks.json"
   has OWNER "$HOME/.codex/rules/factory.rules" && say ok 'forbidden rules' || say MISSING "$HOME/.codex/rules/factory.rules"
 fi
 command -v "$cli" >/dev/null && say ok "$host CLI" || say MISSING "$host CLI: on PATH, or set FACTORY_CLAUDE / FACTORY_CODEX"

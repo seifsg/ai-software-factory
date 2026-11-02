@@ -40,7 +40,7 @@ Before is captured before the first edit, After during verify, and both land in 
 
 ## ⚡ Quick start
 
-**1. Install** in your agent, inside a session ([terminal and other options](docs/install.md)):
+**1. Install**: Claude Code and Cursor in a session, Codex in a terminal ([all options](docs/install.md)):
 
 | | **Claude Code** | **Codex** (not yet run live) | **Cursor** (not yet run live) |
 |---|---|---|---|
