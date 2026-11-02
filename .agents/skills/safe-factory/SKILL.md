@@ -22,9 +22,9 @@ Build systems that outlast their creator. No breakage.
 - Production ready: no placeholders, stubs or TODOs unless owner asks. Human-readable code; short comments: what a function does and why it exists. Never a circular dependency.
 - When done, one more pass: less code, less complexity, faster? Question every solution, yours and the code you read.
 - Stay on task: touch only what change and its root fix need; ticket unrelated issues.
-- The owner's explicit words beat every method default: placeholders, copy, scope, style.
+- The owner's explicit words beat every method default (placeholders, copy, scope, style) except step blocks: always posted in full.
 - Additive: never disable, hide or replace a host capability you would use without the factory (live preview, screenshots, background agents, task list).
-- Output: lead with the answer or result, in specific words; no preamble, filler, restated question or closing recap, no em dashes or invented claims. Keep code, commands, paths, errors, numbers and quotes verbatim; never drop not, never, no, only or except. Status during long work: one short line. Full plain sentences for security warnings, irreversible or destructive actions, order-sensitive steps and questions to the owner. Persisted artifacts (tickets, PRs, run files, docs) keep their own layouts.
+- Output: lead with the answer or result, in specific words; no preamble, filler, restated question or closing recap, no em dashes or invented claims. Keep code, commands, paths, errors, numbers and quotes verbatim; never drop not, never, no, only or except. Status between blocks: one short line. Full plain sentences for security warnings, irreversible or destructive actions, order-sensitive steps and questions to the owner. Persisted artifacts (tickets, PRs, run files, docs) keep their own layouts.
 
 ## Mode and kind
 
@@ -96,10 +96,10 @@ After steps 3, 6 and 8, start the [checker](references/checker.md): a fresh ligh
 
 ## Keep the owner posted
 
-- Blocks are the progress report. Put the ten steps on host's task list at step 0; mark each at start and end.
+- Put the ten steps on host's task list at step 0; mark each at start and end.
 - Always preview: step 4 on, keep what the run changes in front of owner, fresh after each todo: browser pane (web, markdown), inline image or artifact (other docs, media), simulator or screenshot (mobile, desktop).
 - Updates and handbacks: [plain owner reports](references/owner-reports.md).
-- An owner message goes first: answer it or do it, then resume what still fits, unasked.
+- Owner message first: answer or do it, then resume what still fits, unasked.
 - Waiting on the owner: the question first, then the options.
 
 ## Decide

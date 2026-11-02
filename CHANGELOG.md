@@ -6,6 +6,10 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+### Fixed
+
+- Fix step blocks (Recommend, Plan and the rest) missing from chat when steps chain in one turn or your own instructions ask for short replies ([#267])
+
 ## [0.4.0] - 2026-11-02
 
 _Upgrade needed: run `doctor.sh --fix` once and add `Left running:` to open runs; follow [UPGRADING.md](UPGRADING.md#040)._
