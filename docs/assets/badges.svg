@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 28" width="860" height="28" role="img" aria-label="Version 0.1.0. Claude Code live. Codex and Cursor plugins not yet run live. Fast and Safe modes. Windows, macOS, Linux. No runtime: Markdown skills and one sh script.">
+<style>text{font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:12px;fill:#fff;dominant-baseline:central;text-anchor:middle}.k{fill:#30363d}</style>
+<rect class="k" x="0" y="2" width="56" height="24" rx="5"/><rect x="50" y="2" width="56" height="24" rx="5" fill="#6E56CF"/><rect class="k" x="50" y="2" width="6" height="24"/><text x="27" y="14">version</text><text x="80" y="14">0.1.0</text>
+<rect class="k" x="116" y="2" width="86" height="24" rx="5"/><rect x="196" y="2" width="40" height="24" rx="5" fill="#2EA44F"/><rect class="k" x="196" y="2" width="6" height="24"/><text x="157" y="14">Claude Code</text><text x="218" y="14">live</text>
+<rect class="k" x="246" y="2" width="104" height="24" rx="5"/><rect x="344" y="2" width="128" height="24" rx="5" fill="#9a6700"/><rect class="k" x="344" y="2" width="6" height="24"/><text x="296" y="14">Codex · Cursor</text><text x="410" y="14">not yet run live</text>
+<rect class="k" x="482" y="2" width="52" height="24" rx="5"/><rect x="528" y="2" width="82" height="24" rx="5" fill="#0A66C2"/><rect class="k" x="528" y="2" width="6" height="24"/><text x="507" y="14">modes</text><text x="572" y="14">Fast · Safe</text>
+<rect class="k" x="620" y="2" width="30" height="24" rx="5"/><rect x="644" y="2" width="216" height="24" rx="5" fill="#57606a"/><rect class="k" x="644" y="2" width="6" height="24"/><text x="636" y="14">OS</text><text x="753" y="14">Windows · macOS · Linux · no runtime</text>
+</svg>
