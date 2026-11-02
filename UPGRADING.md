@@ -2,6 +2,11 @@
 
 What installs and active runs must do for each release, newest first. What changed: [CHANGELOG.md](CHANGELOG.md).
 
+## Unreleased
+
+1. **Every install, once:** from a project, run `sh <plugin root>/skills/safe-factory/scripts/doctor.sh --fix` ([clean up](docs/install.md#clean-up-and-uninstall)). It moves what the cleanup steps of 0.1.0 and 0.3.0 list to a backup and names what needs a hand edit. Run it in each project that had factory hooks.
+2. **Open runs before Gate C:** add `Left running: <item, stop command>` or `Left running: none` to `## 8 Review` before Gate C.
+
 ## 0.3.0
 
 The plugin and its entry skill are now `safe-factory`.

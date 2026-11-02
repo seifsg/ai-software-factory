@@ -101,7 +101,7 @@ Details: [run file](.agents/skills/safe-factory/references/run-file.md), [checke
 
 ## 🔄 Update
 
-- Each session start checks for a newer release (cached, about 0.1 s) and says so before a run ([update check](docs/install.md#update-check)).
+- Each session start checks for a newer release (cached, about 0.1 s) and says so before a run ([update check](docs/install.md#update-check)). It also lists leftovers of old versions; `doctor.sh --fix` moves them to a backup ([clean up](docs/install.md#clean-up-and-uninstall)).
 - **Claude Code:** `claude plugin update safe-factory@ai-software-factory`. Auto-update is off for third-party marketplaces: turn it on in `/plugin`, Marketplaces, `ai-software-factory`, Enable auto-update.
 - **Codex:** `codex plugin marketplace upgrade ai-software-factory`, then trust the hooks again in `/hooks`. Copied skills: `git -C <clone> pull`, copy again.
 - **Cursor:** in `/plugin`, uninstall `safe-factory` and install it again; Cursor keeps GitHub installs on their first commit.

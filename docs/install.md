@@ -64,7 +64,20 @@ Plugin (not yet run live): in a session, `/plugin marketplace add https://github
 
 ## Update check
 
-At session start the plugin hook reads a cached latest release (no network, about 0.1 s on Windows) and refreshes that cache in the background once a day with `gh api`, or `curl` when `gh` is missing or signed out. Check by hand: compare the README version badge, or the [Latest release](https://github.com/seifsg/ai-software-factory/releases/latest), with your agent's installed plugin version. A newer release: the agent tells you before any run and links what's new. Off: `FACTORY_NO_UPDATE_CHECK=1`.
+At session start the plugin hook reads a cached latest release (no network, about 0.1 s on Windows) and refreshes that cache in the background once a day with `gh api`, or `curl` when `gh` is missing or signed out. Check by hand: compare the README version badge, or the [Latest release](https://github.com/seifsg/ai-software-factory/releases/latest), with your agent's installed plugin version. A newer release: the agent tells you before any run and links what's new. The same hook also lists leftovers of old versions (see below) and the agent offers to clean them; it never stops a run for it. Off: `FACTORY_NO_UPDATE_CHECK=1`.
+
+## Clean up and uninstall
+
+Old versions and copies leave things behind: 1.x hooks in `~/.codex/hooks.json` or `~/.cursor/hooks.json`, launchers in `~/.agents/skills/safe-engine`, `~/.safe-engine`, project hooks pointing at old paths, a second Stop guard, the old `safe-engine@` plugin id, stale copies of `pre-push` and `codex.rules`. From the project:
+
+```text
+sh <plugin root>/skills/safe-factory/scripts/doctor.sh         # list leftovers, change nothing
+sh <plugin root>/skills/safe-factory/scripts/doctor.sh --fix   # move them to a backup, refresh stale copies
+```
+
+`--fix` never deletes: each item goes to `~/.cache/ai-software-factory/removed/<time>/`, listed with its old path in `index`. A config file that holds other settings is only reported, with the entry to delete. `<plugin root>`: Claude Code `~/.claude/plugins/marketplaces/ai-software-factory/.agents`; a clone: `<clone>/.agents`.
+
+Uninstall: run `doctor.sh --fix`, then remove the plugin (`claude plugin uninstall safe-factory@ai-software-factory`, `codex plugin remove safe-factory@ai-software-factory`, Cursor `/plugin`), delete copied skills (`~/.agents/skills/<each factory skill>`) and hand-added hook entries naming `skills/safe-factory/`, the `pre-push` copies, `~/.codex/rules/factory.rules`, any watchdog task (`schtasks /delete /tn factory-watchdog` or its cron line) and `~/.cache/ai-software-factory`.
 
 ## Overnight runs
 

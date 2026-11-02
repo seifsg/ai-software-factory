@@ -7,6 +7,7 @@ Humans release. Never move or delete a published tag, never re-publish a version
 - **One canonical version:** `version` in `.agents/.claude-plugin/plugin.json`; `.agents/.codex-plugin/plugin.json` and `.agents/.cursor-plugin/plugin.json` carry the same. Marketplace entry's tag `ref` in `.claude-plugin/marketplace.json` names same release.
 - **Latest:** the update check reads the GitHub release marked Latest, never the highest tag. Deprecated 1.x tags stay; their releases say deprecated.
 - **Public surface:** skill names, run file format, hook scripts and events. **Breaking** = an install, open run or caller must act (an `UPGRADING.md` step), or something that worked stops working.
+- **Renames and removals clean up after themselves:** a PR that renames or removes a skill, plugin id, script, hook or install path adds the old name to `.agents/skills/safe-factory/scripts/doctor.sh` in the same PR, so every install finds and moves it. The `UPGRADING.md` step then says `doctor.sh --fix` instead of listing files to delete by hand.
 - **Bump** from the release's highest entry ([SemVer 2.0.0](https://semver.org/spec/v2.0.0.html); 0.x rule as Cargo and npm `^`):
 
 | Highest entry | From 1.0.0 | 0.y.z (now) |
