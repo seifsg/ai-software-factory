@@ -24,7 +24,7 @@ Humans release. Never move or delete a published tag, never re-publish a version
    git push origin vX.Y.Z
    ```
 
-7. Publish as Latest: `gh release create vX.Y.Z --latest --notes-file <the CHANGELOG section>`.
+7. Publish as Latest: `gh release create vX.Y.Z --latest --notes-file <the CHANGELOG section>`. Until a 0.x release is Latest, installs see the deprecated 1.x one: 0.1.0 also retitles each 1.x release "(deprecated)" and adds a "Deprecated: use 0.1.0 or later" line to its notes, without `--latest`.
 
 ## What follows a release
 

@@ -4,14 +4,15 @@
 [ -n "$FACTORY_NO_UPDATE_CHECK" ] && exit 0
 m="${1:-${0%/*}/../../..}/.claude-plugin/plugin.json"; have=  # $1: plugin root
 [ -f "$m" ] || exit 0  # a skills-only copy has no manifest: nothing to compare
-while IFS= read -r l; do case $l in *'"version"'*) have=${l#*: \"}; have=${have%%\"*}; break;; esac; done < "$m"
+while IFS= read -r l; do case $l in *'"version"'*) have=${l#*'"version"'*\"}; have=${have%%\"*}; break;; esac; done < "$m"
 [ -n "$have" ] || exit 0
 c="${XDG_CACHE_HOME:-$HOME/.cache}/ai-software-factory"; f="$c/latest"; slug=seifsg/ai-software-factory
 # Stale or missing: refresh in the background from the release marked Latest (deprecated tags stay), never wait on it.
-[ -n "$(find "$f" -mmin -1440 2>/dev/null)" ] || { mkdir -p "$c" && touch "$f" && ( gh api "repos/$slug/releases/latest" --jq .tag_name 2>/dev/null \
-  | sed -n 's/^v//p' > "$f.tmp" && [ -s "$f.tmp" ] && mv "$f.tmp" "$f" ) >/dev/null 2>&1 & }
+# One detached subshell owning all its output, so the hook's pipes close at once.
+if [ -z "$(find "$f" -mmin -1440 2>/dev/null)" ]; then ( mkdir -p "$c" && touch "$f" && { gh api "repos/$slug/releases/latest" --jq .tag_name \
+  | sed -n 's/^v//p' > "$f.tmp" && [ -s "$f.tmp" ] && mv "$f.tmp" "$f" || rm -f "$f.tmp"; } ) </dev/null >/dev/null 2>&1 & fi
 new=; [ -s "$f" ] && read -r new < "$f"
-case $have$new in *[!0-9.]*) exit 0;; esac  # only plain x.y.z versions
+for v in "$have" "$new"; do case $v in [0-9]*.[0-9]*.[0-9]*) ;; *) exit 0;; esac; case $v in *[!0-9.]*) exit 0;; esac; done  # only plain x.y.z
 [ -n "$new" ] && [ "$new" != "$have" ] || exit 0
 # Newer only: compare major, minor, patch as numbers.
 IFS=. read -r a b d <<EOF

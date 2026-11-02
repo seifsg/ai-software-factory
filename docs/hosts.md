@@ -44,7 +44,7 @@ Pass request, decisions, interfaces, stops and artifact paths explicitly; full h
 
 | Agent | Skills | Hooks |
 |---|---|---|
-| Cursor | plugin, root `.agents/` (`.cursor-plugin/plugin.json`: skills, agents), [install](install.md#cursor) | runs Claude Code hooks from a project's `.claude/settings.json`; plugin ships none yet |
+| Cursor | plugin, root `.agents/` (`.cursor-plugin/plugin.json`: skills, agents), [install](install.md#cursor) | runs Claude Code hooks from a project's `.claude/settings.json`; the plugin's `hooks/hooks.json` loads but finds no root (`CURSOR_PLUGIN_ROOT` only): no hooks run |
 | GitHub Copilot, Gemini CLI, OpenCode | read `.agents/skills` | none wired: apply the run-file rules by hand |
 | Anything else | point it at `.agents/skills/safe-engine/SKILL.md` | none |
 
