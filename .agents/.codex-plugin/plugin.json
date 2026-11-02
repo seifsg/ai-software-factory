@@ -1,6 +1,6 @@
 {
   "name": "safe-factory",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "AI Software Factory: ten visible steps from ticket to reviewed draft PR, with a run file, a Stop guard and checker gates.",
   "homepage": "https://github.com/seifsg/ai-software-factory",
   "repository": "https://github.com/seifsg/ai-software-factory",
