@@ -44,7 +44,7 @@ Before is captured before the first edit, After during verify, and both land in 
 
 | | **Claude Code** | **Codex** (not yet run live) | **Cursor** (not yet run live) |
 |---|---|---|---|
-| Add marketplace | `/plugin marketplace add https://github.com/seifsg/ai-software-factory.git` | `codex plugin marketplace add seifsg/ai-software-factory` | `/plugin marketplace add https://github.com/seifsg/ai-software-factory` |
+| Add marketplace | `/plugin marketplace add https://github.com/seifsg/ai-software-factory.git` | `codex plugin marketplace add https://github.com/seifsg/ai-software-factory.git` | `/plugin marketplace add https://github.com/seifsg/ai-software-factory.git` |
 | Install | `/plugin install safe-factory@ai-software-factory` | `codex plugin add safe-factory@ai-software-factory`, then trust its hooks in `/hooks` | `/plugin`, install `safe-factory` |
 | Run | `/safe-factory` | `$safe-factory` | `/safe-factory` |
 | One skill alone | `/safe-factory:analyze-start` | type `$`, pick `analyze-start` | `/analyze-start` |

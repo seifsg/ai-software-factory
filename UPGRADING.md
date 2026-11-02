@@ -6,10 +6,10 @@ What installs and active runs must do for each release, newest first. What chang
 
 The plugin and its entry skill are now `safe-factory`.
 
-1. **Claude Code:** run `claude plugin marketplace update ai-software-factory`, then `/plugin install safe-factory@ai-software-factory` once. The marketplace renames `safe-engine`, so your enabled setting moves over by itself.
-2. **Codex:** `codex plugin marketplace upgrade ai-software-factory`, `codex plugin remove safe-engine@ai-software-factory`, `codex plugin add safe-factory@ai-software-factory`, then trust the hooks again in `/hooks`. Copied skills: delete `~/.agents/skills/safe-engine`, copy again.
+1. **Claude Code:** run `claude plugin marketplace update ai-software-factory`, then `/plugin install safe-factory@ai-software-factory` once, and start a new session. The marketplace maps `safe-engine` to `safe-factory`, so this replaces the old plugin and keeps its settings: nothing to uninstall.
+2. **Codex:** `codex plugin marketplace upgrade ai-software-factory`, `codex plugin remove safe-engine@ai-software-factory`, `codex plugin add safe-factory@ai-software-factory`, then trust the hooks again in `/hooks`. Copied skills: `git -C <clone> pull`, `rm -rf ~/.agents/skills/safe-engine`, `cp -r <clone>/.agents/skills/* ~/.agents/skills/`, then step 4.
 3. **Cursor:** in `/plugin`, uninstall `safe-engine` and install `safe-factory`.
-4. **Hooks you copied by hand**, on any host: change `skills/safe-engine/` to `skills/safe-factory/` in `.claude/settings.json`, `.claude/settings.local.json`, `~/.claude/settings.json` and `~/.codex/hooks.json`. The night preflight now reports an old path as missing.
+4. **Hooks you copied by hand**, on any host: change `skills/safe-engine/` to `skills/safe-factory/` in every file that has it: `.claude/settings.json`, `.claude/settings.local.json`, `~/.claude/settings.json`, `~/.codex/hooks.json`, `<project>/.codex/hooks.json`, `~/.cursor/hooks.json`, `<project>/.cursor/hooks.json`. Until then the guard does not run; the night preflight reports it missing.
 5. **Open runs and night jobs:** resume with `safe-factory Resume <dir>`; a `FACTORY_START`, `FACTORY_RESUME` or `FACTORY_FRESH` override or scheduled command that names `safe-engine` must name `safe-factory`.
 
 ## 0.2.0
