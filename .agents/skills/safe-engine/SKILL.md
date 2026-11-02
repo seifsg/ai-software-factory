@@ -49,8 +49,6 @@ Every run keeps project rules and never puts secrets in code or Git. Build what 
 - `Waiting:` stays `none` while you work. Before ending a turn on purpose, set `owner: <question>` or `jobs: <what runs> (max <minutes> min)`; back to `none` on resume.
 - `Status: closed` only after step 8 and gates A, B and C pass or owner waives one. Owner stop: `Status: stopped (<reason>)`.
 
-Factory hooks read this file.
-
 ## Steps
 
 One step per turn: load its skill, do that step's own work with fresh reading, searching or running, post its block as last message, update run file, end turn. Stop guard sends next step's prompt, as if owner typed it, and catches two headings ticked in one turn. Step 5 takes one todo per turn. No live guard (step 0): Fast chains steps in one turn, each block its own message; Safe ends each with `Say go for step <n>`. Before each step load its skill fresh, even one read earlier: invoke with your agent's skill command or read the file. Same skill as last step: rereading this step's section is enough.
