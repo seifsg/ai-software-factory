@@ -5,7 +5,7 @@
 ### Your coding agent, run like a software team.
 **One request in. Ten checked steps. A reviewed draft PR out.**
 
-<a href="https://github.com/seifsg/ai-software-factory/releases/latest"><img src="https://img.shields.io/github/v/release/seifsg/ai-software-factory?label=version&color=6E56CF&style=flat-square" alt="Latest version" height="24"></a> <img src="docs/assets/badges.svg" alt="Claude Code live · Codex plugin and Cursor not yet run live · Fast and Safe modes · any OS with Git and sh, no runtime" height="28">
+<a href="https://github.com/seifsg/ai-software-factory/releases/latest"><img src="https://img.shields.io/github/v/release/seifsg/ai-software-factory?label=version&color=6E56CF&style=flat-square" alt="Latest version" height="24"></a> <img src="docs/assets/badges.svg" alt="Claude Code live · Windows Codex phase chain checked; full Codex and Cursor delivery pending · Fast and Safe modes · any OS with Git and sh, no runtime" height="28">
 
 **[Quick start](#-quick-start) · [A run](#-a-run) · [How it stays on track](#%EF%B8%8F-how-it-stays-on-track) · [Update](#-update) · [Troubleshooting](#-troubleshooting)**
 
@@ -42,7 +42,7 @@ Before is captured before the first edit, After during verify, and both land in 
 
 **1. Install**: Claude Code and Cursor in a session, Codex in a terminal ([all options](docs/install.md)):
 
-| | **Claude Code** | **Codex** (not yet run live) | **Cursor** (not yet run live) |
+| | **Claude Code** | **Codex** (full delivery pending) | **Cursor** (not yet run live) |
 |---|---|---|---|
 | Add marketplace | `/plugin marketplace add https://github.com/seifsg/ai-software-factory.git` | `codex plugin marketplace add https://github.com/seifsg/ai-software-factory.git` | `/plugin marketplace add https://github.com/seifsg/ai-software-factory.git` |
 | Install | `/plugin install safe-factory@ai-software-factory` | `codex plugin add safe-factory@ai-software-factory`, then trust its hooks in `/hooks` | `/plugin`, install `safe-factory` |
@@ -52,7 +52,7 @@ Before is captured before the first edit, After during verify, and both land in 
 
 Start a new session; your agent should list `safe-factory`. Other agents: copy the skills ([other agents](docs/install.md#other-agents)). You need Git, the GitHub CLI signed in (`gh auth login`) for tickets and draft PRs, and on Windows Git Bash (part of Git for Windows) for the hooks. To try unreleased `main`, run `claude --plugin-dir <clone>/.agents`.
 
-The Codex Windows plugin locates Git Bash beside `git.exe` on `PATH`; its native launcher preserves the hook input and output. After updating, review the changed hooks in `/hooks` before relying on automatic turns.
+The Codex Windows plugin locates Git Bash beside `git.exe` on `PATH`; its native launcher preserves the hook input and output. A bounded native test verified ticket, analysis, recommendation and challenge as separate prompt/response rounds, followed by the requested stop. Full delivery remains unverified. After updating, review the changed hooks in `/hooks` before relying on automatic turns.
 
 **2. Ask** (`/safe-factory` in Claude Code and Cursor, `$safe-factory` in Codex):
 
