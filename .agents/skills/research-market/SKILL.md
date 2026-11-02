@@ -17,19 +17,17 @@ Research and planning only. Do not build or publish.
 
 ## Kickoff research
 
-Read the request, constraints and settled choices first. POC: one research agent for everything. MVP and up: in parallel, one agent per competitor, one for stacks.
+Read the request, constraints and settled choices first. Parallel agents: competitors split in groups, one for stacks. Same depth every run. Covers asked items, the riskiest capability, how best products look. Owner said MVP: also what MVP means for this product (launch needs users expect). Extra ideas: suggestions in the follow-ups ticket, not the questions.
 
-Depth follows the size. Before the size is known, research at MVP depth; a later POC answer moves the extra findings to the epic's follow-ups ticket in Backlog.
-- POC: how competitors deliver the requested items, plus the riskiest capability. Extra ideas go to that ticket, not the questions.
-- MVP: the launch baseline (accounts when anyone signs in, security, privacy pages when it collects personal data, onboarding, analytics, in-app feedback) is built without asking. Research the gaps users expect beyond it (payments, notifications, support, integrations) as suggestions to the owner, each with evidence, cost and a recommendation.
+1. **Competitors:** top 10 for this job (leaders, fastest growing, closest fit; why each). Per competitor: source URL, product, core loop, standout features, pricing and positioning, look (type, color, layout, motion), UX patterns worth reusing, nav labels and structure, weak spots.
+2. **Market:** trends, user opinions (reviews, forums), common features, loved features, features users hate. Source each.
+3. **Feature matrix:** features × competitors. Mark requested items, must-haves and gaps.
+4. **UI refs:** 3 best-looking in category, what makes each good. Feeds step 2 looks.
+5. **Opportunities:** gaps, underserved segments, pricing angles, quick wins that make money. One line each.
+6. **Stack options** (new products): three stacks with fit, speed, look and risk. Recommendation first. Apply the project's stack defaults.
+7. Show the owner a 5 to 10 line summary before asking anything.
 
-1. **Competitors:** the 3 top products for this job (leaders, fastest growing or closest fit; say why each). Per competitor: source URL, core loop, standout features, pricing and positioning, UX patterns worth reusing, nav labels and structure (evidence for the brief's Map and Labels), weak spots.
-2. **Feature matrix:** features × competitors. Mark requested items, must-haves and gaps.
-3. **Opportunities:** gaps, underserved segments, pricing angles, quick wins that make money. One line each.
-4. **Stack options** (new products): three stacks with fit, speed, look and risk. Recommendation first. Apply the project's stack defaults.
-5. Show the owner a 5 to 10 line summary before asking anything.
-
-Record: a `### <competitor>` subsection per product with its URL, one feature-matrix table, an `**Opportunities:**` line, and for products a `### Stack options` subsection with a 3-row table.
+Record: one competitor table (10 rows: URL, why, standout, look, weak spot), a `**Market:**` line set, one feature-matrix table, a `**UI refs:**` list, an `**Opportunities:**` line, and for products a `### Stack options` subsection with a 3-row table.
 
 ## Evidence
 

@@ -33,6 +33,7 @@ Trust nothing until traced. Follow the user's or consumer's first action to the 
 ## Public pages
 
 - UI/interaction changes: judge the affected journey as its user: findable, clear labels and states, few steps, readable and accessible, consistent look. Missing interaction evidence stays UNKNOWN.
+- Look: best in class vs step 2 pick + refs (type, spacing, hierarchy, color, motion), primary platform. Dated, plain or generic = HIGH.
 - Public pages meant for search: check titles, descriptions, headings and crawlable content with actual render evidence. Keep private and staging pages excluded.
 
 ## Calibrate
@@ -50,6 +51,6 @@ Trust nothing until traced. Follow the user's or consumer's first action to the 
 |------------------|--------|----------|-------------------|-------------------------------|
 ```
 
-Then findings in the SKILL.md format. Severity: CRITICAL claim not delivered, existing journey broken, crash. HIGH happy path only, real scenario fails. MEDIUM rough edge, poor feedback. LOW polish. Impact: which user or consumer, doing what, gets what wrong outcome.
+Then findings in the SKILL.md format. Severity: CRITICAL claim not delivered, existing journey broken, crash. HIGH happy path only, real scenario fails. MEDIUM rough edge, poor feedback. LOW polish, never a look miss. Impact: which user or consumer, doing what, gets what wrong outcome.
 
 End with: `JOURNEY VERDICT: <delivers | partial | does-not-deliver | breaks-existing> - <one sentence>`
