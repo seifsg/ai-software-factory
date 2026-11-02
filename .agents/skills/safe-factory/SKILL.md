@@ -51,7 +51,7 @@ Every run keeps project rules and never puts secrets in code or Git. Build what 
 
 ## Steps
 
-One step per turn while guard is live: load its skill, do that step's own work with fresh reading, searching or running, post its block as last message, update run file, end turn. Stop guard sends next step's prompt, as if owner typed it, and catches two headings ticked in one turn. Step 5 takes one todo per turn. No live guard (step 0 or 1 decides): Fast chains steps in one turn, never ending one open with `Waiting: none`; Safe ends each with `Say go for step <n>`. Before each step load its skill fresh, even one read earlier: invoke with your agent's skill command or read the file. Same skill as last step: rereading this step's section is enough.
+Live guard: one step per turn: load its skill, do that step's own work with fresh reading, searching or running, post its block as last message, update run file, end turn. Stop guard sends next step's prompt, as if owner typed it, and catches two headings ticked in one turn. Step 5 takes one todo per turn. No live guard (step 0 or 1): Fast chains steps in one turn, never ending one open with `Waiting: none`; Safe ends each with `Say go for step <n>`. Before each step load its skill fresh, even one read earlier: invoke with your agent's skill command or read the file. Same skill as last step: rereading this step's section is enough.
 
 Each step ends with its block: post full block as its own chat message (never summary, never only a file or tool output), then write to run file. Before next step reads it, fold in any owner reply that arrived. Ticket gets a comment only on status change (steps 0, 5, 7 and 8) or relay, linking run file's blocks.
 
