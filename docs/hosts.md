@@ -24,7 +24,7 @@ Methods are host-neutral. This page = what differs per agent: where skills live,
 | Deny rules | `claude-settings.json` `permissions.deny` (Bash prefixes, `Edit` paths); a command hidden in `sh -c` or a script escapes them | `~/.codex/rules/factory.rules` `prefix_rule(..., decision = "forbidden")`: leading arguments only |
 | Watchdog resume | `claude -p -r <session> --permission-mode dontAsk --settings <template> "<prompt>"` | `codex exec resume -c 'approval_policy="never"' -c 'sandbox_mode="workspace-write"' <session> "<prompt>"` (not yet run live) |
 
-Both hosts run `run-guard.sh` through a POSIX `sh`; on Windows that is Git Bash. Reads only nearest `.factory/run.md` inside session's current checkout, so a worktree's run stays separate from its parent's, plus that session's subagent files. State: `.factory/guard/state` (single-quoted `g_*` lines; anything else reported and ignored). Ignores runs untouched for 12 hours. Costs about 65 ms with no run, 0.4 s with one on Windows (process starts dominate), once per turn end. `night.sh` and `watchdog.sh` in `.agents/hooks/` call the host CLIs above; `FACTORY_CLAUDE` and `FACTORY_CODEX` name a CLI off PATH (desktop installs), `FACTORY_START`, `FACTORY_RESUME`, `FACTORY_FRESH` and `FACTORY_NOTIFY` replace the commands, `FACTORY_IDLE_TURNS` (6) and `FACTORY_JOB_MAX` (120 min) tune the guard.
+Both hosts run `run-guard.sh` through a POSIX `sh`; on Windows that is Git Bash. Reads only nearest `.factory/run.md` inside session's current checkout (walking up from the hook input's `cwd`, else the hook's own directory: a desktop worktree session's hook may start elsewhere), so a worktree's run stays separate from its parent's, plus that session's subagent files. State: `.factory/guard/state` (single-quoted `g_*` lines; anything else reported and ignored). Ignores runs untouched for 12 hours. Costs about 65 ms with no run, 0.4 s with one on Windows (process starts dominate), once per turn end. `night.sh` and `watchdog.sh` in `.agents/hooks/` call the host CLIs above; `FACTORY_CLAUDE` and `FACTORY_CODEX` name a CLI off PATH (desktop installs), `FACTORY_START`, `FACTORY_RESUME`, `FACTORY_FRESH` and `FACTORY_NOTIFY` replace the commands, `FACTORY_IDLE_TURNS` (6) and `FACTORY_JOB_MAX` (120 min) tune the guard.
 
 ## Delegation
 
@@ -48,7 +48,7 @@ Pass request, decisions, interfaces, stops and artifact paths explicitly; full h
 | GitHub Copilot, Gemini CLI, OpenCode | read `.agents/skills` | none wired: apply the run-file rules by hand |
 | Anything else | point it at `.agents/skills/safe-factory/SKILL.md` | none |
 
-Without a live guard (hooks added mid-session never load: Claude Code reads settings at session start, so step 0 checks the hook entry predates the session and step 1 finds `.factory/guard/state`), Fast chains steps in one turn, one block message per step, and never waits; Safe ends each step with `Say go for step <n>`. Each step still rereads `.factory/run.md` and loads the `Next:` skill fresh; checker gates and PR review still apply.
+Without a live guard (hooks added mid-session never load: Claude Code reads settings at session start, so step 0 checks the hook entry predates the session and step 1 finds `.factory/guard/state`), Fast chains steps in one turn, one block message per step, never waits and never ends a turn with the run open and `Waiting: none`; Safe ends each step with `Say go for step <n>`. Each step still rereads `.factory/run.md` and loads the `Next:` skill fresh; checker gates and PR review still apply.
 
 ## Sources
 
