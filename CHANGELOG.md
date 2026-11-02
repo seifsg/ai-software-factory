@@ -6,16 +6,13 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
-### Changed
-
-- README reworked to sell and start fast (#250): animated run card, badge strip and guard loop as committed SVGs under `docs/assets/`, a three-point "why", a 3-step quick start with one install row per host (Codex and Cursor marked not yet run live, a pre-tag `--plugin-dir` line), all ten steps in the run table including 2b, and a fixed anchor for "How it stays on track".
-
 ## [0.1.0] - 2026-11-02
 
 A fresh start: 0.1.0 replaces the deprecated 1.x line. Claude Code installs reinstall once (UPGRADING.md).
 
 ### Changed
 
+- README reworked to sell and start fast (#250): animated run card, badge strip and guard loop as committed SVGs under `docs/assets/`, a three-point "why", a 3-step quick start with one install row per host (Codex and Cursor marked not yet run live, a pre-tag `--plugin-dir` line), all ten steps in the run table including 2b, and a fixed anchor for "How it stays on track".
 - Caveman wording (#245): skills, references, agents and docs say the same rules in fewer words; the owner's own `analyze-start`, `get-ready-to-code` and `deep-review` opening are unchanged. Read set now under 105,000 B.
 - Build what asked, best UI/UX (#243): no size default (POC, MVP only when the owner names one; MVP researches what this product needs to launch); extras only better UI/UX, small enhancements and critical additions; least code and CPU apply to logic only; step 2 also picks one of three looks and `recommend` gains a `UX / look` column; kickoff research covers the top 10 competitors, market opinions and UI references; step 6 adds a UI pass and a look below the bar is HIGH and required; verify and polish the primary platform first, the secondary after the owner confirms it.
 - Relay-run frictions (#240): the PR contract accepts the layout's `**Before → After:**` form; lens reviewers are briefed `Role: analyst` and hand back their `deep-review` lens report, never a `verdict:` line, so they never count as review rounds; `how-to-review-a-pr` owns the factory verdict mapping and its reviewer never pushes in a factory run; the checker brief settles `DEFERRED`, stub and owner-only evidence, and its handback adds no `G<n>` lines; fixes after Gate B never rerun it, Gate C checks their recaptured After files; step 5 moves the ticket to In progress and steps 5 and 6 show an example line; a relay may add one ticket comment; byte checks read Git blobs; `improve-factory` changes a hook that drives the live session on a copy first. `night.sh` and `watchdog.sh` read `FACTORY_CLAUDE`/`FACTORY_CODEX` for a CLI off PATH, `night.sh` refuses Codex when one sandboxed command, run in a scratch repo the guard ignores, does not run (its scratch commit ignores the owner's Git signing and hooks, a relative override still resolves), the watchdog resumes Codex with the night flags, and the reviewer agent ends its handback with the verdict line. The stray empty `pr-layout.md.orig` is gone.
