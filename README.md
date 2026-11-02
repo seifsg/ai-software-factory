@@ -26,7 +26,7 @@ Ten steps in order, every time. Each step loads its skill fresh, prints its bloc
 <td width="33%" valign="top">
 
 ### 🔒 Gates it cannot skip
-After plan, verify and review, a fresh checker compares the outputs with each skill's contract. The run cannot close without all three passes on the commit.
+After plan, verify and review, a fresh checker compares the outputs with each skill's contract. The run cannot close until all three pass on the commit, or you waive one.
 
 </td>
 <td width="33%" valign="top">
