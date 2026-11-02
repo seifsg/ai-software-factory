@@ -15,7 +15,7 @@ URL vs bare number, table vs prose, commit, command). Be strict: unsure is MISSI
 owner (hands, approval, an install) or missing hardware; a stub or placeholder never does, and "unverified" only as that DEFERRED.
 Read-only. Round 1 checks every line in one pass. Hand back "Gate <X>: PASS @<commit>" when all are met, else "Gate <X>:
 FAIL <n> missing" and the list. Do not read the builder's notes or chat.
-Round 2 on: recheck only MISSING lines of round 1's handback (attached); the rest stay met.
+Round 2 on: recheck only MISSING lines of round 1's handback; the rest stay met.
 ```
 
 | Gate | Steps | Contracts from |
