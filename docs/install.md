@@ -63,7 +63,7 @@ Plugin (not yet run live): Customize, Plugins, add marketplace `https://github.c
 
 ## Update check
 
-At session start the plugin hook reads a cached latest release (no network, about 0.1 s on Windows) and refreshes that cache in the background once a day with `gh api`, or `curl` when `gh` is missing or signed out. Check by hand: `cat ~/.cache/ai-software-factory/latest` against the `version` in your installed `plugin.json`. A newer release: the agent tells you before any run and links what's new. Off: `FACTORY_NO_UPDATE_CHECK=1`.
+At session start the plugin hook reads a cached latest release (no network, about 0.1 s on Windows) and refreshes that cache in the background once a day with `gh api`, or `curl` when `gh` is missing or signed out. Check by hand: compare the README version badge, or the [Latest release](https://github.com/seifsg/ai-software-factory/releases/latest), with your agent's installed plugin version. A newer release: the agent tells you before any run and links what's new. Off: `FACTORY_NO_UPDATE_CHECK=1`.
 
 ## Overnight runs
 
