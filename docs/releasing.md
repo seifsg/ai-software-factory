@@ -52,7 +52,7 @@ Bad: `- Continuous runs (#253): a gate or review loop with 3 failed rounds ... c
 
 1. Pick `X.Y.Z` from the bump table and the Unreleased lines. Branch from up-to-date `main`: `git fetch origin`, then `git switch -c release/vX.Y.Z origin/main`.
 2. Write upgrade steps under `## X.Y.Z` in `UPGRADING.md`.
-3. Set `version` to `X.Y.Z` in all three plugin manifests. In `.claude-plugin/marketplace.json`, set the plugin's `source.ref` to `vX.Y.Z` and its `source.path` to plugin root at that tag (`.agents` from 0.1.0); refresh both descriptions to match that release.
+3. Set `version` to `X.Y.Z` in all three plugin manifests. In `.claude-plugin/marketplace.json`, set the plugin's `source.ref` to `vX.Y.Z` and its `source.path` to plugin root at that tag (`.agents` from 0.1.0); refresh both descriptions to match that release. The README version badge reads the Latest release by itself; the version check in `AGENTS.md` lists any manifest still missing the new version.
 4. In `CHANGELOG.md`, move `## [Unreleased]` into `## [X.Y.Z] - <today>`; keep an empty `## [Unreleased]` above it. At the bottom, point `[Unreleased]` at `vX.Y.Z...HEAD` and add `[X.Y.Z]`: `compare/<previous tag>...vX.Y.Z`.
 5. Run repository checks in `AGENTS.md`, commit, open release PR, merge it.
 6. Tag merge commit, push tag right away: Claude Code installs fetch the tag marketplace names; until it exists a new install fails.
