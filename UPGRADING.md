@@ -2,6 +2,15 @@
 
 What installs and active runs must do for each release, newest first. What changed: [CHANGELOG.md](CHANGELOG.md).
 
+## 0.3.0
+
+The plugin and its entry skill are now `safe-factory`.
+
+1. **Claude Code:** run `claude plugin marketplace update ai-software-factory`, then `/plugin install safe-factory@ai-software-factory` once. The marketplace renames `safe-engine`, so your enabled setting moves over by itself.
+2. **Codex:** `codex plugin marketplace upgrade ai-software-factory`, `codex plugin remove safe-engine@ai-software-factory`, `codex plugin add safe-factory@ai-software-factory`, then trust the hooks again in `/hooks`. Copied skills: delete `~/.agents/skills/safe-engine`, copy again, and change `safe-engine` to `safe-factory` in the paths in `~/.codex/hooks.json`.
+3. **Cursor:** in `/plugin`, uninstall `safe-engine` and install `safe-factory`. A Stop entry copied into a project's `.claude/settings.json` points at `skills/safe-engine/`: change it to `skills/safe-factory/`.
+4. **Open runs and night jobs:** resume with `safe-factory Resume <dir>`; a `FACTORY_START`, `FACTORY_RESUME` or `FACTORY_FRESH` override or scheduled command that names `safe-engine` must name `safe-factory`.
+
 ## 0.2.0
 
 Nothing to do: update the plugin. Open runs keep going; the guard applies round caps and step chaining from its next stop.

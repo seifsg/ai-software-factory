@@ -6,6 +6,11 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking:** Rename the plugin and its entry skill from `safe-engine` to `safe-factory`: run `/safe-factory`, or `$safe-factory` in Codex ([#260])
+- Give the README one setup table per host: install, run, one skill alone, update and uninstall for Claude Code, Codex and Cursor ([#260])
+
 ### Fixed
 
 - Fix the README version badge, which still showed 0.1.0 after the 0.2.0 release; it now reads the Latest release ([#258])
@@ -187,3 +192,4 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 [#251]: https://github.com/seifsg/ai-software-factory/pull/251
 [#254]: https://github.com/seifsg/ai-software-factory/pull/254
 [#258]: https://github.com/seifsg/ai-software-factory/pull/258
+[#260]: https://github.com/seifsg/ai-software-factory/pull/260

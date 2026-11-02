@@ -16,7 +16,7 @@ grep -q '^Status: open' "$run" 2>/dev/null && say ok 'run file open' || say MISS
 grep -q '^Waiting: owner' "$run" 2>/dev/null && say MISSING 'the run waits on the owner: answer first'
 # 2. The guard is wired for this host.
 if [ "$host" = claude ]; then
-  { has run-guard.sh "$cfg/settings.json" "$P/.claude/settings.json" "$P/.claude/settings.local.json" || has 'safe-engine@' "$cfg/settings.json"; } \
+  { has run-guard.sh "$cfg/settings.json" "$P/.claude/settings.json" "$P/.claude/settings.local.json" || has 'safe-factory@' "$cfg/settings.json"; } \
     && say ok 'guard hooks wired' || say MISSING 'guard hooks (plugin or settings)'
   [ -f "$here/claude-settings.json" ] && say ok 'deny/allow template' || say MISSING "$here/claude-settings.json"
 else
@@ -49,5 +49,5 @@ grep -v '^Night:' "$run" | awk -v n="Night: until $(date -d "@$until" '+%Y-%m-%d
 echo "Preflight passed. Night budget: $hours h."
 export P
 [ -n "$FACTORY_START" ] && exec sh -c "$FACTORY_START"
-[ "$host" = claude ] && exec "$cli" -p --permission-mode dontAsk --settings "$here/claude-settings.json" "/safe-engine Resume $P"
-exec "$cli" exec -s workspace-write -c 'approval_policy="never"' "\$safe-engine Resume $P"
+[ "$host" = claude ] && exec "$cli" -p --permission-mode dontAsk --settings "$here/claude-settings.json" "/safe-factory Resume $P"
+exec "$cli" exec -s workspace-write -c 'approval_policy="never"' "\$safe-factory Resume $P"

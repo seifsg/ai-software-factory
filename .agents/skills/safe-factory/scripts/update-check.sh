@@ -23,4 +23,4 @@ IFS=. read -r x y z <<EOF
 $new
 EOF
 [ "$x" -gt "$a" ] || { [ "$x" -eq "$a" ] && { [ "$y" -gt "$b" ] || { [ "$y" -eq "$b" ] && [ "${z%%[!0-9]*}" -gt "${d%%[!0-9]*}" ]; }; }; } 2>/dev/null || exit 0
-printf 'AI Software Factory %s is out (installed %s). Before any factory run, tell the owner and ask: update now or continue? What is new: https://github.com/%s/releases/tag/v%s. Update: Claude Code `claude plugin update safe-engine@ai-software-factory`, Codex `codex plugin marketplace upgrade ai-software-factory`, Cursor: Customize, Plugins, update. Then start a new session.\n' "$new" "$have" "$slug" "$new"
+printf 'AI Software Factory %s is out (installed %s). Before any factory run, tell the owner and ask: update now or continue? What is new: https://github.com/%s/releases/tag/v%s. Update: Claude Code `claude plugin update safe-factory@ai-software-factory`, Codex `codex plugin marketplace upgrade ai-software-factory`, Cursor `/plugin`: uninstall, install again. Then start a new session.\n' "$new" "$have" "$slug" "$new"
