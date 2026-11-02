@@ -17,7 +17,7 @@ Find real repository, branches, release policy, PR template, signing rule, check
 - No ticket only if a project exemption covers the whole diff, or the change is trivial and the run kept it without one: PR body says why.
 - Link both ways: on open, PR link in ticket activity; clickable ticket link in PR body.
 - Finished ticket = Ready for QA while PR open, Done on merge; status follows `ticketing`.
-- Ticket with confirmed contract: refresh before opening or updating. Pending scope, drift or failed refresh = open dependent step. Draft or local pass never replaces owner's current expectation.
+- Ticket with confirmed contract: refresh before opening or updating. Pending scope, drift or failed refresh leaves the dependent step open. Draft or local pass never replaces owner's current expectation.
 
 ## 3. Branch from the right base
 
@@ -36,7 +36,7 @@ git switch -c <scope>/<short-name> origin/<base>
 
 ## 4. Before proof, before the first edit
 
-Every PR shows observed Before/After per outcome; prose or illustrative diagrams never replace results. In a `diff`: API proof is one request's status and body; CLI/script proof = one command's output; method/prose proof = fresh walkthrough's changed result and key text. Speed/size/cost proof measures same workload. Internal module proves its changed screen, endpoint or command. New nonvisual result: prior output = "did not exist". Name `**Visual:**` and `**Journey:**` under each outcome (`references/pr-layout.md`), with reason when no. Map shared backend effects to UI journeys.
+Every PR shows observed Before/After per outcome; prose or illustrative diagrams never replace results. Nonvisual proof, in a `diff`: API, one request's status and body; CLI or script, one command's output; method or prose, a fresh walkthrough's changed result and key text. Speed/size/cost proof measures same workload. Internal module proves its changed screen, endpoint or command. New nonvisual result: prior output is "did not exist". Name `**Visual:**` and `**Journey:**` under each outcome (`references/pr-layout.md`), with reason when no. Map shared backend effects to UI journeys.
 
 1. Take plan's proof list. Changed views, states, motion, interactions or affected UI journeys: read [visual and journey proof](references/media-proof.md) now; its rules apply in full.
 2. Brand-new surface: no Before capture, Before = "did not exist". Capture every other Before now, before any source edit, into `.factory/proof/<ticket>/before-<id>.png` (screens) or `before-<id>.txt` (commands, responses, text). Screens: use host's built-in browser, the preview owner watches; keep that one server for After. No Playwright, headless browsers or capture scripts unless owner asks. Host cannot save screenshot as file: write what it shows into `before-<id>.txt` as `pane:` observation; valid proof, no waiver needed.
@@ -51,7 +51,7 @@ Every PR shows observed Before/After per outcome; prose or illustrative diagrams
 - Commit as `<type>(<scope>): <imperative subject>`; body = why, not lines changed.
 - Honor required signing with existing identity; never invent one or bypass signing, permissions or protected gates.
 - **No AI or tool attribution lines** in commits, even if your agent's defaults add one. PR body ends with factory credit line in `references/credit.md`.
-- Required gates (step 1) pass locally before push; PR names their commands and results. Check not run = **unverified**. CI never required: never wait on or rerun it; a result that arrives = extra evidence.
+- Required gates (step 1) pass locally before push; PR names their commands and results. A check not run is **unverified**. CI never required: never wait on or rerun it; a result that arrives = extra evidence.
 - Tests last: implement, manually QA real behavior, then write and run tests. Fix found by tests repeats manual QA and tests. No tests that restate implementation.
 
 ## 6. Open the draft

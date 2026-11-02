@@ -39,7 +39,7 @@ Build systems that outlast their creator. No breakage.
 | `feature` | big feature with product choices | same |
 | `change` | bug fix, small change, follow-up, factory maintenance | none; every block stays short |
 
-Every run keeps project rules and never puts secrets in code or Git. Build what asked, best quality. No size default: [sizes](references/sizes.md).
+Every run keeps project rules and never puts secrets in code or Git. Build what asked, best quality. Never assume a size (POC, MVP) the owner did not name: [sizes](references/sizes.md).
 
 ## The run file
 
@@ -73,10 +73,10 @@ Each step ends with its block: post full block as its own chat message (never su
 Only what those skills leave out:
 
 - **0:** before any work, check tracker and push access (`ticketing`); ask owner once, up front, for every action host may block (creating a repository, pushing). No project folder named: create one beside owner's other projects (parent of current project, else current folder), named for product in kebab-case, report its absolute path. No Git: `git init`, first commit on default branch, then feature branch. Every commit, first included, follows `how-to-make-a-pr`'s commit rules: no AI attribution lines. No remote: `ticketing` creates private repository on owner's account and pushes default branch. Product and feature: research and kickoff questions belong to step 0, after the ticket, in its block; Fast goes on without answers, which feed step 1.
-- **3:** new or changed persistence adds `database-schema`. A `change` uses the light plan. Fast passes the file-summary stop. Safe runs Gate A, then stops: `Waiting: owner: plan OK?`.
+- **3:** new or changed persistence adds `database-schema`. A `change` uses the light plan. Fast does not stop at the file summary. Safe runs Gate A, then stops: `Waiting: owner: plan OK?`.
 - **4:** starts once plan names views and commands. Up to three items: capture yourself. More: one light delegate captures while you finish plan. No source edit until every Before file saved. Host has live preview: open it, bring in front of owner, name its URL in block.
 - **5:** spike unknown capabilities first. A run of mapped tests that is the whole suite is still only a build check. Commit by phase in project's commit style.
-- **6:** verify is yours; independence comes from checker and step 8. Order: lenses (compliance always; change-guard when existing code, contracts or data changed, so never on a new project; others by `deep-review`'s scale) and UI pass, their fixes, then one final manual pass through every requested journey that captures After with same ids, then full suite once on that candidate; a proof id that is the full suite is that same run. Before captures of the base never count as that run. UI pass (step 2 look): fresh `analyst` lists each miss vs that look + refs on the primary platform, with the capture. A miss of the picked look = HIGH. Secrets, dependency, static-analysis scans: MVP, production slice, or any run with dependencies or a server.
+- **6:** verify is yours; independence comes from checker and step 8. Order: lenses (compliance always; change-guard when existing code, contracts or data changed, so never on a new project; others by `deep-review`'s scale) and UI pass, their fixes, then one final manual pass through every requested journey that captures After with same ids, then full suite once on that candidate; a proof id that is the full suite is that same run. Before captures of the base never count as that run. UI pass (step 2 look): fresh `analyst` lists each miss vs that look + refs on the primary platform, with the capture. A miss of the picked look = HIGH. Run secrets, dependency and static-analysis scans for an MVP, a production slice, or any run with dependencies or a server.
 - **7:** the ticket moves to Ready for QA with its PR.
 - **8:** fresh agent that did not build it gets PR, ticket and run file's absolute path. The reviewer hands back its fix-set, never pushing: you apply it through the 0–4 loop, recapturing After of every proof id a fix touches (named in block), and same reviewer checks the delta. Its brief starts `Role: reviewer.` and names pushed head; each reviewer handback ends with skill's factory `verdict:` line. Paste the last as `Review: ready (reviewer <id>) @<sha>`. You write final verdict as step's block and tick it. Full suite runs again only after those fixes. Then Gate C, once, on final head; close run and ask owner to verify and merge.
 
@@ -96,7 +96,7 @@ After steps 3, 6 and 8, start the [checker](references/checker.md): a fresh ligh
 - Run file shows `Night:`: the [night mode](references/night.md) rules apply.
 - Released app or release policy: [app releases](references/app-releases.md).
 - Never claim tested, reviewed or production ready without that evidence.
-- Effort on confirmed work only. Primary platform first (existing app: its lead; else web = desktop, mobile app = phone): verify, fix, polish. Secondary: after owner confirms primary; until then the PR names it pending, never a blocking UNKNOWN.
+- Effort on confirmed work only. Primary platform first (existing app: the platform it mainly targets; else a web app means desktop, a mobile app means phone): verify, fix, polish. Secondary: after owner confirms primary; until then the PR names it pending, never a blocking UNKNOWN.
 - Backlog: `ticketing` moves each ticket through its statuses and logs every change in its activity. Deferred work appends to the epic's one open follow-ups ticket in Backlog.
 
 ## Keep the owner posted
