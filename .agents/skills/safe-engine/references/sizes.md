@@ -17,7 +17,7 @@ Every feature, journey, integration and behavior the owner asked for, plus what 
 | | POC | MVP | Production slice |
 |---|---|---|---|
 | Promise | Asked idea works | Can go live with real test users | Runs in production |
-| Builds | Asked items only | Asked items + this product's launch needs (research) | Asked scope, every `deep-review` lens in full |
+| Builds | Asked items only | Asked items + this product's launch needs (research) | Asked scope, every `deep-review` lens in full, release and operations included |
 | Skips unless asked | Sign-in, hardening, full backend, deploy, CI/CD, test suites | Scale beyond launch, paid services without authority, owner-declined | Nothing |
 
 ## POC
@@ -47,7 +47,3 @@ Owner publishes it to real test users. Research what MVP means for this product:
 - a release record ready to deploy.
 
 Each need: gap, evidence, cost in step 0's block. Paid ones: owner approves; declined or unanswered go to the follow-ups ticket. Deploying needs the owner's authority.
-
-## Production slice
-
-Every `deep-review` lens in full for the affected paths, release and operations included.

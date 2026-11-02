@@ -27,7 +27,7 @@ Read the request, constraints and settled choices first. Parallel agents: compet
 6. **Stack options** (new products): three stacks with fit, speed, look and risk. Recommendation first. Apply the project's stack defaults.
 7. Show the owner a 5 to 10 line summary before asking anything.
 
-Record: one competitor table (10 rows, one column per step 1 field), a `**Market:**` line set, one feature-matrix table, a `**UI refs:**` list, an `**Opportunities:**` line, and for products a `### Stack options` subsection with a 3-row table.
+Record: competitor table (10 rows, a column per field), feature matrix, `**Market:**`, `**UI refs:**`, `**Opportunities:**` lines; products add `### Stack options`, 3 rows.
 
 ## Evidence
 
