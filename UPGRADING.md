@@ -2,7 +2,7 @@
 
 What installs and active runs must do for each release, newest first. What changed: [CHANGELOG.md](CHANGELOG.md).
 
-## Unreleased
+## 0.5.0
 
 1. **Night mode that copied the allow list** (`claude-settings.json`): add `Bash(git push origin *:refs/proof/*)` beside the old proof entry. Proof uploads go to `refs/proof/<branch>` now, so the old entry no longer matches them.
 
