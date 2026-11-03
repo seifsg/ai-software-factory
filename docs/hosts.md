@@ -12,7 +12,7 @@ Methods are host-neutral. This page = what differs per agent: where skills live,
 | Invoke | `/safe-factory …` | `$safe-factory …` |
 | Load a step's skill fresh | the Skill tool, `safe-factory:<name>` | `$<name>`, or read its `SKILL.md` |
 | What compaction keeps | the first 5k tokens of each recently used skill, 25k in total; CLAUDE.md is re-read | AGENTS.md and the skill list; skill bodies are dropped |
-| Stop guard | plugin `Stop` hook, sourced in the hook shell | `Stop` hook; trust once in `/hooks` |
+| Stop guard | plugin `Stop` hook, sourced in the hook shell; also checks each ticked step's block opened a chat message (transcript text blocks) | `Stop` hook; trust once in `/hooks`; no block check (other transcript format) |
 | Compact hook | plugin `SessionStart`, matcher `compact\|resume`; stdout becomes context | `SessionStart`, matcher `compact\|resume`; stdout becomes developer context |
 | Guard output | `{"decision":"block","reason":…}`: the next step's prompt; Claude Code overrides after 8 blocks in a row, a count every tool call resets, so one step per turn never reaches it | same JSON; each reason becomes a user-role hook prompt and each phase has its own final response. Codex groups these rounds under one outer native turn ID |
 | Fresh-context delegate | Agent tool with a plugin role | `spawn_agent` with `fork_turns: "none"` |
@@ -48,7 +48,7 @@ Pass request, decisions, interfaces, stops and artifact paths explicitly; full h
 | GitHub Copilot, Gemini CLI, OpenCode | read `.agents/skills` | none wired: apply the run-file rules by hand |
 | Anything else | point it at `.agents/skills/safe-factory/SKILL.md` | none |
 
-Without a live guard (hooks added mid-session never load: Claude Code reads settings at session start, so step 0 checks the hook entry predates the session, unsure counting as not live, and step 1 finds `.factory/guard/state`), Fast chains steps in one turn, one block message per step, never waits and never ends a turn with the run open and `Waiting: none`; Safe ends each step with `Say go for step <n>`. Each step still rereads `.factory/run.md` and loads the `Next:` skill fresh; checker gates and PR review still apply.
+Without a live guard (hooks added mid-session never load: Claude Code reads settings and plugins at session start, so step 0 checks the plugin or hook entry predates the session, unsure counting as not live, and step 1 finds `.factory/guard/state`), Fast chains steps in one turn, one block message per step, never waits and never ends a turn with the run open and `Waiting: none`; Safe ends each step with `Say go for step <n>`. Each step still rereads `.factory/run.md` and loads the `Next:` skill fresh; checker gates and PR review still apply.
 
 ## Sources
 
