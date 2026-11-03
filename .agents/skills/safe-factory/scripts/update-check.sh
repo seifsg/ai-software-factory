@@ -1,5 +1,5 @@
 #!/bin/sh
-# Update check at session start: reads a cached latest version (no network, few forks), refreshes it in the background once a day.
+# Update check at session start: reads a cached latest version (no network, few forks), refreshes it in the background each start.
 # Prints one context line when a newer factory release exists, and the leftovers doctor.sh finds. FACTORY_NO_UPDATE_CHECK=1 turns both off.
 [ -n "$FACTORY_NO_UPDATE_CHECK" ] && exit 0
 # Leftovers of old versions and copies (doctor.sh, read-only here): one notice, never a stop.
@@ -9,11 +9,12 @@ m="${1:-${0%/*}/../../..}/.claude-plugin/plugin.json"; have=  # $1: plugin root
 while IFS= read -r l; do case $l in *'"version"'*) have=${l#*'"version"'*\"}; have=${have%%\"*}; break;; esac; done < "$m"
 [ -n "$have" ] || exit 0
 c="${XDG_CACHE_HOME:-$HOME/.cache}/ai-software-factory"; f="$c/latest"; slug=seifsg/ai-software-factory
-# Stale or missing: refresh in the background from the release marked Latest (deprecated tags stay), never wait on it; curl when gh is absent or signed out.
+# Every start: refresh in the background from the release marked Latest (deprecated tags stay), never wait on it; curl when gh
+# is absent or signed out. Written only on success (own tmp, atomic mv), so a failed fetch retries next start.
 # One detached subshell owning all its output, so the hook's pipes close at once.
-if [ -z "$(find "$f" -mmin -1440 2>/dev/null)" ]; then ( mkdir -p "$c" && touch "$f" && { { gh api "repos/$slug/releases/latest" --jq .tag_name \
+( mkdir -p "$c" && t="$f.$$" && { { gh api "repos/$slug/releases/latest" --jq .tag_name \
   || curl -fsm 20 "https://api.github.com/repos/$slug/releases/latest" | sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p'; } \
-  | sed -n 's/^v//p' > "$f.tmp" && [ -s "$f.tmp" ] && mv "$f.tmp" "$f" || rm -f "$f.tmp"; } ) </dev/null >/dev/null 2>&1 & fi
+  | sed -n 's/^v//p' > "$t" && [ -s "$t" ] && mv "$t" "$f" || rm -f "$t"; } ) </dev/null >/dev/null 2>&1 &
 new=; [ -s "$f" ] && read -r new < "$f"
 for v in "$have" "$new"; do case $v in [0-9]*.[0-9]*.[0-9]*) ;; *) exit 0;; esac; case $v in *[!0-9.]*) exit 0;; esac; done  # only plain x.y.z
 [ -n "$new" ] && [ "$new" != "$have" ] || exit 0
