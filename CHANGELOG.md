@@ -6,11 +6,15 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-11-03
+
+_Upgrade needed on Codex for Windows: trust the changed hooks again; follow [UPGRADING.md](UPGRADING.md#041)._
+
 ### Fixed
 
 - Fix step blocks (Recommend, Plan and the rest) missing from chat when steps chain in one turn or your own instructions ask for short replies ([#269])
 - Fix Fast runs stopping after a step when the Stop hook never fires or starts outside the session's folder, as in desktop worktree sessions and Cursor ([#270])
-- Run Codex Windows hooks through a native launcher that locates Git Bash and preserves hook input/output, instead of sending POSIX syntax to PowerShell or cmd. Missing Git Bash explains the install and restart action (#264).
+- Fix Codex on Windows never sending the next step: hooks now run through Git Bash and say how to install it when missing ([#267])
 
 ## [0.4.0] - 2026-11-02
 
@@ -196,7 +200,8 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 - Leaner runs (#137): product, feature and change runs each read 24% less method text, every gate message is shorter with the same facts, `scripts/token_report.py` measures both, and tests hold every method file and the gate's fixture messages to a byte budget and the product and change loads to 80% of their earlier size.
 - Self-update (#139): a clone install moves only to a release tag on `main` whose files match its manifest, records the previous revision, rolls back a failed install and shows a one-time notice naming both versions.
 
-[Unreleased]: https://github.com/seifsg/ai-software-factory/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/seifsg/ai-software-factory/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/seifsg/ai-software-factory/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/seifsg/ai-software-factory/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/seifsg/ai-software-factory/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/seifsg/ai-software-factory/compare/v0.1.0...v0.2.0
@@ -218,5 +223,6 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 [#258]: https://github.com/seifsg/ai-software-factory/pull/258
 [#260]: https://github.com/seifsg/ai-software-factory/pull/260
 [#262]: https://github.com/seifsg/ai-software-factory/pull/262
+[#267]: https://github.com/seifsg/ai-software-factory/pull/267
 [#269]: https://github.com/seifsg/ai-software-factory/pull/269
 [#270]: https://github.com/seifsg/ai-software-factory/pull/270
