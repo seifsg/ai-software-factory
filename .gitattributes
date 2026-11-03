@@ -1,3 +1,4 @@
 # Shell scripts must keep LF endings on every checkout: POSIX sh fails on CRLF.
 *.sh text eol=lf
 .agents/hooks/pre-push text eol=lf
+*.cmd text eol=crlf

@@ -2,6 +2,10 @@
 
 What installs and active runs must do for each release, newest first. What changed: [CHANGELOG.md](CHANGELOG.md).
 
+## Unreleased
+
+Codex on Windows: update the plugin, start a new chat and review all changed hooks in `/hooks`. The plugin now finds Git Bash beside `git.exe` on `PATH`; no hook-trust bypass or PowerShell policy change is needed. Verify the ticket response is followed by an automatic analysis prompt and full response in a separate turn. Hand-copied hooks still need Git's `sh` on `PATH` as described in [install](docs/install.md#codex).
+
 ## 0.4.0
 
 1. **Every install, once:** from each project that had factory hooks, run `sh <plugin root>/skills/safe-factory/scripts/doctor.sh --fix` ([clean up](docs/install.md#clean-up-and-uninstall)). It moves 1.x hooks and launchers, `~/.safe-engine`, old-path project hooks and stale `pre-push` and `codex.rules` copies to a backup, and names what needs a hand edit (the old `safe-engine@` id, hook files holding other settings). Not covered: `--codex-home <dir>` installs and a Codex `safe-engine@` plugin: clean those per 0.1.0 and 0.3.0.

@@ -6,6 +6,10 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+### Fixed
+
+- Run Codex Windows hooks through a native launcher that locates Git Bash and preserves hook input/output, instead of sending POSIX syntax to PowerShell or cmd. Missing Git Bash explains the install and restart action (#264).
+
 ## [0.4.0] - 2026-11-02
 
 _Upgrade needed: run `doctor.sh --fix` once and add `Left running:` to open runs; follow [UPGRADING.md](UPGRADING.md#040)._
