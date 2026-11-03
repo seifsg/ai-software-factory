@@ -6,6 +6,12 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+### Fixed
+
+- Fix a Fast run hiding its step blocks: the Stop guard now asks the agent to post any finished step whose block never reached chat ([#280])
+- Fix a run stopping by itself when a message held an emoji, and count a plugin install as a live guard, so each step gets its own turn ([#280])
+- Fix the session-start cleanup offering to move tracked files out of an old factory checkout; it now names the checkout and the command to update it ([#280])
+
 ## [0.4.3] - 2026-11-03
 
 _Upgrade needed on Codex: re-add the marketplace sparse once; follow [UPGRADING.md](UPGRADING.md#043)._
@@ -251,3 +257,4 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 [#270]: https://github.com/seifsg/ai-software-factory/pull/270
 [#274]: https://github.com/seifsg/ai-software-factory/pull/274
 [#277]: https://github.com/seifsg/ai-software-factory/pull/277
+[#280]: https://github.com/seifsg/ai-software-factory/pull/280
