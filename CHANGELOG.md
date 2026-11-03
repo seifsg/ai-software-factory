@@ -6,6 +6,11 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+### Fixed
+
+- Fix the update notice missing new releases: the check now refreshes at every session start and retries after a failed fetch ([#277])
+- Fix `codex plugin marketplace upgrade` timing out: the Codex install fetches only the plugin (`--sparse`), and the notice names the one-time re-add ([#277])
+
 ## [0.4.2] - 2026-11-03
 
 _Upgrade needed: Codex trusts the changed hooks again, Cursor keeps one plugin; follow [UPGRADING.md](UPGRADING.md#042)._
@@ -240,3 +245,4 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 [#269]: https://github.com/seifsg/ai-software-factory/pull/269
 [#270]: https://github.com/seifsg/ai-software-factory/pull/270
 [#274]: https://github.com/seifsg/ai-software-factory/pull/274
+[#277]: https://github.com/seifsg/ai-software-factory/pull/277

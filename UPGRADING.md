@@ -2,6 +2,10 @@
 
 What installs and active runs must do for each release, newest first. What changed: [CHANGELOG.md](CHANGELOG.md).
 
+## Unreleased
+
+1. **Codex, installed before this release:** `codex plugin marketplace upgrade ai-software-factory` times out on the full clone. Once: `codex plugin marketplace remove ai-software-factory`, `codex plugin marketplace add https://github.com/seifsg/ai-software-factory.git --sparse .claude-plugin --sparse .agents`, `codex plugin add safe-factory@ai-software-factory`, then trust the hooks in `/hooks`. Later upgrades finish in seconds.
+
 ## 0.4.2
 
 1. **Codex:** the hook commands changed, so trust them again in `/hooks`.
