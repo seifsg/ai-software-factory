@@ -54,7 +54,7 @@ gh pr edit <n> --add-reviewer <login>
 gh pr comment <n> --body-file <file>
 ```
 
-Never guess logins. Comment only where authorized: own draft, or reviewer checkpoint someone approved.
+Never guess logins. Comment only where authorized: own draft, or an approved reviewer checkpoint.
 
 ## Update the ticket
 

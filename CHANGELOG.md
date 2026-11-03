@@ -8,12 +8,12 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ### Changed
 
+- **Breaking:** Move PR proof media to `refs/proof/<branch>` so clones stop downloading them; night mode that copied the allow list adds the new entry ([#283])
 - Let a run check every gate line itself before it briefs the checker, so gates stop failing on form ([#283])
 
 ### Fixed
 
 - Fix tickets staying open after their PR merged: Gate C now fails a PR without `Closes #<n>` for each ticket it finishes ([#283])
-- Fix every clone of a project carrying its PR screenshots: proof media go to `refs/proof/<branch>`, which clones never fetch ([#283])
 - Fix the update check leaving a hanging `gh` behind each session start: it stops after 20 s and the next start sweeps its leftovers ([#283])
 
 ## [0.4.4] - 2026-11-03

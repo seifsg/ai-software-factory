@@ -25,7 +25,7 @@ Factory changes use `improve-factory` (`.agents/skills/improve-factory/SKILL.md`
 No Python, test suite or build. Checks are commands and a fresh agent. Byte counts come from Git blobs, same on every checkout and line ending: commit first, or name the base (`origin/main`) in place of `HEAD`.
 
 ```text
-sh scripts/check.sh                    # every check on HEAD: prints nothing, exit 0; else one FAIL line each, exit 1
+sh scripts/check.sh                    # every check: prints nothing, exit 0; else one FAIL line each, exit 1
 sh scripts/check.sh HEAD origin/main    # also fails any method byte growth against the base
 sh scripts/check.sh bytes origin/main   # "<all methods> <read set>" for the PR line (run for base and head)
 ```
@@ -45,5 +45,5 @@ Draft PRs, through `how-to-make-a-pr`, linked to their ticket, unless owner says
 
 ## Releases
 
-- Every PR a reader notices adds its lines under `## [Unreleased]` in `CHANGELOG.md` per [releasing](docs/releasing.md#changelog), and steps under next version in `UPGRADING.md` when installs or open runs must act.
+- Every PR a reader notices adds its lines under `## [Unreleased]` in `CHANGELOG.md` per [releasing](docs/releasing.md#changelog), and steps under `## Unreleased` in `UPGRADING.md` when installs or open runs must act.
 - One canonical version: `version` in `.agents/.claude-plugin/plugin.json`, SemVer by the bump table in [releasing](docs/releasing.md#versions); `.agents/.codex-plugin/plugin.json` and `.agents/.cursor-plugin/plugin.json` match it. Humans cut, tag and publish releases ([releasing](docs/releasing.md)); never move or re-publish a tag.

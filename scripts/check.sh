@@ -1,5 +1,6 @@
 #!/bin/sh
 # Repository checks (AGENTS.md "Keep it working"), one command from the repo root: sh scripts/check.sh [<ref>] [<base>]
+# Static checks read the blobs of <ref>; the update-check and doctor checks run the working-tree scripts.
 # sh scripts/check.sh bytes [<ref>] prints "<all methods> <read set>" for a PR's before and after line.
 # Byte counts read Git blobs of <ref> (default HEAD); <base> also fails any method byte growth against it.
 # Prints nothing and exits 0 when all pass; otherwise one FAIL line per failed check, exit 1.
@@ -16,8 +17,9 @@ bytes() {
   r=$(cd $skills && git ls-tree -l "$1" $read_set | awk '{s += $4} END {print s + 0}')
   echo "$a $r"
 }
-[ "$ref" = bytes ] && { bytes "${2:-HEAD}"; exit; }
-git rev-parse -q --verify "$ref^{commit}" >/dev/null || { echo "FAIL: unknown ref $ref"; exit 1; }
+good() { git rev-parse -q --verify "$1^{commit}" >/dev/null || { echo "FAIL: unknown ref $1"; exit 1; }; }
+[ "$ref" = bytes ] && { good "${2:-HEAD}"; bytes "${2:-HEAD}"; exit; }
+good "$ref"; [ -z "$base" ] || good "$base"
 
 # Skill hygiene: links stay inside a skill's folder, no SKILL.md at 17000 bytes, no media in Git (proof goes to refs/proof/).
 o=$(git grep -nE '\]\(\.\./' "$ref" -- $skills) && fail "links out of a skill folder: $o"
@@ -35,8 +37,9 @@ fi
 # Every manifest agrees with the canonical version.
 blob() { MSYS_NO_PATHCONV=1 git show "$ref:$1"; }  # <ref>:<path> as typed under Git Bash
 v=$(blob .agents/.claude-plugin/plugin.json | grep -o '"version": "[^"]*"' | cut -d'"' -f4)
+[ -n "$v" ] || fail "no version in .agents/.claude-plugin/plugin.json"
 for f in .agents/.codex-plugin/plugin.json .agents/.cursor-plugin/plugin.json .claude-plugin/marketplace.json; do
-  blob "$f" | grep -qF "\"${v:?}\"" || blob "$f" | grep -qF "\"v$v\"" || fail "$f disagrees with version $v"
+  blob "$f" | grep -qF "\"$v\"" || blob "$f" | grep -qF "\"v$v\"" || fail "$f disagrees with version $v"
 done
 
 # Update check, offline: newer release tells the owner, older stays quiet; gh signed out still finds it through curl.

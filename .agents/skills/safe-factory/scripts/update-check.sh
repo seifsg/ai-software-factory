@@ -14,7 +14,7 @@ c="${XDG_CACHE_HOME:-$HOME/.cache}/ai-software-factory"; f="$c/latest"; slug=sei
 # fetch retries next start; a tmp a killed fetch left is swept after a minute. One detached subshell owns all output: hook pipes close.
 ( mkdir -p "$c" && t="$f.$$" || exit; find "$c" -name 'latest.?*' -mmin +1 -exec rm -f {} +
   gh api "repos/$slug/releases/latest" --jq .tag_name > "$t" & p=$!; { sleep 20; kill $p; } & w=$!
-  wait $p; r=$?; kill $w  # the watchdog goes first, so it never signals a reused pid
+  wait $p; r=$?; kill $w 2>/dev/null  # its sleep may outlive it by up to 20 s: harmless, no output
   [ $r = 0 ] && [ -s "$t" ] || curl -fsm 20 "https://api.github.com/repos/$slug/releases/latest" | sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p' > "$t"
   v=$(sed -n 's/^v//p' "$t"); [ -n "$v" ] && echo "$v" > "$t" && mv "$t" "$f" || rm -f "$t" ) </dev/null >/dev/null 2>&1 &
 new=; [ -s "$f" ] && read -r new < "$f"
