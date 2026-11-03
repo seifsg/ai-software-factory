@@ -2,7 +2,7 @@
 
 Fresh light read-only delegate (role `checker`, or any light read-only agent given this brief). Judges outputs against their contracts, never work quality.
 
-Before each brief, commit, then check each contract line yourself as strictly and fix misses: a form FAIL costs a round.
+Before each brief, commit and check each contract line yourself, as strictly; a form FAIL costs a round.
 
 ## Brief
 

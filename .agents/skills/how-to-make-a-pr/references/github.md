@@ -1,6 +1,6 @@
 # GitHub PR commands
 
-Load when project host is GitHub. Write bodies to a file; skip shell escaping.
+Load when project host is GitHub. Write bodies to a file.
 
 ## Open the draft
 
@@ -9,10 +9,10 @@ git push -u origin <branch>
 gh pr create --draft --base <base> --head <branch> --title "<type>(<scope>): <subject>" --body-file <file>
 ```
 
-- `--body-file` replaces repository template: copy structure of `.github/pull_request_template.md` or `.github/PULL_REQUEST_TEMPLATE/` into body file.
+- `--body-file` replaces the repository template: copy the structure of `.github/pull_request_template.md` (or `PULL_REQUEST_TEMPLATE/`) into it.
 - Always `--draft`. Never run `gh pr ready` or `gh pr merge`.
 - Link every ticket in body: `Closes #<n>` where this skill's step 6 allows one, else `Refs #<n>`.
-- Closing keywords act only on PRs into default branch; elsewhere ignored, link nothing. Keep them for the record: next intake closes those tickets after merge. After base change, check PR's linked issues.
+- Closing keywords act only on PRs into default branch; elsewhere ignored, link nothing. Next intake closes those tickets after merge; after a base change, check the linked issues.
 
 ## Attach proof media
 
