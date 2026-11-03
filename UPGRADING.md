@@ -2,7 +2,7 @@
 
 What installs and active runs must do for each release, newest first. What changed: [CHANGELOG.md](CHANGELOG.md).
 
-## Unreleased
+## 0.4.2
 
 1. **Codex:** the hook commands changed, so trust them again in `/hooks`.
 2. **Cursor with the Claude Code plugin installed:** uninstall the Cursor `safe-factory` plugin in `/plugin`, or turn off Settings → Agents → Third-Party Imports → Include Third-Party Plugins, Skills, and Other Configs.

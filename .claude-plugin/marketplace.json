@@ -14,7 +14,7 @@
         "source": "git-subdir",
         "url": "https://github.com/seifsg/ai-software-factory.git",
         "path": ".agents",
-        "ref": "v0.4.1"
+        "ref": "v0.4.2"
       },
       "description": "AI Software Factory: Safe Factory delivery and Improve Factory maintenance skills, delegate roles, the Stop guard, the update check and the leftover doctor."
     }
