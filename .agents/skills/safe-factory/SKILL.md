@@ -5,7 +5,7 @@ description: "Delivers games, apps, services, tools and libraries end to end in 
 
 # Safe Factory
 
-Build the requested outcome with the factory's methods. Every step prints its output: owner sees whole run, no step skipped. Skills named here sit beside this one (`.agents/skills/<name>/SKILL.md`).
+Build the requested outcome with the factory's methods. Skills named here sit beside this one (`.agents/skills/<name>/SKILL.md`).
 
 Analysis, planning or review requests stay in that phase: no code.
 
@@ -51,9 +51,9 @@ Every run keeps project rules and never puts secrets in code or Git. Build what 
 
 ## Steps
 
-Live guard: one step per turn: load its skill, do that step's own work with fresh reading, searching or running, post its block as last message, update run file, end turn. Stop guard sends next step's prompt, as if owner typed it, and catches two headings ticked in one turn. Step 5 takes one todo per turn. No live guard (step 0 or 1): Fast chains steps in one turn, never ending one open with `Waiting: none`; Safe ends each with `Say go for step <n>`. Before each step load its skill fresh, even one read earlier: invoke with your agent's skill command or read the file. Same skill as last step: rereading this step's section is enough.
+Live guard: one step per turn: load its skill, do that step's own work with fresh reading, searching or running, post its block as last message, update run file, end turn. Stop guard sends next step's prompt, as if owner typed it. Step 5 takes one todo per turn. No live guard: Fast chains steps in one turn, never ending one open with `Waiting: none`; Safe ends each with `Say go for step <n>`. Before each step load its skill fresh (skill command or file), even one read earlier. Same skill as last step: rereading this step's section is enough.
 
-Each step ends with its block: post full block as its own chat message (never summary, never only a file or tool output), then write to run file. Before next step reads it, fold in any owner reply that arrived. Ticket gets a comment only on status change (steps 0, 5, 7 and 8) or relay, linking run file's blocks.
+Each step ends with its block: post full block as its own chat message opening with its heading (never summary, never only a file or tool output; Stop guard checks), then write to run file. Before next step reads it, fold in any owner reply that arrived. Ticket gets a comment only on status change (steps 0, 5, 7 and 8) or relay, linking run file's blocks.
 
 | Step | Skill | Block |
 |---|---|---|
@@ -70,7 +70,7 @@ Each step ends with its block: post full block as its own chat message (never su
 
 Only what those skills leave out:
 
-- **0:** update notice in context, new run: before the run file, tell owner, link what's new, ask update or continue (owner-reserved); end turn, no block. Update: notice's command, new session. Resume or night: one line in current block; never wait or update mid-run. Guard live only if its hook entry predates this session; name which in block; unsure: not live. Step 1 finds no `.factory/guard/state`: not live. Before any work, check tracker and push access (`ticketing`); ask owner once, up front, for every action host may block (creating a repository, pushing). No project folder named: create one beside owner's other projects (parent of current project, else current folder), named for product in kebab-case, report its absolute path. No Git: `git init`, first commit on default branch, then feature branch. Every commit, first included, follows `how-to-make-a-pr`'s commit rules. No remote: `ticketing` creates it. Product and feature: research and kickoff questions belong to step 0, after the ticket, in its block; Fast goes on without answers, which feed step 1.
+- **0:** update notice in context, new run: before the run file, tell owner, link what's new, ask update or continue (owner-reserved); end turn, no block. Update: notice's command, new session. Resume or night: one line in current block; never wait or update mid-run. Guard live only if the plugin or its hook entry predates this session; name which in block; unsure: not live. Step 1 finds no `.factory/guard/state`: not live. Before any work, check tracker and push access (`ticketing`); ask owner once, up front, for every action host may block (creating a repository, pushing). No project folder named: create one beside owner's other projects (parent of current project, else current folder), named for product in kebab-case, report its absolute path. No Git: `git init`, first commit on default branch, then feature branch. Every commit, first included, follows `how-to-make-a-pr`'s commit rules. No remote: `ticketing` creates it. Product and feature: research and kickoff questions belong to step 0, after the ticket, in its block; Fast goes on without answers, which feed step 1.
 - **3:** new or changed persistence adds `database-schema`. A `change` uses the light plan. Fast does not stop at the file summary. Safe runs Gate A, then stops: `Waiting: owner: plan OK?`.
 - **4:** starts once plan names views and commands. Up to three items: capture yourself. More: one light delegate captures while you finish plan. No source edit until every Before file saved.
 - **5:** spike unknown capabilities first. A run of mapped tests that is the whole suite is still only a build check. Commit by phase in project's commit style.

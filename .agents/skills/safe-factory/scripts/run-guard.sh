@@ -6,6 +6,7 @@
 # Reads only the nearest .factory/run.md inside the current Git checkout, so other sessions exit at once.
 # Its own state lives in .factory/guard/; proof comes from files the host writes, never from run-file text alone.
 #   clear    the owner's command after a halt: the guard drives the run again, loop caps count from here.
+export LC_ALL=C  # bytes, not characters: a UTF-8 sed stops at a 4-byte emoji and leaks the input into the state
 mode=${1:-stop}
 self=$0; case $self in *run-guard.sh) ;; *) self=${g:-run-guard.sh} ;; esac  # an older plugin hook sourced it from $g
 self=$(printf '%s' "$self" | tr '\\' /)  # a Windows path's backslashes would break the JSON replies
@@ -47,13 +48,17 @@ ev=${tp%/*} fb=0 nov=0
 set --; for s in $g_sessions; do for f in "$ev/$s"/subagents/agent-*.jsonl; do [ -f "$f" ] && set -- "$@" "$s/subagents/${f##*/}"; done; done
 if [ $# -gt 0 ]; then set -- $(cd "$ev" && ls -tr "$@")  # oldest first: rounds count in order
 else ev=.; if [ -f "$tp" ]; then fb=1; set -- "$tp"; else nov=1; fi; fi
+# Posting proof: each session's own transcript beside it, and the heading of the message ending this turn
+# (the host may not have written it to the transcript yet).
+t=${tp%/*}; for s in $g_sessions; do [ -f "$t/$s.jsonl" ] && [ "$fb$t/$s.jsonl" != "1$tp" ] && set -- "$@" "$t/$s.jsonl"; done
+lh=${in#*\"last_assistant_message\":\"## }; lh=${lh%% *}; case $lh in [0-8] | [0-8]b) ;; *) lh= ;; esac
 head=$(git -C "$d" rev-parse HEAD 2>/dev/null) up=$(git -C "$d" rev-parse '@{u}' 2>/dev/null)
 night=0; [ "${g_night_until:-0}" -gt 0 ] 2>/dev/null && night=1
 # One awk pass over the run file and the evidence files. Only a strict "<step> <name> · <skill>" Next value
 # is kept for the reply. The step is the later of Next and the last ticked heading, so a malformed Next never
 # skips a gate. gate: the first gate the run has reached without proof; R: step 8 without a proven review.
-read -r stopped waiting finished ticks gate sig jobs jmax crit fA fB fC fR step next <<EOF
-$(cd "$ev" && awk -v R="$run" -v fb=$fb -v nov=$nov -v head="$head" -v up="$up" -v night=$night -v clr="$g_clear" -v bs="${g_base_A:-0} ${g_base_B:-0} ${g_base_C:-0} ${g_base_R:-0}" '
+read -r stopped waiting finished ticks gate sig jobs jmax crit fA fB fC fR unp step next <<EOF
+$(cd "$ev" && awk -v R="$run" -v lh="$lh" -v fb=$fb -v nov=$nov -v head="$head" -v up="$up" -v night=$night -v clr="$g_clear" -v bs="${g_base_A:-0} ${g_base_B:-0} ${g_base_C:-0} ${g_base_R:-0}" '
   BEGIN { split(bs, b); split("A B C R", k); split("3 6 8 8", sp); for (i = 1; i <= 4; i++) { base[k[i]] = b[i]; st[k[i]] = sp[i] } }  # the step of each loop; rounds count since the last clear
   function pre(a, b,  n) { n = length(a) < length(b) ? length(a) : length(b); return n >= 7 && substr(a, 1, n) == substr(b, 1, n) }
   function at(t) { sub(/.*@/, "", t); return t }
@@ -76,7 +81,7 @@ $(cd "$ev" && awk -v R="$run" -v fb=$fb -v nov=$nov -v head="$head" -v up="$up" 
     if (/^Status: stopped/) s = 1
     if (/^Waiting: none/) w = 1
     if (/^Waiting: jobs:/) { j = 1; if (match($0, /\(max [0-9]+ min\)/)) jm = substr($0, RSTART + 5, RLENGTH - 10) + 0 }
-    if (/^## [0-8]b? .*✔/) c++
+    if (/^## [0-8]b? .*✔/) tk[++c] = $2
     if (/✔/) p++
     if (/^## 8 Review ✔/) r = 1
     if (/^## [0-8] .*✔/) { t = substr($0, 4, 1) + 1; if (t > m) m = t }
@@ -88,6 +93,11 @@ $(cd "$ev" && awk -v R="$run" -v fb=$fb -v nov=$nov -v head="$head" -v up="$up" 
     if (/^Gate [ABC]: WAIVED by owner/) wv[substr($0, 6, 1)] = 1
     if (/^Review: ready \(reviewer [^ )]+\) @[0-9a-f]+/) { rid = $4; sub(/\)$/, "", rid); rsha = at($5); want[rid] = 1 }
     next
+  }
+  FILENAME !~ /subagents\/agent-[^\/]*$/ {  # a session transcript: the step blocks that reached chat as text
+    if (index($0, "\"isSidechain\"")) cx = 1
+    if (/"role":"assistant"/) for (l = $0; match(l, /"type":"text","text":"## [0-8]b? /); l = substr(l, RSTART + RLENGTH)) sent[substr(l, RSTART + 25, RLENGTH - 26)] = 1
+    if (!fb) next
   }
   fb { if (index($0, "\"isSidechain\"")) cc = 1; for (x in want) if (index($0, x)) seen[x] = 1; next }
   function done1(k) { k = kind[id]; if (k ~ /^[ABC]$/) f[k] = last[id] ~ /^Gate .: PASS/ ? 0 : f[k] + (last[id] ~ /FAIL/) }  # one checker per gate round
@@ -113,7 +123,8 @@ $(cd "$ev" && awk -v R="$run" -v fb=$fb -v nov=$nov -v head="$head" -v up="$up" 
     p += ok("A") + ok("B") + ok("C") + rok  # progress: ticks plus proven gates
     for (x in st) if (opn(x)) oc = oc x
     for (x in f) if (x == "R" ? rok : ok(x)) f[x] = 0  # a loop that converged has no rounds left to cap
-    printf "%d %d %d %d %s %d %d %d %s %d %d %d %d %d %s\n", s, w, r && g == "-", c, g, p, j, jm, oc == "" ? "-" : oc, f["A"], f["B"], f["C"], f["R"], step, n
+    sent[lh] = 1; if (cx) for (i = 1; i <= c; i++) if (!sent[tk[i]]) u = u (u == "" ? "" : ",") tk[i]  # Claude Code transcripts only
+    printf "%d %d %d %d %s %d %d %d %s %d %d %d %d %s %d %s\n", s, w, r && g == "-", c, g, p, j, jm, oc == "" ? "-" : oc, f["A"], f["B"], f["C"], f["R"], u == "" ? "-" : u, step, n
   }' "$run" "$@")
 EOF
 [ "$gate" = - ] && gate=
@@ -126,6 +137,14 @@ if [ "$mode" = stop ]; then
   [ "$g_session" = "$sid" ] || g_sstep=$step  # a new session counts phase boundaries from here
   [ -n "$g_relay" ] && [ "$g_relay" != "$sid" ] && g_relay=  # the fresh session took over
   g_ticks=$ticks g_seen=$now g_session=$sid g_transcript=$tp
+fi
+# Each ticked step's block reaches the owner as its own chat message opening with its heading. One block per
+# missing set, before the finished exit: a run chained in one turn is checked when that turn ends. The set lives
+# in its own file, so an older guard reading the state never halts on it.
+[ "$unp" = - ] && unp=
+if [ "$mode" = stop ] && [ -n "$unp" ] && [ "$stopped" != 1 ] && [ -z "$g_halt" ] && [ "$unp" != "$(cat "$g/unposted" 2>/dev/null)" ]; then
+  save; printf '%s' "$unp" > "$g/unposted"
+  printf '{"decision":"block","reason":"If this session runs the factory run in .factory/run.md: Step blocks not posted in chat: %s. Post each full block from .factory/run.md now, each as its own message opening with its heading (## <step> <name>), then go on with the run."}\n' "$unp"; exit 0
 fi
 [ "$stopped" = 1 ] || [ "$finished" = 1 ] && { [ "$mode" = stop ] && save; exit 0; }  # stopped by the owner, or finished
 if [ -n "$g_halt" ]; then  # halted: the guard drives nothing until the owner clears it
@@ -218,7 +237,7 @@ else
     2b) todo='Step 2b Challenge: I don'\''t think this is the best we could do. Do better. Make no mistake. Use the Challenge section of `recommend` and stay neutral: keep the pick and make it stronger if it truly is the best, else replace it and say why.' ;;
     3) todo='Step 3 Plan: load `get-ready-to-code` fresh and write Part A: the plan, the todo checklist, the proof list and the test map.' ;;
     4) todo='Step 4 Before: load `how-to-make-a-pr` fresh and capture every Before proof the plan lists, before any source edit.' ;;
-    5) todo='Step 5 Build: load Part B of `get-ready-to-code` fresh. Take only the next unticked todo through its loop (before, change, light check, mapped tests), post its log line as your last message, then end your turn. Tick `## 5 Build` and set Next to 6 only after the last todo.' ;;
+    5) todo='Step 5 Build: load Part B of `get-ready-to-code` fresh. Take only the next unticked todo through its loop (before, change, light check, mapped tests), post its log line as your last message, then end your turn. Tick `## 5 Build` and set Next to 6 only after the last todo, then post the full `## 5 Build` block.' ;;
     6) todo='Step 6 Verify: load `deep-review` fresh. Review the whole build, make the final manual pass with After captures, run the full suite once.' ;;
     7) todo='Step 7 PR: load `how-to-make-a-pr` fresh and open the draft PR.' ;;
     8) todo='Step 8 Review: load `how-to-review-a-pr` fresh and brief a fresh reviewer that did not build it.' ;;
