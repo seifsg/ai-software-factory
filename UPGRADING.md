@@ -5,7 +5,8 @@ What installs and active runs must do for each release, newest first. What chang
 ## Unreleased
 
 1. **Codex:** the hook commands changed, so trust them again in `/hooks`.
-2. **Cursor:** with the Claude Code plugin installed, uninstall the Cursor `safe-factory` plugin in `/plugin` (or turn off Settings → Agents → Third-Party Imports → Include Third-Party Plugins, Skills, and Other Configs), then run `doctor.sh --fix` from each project to find a `Stop` entry you copied into its `.claude/settings.json`.
+2. **Cursor with the Claude Code plugin installed:** uninstall the Cursor `safe-factory` plugin in `/plugin`, or turn off Settings → Agents → Third-Party Imports → Include Third-Party Plugins, Skills, and Other Configs.
+3. **Cursor, every install:** from each project, run `sh <plugin root>/skills/safe-factory/scripts/doctor.sh`. Delete each `Stop` entry it names in `.claude/settings.json` (the one copied from the old install steps): the plugin now runs it, so a copy runs the guard twice.
 
 ## 0.4.1
 

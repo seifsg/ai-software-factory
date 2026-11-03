@@ -6,10 +6,13 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+### Changed
+
+- Let Cursor run the plugin's own hooks; it also loads an installed Claude Code plugin, so install only one of the two ([#274])
+
 ### Fixed
 
 - Fix the run guard never running in Cursor on Windows, and hanging outside a Git repo on a Windows drive path ([#274])
-- Let Cursor run the plugin's own hooks; it also loads an installed Claude Code plugin, so install only one of the two ([#274])
 
 ## [0.4.1] - 2026-11-03
 
