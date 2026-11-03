@@ -9,6 +9,7 @@ The public surface is the skill names, the run file format, and the hook scripts
 ### Fixed
 
 - Fix step blocks (Recommend, Plan and the rest) missing from chat when steps chain in one turn or your own instructions ask for short replies ([#269])
+- Run Codex Windows hooks through a native launcher that locates Git Bash and preserves hook input/output, instead of sending POSIX syntax to PowerShell or cmd. Missing Git Bash explains the install and restart action (#264).
 
 ## [0.4.0] - 2026-11-02
 
