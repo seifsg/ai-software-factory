@@ -5,7 +5,7 @@ What installs and active runs must do for each release, newest first. What chang
 ## Unreleased
 
 1. **Codex:** the hook commands changed, so trust them again in `/hooks`.
-2. **Cursor:** with the Claude Code plugin installed, uninstall the Cursor `safe-factory` plugin in `/plugin` (or turn off Settings → Agents → Third-Party Imports), and delete any `Stop` entry you copied into a project's `.claude/settings.json`.
+2. **Cursor:** with the Claude Code plugin installed, uninstall the Cursor `safe-factory` plugin in `/plugin` (or turn off Settings → Agents → Third-Party Imports → Include Third-Party Plugins, Skills, and Other Configs), then run `doctor.sh --fix` from each project to find a `Stop` entry you copied into its `.claude/settings.json`.
 
 ## 0.4.1
 

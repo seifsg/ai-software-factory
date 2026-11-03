@@ -44,10 +44,10 @@ while IFS= read -r f; do
     # Whole file moves only when pretty-printed (2 spaces), holding nothing but old factory command hooks.
     if awk -v p="$old" '{ m = split($0, a, /"command":/); for (i = 2; i <= m; i++) { n++; if (a[i] ~ p) k++ } } /"type": *"[^c]/ { o++ }
       NR == 2 && !/^  "/ { o++ } /^  "/ && !/^  "(hooks|version)"/ { o++ }
-      END { exit !(NR > 2 && n && n == k && !o) }' "$f"; then move "$f" "hooks of an old factory version (Cursor: copy the Stop entry again, install.md#cursor)"
+      END { exit !(NR > 2 && n && n == k && !o) }' "$f"; then move "$f" "hooks of an old factory version; the plugin brings its own"
     else todo "$f" "hooks of an old factory version; delete entries naming fast_gate, run-gate.sh or skills/safe-engine/"; fi
   elif [ -n "$on" ] && case $f in */.claude/*) grep -q 'run-guard[.]sh' "$f" ;; *) false ;; esac; then
-    todo "$f" "second Stop guard: the plugin already runs it; delete that entry unless Cursor uses this project"
+    todo "$f" "second Stop guard: the plugin already runs it; delete that entry"
   fi
 done <<EOF
 $hits

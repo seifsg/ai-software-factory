@@ -1,5 +1,5 @@
 #!/bin/sh
-# Run guard for factory runs, one script for both hooks (Claude Code and Codex use the same JSON):
+# Run guard for factory runs, one script for both hooks (Claude Code, Codex and Cursor use the same JSON):
 #   stop     keeps an open run going, one step per turn, until step 8 is ticked, gates A, B and C and the
 #            review are proven on their commits;
 #   compact  after compaction or a resume, re-injects the run's place, because compaction drops skill text.
@@ -7,7 +7,7 @@
 # Its own state lives in .factory/guard/; proof comes from files the host writes, never from run-file text alone.
 #   clear    the owner's command after a halt: the guard drives the run again, loop caps count from here.
 mode=${1:-stop}
-self=$0; case $self in *run-guard.sh) ;; *) self=${g:-run-guard.sh} ;; esac  # the plugin hook sources it from $g
+self=$0; case $self in *run-guard.sh) ;; *) self=${g:-run-guard.sh} ;; esac  # an older plugin hook sourced it from $g
 self=$(printf '%s' "$self" | tr '\\' /)  # a Windows path's backslashes would break the JSON replies
 in=; [ "$mode" = clear ] || in=$(cat)
 val() { printf '%s' "$in" | sed -n "s/.*\"$1\": *\"\([^\"]*\)\".*/\1/p" | head -n 1; }  # one JSON string field
