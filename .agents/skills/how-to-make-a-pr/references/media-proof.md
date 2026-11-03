@@ -1,6 +1,6 @@
 # Visual and journey proof
 
-Every PR shows a skeptical owner truthful before/after proof: what failed or was missing, what now works, observed benefit. Short schema, diagram, table or labeled emoji may explain nonvisual proof.
+Every PR shows a skeptical owner truthful before/after proof: what failed or was missing, what now works, observed benefit. Required in every mode. Short schema, diagram, table or labeled emoji may explain nonvisual proof.
 
 1. **Inventory now:** map ticket/diff to changed views, states, journeys, including shared-logic effects. Primary platform only, light (existing app: its lead; else web = desktop, mobile app = phone). Secondary platform, themes: after owner confirms primary, or on request. One outcome per journey; share pairs/clips with chapters across outcomes. Reconcile final diff. Input variants with same rendered state need behavioral checks, not duplicate pictures. Unchanged views/speculative cases: no media unless required.
 2. **Capture each Before now**, minimum safe navigation. Exercise or side effects needed: isolated fixture or existing evidence, conditions stated. Where tool allows: scroll with `behavior: 'instant'`, discard one warm-up shot, click by element ref not coordinates. Missed: SKILL.md step 4. Never fabricate it, reset dirty work, or start a second checkout or server to recreate it.

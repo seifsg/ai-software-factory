@@ -33,9 +33,10 @@ if [ -n "$base" ]; then
 fi
 
 # Every manifest agrees with the canonical version.
-v=$(grep -o '"version": "[^"]*"' .agents/.claude-plugin/plugin.json | cut -d'"' -f4)
+blob() { MSYS_NO_PATHCONV=1 git show "$ref:$1"; }  # <ref>:<path> as typed under Git Bash
+v=$(blob .agents/.claude-plugin/plugin.json | grep -o '"version": "[^"]*"' | cut -d'"' -f4)
 for f in .agents/.codex-plugin/plugin.json .agents/.cursor-plugin/plugin.json .claude-plugin/marketplace.json; do
-  grep -qF "\"${v:?}\"" "$f" || grep -qF "\"v$v\"" "$f" || fail "$f disagrees with version $v"
+  blob "$f" | grep -qF "\"${v:?}\"" || blob "$f" | grep -qF "\"v$v\"" || fail "$f disagrees with version $v"
 done
 
 # Update check, offline: newer release tells the owner, older stays quiet; gh signed out still finds it through curl.

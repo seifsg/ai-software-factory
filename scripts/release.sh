@@ -51,12 +51,13 @@ prepare() {
     /^\[Unreleased\]: / {print "[Unreleased]: " u "/v" v "...HEAD"; print "[" v "]: " u "/v" o "...v" v; next}
     {print}' CHANGELOG.md > CHANGELOG.md.n && mv CHANGELOG.md.n CHANGELOG.md
   sub "s/^## Unreleased$/## $v/" UPGRADING.md
+  grep -q "\"version\": \"$v\"" $man && grep -q "^## \[$v\] - " CHANGELOG.md || die "edit did not apply: check the formats in docs/releasing.md"
+  grep -q "^## $v$" UPGRADING.md || echo "release: UPGRADING.md has no '## Unreleased' section: no upgrade steps for $v (fine when none are needed)"
   sh scripts/check.sh || die "checks failed on the release branch; fix, commit, then push it yourself"
   git commit -q -am "chore(release): $v" || die "commit failed"
   git push -q -u origin "release/v$v" || die "push failed"
-  b=$(mktemp) || exit 1; notes "$v" CHANGELOG.md > "$b"
+  b=$(mktemp) || exit 1; trap 'rm -f "$b"' EXIT; { notes "$v" CHANGELOG.md; printf '\n---\n🏭 Built with [AI Software Factory](https://softwarefactory.company/) by Seif\n'; } > "$b"
   gh pr create --draft --base main --head "release/v$v" --title "chore(release): $v" --body-file "$b" || die "PR not created; branch release/v$v is pushed"
-  rm -f "$b"
   echo "release: PR for $v open. After the owner merges it: sh scripts/release.sh publish $v"
 }
 
@@ -66,11 +67,13 @@ publish() {
   # The first-parent commit on main that set the version: the release PR's merge, even with later merges on top.
   m=$(git log --first-parent --format=%H -1 -G"\"version\": \"$v\"" origin/main -- $man)
   [ -n "$m" ] && [ "$(ver "$m")" = "$v" ] || die "cannot find the commit that set $v"
-  git tag -a "v$v" -m "v$v" "$m" && git push -q origin "v$v" || die "tag push failed"
-  b=$(mktemp) || exit 1; show "$m:CHANGELOG.md" > "$b.c"; notes "$v" "$b.c" > "$b"
-  [ -s "$b" ] || die "no ## [$v] section in CHANGELOG.md at $m (tag v$v is pushed)"
-  gh release create "v$v" --latest --title "v$v" --notes-file "$b" || die "release not created (tag v$v is pushed): rerun gh release create"
-  rm -f "$b" "$b.c"
+  # Everything that can fail runs before the irreversible tag push.
+  gh auth status >/dev/null 2>&1 || die "gh is not signed in: run gh auth login, then rerun"
+  b=$(mktemp) || exit 1; trap 'rm -f "$b" "$b.c"' EXIT; show "$m:CHANGELOG.md" > "$b.c"; notes "$v" "$b.c" > "$b"
+  [ -s "$b" ] || die "no ## [$v] section in CHANGELOG.md at $m: fix it on main first"
+  git tag -a "v$v" -m "v$v" "$m" || die "cannot tag"
+  git push -q origin "v$v" || { git tag -d "v$v" >/dev/null; die "tag push failed; local tag removed, rerun"; }
+  gh release create "v$v" --latest --title "v$v" --notes-file "$b" || die "release not created (tag v$v is pushed): rerun gh release create v$v --latest --notes-file <its CHANGELOG section>"
   echo "release: v$v published as Latest from $m"
 }
 

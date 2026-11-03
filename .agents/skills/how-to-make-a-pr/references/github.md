@@ -11,7 +11,7 @@ gh pr create --draft --base <base> --head <branch> --title "<type>(<scope>): <su
 
 - `--body-file` replaces repository template: copy structure of `.github/pull_request_template.md` or `.github/PULL_REQUEST_TEMPLATE/` into body file.
 - Always `--draft`. Never run `gh pr ready` or `gh pr merge`.
-- Link every ticket in body: `Closes #<n>` where SKILL.md step 6 allows a closing keyword, else `Refs #<n>`.
+- Link every ticket in body: `Closes #<n>` where this skill's step 6 allows one, else `Refs #<n>`.
 - Closing keywords act only on PRs into default branch; elsewhere ignored, link nothing. Keep them for the record: next intake closes those tickets after merge. After base change, check PR's linked issues.
 
 ## Attach proof media
@@ -24,7 +24,7 @@ git commit-tree <tree id> -m "proof: <branch>"
 git push origin <commit id>:refs/proof/<branch>
 ```
 
-- Later uploads: `git fetch origin refs/proof/<branch>`, then add `-p FETCH_HEAD` to `commit-tree`; earlier links keep working. Required signing: add `-S`.
+- Later uploads: `git fetch origin refs/proof/<branch>`, then list the earlier files too in `git mktree` input and add `-p FETCH_HEAD` to `commit-tree`; earlier links keep working. Required signing: add `-S`.
 - Link pinned to commit: `![<outcome> before](https://github.com/{owner}/{repo}/blob/<commit id>/<name>?raw=true)`. GIFs play inline. Video over 10 MB: link it, with GIF or screenshot beside it.
 - Check each file landed: `gh api "repos/{owner}/{repo}/contents/<name>?ref=<commit id>" --jq .size`, then rendering and playback in PR from signed-in browser.
 - Keep proof refs after merge: PR links to them.
