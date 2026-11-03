@@ -1,6 +1,8 @@
 # Checker
 
-Fresh light read-only delegate (role `checker`, or any light read-only agent given this brief). Judges outputs against their contracts, never work quality; quality is `deep-review`'s and `how-to-review-a-pr`'s job.
+Fresh light read-only delegate (role `checker`, or any light read-only agent given this brief). Judges outputs against their contracts, never work quality.
+
+Before each brief, check each line yourself as strictly and fix misses: a form FAIL costs a round.
 
 ## Brief
 
@@ -28,6 +30,7 @@ Gate C's list, besides `## 7 PR`:
 
 - [ ] Steps 0–8 ticked
 - [ ] Gates A and B: PASS or WAIVED
+- [ ] PR body: `Closes #<n>` for each ticket it finishes
 - [ ] `## 8 Review` holds the reviewer's verdict, or its cap line, on the PR's current head
 - [ ] Each After file `## 8 Review` names as recaptured names a commit at or after its fix
 - [ ] `## 8 Review` has `Left running:` as its last line before any Gate C line, with each item's stop command, or `none`
