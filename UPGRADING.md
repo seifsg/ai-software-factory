@@ -2,6 +2,11 @@
 
 What installs and active runs must do for each release, newest first. What changed: [CHANGELOG.md](CHANGELOG.md).
 
+## Unreleased
+
+1. **Codex:** the hook commands changed, so trust them again in `/hooks`.
+2. **Cursor:** with the Claude Code plugin installed, uninstall the Cursor `safe-factory` plugin in `/plugin` (or turn off Settings → Agents → Third-Party Imports), and delete any `Stop` entry you copied into a project's `.claude/settings.json`.
+
 ## 0.4.1
 
 1. **Codex on Windows:** `codex plugin marketplace upgrade ai-software-factory`, start a new chat and trust the changed hooks in `/hooks`. The plugin now finds Git Bash beside `git.exe` on `PATH`; no hook-trust bypass or PowerShell policy change is needed. Verify the ticket response is followed by an automatic analysis prompt and full response in a separate turn. Hand-copied hooks still need Git's `sh` on `PATH` as described in [install](docs/install.md#codex).

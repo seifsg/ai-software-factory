@@ -6,6 +6,10 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+### Fixed
+
+- Fix the run guard never running in Cursor on Windows, and hanging outside a Git repo on a Windows drive path ([#274])
+
 ## [0.4.1] - 2026-11-03
 
 _Upgrade needed on Codex for Windows: trust the changed hooks again; follow [UPGRADING.md](UPGRADING.md#041)._
@@ -226,3 +230,4 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 [#267]: https://github.com/seifsg/ai-software-factory/pull/267
 [#269]: https://github.com/seifsg/ai-software-factory/pull/269
 [#270]: https://github.com/seifsg/ai-software-factory/pull/270
+[#274]: https://github.com/seifsg/ai-software-factory/pull/274

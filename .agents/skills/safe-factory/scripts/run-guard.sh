@@ -15,7 +15,7 @@ val() { printf '%s' "$in" | sed -n "s/.*\"$1\": *\"\([^\"]*\)\".*/\1/p" | head -
 c=${in#*\"cwd\":}; [ "$c" = "$in" ] || { c=${c#*\"}; c=${c%%\"*}; cd "$c" 2>/dev/null; }  # no fork: runs at every turn end; Git Bash cd takes JSON's G:\\x
 d=$PWD
 while [ ! -f "$d/.factory/run.md" ]; do
-  { [ -e "$d/.git" ] || [ -z "$d" ]; } && exit 0  # checkout root reached: no run here
+  { [ -e "$d/.git" ] || [ "$d" = "${d%/*}" ]; } && exit 0  # checkout or drive root (C: too) reached: no run here
   d=${d%/*}
 done
 run="$d/.factory/run.md" g="$d/.factory/guard"
