@@ -9,7 +9,7 @@ The public surface is the skill names, the run file format, and the hook scripts
 ### Fixed
 
 - Fix a Fast run hiding its step blocks: the Stop guard now asks the agent to post any finished step whose block never reached chat ([#280])
-- Fix a run stopping by itself when a message held an emoji, and count a plugin install as a live guard, so each step gets its own turn ([#280])
+- Fix a run halting itself on an emoji in a message, and count a plugin install as a live guard so each step gets its own turn ([#280])
 - Fix the session-start cleanup offering to move tracked files out of an old factory checkout; it now names the checkout and the command to update it ([#280])
 
 ## [0.4.3] - 2026-11-03
