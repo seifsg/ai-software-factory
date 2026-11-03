@@ -25,9 +25,11 @@ stale() {
   [ -n "$fix" ] || { todo "$1" "stale copy of $2; --fix refreshes it"; return 0; }
   move "$1" "stale copy" && { cp "$2" "$1" && say "$1" "refreshed from $2" || todo "$1" "refresh failed; restore it from $t"; }
 }
-# Moves old folder $1 ($2 says what), unless Git tracks it: then it is an old factory checkout, updated, never moved.
+# Moves old folder $1 ($2 says what), unless Git tracks it: never moved then; an old factory checkout gets its
+# update command, another project's own tracked copy is its business.
 old_dir() {
   git -C "$1" ls-files --error-unmatch . >/dev/null 2>&1 || { move "$1" "$2"; return; }
+  case $(git -C "$1" remote get-url origin 2>/dev/null) in *ai-software-factory*) ;; *) return 0 ;; esac
   ck=${1%/.agents/*} db=$(git -C "$1" symbolic-ref -q --short refs/remotes/origin/HEAD); db=${db#origin/}
   todo "$ck" "old factory checkout (tracks $2); --fix leaves it: git -C \"$ck\" switch ${db:-main} && git -C \"$ck\" pull"
 }

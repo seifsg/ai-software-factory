@@ -144,7 +144,7 @@ fi
 [ "$unp" = - ] && unp=
 if [ "$mode" = stop ] && [ -n "$unp" ] && [ "$stopped" != 1 ] && [ -z "$g_halt" ] && [ "$unp" != "$(cat "$g/unposted" 2>/dev/null)" ]; then
   save; printf '%s' "$unp" > "$g/unposted"
-  printf '{"decision":"block","reason":"Step blocks not posted in chat: %s. Post each full block from .factory/run.md now, each as its own message opening with its heading (## <step> <name>), then go on with the run."}\n' "$unp"; exit 0
+  printf '{"decision":"block","reason":"If this session runs the factory run in .factory/run.md: Step blocks not posted in chat: %s. Post each full block from .factory/run.md now, each as its own message opening with its heading (## <step> <name>), then go on with the run."}\n' "$unp"; exit 0
 fi
 [ "$stopped" = 1 ] || [ "$finished" = 1 ] && { [ "$mode" = stop ] && save; exit 0; }  # stopped by the owner, or finished
 if [ -n "$g_halt" ]; then  # halted: the guard drives nothing until the owner clears it
@@ -237,7 +237,7 @@ else
     2b) todo='Step 2b Challenge: I don'\''t think this is the best we could do. Do better. Make no mistake. Use the Challenge section of `recommend` and stay neutral: keep the pick and make it stronger if it truly is the best, else replace it and say why.' ;;
     3) todo='Step 3 Plan: load `get-ready-to-code` fresh and write Part A: the plan, the todo checklist, the proof list and the test map.' ;;
     4) todo='Step 4 Before: load `how-to-make-a-pr` fresh and capture every Before proof the plan lists, before any source edit.' ;;
-    5) todo='Step 5 Build: load Part B of `get-ready-to-code` fresh. Take only the next unticked todo through its loop (before, change, light check, mapped tests), post its log line as your last message, then end your turn. Tick `## 5 Build` and set Next to 6 only after the last todo.' ;;
+    5) todo='Step 5 Build: load Part B of `get-ready-to-code` fresh. Take only the next unticked todo through its loop (before, change, light check, mapped tests), post its log line as your last message, then end your turn. Tick `## 5 Build` and set Next to 6 only after the last todo, then post the full `## 5 Build` block.' ;;
     6) todo='Step 6 Verify: load `deep-review` fresh. Review the whole build, make the final manual pass with After captures, run the full suite once.' ;;
     7) todo='Step 7 PR: load `how-to-make-a-pr` fresh and open the draft PR.' ;;
     8) todo='Step 8 Review: load `how-to-review-a-pr` fresh and brief a fresh reviewer that did not build it.' ;;
