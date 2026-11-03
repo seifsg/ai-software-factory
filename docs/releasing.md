@@ -29,7 +29,7 @@ Written for the person who installs or runs the factory: what changed for them, 
 1. Each PR adds its lines under `## [Unreleased]`, in its group; a PR no reader notices (rule 5), such as a release-guide change, adds none. Groups in this order, empty ones left out: `Changed`, `Added`, `Deprecated`, `Removed`, `Fixed`, `Security` (Common Changelog order, plus Keep a Changelog's `Deprecated` before removals and `Security` last).
 2. One line per change, one sentence, under 30 words. Starts with an imperative verb (Add, Make, Let, Rename, Fix, Remove, ...). Says the effect the reader sees, readable without its group heading.
 3. Ends with its PR as `([#254])`, and `[#254]: https://github.com/seifsg/ai-software-factory/pull/254` joins the link list at the file bottom.
-4. Breaking line starts `**Breaking:**`, goes first in its group, then the rest by importance. Each has a numbered `UPGRADING.md` step under `## X.Y.Z`: what to run or change, in order.
+4. Breaking line starts `**Breaking:**`, goes first in its group, then the rest by importance. Each has a numbered `UPGRADING.md` step under `## Unreleased` (the release script renames it `## X.Y.Z`): what to run or change, in order.
 5. Leave out what no reader notices: wording trims, byte counts, typos, CI, internal script structure, review rounds. Merge related lines; drop changes undone before the release.
 6. No internal mechanics (file names inside skills, guard internals) unless the reader types or reads them.
 7. Release header `## [X.Y.Z] - YYYY-MM-DD`; at most one notice under it, one italic sentence (first release, yanked, upgrade needed, renumbered).
@@ -51,20 +51,12 @@ Bad: `- Continuous runs (#253): a gate or review loop with 3 failed rounds ... c
 
 ## Steps
 
-1. Pick `X.Y.Z` from the bump table and the Unreleased lines. Branch from up-to-date `main`: `git fetch origin`, then `git switch -c release/vX.Y.Z origin/main`.
-2. Write upgrade steps under `## X.Y.Z` in `UPGRADING.md`.
-3. Set `version` to `X.Y.Z` in all three plugin manifests. In `.claude-plugin/marketplace.json`, set the plugin's `source.ref` to `vX.Y.Z` and its `source.path` to plugin root at that tag (`.agents` from 0.1.0); refresh both descriptions to match that release. The README version badge reads the Latest release by itself; the version check in `AGENTS.md` lists any manifest that disagrees with `.agents/.claude-plugin/plugin.json`.
-4. In `CHANGELOG.md`, move `## [Unreleased]` into `## [X.Y.Z] - <today>`; keep an empty `## [Unreleased]` above it. At the bottom, point `[Unreleased]` at `vX.Y.Z...HEAD` and add `[X.Y.Z]`: `compare/<previous tag>...vX.Y.Z`.
-5. Run repository checks in `AGENTS.md`, commit, open release PR, merge it.
-6. Tag merge commit, push tag right away: Claude Code installs fetch the tag marketplace names; until it exists a new install fails.
+1. Pick `X.Y.Z` from the bump table and the Unreleased lines. Upgrade steps and changed marketplace descriptions land on `main` with their PRs; steps sit under `## Unreleased` in `UPGRADING.md`, and the script names that heading `## X.Y.Z`. A release candidate (`X.Y.Z-rc.1`) is cut by hand.
+2. `sh scripts/release.sh prepare X.Y.Z`: refuses a dirty tree, a version not above `main`'s, an existing tag or an empty Unreleased section; branches `release/vX.Y.Z` from `origin/main`; sets `version` in the three plugin manifests and the marketplace `source.ref` to `vX.Y.Z` (`source.path` stays `.agents`); moves `## [Unreleased]` into `## [X.Y.Z] - <today>` with its compare links; runs `sh scripts/check.sh`; commits, pushes and opens the draft release PR.
+3. The owner merges the release PR.
+4. `sh scripts/release.sh publish X.Y.Z`: refuses until `main` carries `X.Y.Z` and while the tag exists; tags the commit that set the version (the release merge, even with later merges on top), pushes the tag right away (Claude Code installs fetch the tag the marketplace names; until it exists a new install fails), then `gh release create vX.Y.Z --latest` with the CHANGELOG section, links made absolute.
 
-   ```text
-   git fetch origin && git switch --detach <merge commit>
-   git tag -a vX.Y.Z -m vX.Y.Z <merge commit>
-   git push origin vX.Y.Z
-   ```
-
-7. Publish as Latest: `gh release create vX.Y.Z --latest --notes-file <the CHANGELOG section>`. Until a 0.x release is Latest, installs see the deprecated 1.x one: 0.1.0 also retitles each 1.x release "(deprecated)" and adds a "Deprecated: use 0.1.0 or later" line to its notes, without `--latest`.
+A step that fails says what is already done; finish it by hand from there. Never move a tag to retry.
 
 ## What follows a release
 

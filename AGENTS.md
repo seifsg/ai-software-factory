@@ -25,21 +25,18 @@ Factory changes use `improve-factory` (`.agents/skills/improve-factory/SKILL.md`
 No Python, test suite or build. Checks are commands and a fresh agent. Byte counts come from Git blobs, same on every checkout and line ending: commit first, or name the base (`origin/main`) in place of `HEAD`.
 
 ```text
-grep -rnE '\]\(\.\./' .agents/skills                 # no links out of a skill's folder: expect nothing
-git ls-tree -rl HEAD .agents/skills | awk '$5 ~ /\/SKILL\.md$/ && $4 >= 17000'   # a SKILL.md at 17000 or over: expect nothing
-git ls-tree -rl HEAD .agents/skills | awk '$5 ~ /\/(SKILL|references\/[^\/]+)\.md$/ {s += $4} END {print s}'   # under 170000
-(cd .agents/skills && git ls-tree -l HEAD safe-factory/SKILL.md safe-factory/references/run-file.md safe-factory/references/checker.md safe-factory/references/sizes.md safe-factory/references/delegate.md safe-factory/references/owner-reports.md safe-factory/references/worth-it.md ticketing/SKILL.md ticketing/references/ticket-layout.md analyze-start/SKILL.md recommend/SKILL.md get-ready-to-code/SKILL.md how-to-make-a-pr/SKILL.md how-to-make-a-pr/references/media-proof.md how-to-make-a-pr/references/pr-layout.md how-to-make-a-pr/references/github.md how-to-make-a-pr/references/credit.md deep-review/SKILL.md deep-review/references/change-guard.md deep-review/references/compliance.md | awk '{s += $4} END {print s}')   # read set: under 105000
-v=$(grep -o '"version": "[^"]*"' .agents/.claude-plugin/plugin.json | cut -d'"' -f4); for f in .agents/.codex-plugin/plugin.json .agents/.cursor-plugin/plugin.json .claude-plugin/marketplace.json; do grep -qF "\"${v:?}\"" "$f" || grep -qF "\"v$v\"" "$f" || echo "$f"; done   # every manifest agrees with the canonical version: expect nothing
-d=$(mktemp -d); mkdir -p "$d/ai-software-factory" "$d/b"; printf '#!/bin/sh\nexit 4\n' > "$d/b/gh"; cp "$d/b/gh" "$d/b/curl"; chmod +x "$d/b/gh" "$d/b/curl"; for c in 9.9.9:out 0.0.1:quiet; do echo "${c%:*}" > "$d/ai-software-factory/latest"; o=$(PATH="$d/b:$PATH" FACTORY_NO_UPDATE_CHECK= HOME="$d" CLAUDE_PROJECT_DIR="$d" XDG_CACHE_HOME="$d" sh .agents/skills/safe-factory/scripts/update-check.sh .agents); case "${c#*:}:$o" in out:*"is out"*|quiet:) ;; *) echo "update check wrong for ${c%:*}";; esac; done; rm -rf "$d"   # newer release tells the owner, older stays quiet: expect nothing
-d=$(mktemp -d); mkdir "$d/b"; printf '#!/bin/sh\nexit 4\n' > "$d/b/gh"; printf '#!/bin/sh\necho "  \\"tag_name\\": \\"v9.9.9\\","\n' > "$d/b/curl"; chmod +x "$d/b/gh" "$d/b/curl"; PATH="$d/b:$PATH" FACTORY_NO_UPDATE_CHECK= HOME="$d" CLAUDE_PROJECT_DIR="$d" XDG_CACHE_HOME="$d" sh .agents/skills/safe-factory/scripts/update-check.sh .agents; for i in 1 2 3 4 5; do [ -s "$d/ai-software-factory/latest" ] && break; sleep 1; done; grep -qx 9.9.9 "$d/ai-software-factory/latest" 2>/dev/null || echo "update check: no curl fallback"; rm -rf "$d"   # gh signed out: curl still finds the release: expect nothing
-(d=$(mktemp -d); s=$PWD/.agents/skills/safe-factory/scripts/doctor.sh; mkdir -p "$d/.codex" "$d/.cursor" "$d/p/.claude"; printf '{\n  "hooks": {\n    "Stop": [{"hooks": [{"command": "sh x/run-gate.sh"}]}]\n  }\n}\n' > "$d/.codex/hooks.json"; printf '{\n  "hooks": {\n    "stop": [{"command": "sh x/run-gate.sh"}, {"command": "sh x/skills/safe-factory/scripts/run-guard.sh"}]\n  }\n}\n' > "$d/.cursor/hooks.json"; printf '{\n\t"permissions": {},\n\t"hooks": {"Stop": [{"hooks": [{"command": "sh x/run-gate.sh"}]}]}\n}\n' > "$d/p/.claude/settings.json"; export HOME="$d" CLAUDE_PROJECT_DIR="$d/p" XDG_CACHE_HOME="$d"; sh "$s" >/dev/null && echo "doctor missed a leftover"; sh "$s" --fix >/dev/null; [ -f "$d/.codex/hooks.json" ] && echo "doctor --fix left the old hook"; [ -f "$d/.cursor/hooks.json" ] && [ -f "$d/p/.claude/settings.json" ] || echo "doctor --fix moved a file holding more than old hooks"; rm -rf "$d")   # old-only file moved; mixed or other-settings files stay: expect nothing
+sh scripts/check.sh                    # every check: prints nothing, exit 0; else one FAIL line each, exit 1
+sh scripts/check.sh HEAD origin/main    # also fails any method byte growth against the base
+sh scripts/check.sh bytes origin/main   # "<all methods> <read set>" for the PR line (run for base and head)
 ```
+
+It checks: links stay in a skill folder, SKILL.md under 17000, no media in Git, methods under 170000 and read set under 105000 (Git blobs), manifests agree, update check offline (newer tells, older quiet, curl fallback), doctor moves only old-only files.
 
 - Changed `run-guard.sh` runs on fixture run files (`improve-factory`, Proof). Stays POSIX `sh` with LF endings and one `awk` pass.
 - Changed `gh` or `git` command form in a method: update night templates (`.agents/hooks/claude-settings.json` allow list, `codex.rules`) to match.
 - Every changed method gets a fresh-agent walkthrough before review.
 - Skill, reference, role or hook moved, added or deleted: update `README.md` and `docs/` in same PR. Keep what they say (commands, paths, defaults) true by hand.
-- Each PR states method bytes before and after (commands above, base and head). Net growth needs owner's OK with the reason.
+- Each PR states method bytes before and after (`bytes` for base and head). Net growth needs owner's OK with the reason.
 - Keep secrets, client data, transcripts and `.factory/` run files out of Git.
 
 ## PRs
@@ -48,5 +45,5 @@ Draft PRs, through `how-to-make-a-pr`, linked to their ticket, unless owner says
 
 ## Releases
 
-- Every PR a reader notices adds its lines under `## [Unreleased]` in `CHANGELOG.md` per [releasing](docs/releasing.md#changelog), and steps under next version in `UPGRADING.md` when installs or open runs must act.
+- Every PR a reader notices adds its lines under `## [Unreleased]` in `CHANGELOG.md` per [releasing](docs/releasing.md#changelog), and steps under `## Unreleased` in `UPGRADING.md` when installs or open runs must act.
 - One canonical version: `version` in `.agents/.claude-plugin/plugin.json`, SemVer by the bump table in [releasing](docs/releasing.md#versions); `.agents/.codex-plugin/plugin.json` and `.agents/.cursor-plugin/plugin.json` match it. Humans cut, tag and publish releases ([releasing](docs/releasing.md)); never move or re-publish a tag.

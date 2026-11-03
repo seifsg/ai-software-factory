@@ -6,6 +6,16 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking:** Move PR proof media to `refs/proof/<branch>` so clones stop downloading them; night mode that copied the allow list adds the new entry ([#283])
+- Let a run check every gate line itself before it briefs the checker, so gates stop failing on form ([#283])
+
+### Fixed
+
+- Fix tickets staying open after their PR merged: Gate C now fails a PR without `Closes #<n>` for each ticket it finishes ([#283])
+- Fix the update check leaving a hanging `gh` behind each session start: it stops after 20 s and the next start sweeps its leftovers ([#283])
+
 ## [0.4.4] - 2026-11-03
 
 ### Fixed
@@ -261,3 +271,4 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 [#274]: https://github.com/seifsg/ai-software-factory/pull/274
 [#277]: https://github.com/seifsg/ai-software-factory/pull/277
 [#280]: https://github.com/seifsg/ai-software-factory/pull/280
+[#283]: https://github.com/seifsg/ai-software-factory/pull/283

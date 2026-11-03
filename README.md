@@ -145,7 +145,7 @@ Projects keep `.factory/` folders until you delete them.
 
 ## 🛠️ Work on the factory
 
-Rules: [AGENTS.md](AGENTS.md). Changes go through `improve-factory`. Releases: [docs/releasing.md](docs/releasing.md). Report problems as [issues](https://github.com/seifsg/ai-software-factory/issues).
+Rules: [AGENTS.md](AGENTS.md). Changes go through `improve-factory`; checks: `sh scripts/check.sh`. Releases: [docs/releasing.md](docs/releasing.md) (`sh scripts/release.sh`). Report problems as [issues](https://github.com/seifsg/ai-software-factory/issues).
 
 ```text
 .agents/skills/                  the skills (canonical methods)
