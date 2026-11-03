@@ -6,6 +6,7 @@
           {
             "type": "command",
             "command": "r=\"${CLAUDE_PLUGIN_ROOT}\"; [ -n \"$r\" ] || r=\"$PLUGIN_ROOT\"; g=\"$r/skills/safe-factory/scripts/run-guard.sh\"; [ -f \"$g\" ] && { set -- stop; . \"$g\"; }; exit 0",
+            "commandWindows": "cmd.exe /d /c call \"${PLUGIN_ROOT}/hooks/windows.cmd\" stop",
             "timeout": 10
           }
         ]
@@ -18,6 +19,7 @@
           {
             "type": "command",
             "command": "r=\"${CLAUDE_PLUGIN_ROOT}\"; [ -n \"$r\" ] || r=\"$PLUGIN_ROOT\"; g=\"$r/skills/safe-factory/scripts/run-guard.sh\"; [ -f \"$g\" ] && { set -- compact; . \"$g\"; }; exit 0",
+            "commandWindows": "cmd.exe /d /c call \"${PLUGIN_ROOT}/hooks/windows.cmd\" compact",
             "timeout": 10
           }
         ]
@@ -28,6 +30,7 @@
           {
             "type": "command",
             "command": "r=\"${CLAUDE_PLUGIN_ROOT}\"; [ -n \"$r\" ] || r=\"$PLUGIN_ROOT\"; [ -f \"$r/skills/safe-factory/scripts/update-check.sh\" ] && sh \"$r/skills/safe-factory/scripts/update-check.sh\" \"$r\"; exit 0",
+            "commandWindows": "cmd.exe /d /c call \"${PLUGIN_ROOT}/hooks/windows.cmd\" startup",
             "timeout": 5
           }
         ]
