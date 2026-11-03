@@ -1,6 +1,6 @@
 {
   "name": "safe-factory",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "AI Software Factory: ten visible steps from ticket to reviewed draft PR, with a run file and checker gates.",
   "skills": "./skills/",
   "agents": "./agents/"
