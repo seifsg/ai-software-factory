@@ -8,6 +8,7 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ### Fixed
 
+- Fix Fast runs stopping after a step when the Stop hook never fires or starts outside the session's folder, as in desktop worktree sessions and Cursor ([#270])
 - Run Codex Windows hooks through a native launcher that locates Git Bash and preserves hook input/output, instead of sending POSIX syntax to PowerShell or cmd. Missing Git Bash explains the install and restart action (#264).
 
 ## [0.4.0] - 2026-11-02
@@ -216,3 +217,4 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 [#258]: https://github.com/seifsg/ai-software-factory/pull/258
 [#260]: https://github.com/seifsg/ai-software-factory/pull/260
 [#262]: https://github.com/seifsg/ai-software-factory/pull/262
+[#270]: https://github.com/seifsg/ai-software-factory/pull/270

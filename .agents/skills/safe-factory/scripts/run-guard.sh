@@ -9,6 +9,10 @@
 mode=${1:-stop}
 self=$0; case $self in *run-guard.sh) ;; *) self=${g:-run-guard.sh} ;; esac  # the plugin hook sources it from $g
 self=$(printf '%s' "$self" | tr '\\' /)  # a Windows path's backslashes would break the JSON replies
+in=; [ "$mode" = clear ] || in=$(cat)
+val() { printf '%s' "$in" | sed -n "s/.*\"$1\": *\"\([^\"]*\)\".*/\1/p" | head -n 1; }  # one JSON string field
+# Walk from the session's folder (input cwd), else $PWD: a hook may start elsewhere, as in desktop worktree sessions.
+c=${in#*\"cwd\":}; [ "$c" = "$in" ] || { c=${c#*\"}; c=${c%%\"*}; cd "$c" 2>/dev/null; }  # no fork: runs at every turn end; Git Bash cd takes JSON's G:\\x
 d=$PWD
 while [ ! -f "$d/.factory/run.md" ]; do
   { [ -e "$d/.git" ] || [ -z "$d" ]; } && exit 0  # checkout root reached: no run here
@@ -18,8 +22,6 @@ run="$d/.factory/run.md" g="$d/.factory/guard"
 st="$g/state"
 # Untouched for 12 hours: abandoned, not this session's. A resume (compact mode) still gets its place back.
 [ "$mode" = stop ] && [ -n "$(find "$run" -mmin +720)" ] && exit 0
-in=; [ "$mode" = clear ] || in=$(cat)
-val() { printf '%s' "$in" | sed -n "s/.*\"$1\": *\"\([^\"]*\)\".*/\1/p" | head -n 1; }  # one JSON string field
 sid=$(val session_id) tp=$(val transcript_path | sed 's/\\\\/\//g' | tr -d "'") now=$(date +%s)
 # State: single-quoted g_* lines only the guard writes, counters digits only, no $ or backquote anywhere.
 # Anything else is never sourced: the run halts until the owner clears it (a lost state halts the same way).
