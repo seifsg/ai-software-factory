@@ -25,11 +25,11 @@ Try unreleased checkout: `claude --plugin-dir <clone>/.agents`.
 Plugin (Windows automatic phase chain verified; full delivery pending):
 
 ```text
-codex plugin marketplace add https://github.com/seifsg/ai-software-factory.git
+codex plugin marketplace add https://github.com/seifsg/ai-software-factory.git --sparse .claude-plugin --sparse .agents
 codex plugin add safe-factory@ai-software-factory
 ```
 
-Or pick it in `/plugins`. Start a new session, trust its hooks in `/hooks` (again after each update: trust follows each hook's hash). Update: `codex plugin marketplace upgrade ai-software-factory`. Remove: `codex plugin remove safe-factory@ai-software-factory`. Codex reads the repo's `.claude-plugin/marketplace.json`; the plugin root is `.agents/` (`.codex-plugin/plugin.json`, `skills/`, `hooks/hooks.json`). Plugin hooks run only for manual installs.
+Or pick it in `/plugins`. Start a new session, trust its hooks in `/hooks` (again after each update: trust follows each hook's hash). Update: `codex plugin marketplace upgrade ai-software-factory`. `--sparse` fetches only the plugin, so add and upgrade finish inside Codex's 30 s clone limit; a full clone of this repository takes longer. Remove: `codex plugin remove safe-factory@ai-software-factory`. Codex reads the repo's `.claude-plugin/marketplace.json`; the plugin root is `.agents/` (`.codex-plugin/plugin.json`, `skills/`, `hooks/hooks.json`). Plugin hooks run only for manual installs.
 
 On Windows, `commandWindows` uses `hooks/windows.cmd` to find Git Bash beside `git.exe` on `PATH`, then runs the same Stop, compact and startup scripts. No PowerShell execution-policy change or extra runtime is needed. Missing Git Bash produces a notice with the install and restart action; the factory does not automatically continue. Check a new run advances from the ticket response to a separate analysis prompt and full response. An installed skill or trusted hook entry alone does not prove that chain.
 
@@ -68,7 +68,7 @@ Plugin (not yet run live): in a session, `/plugin marketplace add https://github
 
 ## Update check
 
-At session start the plugin hook reads a cached latest release (no network, about 0.2 s on Windows) and refreshes that cache in the background once a day with `gh api`, or `curl` when `gh` is missing or signed out. Check by hand: compare the README version badge, or the [Latest release](https://github.com/seifsg/ai-software-factory/releases/latest), with your agent's installed plugin version. A newer release: the agent tells you before any run and links what's new. The same hook also lists leftovers of old versions (see below) and the agent offers to clean them; it never stops a run for it. Off: `FACTORY_NO_UPDATE_CHECK=1`.
+At session start the plugin hook reads a cached latest release (no network, about 0.2 s on Windows) and refreshes that cache in the background at every session start (written only when the fetch succeeds, so a failure retries next start) with `gh api`, or `curl` when `gh` is missing or signed out. Check by hand: compare the README version badge, or the [Latest release](https://github.com/seifsg/ai-software-factory/releases/latest), with your agent's installed plugin version. A newer release: the agent tells you before any run and links what's new. The same hook also lists leftovers of old versions (see below) and the agent offers to clean them; it never stops a run for it. Off: `FACTORY_NO_UPDATE_CHECK=1`.
 
 ## Clean up and uninstall
 
