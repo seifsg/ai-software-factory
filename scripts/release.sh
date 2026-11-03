@@ -8,7 +8,8 @@ case $cmd:$v in prepare:[0-9]*.[0-9]*.[0-9]* | publish:[0-9]*.[0-9]*.[0-9]*) ;; 
 case $v in *[!0-9.]* | *..* | *.*.*.*) die "version must be plain X.Y.Z, got $v" ;; esac
 cd "$(git rev-parse --show-toplevel)" || exit 1
 man=.agents/.claude-plugin/plugin.json
-slug=$(git remote get-url origin | sed 's#.*github\.com[:/]##; s#\.git$##')
+slug=$(git config --get remote.origin.url | sed 's#.*github\.com[:/]##; s#\.git$##')
+case $slug in ?*/?*) ;; *) die "origin is not a GitHub repository: $slug" ;; esac
 git fetch -q origin '+refs/heads/main:refs/remotes/origin/main' '+refs/tags/*:refs/tags/*' || die "git fetch failed"  # explicit: --tags alone may skip main
 git rev-parse -q --verify "refs/tags/v$v" >/dev/null && die "tag v$v exists; fix forward with a new version"
 
