@@ -8,6 +8,8 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [0.5.0] - 2026-11-03
 
+_Upgrade needed only for night mode installs that copied the allow list; follow [UPGRADING.md](UPGRADING.md#050)._
+
 ### Changed
 
 - **Breaking:** Move PR proof media to `refs/proof/<branch>` so clones stop downloading them; night mode that copied the allow list adds the new entry ([#283])
