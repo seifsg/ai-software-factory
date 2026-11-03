@@ -64,7 +64,7 @@ Without plugins, copy by hand:
 
 ## Cursor
 
-Plugin (not yet run live): in a session, `/plugin marketplace add https://github.com/seifsg/ai-software-factory.git`, then `/plugin` and install `safe-factory` (CLI: `agent plugin marketplace add …`; editor: paste the repo URL into the plugin search). Reads `.cursor-plugin/marketplace.json`. Brings skills and delegate roles; no hooks yet, so Fast chains steps in one turn (Safe: `Say go for step <n>`). For the Stop guard, Cursor runs Claude Code hooks from a project's `.claude/settings.json`: copy the `Stop` entry from `.agents/hooks/hooks.json` there and set the `r=` at the start of its command to the absolute path of the plugin's `.agents/` folder. Update: GitHub installs stay on the commit they were installed from, so uninstall and install again in `/plugin`; a team marketplace import with Auto Refresh updates by itself (Teams and Enterprise).
+Plugin (not yet run live): in a session, `/plugin marketplace add https://github.com/seifsg/ai-software-factory.git`, then `/plugin` and install `safe-factory` (CLI: `agent plugin marketplace add …`; editor: paste the repo URL into the plugin search). Reads `.cursor-plugin/marketplace.json`. Brings skills, delegate roles and the run hooks. Cursor also loads Claude Code's installed plugins (Settings → Agents → Third-Party Imports → Include Third-Party Plugins, Skills, and Other Configs): with the Claude Code plugin installed, skip this one or turn that off, else every hook runs twice. Update: GitHub installs stay on the commit they were installed from, so uninstall and install again in `/plugin`; a team marketplace import with Auto Refresh updates by itself (Teams and Enterprise).
 
 ## Update check
 

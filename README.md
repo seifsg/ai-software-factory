@@ -48,7 +48,7 @@ Before is captured before the first edit, After during verify, and both land in 
 | Install | `/plugin install safe-factory@ai-software-factory` | `codex plugin add safe-factory@ai-software-factory`, then trust its hooks in `/hooks` | `/plugin`, install `safe-factory` |
 | Run | `/safe-factory` | `$safe-factory` | `/safe-factory` |
 | One skill alone | `/safe-factory:analyze-start` | type `$`, pick `analyze-start` | `/analyze-start` |
-| Hooks | built in | built in; trust again in `/hooks` after each update | none yet: steps chain in Fast; Stop guard by hand ([Cursor](docs/install.md#cursor)) |
+| Hooks | built in | built in; trust again in `/hooks` after each update | built in, not yet run live; with the Claude Code plugin too, install only one ([Cursor](docs/install.md#cursor)) |
 
 Start a new session; your agent should list `safe-factory`. Other agents: copy the skills ([other agents](docs/install.md#other-agents)). You need Git, the GitHub CLI signed in (`gh auth login`) for tickets and draft PRs, and on Windows Git Bash (part of Git for Windows) for the hooks. To try unreleased `main`, run `claude --plugin-dir <clone>/.agents`.
 
@@ -150,7 +150,7 @@ Rules: [AGENTS.md](AGENTS.md). Changes go through `improve-factory`. Releases: [
 ```text
 .agents/skills/                  the skills (canonical methods)
 .agents/agents/                  delegate roles for Claude Code (runner, analyst, maker, builder, reviewer, checker)
-.agents/hooks/hooks.json         the Stop guard, compact hook and update check (Claude Code, Codex)
+.agents/hooks/hooks.json         the Stop guard, compact hook and update check (Claude Code, Codex, Cursor)
 .agents/.claude-plugin/          plugin manifests (also .codex-plugin/, .cursor-plugin/); the plugin root is .agents/
 .claude-plugin/marketplace.json  the marketplace (Claude Code, Codex), pinned to the release tag
 .cursor-plugin/marketplace.json  the Cursor marketplace
