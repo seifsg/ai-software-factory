@@ -3,7 +3,6 @@
 #   sh scripts/release.sh prepare X.Y.Z   branch from origin/main, bump, move CHANGELOG and UPGRADING, check, open the release PR
 #   sh scripts/release.sh publish X.Y.Z   after the owner merged that PR: tag its merge commit, push the tag, publish as Latest
 cmd=$1 v=$2
-export MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL="*"  # Git Bash: keep <ref>:<path> as typed, never a Windows path list
 die() { echo "release: $*" >&2; exit 1; }
 case $cmd:$v in prepare:[0-9]*.[0-9]*.[0-9]* | publish:[0-9]*.[0-9]*.[0-9]*) ;; *) die "usage: sh scripts/release.sh prepare|publish X.Y.Z" ;; esac
 case $v in *[!0-9.]* | *..* | *.*.*.*) die "version must be plain X.Y.Z, got $v" ;; esac
@@ -15,8 +14,10 @@ git rev-parse -q --verify "refs/tags/v$v" >/dev/null && die "tag v$v exists; fix
 
 # Rewrite file $2 with sed script $1 (portable: no sed -i), CR endings of a Windows checkout dropped.
 sub() { tr -d '\r' < "$2" | sed "$1" > "$2.n" && mv "$2.n" "$2"; }
+# <ref>:<path> as typed: Git Bash would turn it into a Windows path list.
+show() { MSYS_NO_PATHCONV=1 git show "$1"; }
 # Version in <ref>'s canonical manifest.
-ver() { git show "$1:$man" | grep -o '"version": "[^"]*"' | cut -d'"' -f4; }
+ver() { show "$1:$man" | grep -o '"version": "[^"]*"' | cut -d'"' -f4; }
 # True when X.Y.Z $1 is above $2, comparing numbers.
 above() {
   IFS=. read -r a b c <<EOF
@@ -36,7 +37,7 @@ notes() {
 prepare() {
   [ -z "$(git status --porcelain)" ] || die "working tree not clean"
   old=$(ver origin/main); above "$v" "$old" || die "$v is not above $old on origin/main"
-  git show origin/main:CHANGELOG.md | awk '/^## \[Unreleased\]/ {on = 1; next} on && /^## \[/ {exit} on && /^- /' | grep -q . ||
+  show origin/main:CHANGELOG.md | awk '/^## \[Unreleased\]/ {on = 1; next} on && /^## \[/ {exit} on && /^- /' | grep -q . ||
     die "nothing under ## [Unreleased] in CHANGELOG.md"
   git switch -q -c "release/v$v" origin/main || die "cannot create branch release/v$v"
   for f in $man .agents/.codex-plugin/plugin.json .agents/.cursor-plugin/plugin.json; do
@@ -65,7 +66,7 @@ publish() {
   m=$(git log --first-parent --format=%H -1 -G"\"version\": \"$v\"" origin/main -- $man)
   [ -n "$m" ] && [ "$(ver "$m")" = "$v" ] || die "cannot find the commit that set $v"
   git tag -a "v$v" -m "v$v" "$m" && git push -q origin "v$v" || die "tag push failed"
-  b=$(mktemp) || exit 1; git show "$m:CHANGELOG.md" > "$b.c"; notes "$v" "$b.c" > "$b"
+  b=$(mktemp) || exit 1; show "$m:CHANGELOG.md" > "$b.c"; notes "$v" "$b.c" > "$b"
   [ -s "$b" ] || die "no ## [$v] section in CHANGELOG.md at $m (tag v$v is pushed)"
   gh release create "v$v" --latest --title "v$v" --notes-file "$b" || die "release not created (tag v$v is pushed): rerun gh release create"
   rm -f "$b" "$b.c"
