@@ -10,11 +10,13 @@ while IFS= read -r l; do case $l in *'"version"'*) have=${l#*'"version"'*\"}; ha
 [ -n "$have" ] || exit 0
 c="${XDG_CACHE_HOME:-$HOME/.cache}/ai-software-factory"; f="$c/latest"; slug=seifsg/ai-software-factory
 # Every start: refresh in the background from the release marked Latest (deprecated tags stay), never wait on it; curl when gh
-# is absent or signed out. Written only on success (own tmp, atomic mv), so a failed fetch retries next start.
-# One detached subshell owning all its output, so the hook's pipes close at once.
-( mkdir -p "$c" && t="$f.$$" && { { gh api "repos/$slug/releases/latest" --jq .tag_name \
-  || curl -fsm 20 "https://api.github.com/repos/$slug/releases/latest" | sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p'; } \
-  | sed -n 's/^v//p' > "$t" && [ -s "$t" ] && mv "$t" "$f" || rm -f "$t"; } ) </dev/null >/dev/null 2>&1 &
+# is absent, signed out or hangs (killed after 20 s, like curl -m 20). Written only on success (own tmp, atomic mv), so a failed
+# fetch retries next start; a tmp a killed fetch left is swept after a minute. One detached subshell owns all output: hook pipes close.
+( mkdir -p "$c" && t="$f.$$" || exit; find "$c" -name 'latest.?*' -mmin +1 -exec rm -f {} +
+  gh api "repos/$slug/releases/latest" --jq .tag_name > "$t" & p=$!; { sleep 20; kill $p; } & w=$!
+  wait $p; r=$?; kill $w  # the watchdog goes first, so it never signals a reused pid
+  [ $r = 0 ] && [ -s "$t" ] || curl -fsm 20 "https://api.github.com/repos/$slug/releases/latest" | sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p' > "$t"
+  v=$(sed -n 's/^v//p' "$t"); [ -n "$v" ] && echo "$v" > "$t" && mv "$t" "$f" || rm -f "$t" ) </dev/null >/dev/null 2>&1 &
 new=; [ -s "$f" ] && read -r new < "$f"
 for v in "$have" "$new"; do case $v in [0-9]*.[0-9]*.[0-9]*) ;; *) exit 0;; esac; case $v in *[!0-9.]*) exit 0;; esac; done  # only plain x.y.z
 [ -n "$new" ] && [ "$new" != "$have" ] || exit 0
