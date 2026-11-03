@@ -68,7 +68,7 @@ Bad: `- Continuous runs (#253): a gate or review loop with 3 failed rounds ... c
 
 ## What follows a release
 
-Every install's update check sees it within a day and tells the owner. Claude Code installs take it at next plugin update (auto-update on: by itself). Codex: `codex plugin marketplace upgrade`. Cursor: reinstall from the marketplace. Copied skills: pull the clone, copy again.
+Every install's update check sees it at its next session start and tells the owner at the one after. Claude Code installs take it at next plugin update (auto-update on: by itself). Codex: `codex plugin marketplace upgrade`. Cursor: reinstall from the marketplace. Copied skills: pull the clone, copy again.
 
 ## Owner settings
 
