@@ -3,6 +3,7 @@
 #   sh scripts/release.sh prepare X.Y.Z   branch from origin/main, bump, move CHANGELOG and UPGRADING, check, open the release PR
 #   sh scripts/release.sh publish X.Y.Z   after the owner merged that PR: tag its merge commit, push the tag, publish as Latest
 cmd=$1 v=$2
+export MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL="*"  # Git Bash: keep <ref>:<path> as typed, never a Windows path list
 die() { echo "release: $*" >&2; exit 1; }
 case $cmd:$v in prepare:[0-9]*.[0-9]*.[0-9]* | publish:[0-9]*.[0-9]*.[0-9]*) ;; *) die "usage: sh scripts/release.sh prepare|publish X.Y.Z" ;; esac
 case $v in *[!0-9.]* | *..* | *.*.*.*) die "version must be plain X.Y.Z, got $v" ;; esac
