@@ -25,12 +25,18 @@ stale() {
   [ -n "$fix" ] || { todo "$1" "stale copy of $2; --fix refreshes it"; return 0; }
   move "$1" "stale copy" && { cp "$2" "$1" && say "$1" "refreshed from $2" || todo "$1" "refresh failed; restore it from $t"; }
 }
-# A factory checkout tracks its own skills: only home and other projects hold leftover launchers.
+# Moves old folder $1 ($2 says what), unless Git tracks it: then it is an old factory checkout, updated, never moved.
+old_dir() {
+  git -C "$1" ls-files --error-unmatch . >/dev/null 2>&1 || { move "$1" "$2"; return; }
+  ck=${1%/.agents/*} db=$(git -C "$1" symbolic-ref -q --short refs/remotes/origin/HEAD); db=${db#origin/}
+  todo "$ck" "old factory checkout (tracks $2); --fix leaves it: git -C \"$ck\" switch ${db:-main} && git -C \"$ck\" pull"
+}
+# A current factory checkout tracks its own skills: only home and other projects hold leftover launchers.
 for d in "$H" "$P"; do
   [ -f "$d/.agents/.claude-plugin/plugin.json" ] && continue
   d=$d/.agents/skills
-  [ -d "$d/safe-engine" ] && move "$d/safe-engine" "old launcher, now safe-factory"
-  [ -f "$d/improve-factory/scripts/resolve_bundle.py" ] && move "$d/improve-factory" "1.x launcher"
+  [ -d "$d/safe-engine" ] && old_dir "$d/safe-engine" "old launcher, now safe-factory"
+  [ -f "$d/improve-factory/scripts/resolve_bundle.py" ] && old_dir "$d/improve-factory" "1.x launcher"
 done
 [ -d "$H/.safe-engine" ] && move "$H/.safe-engine" "1.x run state and self-updater"
 on=; grep -qs 'safe-factory@' "$H/.claude/settings.json" && on=1
