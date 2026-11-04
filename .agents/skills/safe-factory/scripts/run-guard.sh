@@ -53,6 +53,7 @@ if [ -z "$d" ]; then
   esac
   exit 0
 fi
+case $d in /*) command -v cygpath >/dev/null && d=$(cygpath -m "$d") ;; esac  # Git Bash: /tmp/... means nothing to the agent's native tools
 run="$d/.factory/run.md" g="$d/.factory/guard"
 rf=$run; case $rf in *%*) rf=$(printf '%s' "$rf" | sed 's/%/%%/g') ;; esac  # run path inside printf formats
 st="$g/state"
