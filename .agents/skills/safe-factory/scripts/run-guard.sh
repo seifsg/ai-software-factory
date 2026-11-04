@@ -169,6 +169,9 @@ EOF
 [ -n "$note" ] && g_halt="$note"  # never trusted, never reset: the owner looks, then clears
 prev=${g_ticks:-$ticks}
 case $prev in '' | *[!0-9]*) prev=$ticks ;; esac
+# A finish the guard saw holds while the run says closed, wherever HEAD went since. Only the guard writes g_end;
+# a run that stops saying closed, or a new run in this checkout, proves itself again.
+[ "$g_end" = done ] && { grep -q '^Status: closed' "$run" && grep -Eq '^Gate C: (PASS|WAIVED)' "$run" && finished=1 || g_end=; }
 [ "$finished" = 1 ] && g_end=done
 if [ "$mode" = stop ]; then
   [ "$g_session" = "$sid" ] || g_sstep=$step  # a new session counts phase boundaries from here
