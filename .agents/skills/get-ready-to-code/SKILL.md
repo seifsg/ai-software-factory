@@ -11,12 +11,12 @@ Keep required quality. Complete working iterations, tiny bug or full product. Ne
 
 ## Part A: the plan (in order; stop where noted)
 
-1. **Summary of files about to change.** List them, then stop and look at the list. Continue only when your instructions already authorize it.
-2. **Self-critique that set.** Is this file set optimal, the best path for the plan? Can it be smaller, cleaner, more reusable? Revise it before going on.
+1. **Summary of files about to change.** List, then stop and look. Continue only when your instructions already authorize it.
+2. **Self-critique that set.** Optimal, best path for the plan? Smaller, cleaner, more reusable? Revise before going on.
 3. **Steps or phases.** Ordered by user value: first the smallest real journey someone can see and use. Before dependent work, settle the shared state owner, invariants and who enforces them, entry points, limits, compatibility and failure behavior. Root fix, not patch; big or risky ones go to the owner.
 4. **The entire todo list.** Every todo concrete and checkable, and it becomes the ticket's checklist. Order never drops scope: every requested item maps to a todo, or stays open in its ticket when the owner narrowed this iteration.
-5. **The entire plan.** The whole thing written out, so no agent guesses: interfaces and this checkout's dev ports.
-6. **Proof and tests.** The proof list for the PR's Before and After: one short id per changed view, state, journey or command; interactive elements share their journey's id, never one id each. The test map: the command that runs the tests covering each changed file, and the project's full-suite command for verify.
+5. **The entire plan.** Written out so no agent guesses: interfaces, this checkout's dev ports.
+6. **Proof and tests.** The proof list for the PR's Before and After: one short id per changed view, state, journey or command; interactive elements share their journey's id, never one id each. The test map: command running tests covering each changed file, and project's full-suite command for verify.
 
 Do no coding while producing the plan.
 
@@ -47,13 +47,12 @@ Do no coding while producing the plan.
 
 - After each todo's real use: only tests covering its changed files. Full suite waits for verify.
 - Tick the todo in the ticket and write its log line once its own use-check passes: `T3 pre: <before> do: <change> post: <check>`.
-- Second related failure or edge case: find the shared cause and why the previous fix failed, fix the cause and its consumers, state what prevents recurrence. No endless symptom patches.
+- Second related failure or edge case: shared cause, why the previous fix failed; fix cause and consumers, state what prevents recurrence. No endless symptom patches.
 - Ticket finished: every item ticked, definition of done proven. Until then the loop continues.
 
 ## Light plan
 
 A small `change` or follow-up, when your instructions ask for one: files with a one-line critique, the todo list, one success line, the proof list and the test map. It meets the same output contract, whose product-only lines it omits. The 0–4 loop stays.
-
 
 ## Output contract
 

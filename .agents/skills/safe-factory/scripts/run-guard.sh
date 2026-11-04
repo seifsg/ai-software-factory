@@ -89,7 +89,8 @@ else ev=.; if [ -f "$tp" ]; then fb=1; set -- "$tp"; else nov=1; fi; fi
 t=${tp%/*/*}; for q in $g_sessions; do for f in "$t"/*/"$q.jsonl"; do [ -f "$f" ] && [ "$fb$f" != "1$tp" ] && set -- "$@" "$f"; done; done
 lh=${in#*\"last_assistant_message\":\"## }; lh=${lh%% *}; case $lh in [0-8] | [0-8]b) ;; *) lh= ;; esac
 head=$(git -C "$d" rev-parse HEAD 2>/dev/null) up=$(git -C "$d" rev-parse '@{u}' 2>/dev/null)
-[ -n "$up" ] || [ -n "$(git -C "$d" remote 2>/dev/null)" ] || up=$head  # no remote: nothing to push to; a branch never pushed still has one
+if [ -n "$up" ] || [ -n "$(git -C "$d" remote 2>/dev/null)" ]; then { [ -f "$g/remote" ] || { mkdir -p "$g" && : > "$g/remote"; }; }
+elif [ ! -f "$g/remote" ]; then up=$head; fi  # no remote, ever: nothing to push to. A branch never pushed still has one
 night=0; [ "${g_night_until:-0}" -gt 0 ] 2>/dev/null && night=1
 # One awk pass over the run file and the evidence files. Only a strict "<step> <name> · <skill>" Next value
 # is kept for the reply. The step is the later of Next and the last ticked heading, so a malformed Next never
@@ -116,9 +117,10 @@ $(cd "$ev" && awk -v R="$run" -v lh="$lh" -v fb=$fb -v nov=$nov -v head="$head" 
   }
   FILENAME == R {
     if (/^Status: stopped/) s = 1
-    if (/^Waiting: /) hw = 1
-    if (/^Waiting: owner/) o = 1
-    if (/^Waiting: jobs:/) { j = 1; if (match($0, /\(max [0-9]+ min\)/)) jm = substr($0, RSTART + 5, RLENGTH - 10) + 0 }
+    if (/^Waiting: / && !hw++) {  # the header line: an old question in a block decides nothing
+      if (/^Waiting: owner/) o = 1
+      if (/^Waiting: jobs:/) { j = 1; if (match($0, /\(max [0-9]+ min\)/)) jm = substr($0, RSTART + 5, RLENGTH - 10) + 0 }
+    }
     if (/^## [0-8]b? .*✔/) { tk[++c] = $2; dn[$2] = 1 }
     if (/✔/) p++
     if (/^## 8 Review ✔/) r = 1
@@ -126,7 +128,11 @@ $(cd "$ev" && awk -v R="$run" -v lh="$lh" -v fb=$fb -v nov=$nov -v head="$head" 
     if (n == "" && match($0, /^Next: *[0-8]b? [A-Za-z]+ · [a-z-]+/)) { n = substr($0, RSTART, RLENGTH); sub(/^Next: */, "", n) }
     if (/^Gate [ABC]: PASS \(checker [^ )]+\) @[0-9a-f]+/) { x = substr($0, 6, 1); gid[x] = $5; sub(/\)$/, "", gid[x]); gsha[x] = at($6); want[gid[x]] = 1 }
     if (/^## /) sec = $2
-    if (/^```/) fc = !fc; else if (!fc && !/^\|/ && length($0) > 300) ll = ll (ll == "" ? "" : ",") FNR  # a wall of text
+    if (/^ *```/) fc = !fc
+    else if (!/^ *\|/ && length($0) > 300) {  # a wall of text: characters, so UTF-8 continuation bytes do not count
+      x = $0; gsub(/[\200-\277]/, "", x)
+      if (length(x) > 300) { if (fc) lf = lf "," FNR; else ll = ll (ll == "" ? "" : ",") FNR }
+    }
     if (/^CRITICAL: /) crs[sec] = 1
     if (match($0, /^(Gate [ABC]: PASS|Review: ready) \(cap, 3 rounds, no CRITICAL\) @[0-9a-f]+/)) { x = /^R/ ? "R" : substr($0, 6, 1); cs[x] = at(substr($0, 1, RLENGTH)) }
     if (/^Gate [ABC]: WAIVED by owner/) wv[substr($0, 6, 1)] = 1
@@ -157,6 +163,7 @@ $(cd "$ev" && awk -v R="$run" -v lh="$lh" -v fb=$fb -v nov=$nov -v head="$head" 
   END {
     done1(); if (clr) for (x in base) base[x] = f[x]  # the owner just cleared: caps count from here
     if (!hw) n = ""  # no Waiting line: a broken header, whatever Next says
+    if (fc && lf != "") ll = (ll == "" ? substr(lf, 2) : ll lf)  # an unclosed fence exempts nothing
     step = n == "" ? 0 : substr(n, 1, 1) + 0; if (m > step) step = m; g = "-"
     rok = capped("R") || rid != "" &&pre(rsha, head) && head == up && proven(rid, "R", rsha) && (nov || fb || last[rid] ~ /^verdict: ready( @|$)/)
     if ((step > 3 || r) && !ok("A")) g = "A"; else if ((step > 6 || r) && !ok("B")) g = "B"; else if (r && !ok("C")) g = "C"; else if (r && !rok) g = "R"
@@ -166,7 +173,7 @@ $(cd "$ev" && awk -v R="$run" -v lh="$lh" -v fb=$fb -v nov=$nov -v head="$head" 
     # Past the plan, its steps must be ticked; at the end, all of them. Earlier, a blocked step may wait its turn.
     if (step > 3 || r) for (i = split(r ? "0 1 2 2b 3 4 5 6 7" : "0 1 2 2b 3", q, " "); i > 0; i--) if (!(q[i] in dn)) sk = q[i] (sk == "" ? "" : ",") sk
     sent[lh] = 1; if (cx) for (i = 1; i <= c; i++) if (!sent[tk[i]]) u = u (u == "" ? "" : ",") tk[i]  # Claude Code transcripts only
-    printf "%d %d %d %d %s %d %d %d %s %d %d %d %d %s %s %s %d %s\n", s, !(o || j), r && g == "-" && sk == "" && ll == "", c, g, p, j, jm, oc == "" ? "-" : oc, f["A"], f["B"], f["C"], f["R"], u == "" ? "-" : u, sk == "" ? "-" : sk, ll == "" ? "-" : ll, step, n
+    printf "%d %d %d %d %s %d %d %d %s %d %d %d %d %s %s %s %d %s\n", s, (!(o || j)), (r && g == "-" && sk == "" && ll == ""), c, g, p, j, jm, (oc == "" ? "-" : oc), f["A"], f["B"], f["C"], f["R"], (u == "" ? "-" : u), (sk == "" ? "-" : sk), (ll == "" ? "-" : ll), step, n
   }' "$run" "$@")
 EOF
 [ "$gate" = - ] && gate=
@@ -248,7 +255,8 @@ save
 # Only a real wait stops a run: any other Waiting spelling is driven. A wait never hides a skipped step: one block, then it holds.
 if [ "$waiting" != 1 ]; then
   [ -n "$skip" ] || exit 0
-  case $in in *'"stop_hook_active":true'* | *'"stop_hook_active": true'*) exit 0 ;; esac
+  [ -f "$g/nudge" ] && [ ! "$run" -nt "$g/nudge" ] && exit 0
+  : > "$g/nudge"
   printf '{"decision":"block","reason":"If this session runs the factory run in '"$rf"': Steps not ticked: %s. Do each now, in order, or name them in Waiting: owner: only the owner skips a step."}\n' "$skip"
   exit 0
 fi
@@ -275,19 +283,19 @@ if [ -n "$why" ]; then
 fi
 save
 # One step per turn: the next step's prompt arrives only after the last answer is complete, as if the owner typed it.
-if [ -n "$skip" ]; then
+if [ "$batched" = 1 ]; then
+  todo="Batched: more than one step heading was ticked in one turn. Redo the last ticked step as its own fresh pass, run any open gate, then end your turn."
+elif [ -n "$skip" ]; then
   todo="Steps not ticked: $skip. Do each now, in order: load its skill, post its block, tick it. Only the owner skips a step: \`Waiting: owner:\` to ask."
 elif [ -n "$long" ]; then
-  todo="Run file lines over 300 characters: $long. Split each into short bullets or a table, every fact kept."
-elif [ "$batched" = 1 ]; then
-  todo="Batched: more than one step heading was ticked in one turn. Redo the last ticked step as its own fresh pass, run any open gate, then end your turn."
+  todo="Run file lines over 300 characters: $long. Split each into short bullets or a table, every fact kept; shorten exact lines (Status, Gate, T1 pre), never split them."
 elif [ "$rounds" -ge 3 ] && case $crit in *"$lx"*) false ;; *) true ;; esac; then  # the max-rounds loop, no open CRITICAL in its step
   [ "$lx" = R ] && cl='Review: ready' ln=review || cl="Gate $lx: PASS" ln="Gate $lx"
-  todo="$ln: $rounds failed rounds, no open CRITICAL: the loop passes by cap. Write \`$cl (cap, 3 rounds, no CRITICAL) @<sha>\` under its step (Gate C and review: on the pushed HEAD), move what is left to the ticket's follow-ups, then go on with the run."
+  todo="$ln: $rounds failed rounds, no open CRITICAL: the loop passes by cap. Write \`$cl (cap, 3 rounds, no CRITICAL) @<sha>\` under its step (Gate C and review: on the pushed HEAD, or HEAD with no remote), move what is left to the ticket's follow-ups, then go on with the run."
 elif [ "$gate" = R ]; then
-  todo='Step 8 has no verified reviewer verdict on the pushed HEAD: brief a fresh reviewer on that head, paste its line as `Review: ready (reviewer <id>) @<sha>`, then end your turn.'
+  todo='Step 8 has no verified reviewer verdict on the pushed HEAD (no remote: HEAD): brief a fresh reviewer on that head, paste its line as `Review: ready (reviewer <id>) @<sha>`, then end your turn.'
 elif [ -n "$gate" ]; then
-  todo="Gate $gate has not passed: its line needs a checker result on its commit (\`Gate $gate: PASS (checker <id>) @<sha>\`$([ "$gate" = C ] && printf ', HEAD pushed')). Run the checker for Gate $gate, paste its line, then end your turn."
+  todo="Gate $gate has not passed: its line needs a checker result on its commit (\`Gate $gate: PASS (checker <id>) @<sha>\`$([ "$gate" = C ] && printf ', HEAD pushed, unless no remote')). Run the checker for Gate $gate, paste its line, then end your turn."
 else
   case ${next%% *} in
     0) todo='Step 0 Ticket: load `ticketing` fresh. Check access, ask the owner once for anything the host may block, open or reuse the ticket.' ;;
@@ -300,7 +308,7 @@ else
     6) todo='Step 6 Verify: load `deep-review` fresh. Review the whole build, make the final manual pass with After captures, run the full suite once.' ;;
     7) todo='Step 7 PR: load `how-to-make-a-pr` fresh and open the draft PR.' ;;
     8) todo='Step 8 Review: load `how-to-review-a-pr` fresh and brief a fresh reviewer that did not build it.' ;;
-    '') todo='Run file header is wrong. Fix these lines, spelled exactly: `Status: open`, `Next: <step> <name> · <skill>`, `Waiting: none`. Then do that step.' ;;
+    '') grep -q '^Status: closed' "$run" && todo='This run says closed but its gates and review are not proven here. Set `Status: open` with a real `Next:`, or `Status: stopped (<reason>)`.' || todo='Run file header is wrong. Fix these lines, spelled exactly: `Status: open`, `Next: <step> <name> · <skill>`, `Waiting: none`. Then do that step.' ;;
     *) todo="Next: $next. Load that skill fresh." ;;
   esac
   [ "${next%% *}" = 5 ] || todo="$todo Do only this step: post its full block as your last message, update $run (tick, Next), then end your turn."

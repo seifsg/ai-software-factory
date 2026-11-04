@@ -138,7 +138,7 @@ Read-only: no fixes unless told. Does the journey work? Keep overall requirement
 | [performance](references/performance.md) | Loops, rendering, queries, I/O, caching, concurrency, memory, assets or startup touched. |
 | [journey](references/journey.md) | User- or consumer-visible behavior changed. |
 
-Lenses may run as isolated parallel reviewers. Give each: scope, baseline, raw evidence, its lens, finding format below. Reviewers verify hypotheses and request missing evidence; an omission cannot hide a risk.
+Lenses may run as isolated parallel reviewers. Give each: scope, baseline, raw evidence, its lens, finding format below. Reviewers verify hypotheses, request missing evidence; an omission cannot hide a risk.
 
 ### Scale to the change
 

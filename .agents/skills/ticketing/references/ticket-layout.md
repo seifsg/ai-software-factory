@@ -26,7 +26,7 @@ Skip what does not apply. Keep blocks separate. Never bury purpose, context or p
 
 ## Writing rules
 
-- No em dashes: use period, comma, colon or parentheses.
+- No em dashes: period, comma, colon or parentheses.
 - Cut generic openers, canned summaries, buzzwords, inflated adjectives, filler transitions, "not X, but Y", slogans. State the point.
 - Specific nouns, active verbs, consistent terms, key facts first.
 - Short bullets, narrow tables, flow diagrams. Emojis only to label sections and help scanning.

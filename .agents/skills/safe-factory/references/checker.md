@@ -29,6 +29,7 @@ Round 2 on: recheck only MISSING lines of round 1's handback; the rest stay met.
 Gate C's list, besides `## 7 PR`:
 
 - [ ] Steps 0–8 ticked
+- [ ] `## 7 PR` `local only`: its PR lines do not apply
 - [ ] Gates A and B: PASS or WAIVED
 - [ ] PR body: a closing keyword per sub-issue or change ticket it finishes (`how-to-make-a-pr`); an epic only a plain reference
 - [ ] `## 8 Review` holds the reviewer's verdict, or its cap line, on the PR's current head

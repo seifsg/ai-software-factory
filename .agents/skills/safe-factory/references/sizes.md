@@ -6,7 +6,7 @@ Build what asked + what it needs to work. Best quality, best UI/UX. No size defa
 
 Every feature, journey, integration, behavior owner asked for, plus what each needs end to end (item fails for a real user without it: part of the item).
 
-- A requested item leaves scope only by owner's recorded decision: source, reason, revisit condition, and its entry in the epic's follow-ups ticket.
+- A requested item leaves scope only by owner's recorded decision: source, reason, revisit condition, entry in the epic's follow-ups ticket.
 - Without that decision, nothing removes or replaces a requested item: no size label, research finding, generic follow-up, later iteration's focus or substitute (mock, sample data, a sandbox that cannot reach the real target, manual step). Seeded data fills content, never a requested integration. A provider's test mode on the real integration counts; live keys come with deployment.
 - Capability unavailable: item stays Blocked with reason, build rest, report unfinished.
 - Extras, no ask: better UI/UX, small enhancements of asked items, critical additions an asked item needs. Nothing else: no unasked features or pages (sign-in, payments, analytics, onboarding) unless an asked item needs it (roles, per-user data: real sign-in) or an owner-named MVP's launch needs it. Other ideas: suggestions in the follow-ups ticket (gap, evidence, cost), never built.

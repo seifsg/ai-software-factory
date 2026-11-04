@@ -50,10 +50,10 @@ G3 MANUAL <outcome>: <what the reviewer judges>
 
 - Lowest role that can pass the gates. To spend less, lower effort before tier.
 - Escalate, don't coach: after two failed gate rounds, job and handbacks go to fresh delegate one tier up, same edit access (runner to analyst, analyst to reviewer, maker to builder). A deep job that fails twice comes back to you (Authority and stops, rule 4).
-- Session is ceiling: a role above its tier runs on its model.
+- Session is ceiling: a role above session tier runs on session model.
 - Owner's override beats every role. Never change owner's session model or effort.
 
 ## Rounds
 
 - One maker, one independent reviewer per repair batch; reviewer checks deltas. Replace either on lost context, and a reviewer that repaired.
-- First review goes to fresh reviewer with baseline its method names (requirements, plan, rules, the diff and raw evidence such as logs, transcripts and QA notes), never builder's reasoning or a verdict.
+- First review goes to fresh reviewer with baseline its method names (requirements, plan, rules, diff, raw evidence: logs, transcripts, QA notes), never builder's reasoning or a verdict.

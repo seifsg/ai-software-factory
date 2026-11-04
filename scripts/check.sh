@@ -97,7 +97,7 @@ case $(ge sF -home-x-F) in *'Gate A has not'* | *'not posted'*) fail "a run move
 
 # Stop rules: only a real wait stops a run; a finish holds once seen; no remote passes; a skipped step or a wall of text never finishes.
 h=$w/h; mkdir -p "$h/.factory"; git init -q "$h"; git -C "$h" -c user.name=t -c user.email=t@t -c commit.gpgsign=false commit -q --allow-empty -m i; a=$w/hp/-home-x-H/sH/subagents; mkdir -p "$a"
-hs() { printf '{"session_id":"sH","transcript_path":"%s","cwd":"%s","last_assistant_message":"x"}' "$w/hp/-home-x-H/sH.jsonl" "$h" | HOME="$h" XDG_CACHE_HOME="$h" sh "$sg" stop; }
+hs() { printf '{"session_id":"sH","transcript_path":"%s","cwd":"%s","stop_hook_active":%s,"last_assistant_message":"x"}' "$w/hp/-home-x-H/sH.jsonl" "$h" "${1:-false}" | HOME="$h" XDG_CACHE_HOME="$h" sh "$sg" stop; }
 hd() { rm -rf "$h/.factory/guard"; printf '# Run: x\nStatus: open\nNext: 1 Analyze · analyze-start\n%s\n' "$1" > "$h/.factory/run.md"; }
 # A run file with these steps ticked and every gate proven on HEAD.
 full() {
@@ -109,13 +109,23 @@ full() {
 }
 all='0 1 2 2b 3 4 5 6 7 8'
 for x in '**Waiting:** none' '- Waiting: none' ''; do hd "$x"; case $(hs) in *'"decision":"block"'*'Waiting: none'*) ;; *) fail "a Waiting line reading '$x' let the agent stop" ;; esac; done
+hd 'Waiting: none'; printf 'Waiting: owner: old\n' >> "$h/.factory/run.md"; [ -n "$(hs)" ] || fail "an old Waiting line in a block let the agent stop"
+hd '**Waiting:** none'; hs >/dev/null; case $(hs true) in *idle*) ;; *) fail "the loop guard no longer ends an idle run" ;; esac
 for x in 'Waiting: owner: q' 'Waiting: jobs: x (max 9 min)'; do hd "$x"; [ -z "$(hs)" ] || fail "'$x' did not end the turn"; done
 rm -rf "$h/.factory/guard"; full "$all"; [ -z "$(hs)" ] || fail "a proven run with no remote did not finish"
 git -C "$h" -c user.name=t -c user.email=t@t -c commit.gpgsign=false commit -q --allow-empty -m later; [ -z "$(hs)" ] || fail "a finished closed run was asked again after its checkout moved on"
 printf '# Run: x\nStatus: closed\nNext: none (closed)\nWaiting: none\n\n## 0 Ticket ✔\n' > "$h/.factory/run.md"; [ -n "$(hs)" ] || fail "a closed run with no gates in a used checkout passed"
+printf '# Run: x\nStatus: open\nNext: 5 Build · get-ready-to-code\nWaiting: none\n\n## 3 Plan ✔\n' > "$h/.factory/run.md"; rm -rf "$h/.factory/guard"; case $(hs) in *'Steps not ticked: 0,1,2,2b'*) ;; *) fail "a step skipped before the plan was not named" ;; esac
 rm -rf "$h/.factory/guard"; full '0 1 2 2b 3 4 6 7 8'; case $(hs) in *'Steps not ticked: 5'*) ;; *) fail "a skipped step was not named" ;; esac
 sed 's/^Waiting: none/Waiting: owner: q/' "$h/.factory/run.md" > "$h/n" && mv "$h/n" "$h/.factory/run.md"; case $(hs) in *'Steps not ticked: 5'*) ;; *) fail "a wait hid a skipped step" ;; esac
+[ -z "$(hs true)" ] || fail "a wait with a skipped step never released"
 rm -rf "$h/.factory/guard"; full "$all"; awk 'BEGIN { for (i = 0; i < 31; i++) printf "ten chars "; print "" }' >> "$h/.factory/run.md"; case $(hs) in *'over 300 characters'*) ;; *) fail "a wall of text passed" ;; esac
+L=$(awk 'BEGIN { for (i = 0; i < 31; i++) printf "ten chars " }')
+hd 'Waiting: none'; printf '| %s |\n' "$L" >> "$h/.factory/run.md"; case $(hs) in *'over 300'*) fail "a long table row was refused" ;; esac
+hd 'Waiting: none'; printf '%s\n%s\n%s\n' '```' "$L" '```' >> "$h/.factory/run.md"; case $(hs) in *'over 300'*) fail "a long line in a fence was refused" ;; esac
+hd 'Waiting: none'; printf '%s\n%s\n' '```' "$L" >> "$h/.factory/run.md"; case $(hs) in *'over 300'*) ;; *) fail "an unclosed fence hid a wall of text" ;; esac
+hd 'Waiting: none'; awk 'BEGIN { for (i = 0; i < 110; i++) printf "█"; print "" }' >> "$h/.factory/run.md"; case $(hs) in *'over 300'*) fail "the line limit counted bytes" ;; esac
 rm -rf "$h/.factory/guard"; git -C "$h" remote add origin "$h/none.git"; full "$all"; [ -n "$(hs)" ] || fail "an unpushed head with a remote passed Gate C"
+git -C "$h" remote remove origin; [ -n "$(hs)" ] || fail "removing the remote skipped Gate C's push"
 if command -v cygpath >/dev/null; then case $(hs) in *'factory run in /'*) fail "a prompt named a Git Bash path" ;; esac; fi
 exit $bad
