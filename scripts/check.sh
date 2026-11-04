@@ -63,4 +63,20 @@ dr() { HOME="$h" CLAUDE_PROJECT_DIR="$h/p" XDG_CACHE_HOME="$h" sh $skills/safe-f
 dr && fail "doctor missed a leftover"
 dr --fix; [ -f "$h/.codex/hooks.json" ] && fail "doctor --fix left the old hook"
 [ -f "$h/.cursor/hooks.json" ] && [ -f "$h/p/.claude/settings.json" ] || fail "doctor --fix moved a file holding more than old hooks"
+
+# Guard wiring: Stop lives in the skill on Claude Code; the portable file serves the other hosts.
+blob .agents/hooks/hooks.json | grep -q '"Stop"' && fail "Stop hook in hooks.json: every Claude Code session would run it"
+blob .agents/hooks/portable.json | grep -q '"Stop"' || fail "no Stop hook in portable.json"
+for m in codex cursor; do blob ".agents/.$m-plugin/plugin.json" | grep -qF hooks/portable.json || fail "$m manifest does not name hooks/portable.json"; done
+blob $skills/safe-factory/SKILL.md | sed -n '2,/^---/p' | grep -q 'run-guard.sh" stop' || fail "no Stop hook in safe-factory's frontmatter"
+
+# Session binding: a step block binds a run in another repository; a plain session stays quiet.
+b=$w/g; mkdir -p "$b/a/.git" "$b/b/.factory"; printf '# Run: x · fast · change\nStatus: open\nNext: 3 Plan · get-ready-to-code\nWaiting: none\n\n## 0 Ticket ✔\n' > "$b/b/.factory/run.md"
+gd() { printf '{"session_id":"%s","cwd":"%s","last_assistant_message":"%s"}' "$1" "$b/a" "$2" | HOME="$b" XDG_CACHE_HOME="$b" sh $skills/safe-factory/scripts/run-guard.sh stop; }
+[ -z "$(gd plain 'hello')" ] && [ -z "$(gd plain '## 1 Overview')" ] || fail "guard spoke to a plain session"
+p=$b/b; command -v cygpath >/dev/null && p=$(cygpath -w "$p" | sed 's/\\/\\\\/g')  # Windows: the path as JSON carries it
+case $(gd s1 "## 0 Ticket\\n- **Workspace:** \`$p\`") in *'"decision":"block"'*) ;; *) fail "guard did not bind a run in another repository" ;; esac
+[ -f "$b/b/.factory/guard/state" ] || fail "no guard state in the bound run's folder"
+[ -f "$b/ai-software-factory/sessions/s1" ] || fail "no session file for the bound session"
+case $(gd s2 '## 1 Analyze') in *'no run file found'*) ;; *) fail "a step block with no run did not ask" ;; esac
 exit $bad

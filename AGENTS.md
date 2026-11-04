@@ -30,7 +30,7 @@ sh scripts/check.sh HEAD origin/main    # also fails any method byte growth agai
 sh scripts/check.sh bytes origin/main   # "<all methods> <read set>" for the PR line (run for base and head)
 ```
 
-It checks: links stay in a skill folder, SKILL.md under 17000, no media in Git, methods under 170000 and read set under 105000 (Git blobs), manifests agree, update check offline (newer tells, older quiet, curl fallback), doctor moves only old-only files.
+It checks: links stay in a skill folder, SKILL.md under 17000, no media in Git, methods under 170000 and read set under 105000 (Git blobs), manifests agree, update check offline (newer tells, older quiet, curl fallback), doctor moves only old-only files, guard wiring (Stop in the skill, portable file for other hosts), session binding.
 
 - Changed `run-guard.sh` runs on fixture run files (`improve-factory`, Proof). Stays POSIX `sh` with LF endings and one `awk` pass.
 - Changed `gh` or `git` command form in a method: update night templates (`.agents/hooks/claude-settings.json` allow list, `codex.rules`) to match.
