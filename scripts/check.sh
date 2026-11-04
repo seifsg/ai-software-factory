@@ -114,6 +114,7 @@ rm -rf "$h/.factory/guard"; full "$all"; [ -z "$(hs)" ] || fail "a proven run wi
 git -C "$h" -c user.name=t -c user.email=t@t -c commit.gpgsign=false commit -q --allow-empty -m later; [ -z "$(hs)" ] || fail "a finished closed run was asked again after its checkout moved on"
 printf '# Run: x\nStatus: closed\nNext: none (closed)\nWaiting: none\n\n## 0 Ticket ✔\n' > "$h/.factory/run.md"; [ -n "$(hs)" ] || fail "a closed run with no gates in a used checkout passed"
 rm -rf "$h/.factory/guard"; full '0 1 2 2b 3 4 6 7 8'; case $(hs) in *'Steps not ticked: 5'*) ;; *) fail "a skipped step was not named" ;; esac
+sed -i 's/^Waiting: none/Waiting: owner: q/' "$h/.factory/run.md"; case $(hs) in *'Steps not ticked: 5'*) ;; *) fail "a wait hid a skipped step" ;; esac
 rm -rf "$h/.factory/guard"; full "$all"; awk 'BEGIN { for (i = 0; i < 31; i++) printf "ten chars "; print "" }' >> "$h/.factory/run.md"; case $(hs) in *'over 300 characters'*) ;; *) fail "a wall of text passed" ;; esac
 rm -rf "$h/.factory/guard"; git -C "$h" remote add origin "$h/none.git"; full "$all"; [ -n "$(hs)" ] || fail "an unpushed head with a remote passed Gate C"
 if command -v cygpath >/dev/null; then case $(hs) in *'factory run in /'*) fail "a prompt named a Git Bash path" ;; esac; fi

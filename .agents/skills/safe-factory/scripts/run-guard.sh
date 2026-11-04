@@ -245,7 +245,13 @@ halt() {
 }
 save
 [ -n "$todo" ] && { idle; halt; save; printf '{"decision":"block","reason":"If this session runs the factory run in '"$rf"': %s"}\n' "$todo"; exit 0; }
-[ "$waiting" = 1 ] || exit 0  # only a real wait stops a run: any other Waiting spelling is driven
+# Only a real wait stops a run: any other Waiting spelling is driven. A wait never hides a skipped step: one block, then it holds.
+if [ "$waiting" != 1 ]; then
+  [ -n "$skip" ] || exit 0
+  case $in in *'"stop_hook_active":true'* | *'"stop_hook_active": true'*) exit 0 ;; esac
+  printf '{"decision":"block","reason":"If this session runs the factory run in '"$rf"': Steps not ticked: %s. Do each now, in order, or name them in Waiting: owner: only the owner skips a step."}\n' "$skip"
+  exit 0
+fi
 case $in in
   # The host reports a running subagent: its result wakes the session. A background shell (a dev server) never does.
   *'"background_tasks"'*'"type":"subagent"'* | *'"background_tasks"'*'"type": "subagent"'*) exit 0 ;;
