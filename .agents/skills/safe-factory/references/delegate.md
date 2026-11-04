@@ -25,7 +25,7 @@ Refusals first: split, confirm or clarify, then brief again.
 
 Carry goal, role, absolute paths, edit limits, branch, handback and a scratch folder under `.factory/`. Quote needed rules; whole methods only for walkthroughs/reviews. Fresh context: request, decisions, interface, stops, evidence paths; full chat needs a reason. Keep bulky returns in files; give needed fields and paths. Never resend unchanged methods or transcripts. Host controls: adapter.
 
-Verify working folder before writes; stop on mismatch. Background delegates: set `Waiting: jobs: <what>` in the run file before ending turn; its result comes back. End with a gate per required outcome:
+Verify working folder before writes; stop on mismatch. Background delegates: set `Waiting: jobs: <what>` in the run file before ending turn; result comes back. End with a gate per required outcome:
 
 ```text
 G1 <outcome> CHECK: <command> EXPECT: <text its output must show>
