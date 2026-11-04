@@ -134,4 +134,9 @@ hd 'Waiting: none'; awk 'BEGIN { for (i = 0; i < 110; i++) printf "█"; print "
 rm -rf "$h/.factory/guard"; git -C "$h" remote add origin "$h/none.git"; full "$all"; case $(hs) in *'"decision":"block"'*'Gate C'*) ;; *) fail "an unpushed head with a remote passed Gate C" ;; esac
 hs >/dev/null; git -C "$h" remote remove origin; case $(hs) in *'"decision":"block"'*'Gate C'*) ;; *) fail "removing the remote skipped Gate C's push" ;; esac
 if command -v cygpath >/dev/null; then case $(hs) in *'factory run in /'*) fail "a prompt named a Git Bash path" ;; esac; fi
+# A new run in a session that already failed a gate starts at zero rounds.
+n=$w/n; mkdir -p "$n/r/.factory" "$n/p/x/s/subagents"; git init -q "$n/r"; printf '{"isSidechain":false}\n' > "$n/p/x/s.jsonl"
+for i in 1 2 3; do { printf '{"message":"Role: checker. Gate B"}\n'; printf '{"message":{"role":"assistant","content":[{"type":"text","text":"Gate B: FAIL 1 missing"}]}}\n'; } > "$n/p/x/s/subagents/agent-c$i.jsonl"; done
+printf '# Run: x\nStatus: open\nNext: 1 Analyze · analyze-start\nWaiting: none\n' > "$n/r/.factory/run.md"
+case $(printf '{"session_id":"s","transcript_path":"%s/p/x/s.jsonl","cwd":"%s","last_assistant_message":"x"}' "$n" "$n/r" | HOME="$n" XDG_CACHE_HOME="$n" sh "$sg" stop) in *'by cap'*) fail "a new run inherited the session's failed rounds" ;; esac
 exit $bad

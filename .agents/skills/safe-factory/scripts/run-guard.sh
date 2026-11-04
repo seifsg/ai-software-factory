@@ -67,6 +67,7 @@ num='ticks|seen|night_until|sig|idle|base_[ABCR]|sstep|rstep|compacts|jobs_since
 if [ -f "$st" ]; then
   if grep -qvE "^g_($num)='[0-9]*'\$|^g_(session|sessions|transcript|halt|end|relay|csession)='[^'\$\`]*'\$" "$st"; then note='guard state was edited outside the guard'; else . "$st"; fi
 fi
+[ -f "$st" ] || g_clear=1  # no state yet: a new run, so a session's earlier rounds are not its rounds
 [ -f "$run.ticks" ] && { g_ticks=$(cat "$run.ticks"); rm -f "$run.ticks" "$run.nudge"; }  # state of an older guard
 case $sid in '' | *[!A-Za-z0-9_-]*) ;; *) case " $g_sessions " in *" $sid "*) ;; *) g_sessions="${g_sessions:+$g_sessions }$sid" ;; esac ;; esac
 keys='ticks session sessions transcript seen night_until sig idle halt end clear base_A base_B base_C base_R sstep relay rstep compacts csession jobs_since jobs_key'
