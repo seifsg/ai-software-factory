@@ -9,7 +9,7 @@ claude plugin marketplace add https://github.com/seifsg/ai-software-factory.git
 claude plugin install safe-factory@ai-software-factory
 ```
 
-In a session, the same as `/plugin marketplace add …` and `/plugin install …`. Use the HTTPS URL; `owner/repo` shorthand tries SSH first. Auto mode: new projects need `gh repo create` and `git push` allowed. Add `Bash(gh repo create:*)` and `Bash(git push:*)` to your permission allow rules, or approve once when step 0 asks. Plugin brings every skill, delegate roles, the run hooks and the update check; follows release tags. Start a new session.
+The Stop guard loads with the `safe-factory` skill: starting a run may ask once to allow it (skip the ask with the allow rule `Skill(safe-factory:*)`). In a session, the same as `/plugin marketplace add …` and `/plugin install …`. Use the HTTPS URL; `owner/repo` shorthand tries SSH first. Auto mode: new projects need `gh repo create` and `git push` allowed. Add `Bash(gh repo create:*)` and `Bash(git push:*)` to your permission allow rules, or approve once when step 0 asks. Plugin brings every skill, delegate roles, the run hooks and the update check; follows release tags. Start a new session.
 
 Desktop app without terminal: add to `~/.claude/settings.json`, start a new session, then install from `/plugin` if missing:
 

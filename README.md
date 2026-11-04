@@ -150,7 +150,8 @@ Rules: [AGENTS.md](AGENTS.md). Changes go through `improve-factory`; checks: `sh
 ```text
 .agents/skills/                  the skills (canonical methods)
 .agents/agents/                  delegate roles for Claude Code (runner, analyst, maker, builder, reviewer, checker)
-.agents/hooks/hooks.json         the Stop guard, compact hook and update check (Claude Code, Codex, Cursor)
+.agents/hooks/hooks.json         compact hook and update check (Claude Code); the Stop guard is in safe-factory's frontmatter
+.agents/hooks/portable.json      Stop guard, compact hook and update check (Codex, Cursor)
 .agents/.claude-plugin/          plugin manifests (also .codex-plugin/, .cursor-plugin/); the plugin root is .agents/
 .claude-plugin/marketplace.json  the marketplace (Claude Code, Codex), pinned to the release tag
 .cursor-plugin/marketplace.json  the Cursor marketplace
