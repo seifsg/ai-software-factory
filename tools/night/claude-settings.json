@@ -16,10 +16,10 @@
       "Bash(*run-guard.sh clear*)", "Bash(*.factory/guard*)",
       "Edit(.claude/settings*.json)", "Edit(~/.claude/settings*.json)", "Edit(~/.codex/**)",
       "Edit(//**/.factory/guard/**)", "Edit(//**/run-guard.sh)", "Edit(//**/hooks.json)", "Edit(//**/.git/hooks/**)",
-      "Edit(//**/.agents/hooks/**)"
+      "Edit(//**/.agents/hooks/**)", "Edit(//**/tools/night/**)", "Edit(//**/.factory/night-settings.json)"
     ],
     "allow": [
-      "Bash(sh *run-guard.sh check *)", "Read", "Glob", "Grep", "Agent", "Skill", "WebSearch", "WebFetch", "Edit(./**)",
+      "Read", "Glob", "Grep", "Agent", "Skill", "WebSearch", "WebFetch", "Edit(./**)",
       "Bash(git status*)", "Bash(git diff*)", "Bash(git log*)", "Bash(git show*)", "Bash(git rev-parse*)", "Bash(git ls-files*)",
       "Bash(git ls-remote*)", "Bash(git fetch*)", "Bash(git add *)", "Bash(git commit *)", "Bash(git switch *)", "Bash(git branch*)",
       "Bash(git push)", "Bash(git push -u origin HEAD)", "Bash(git push origin HEAD)", "Bash(git push --dry-run *)",

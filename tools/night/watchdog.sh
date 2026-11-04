@@ -42,7 +42,7 @@ if [ -n "$g_relay" ]; then old "$st" 10 || { say 'relay starting'; exit 0; }; mo
 elif old "$run" "$stall" && ! busy; then mode=resume
 else say running; exit 0; fi
 S=$g_session MSG='The factory watchdog found this run stalled. Load safe-factory, read .factory/run.md and continue its Next step.'; export P S MSG
-tpl=$P/.factory/night-settings.json; sed "s|__GUARD__|$here/../../.agents/skills/safe-factory/scripts/run-guard.sh|g" "$here/claude-settings.json" > "$tpl"; [ "$host" = codex ] && CLI=${FACTORY_CODEX:-codex} || CLI=${FACTORY_CLAUDE:-claude}; export CLI
+tpl=$P/.factory/night-settings.json; sed "s|__GUARD__|$(printf '%s' "$here/../../.agents/skills/safe-factory/scripts/run-guard.sh" | sed 's/[&|\\]/\\&/g')|g" "$here/claude-settings.json" > "$tpl"; [ "$host" = codex ] && CLI=${FACTORY_CODEX:-codex} || CLI=${FACTORY_CLAUDE:-claude}; export CLI
 nf="-c 'approval_policy=\"never\"' -c 'sandbox_mode=\"workspace-write\"'" cf='--permission-mode dontAsk --settings "'"$tpl"'"'  # night flags (resume takes no -s)
 if [ "$mode" = fresh ]; then
   say "starting a fresh session (relay)"

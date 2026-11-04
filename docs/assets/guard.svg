@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 280" width="1200" height="280" role="img" aria-labelledby="t d">
 <title id="t">How a run stays on track</title>
-<desc id="d">Each step loads its skill fresh, does the work and writes its block to .factory/run.md. When the turn ends the Stop guard reads the run file and sends the next step's prompt. After compaction the compact hook re-injects the next step. Gates A, B and C need a fresh checker's pass on the commit.</desc>
+<desc id="d">Each step loads its skill fresh, does the work and writes its block to .factory/run.md. When the turn ends the Stop guard reads the run file and sends the next step's prompt. After compaction the next stop or a compact hook sends the next step. Gates A, B and C need a fresh checker's pass on the commit.</desc>
 <style>
 text{font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;fill:#c9d1d9;text-anchor:middle}
 .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
@@ -32,7 +32,7 @@ text{font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;fill:#c9d1d
 <path d="M1050 124V160H160V130" class="a" marker-end="url(#m)"/>
 <text x="600" y="152" class="s">next turn</text>
 <rect x="40" y="190" width="520" height="64" rx="12" class="box"/>
-<text x="300" y="218" class="h">Context compacted?</text><text x="300" y="240" class="s">compact hook re-injects Next: from the run file</text>
+<text x="300" y="218" class="h">Context compacted?</text><text x="300" y="240" class="s">next stop or compact hook sends Next:</text>
 <rect x="640" y="190" width="520" height="64" rx="12" class="ok"/>
 <text x="900" y="218" class="h">Gates A · B · C after steps 3, 6, 8</text><text x="900" y="240" class="s">a fresh checker's PASS on the commit</text>
 </svg>

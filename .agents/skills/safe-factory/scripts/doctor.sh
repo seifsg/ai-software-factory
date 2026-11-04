@@ -55,7 +55,7 @@ while IFS= read -r f; do
       NR == 2 && !/^  "/ { o++ } /^  "/ && !/^  "(hooks|version)"/ { o++ }
       END { exit !(NR > 2 && n && n == k && !o) }' "$f"; then move "$f" "hooks of an old factory version; the plugin brings its own (copied skills: add hooks again, install.md)"
     else todo "$f" "hooks of an old factory version; delete entries naming fast_gate, run-gate.sh or skills/safe-engine/"; fi
-  elif [ -n "$on" ] && case $f in */.claude/*) grep -q 'run-guard[.]sh' "$f" ;; *) false ;; esac; then
+  elif [ -n "$on" ] && case $f in */.claude/*) grep -q '"command".*run-guard[.]sh' "$f" ;; *) false ;; esac; then
     todo "$f" "second Stop guard: the plugin already runs it; delete that entry"
   fi
 done <<EOF

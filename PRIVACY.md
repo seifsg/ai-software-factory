@@ -15,7 +15,9 @@ Nothing by the author: no telemetry, accounts or analytics.
 ## What stays on your machine, and for how long
 
 - `.factory/` in your project: the run file, guard state and proof files. Git ignores it. Delete it whenever you like.
-- `ai-software-factory` in your cache folder: the latest version seen and session links, removed after 30 days.
+- `ai-software-factory` in your cache folder: the latest version seen, session links (removed after 30 days) and any backups `doctor.sh --fix` made. Delete it whenever you like.
+
+The doctor reads your agent settings files, only to list leftovers of old factory versions.
 
 On Claude Code the plugin reads no conversation or chat history. Overnight tools, which you install apart from a clone, read the running session's delegate files to prove gates; they stay on your machine.
 

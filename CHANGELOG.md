@@ -23,7 +23,7 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ### Security
 
-- Stop reading conversation files on Claude Code: the check uses the run file and Git ([#295])
+- Stop reading conversation files on Claude Code: gates are judged by a small model, and no script checks that blocks reached chat ([#295])
 
 ## [0.6.2] - 2026-11-04
 

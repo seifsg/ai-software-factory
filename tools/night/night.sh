@@ -17,6 +17,7 @@ sed -n '/^## /q;/^Waiting: /{p;q;}' "$run" 2>/dev/null | grep -q '^Waiting: owne
 # 2. The guard is wired for this host.
 if [ "$host" = claude ]; then
   [ -f "$guard" ] && say ok 'guard script' || say MISSING "$guard"
+  has 'safe-factory@' "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/settings.json" && say ok 'plugin enabled' || say MISSING 'the safe-factory plugin, enabled in your settings'
   has __GUARD__ "$here/claude-settings.json" && say ok 'deny/allow and guard template' || say MISSING "$here/claude-settings.json"
 else
   has safe-factory/scripts/run-guard.sh "$HOME/.codex/hooks.json" && say ok 'guard hooks wired' || say MISSING "guard hooks in $HOME/.codex/hooks.json"
@@ -48,5 +49,5 @@ grep -v '^Night:' "$run" | awk -v n="Night: until $(date -d "@$until" '+%Y-%m-%d
 echo "Preflight passed. Night budget: $hours h."
 export P
 [ -n "$FACTORY_START" ] && exec sh -c "$FACTORY_START"
-[ "$host" = claude ] && { ns=$P/.factory/night-settings.json; sed "s|__GUARD__|$guard|g" "$here/claude-settings.json" > "$ns" && exec "$cli" -p --permission-mode dontAsk --settings "$ns" "/safe-factory Resume $P"; }
+[ "$host" = claude ] && { ns=$P/.factory/night-settings.json; sed "s|__GUARD__|$(printf '%s' "$guard" | sed 's/[&|\\]/\\&/g')|g" "$here/claude-settings.json" > "$ns" && exec "$cli" -p --permission-mode dontAsk --settings "$ns" "/safe-factory Resume $P"; }
 exec "$cli" exec -s workspace-write -c 'approval_policy="never"' "\$safe-factory Resume $P"
