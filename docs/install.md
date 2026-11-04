@@ -97,12 +97,12 @@ Optional. All below is per project and stays on your machine. `<clone>` = factor
    ```
 
    Blocks pushes to default branch, force pushes, branch deletes, added token shapes. Pair with host's server-side rules (GitHub: ruleset on default branch that blocks force pushes and requires a pull request) and secret push protection: only those hold against a shell that skips local hooks.
-2. **Deny rules.** Claude Code: nothing to copy; `night.sh` passes `<clone>/.agents/hooks/claude-settings.json` with `--settings`. Same deny list by day: merge its `deny` array into `~/.claude/settings.json`. Add project's test and build commands to project's own `.claude/settings.json` `allow` list (plugin updates replace the template). Codex: `cp <clone>/.agents/hooks/codex.rules ~/.codex/rules/factory.rules`.
+2. **Deny rules.** Claude Code: nothing to copy; `night.sh` passes `<clone>/tools/night/claude-settings.json`, which also brings the command guard, with `--settings`. Same deny list by day: merge its `deny` array into `~/.claude/settings.json`. Add project's test and build commands to project's own `.claude/settings.json` `allow` list (plugin updates replace the template). Codex: `cp <clone>/.agents/hooks/codex.rules ~/.codex/rules/factory.rules`.
 3. **Start a night run** from the project, once run is open and past any owner question:
 
    ```text
-   sh <clone>/.agents/hooks/night.sh claude 8 --check   # preflight only
-   sh <clone>/.agents/hooks/night.sh claude 8           # preflight, then start
+   sh <clone>/tools/night/night.sh claude 8 --check   # preflight only
+   sh <clone>/tools/night/night.sh claude 8           # preflight, then start
    ```
 
    CLI installed off PATH (desktop apps): set `FACTORY_CLAUDE` or `FACTORY_CODEX` to its path. Codex preflight also runs one sandboxed command (up to `FACTORY_PROBE_S`, 180 s), refuses when it does not run.
@@ -110,8 +110,8 @@ Optional. All below is per project and stays on your machine. `<clone>` = factor
 4. **Watchdog** every 30 minutes, outside the session:
 
    ```text
-   cron:    */30 * * * * sh <clone>/.agents/hooks/watchdog.sh claude <project>
-   Windows: schtasks /create /tn factory-watchdog /sc minute /mo 30 /tr "\"C:\Program Files\Git\bin\sh.exe\" <clone>/.agents/hooks/watchdog.sh claude <project>"
+   cron:    */30 * * * * sh <clone>/tools/night/watchdog.sh claude <project>
+   Windows: schtasks /create /tn factory-watchdog /sc minute /mo 30 /tr "\"C:\Program Files\Git\bin\sh.exe\" <clone>/tools/night/watchdog.sh claude <project>"
    ```
 
    Set `FACTORY_NOTIFY` to a command that reaches you (gets `$MSG`), for example `curl -d "$MSG" ntfy.sh/<your-topic>`; without it notices go to `.factory/guard/notices`. Sleeping machine runs nothing: keep it awake overnight.

@@ -19,7 +19,7 @@
       "Edit(//**/.agents/hooks/**)"
     ],
     "allow": [
-      "Read", "Glob", "Grep", "Agent", "Skill", "WebSearch", "WebFetch", "Edit(./**)",
+      "Bash(sh *run-guard.sh check *)", "Read", "Glob", "Grep", "Agent", "Skill", "WebSearch", "WebFetch", "Edit(./**)",
       "Bash(git status*)", "Bash(git diff*)", "Bash(git log*)", "Bash(git show*)", "Bash(git rev-parse*)", "Bash(git ls-files*)",
       "Bash(git ls-remote*)", "Bash(git fetch*)", "Bash(git add *)", "Bash(git commit *)", "Bash(git switch *)", "Bash(git branch*)",
       "Bash(git push)", "Bash(git push -u origin HEAD)", "Bash(git push origin HEAD)", "Bash(git push --dry-run *)",
@@ -28,5 +28,9 @@
       "Bash(git push origin *:refs/proof/*)", "Bash(git hash-object *)", "Bash(git mktree*)", "Bash(git commit-tree *)",
       "Bash(gh pr create --draft *)", "Bash(gh pr view *)", "Bash(gh pr list*)", "Bash(gh pr diff *)", "Bash(gh pr edit *)", "Bash(gh pr comment *)"
     ]
+  },
+  "hooks": {
+    "Stop": [{ "hooks": [{ "type": "command", "command": "sh \"__GUARD__\" stop", "timeout": 10 }] }],
+    "SessionStart": [{ "matcher": "compact|resume", "hooks": [{ "type": "command", "command": "sh \"__GUARD__\" compact", "timeout": 10 }] }]
   }
 }
