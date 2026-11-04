@@ -5,7 +5,7 @@ hooks:
   Stop:
     - hooks:
         - type: prompt
-          prompt: 'One stop of a factory session. Input: $ARGUMENTS. Read last_assistant_message. Answer ok true if it contains "Factory check: may stop", or says it is blocked and names what blocks it. Otherwise answer ok false, reason: "Run the factory check in safe-factory, then do what it prints."'
+          prompt: 'One stop of a factory session. Input: $ARGUMENTS. Read last_assistant_message. Answer ok true only if it contains "Factory check: may stop", or names a denied permission or failed tool that blocks it; a wait or a question never counts. Otherwise ok false, reason: "Run the factory check in safe-factory, then do what it prints."'
           timeout: 30
 ---
 
@@ -82,7 +82,7 @@ Load  before █████ 800 ms
 
 ## Steps
 
-Live guard: one step per turn: load its skill, do that step's own work with fresh reading, searching or running, post its block as last message, update run file, end turn. Stop guard then sends next prompt; told to run the factory check: `sh "${CLAUDE_SKILL_DIR}/scripts/run-guard.sh" check ${CLAUDE_SESSION_ID}`, do what it prints, and end a turn on purpose only by quoting its `may stop` line (set `Waiting:` first). Step 5 takes one todo per turn. Host with no Stop hook of any kind: Fast chains steps in one turn, never ending one open with `Waiting: none`; Safe ends each with `Say go for step <n>`. Before each step load its skill fresh (skill command or file), even one read earlier. Same skill as last step: rereading this step's section is enough.
+Live guard: one step per turn: load its skill, do that step's own work with fresh reading, searching or running, post its block as last message, update run file, end turn. Stop guard then sends next prompt. Told to run the factory check: `sh "${CLAUDE_SKILL_DIR}/scripts/run-guard.sh" check ${CLAUDE_SESSION_ID}`, do what it prints; end a turn on purpose by setting the header's `Waiting:`, then quoting its `may stop` line. Step 5 takes one todo per turn. Host with no Stop hook of any kind: Fast chains steps in one turn, never ending one open with `Waiting: none`; Safe ends each with `Say go for step <n>`. Before each step load its skill fresh (skill command or file), even one read earlier. Same skill as last step: rereading this step's section is enough.
 
 Each step ends with its block: post full block as own chat message opening with its heading (never summary, never only a file or tool output), then write to run file. Fold in any owner reply before next step reads it. Ticket gets a comment only on status change (steps 0, 5, 7 and 8) or relay, linking run file's blocks.
 
