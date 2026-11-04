@@ -54,13 +54,24 @@ Bad: `- Continuous runs (#253): a gate or review loop with 3 failed rounds ... c
 1. Pick `X.Y.Z` from the bump table and the Unreleased lines. Upgrade steps and changed marketplace descriptions land on `main` with their PRs; steps sit under `## Unreleased` in `UPGRADING.md`, and the script names that heading `## X.Y.Z`. A release candidate (`X.Y.Z-rc.1`) is cut by hand.
 2. `sh scripts/release.sh prepare X.Y.Z`: refuses a dirty tree, a version not above `main`'s, an existing tag or an empty Unreleased section; branches `release/vX.Y.Z` from `origin/main`; sets `version` in the three plugin manifests and the marketplace `source.ref` to `vX.Y.Z` (`source.path` stays `.agents`); moves `## [Unreleased]` into `## [X.Y.Z] - <today>` with its compare links; runs `sh scripts/check.sh`; commits, pushes and opens the draft release PR.
 3. The owner merges the release PR.
-4. `sh scripts/release.sh publish X.Y.Z`: refuses until `main` carries `X.Y.Z` and while the tag exists; tags the commit that set the version (the release merge, even with later merges on top), pushes the tag right away (Claude Code installs fetch the tag the marketplace names; until it exists a new install fails), then `gh release create vX.Y.Z --latest` with the CHANGELOG section, links made absolute.
+4. `sh scripts/release.sh publish X.Y.Z`: refuses until `main` carries `X.Y.Z` and while the tag exists; tags the commit that set the version (the release merge, even with later merges on top), pushes the tag right away (Claude Code installs fetch the tag the marketplace names; until it exists a new install fails), moves `stable` to that commit (never forced), then `gh release create vX.Y.Z --latest` with the CHANGELOG section, links made absolute.
 
 A step that fails says what is already done; finish it by hand from there. Never move a tag to retry.
 
 ## What follows a release
 
-Every install's update check sees it at its next session start and tells the owner at the one after. Claude Code installs take it at next plugin update (auto-update on: by itself). Codex: `codex plugin marketplace upgrade`. Cursor: reinstall from the marketplace. Copied skills: pull the clone, copy again.
+Every install's update check sees it at its next session start and tells the owner at the one after. Claude Code: `claude plugin update`, or by itself up to 10 minutes after a session's first message when auto-update is on, which each user sets; a marketplace file cannot. Plugin screens read the local listing, so they can say latest until it refreshes. Codex: `codex plugin marketplace upgrade` (run: moves listing and plugin). Cursor: per Cursor staff, a Marketplace listing updates by itself after review; a GitHub install stays on its first commit. Copied skills: pull the clone, copy again.
+
+## Store listings
+
+Each store is a listing of its own, submitted by the owner once. Check first: `claude plugin validate --profile directory .agents`. An icon is only a warning.
+
+| Store | Submit at | Follows | Updates |
+|---|---|---|---|
+| Anthropic's directory (claude.ai, Cowork, Claude Code by sync) | claude.ai/directory/manage, plugin path `.agents` | branch `stable` | scans each commit, publishes per its setting |
+| Cursor Marketplace | cursor.com/marketplace/publish, public repository | the repository | manual review per update |
+
+`stable` first exists at the first release that carries it. `claude-plugins-official` takes no portal submissions: an Anthropic partner contact only. From host docs and staff posts, not run.
 
 ## Owner settings
 

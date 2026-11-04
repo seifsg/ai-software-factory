@@ -6,6 +6,15 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+### Added
+
+- Add the MIT license ([#292])
+- Add a `stable` branch that moves on every release, so a store listing follows released versions only ([#292])
+
+### Fixed
+
+- Fix a second run in one session inheriting the first run's failed gate rounds, which offered a cap on a gate it never ran ([#292])
+
 ## [0.6.1] - 2026-11-04
 
 ### Added
@@ -296,6 +305,7 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 [1.1.0]: https://github.com/seifsg/ai-software-factory/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/seifsg/ai-software-factory/releases/tag/v1.0.0
 
+[#292]: https://github.com/seifsg/ai-software-factory/pull/292
 [#290]: https://github.com/seifsg/ai-software-factory/pull/290
 [#232]: https://github.com/seifsg/ai-software-factory/pull/232
 [#241]: https://github.com/seifsg/ai-software-factory/pull/241
