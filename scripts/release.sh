@@ -1,7 +1,7 @@
 #!/bin/sh
 # Release in two commands (docs/releasing.md). Humans run it; it never moves a tag or re-publishes a version.
 #   sh scripts/release.sh prepare X.Y.Z   branch from origin/main, bump, move CHANGELOG and UPGRADING, check, open the release PR
-#   sh scripts/release.sh publish X.Y.Z   after the owner merged that PR: tag its merge commit, push the tag, publish as Latest
+#   sh scripts/release.sh publish X.Y.Z   after the owner merged that PR: tag its merge commit, push the tag, move stable, publish as Latest
 cmd=$1 v=$2
 die() { echo "release: $*" >&2; exit 1; }
 case $cmd:$v in prepare:[0-9]*.[0-9]*.[0-9]* | publish:[0-9]*.[0-9]*.[0-9]*) ;; *) die "usage: sh scripts/release.sh prepare|publish X.Y.Z" ;; esac
@@ -83,6 +83,8 @@ publish() {
     git tag -a "v$v" -m "v$v" "$m" || die "cannot tag"
     git push -q origin "refs/tags/v$v" || { git tag -d "v$v" >/dev/null; die "tag push failed; local tag removed, rerun"; }
   fi
+  # stable: what a store listing follows, released commits only. Never forced; before the release, so a rerun retries it.
+  git push -q origin "$m:refs/heads/stable" || die "stable is not behind $m, so it did not move (tag v$v is pushed): fix the branch, then rerun publish $v"
   gh release create "v$v" -R "$slug" --verify-tag --latest --title "v$v" --notes-file "$b" || die "release not created (tag v$v is pushed): rerun publish $v"
   echo "release: v$v published as Latest from $m"
 }
