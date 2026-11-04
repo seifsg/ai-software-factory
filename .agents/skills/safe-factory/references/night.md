@@ -6,7 +6,7 @@ Night command refuses to start unless the run can finish unattended. Started ses
 
 ## While it runs
 
-0. **Stop hook asks for the factory check:** never run it, never ask for approval. Say `check denied at night` once; the command guard drives.
+0. **Stop hook asks for the factory check:** never run it or ask approval. Say `check denied at night` once; command guard drives.
 1. **Owner questions:** never wait. Take the recommended answer and record `Default: <question> → <choice> (<why>)` in the step's block and the ticket's activity. Owner can reverse before merging.
 2. **Owner-reserved items** (spend, release, merge, scope beyond the ticket, deleting data, anything the request did not cover): never decide them. Record `Parked: <item>, needs <what>` in the step's block and the ticket's activity, and continue with independent work. Only parked work left, or a parked item blocks a required fix: `Waiting: owner: <the parked list>`.
 3. **Outward actions:** push the run's own branch, open or update its draft PR and its tickets. Nothing else leaves the machine. A denied command is never retried another way: park it.
