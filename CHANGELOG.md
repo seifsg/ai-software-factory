@@ -13,6 +13,7 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ### Fixed
 
+- Fix the update notice telling Cursor users to reinstall, which Cursor staff advise against ([#292])
 - Fix a second run in one session inheriting the first run's failed gate rounds, which offered a cap on a gate it never ran ([#292])
 
 ## [0.6.1] - 2026-11-04

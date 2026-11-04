@@ -106,7 +106,7 @@ Details: [run file](.agents/skills/safe-factory/references/run-file.md), [checke
 - Each session start checks for a newer release (cached, about 0.2 s on Windows) and says so before a run ([update check](docs/install.md#update-check)). It also lists leftovers of old versions; `doctor.sh --fix` moves them to a backup ([clean up](docs/install.md#clean-up-and-uninstall)).
 - **Claude Code:** `claude plugin update safe-factory@ai-software-factory`. Auto-update is off for third-party marketplaces: turn it on in `/plugin`, Marketplaces, `ai-software-factory`, Enable auto-update.
 - **Codex:** `codex plugin marketplace upgrade ai-software-factory`, then trust the hooks again in `/hooks`. Copied skills: `git -C <clone> pull`, copy again.
-- **Cursor:** Marketplace and team installs update by themselves. A GitHub install has no proven update path: Cursor staff advise against uninstalling and reinstalling, and report such installs stay on their first commit. Not run live.
+- **Cursor:** Marketplace installs update by themselves; team imports do once an admin enables Auto Refresh. A GitHub install has no proven update path: Cursor staff advise against uninstalling and reinstalling, and report such installs stay on their first commit. Not run live.
 - What changed: [CHANGELOG.md](CHANGELOG.md). What to do: [UPGRADING.md](UPGRADING.md).
 
 ## 🧹 Uninstall

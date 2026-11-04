@@ -38,7 +38,7 @@ blob() { MSYS_NO_PATHCONV=1 git show "$ref:$1"; }  # <ref>:<path> as typed under
 
 # A store refuses a plugin with no license: the file and every manifest name it.
 blob LICENSE | grep -q '^MIT License' || fail "no MIT LICENSE at the root"
-blob .agents/LICENSE | grep -q '^MIT License' || fail "no MIT LICENSE in the plugin folder"
+[ "$(blob LICENSE)" = "$(blob .agents/LICENSE)" ] || fail "the plugin folder's LICENSE differs from the root's"
 for m in claude codex cursor; do blob ".agents/.$m-plugin/plugin.json" | grep -q '"license": "MIT"' || fail "$m manifest names no MIT license"; done
 # Every manifest agrees with the canonical version.
 v=$(blob .agents/.claude-plugin/plugin.json | grep -o '"version": "[^"]*"' | cut -d'"' -f4)

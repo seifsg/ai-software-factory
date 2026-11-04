@@ -64,7 +64,7 @@ Every install's update check sees it at its next session start and tells the own
 
 ## Store listings
 
-Each store is a listing of its own, submitted by the owner once. Check first: `claude plugin validate --profile directory .agents`, a subset: the portal's Validate runs more, and may hold our hook commands in a subfolder plugin. An icon is only a warning.
+Each store is a listing of its own, submitted by the owner once. Check first: `claude plugin validate --profile directory .agents`, a subset: the portal's Validate runs more, and may block our hook commands in a subfolder plugin. An icon is only a warning.
 
 | Store | Submit at | Follows | Updates |
 |---|---|---|---|
