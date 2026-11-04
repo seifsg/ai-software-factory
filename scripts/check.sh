@@ -34,8 +34,13 @@ if [ -n "$base" ]; then
   b=$(bytes "$base"); [ "$1" -le "${b% *}" ] || fail "methods grew: ${b% *} -> $1"; [ "$2" -le "${b#* }" ] || fail "read set grew: ${b#* } -> $2"
 fi
 
-# Every manifest agrees with the canonical version.
 blob() { MSYS_NO_PATHCONV=1 git show "$ref:$1"; }  # <ref>:<path> as typed under Git Bash
+
+# A store refuses a plugin with no license: the file and every manifest name it.
+blob LICENSE | grep -q '^MIT License' || fail "no MIT LICENSE at the root"
+[ "$(blob LICENSE)" = "$(blob .agents/LICENSE)" ] || fail "the plugin folder's LICENSE differs from the root's"
+for m in claude codex cursor; do blob ".agents/.$m-plugin/plugin.json" | grep -q '"license": "MIT"' || fail "$m manifest names no MIT license"; done
+# Every manifest agrees with the canonical version.
 v=$(blob .agents/.claude-plugin/plugin.json | grep -o '"version": "[^"]*"' | cut -d'"' -f4)
 [ -n "$v" ] || fail "no version in .agents/.claude-plugin/plugin.json"
 for f in .agents/.codex-plugin/plugin.json .agents/.cursor-plugin/plugin.json .claude-plugin/marketplace.json; do
@@ -134,4 +139,16 @@ hd 'Waiting: none'; awk 'BEGIN { for (i = 0; i < 110; i++) printf "█"; print "
 rm -rf "$h/.factory/guard"; git -C "$h" remote add origin "$h/none.git"; full "$all"; case $(hs) in *'"decision":"block"'*'Gate C'*) ;; *) fail "an unpushed head with a remote passed Gate C" ;; esac
 hs >/dev/null; git -C "$h" remote remove origin; case $(hs) in *'"decision":"block"'*'Gate C'*) ;; *) fail "removing the remote skipped Gate C's push" ;; esac
 if command -v cygpath >/dev/null; then case $(hs) in *'factory run in /'*) fail "a prompt named a Git Bash path" ;; esac; fi
+# A new run in a session that already failed a gate starts at zero rounds.
+n=$w/n; mkdir -p "$n/r/.factory" "$n/p/x/s/subagents"; git init -q "$n/r"; printf '{}\n' > "$n/p/x/s.jsonl"
+for i in 1 2 3; do { printf '{"message":"Role: checker. Gate B"}\n'; printf '{"message":{"role":"assistant","content":[{"type":"text","text":"Gate B: FAIL 1 missing"}]}}\n'; } > "$n/p/x/s/subagents/agent-c$i.jsonl"; done
+printf '# Run: x\nStatus: open\nNext: 1 Analyze · analyze-start\nWaiting: none\n' > "$n/r/.factory/run.md"
+case $(printf '{"session_id":"s","transcript_path":"%s/p/x/s.jsonl","cwd":"%s","last_assistant_message":"x"}' "$n" "$n/r" | HOME="$n" XDG_CACHE_HOME="$n" sh "$sg" stop) in *'Step 1 Analyze'*) ;; *) fail "a new run inherited the session's failed rounds" ;; esac
+# The same in a checkout with an earlier run's state; an old run keeps its rounds; deleting state lifts no halt.
+ns() { printf '{"session_id":"s","transcript_path":"%s/p/x/s.jsonl","cwd":"%s","last_assistant_message":"x"}' "$n" "$n/r" | HOME="$n" XDG_CACHE_HOME="$n" sh "$sg" stop; }
+nf() { { printf '# Run: x\nStatus: open\nNext: 7 PR · how-to-make-a-pr\nWaiting: none\n\n'; for s in '0 Ticket' '1 Analyze' '2 Recommend' '2b Challenge' '3 Plan' '4 Before' '5 Build' '6 Verify'; do printf '## %s ✔\n' "$s"; done; } > "$n/r/.factory/run.md"; }
+rm -rf "$n/r/.factory/guard"; nf; ns >/dev/null; printf '# Run: y\nStatus: open\nNext: 1 Analyze · analyze-start\nWaiting: none\n\n## 0 Ticket ✔\nx\n' > "$n/r/.factory/run.md"; case $(ns) in *'Step 1 Analyze'*) ;; *) fail "a new run in a used checkout inherited the failed rounds" ;; esac
+rm -rf "$n/r/.factory/guard"; nf; ns >/dev/null; case $(ns) in *'by cap'*) ;; *) fail "a run past its plan lost its rounds" ;; esac
+for i in 4 5; do cp "$n/p/x/s/subagents/agent-c1.jsonl" "$n/p/x/s/subagents/agent-c$i.jsonl"; done
+rm -rf "$n/r/.factory/guard"; nf; ns >/dev/null; ns >/dev/null; rm -rf "$n/r/.factory/guard"; ns >/dev/null; case $(ns) in *HALT* | *halted*) ;; *) fail "deleting guard state lifted a halt" ;; esac
 exit $bad

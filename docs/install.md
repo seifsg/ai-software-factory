@@ -9,7 +9,7 @@ claude plugin marketplace add https://github.com/seifsg/ai-software-factory.git
 claude plugin install safe-factory@ai-software-factory
 ```
 
-The Stop guard loads with the `safe-factory` skill: starting a run may ask once to allow it (skip the ask with the allow rule `Skill(safe-factory:*)`). In a session, the same as `/plugin marketplace add …` and `/plugin install …`. Use the HTTPS URL; `owner/repo` shorthand tries SSH first. Auto mode: new projects need `gh repo create` and `git push` allowed. Add `Bash(gh repo create:*)` and `Bash(git push:*)` to your permission allow rules, or approve once when step 0 asks. Plugin brings every skill, delegate roles, the run hooks and the update check; follows release tags. Start a new session.
+The Stop guard loads with the `safe-factory` skill: starting a run may ask once to allow it (skip the ask with the allow rule `Skill(safe-factory:*)`). In a session, the same as `/plugin marketplace add …` and `/plugin install …`. Use the HTTPS URL; `owner/repo` shorthand tries SSH first. Update: `claude plugin update safe-factory@ai-software-factory`, then a new session. Plugin screens read the local listing, so they can say latest until it refreshes. Auto mode: new projects need `gh repo create` and `git push` allowed. Add `Bash(gh repo create:*)` and `Bash(git push:*)` to your permission allow rules, or approve once when step 0 asks. Plugin brings every skill, delegate roles, the run hooks and the update check; follows release tags. Start a new session.
 
 Desktop app without terminal: add to `~/.claude/settings.json`, start a new session, then install from `/plugin` if missing:
 
@@ -64,7 +64,9 @@ Without plugins, copy by hand:
 
 ## Cursor
 
-Plugin (not yet run live): in a session, `/plugin marketplace add https://github.com/seifsg/ai-software-factory.git`, then `/plugin` and install `safe-factory` (CLI: `agent plugin marketplace add …`; editor: paste the repo URL into the plugin search). Reads `.cursor-plugin/marketplace.json`. Brings skills, delegate roles and the run hooks. Cursor also loads Claude Code's installed plugins (Settings → Agents → Third-Party Imports → Include Third-Party Plugins, Skills, and Other Configs): with the Claude Code plugin installed, turn that off, else hooks run twice and Claude Code's plugin brings Cursor no Stop guard. Update: GitHub installs stay on the commit they were installed from, so uninstall and install again in `/plugin`; a team marketplace import with Auto Refresh updates by itself (Teams and Enterprise).
+Update: Marketplace installs update by themselves; team imports do once an admin enables Auto Refresh (Teams and Enterprise); a GitHub install has no proven update path (Cursor staff report it stays on its first commit and advise against reinstalling). Not run live.
+
+Plugin (not yet run live): in a session, `/plugin marketplace add https://github.com/seifsg/ai-software-factory.git`, then `/plugin` and install `safe-factory` (CLI: `agent plugin marketplace add …`; editor: paste the repo URL into the plugin search). Reads `.cursor-plugin/marketplace.json`. Brings skills, delegate roles and the run hooks. Cursor also loads Claude Code's installed plugins (Settings → Agents → Third-Party Imports → Include Third-Party Plugins, Skills, and Other Configs): with the Claude Code plugin installed, turn that off, else hooks run twice and Claude Code's plugin brings Cursor no Stop guard.
 
 ## Update check
 

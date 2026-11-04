@@ -67,6 +67,7 @@ num='ticks|seen|night_until|sig|idle|base_[ABCR]|sstep|rstep|compacts|jobs_since
 if [ -f "$st" ]; then
   if grep -qvE "^g_($num)='[0-9]*'\$|^g_(session|sessions|transcript|halt|end|relay|csession)='[^'\$\`]*'\$" "$st"; then note='guard state was edited outside the guard'; else . "$st"; fi
 fi
+ns=; [ -f "$st" ] || ns=1
 [ -f "$run.ticks" ] && { g_ticks=$(cat "$run.ticks"); rm -f "$run.ticks" "$run.nudge"; }  # state of an older guard
 case $sid in '' | *[!A-Za-z0-9_-]*) ;; *) case " $g_sessions " in *" $sid "*) ;; *) g_sessions="${g_sessions:+$g_sessions }$sid" ;; esac ;; esac
 keys='ticks session sessions transcript seen night_until sig idle halt end clear base_A base_B base_C base_R sstep relay rstep compacts csession jobs_since jobs_key'
@@ -96,7 +97,7 @@ night=0; [ "${g_night_until:-0}" -gt 0 ] 2>/dev/null && night=1
 # is kept for the reply. The step is the later of Next and the last ticked heading, so a malformed Next never
 # skips a gate. gate: the first gate the run has reached without proof; R: step 8 without a proven review.
 read -r stopped waiting finished ticks gate sig jobs jmax crit fA fB fC fR unp skip long step next <<EOF
-$(cd "$ev" && awk -v R="$run" -v lh="$lh" -v fb=$fb -v nov=$nov -v head="$head" -v up="$up" -v night=$night -v clr="$g_clear" -v bs="${g_base_A:-0} ${g_base_B:-0} ${g_base_C:-0} ${g_base_R:-0}" '
+$(cd "$ev" && awk -v R="$run" -v lh="$lh" -v fb=$fb -v nov=$nov -v head="$head" -v up="$up" -v night=$night -v clr="$g_clear" -v ns="$ns" -v pt="${g_ticks:-0}" -v bs="${g_base_A:-0} ${g_base_B:-0} ${g_base_C:-0} ${g_base_R:-0}" '
   BEGIN { split(bs, b); split("A B C R", k); split("3 6 8 8", sp); for (i = 1; i <= 4; i++) { base[k[i]] = b[i]; st[k[i]] = sp[i] } }  # the step of each loop; rounds count since the last clear
   function pre(a, b,  n) { n = length(a) < length(b) ? length(a) : length(b); return n >= 7 && substr(a, 1, n) == substr(b, 1, n) }
   function at(t) { sub(/.*@/, "", t); return t }
@@ -161,7 +162,7 @@ $(cd "$ev" && awk -v R="$run" -v lh="$lh" -v fb=$fb -v nov=$nov -v head="$head" 
     } else if ((v = final($0, "Gate " kind[id] ": (PASS|FAIL)[^\"\\\\]*")) != "") last[id] = v
   }
   END {
-    done1(); if (clr) for (x in base) base[x] = f[x]  # the owner just cleared: caps count from here
+    done1(); if (clr || c <= 1 && (ns || pt > c)) for (x in base) base[x] = f[x]  # the owner cleared, or a new run began: caps count from here
     if (!hw) n = ""  # no Waiting line: a broken header, whatever Next says
     if (fc && lf != "") ll = (ll == "" ? substr(lf, 2) : ll lf)  # an unclosed fence exempts nothing
     step = n == "" ? 0 : substr(n, 1, 1) + 0; if (m > step) step = m; g = "-"
@@ -176,6 +177,7 @@ $(cd "$ev" && awk -v R="$run" -v lh="$lh" -v fb=$fb -v nov=$nov -v head="$head" 
     printf "%d %d %d %d %s %d %d %d %s %d %d %d %d %s %s %s %d %s\n", s, (!(o || j)), (r && g == "-" && sk == "" && ll == ""), c, g, p, j, jm, (oc == "" ? "-" : oc), f["A"], f["B"], f["C"], f["R"], (u == "" ? "-" : u), (sk == "" ? "-" : sk), (ll == "" ? "-" : ll), step, n
   }' "$run" "$@")
 EOF
+[ "${ticks:-0}" -le 1 ] && { [ -n "$ns" ] || [ "${g_ticks:-0}" -gt "${ticks:-0}" ]; } && g_clear=1  # a new run: an earlier run's rounds are not its rounds; a late run keeps them
 [ "$gate" = - ] && gate=
 [ "$skip" = - ] && skip=
 [ "$long" = - ] && long=
