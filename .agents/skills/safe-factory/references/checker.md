@@ -1,6 +1,6 @@
 # Checker
 
-Fresh light read-only delegate (role `checker`, or any light read-only agent given this brief). Judges outputs against their contracts, never work quality.
+Fresh light read-only delegate (role `checker`, or any light read-only agent given this brief). Judges outputs against contracts, never work quality.
 
 Before each brief, commit and check each contract line yourself, as strictly; a form FAIL costs a round.
 
@@ -25,6 +25,8 @@ Round 2 on: recheck only MISSING lines of round 1's handback; the rest stay met.
 | A | 0–3 | `ticketing`, `analyze-start`, `recommend`, `get-ready-to-code` (plan) |
 | B | 4–6 | `how-to-make-a-pr` (Before proof), `get-ready-to-code` (0–4 loop), `deep-review` |
 | C | 7–8, the PR | `how-to-make-a-pr` (`## 7 PR`), plus the list below |
+
+`## 7 PR` `local only ("<owner's words>") @<sha>` with `git remote` empty: PR lines lapse. `Skipped by owner ("<their words>")` meets its step's lines. Not at night.
 
 Gate C's list, besides `## 7 PR`:
 

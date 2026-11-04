@@ -60,12 +60,12 @@ Fill project's PR template first, then use these blocks inside it. Skip what doe
 **Video:** [<journey through its result, 00:00-00:35>](https://<host>/<journey>.mp4)
 ```
 
-- Compare variants across dimensions in a table; mark what is new.
+- Variants: table across dimensions; mark what is new.
 - Monospace diagrams in code blocks. Bold only key terms.
 
 ## Writing rules
 
-- No em dashes. Use a period, comma, colon or parentheses.
+- No em dashes: period, comma, colon or parentheses.
 - Cut generic openers, canned summaries, buzzwords, inflated adjectives, filler transitions, "not X, but Y", slogans. State point, key facts first.
 - Specific nouns, active verbs, consistent terms, short bullets, narrow tables. Emojis only to label sections, aid scanning.
 - No invented facts, metrics, benefits, tests, visuals, authorship or consent; charts need measured values; screenshots show real, relevant proof. Label illustrative examples. Verify names, numbers, units, dates.

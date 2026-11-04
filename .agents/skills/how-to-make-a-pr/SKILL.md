@@ -74,7 +74,7 @@ Every PR shows observed Before/After per outcome; prose or illustrative diagrams
 
 Open one every run, unasked, unless its wave's draft PR is open: then push to that branch and update that PR: append run's outcomes, criteria verification, remaining steps; refresh summary.
 
-- Variations requested: one branch and draft PR per variation, each follows these rules with own proof.
+- Variations requested: one branch and draft PR each, same rules, own proof.
 - List missing tests, review, baseline as unverified. Link run's epic.
 
 ## Stops

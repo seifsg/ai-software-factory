@@ -4,11 +4,11 @@ Build what asked + what it needs to work. Best quality, best UI/UX. No size defa
 
 ## Requested scope
 
-Every feature, journey, integration and behavior the owner asked for, plus what each needs to work end to end (if the item fails for a real user without it, it is part of the item).
+Every feature, journey, integration, behavior owner asked for, plus what each needs end to end (item fails for a real user without it: part of the item).
 
-- A requested item leaves scope only by owner's recorded decision: source, reason, revisit condition, and its entry in the epic's follow-ups ticket.
+- A requested item leaves scope only by owner's recorded decision: source, reason, revisit condition, entry in the epic's follow-ups ticket.
 - Without that decision, nothing removes or replaces a requested item: no size label, research finding, generic follow-up, later iteration's focus or substitute (mock, sample data, a sandbox that cannot reach the real target, manual step). Seeded data fills content, never a requested integration. A provider's test mode on the real integration counts; live keys come with deployment.
-- Capability unavailable: keep item Blocked with its reason, build rest, report outcome unfinished.
+- Capability unavailable: item stays Blocked with reason, build rest, report unfinished.
 - Extras, no ask: better UI/UX, small enhancements of asked items, critical additions an asked item needs. Nothing else: no unasked features or pages (sign-in, payments, analytics, onboarding) unless an asked item needs it (roles, per-user data: real sign-in) or an owner-named MVP's launch needs it. Other ideas: suggestions in the follow-ups ticket (gap, evidence, cost), never built.
 - Logic gets small tests, any run, except owner-named POC.
 
@@ -30,7 +30,7 @@ Every feature, journey, integration and behavior the owner asked for, plus what 
 
 ## MVP
 
-Owner publishes it to real test users. Research what MVP means for this product: what competitors ship, what users expect before trusting it, what breaks at first real use. Build each launch need it shows, from this list and beyond:
+Owner publishes to real test users. Research MVP for this product: what competitors ship, what users expect before trusting it, what breaks at first real use. Build each launch need it shows, from this list and beyond:
 
 - real sign-in and enforced roles when anyone signs in or roles exist;
 - `deep-review`'s security lens in full, with the three verify scans (secrets, dependencies, static analysis);

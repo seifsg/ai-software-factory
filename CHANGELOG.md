@@ -6,6 +6,25 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+### Added
+
+- Let a run the owner keeps local finish with no PR ([#290])
+- Add one clean format for run files, chat blocks and handbacks: short lines, tables, ASCII graphs, status marks, optional linked visuals ([#290])
+
+### Changed
+
+- Keep a run and its code in the project folder the owner names, even when the session cannot move there ([#290])
+
+### Fixed
+
+- Fix the guard doing nothing under the awk macOS ships: every stop passed silently, so no step or gate was enforced ([#290])
+- Fix a misspelled or missing `Waiting:` line letting an agent stop silently: the guard drives the run and shows the exact header ([#290])
+- Fix a skipped step going unnoticed: the guard names it, and a run cannot finish with one ([#290])
+- Fix walls of text in the run file: the guard names any line over 300 characters ([#290])
+- Fix a closed run asking for Gate C again after its checkout moved on ([#290])
+- Fix a project with no remote never passing Gate C ([#290])
+- Fix guard prompts on Windows naming Git Bash paths the agent could not open ([#290])
+
 ## [0.6.0] - 2026-11-04
 
 _Upgrade needed: start a new session, and Codex trusts its hooks again; follow [UPGRADING.md](UPGRADING.md#060)._
@@ -274,6 +293,7 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 [1.1.0]: https://github.com/seifsg/ai-software-factory/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/seifsg/ai-software-factory/releases/tag/v1.0.0
 
+[#290]: https://github.com/seifsg/ai-software-factory/pull/290
 [#232]: https://github.com/seifsg/ai-software-factory/pull/232
 [#241]: https://github.com/seifsg/ai-software-factory/pull/241
 [#242]: https://github.com/seifsg/ai-software-factory/pull/242

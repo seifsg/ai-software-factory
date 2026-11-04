@@ -5,17 +5,17 @@ description: "Analyzes a feature, defect, refactor or PR before any coding: read
 
 # Analyze Start: understand it fully, write no code
 
-Deep, thorough, analysis-only phase. Educate yourself on the feature, task or PR until you understand it end to end, then explain it back so a teammate or a future agent could pick it up cold. Do not write or change code. Reading, searching and diagramming only.
+Analysis only. Learn the feature, task or PR end to end, then explain it so a teammate or future agent can pick it up cold. No code changes: read, search, diagram.
 
-> **Grounding rule.** Read the real code, never guess from a diff or a filename. A claim you only skimmed is a hypothesis until you have read enough to know what it means. Keep verified facts and hypotheses apart.
+> **Grounding rule.** Read the real code, never guess from a diff or a filename. A skimmed claim is a hypothesis until read enough to know what it means. Keep verified facts and hypotheses apart.
 
 ## Instructions
 
 0. **Start from the inputs.** Read the ticket (requested items, criteria), any kickoff research and an owner-named size; know which step this is and what comes next.
-1. **Educate yourself thoroughly.** Read the feature or PR and everything it touches. Follow the code, not the summary. Skim details that don't matter; focus hard on the core logic.
-2. **Explain it back in full detail.** In your own words: what it does and why it exists. Define what success means. New product or feature: who uses it, the jobs they need done, each requested item mapped to what it needs, and the non-functional needs (speed, accessibility, security). If the why is stated nowhere, say so: a change with no rationale is itself a finding.
-3. **Map every call site.** Find everywhere else this code is called, used or depended on: callers, consumers, route/DTO/schema references, event names, storage keys, tests. List them with paths. Regression review builds on this map. Prefer search and reading over assumption.
-4. **Draw ASCII charts.** Show the flow and the architecture, trigger → layers → data/persistence → result, and mark where the change sits.
+1. **Learn it.** Read the feature or PR and everything it touches. Follow the code, not the summary. Skim what doesn't matter; focus on core logic.
+2. **Explain it back in full detail.** Own words: what it does, why it exists, what success means. New product or feature: who uses it, the jobs they need done, each requested item mapped to what it needs, and the non-functional needs (speed, accessibility, security). Why stated nowhere: say so; no rationale is a finding.
+3. **Map every call site.** Everywhere this code is called, used or depended on: callers, consumers, route/DTO/schema references, event names, storage keys, tests. List with paths; regression review builds on it. Prefer search and reading over assumption.
+4. **Draw ASCII charts.** Flow and architecture, trigger → layers → data/persistence → result; mark where the change sits.
 
    ```
    Web example:
@@ -29,21 +29,21 @@ Deep, thorough, analysis-only phase. Educate yourself on the feature, task or PR
                  → navigation + UI result
    ```
 
-5. **Trace the risky edges.** Name where outside data enters, which invariants are enforced and which are only assumed. Trace each defect or edge case to its design cause.
-6. **Claim vs code** (a PR or a bug report). For each claimed behavior, point to where it is delivered and whether it is actually wired up:
+5. **Trace the risky edges.** Where outside data enters; invariants enforced vs only assumed. Trace each defect or edge case to its design cause.
+6. **Claim vs code** (a PR or a bug report). Each claimed behavior: where delivered, whether wired up:
 
    | Claimed behavior | Where in the code | Delivered? (YES / PARTIAL / NO) | Note |
    |---|---|---|---|
 
-7. **Extensions.** State what can change through data or config and what needs code. Plan the final proof with content absent from the build.
-8. **Scope.** Name the next complete useful result, its required dependencies and shared constraints. Keep the whole requested outcome visible.
-9. **Open questions and hypotheses.** Collect anything ambiguous, risky or needing outside context. Label hypotheses; never present a hunch as a fact.
+7. **Extensions.** What changes through data or config, what needs code. Plan the final proof with content absent from the build.
+8. **Scope.** Next complete useful result, its required dependencies, shared constraints. Keep the whole requested outcome visible.
+9. **Open questions and hypotheses.** Collect the ambiguous, the risky, what needs outside context. Label hypotheses; never a hunch as fact.
 
 Docs or method changes: map readers, links and canonical owners instead of inventing code consumers.
 
 ## Hard rule
 
-No code in this phase. No edits, no fixes, no quick changes. Coding happens only in a later, explicit build phase.
+No code in this phase: no edits, fixes, quick changes. Coding only in a later, explicit build phase.
 
 ## Output contract
 
