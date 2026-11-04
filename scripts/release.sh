@@ -84,7 +84,7 @@ publish() {
     git push -q origin "refs/tags/v$v" || { git tag -d "v$v" >/dev/null; die "tag push failed; local tag removed, rerun"; }
   fi
   # stable: what a store listing follows, released commits only. Never forced; before the release, so a rerun retries it.
-  git push -q origin "$m:refs/heads/stable" || die "stable is not behind $m, so it did not move (tag v$v is pushed): fix the branch, then rerun publish $v"
+  git push -q origin "$m:refs/heads/stable" || die "stable push failed, it did not move (tag v$v is pushed): fix the cause, then rerun publish $v"
   gh release create "v$v" -R "$slug" --verify-tag --latest --title "v$v" --notes-file "$b" || die "release not created (tag v$v is pushed): rerun publish $v"
   echo "release: v$v published as Latest from $m"
 }

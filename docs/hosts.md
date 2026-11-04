@@ -10,6 +10,7 @@ Methods are host-neutral. This page = what differs per agent: where skills live,
 |---|---|---|
 | Install | plugin, root `.agents/` ([install](install.md#claude-code)) | plugin, root `.agents/`, or copied skills + `~/.codex/hooks.json` ([install](install.md#codex)) |
 | Invoke | `/safe-factory …` | `$safe-factory …` |
+| Update | `claude plugin update safe-factory@ai-software-factory` | `codex plugin marketplace upgrade ai-software-factory` |
 | Load a step's skill fresh | the Skill tool, `safe-factory:<name>` | `$<name>`, or read its `SKILL.md` |
 | What compaction keeps | the first 5k tokens of each recently used skill, 25k in total; CLAUDE.md is re-read | AGENTS.md and the skill list; skill bodies are dropped |
 | Stop guard | `Stop` hook in the `safe-factory` skill's frontmatter, so it exists only once that skill loads through the Skill tool or `/safe-factory` and other sessions start no process (tested on 2.1.309: survives later turns and compaction, gone after a process resume). The agent loading it needs permission: an allow rule, auto mode or the owner's yes. Also checks each ticked step's block opened a chat message (transcript text blocks) | `Stop` hook in `hooks/portable.json`, which the manifest names and which replaces `hooks/hooks.json`; runs in every session; trust once in `/hooks`; no block check (other transcript format) |

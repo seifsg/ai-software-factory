@@ -64,6 +64,8 @@ Without plugins, copy by hand:
 
 ## Cursor
 
+Update: Marketplace and team installs update by themselves; a GitHub install has no proven update path (Cursor staff report it stays on its first commit and advise against reinstalling). Not run live.
+
 Plugin (not yet run live): in a session, `/plugin marketplace add https://github.com/seifsg/ai-software-factory.git`, then `/plugin` and install `safe-factory` (CLI: `agent plugin marketplace add …`; editor: paste the repo URL into the plugin search). Reads `.cursor-plugin/marketplace.json`. Brings skills, delegate roles and the run hooks. Cursor also loads Claude Code's installed plugins (Settings → Agents → Third-Party Imports → Include Third-Party Plugins, Skills, and Other Configs): with the Claude Code plugin installed, turn that off, else hooks run twice and Claude Code's plugin brings Cursor no Stop guard. Update: GitHub installs stay on the commit they were installed from, so uninstall and install again in `/plugin`; a team marketplace import with Auto Refresh updates by itself (Teams and Enterprise).
 
 ## Update check
