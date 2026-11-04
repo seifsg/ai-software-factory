@@ -2,6 +2,12 @@
 
 Delivers games, apps, services, tools and libraries in ten visible steps: ticket, analyze, recommend, challenge, plan, Before proof, build, verify, draft PR and review. Eleven skills and six delegate roles. Humans decide ready, merge and release.
 
+## Try it
+
+- `/safe-factory:safe-factory Build a small habit tracker web app`
+- `/safe-factory:safe-factory safe: fix the crash when the login form is empty`
+- `/safe-factory:how-to-review-a-pr Review pull request 12`
+
 ## What it runs
 
 - A prompt Stop hook, added when the `safe-factory` skill loads: at each turn end a small model checks the last message and sends the next step. Nothing runs in sessions that never load the skill.
@@ -17,5 +23,11 @@ Delivers games, apps, services, tools and libraries in ten visible steps: ticket
 - The hook's small model is Claude Code's own background model, under your Claude terms.
 
 Files stay on your machine: `.factory/` in your project, and `ai-software-factory` in your cache folder.
+
+## Troubleshooting
+
+- A run stops between steps: say "go on", or `/safe-factory:safe-factory Resume <folder>`. Reloading the skill brings the Stop check back after a stop or a resumed session.
+- A permission prompt on every step: allow `Skill(safe-factory:*)` and `Bash(sh *run-guard.sh check *)`.
+- The run file reads wrong: `.factory/run.md` needs `Status:`, `Next:` and `Waiting:` spelled exactly.
 
 [Privacy](https://github.com/seifsg/ai-software-factory/blob/main/PRIVACY.md) · [Security](https://github.com/seifsg/ai-software-factory/blob/main/SECURITY.md) · [Full guide](https://github.com/seifsg/ai-software-factory#readme)
