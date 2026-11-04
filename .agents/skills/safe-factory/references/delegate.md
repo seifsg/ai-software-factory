@@ -1,6 +1,6 @@
 # Delegate: roles, briefs and gates
 
-Use the cheapest capable role; host models/overrides: `docs/hosts.md`.
+Cheapest capable role; host models/overrides: `docs/hosts.md`.
 
 ## Roles
 

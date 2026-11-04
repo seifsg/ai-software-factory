@@ -1,6 +1,6 @@
 # Worth-it repair rounds
 
-Use `deep-review`'s assessment for every finding.
+`deep-review`'s assessment for every finding.
 
 1. Keep complete JSON `findings`: `location`, plain `description`, `severity`, `disposition`, `exception`, `worth`; clean reports use an empty list.
 2. `worth` holds `notice` (0..2), `harm` (0..3), `minutes` (whole nonnegative estimate or null), `required` (boolean), `reason` (one line). Cost points are 2 under 15 minutes, 1 under 60, else 0; score is notice + harm + cost. Null cost stays unknown.
