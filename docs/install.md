@@ -70,7 +70,7 @@ Plugin (not yet run live): in a session, `/plugin marketplace add https://github
 
 ## Update check
 
-At a run's first step (Claude Code) or at session start (Codex, Cursor) the check reads a cached latest release at once (about 0.2 s on Windows) and refreshes it from GitHub in the background each time (written only when the fetch succeeds, so a failure retries next start) with `gh api`, or `curl` when `gh` is missing or signed out. Check by hand: compare the README version badge, or the [Latest release](https://github.com/seifsg/ai-software-factory/releases/latest), with your agent's installed plugin version. A newer release: the agent tells you before any run and links what's new. The same hook also lists leftovers of old versions (see below) and the agent offers to clean them; it never stops a run for it. Off: `FACTORY_NO_UPDATE_CHECK=1`.
+At a run's first step (Claude Code) or at session start (Codex, Cursor) the check reads a cached latest release at once (about 0.2 s on Windows) and refreshes it from GitHub in the background each time (written only when the fetch succeeds, so a failure retries next start) with `gh api`, or `curl` when `gh` is missing or signed out. Check by hand: compare the README version badge, or the [Latest release](https://github.com/seifsg/ai-software-factory/releases/latest), with your agent's installed plugin version. A newer release: the agent tells you before any run and links what's new. The same check also lists leftovers of old versions (see below) and the agent offers to clean them; it never stops a run for it. Off: `FACTORY_NO_UPDATE_CHECK=1`.
 
 ## Clean up and uninstall
 

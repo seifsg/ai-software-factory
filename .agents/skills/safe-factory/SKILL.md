@@ -5,7 +5,7 @@ hooks:
   Stop:
     - hooks:
         - type: prompt
-          prompt: 'One factory stop: $ARGUMENTS. Read last_assistant_message. If "Gate X: PASS (checker" or "Review: ready (reviewer" has no delegate handback earlier in this conversation: ok false, reason: "Run that delegate." Else ok true only if it contains "Factory check: may stop", or names a denied permission or failed tool that blocks it; a wait or a question never counts. Else ok false, reason: "Run the factory check in safe-factory."'
+          prompt: 'Factory stop: $ARGUMENTS. Read last_assistant_message. If a Gate or Review line lacks its backing earlier in this conversation (delegate handback; waiver: an owner message; cap: three failed handbacks): ok false, reason: "Run that delegate." Else ok true only if it contains "Factory check: may stop", or names a denied permission or failed tool that blocks it; a wait or a question never counts. Else ok false, reason: "Run the factory check in safe-factory."'
 ---
 
 # Safe Factory
@@ -83,7 +83,7 @@ Load  before █████ 800 ms
 
 Live guard: one step per turn: load its skill, do that step's own work with fresh reading, searching or running, post its block as last message, update run file, end turn. Stop guard sends next step. Check asked for: from run's folder, `sh "${CLAUDE_SKILL_DIR}/scripts/run-guard.sh" check ${CLAUDE_SESSION_ID}`, do what it prints; to stop, set header's `Waiting:`, then quote its `may stop` line. A stop spends the hook: next message, reload this skill. Step 5 takes one todo per turn. Host with no Stop hook: Fast chains steps in one turn, never ending one open with `Waiting: none`; Safe ends each with `Say go for step <n>`. Before each step load its skill fresh (skill command or file), even if read earlier. Same skill as last step: rereading this step's section is enough.
 
-Each step ends with its block: post full block as own chat message opening with its heading (never summary, never only a file or tool output), then write to run file. Fold in any owner reply before next step reads it. Ticket gets a comment only on status change (steps 0, 5, 7 and 8) or relay, linking run file's blocks.
+Each step ends with its block: post full block as own chat message opening with its heading (never summary, never only a file or tool output), then write to run file. Fold in any owner reply before next step reads it. Ticket gets a comment only on status change (steps 0, 5, 7, 8) or relay, linking run file's blocks.
 
 | Step | Skill | Block |
 |---|---|---|
@@ -122,14 +122,14 @@ After steps 3, 6 and 8, start the [checker](references/checker.md): a fresh ligh
 - Run file shows `Night:`: [night mode](references/night.md) rules.
 - Released app or release policy: [app releases](references/app-releases.md).
 - Effort on confirmed work only. Primary platform first (existing app: the platform it mainly targets; else a web app means desktop, a mobile app means phone): verify, fix, polish. Secondary: after owner confirms primary; until then the PR names it pending, never a blocking UNKNOWN.
-- Backlog: `ticketing` moves each ticket through its statuses and logs every change in its activity. Deferred work appends to the epic's one open follow-ups ticket in Backlog.
+- Backlog: `ticketing` moves tickets through statuses and logs changes in activity. Deferred work appends to the epic's one open follow-ups ticket in Backlog.
 
 ## Keep the owner posted
 
-- Ten steps on host's task list at step 0; mark each at start and end.
+- Ten steps on host's task list at step 0; mark each start and end.
 - Always preview, step 4 on: what the run changes in front of owner, fresh after each todo: browser pane (web, markdown), inline image or artifact (other docs, media), simulator or screenshot (mobile, desktop).
 - Updates and handbacks: [plain owner reports](references/owner-reports.md).
-- Owner message first: answer or do it, then resume what still fits, unasked.
+- Owner message first: answer or do it, then resume what fits, unasked.
 - Waiting on owner: question first, then options; by question tool if any: hook stays.
 
 ## Decide
