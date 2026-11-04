@@ -5,7 +5,7 @@ hooks:
   Stop:
     - hooks:
         - type: prompt
-          prompt: 'Factory stop: $ARGUMENTS. Read last_assistant_message. If a Gate or Review line lacks its backing earlier in this conversation (delegate handback; waiver: an owner message; cap: three failed handbacks): ok false, reason: "Run that delegate." Else ok true only if it contains "Factory check: may stop", or names a denied permission or failed tool that blocks it; a wait or a question never counts. Else ok false, reason: "Run the factory check in safe-factory."'
+          prompt: 'Factory stop: $ARGUMENTS. Read last_assistant_message. If a Gate or Review line lacks its backing earlier in this conversation (delegate handback; waiver: an owner message; cap: 3 failed handbacks): ok false, reason: "Run that delegate." Else ok true only if it contains "Factory check: may stop", or names a denied permission or failed tool that blocks it; a wait or a question never counts. Else ok false, reason: "Run the factory check in safe-factory."'
 ---
 
 # Safe Factory
