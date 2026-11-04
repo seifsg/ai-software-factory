@@ -34,12 +34,12 @@ if [ -n "$base" ]; then
   b=$(bytes "$base"); [ "$1" -le "${b% *}" ] || fail "methods grew: ${b% *} -> $1"; [ "$2" -le "${b#* }" ] || fail "read set grew: ${b#* } -> $2"
 fi
 
+# Every manifest agrees with the canonical version.
+blob() { MSYS_NO_PATHCONV=1 git show "$ref:$1"; }  # <ref>:<path> as typed under Git Bash
+
 # A store refuses a plugin with no license: the file and every manifest name it.
 blob LICENSE | grep -q '^MIT License' || fail "no MIT LICENSE at the root"
 for m in claude codex cursor; do blob ".agents/.$m-plugin/plugin.json" | grep -q '"license": "MIT"' || fail "$m manifest names no MIT license"; done
-
-# Every manifest agrees with the canonical version.
-blob() { MSYS_NO_PATHCONV=1 git show "$ref:$1"; }  # <ref>:<path> as typed under Git Bash
 v=$(blob .agents/.claude-plugin/plugin.json | grep -o '"version": "[^"]*"' | cut -d'"' -f4)
 [ -n "$v" ] || fail "no version in .agents/.claude-plugin/plugin.json"
 for f in .agents/.codex-plugin/plugin.json .agents/.cursor-plugin/plugin.json .claude-plugin/marketplace.json; do
