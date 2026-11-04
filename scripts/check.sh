@@ -80,7 +80,7 @@ case $(gd s1 "## 0 Ticket\\n- **Workspace:** \`$p\`") in *'"decision":"block"'*)
 [ -f "$b/ai-software-factory/sessions/s1" ] || fail "no session file for the bound session"
 case $(gd s2 '## 1 Analyze') in *'no run file found'*) ;; *) fail "a step block with no run did not ask" ;; esac
 case $(gd s1 "## 1 Analyze **Workspace:** \`/nope\`") in *'no run file found'*) ;; *) fail "a bound session with a bad Workspace did not ask" ;; esac
-case $(printf '{"session_id":"s3","cwd":"%s","last_assistant_message":"## 1 Analyze **Workspace:** \`/nope\`"}' "$b/b" | HOME="$b" XDG_CACHE_HOME="$b" sh $skills/safe-factory/scripts/run-guard.sh stop) in *'no run file found'*) fail "an own-folder run with a bad Workspace was not driven" ;; esac
+case $(printf '{"session_id":"s3","cwd":"%s","last_assistant_message":"## 1 Analyze **Workspace:** `/nope`"}' "$b/b" | HOME="$b" XDG_CACHE_HOME="$b" sh $skills/safe-factory/scripts/run-guard.sh stop) in *'no run file found'*) fail "an own-folder run with a bad Workspace was not driven" ;; esac
 sg=$PWD/$skills/safe-factory/scripts/run-guard.sh
 mkdir "$b/none"; (cd "$b/none" && sh "$sg" clear) 2>/dev/null && fail "clear with no run passed silently"
 [ "$(grep -c 'clear %s' "$sg")" -ge 2 ] || fail "a halt reply does not name the run's folder for clear"
