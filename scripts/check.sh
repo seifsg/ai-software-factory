@@ -79,4 +79,18 @@ case $(gd s1 "## 0 Ticket\\n- **Workspace:** \`$p\`") in *'"decision":"block"'*)
 [ -f "$b/b/.factory/guard/state" ] || fail "no guard state in the bound run's folder"
 [ -f "$b/ai-software-factory/sessions/s1" ] || fail "no session file for the bound session"
 case $(gd s2 '## 1 Analyze') in *'no run file found'*) ;; *) fail "a step block with no run did not ask" ;; esac
+case $(gd s1 "## 1 Analyze **Workspace:** \`/nope\`") in *'no run file found'*) ;; *) fail "a bound session with a bad Workspace did not ask" ;; esac
+sg=$PWD/$skills/safe-factory/scripts/run-guard.sh
+mkdir "$b/none"; (cd "$b/none" && sh "$sg" clear) 2>/dev/null && fail "clear with no run passed silently"
+[ "$(grep -c 'clear %s' "$sg")" -ge 2 ] || fail "a halt reply does not name the run's folder for clear"
+
+# A moved run keeps its proof: session A proved Gate A in one project folder, session F drives it from another.
+e=$w/e; mkdir -p "$e/p/A/sA/subagents" "$e/p/F" "$e/r/.factory"; git init -q "$e/r"; git -C "$e/r" -c user.name=t -c user.email=t@t commit -q --allow-empty -m i; sha=$(git -C "$e/r" rev-parse HEAD)
+{ printf '{"message":"Role: checker. Gate A"}\n'; printf '{"message":{"role":"assistant","content":[{"type":"text","text":"Gate A: PASS @%s"}]}}\n' "$sha"; } > "$e/p/A/sA/subagents/agent-chk.jsonl"
+{ printf '# Run: x · fast · change\nStatus: open\nNext: 4 Before · how-to-make-a-pr\nWaiting: none\n\n'; for h in '0 Ticket' '1 Analyze' '2 Recommend' '2b Challenge' '3 Plan'; do printf '## %s ✔\nx\n' "$h"; done; printf 'Gate A: PASS (checker chk) @%s\n' "$sha"; } > "$e/r/.factory/run.md"
+for h in '0 Ticket' '1 Analyze' '2 Recommend' '2b Challenge' '3 Plan'; do printf '{"isSidechain":false,"message":{"role":"assistant","content":[{"type":"text","text":"## %s x"}]}}\n' "$h"; done > "$e/p/A/sA.jsonl"
+printf '{"isSidechain":false}\n' > "$e/p/F/sF.jsonl"
+ge() { printf '{"session_id":"%s","transcript_path":"%s","cwd":"%s","last_assistant_message":"x"}' "$1" "$e/p/$2/$1.jsonl" "$e/r" | HOME="$e" XDG_CACHE_HOME="$e" sh "$sg" stop; }
+ge sA A >/dev/null
+case $(ge sF F) in *'Gate A has not'* | *'not posted'*) fail "a run moved to a session in another project folder lost its proof" ;; esac
 exit $bad

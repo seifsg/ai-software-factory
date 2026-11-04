@@ -27,10 +27,11 @@ walk() {
 # Bind this session to the run in the Workspace its step block names: an absolute folder holding a run file, nothing else.
 bind() {
   w=${h#*\*\*Workspace:\*\* \`}; [ "$w" = "$h" ] && return 1
+  bad=1
   w=$(printf '%s' "${w%%\`*}" | sed 's/\\\\/\//g')
   case $w in *[\'\"\$\\%]*) return 1 ;; /* | [A-Za-z]:/*) ;; *) return 1 ;; esac
   [ -f "$w/.factory/run.md" ] || return 1
-  d=$w; [ -z "$s" ] && return 0
+  d=$w bad=; [ -z "$s" ] && return 0
   mkdir -p "${b%/*}" && find "${b%/*}" -type f -mtime +30 -exec rm -f {} + ; printf '%s\n' "$w" > "$b"
 }
 case $in in *\"session_id\":*) s=${in#*\"session_id\":}; s=${s#*\"}; s=${s%%\"*} ;; *) s= ;; esac
@@ -39,14 +40,16 @@ b=${XDG_CACHE_HOME:-$HOME/.cache}/ai-software-factory/sessions/$s
 # The step heading opening this turn's last message, if any: only real step names, so a normal heading is never one.
 h=${in#*\"last_assistant_message\":\"## }; [ "$h" = "$in" ] && h=
 case $h in '0 Ticket'* | '1 Analyze'* | '2 Recommend'* | '2b Challenge'* | '3 Plan'* | '4 Before'* | '5 Build'* | '6 Verify'* | '7 PR'* | '8 Review'*) ;; *) h= ;; esac
-d=
+d= bad=
 [ -z "$h" ] || bind  # a block naming a run always wins over an older binding
 [ -z "$d" ] && [ -n "$s" ] && [ -f "$b" ] && { read -r d < "$b"; [ -f "$d/.factory/run.md" ] || d=; }
 [ -n "$d" ] || walk
-if [ -z "$d" ]; then
+# No run, or a block naming a bad folder even when bound: ask.
+if [ -z "$d" ] || [ -n "$bad" ]; then
+  [ "$mode" = clear ] && { echo "run-guard: no run file here; pass its folder: clear <run folder>" >&2; exit 1; }
   [ -n "$h" ] && [ "$mode" = stop ] || exit 0  # no step block either: not a factory session
   case $in in
-    *\"stop_hook_active\":true* | *\"stop_hook_active\":\ true*) printf '{"systemMessage":"Factory step block posted, but no run file found: this run has no guard."}\n' ;;
+    *\"stop_hook_active\":true* | *\"stop_hook_active\":\ true*) printf '{"systemMessage":"Factory step block posted, but no usable run file found: this run may have no guard."}\n' ;;
     *) printf '{"decision":"block","reason":"Factory step block, but no run file found from this folder. If this session runs a factory run, post that block again with a line **Workspace:** `<absolute folder holding .factory/run.md>` so the guard binds it."}\n' ;;
   esac
   exit 0
@@ -77,13 +80,13 @@ fi
 # Evidence: Claude Code keeps each subagent's transcript in <session>/subagents/agent-<id>.jsonl, its brief first,
 # for every session of the run (relays). Other hosts: the gate's agent id must appear in the session transcript,
 # never in a Claude Code transcript (the model's own edits are in it). No transcript at all: text only.
-ev=${tp%/*} fb=0 nov=0
-set --; for s in $g_sessions; do for f in "$ev/$s"/subagents/agent-*.jsonl; do [ -f "$f" ] && set -- "$@" "$s/subagents/${f##*/}"; done; done
+ev=${tp%/*} ev=${ev%/*} fb=0 nov=0  # every project folder: a moved run's sessions live in different ones
+set --; for q in $g_sessions; do for f in "$ev"/*/"$q"/subagents/agent-*.jsonl; do [ -f "$f" ] && set -- "$@" "${f#"$ev"/}"; done; done
 if [ $# -gt 0 ]; then set -- $(cd "$ev" && ls -tr "$@")  # oldest first: rounds count in order
 else ev=.; if [ -f "$tp" ]; then fb=1; set -- "$tp"; else nov=1; fi; fi
 # Posting proof: each session's own transcript beside it, and the heading of the message ending this turn
 # (the host may not have written it to the transcript yet).
-t=${tp%/*}; for s in $g_sessions; do [ -f "$t/$s.jsonl" ] && [ "$fb$t/$s.jsonl" != "1$tp" ] && set -- "$@" "$t/$s.jsonl"; done
+t=${tp%/*/*}; for q in $g_sessions; do for f in "$t"/*/"$q.jsonl"; do [ -f "$f" ] && [ "$fb$f" != "1$tp" ] && set -- "$@" "$f"; done; done
 lh=${in#*\"last_assistant_message\":\"## }; lh=${lh%% *}; case $lh in [0-8] | [0-8]b) ;; *) lh= ;; esac
 head=$(git -C "$d" rev-parse HEAD 2>/dev/null) up=$(git -C "$d" rev-parse '@{u}' 2>/dev/null)
 night=0; [ "${g_night_until:-0}" -gt 0 ] 2>/dev/null && night=1
@@ -190,7 +193,7 @@ if [ "$mode" = compact ]; then
     [ "$g_csession" = "$sid" ] && g_compacts=$(( ${g_compacts:-0} + 1 )) || g_compacts=1
     g_csession=$sid; save ;;
   esac
-  case $in in *'"source":"resume"'* | *'"source": "resume"'*) printf 'Load `safe-factory` first: a resumed session has lost its Stop guard.
+  case $in in *'"source":"resume"'* | *'"source": "resume"'*) printf 'Load `safe-factory` first: a resumed session may have lost its Stop guard.
 ' ;; esac
   case $gate in '') ;; R) next='8 Review: a proven reviewer verdict on HEAD' ;; *) next="Gate $gate checker" ;; esac
   printf 'Factory run open ('"$rf"'). Next: %s. Read the run file, load that skill fresh, do only that step, then end your turn.\n' "${next:-see the run file}"
@@ -226,7 +229,7 @@ halt() {
   fi
   [ -n "$g_halt" ] || return 0
   g_end=halt; save
-  printf '{"decision":"block","reason":"HALT (%s): the guard stops driving this run. Start no new round. Write the owner packet under the current step: findings per round (new vs repeated), the shared cause, options (extend, amend scope, cancel). Set Waiting: owner: <question>, then end your turn. Only the owner resumes it: sh %s clear"}\n' "$g_halt" "$self"
+  printf '{"decision":"block","reason":"HALT (%s): the guard stops driving this run. Start no new round. Write the owner packet under the current step: findings per round (new vs repeated), the shared cause, options (extend, amend scope, cancel). Set Waiting: owner: <question>, then end your turn. Only the owner resumes it: sh %s clear %s"}\n' "$g_halt" "$self" "$d"
   exit 0
 }
 save

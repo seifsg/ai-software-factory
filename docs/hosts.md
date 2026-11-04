@@ -48,7 +48,7 @@ Pass request, decisions, interfaces, stops and artifact paths explicitly; full h
 | GitHub Copilot, Gemini CLI, OpenCode | read `.agents/skills` | none wired: apply the run-file rules by hand |
 | Anything else | point it at `.agents/skills/safe-factory/SKILL.md` | none |
 
-Guard live: step 0 checks the skill brought its hook or the hook entry predates the session (hooks added mid-session never load), and step 1 finds `.factory/guard/state`. Not live on a host with hooks: the run moves to a fresh session with `safe-factory Resume <run folder>`. On a host without hooks, Fast chains steps in one turn, one block message per step, never waits and never ends a turn with the run open and `Waiting: none`; Safe ends each step with `Say go for step <n>`. Each step still rereads `.factory/run.md` and loads the `Next:` skill fresh; checker gates and PR review still apply.
+Guard live: step 0 checks the skill brought its hook or the hook entry predates the session (hooks added mid-session never load), and step 1 finds `.factory/guard/state`. Not live on a host with hooks: the run moves to a fresh session with `safe-factory Resume <run folder>`; still not live there (hooks not trusted, Git Bash missing): `Waiting: owner:` with the cause. On a host without hooks, Fast chains steps in one turn, one block message per step, never waits and never ends a turn with the run open and `Waiting: none`; Safe ends each step with `Say go for step <n>`. Each step still rereads `.factory/run.md` and loads the `Next:` skill fresh; checker gates and PR review still apply.
 
 ## Sources
 
