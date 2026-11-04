@@ -114,7 +114,8 @@ $(cd "$ev" && awk -v R="$run" -v lh="$lh" -v fb=$fb -v nov=$nov -v head="$head" 
   }
   FILENAME == R {
     if (/^Status: stopped/) s = 1
-    if (/^Waiting: none/) w = 1
+    if (/^Waiting: /) hw = 1
+    if (/^Waiting: owner/) o = 1
     if (/^Waiting: jobs:/) { j = 1; if (match($0, /\(max [0-9]+ min\)/)) jm = substr($0, RSTART + 5, RLENGTH - 10) + 0 }
     if (/^## [0-8]b? .*✔/) tk[++c] = $2
     if (/✔/) p++
@@ -152,6 +153,7 @@ $(cd "$ev" && awk -v R="$run" -v lh="$lh" -v fb=$fb -v nov=$nov -v head="$head" 
   }
   END {
     done1(); if (clr) for (x in base) base[x] = f[x]  # the owner just cleared: caps count from here
+    if (!hw) n = ""  # no Waiting line: a broken header, whatever Next says
     step = n == "" ? 0 : substr(n, 1, 1) + 0; if (m > step) step = m; g = "-"
     rok = capped("R") || rid != "" &&pre(rsha, head) && head == up && proven(rid, "R", rsha) && (nov || fb || last[rid] ~ /^verdict: ready( @|$)/)
     if ((step > 3 || r) && !ok("A")) g = "A"; else if ((step > 6 || r) && !ok("B")) g = "B"; else if (r && !ok("C")) g = "C"; else if (r && !rok) g = "R"
@@ -159,7 +161,7 @@ $(cd "$ev" && awk -v R="$run" -v lh="$lh" -v fb=$fb -v nov=$nov -v head="$head" 
     for (x in st) if (opn(x)) oc = oc x
     for (x in f) if (x == "R" ? rok : ok(x)) f[x] = 0  # a loop that converged has no rounds left to cap
     sent[lh] = 1; if (cx) for (i = 1; i <= c; i++) if (!sent[tk[i]]) u = u (u == "" ? "" : ",") tk[i]  # Claude Code transcripts only
-    printf "%d %d %d %d %s %d %d %d %s %d %d %d %d %s %d %s\n", s, w, r && g == "-", c, g, p, j, jm, oc == "" ? "-" : oc, f["A"], f["B"], f["C"], f["R"], u == "" ? "-" : u, step, n
+    printf "%d %d %d %d %s %d %d %d %s %d %d %d %d %s %d %s\n", s, !(o || j), r && g == "-", c, g, p, j, jm, oc == "" ? "-" : oc, f["A"], f["B"], f["C"], f["R"], u == "" ? "-" : u, step, n
   }' "$run" "$@")
 EOF
 [ "$gate" = - ] && gate=
@@ -233,7 +235,7 @@ halt() {
 }
 save
 [ -n "$todo" ] && { idle; halt; save; printf '{"decision":"block","reason":"If this session runs the factory run in '"$rf"': %s"}\n' "$todo"; exit 0; }
-[ "$waiting" = 1 ] || exit 0  # waiting on the owner or background jobs: stopping is right
+[ "$waiting" = 1 ] || exit 0  # only a real wait stops a run: any other Waiting spelling is driven
 case $in in
   # The host reports a running subagent: its result wakes the session. A background shell (a dev server) never does.
   *'"background_tasks"'*'"type":"subagent"'* | *'"background_tasks"'*'"type": "subagent"'*) exit 0 ;;
@@ -278,7 +280,8 @@ else
     6) todo='Step 6 Verify: load `deep-review` fresh. Review the whole build, make the final manual pass with After captures, run the full suite once.' ;;
     7) todo='Step 7 PR: load `how-to-make-a-pr` fresh and open the draft PR.' ;;
     8) todo='Step 8 Review: load `how-to-review-a-pr` fresh and brief a fresh reviewer that did not build it.' ;;
-    *) todo="Next: ${next:-read the run file}. Load that skill fresh." ;;
+    '') todo='Run file header is wrong. Fix these lines, spelled exactly: `Status: open`, `Next: <step> <name> · <skill>`, `Waiting: none`. Then do that step.' ;;
+    *) todo="Next: $next. Load that skill fresh." ;;
   esac
   [ "${next%% *}" = 5 ] || todo="$todo Do only this step: post its full block as your last message, update $run (tick, Next), then end your turn."
 fi
