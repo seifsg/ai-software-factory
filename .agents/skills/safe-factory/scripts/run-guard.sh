@@ -180,7 +180,7 @@ if [ "$mode" = stop ] && [ -n "$unp" ] && [ "$stopped" != 1 ] && [ -z "$g_halt" 
   save; printf '%s' "$unp" > "$g/unposted"
   printf '{"decision":"block","reason":"If this session runs the factory run in '"$rf"': Step blocks not posted in chat: %s. Post each full block from '"$rf"' now, each as its own message opening with its heading (## <step> <name>), then go on with the run."}\n' "$unp"; exit 0
 fi
-[ "$stopped" = 1 ] || [ "$finished" = 1 ] && { [ "$mode" = stop ] && save; exit 0; }  # stopped by the owner, or finished
+[ "$stopped" = 1 ] || [ "$finished" = 1 ] && { [ -z "$s" ] || rm -f "$b"; [ "$mode" = stop ] && save; exit 0; }  # stopped by the owner, or finished: the binding ends
 if [ -n "$g_halt" ]; then  # halted: the guard drives nothing until the owner clears it
   [ "$mode" = compact ] && { printf 'Factory run halted (%s): wait for the owner; do not continue the run.\n' "$g_halt"; exit 0; }
   save; printf '{"systemMessage":"Factory run halted (%s). The owner reads the packet in '"$rf"' and resumes with: sh %s clear %s"}\n' "$g_halt" "$self" "$d"
