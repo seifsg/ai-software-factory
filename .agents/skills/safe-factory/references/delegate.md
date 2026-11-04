@@ -25,7 +25,7 @@ Refusals first: split, confirm or clarify, then brief again.
 
 Carry goal, role, absolute paths, edit limits, branch, handback and a scratch folder under `.factory/`. Quote needed rules; whole methods only for walkthroughs/reviews. Fresh context: request, decisions, interface, stops, evidence paths; full chat needs a reason. Keep bulky returns in files; pass needed fields and paths. Never resend unchanged methods or transcripts. Host controls: adapter.
 
-Verify the working folder before writes; stop on mismatch. Background delegates: set `Waiting: jobs: <what>` in the run file before ending turn; host reports back. End with a gate per required outcome:
+Verify working folder before writes; stop on mismatch. Background delegates: set `Waiting: jobs: <what>` in the run file before ending turn; host reports back. End with a gate per required outcome:
 
 ```text
 G1 <outcome> CHECK: <command> EXPECT: <text its output must show>
@@ -41,7 +41,7 @@ G3 MANUAL <outcome>: <what the reviewer judges>
 
 - One coherent job per agent. Combine related checks; separate only useful independent jobs.
 - Split briefs with over three outcomes, multiple commits or a whole unrelated document; one change across files counts once.
-- Large spec: an analyst returns focused briefs with required rules and affected paths.
+- Large spec: analyst returns focused briefs with required rules and affected paths.
 - Change smaller than its brief stays local.
 - Only the coordinator spawns, and a reviewer its lens agents; extra agents need `too-big. split:`.
 - Preserve early groundwork (`left:`) in the next brief.
