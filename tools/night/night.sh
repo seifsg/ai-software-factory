@@ -36,7 +36,7 @@ probe() {  # codex: one sandboxed command must really run; a dead sandbox (seen 
 b=$(git -C "$P" branch --show-current 2>/dev/null)
 case $b in '' | main | master) say MISSING "a feature branch (on '${b:-detached}')" ;; *) say ok "branch $b" ;; esac
 hk=$(cd "$P" && git rev-parse --git-path hooks/pre-push 2>/dev/null)  # honors core.hooksPath
-cmp -s "$ag/hooks/pre-push" "$hk" && say ok 'pre-push hook' || say MISSING "pre-push hook at $hk"
+cmp -s "$here/pre-push" "$hk" && say ok 'pre-push hook' || say MISSING "pre-push hook at $hk"
 git -C "$P" push --dry-run origin HEAD >/dev/null 2>&1 && say ok 'push dry run' || say MISSING 'git push --dry-run origin HEAD'
 gh auth status >/dev/null 2>&1 && say ok 'gh signed in' || say MISSING 'gh auth status'
 [ "$bad" = 0 ] || { echo 'Night mode refused: fix the MISSING lines.' >&2; exit 1; }

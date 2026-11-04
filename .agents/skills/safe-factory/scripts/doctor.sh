@@ -4,7 +4,7 @@
 # --fix moves each safe item into a dated backup (never deletes) and refreshes stale copies; a config file holding
 # anything else is only reported, with what to edit. Exit 1 while anything is left to do. Add each rename here.
 r=${0%/*}/../../..; fix=; for a; do case $a in --fix) fix=1 ;; *) r=$a ;; esac; done
-H=$HOME; P=${CLAUDE_PROJECT_DIR:-$PWD}; X=${CODEX_HOME:-$H/.codex}; left=0; stamp=; n=0
+H=$HOME; P=${CLAUDE_PROJECT_DIR:-$(pwd)}; X=${CODEX_HOME:-$H/.codex}; left=0; stamp=; n=0
 [ "$P" = "$H" ] && P=/nonexistent  # project is home: check each file once
 old='fast_gate|run-gate[.]sh|skills/safe-engine/|resolve_bundle'
 bak="${XDG_CACHE_HOME:-$H/.cache}/ai-software-factory/removed"
@@ -61,8 +61,8 @@ while IFS= read -r f; do
 done <<EOF
 $hits
 EOF
-[ -f "$r/hooks/codex.rules" ] && [ -f "$X/rules/factory.rules" ] && stale "$X/rules/factory.rules" "$r/hooks/codex.rules"
+n=$r/../tools/night; [ -f "$n/codex.rules" ] && [ -f "$X/rules/factory.rules" ] && stale "$X/rules/factory.rules" "$n/codex.rules"
 # Copied pre-push: main checkout or worktree (hooks live in the common dir); core.hooksPath is not followed.
 g=$P/.git; [ -f "$g" ] && { read -r g < "$g"; g=${g#gitdir: }/../..; case $g in /* | ?:*) ;; *) g=$P/$g ;; esac; }; g=$g/hooks/pre-push
-[ -f "$r/hooks/pre-push" ] && grep -qs 'Factory pre-push hook' "$g" && stale "$g" "$r/hooks/pre-push"
+[ -f "$n/pre-push" ] && grep -qs 'Factory pre-push hook' "$g" && stale "$g" "$n/pre-push"
 exit $left

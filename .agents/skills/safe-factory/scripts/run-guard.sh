@@ -15,7 +15,7 @@ if [ "$mode" = check ]; then
   # plays the Stop event from the session's files; the step just ticked counts as posted, its block ends this turn
   tp=$(ls "${CLAUDE_CONFIG_DIR:-$HOME/.claude}"/projects/*/"$2.jsonl" 2>/dev/null | head -n 1)
   lh=$(sed -n 's/^## \([0-8]b\{0,1\}\) .*✔.*/\1/p' .factory/run.md 2>/dev/null | tail -n 1)
-  o=$(printf '{"session_id":"%s","cwd":"%s","transcript_path":"%s","last_assistant_message":"## %s "}' "$2" "$PWD" "$tp" "$lh" | sh "$0" stop)
+  o=$(printf '{"session_id":"%s","cwd":"%s","transcript_path":"%s","last_assistant_message":"## %s "}' "$2" "$(pwd)" "$tp" "$lh" | sh "$0" stop)
   o=$(printf '%s' "$o" | sed 's/^{"decision":"block","reason":"\(.*\)"}$/\1/; s/^{"systemMessage":"\(.*\)"}$/\1/')
   case $o in '') echo 'Factory check: may stop. On the next owner message, load safe-factory first.' ;; 'Factory run idle'* | 'Factory run halted'* | 'Factory run relayed'*) printf 'Factory check: may stop. %s\n' "$o" ;; *) printf 'Factory check: continue. %s\n' "$o" ;; esac
   exit 0
@@ -24,12 +24,12 @@ self=$0; case $self in *run-guard.sh) ;; *) self=${g:-run-guard.sh} ;; esac  # a
 self=$(printf '%s' "$self" | tr '\\' /)  # a Windows path's backslashes would break the JSON replies
 in=; [ "$mode" = clear ] || in=$(cat)
 val() { printf '%s' "$in" | sed -n "s/.*\"$1\": *\"\([^\"]*\)\".*/\1/p" | head -n 1; }  # one JSON string field
-# Walk from the session's folder (input cwd), else $PWD: a hook may start elsewhere, as in desktop worktree sessions.
+# Walk from the session's folder (input cwd), else this folder: a hook may start elsewhere, as in desktop worktree sessions.
 c=${in#*\"cwd\":}; [ "$c" = "$in" ] || { c=${c#*\"}; c=${c%%\"*}; cd "$c" 2>/dev/null; }  # no fork: runs at every turn end; Git Bash cd takes JSON's G:\\x
 [ "$mode" = clear ] && [ -n "$2" ] && { cd "$2" || exit 1; }
 # Nearest run file inside this checkout, stopping at the checkout or drive root (C: too). No fork.
 walk() {
-  d=$PWD
+  d=$(pwd)
   while [ ! -f "$d/.factory/run.md" ]; do
     { [ -e "$d/.git" ] || [ "$d" = "${d%/*}" ]; } && { d=; return; }
     d=${d%/*}

@@ -33,7 +33,7 @@ sh scripts/check.sh bytes origin/main   # "<all methods> <read set>" for the PR 
 It checks: links stay in a skill folder, SKILL.md under 17000, no media in Git, methods under 170000 and read set under 105000 (Git blobs), manifests agree, update check offline (newer tells, older quiet, curl fallback), doctor moves only old-only files, guard wiring (Stop in the skill, portable file for other hosts), session binding, stop rules, license.
 
 - Changed `run-guard.sh` runs on fixture run files (`improve-factory`, Proof). Stays POSIX `sh` with LF endings and one `awk` pass.
-- Changed `gh` or `git` command form in a method: update night templates (`tools/night/claude-settings.json` allow list, `codex.rules`) to match.
+- Changed `gh` or `git` command form in a method: update night templates (`tools/night/claude-settings.json` allow list, `tools/night/codex.rules`) to match.
 - Every changed method gets a fresh-agent walkthrough before review.
 - Skill, reference, role or hook moved, added or deleted: update `README.md` and `docs/` in same PR. Keep what they say (commands, paths, defaults) true by hand.
 - Each PR states method bytes before and after (`bytes` for base and head). Net growth needs owner's OK with the reason.

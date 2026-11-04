@@ -4,7 +4,7 @@ What installs and active runs must do for each release, newest first. What chang
 
 ## Unreleased
 
-1. **Night and watchdog moved:** `night.sh`, `watchdog.sh` and `claude-settings.json` are now in `tools/night/`. Update any schedule or copied path from `<clone>/.agents/hooks/` to `<clone>/tools/night/`.
+1. **Night and watchdog moved:** `night.sh`, `watchdog.sh`, `claude-settings.json`, `pre-push` and `codex.rules` are now in `tools/night/`. Update any schedule or copied path from `<clone>/.agents/hooks/` to `<clone>/tools/night/`.
 
 ## 0.6.0
 
