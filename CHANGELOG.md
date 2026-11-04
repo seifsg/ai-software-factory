@@ -8,6 +8,8 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [0.6.0] - 2026-11-04
 
+_Upgrade needed: start a new session, and Codex trusts its hooks again; follow [UPGRADING.md](UPGRADING.md#060)._
+
 ### Changed
 
 - **Breaking:** Make the Claude Code Stop guard load with the `safe-factory` skill, so other sessions start no guard process; a run's start may ask once to allow it ([#286])
