@@ -61,4 +61,4 @@ Per applicable surface: `surface -> control -> evidence -> PASS / FAIL / UNKNOWN
 
 Findings use SKILL.md format. Severity: CRITICAL real secret exposed, sensitive data exposed through storage/logs, account/data compromise. HIGH exploitable with conditions. MEDIUM hardening. LOW hygiene. Impact: what leaks, who gains access, what they can do.
 
-End with: `SECURITY VERDICT: <clean | hardening-needed | vulnerable | blocker> - <one sentence>`. Clean pass is valid; say so plainly.
+End with: `SECURITY VERDICT: <clean | hardening-needed | vulnerable | blocker> - <one sentence>`. Clean result is valid; say so plainly.

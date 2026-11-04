@@ -70,7 +70,7 @@ Fill project's PR template first, then use these blocks inside it. Skip what doe
 - Specific nouns, active verbs, consistent terms, short bullets, narrow tables. Emojis only to label sections, aid scanning.
 - No invented facts, metrics, benefits, tests, visuals, authorship or consent; charts need measured values; screenshots show real, relevant proof. Label illustrative examples. Verify names, numbers, units, dates.
 - Fold long machine data; keep purpose, outcome, proof, gaps, next action visible.
-- Finishing pass: can a cold reader say what, why, before, after and next, open every outcome's proof, and find every requested detail?
+- Last look: can a cold reader say what, why, before, after and next, open every outcome's proof, and find every requested detail?
 
 ## Example
 

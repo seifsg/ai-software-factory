@@ -104,7 +104,7 @@ Safe runs, or moving an epic to Safe: [the contract](references/safe-contract.md
 
 1. Refresh the ticket.
 2. Map every latest confirmed expectation and original input item to its implementation and actual evidence. Compare actual before with delivered after. List missing or partial results, unintended behavior, deviations.
-3. Approved deviations keep authority and reason. Pending changes cannot redefine a pass. Unresolved drift, unknown required scope, missing evidence block dependent acceptance.
+3. Approved deviations keep authority and reason. Pending changes cannot redefine success. Unresolved drift, unknown required scope, missing evidence block dependent acceptance.
 4. PRs and reviews carry ticket and epic links, confirmed criteria, before/after proof, decisions, unresolved findings, resume step.
 5. Update ticket with actual outcome and openable, sanitized proof. Preserve blocked and cancelled work and open human decisions.
 6. Closed child list does not certify epic: it needs combined journey evidence; combined QA waits until its tickets finish implementation.

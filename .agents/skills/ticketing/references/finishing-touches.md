@@ -10,4 +10,4 @@ Append each authorized parked finding once, by source and finding identity:
 
 Use `deep-review` for scoring and disposition. Safety, data, legal, required accessibility, unmet criteria, HIGH/CRITICAL findings stay in the active outcome. Low score cannot waive required proof or close a requested item.
 
-Owner starts Finishing touches: select agreed entries as one batch with checklist and definition of done. Unselected entries stay in Backlog. Use the complete batch before its final test pass; changed inputs or failures need fresh proof. State what was parked and why in plain words, source/destination links separate. Only owner's recorded decision can cancel or drop entries. Done still follows the merged PR.
+Owner starts Finishing touches: select agreed entries as one batch with checklist and definition of done. Unselected entries stay in Backlog. Use the complete batch before its final test run; changed inputs or failures need fresh proof. State what was parked and why in plain words, source/destination links separate. Only owner's recorded decision can cancel or drop entries. Done still follows the merged PR.

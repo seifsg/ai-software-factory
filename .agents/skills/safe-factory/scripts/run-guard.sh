@@ -54,7 +54,7 @@ d= bad=
 [ -z "$bad$d" ] && [ -n "$s" ] && [ -f "$b" ] && { read -r d < "$b"; [ -f "$d/.factory/run.md" ] || d=; }
 [ -n "$d" ] || walk
 if [ -z "$d" ]; then
-  [ "$mode" = clear ] && { echo "run-guard: no run file here; pass its folder: clear <run folder>" >&2; exit 1; }
+  [ "$mode" = clear ] && { echo "run-guard: no run file here; give its folder: clear <run folder>" >&2; exit 1; }
   [ -n "$h" ] && [ "$mode" = stop ] || exit 0  # no step block either: not a factory session
   case $in in
     *\"stop_hook_active\":true* | *\"stop_hook_active\":\ true*) printf '{"systemMessage":"Factory step block posted, but no usable run file found: this run may have no guard."}\n' ;;

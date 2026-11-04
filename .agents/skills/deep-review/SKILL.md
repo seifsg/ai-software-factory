@@ -126,7 +126,7 @@ Read-only: no fixes unless told. Does the journey work? Keep overall requirement
 - Label every claim verified (read or observed) or hypothesis. A raw count = hypothesis about impact until you read what it means.
 - Any language: its debug output and loose types count in categories 5 and 8.
 - Also hunt: non-critical integrations (analytics, history, messaging) breaking main logic when they fail; valid actions that leave unrecoverable state (creation, update, save and load limits must agree); bypassing project's wrapper for config or shared integrations; guards for states the design rules out (not defense in depth).
-- Factory rules, for our own work (someone else's project: judge by its rules): extra code or over-engineering (least code that fully solves the problem; logic only, UI: best look); not O(1) or as close as the real workload allows, wasted CPU or memory; new code where an existing function fits; placeholders, stubs or TODOs; files at 1000 lines or more not split; functions without a short comment saying what they do and why; one more pass: less code? less complexity? faster?
+- Factory rules, for our own work (someone else's project: judge by its rules): extra code or over-engineering (least code that fully solves the problem; logic only, UI: best look); not O(1) or as close as the real workload allows, wasted CPU or memory; new code where an existing function fits; placeholders, stubs or TODOs; files at 1000 lines or more not split; functions without a short comment saying what they do and why; one more round: less code? less complexity? faster?
 
 ### Lenses
 
@@ -163,7 +163,7 @@ Scope also names baseline, lenses run and verdict scope; `### Unknowns` (require
 - Load-bearing code is not over-engineering: mark **KEEP** with reason.
 - Edge-case fix: at root cause, first rung that fits (impossible by design; normalized or rejected loudly at entry; specified, logged behavior); state beyond data, config and platform in use: one loud assertion. One cause, one finding.
 - Out-of-scope opportunities: notes, not findings.
-- Clean pass is valid. Invent no findings.
+- Clean result is valid. Invent no findings.
 
 ### Verdict
 
@@ -187,11 +187,11 @@ Disposition decides the gate: `blocking`, `before-exposure` or `accepted-deferra
 
 ## Output contract
 
-In a factory run this is step 6, Verify: builder runs this pass, independent review is step 8 (`how-to-review-a-pr`). The block `## 6 Verify` holds:
+In a factory run this is step 6, Verify: builder runs this round, independent review is step 8 (`how-to-review-a-pr`). The block `## 6 Verify` holds:
 
 - [ ] Every requested journey used through real controls, with observed results
 - [ ] compliance results, change-guard results when existing code, contracts or data changed, plus each other lens run, each with its findings table (possibly empty) and verdict, e.g. `**compliance:** <its table, or "no findings"> · PASS`
-- [ ] An `after-<id>` file for every proof-list id, same ids as Before, captured in that same pass on the verified head, each naming that commit; a later edit recaptures the ids it touches; a full-suite id is that final run
-- [ ] UI pass (new UI): analyst misses vs step 2 look + refs, primary platform; else `existing` or `no UI`
+- [ ] An `after-<id>` file for every proof-list id, same ids as Before, captured in that same round on the verified head, each naming that commit; a later edit recaptures the ids it touches; a full-suite id is that final run
+- [ ] UI check (new UI): analyst misses vs step 2 look + refs, primary platform; else `existing` or `no UI`
 - [ ] The full suite: command and result, run once after manual use
 - [ ] The verdict; blocking findings fixed through the build loop before the gate

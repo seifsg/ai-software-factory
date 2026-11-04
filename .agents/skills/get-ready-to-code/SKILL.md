@@ -25,7 +25,7 @@ No coding while planning.
 - Each todo reads as an outcome the owner understands, then its ticket and criteria. Example: `T4 Download button → click it and the PDF saves (#12, A2)`. Not `T4 add store_true option`.
 - Each todo: pre-step, step, post-step, so the loop applies.
 - A todo that depends on an unproven capability (platform API, device, third-party access) goes first as a bounded spike: one question, one stop condition. A failed spike blocks only that item.
-- Group useful parallel jobs by files and dependencies; keep tasks shorter than their delegation overhead local. A delegated todo names the lowest tier that can pass its checks: light (commands with a pass/fail, search; no edits), standard (planned edits, research, walkthroughs) or deep (architecture, schema, security, unclear bugs).
+- Group useful parallel jobs by files and dependencies; keep tasks shorter than their delegation overhead local. A delegated todo names the lowest tier that can clear its checks: light (commands with a yes/no result, search; no edits), standard (planned edits, research, walkthroughs) or deep (architecture, schema, security, unclear bugs).
 
 ## Part B: the 0–4 loop (absolute for every todo)
 

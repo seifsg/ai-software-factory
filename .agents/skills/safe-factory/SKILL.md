@@ -25,7 +25,7 @@ Build systems that outlast their creator. No breakage.
 - Fix design at root cause of a bug or edge case, not symptom; lean to refactoring. Big or regression-risky root fix (shared contracts, schema, stored data, consumers outside task) needs owner's yes first.
 - Guarantees, not guards. Each real edge case gets the first that fits: impossible by design; normalized or rejected loudly where data enters (undefined, null, wrong values, exceptions); specified, logged behavior. A state beyond data, config and platform in use: one loud assertion, never new code paths. No silent defaults or swallowed errors.
 - Production ready: no placeholders, stubs or TODOs unless owner asks. Human-readable code; short comments: what a function does and why it exists. Never a circular dependency.
-- Done: one more pass: less code, less complexity, faster? Question every solution, yours and code you read.
+- Done: one more round: less code, less complexity, faster? Question every solution, yours and code you read.
 - Stay on task: touch only what change and its root fix need; ticket unrelated issues.
 - The owner's explicit words beat every method default (placeholders, copy, scope, style) except step blocks: always posted in full.
 - Additive: never disable, hide or replace a host capability usable without the factory (live preview, screenshots, background agents, task list).
@@ -52,7 +52,7 @@ Every run keeps project rules and never puts secrets in code or Git. Build what 
 
 - After each step: write its block under the step's heading, tick heading `✔` once contract holds, set `Next:` to next step and its skill.
 - `Waiting:` stays `none` while you work. Before ending a turn on purpose, set `owner: <question>` or `jobs: <what runs> (max <minutes> min)`; back to `none` on resume.
-- `Status: closed` only after step 8 and gates A, B and C pass or owner waives one. Owner stop: `Status: stopped (<reason>)`.
+- `Status: closed` only after step 8 and gates A, B and C are proven or owner waives one. Owner stop: `Status: stopped (<reason>)`.
 
 ## Block format
 
@@ -66,7 +66,7 @@ Run file, chat blocks, handbacks. Caveman: short words, every fact kept.
 - Richer visual: host artifact or `.factory/visuals/<step>-<name>.html`, linked; block alone holds every fact.
 
 ````text
-**Verdict:** ⚠️ 1 of 2 pass
+**Verdict:** ⚠️ 1 of 2 met
 
 | Check | Result |
 |---|---|
@@ -94,7 +94,7 @@ Each step ends with its block: post full block as own chat message opening with 
 | 3 Plan | `get-ready-to-code` | five outputs and the proof list, then **Gate A** |
 | 4 Before | `how-to-make-a-pr`, Before proof | the saved Before files |
 | 5 Build | `get-ready-to-code`, 0–4 loop | one line per todo |
-| 6 Verify | `deep-review` | findings, UI pass, suite result, After files, then **Gate B** |
+| 6 Verify | `deep-review` | findings, UI check, suite result, After files, then **Gate B** |
 | 7 PR | `how-to-make-a-pr` | draft PR link |
 | 8 Review | `how-to-review-a-pr` | verdict, then **Gate C** |
 
@@ -104,7 +104,7 @@ Only what those skills leave out:
 - **3:** new or changed persistence adds `database-schema`. A `change` uses the light plan. Fast does not stop at the file summary. Safe runs Gate A, then stops: `Waiting: owner: plan OK?`.
 - **4:** starts once plan names views and commands. Up to three items: capture yourself. More: one light delegate captures while you finish plan. No source edit until every Before file saved.
 - **5:** spike unknown capabilities first. A run of mapped tests that is the whole suite is still only a build check. Commit by phase in project's commit style.
-- **6:** verify is yours; independence comes from checker and step 8. Order: lenses (compliance always; change-guard when existing code, contracts or data changed, so never on a new project; others by `deep-review`'s scale) and UI pass, their fixes, then one final manual pass through every requested journey that captures After with same ids, then full suite once on that candidate; a proof id that is the full suite is that same run. Before captures of the base never count as that run. UI pass (step 2 look): fresh `analyst` lists each miss vs that look + refs on the primary platform, with the capture. A miss of the picked look = HIGH. Run secrets, dependency and static-analysis scans for an MVP, a production slice, or any run with dependencies or a server.
+- **6:** verify is yours; independence comes from checker and step 8. Order: lenses (compliance always; change-guard when existing code, contracts or data changed, so never on a new project; others by `deep-review`'s scale) and UI check, their fixes, then one final manual round through every requested journey that captures After with same ids, then full suite once on that candidate; a proof id that is the full suite is that same run. Before captures of the base never count as that run. UI check (step 2 look): fresh `analyst` lists each miss vs that look + refs on the primary platform, with the capture. A miss of the picked look = HIGH. Run secrets, dependency and static-analysis scans for an MVP, a production slice, or any run with dependencies or a server.
 - **7:** ticket moves to Ready for QA with its PR. Owner said no remote: no PR; block: `local only ("<their words>") @<sha>`; reviewer gets that head.
 - **8:** fresh agent that did not build it gets PR, ticket and run file's absolute path. The reviewer hands back its fix-set, never pushing: you apply it through the 0–4 loop, recapturing After of every proof id a fix touches (named in block), and same reviewer checks the delta. Its brief starts `Role: reviewer.` and names pushed head; each reviewer handback ends with skill's factory `verdict:` line. Paste the last as `Review: ready (reviewer <id>) @<sha>`. You write final verdict as step's block and tick it. Full suite runs again only after those fixes. Then stop what run itself started (servers, watchers, schedules, worktrees, its hooks) except owner's preview; last line before any Gate C line: `Left running:` with each item, preview included, and its stop command, or `none`. Then Gate C, once, on final head; on PASS close run and ask owner to verify and merge.
 
