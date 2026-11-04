@@ -5,7 +5,7 @@
 ### Your coding agent, run like a software team.
 **One request in. Ten checked steps. A reviewed draft PR out.**
 
-<a href="https://github.com/seifsg/ai-software-factory/releases/latest"><img src="https://img.shields.io/github/v/release/seifsg/ai-software-factory?label=version&color=6E56CF&style=flat-square" alt="Latest version" height="24"></a> <img src="docs/assets/badges.svg" alt="Claude Code live · Windows Codex phase chain checked; full Codex and Cursor delivery pending · Fast and Safe modes · any OS with Git and sh, no runtime" height="28">
+<a href="https://github.com/seifsg/ai-software-factory/releases/latest"><img src="https://img.shields.io/github/v/release/seifsg/ai-software-factory?label=version&color=6E56CF&style=flat-square" alt="Latest version" height="24"></a> <a href="LICENSE"><img src="https://img.shields.io/github/license/seifsg/ai-software-factory?color=6E56CF&style=flat-square" alt="MIT license" height="24"></a> <img src="docs/assets/badges.svg" alt="Claude Code live · Windows Codex phase chain checked; full Codex and Cursor delivery pending · Fast and Safe modes · any OS with Git and sh, no runtime" height="28">
 
 **[Quick start](#-quick-start) · [A run](#-a-run) · [How it stays on track](#%EF%B8%8F-how-it-stays-on-track) · [Update](#-update) · [Troubleshooting](#-troubleshooting)**
 
@@ -158,3 +158,7 @@ Rules: [AGENTS.md](AGENTS.md). Changes go through `improve-factory`; checks: `sh
 docs/                            install, hosts, releasing; docs/assets/ holds the README images
 CHANGELOG.md, UPGRADING.md       what changed per release, and what to do
 ```
+
+## 📄 License
+
+[MIT](LICENSE).
