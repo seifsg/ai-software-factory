@@ -2,11 +2,11 @@
 
 What installs and active runs must do for each release, newest first. What changed: [CHANGELOG.md](CHANGELOG.md).
 
-## Unreleased
+## 0.6.0
 
 1. **Claude Code:** start a new session. Starting a run may ask once to allow the `safe-factory` skill; the allow rule `Skill(safe-factory:*)` skips it. Night mode needs nothing new. An open run: `safe-factory Resume <run folder>`.
 2. **Codex:** trust the hooks again in `/hooks`: they moved to `hooks/portable.json`.
-3. **Cursor:** nothing, unless it asks to trust hooks again.
+3. **Cursor:** turn off its import of Claude Code's plugins if it is on: that hook file has no Stop. Trust hooks again if it asks.
 
 ## 0.5.0
 
