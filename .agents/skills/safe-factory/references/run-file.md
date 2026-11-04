@@ -52,7 +52,7 @@ Both run `scripts/run-guard.sh` (`stop` or `compact`) on this session's run: its
 
 | Hook | When | Does |
 |---|---|---|
-| Stop guard | your turn ends | with `Waiting: none` and no background tasks reported by the host: blocks the stop and sends the first unproven gate, else the fixed prompt for `Next:`'s step. Ticked step blocks missing from chat (Claude Code): one prompt per missing set, finished runs too. Past round 5, 6 turns without progress or a spent night budget: one packet prompt, then the run is halted. Two compactions, or a night phase boundary: one relay prompt, then a fresh session drives the run. |
+| Stop guard | your turn ends | with `Waiting: none` and no background tasks reported by the host: blocks the stop and sends the first unproven gate, else the fixed prompt for `Next:`'s step. Ticked step blocks missing from chat: one prompt per missing set, finished runs too. Past round 5, 6 turns without progress or a spent night budget: one packet prompt, then the run is halted. Two compactions, or a night phase boundary: one relay prompt, then a fresh session drives the run. |
 | Compact hook | after compaction or a resume | prints `Next:` with "load that skill fresh"; resume also says to load `safe-factory` |
 
 Proof comes from the host: a gate or review line counts only when the subagent file of the id it names holds that handback on that commit.
