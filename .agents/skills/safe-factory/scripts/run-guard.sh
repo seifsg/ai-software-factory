@@ -15,7 +15,7 @@ if [ "$mode" = check ]; then
   # Plays the Stop event from the run file and Git alone: never a transcript, so gate lines count as text and the Stop hook's evaluator judges them.
   o=$(printf '{"session_id":"%s","cwd":"%s"}' "$2" "$(pwd)" | sh "$0" stop)
   o=$(printf '%s' "$o" | sed 's/^{"decision":"block","reason":"\(.*\)"}$/\1/; s/^{"systemMessage":"\(.*\)"}$/\1/')
-  case $o in '') echo 'Factory check: may stop. On the next owner message, load safe-factory first.' ;; 'Factory run idle'* | 'Factory run halted'* | 'Factory run relayed'*) printf 'Factory check: may stop. %s\n' "$o" ;; *) printf 'Factory check: continue. %s\n' "$o" ;; esac
+  case $o in '') echo 'Factory check: may stop. On the next message, load safe-factory first.' ;; 'Factory run idle'* | 'Factory run halted'* | 'Factory run relayed'*) printf 'Factory check: may stop. %s\n' "$o" ;; *) printf 'Factory check: continue. %s\n' "$o" ;; esac
   exit 0
 fi
 self=$0; case $self in *run-guard.sh) ;; *) self=${g:-run-guard.sh} ;; esac  # an older plugin hook sourced it from $g

@@ -9,7 +9,7 @@ claude plugin marketplace add https://github.com/seifsg/ai-software-factory.git
 claude plugin install safe-factory@ai-software-factory
 ```
 
-The Stop guard loads with the `safe-factory` skill: starting a run may ask once to allow it (skip the ask with the allow rule `Skill(safe-factory:*)`). In a session, the same as `/plugin marketplace add …` and `/plugin install …`. Use the HTTPS URL; `owner/repo` shorthand tries SSH first. Update: `claude plugin update safe-factory@ai-software-factory`, then a new session. Plugin screens read the local listing, so they can say latest until it refreshes. Auto mode: new projects need `gh repo create` and `git push` allowed. Add `Bash(gh repo create:*)` and `Bash(git push:*)` to your permission allow rules, or approve once when step 0 asks. Plugin brings every skill, delegate roles, the run hooks and the update check; follows release tags. Start a new session.
+The Stop check loads with the `safe-factory` skill: starting a run may ask once to allow it, and once for `run-guard.sh check` (skip both with the allow rules `Skill(safe-factory:*)` and `Bash(sh *run-guard.sh check *)`). In a session, the same as `/plugin marketplace add …` and `/plugin install …`. Use the HTTPS URL; `owner/repo` shorthand tries SSH first. Update: `claude plugin update safe-factory@ai-software-factory`, then a new session. Plugin screens read the local listing, so they can say latest until it refreshes. Auto mode: new projects need `gh repo create` and `git push` allowed. Add `Bash(gh repo create:*)` and `Bash(git push:*)` to your permission allow rules, or approve once when step 0 asks. Plugin brings every skill, delegate roles, the Stop check and the update check; follows release tags. Start a new session.
 
 Desktop app without terminal: add to `~/.claude/settings.json`, start a new session, then install from `/plugin` if missing:
 
@@ -70,7 +70,7 @@ Plugin (not yet run live): in a session, `/plugin marketplace add https://github
 
 ## Update check
 
-At session start the plugin hook reads a cached latest release (no network, about 0.2 s on Windows) and refreshes it in the background each time (written only when the fetch succeeds, so a failure retries next start) with `gh api`, or `curl` when `gh` is missing or signed out. Check by hand: compare the README version badge, or the [Latest release](https://github.com/seifsg/ai-software-factory/releases/latest), with your agent's installed plugin version. A newer release: the agent tells you before any run and links what's new. The same hook also lists leftovers of old versions (see below) and the agent offers to clean them; it never stops a run for it. Off: `FACTORY_NO_UPDATE_CHECK=1`.
+At a run's first step (Claude Code) or at session start (Codex, Cursor) the check reads a cached latest release at once (about 0.2 s on Windows) and refreshes it from GitHub in the background each time (written only when the fetch succeeds, so a failure retries next start) with `gh api`, or `curl` when `gh` is missing or signed out. Check by hand: compare the README version badge, or the [Latest release](https://github.com/seifsg/ai-software-factory/releases/latest), with your agent's installed plugin version. A newer release: the agent tells you before any run and links what's new. The same hook also lists leftovers of old versions (see below) and the agent offers to clean them; it never stops a run for it. Off: `FACTORY_NO_UPDATE_CHECK=1`.
 
 ## Clean up and uninstall
 
