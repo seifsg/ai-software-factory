@@ -4,7 +4,7 @@
 # --fix moves each safe item into a dated backup (never deletes) and refreshes stale copies; a config file holding
 # anything else is only reported, with what to edit. Exit 1 while anything is left to do. Add each rename here.
 r=${0%/*}/../../..; fix=; for a; do case $a in --fix) fix=1 ;; *) r=$a ;; esac; done
-H=$HOME; P=${CLAUDE_PROJECT_DIR:-$(pwd)}; X=${CODEX_HOME:-$H/.codex}; left=0; stamp=; n=0
+H=$HOME; P=$CLAUDE_PROJECT_DIR; [ -n "$P" ] || P=$(pwd); X=${CODEX_HOME:-$H/.codex}; left=0; stamp=; n=0
 [ "$P" = "$H" ] && P=/nonexistent  # project is home: check each file once
 old='fast_gate|run-gate[.]sh|skills/safe-engine/|resolve_bundle'
 bak="${XDG_CACHE_HOME:-$H/.cache}/ai-software-factory/removed"

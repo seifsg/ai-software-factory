@@ -74,14 +74,14 @@ sid=$(val session_id) tp=$(val transcript_path | sed 's/\\\\/\//g' | tr -d "'") 
 # State: single-quoted g_* lines only the guard writes, counters digits only, no $ or backquote anywhere.
 # Anything else is never sourced: the run halts until the owner clears it (a lost state halts the same way).
 note=
-num='ticks|seen|night_until|sig|idle|base_[ABCR]|sstep|rstep|compacts|jobs_since|jobs_key|clear'
+num='ticks|seen|night_until|sig|idle|base_[ABCR]|sstep|rstep|compacts|jobs_[a-z]*|clear'
 if [ -f "$st" ]; then
   if grep -qvE "^g_($num)='[0-9]*'\$|^g_(session|sessions|transcript|halt|end|relay|csession)='[^'\$\`]*'\$" "$st"; then note='guard state was edited outside the guard'; else . "$st"; fi
 fi
 ns=; [ -f "$st" ] || ns=1
 [ -f "$run.ticks" ] && { g_ticks=$(cat "$run.ticks"); rm -f "$run.ticks" "$run.nudge"; }  # state of an older guard
 case $sid in '' | *[!A-Za-z0-9_-]*) ;; *) case " $g_sessions " in *" $sid "*) ;; *) g_sessions="${g_sessions:+$g_sessions }$sid" ;; esac ;; esac
-keys='ticks session sessions transcript seen night_until sig idle halt end clear base_A base_B base_C base_R sstep relay rstep compacts csession jobs_since jobs_key'
+keys='ticks session sessions transcript seen night_until sig idle halt end clear base_A base_B base_C base_R sstep relay rstep compacts csession jobs_since jobs_id'
 save() { mkdir -p "$g" && for k in $keys; do eval "printf \"g_%s='%s'\\n\" $k \"\$g_$k\""; done > "$st"; }
 if [ "$mode" = clear ]; then  # also ends night mode: the owner is back; keeps the run's sessions for gate proof
   [ -n "$g_sessions" ] || g_sessions=$(sed -n "s/^g_sessions='\([A-Za-z0-9_ -]*\)'\$/\1/p" "$st" 2>/dev/null)
@@ -242,13 +242,13 @@ for x in A B C R; do eval "n=\$((f$x - \${g_base_$x:-0}))"; [ "$n" -gt "$rounds"
 todo=
 if [ "$jobs" = 1 ]; then
   k=$(grep '^Waiting: jobs:' "$run" | cksum | cut -d ' ' -f 1)  # a new job text starts a new deadline
-  [ -n "$g_jobs_since" ] && [ "$g_jobs_key" = "$k" ] || g_jobs_since=$now g_jobs_key=$k
+  [ -n "$g_jobs_since" ] && [ "$g_jobs_id" = "$k" ] || g_jobs_since=$now g_jobs_id=$k
   [ "$jmax" -gt "${FACTORY_JOB_MAX:-120}" ] && jmax=${FACTORY_JOB_MAX:-120}
   if [ "$jmax" = 0 ]; then todo='Waiting: jobs: needs a deadline: write it as `Waiting: jobs: <what runs> (max <minutes> min)`, then end your turn.'
   elif [ $(( now - g_jobs_since )) -gt $(( jmax * 60 )) ]; then
     todo="The job in Waiting: jobs: is past its deadline ($jmax min): check it, stop it if it hangs, record its result or failure in $run, update Waiting, then end your turn."
   fi
-else g_jobs_since= g_jobs_key=; fi
+else g_jobs_since= g_jobs_id=; fi
 # Progress budget: blocked turns without a new tick or proven gate. Rounds 1-3 run, then a cap line passes the loop;
 # 4 and 5 only while the run file names an open CRITICAL; after 5, idle too long or past the night budget: halt.
 idle() { [ "$sig" = "$g_sig" ] && g_idle=$(( ${g_idle:-0} + 1 )) || g_idle=0; g_sig=$sig; }
