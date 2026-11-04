@@ -51,7 +51,7 @@ Both use `scripts/run-guard.sh` on this session's run: its binding, nearest in i
 
 | Hook | When | Does |
 |---|---|---|
-| Stop guard | turn ends | unless `Waiting: owner:`, `Waiting: jobs:` or reported background tasks: blocks, sends a step not ticked, a line over 300 characters, first unproven gate, else `Next:`'s prompt. A wait gets one block for a step not ticked. Past round 5, 6 idle turns or a spent night budget: one packet prompt, then halted. |
+| Stop guard | turn ends | unless `Waiting: owner:`, `Waiting: jobs:` or reported background tasks: blocks, sends a step not ticked, a line over 300 characters, first unproven gate, else `Next:`'s prompt. A wait gets one block for a step not ticked. Past round 5, 6 idle turns or spent night budget: packet prompt, then halted. |
 | Compact | compaction or resume | prints `Next:`, "load that skill fresh"; resume: load `safe-factory` |
 
 A prompt Stop hook applies these through `check`; compaction's place comes at next stop.
