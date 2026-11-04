@@ -5,16 +5,16 @@ description: "Analyzes a feature, defect, refactor or PR before any coding: read
 
 # Analyze Start: understand it fully, write no code
 
-Deep, thorough, analysis-only phase. Educate yourself on the feature, task or PR until you understand it end to end, then explain it back so a teammate or a future agent could pick it up cold. Do not write or change code. Reading, searching and diagramming only.
+Analysis only. Learn the feature, task or PR end to end, then explain it so a teammate or future agent can pick it up cold. No code changes: read, search, diagram.
 
-> **Grounding rule.** Read the real code, never guess from a diff or a filename. A claim you only skimmed is a hypothesis until you have read enough to know what it means. Keep verified facts and hypotheses apart.
+> **Grounding rule.** Read the real code, never guess from a diff or a filename. A skimmed claim is a hypothesis until read enough to know what it means. Keep verified facts and hypotheses apart.
 
 ## Instructions
 
 0. **Start from the inputs.** Read the ticket (requested items, criteria), any kickoff research and an owner-named size; know which step this is and what comes next.
-1. **Educate yourself thoroughly.** Read the feature or PR and everything it touches. Follow the code, not the summary. Skim details that don't matter; focus hard on the core logic.
+1. **Learn it.** Read the feature or PR and everything it touches. Follow the code, not the summary. Skim what doesn't matter; focus on core logic.
 2. **Explain it back in full detail.** In your own words: what it does and why it exists. Define what success means. New product or feature: who uses it, the jobs they need done, each requested item mapped to what it needs, and the non-functional needs (speed, accessibility, security). If the why is stated nowhere, say so: a change with no rationale is itself a finding.
-3. **Map every call site.** Find everywhere else this code is called, used or depended on: callers, consumers, route/DTO/schema references, event names, storage keys, tests. List them with paths. Regression review builds on this map. Prefer search and reading over assumption.
+3. **Map every call site.** Everywhere this code is called, used or depended on: callers, consumers, route/DTO/schema references, event names, storage keys, tests. List them with paths. Regression review builds on this map. Prefer search and reading over assumption.
 4. **Draw ASCII charts.** Show the flow and the architecture, trigger → layers → data/persistence → result, and mark where the change sits.
 
    ```
@@ -43,7 +43,7 @@ Docs or method changes: map readers, links and canonical owners instead of inven
 
 ## Hard rule
 
-No code in this phase. No edits, no fixes, no quick changes. Coding happens only in a later, explicit build phase.
+No code in this phase: no edits, fixes, quick changes. Coding only in a later, explicit build phase.
 
 ## Output contract
 

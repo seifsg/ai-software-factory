@@ -5,7 +5,7 @@ description: Deep code analysis and review that hunts for bugs, oversights, anti
 
 # Deep Review
 
-Ruthless code review. No mercy, no shortcuts. Find every damn problem.
+Ruthless code review. Find every problem.
 
 ## Instructions
 

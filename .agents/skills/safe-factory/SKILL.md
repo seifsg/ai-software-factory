@@ -26,10 +26,10 @@ Build systems that outlast their creator. No breakage.
 - Fix design at root cause of a bug or edge case, not symptom; lean to refactoring. Big or regression-risky root fix (shared contracts, schema, stored data, consumers outside task) needs owner's yes first.
 - Guarantees, not guards. Each real edge case gets the first that fits: impossible by design; normalized or rejected loudly where data enters (undefined, null, wrong values, exceptions); specified, logged behavior. A state beyond data, config and platform in use: one loud assertion, never new code paths. No silent defaults or swallowed errors.
 - Production ready: no placeholders, stubs or TODOs unless owner asks. Human-readable code; short comments: what a function does and why it exists. Never a circular dependency.
-- When done, one more pass: less code, less complexity, faster? Question every solution, yours and the code you read.
+- Done: one more pass: less code, less complexity, faster? Question every solution, yours and code you read.
 - Stay on task: touch only what change and its root fix need; ticket unrelated issues.
 - The owner's explicit words beat every method default (placeholders, copy, scope, style) except step blocks: always posted in full.
-- Additive: never disable, hide or replace a host capability you would use without the factory (live preview, screenshots, background agents, task list).
+- Additive: never disable, hide or replace a host capability usable without the factory (live preview, screenshots, background agents, task list).
 - Output: answer or result first, specific words; no preamble, filler, restated question, closing recap, em dashes or invented claims. Keep code, commands, paths, errors, numbers, quotes verbatim; never drop not, never, no, only, except. Status between blocks: one short line. Full plain sentences for security warnings, irreversible or destructive actions, order-sensitive steps, owner questions. Tickets, PRs, docs keep own layouts; all else: Block format.
 
 ## Mode and kind
@@ -57,7 +57,7 @@ Every run keeps project rules and never puts secrets in code or Git. Build what 
 
 ## Block format
 
-Run file, chat blocks, handbacks. Caveman: short words, every fact kept. Reader skims.
+Run file, chat blocks, handbacks. Caveman: short words, every fact kept.
 
 - One fact per line; no paragraphs. No line over 300 characters outside tables and fences.
 - `**Label:**` then value or bullets. Same fields on 2+ things: table.
@@ -79,7 +79,7 @@ Load  before ████████ 800 ms
 
 Live guard: one step per turn: load its skill, do that step's own work with fresh reading, searching or running, post its block as last message, update run file, end turn. Stop guard then sends next prompt. Step 5 takes one todo per turn. Host without hooks: Fast chains steps in one turn, never ending one open with `Waiting: none`; Safe ends each with `Say go for step <n>`. Before each step load its skill fresh (skill command or file), even one read earlier. Same skill as last step: rereading this step's section is enough.
 
-Each step ends with its block: post full block as its own chat message opening with its heading (never summary, never only a file or tool output), then write to run file. Before next step reads it, fold in any owner reply that arrived. Ticket gets a comment only on status change (steps 0, 5, 7 and 8) or relay, linking run file's blocks.
+Each step ends with its block: post full block as own chat message opening with its heading (never summary, never only a file or tool output), then write to run file. Fold in any owner reply before next step reads it. Ticket gets a comment only on status change (steps 0, 5, 7 and 8) or relay, linking run file's blocks.
 
 | Step | Skill | Block |
 |---|---|---|
@@ -123,7 +123,7 @@ After steps 3, 6 and 8, start the [checker](references/checker.md): a fresh ligh
 ## Keep the owner posted
 
 - Put the ten steps on host's task list at step 0; mark each at start and end.
-- Always preview: step 4 on, keep what the run changes in front of owner, fresh after each todo: browser pane (web, markdown), inline image or artifact (other docs, media), simulator or screenshot (mobile, desktop).
+- Always preview, step 4 on: what the run changes in front of owner, fresh after each todo: browser pane (web, markdown), inline image or artifact (other docs, media), simulator or screenshot (mobile, desktop).
 - Updates and handbacks: [plain owner reports](references/owner-reports.md).
 - Owner message first: answer or do it, then resume what still fits, unasked.
 - Waiting on the owner: the question first, then the options.

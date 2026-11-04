@@ -7,7 +7,7 @@ description: "Plans the build from a finished analysis and recommendation: files
 
 Prepare to build from the analysis (`analyze-start`) and the picked option (`recommend`). Part A produces the plan; Part B is the loop every change goes through.
 
-Keep required quality. Build in complete working iterations; a tiny bug or a full product follows the same logic. Do not downgrade the result because the correct change takes more work.
+Keep required quality. Complete working iterations, tiny bug or full product. Never downgrade the result because the correct change takes more work.
 
 ## Part A: the plan (in order; stop where noted)
 
@@ -54,7 +54,6 @@ Do no coding while producing the plan.
 
 A small `change` or follow-up, when your instructions ask for one: files with a one-line critique, the todo list, one success line, the proof list and the test map. It meets the same output contract, whose product-only lines it omits. The 0–4 loop stays.
 
-Never code during planning. Plan only.
 
 ## Output contract
 
