@@ -42,10 +42,9 @@ h=${in#*\"last_assistant_message\":\"## }; [ "$h" = "$in" ] && h=
 case $h in '0 Ticket'* | '1 Analyze'* | '2 Recommend'* | '2b Challenge'* | '3 Plan'* | '4 Before'* | '5 Build'* | '6 Verify'* | '7 PR'* | '8 Review'*) ;; *) h= ;; esac
 d= bad=
 [ -z "$h" ] || bind  # a block naming a run always wins over an older binding
-[ -z "$d" ] && [ -n "$s" ] && [ -f "$b" ] && { read -r d < "$b"; [ -f "$d/.factory/run.md" ] || d=; }
+[ -z "$bad$d" ] && [ -n "$s" ] && [ -f "$b" ] && { read -r d < "$b"; [ -f "$d/.factory/run.md" ] || d=; }
 [ -n "$d" ] || walk
-# No run, or a block naming a bad folder even when bound: ask.
-if [ -z "$d" ] || [ -n "$bad" ]; then
+if [ -z "$d" ]; then
   [ "$mode" = clear ] && { echo "run-guard: no run file here; pass its folder: clear <run folder>" >&2; exit 1; }
   [ -n "$h" ] && [ "$mode" = stop ] || exit 0  # no step block either: not a factory session
   case $in in
@@ -81,7 +80,7 @@ fi
 # for every session of the run (relays). Other hosts: the gate's agent id must appear in the session transcript,
 # never in a Claude Code transcript (the model's own edits are in it). No transcript at all: text only.
 ev=${tp%/*} ev=${ev%/*} fb=0 nov=0  # every project folder: a moved run's sessions live in different ones
-set --; for q in $g_sessions; do for f in "$ev"/*/"$q"/subagents/agent-*.jsonl; do [ -f "$f" ] && set -- "$@" "${f#"$ev"/}"; done; done
+set --; for q in $g_sessions; do for f in "$ev"/*/"$q"/subagents/agent-*.jsonl; do [ -f "$f" ] && set -- "$@" "./${f#"$ev"/}"; done; done  # ./: a project folder name may start with -
 if [ $# -gt 0 ]; then set -- $(cd "$ev" && ls -tr "$@")  # oldest first: rounds count in order
 else ev=.; if [ -f "$tp" ]; then fb=1; set -- "$tp"; else nov=1; fi; fi
 # Posting proof: each session's own transcript beside it, and the heading of the message ending this turn

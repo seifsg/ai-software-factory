@@ -135,7 +135,7 @@ After steps 3, 6 and 8, start the [checker](references/checker.md): a fresh ligh
 
 ## Resume
 
-Read run file and ticket, load `Next:` skill fresh, continue there. Outside run's folder: first message opens with `Next:`'s heading and `**Workspace:**`. Run file and ticket disagree: test both against checkout, keep what holds; log correction in ticket's activity. `Next:` past a gate without its PASS: run that gate's checker first. Never restart a run.
+Read run file and ticket, load `Next:` skill fresh, continue there. Outside run's folder: first turn ends on a message opening with `Next:`'s heading and `**Workspace:**`. Run file and ticket disagree: test both against checkout, keep what holds; log correction in ticket's activity. `Next:` past a gate without its PASS: run that gate's checker first. Never restart a run.
 
 ## Factory fault
 

@@ -44,7 +44,7 @@ Pass request, decisions, interfaces, stops and artifact paths explicitly; full h
 
 | Agent | Skills | Hooks |
 |---|---|---|
-| Cursor | plugin, root `.agents/` (`.cursor-plugin/plugin.json`: skills, agents), [install](install.md#cursor) | runs `hooks/portable.json`, named by its manifest (fills in `${CLAUDE_PLUGIN_ROOT}`; Windows: in PowerShell), and Claude Code's installed plugins too, whose hook file has no Stop: install one, not both |
+| Cursor | plugin, root `.agents/` (`.cursor-plugin/plugin.json`: skills, agents), [install](install.md#cursor) | runs `hooks/portable.json`, named by its manifest (fills in `${CLAUDE_PLUGIN_ROOT}`; Windows: in PowerShell), and Claude Code's installed plugins too, whose hook file has no Stop: install this one and turn that import off |
 | GitHub Copilot, Gemini CLI, OpenCode | read `.agents/skills` | none wired: apply the run-file rules by hand |
 | Anything else | point it at `.agents/skills/safe-factory/SKILL.md` | none |
 
