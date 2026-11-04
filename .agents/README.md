@@ -26,7 +26,7 @@ Files stay on your machine: `.factory/` in your project, and `ai-software-factor
 
 ## Troubleshooting
 
-- A run stops between steps: say "go on", or `/safe-factory:safe-factory Resume <folder>`. Reloading the skill brings the Stop check back after a stop or a resumed session.
+- A run stops between steps: `/safe-factory:safe-factory Resume <folder>`. Reloading the skill brings the Stop check back after a stop or a resumed session.
 - A permission prompt on every step: allow `Skill(safe-factory:*)`, and choose always allow for `run-guard.sh check`.
 - The run file reads wrong: `.factory/run.md` needs `Status:`, `Next:` and `Waiting:` spelled exactly.
 
