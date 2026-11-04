@@ -1,6 +1,12 @@
 ---
 name: safe-factory
 description: "Delivers games, apps, services, tools and libraries end to end in ten visible steps: ticket, analyze, recommend, challenge, plan, Before proof, build, verify, PR and review. Fast by default, Safe on request. Use when asked to build, extend, fix or resume software with the factory."
+hooks:
+  Stop:
+    - hooks:
+        - type: command
+          command: sh "${CLAUDE_PLUGIN_ROOT}/skills/safe-factory/scripts/run-guard.sh" stop
+          timeout: 10
 ---
 
 # Safe Factory
@@ -51,9 +57,9 @@ Every run keeps project rules and never puts secrets in code or Git. Build what 
 
 ## Steps
 
-Live guard: one step per turn: load its skill, do that step's own work with fresh reading, searching or running, post its block as last message, update run file, end turn. Stop guard sends next step's prompt, as if owner typed it. Step 5 takes one todo per turn. No live guard: Fast chains steps in one turn, never ending one open with `Waiting: none`; Safe ends each with `Say go for step <n>`. Before each step load its skill fresh (skill command or file), even one read earlier. Same skill as last step: rereading this step's section is enough.
+Live guard: one step per turn: load its skill, do that step's own work with fresh reading, searching or running, post its block as last message, update run file, end turn. Stop guard then sends next prompt. Step 5 takes one todo per turn. Host without hooks: Fast chains steps in one turn, never ending one open with `Waiting: none`; Safe ends each with `Say go for step <n>`. Before each step load its skill fresh (skill command or file), even one read earlier. Same skill as last step: rereading this step's section is enough.
 
-Each step ends with its block: post full block as its own chat message opening with its heading (never summary, never only a file or tool output; Stop guard checks), then write to run file. Before next step reads it, fold in any owner reply that arrived. Ticket gets a comment only on status change (steps 0, 5, 7 and 8) or relay, linking run file's blocks.
+Each step ends with its block: post full block as its own chat message opening with its heading (never summary, never only a file or tool output), then write to run file. Before next step reads it, fold in any owner reply that arrived. Ticket gets a comment only on status change (steps 0, 5, 7 and 8) or relay, linking run file's blocks.
 
 | Step | Skill | Block |
 |---|---|---|
@@ -70,7 +76,7 @@ Each step ends with its block: post full block as its own chat message opening w
 
 Only what those skills leave out:
 
-- **0:** update notice in context, new run: before the run file, tell owner, link what's new, ask update or continue (owner-reserved); end turn, no block. Update: notice's command, new session. Resume or night: one line in current block; never wait or update mid-run. Guard live only if the plugin or its hook entry predates this session; name which in block; unsure: not live. Step 1 finds no `.factory/guard/state`: not live. Before any work, check tracker and push access (`ticketing`); ask owner once, up front, for every action host may block (creating a repository, pushing). No project folder named: create one beside owner's other projects (parent of current project, else current folder), named for product in kebab-case, report its absolute path. No Git: `git init`, first commit on default branch, then feature branch. Every commit, first included, follows `how-to-make-a-pr`'s commit rules. No remote: `ticketing` creates it. Product and feature: research and kickoff questions belong to step 0, after the ticket, in its block; Fast goes on without answers, which feed step 1.
+- **0:** update notice in context, new run: before the run file, tell owner, link what's new, ask update or continue (owner-reserved); end turn, no block. Update: notice's command, new session. Resume or night: one line in current block; never wait or update mid-run. Block's `**Workspace:** `<absolute run folder>`` binds guard. Guard live if this skill brought its hook or its hook entry predates this session; else, or step 1 finds no `.factory/guard/state`: not live. Not live on a host with hooks: `safe-factory Resume <run folder>` in a fresh session, yours or owner's, then stop. Still not live there: `Waiting: owner:` with the cause. Before any work, check tracker and push access (`ticketing`); ask owner once, up front, for every action host may block (creating a repository, pushing). No project folder named: create one beside owner's other projects (parent of current project, else current folder), named for product in kebab-case, report its absolute path. No Git: `git init`, first commit on default branch, then feature branch. Every commit, first included, follows `how-to-make-a-pr`'s commit rules. No remote: `ticketing` creates it. Product and feature: research and kickoff questions belong to step 0, after the ticket, in its block; Fast goes on without answers, which feed step 1.
 - **3:** new or changed persistence adds `database-schema`. A `change` uses the light plan. Fast does not stop at the file summary. Safe runs Gate A, then stops: `Waiting: owner: plan OK?`.
 - **4:** starts once plan names views and commands. Up to three items: capture yourself. More: one light delegate captures while you finish plan. No source edit until every Before file saved.
 - **5:** spike unknown capabilities first. A run of mapped tests that is the whole suite is still only a build check. Commit by phase in project's commit style.
@@ -129,7 +135,7 @@ After steps 3, 6 and 8, start the [checker](references/checker.md): a fresh ligh
 
 ## Resume
 
-Read run file and ticket, load `Next:` skill fresh, continue there. Run file and ticket disagree: test both against checkout, keep what holds; log correction in ticket's activity. `Next:` past a gate without its PASS: run that gate's checker first. Never restart a run.
+Read run file and ticket, load `Next:` skill fresh, continue there. Outside run's folder: first turn ends on a message opening with `Next:`'s heading and `**Workspace:**`. Run file and ticket disagree: test both against checkout, keep what holds; log correction in ticket's activity. `Next:` past a gate without its PASS: run that gate's checker first. Never restart a run.
 
 ## Factory fault
 

@@ -9,7 +9,7 @@ claude plugin marketplace add https://github.com/seifsg/ai-software-factory.git
 claude plugin install safe-factory@ai-software-factory
 ```
 
-In a session, the same as `/plugin marketplace add …` and `/plugin install …`. Use the HTTPS URL; `owner/repo` shorthand tries SSH first. Auto mode: new projects need `gh repo create` and `git push` allowed. Add `Bash(gh repo create:*)` and `Bash(git push:*)` to your permission allow rules, or approve once when step 0 asks. Plugin brings every skill, delegate roles, the run hooks and the update check; follows release tags. Start a new session.
+The Stop guard loads with the `safe-factory` skill: starting a run may ask once to allow it (skip the ask with the allow rule `Skill(safe-factory:*)`). In a session, the same as `/plugin marketplace add …` and `/plugin install …`. Use the HTTPS URL; `owner/repo` shorthand tries SSH first. Auto mode: new projects need `gh repo create` and `git push` allowed. Add `Bash(gh repo create:*)` and `Bash(git push:*)` to your permission allow rules, or approve once when step 0 asks. Plugin brings every skill, delegate roles, the run hooks and the update check; follows release tags. Start a new session.
 
 Desktop app without terminal: add to `~/.claude/settings.json`, start a new session, then install from `/plugin` if missing:
 
@@ -29,7 +29,7 @@ codex plugin marketplace add https://github.com/seifsg/ai-software-factory.git -
 codex plugin add safe-factory@ai-software-factory
 ```
 
-Or pick it in `/plugins`. Start a new session, trust its hooks in `/hooks` (again after each update: trust follows each hook's hash). Update: `codex plugin marketplace upgrade ai-software-factory`. `--sparse` fetches only the plugin, so add and upgrade finish inside Codex's 30 s clone limit; a full clone of this repository takes longer. Remove: `codex plugin remove safe-factory@ai-software-factory`. Codex reads the repo's `.claude-plugin/marketplace.json`; the plugin root is `.agents/` (`.codex-plugin/plugin.json`, `skills/`, `hooks/hooks.json`). Plugin hooks run only for manual installs.
+Or pick it in `/plugins`. Start a new session, trust its hooks in `/hooks` (again after each update: trust follows each hook's hash). Update: `codex plugin marketplace upgrade ai-software-factory`. `--sparse` fetches only the plugin, so add and upgrade finish inside Codex's 30 s clone limit; a full clone of this repository takes longer. Remove: `codex plugin remove safe-factory@ai-software-factory`. Codex reads the repo's `.claude-plugin/marketplace.json`; the plugin root is `.agents/` (`.codex-plugin/plugin.json`, `skills/`, `hooks/portable.json`). Plugin hooks run only for manual installs.
 
 On Windows, `commandWindows` uses `hooks/windows.cmd` to find Git Bash beside `git.exe` on `PATH`, then runs the same Stop, compact and startup scripts. No PowerShell execution-policy change or extra runtime is needed. Missing Git Bash produces a notice with the install and restart action; the factory does not automatically continue. Check a new run advances from the ticket response to a separate analysis prompt and full response. An installed skill or trusted hook entry alone does not prove that chain.
 
@@ -64,7 +64,7 @@ Without plugins, copy by hand:
 
 ## Cursor
 
-Plugin (not yet run live): in a session, `/plugin marketplace add https://github.com/seifsg/ai-software-factory.git`, then `/plugin` and install `safe-factory` (CLI: `agent plugin marketplace add …`; editor: paste the repo URL into the plugin search). Reads `.cursor-plugin/marketplace.json`. Brings skills, delegate roles and the run hooks. Cursor also loads Claude Code's installed plugins (Settings → Agents → Third-Party Imports → Include Third-Party Plugins, Skills, and Other Configs): with the Claude Code plugin installed, skip this one or turn that off, else every hook runs twice. Update: GitHub installs stay on the commit they were installed from, so uninstall and install again in `/plugin`; a team marketplace import with Auto Refresh updates by itself (Teams and Enterprise).
+Plugin (not yet run live): in a session, `/plugin marketplace add https://github.com/seifsg/ai-software-factory.git`, then `/plugin` and install `safe-factory` (CLI: `agent plugin marketplace add …`; editor: paste the repo URL into the plugin search). Reads `.cursor-plugin/marketplace.json`. Brings skills, delegate roles and the run hooks. Cursor also loads Claude Code's installed plugins (Settings → Agents → Third-Party Imports → Include Third-Party Plugins, Skills, and Other Configs): with the Claude Code plugin installed, turn that off, else hooks run twice and Claude Code's plugin brings Cursor no Stop guard. Update: GitHub installs stay on the commit they were installed from, so uninstall and install again in `/plugin`; a team marketplace import with Auto Refresh updates by itself (Teams and Enterprise).
 
 ## Update check
 

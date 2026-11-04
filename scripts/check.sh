@@ -63,4 +63,35 @@ dr() { HOME="$h" CLAUDE_PROJECT_DIR="$h/p" XDG_CACHE_HOME="$h" sh $skills/safe-f
 dr && fail "doctor missed a leftover"
 dr --fix; [ -f "$h/.codex/hooks.json" ] && fail "doctor --fix left the old hook"
 [ -f "$h/.cursor/hooks.json" ] && [ -f "$h/p/.claude/settings.json" ] || fail "doctor --fix moved a file holding more than old hooks"
+
+# Guard wiring: Stop lives in the skill on Claude Code; the portable file serves the other hosts.
+blob .agents/hooks/hooks.json | grep -q '"Stop"' && fail "Stop hook in hooks.json: every Claude Code session would run it"
+blob .agents/hooks/portable.json | grep -q '"Stop"' || fail "no Stop hook in portable.json"
+for m in codex cursor; do blob ".agents/.$m-plugin/plugin.json" | grep -qF hooks/portable.json || fail "$m manifest does not name hooks/portable.json"; done
+blob $skills/safe-factory/SKILL.md | sed -n '2,/^---/p' | grep -q 'run-guard.sh" stop' || fail "no Stop hook in safe-factory's frontmatter"
+
+# Session binding: a step block binds a run in another repository; a plain session stays quiet.
+b=$w/g; mkdir -p "$b/a/.git" "$b/b/.factory"; printf '# Run: x · fast · change\nStatus: open\nNext: 3 Plan · get-ready-to-code\nWaiting: none\n\n## 0 Ticket ✔\n' > "$b/b/.factory/run.md"
+gd() { printf '{"session_id":"%s","cwd":"%s","last_assistant_message":"%s"}' "$1" "$b/a" "$2" | HOME="$b" XDG_CACHE_HOME="$b" sh $skills/safe-factory/scripts/run-guard.sh stop; }
+[ -z "$(gd plain 'hello')" ] && [ -z "$(gd plain '## 1 Overview')" ] || fail "guard spoke to a plain session"
+p=$b/b; command -v cygpath >/dev/null && p=$(cygpath -w "$p" | sed 's/\\/\\\\/g')  # Windows: the path as JSON carries it
+case $(gd s1 "## 0 Ticket\\n- **Workspace:** \`$p\`") in *'"decision":"block"'*) ;; *) fail "guard did not bind a run in another repository" ;; esac
+[ -f "$b/b/.factory/guard/state" ] || fail "no guard state in the bound run's folder"
+[ -f "$b/ai-software-factory/sessions/s1" ] || fail "no session file for the bound session"
+case $(gd s2 '## 1 Analyze') in *'no run file found'*) ;; *) fail "a step block with no run did not ask" ;; esac
+case $(gd s1 "## 1 Analyze **Workspace:** \`/nope\`") in *'no run file found'*) ;; *) fail "a bound session with a bad Workspace did not ask" ;; esac
+case $(printf '{"session_id":"s3","cwd":"%s","last_assistant_message":"## 1 Analyze **Workspace:** `/nope`"}' "$b/b" | HOME="$b" XDG_CACHE_HOME="$b" sh $skills/safe-factory/scripts/run-guard.sh stop) in *'no run file found'*) fail "an own-folder run with a bad Workspace was not driven" ;; esac
+sg=$PWD/$skills/safe-factory/scripts/run-guard.sh
+mkdir "$b/none"; (cd "$b/none" && sh "$sg" clear) 2>/dev/null && fail "clear with no run passed silently"
+[ "$(grep -c 'clear %s' "$sg")" -ge 2 ] || fail "a halt reply does not name the run's folder for clear"
+
+# A moved run keeps its proof: session A proved Gate A in one project folder, session F drives it from another.
+e=$w/e; mkdir -p "$e/p/-home-x-A/sA/subagents" "$e/p/-home-x-F" "$e/r/.factory"; git init -q "$e/r"; git -C "$e/r" -c user.name=t -c user.email=t@t -c commit.gpgsign=false commit -q --allow-empty -m i; sha=$(git -C "$e/r" rev-parse HEAD)
+{ printf '{"message":"Role: checker. Gate A"}\n'; printf '{"message":{"role":"assistant","content":[{"type":"text","text":"Gate A: PASS @%s"}]}}\n' "$sha"; } > "$e/p/-home-x-A/sA/subagents/agent-chk.jsonl"
+{ printf '# Run: x · fast · change\nStatus: open\nNext: 4 Before · how-to-make-a-pr\nWaiting: none\n\n'; for h in '0 Ticket' '1 Analyze' '2 Recommend' '2b Challenge' '3 Plan'; do printf '## %s ✔\nx\n' "$h"; done; printf 'Gate A: PASS (checker chk) @%s\n' "$sha"; } > "$e/r/.factory/run.md"
+for h in '0 Ticket' '1 Analyze' '2 Recommend' '2b Challenge' '3 Plan'; do printf '{"isSidechain":false,"message":{"role":"assistant","content":[{"type":"text","text":"## %s x"}]}}\n' "$h"; done > "$e/p/-home-x-A/sA.jsonl"
+printf '{"isSidechain":false}\n' > "$e/p/-home-x-F/sF.jsonl"
+ge() { printf '{"session_id":"%s","transcript_path":"%s","cwd":"%s","last_assistant_message":"x"}' "$1" "$e/p/$2/$1.jsonl" "$e/r" | HOME="$e" XDG_CACHE_HOME="$e" sh "$sg" stop; }
+ge sA -home-x-A >/dev/null
+case $(ge sF -home-x-F) in *'Gate A has not'* | *'not posted'*) fail "a run moved to a session in another project folder lost its proof" ;; esac
 exit $bad

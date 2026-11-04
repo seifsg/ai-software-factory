@@ -3,9 +3,10 @@
 #   stop     keeps an open run going, one step per turn, until step 8 is ticked, gates A, B and C and the
 #            review are proven on their commits;
 #   compact  after compaction or a resume, re-injects the run's place, because compaction drops skill text.
-# Reads only the nearest .factory/run.md inside the current Git checkout, so other sessions exit at once.
+# Finds this session's run in order: its session file, the nearest .factory/run.md inside its checkout, the Workspace
+# a step block names. A bound session reaches a run anywhere; an unbound one with no run exits at once.
 # Its own state lives in .factory/guard/; proof comes from files the host writes, never from run-file text alone.
-#   clear    the owner's command after a halt: the guard drives the run again, loop caps count from here.
+#   clear    the owner's command after a halt (clear <run folder>): the guard drives the run again, loop caps count from here.
 export LC_ALL=C  # bytes, not characters: a UTF-8 sed stops at a 4-byte emoji and leaks the input into the state
 mode=${1:-stop}
 self=$0; case $self in *run-guard.sh) ;; *) self=${g:-run-guard.sh} ;; esac  # an older plugin hook sourced it from $g
@@ -14,12 +15,46 @@ in=; [ "$mode" = clear ] || in=$(cat)
 val() { printf '%s' "$in" | sed -n "s/.*\"$1\": *\"\([^\"]*\)\".*/\1/p" | head -n 1; }  # one JSON string field
 # Walk from the session's folder (input cwd), else $PWD: a hook may start elsewhere, as in desktop worktree sessions.
 c=${in#*\"cwd\":}; [ "$c" = "$in" ] || { c=${c#*\"}; c=${c%%\"*}; cd "$c" 2>/dev/null; }  # no fork: runs at every turn end; Git Bash cd takes JSON's G:\\x
-d=$PWD
-while [ ! -f "$d/.factory/run.md" ]; do
-  { [ -e "$d/.git" ] || [ "$d" = "${d%/*}" ]; } && exit 0  # checkout or drive root (C: too) reached: no run here
-  d=${d%/*}
-done
+[ "$mode" = clear ] && [ -n "$2" ] && { cd "$2" || exit 1; }
+# Nearest run file inside this checkout, stopping at the checkout or drive root (C: too). No fork.
+walk() {
+  d=$PWD
+  while [ ! -f "$d/.factory/run.md" ]; do
+    { [ -e "$d/.git" ] || [ "$d" = "${d%/*}" ]; } && { d=; return; }
+    d=${d%/*}
+  done
+}
+# Bind this session to the run in the Workspace its step block names: an absolute folder holding a run file, nothing else.
+bind() {
+  w=${h#*\*\*Workspace:\*\* \`}; [ "$w" = "$h" ] && return 1
+  bad=1
+  w=$(printf '%s' "${w%%\`*}" | sed 's/\\\\/\//g')
+  case $w in *[\'\"\$\\%]*) return 1 ;; /* | [A-Za-z]:/*) ;; *) return 1 ;; esac
+  [ -f "$w/.factory/run.md" ] || return 1
+  d=$w bad=; [ -z "$s" ] && return 0
+  mkdir -p "${b%/*}" && find "${b%/*}" -type f -mtime +30 -exec rm -f {} + ; printf '%s\n' "$w" > "$b"
+}
+case $in in *\"session_id\":*) s=${in#*\"session_id\":}; s=${s#*\"}; s=${s%%\"*} ;; *) s= ;; esac
+case $s in *[!A-Za-z0-9_-]*) s= ;; esac
+b=${XDG_CACHE_HOME:-$HOME/.cache}/ai-software-factory/sessions/$s
+# The step heading opening this turn's last message, if any: only real step names, so a normal heading is never one.
+h=${in#*\"last_assistant_message\":\"## }; [ "$h" = "$in" ] && h=
+case $h in '0 Ticket'* | '1 Analyze'* | '2 Recommend'* | '2b Challenge'* | '3 Plan'* | '4 Before'* | '5 Build'* | '6 Verify'* | '7 PR'* | '8 Review'*) ;; *) h= ;; esac
+d= bad=
+[ -z "$h" ] || bind  # a block naming a run always wins over an older binding
+[ -z "$bad$d" ] && [ -n "$s" ] && [ -f "$b" ] && { read -r d < "$b"; [ -f "$d/.factory/run.md" ] || d=; }
+[ -n "$d" ] || walk
+if [ -z "$d" ]; then
+  [ "$mode" = clear ] && { echo "run-guard: no run file here; pass its folder: clear <run folder>" >&2; exit 1; }
+  [ -n "$h" ] && [ "$mode" = stop ] || exit 0  # no step block either: not a factory session
+  case $in in
+    *\"stop_hook_active\":true* | *\"stop_hook_active\":\ true*) printf '{"systemMessage":"Factory step block posted, but no usable run file found: this run may have no guard."}\n' ;;
+    *) printf '{"decision":"block","reason":"Factory step block, but no run file found from this folder. If this session runs a factory run, post that block again with a line **Workspace:** `<absolute folder holding .factory/run.md>` so the guard binds it."}\n' ;;
+  esac
+  exit 0
+fi
 run="$d/.factory/run.md" g="$d/.factory/guard"
+rf=$run; case $rf in *%*) rf=$(printf '%s' "$rf" | sed 's/%/%%/g') ;; esac  # run path inside printf formats
 st="$g/state"
 # Untouched for 12 hours: abandoned, not this session's. A resume (compact mode) still gets its place back.
 [ "$mode" = stop ] && [ -n "$(find "$run" -mmin +720)" ] && exit 0
@@ -44,13 +79,13 @@ fi
 # Evidence: Claude Code keeps each subagent's transcript in <session>/subagents/agent-<id>.jsonl, its brief first,
 # for every session of the run (relays). Other hosts: the gate's agent id must appear in the session transcript,
 # never in a Claude Code transcript (the model's own edits are in it). No transcript at all: text only.
-ev=${tp%/*} fb=0 nov=0
-set --; for s in $g_sessions; do for f in "$ev/$s"/subagents/agent-*.jsonl; do [ -f "$f" ] && set -- "$@" "$s/subagents/${f##*/}"; done; done
+ev=${tp%/*} ev=${ev%/*} fb=0 nov=0  # every project folder: a moved run's sessions live in different ones
+set --; for q in $g_sessions; do for f in "$ev"/*/"$q"/subagents/agent-*.jsonl; do [ -f "$f" ] && set -- "$@" "./${f#"$ev"/}"; done; done  # ./: a project folder name may start with -
 if [ $# -gt 0 ]; then set -- $(cd "$ev" && ls -tr "$@")  # oldest first: rounds count in order
 else ev=.; if [ -f "$tp" ]; then fb=1; set -- "$tp"; else nov=1; fi; fi
 # Posting proof: each session's own transcript beside it, and the heading of the message ending this turn
 # (the host may not have written it to the transcript yet).
-t=${tp%/*}; for s in $g_sessions; do [ -f "$t/$s.jsonl" ] && [ "$fb$t/$s.jsonl" != "1$tp" ] && set -- "$@" "$t/$s.jsonl"; done
+t=${tp%/*/*}; for q in $g_sessions; do for f in "$t"/*/"$q.jsonl"; do [ -f "$f" ] && [ "$fb$f" != "1$tp" ] && set -- "$@" "$f"; done; done
 lh=${in#*\"last_assistant_message\":\"## }; lh=${lh%% *}; case $lh in [0-8] | [0-8]b) ;; *) lh= ;; esac
 head=$(git -C "$d" rev-parse HEAD 2>/dev/null) up=$(git -C "$d" rev-parse '@{u}' 2>/dev/null)
 night=0; [ "${g_night_until:-0}" -gt 0 ] 2>/dev/null && night=1
@@ -144,12 +179,12 @@ fi
 [ "$unp" = - ] && unp=
 if [ "$mode" = stop ] && [ -n "$unp" ] && [ "$stopped" != 1 ] && [ -z "$g_halt" ] && [ "$unp" != "$(cat "$g/unposted" 2>/dev/null)" ]; then
   save; printf '%s' "$unp" > "$g/unposted"
-  printf '{"decision":"block","reason":"If this session runs the factory run in .factory/run.md: Step blocks not posted in chat: %s. Post each full block from .factory/run.md now, each as its own message opening with its heading (## <step> <name>), then go on with the run."}\n' "$unp"; exit 0
+  printf '{"decision":"block","reason":"If this session runs the factory run in '"$rf"': Step blocks not posted in chat: %s. Post each full block from '"$rf"' now, each as its own message opening with its heading (## <step> <name>), then go on with the run."}\n' "$unp"; exit 0
 fi
-[ "$stopped" = 1 ] || [ "$finished" = 1 ] && { [ "$mode" = stop ] && save; exit 0; }  # stopped by the owner, or finished
+[ "$stopped" = 1 ] || [ "$finished" = 1 ] && { [ -z "$s" ] || rm -f "$b"; [ "$mode" = stop ] && save; exit 0; }  # stopped by the owner, or finished: the binding ends
 if [ -n "$g_halt" ]; then  # halted: the guard drives nothing until the owner clears it
   [ "$mode" = compact ] && { printf 'Factory run halted (%s): wait for the owner; do not continue the run.\n' "$g_halt"; exit 0; }
-  save; printf '{"systemMessage":"Factory run halted (%s). The owner reads the packet in .factory/run.md and resumes with: sh %s clear"}\n' "$g_halt" "$self"
+  save; printf '{"systemMessage":"Factory run halted (%s). The owner reads the packet in '"$rf"' and resumes with: sh %s clear %s"}\n' "$g_halt" "$self" "$d"
   exit 0
 fi
 if [ "$mode" = compact ]; then
@@ -157,8 +192,10 @@ if [ "$mode" = compact ]; then
     [ "$g_csession" = "$sid" ] && g_compacts=$(( ${g_compacts:-0} + 1 )) || g_compacts=1
     g_csession=$sid; save ;;
   esac
+  case $in in *'"source":"resume"'* | *'"source": "resume"'*) printf 'Load `safe-factory` first: a resumed session may have lost its Stop guard.
+' ;; esac
   case $gate in '') ;; R) next='8 Review: a proven reviewer verdict on HEAD' ;; *) next="Gate $gate checker" ;; esac
-  printf 'Factory run open (.factory/run.md). Next: %s. Read the run file, load that skill fresh, do only that step, then end your turn.\n' "${next:-see the run file}"
+  printf 'Factory run open ('"$rf"'). Next: %s. Read the run file, load that skill fresh, do only that step, then end your turn.\n' "${next:-see the run file}"
   [ "${g_compacts:-0}" -ge 2 ] && [ "$g_csession" = "$sid" ] && printf 'Relay due: this session was compacted %s times; at the next turn end the guard hands the run to a fresh session.\n' "$g_compacts"
   exit 0
 fi
@@ -177,7 +214,7 @@ if [ "$jobs" = 1 ]; then
   [ "$jmax" -gt "${FACTORY_JOB_MAX:-120}" ] && jmax=${FACTORY_JOB_MAX:-120}
   if [ "$jmax" = 0 ]; then todo='Waiting: jobs: needs a deadline: write it as `Waiting: jobs: <what runs> (max <minutes> min)`, then end your turn.'
   elif [ $(( now - g_jobs_since )) -gt $(( jmax * 60 )) ]; then
-    todo="The job in Waiting: jobs: is past its deadline ($jmax min): check it, stop it if it hangs, record its result or failure in .factory/run.md, update Waiting, then end your turn."
+    todo="The job in Waiting: jobs: is past its deadline ($jmax min): check it, stop it if it hangs, record its result or failure in $run, update Waiting, then end your turn."
   fi
 else g_jobs_since= g_jobs_key=; fi
 # Progress budget: blocked turns without a new tick or proven gate. Rounds 1-3 run, then a cap line passes the loop;
@@ -191,11 +228,11 @@ halt() {
   fi
   [ -n "$g_halt" ] || return 0
   g_end=halt; save
-  printf '{"decision":"block","reason":"HALT (%s): the guard stops driving this run. Start no new round. Write the owner packet under the current step: findings per round (new vs repeated), the shared cause, options (extend, amend scope, cancel). Set Waiting: owner: <question>, then end your turn. Only the owner resumes it: sh %s clear"}\n' "$g_halt" "$self"
+  printf '{"decision":"block","reason":"HALT (%s): the guard stops driving this run. Start no new round. Write the owner packet under the current step: findings per round (new vs repeated), the shared cause, options (extend, amend scope, cancel). Set Waiting: owner: <question>, then end your turn. Only the owner resumes it: sh %s clear %s"}\n' "$g_halt" "$self" "$d"
   exit 0
 }
 save
-[ -n "$todo" ] && { idle; halt; save; printf '{"decision":"block","reason":"If this session runs the factory run in .factory/run.md: %s"}\n' "$todo"; exit 0; }
+[ -n "$todo" ] && { idle; halt; save; printf '{"decision":"block","reason":"If this session runs the factory run in '"$rf"': %s"}\n' "$todo"; exit 0; }
 [ "$waiting" = 1 ] || exit 0  # waiting on the owner or background jobs: stopping is right
 case $in in
   # The host reports a running subagent: its result wakes the session. A background shell (a dev server) never does.
@@ -203,7 +240,7 @@ case $in in
   *'"stop_hook_active":true'* | *'"stop_hook_active": true'*)
     # Loop guard: a second stop with no run-file change since the last nudge goes through.
     if [ -f "$g/nudge" ] && [ ! "$run" -nt "$g/nudge" ]; then
-      printf '{"systemMessage":"Factory run idle since the last nudge; stopping. See .factory/run.md."}\n'
+      printf '{"systemMessage":"Factory run idle since the last nudge; stopping. See '"$rf"'."}\n'
       exit 0
     fi ;;
 esac
@@ -215,7 +252,7 @@ why=
 [ "$night" = 1 ] && case $step in 4 | 6 | 8) [ "${g_sstep:-$step}" -lt "$step" ] && [ "$g_rstep" != "$step" ] && why="night phase boundary before step $step" ;; esac
 if [ -n "$why" ]; then
   g_relay=$sid g_rstep=$step; save
-  printf '{"decision":"block","reason":"Relay (%s): this session stops driving the run. Make sure .factory/run.md and the ticket hold everything the next step needs: the next session reads only those. Start a fresh session with your session tool if you have one, prompt: safe-factory Resume %s; otherwise the watchdog starts it. Set Waiting: jobs: relay to a fresh session (max 30 min), then end your turn."}\n' "$why" "$d"
+  printf '{"decision":"block","reason":"Relay (%s): this session stops driving the run. Make sure '"$rf"' and the ticket hold everything the next step needs: the next session reads only those. Start a fresh session with your session tool if you have one, prompt: safe-factory Resume %s; otherwise the watchdog starts it. Set Waiting: jobs: relay to a fresh session (max 30 min), then end your turn."}\n' "$why" "$d"
   exit 0
 fi
 save
@@ -243,6 +280,6 @@ else
     8) todo='Step 8 Review: load `how-to-review-a-pr` fresh and brief a fresh reviewer that did not build it.' ;;
     *) todo="Next: ${next:-read the run file}. Load that skill fresh." ;;
   esac
-  [ "${next%% *}" = 5 ] || todo="$todo Do only this step: post its full block as your last message, update .factory/run.md (tick, Next), then end your turn."
+  [ "${next%% *}" = 5 ] || todo="$todo Do only this step: post its full block as your last message, update $run (tick, Next), then end your turn."
 fi
-printf '{"decision":"block","reason":"If this session runs the factory run in .factory/run.md: %s%s Ending on purpose? Set Waiting: owner: <question> or Waiting: jobs: <what runs> (max <minutes> min)."}\n' "$todo" "${note:+ Note: $note}"
+printf '{"decision":"block","reason":"If this session runs the factory run in '"$rf"': %s%s Ending on purpose? Set Waiting: owner: <question> or Waiting: jobs: <what runs> (max <minutes> min)."}\n' "$todo" "${note:+ Note: $note}"

@@ -6,6 +6,15 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking:** Make the Claude Code Stop guard load with the `safe-factory` skill, so other sessions start no guard process; a run's start may ask once to allow it ([#286])
+- Move a run to a fresh session when its guard is not live on a host with hooks ([#286])
+
+### Fixed
+
+- Fix runs outside the session's folder getting no guard or warning: a session binds to the run its step block names, or the guard asks for the folder ([#286])
+
 ## [0.5.0] - 2026-11-03
 
 _Upgrade needed only for night mode installs that copied the allow list; follow [UPGRADING.md](UPGRADING.md#050)._
@@ -277,3 +286,4 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 [#277]: https://github.com/seifsg/ai-software-factory/pull/277
 [#280]: https://github.com/seifsg/ai-software-factory/pull/280
 [#283]: https://github.com/seifsg/ai-software-factory/pull/283
+[#286]: https://github.com/seifsg/ai-software-factory/pull/286
