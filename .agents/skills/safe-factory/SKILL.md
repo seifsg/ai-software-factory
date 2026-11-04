@@ -5,7 +5,7 @@ hooks:
   Stop:
     - hooks:
         - type: prompt
-          prompt: 'One factory stop: $ARGUMENTS. Read last_assistant_message. Answer ok true only if it contains "Factory check: may stop", or names a denied permission or failed tool that blocks it; a wait or a question never counts, nor a Gate or Review line no delegate's handback above says. Otherwise ok false, reason: "Run the factory check in safe-factory, then do what it prints."'
+          prompt: 'One factory stop: $ARGUMENTS. Read last_assistant_message. Answer ok true only if it contains "Factory check: may stop", or names a denied permission or failed tool that blocks it; a wait or a question never counts, nor a Gate or Review line that no delegate handback above says. Otherwise ok false, reason: "Run the factory check in safe-factory, then do what it prints."'
 ---
 
 # Safe Factory
