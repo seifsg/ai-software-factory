@@ -191,6 +191,8 @@ if [ "$mode" = compact ]; then
     [ "$g_csession" = "$sid" ] && g_compacts=$(( ${g_compacts:-0} + 1 )) || g_compacts=1
     g_csession=$sid; save ;;
   esac
+  case $in in *'"source":"resume"'* | *'"source": "resume"'*) printf 'Load `safe-factory` first: a resumed session has lost its Stop guard.
+' ;; esac
   case $gate in '') ;; R) next='8 Review: a proven reviewer verdict on HEAD' ;; *) next="Gate $gate checker" ;; esac
   printf 'Factory run open ('"$rf"'). Next: %s. Read the run file, load that skill fresh, do only that step, then end your turn.\n' "${next:-see the run file}"
   [ "${g_compacts:-0}" -ge 2 ] && [ "$g_csession" = "$sid" ] && printf 'Relay due: this session was compacted %s times; at the next turn end the guard hands the run to a fresh session.\n' "$g_compacts"
