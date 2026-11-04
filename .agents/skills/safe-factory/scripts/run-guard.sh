@@ -40,10 +40,9 @@ b=${XDG_CACHE_HOME:-$HOME/.cache}/ai-software-factory/sessions/$s
 h=${in#*\"last_assistant_message\":\"## }; [ "$h" = "$in" ] && h=
 case $h in '0 Ticket'* | '1 Analyze'* | '2 Recommend'* | '2b Challenge'* | '3 Plan'* | '4 Before'* | '5 Build'* | '6 Verify'* | '7 PR'* | '8 Review'*) ;; *) h= ;; esac
 d=
-case $h in '0 Ticket'*) bind ;; esac  # a new run's step 0 always wins over an older binding
+[ -z "$h" ] || bind  # a block naming a run always wins over an older binding
 [ -z "$d" ] && [ -n "$s" ] && [ -f "$b" ] && { read -r d < "$b"; [ -f "$d/.factory/run.md" ] || d=; }
 [ -n "$d" ] || walk
-[ -n "$d" ] || [ -z "$h" ] || bind
 if [ -z "$d" ]; then
   [ -n "$h" ] && [ "$mode" = stop ] || exit 0  # no step block either: not a factory session
   case $in in
