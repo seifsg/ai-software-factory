@@ -89,10 +89,10 @@ Products and big features add `research-market` and kickoff questions at step 0;
 
 Long runs lose skill text when the host compacts context. The factory works around it instead of hoping:
 
-- The run cannot close without step 8, three gates and a review; Gate C and the review on the pushed HEAD (no remote: HEAD). Claude Code: a small model judges each gate line from the conversation, and an agent could still fool it. Codex, Cursor and night runs: the host's record of that checker or reviewer on that commit proves it.
-- Loops never stall: after 3 failed rounds with no open `CRITICAL:` line the gate or review passes by cap (`Gate X: PASS (cap, 3 rounds, no CRITICAL)`) and leftovers go to follow-ups; rounds 4-5 only while a `CRITICAL:` is open. After round 5, or 6 turns without progress, the guard halts the run with one packet for you. `sh run-guard.sh clear <run folder>` resumes it.
+- The run cannot close without step 8, three gates and a review; Gate C and the review on the pushed HEAD (no remote: HEAD). Claude Code: a small model judges each gate line from the conversation, and an agent could still fool it; the check tests that the line exists, and Gate C and the review on the pushed HEAD. Codex, Cursor and night runs: the host's record of that checker or reviewer on that commit proves it.
+- Loops never stall (counted on command-guard hosts; on plain Claude Code the agent keeps the count): after 3 failed rounds with no open `CRITICAL:` line the gate or review passes by cap (`Gate X: PASS (cap, 3 rounds, no CRITICAL)`) and leftovers go to follow-ups; rounds 4-5 only while a `CRITICAL:` is open. After round 5, or 6 turns without progress, the guard halts the run with one packet for you. `sh run-guard.sh clear <run folder>` resumes it.
 - Waiting on you is allowed (`Waiting: owner:`); waiting on background jobs needs a deadline (`(max <n> min)`), past which the guard wakes the run.
-- After two compactions the run moves to a fresh session that reads only the run file and the ticket.
+- Codex, Cursor and night runs: after two compactions the run moves to a fresh session that reads only the run file and the ticket.
 - Claude Code: once the skill loads, a small model checks each turn end, and a session with no run spends one extra turn per message; the check script reads the run file and Git, never the conversation. Codex, Cursor and night runs: a command guard reads the run file and the run's subagent files, about 0.4 s per turn end on Windows. Nothing per tool call.
 
 ### 🌙 Overnight runs

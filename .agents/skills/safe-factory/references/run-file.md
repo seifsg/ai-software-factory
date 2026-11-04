@@ -56,4 +56,4 @@ Both use `scripts/run-guard.sh` on this session's run: its binding, nearest in i
 
 A prompt Stop hook applies these through `check`; compaction's place comes at next stop.
 
-Proof is the host's: gate or review line counts only when the named id's subagent file holds that handback on that commit.
+Command guard's proof is the host's: gate or review line counts only when the named id's subagent file holds that handback on that commit.

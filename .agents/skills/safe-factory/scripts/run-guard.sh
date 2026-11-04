@@ -7,7 +7,7 @@
 # a step block names. A bound session reaches a run anywhere; an unbound one with no run exits at once.
 # Its own state lives in .factory/guard/; proof comes from files the host writes, never from run-file text alone.
 #   clear    the owner's command after a halt (clear <run folder>): the guard drives the run again, loop caps count from here.
-#   check    a host with no command hook: the method runs it (check <session id>); same rules as stop, as one plain line.
+#   check    a host with no command hook: the method runs it (check <session id>); stop's rules from the run file and Git, as one plain line: a gate line counts as text, rounds as zero.
 export LC_ALL=C  # bytes, not characters: a UTF-8 sed stops at a 4-byte emoji and leaks the input into the state
 mode=${1:-stop}
 if [ "$mode" = check ]; then
@@ -24,7 +24,7 @@ val() { printf '%s' "$in" | sed -n "s/.*\"$1\": *\"\([^\"]*\)\".*/\1/p" | head -
 # Walk from the session's folder (input cwd), else this folder: a hook may start elsewhere, as in desktop worktree sessions.
 c=${in#*\"cwd\":}; [ "$c" = "$in" ] || { c=${c#*\"}; c=${c%%\"*}; cd "$c" 2>/dev/null; }  # no fork: runs at every turn end; Git Bash cd takes JSON's G:\\x
 [ "$mode" = clear ] && [ -n "$2" ] && { cd "$2" || exit 1; }
-# Nearest run file inside this checkout, stopping at the checkout or drive root (C: too). No fork.
+# Nearest run file inside this checkout, stopping at the checkout or drive root (C: too).
 walk() {
   d=$(pwd)
   while [ ! -f "$d/.factory/run.md" ]; do

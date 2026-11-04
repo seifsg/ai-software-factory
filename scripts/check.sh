@@ -9,7 +9,7 @@ cd "$(git rev-parse --show-toplevel)" || exit 1
 w=$(mktemp -d) || exit 1; trap 'rm -rf "$w"' EXIT  # short POSIX temp path: a C:/ path would split PATH at its colon
 fail() { echo "FAIL: $*"; bad=1; }
 skills=.agents/skills
-read_set='safe-factory/SKILL.md safe-factory/references/run-file.md safe-factory/references/checker.md safe-factory/references/sizes.md safe-factory/references/delegate.md safe-factory/references/owner-reports.md safe-factory/references/worth-it.md ticketing/SKILL.md ticketing/references/ticket-layout.md analyze-start/SKILL.md recommend/SKILL.md get-ready-to-code/SKILL.md how-to-make-a-pr/SKILL.md how-to-make-a-pr/references/media-proof.md how-to-make-a-pr/references/pr-layout.md how-to-make-a-pr/references/github.md how-to-make-a-pr/references/credit.md deep-review/SKILL.md deep-review/references/change-guard.md deep-review/references/compliance.md'
+read_set='safe-factory/SKILL.md safe-factory/references/run-file.md safe-factory/references/checker.md safe-factory/references/sizes.md safe-factory/references/delegate.md safe-factory/references/owner-reports.md safe-factory/references/worth-it.md ticketing/SKILL.md ticketing/references/ticket-layout.md analyze-start/SKILL.md recommend/SKILL.md get-ready-to-code/SKILL.md how-to-make-a-pr/SKILL.md how-to-make-a-pr/references/media-proof.md how-to-make-a-pr/references/pr-layout.md how-to-make-a-pr/references/github.md deep-review/SKILL.md deep-review/references/change-guard.md deep-review/references/compliance.md'
 
 # Method bytes of a ref: "<all methods> <read set>".
 bytes() {
@@ -85,7 +85,8 @@ git grep -qw pass "$ref" -- .agents && fail 'the word pass in the plugin: the po
 git grep -qE '[$]PWD|[^a-z]keys[^a-z]|_key[^a-z]' "$ref" -- '.agents/skills/*/scripts/*' && fail 'a credential-looking name in the scripts: $PWD, keys or _key'
 [ "$(blob .agents/README.md | wc -w)" -ge 40 ] || fail "plugin README under 40 words"
 for f in PRIVACY.md SECURITY.md; do git cat-file -e "$ref:$f" 2>/dev/null || fail "no $f"; done
-blob $skills/safe-factory/scripts/run-guard.sh | sed -n '/mode" = check/,/^fi/p' | grep -q 'jsonl\|projects' && fail "the check reads a transcript: rule 1G"
+git grep -q "$(printf '\r')" "$ref" -- '*.sh' tools/night/pre-push && fail "a CR in a shell script blob: sh fails on it"
+git grep -q "$(printf '\r')" "$ref" -- '*.cmd' || fail "windows.cmd blob has no CRLF"
 
 # Session binding: a step block binds a run in another repository; a plain session stays quiet.
 b=$w/g; mkdir -p "$b/a/.git" "$b/b/.factory"; printf '# Run: x · fast · change\nStatus: open\nNext: 3 Plan · get-ready-to-code\nWaiting: none\n\n## 0 Ticket ✔\n' > "$b/b/.factory/run.md"
@@ -108,6 +109,16 @@ case $(cm c) in 'Factory check: continue.'*'Step 1 Analyze'*) ;; *) fail "check 
 sed 's/^Waiting: none/Waiting: owner: ok?/' "$b/c/.factory/run.md" > "$b/c/w" && mv "$b/c/w" "$b/c/.factory/run.md"
 case $(cm c) in 'Factory check: may stop'*) ;; *) fail "check did not let a real wait stop" ;; esac
 case $(cm none) in 'Factory check: may stop'*) ;; *) fail "check spoke up with no run" ;; esac
+# Rule 1G: a planted delegate file saying FAIL is never read; a missing gate still stops the run; two ticks at once are refused.
+mkdir -p "$b/.claude/projects/pj/c1/subagents"; printf '{"role":"assistant","content":"Role: checker. Gate A"}\nGate A: FAIL\n' > "$b/.claude/projects/pj/c1/subagents/agent-x.jsonl"; : > "$b/.claude/projects/pj/c1.jsonl"
+mkdir -p "$b/d/.factory" "$b/d/.git"; R='# Run: x · fast · change\nStatus: open\nNext: 4 Before · how-to-make-a-pr\nWaiting: none\n\n## 0 Ticket ✔\n## 1 Analyze ✔\n## 2 Recommend ✔\n## 2b Challenge ✔\n## 3 Plan ✔\n'
+printf "$R"'Gate A: PASS (checker x) @1234567\n## 4 Before\n' > "$b/d/.factory/run.md"; cm d >/dev/null
+case $(cm d) in *'Gate A has not'*) fail "check read a delegate file: rule 1G" ;; esac
+printf "$R"'## 4 Before\n' > "$b/d/.factory/run.md"; rm -rf "$b/d/.factory/guard"; cm d >/dev/null
+case $(cm d) in *'Gate A has not'*) ;; *) fail "check let a missing gate through" ;; esac
+mkdir -p "$b/e/.factory" "$b/e/.git"; printf '# Run: x · fast · change\nStatus: open\nNext: 1 Analyze · analyze-start\nWaiting: none\n\n## 0 Ticket ✔\n## 1 Analyze\n## 2 Recommend\n' > "$b/e/.factory/run.md"; cm e >/dev/null
+sed 's/^## 1 Analyze$/## 1 Analyze ✔/; s/^## 2 Recommend$/## 2 Recommend ✔/; s/^Next: .*/Next: 2b Challenge · recommend/' "$b/e/.factory/run.md" > "$b/e/n" && mv "$b/e/n" "$b/e/.factory/run.md"
+case $(cm e) in *Batched*) ;; *) fail "check let two ticks through" ;; esac
 
 # A moved run keeps its proof: session A proved Gate A in one project folder, session F drives it from another.
 e=$w/e; mkdir -p "$e/p/-home-x-A/sA/subagents" "$e/p/-home-x-F" "$e/r/.factory"; git init -q "$e/r"; git -C "$e/r" -c user.name=t -c user.email=t@t -c commit.gpgsign=false commit -q --allow-empty -m i; sha=$(git -C "$e/r" rev-parse HEAD)

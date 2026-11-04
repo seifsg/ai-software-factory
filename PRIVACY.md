@@ -19,7 +19,7 @@ Nothing by the author: no telemetry, accounts or analytics.
 
 The doctor reads your agent settings files, only to list leftovers of old factory versions.
 
-On Claude Code the plugin reads no conversation or chat history. Overnight tools, which you install apart from a clone, read the running session's delegate files to prove gates; they stay on your machine.
+On Claude Code the plugin reads no conversation or chat history. The command guard, used on Codex, Cursor and in overnight runs from a clone, reads that session's transcript and delegate files to prove gates. Nothing it reads leaves your machine.
 
 ## Contact
 

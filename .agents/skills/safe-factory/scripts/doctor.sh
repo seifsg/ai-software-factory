@@ -61,8 +61,8 @@ while IFS= read -r f; do
 done <<EOF
 $hits
 EOF
-n=$r/../tools/night; [ -f "$n/codex.rules" ] && [ -f "$X/rules/factory.rules" ] && stale "$X/rules/factory.rules" "$n/codex.rules"
+night=$r/../tools/night; [ -f "$night/codex.rules" ] && [ -f "$X/rules/factory.rules" ] && stale "$X/rules/factory.rules" "$night/codex.rules"
 # Copied pre-push: main checkout or worktree (hooks live in the common dir); core.hooksPath is not followed.
 g=$P/.git; [ -f "$g" ] && { read -r g < "$g"; g=${g#gitdir: }/../..; case $g in /* | ?:*) ;; *) g=$P/$g ;; esac; }; g=$g/hooks/pre-push
-[ -f "$n/pre-push" ] && grep -qs 'Factory pre-push hook' "$g" && stale "$g" "$n/pre-push"
+[ -f "$night/pre-push" ] && grep -qs 'Factory pre-push hook' "$g" && stale "$g" "$night/pre-push"
 exit $left

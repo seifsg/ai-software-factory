@@ -329,7 +329,7 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 [1.0.0]: https://github.com/seifsg/ai-software-factory/releases/tag/v1.0.0
 
 [#295]: https://github.com/seifsg/ai-software-factory/pull/295
-[#https://github.com/seifsg/ai-software-factory/pull/292
+[#292]: https://github.com/seifsg/ai-software-factory/pull/292
 [#290]: https://github.com/seifsg/ai-software-factory/pull/290
 [#232]: https://github.com/seifsg/ai-software-factory/pull/232
 [#241]: https://github.com/seifsg/ai-software-factory/pull/241
