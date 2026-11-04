@@ -106,7 +106,7 @@ Only what those skills leave out:
 
 ## Gates
 
-After steps 3, 6 and 8, start the [checker](references/checker.md): a fresh light read-only delegate that gets only contracts and outputs, never your reasoning. Paste its PASS as `Gate A: PASS (checker <agent id>) @<sha>` (B, C); guard accepts it only when that checker's own handback says so; Gate C's commit is the pushed HEAD.
+After steps 3, 6 and 8, start the [checker](references/checker.md): a fresh light read-only delegate that gets only contracts and outputs, never your reasoning. Paste its PASS as `Gate A: PASS (checker <agent id>) @<sha>` (B, C); guard accepts it only when that checker's own handback says so; Gate C's commit is the pushed HEAD (no remote: HEAD).
 
 - No source edit before Gate A passes (a background delegate may start Before captures during the Gate A turn); no PR before Gate B passes.
 - Paste only what a checker handed back; never write a gate line yourself, except a cap line or an owner's waiver (run file).
@@ -115,7 +115,7 @@ After steps 3, 6 and 8, start the [checker](references/checker.md): a fresh ligh
 ## Every mode
 
 - Repair findings: [worth-it rounds](references/worth-it.md); loops: [review loops](references/run-cases.md#review-loops).
-- Run file shows `Night:`: the [night mode](references/night.md) rules apply.
+- Run file shows `Night:`: [night mode](references/night.md) rules.
 - Released app or release policy: [app releases](references/app-releases.md).
 - Effort on confirmed work only. Primary platform first (existing app: the platform it mainly targets; else a web app means desktop, a mobile app means phone): verify, fix, polish. Secondary: after owner confirms primary; until then the PR names it pending, never a blocking UNKNOWN.
 - Backlog: `ticketing` moves each ticket through its statuses and logs every change in its activity. Deferred work appends to the epic's one open follow-ups ticket in Backlog.
@@ -126,7 +126,7 @@ After steps 3, 6 and 8, start the [checker](references/checker.md): a fresh ligh
 - Always preview, step 4 on: what the run changes in front of owner, fresh after each todo: browser pane (web, markdown), inline image or artifact (other docs, media), simulator or screenshot (mobile, desktop).
 - Updates and handbacks: [plain owner reports](references/owner-reports.md).
 - Owner message first: answer or do it, then resume what still fits, unasked.
-- Waiting on the owner: the question first, then the options.
+- Waiting on owner: question first, then options.
 
 ## Decide
 

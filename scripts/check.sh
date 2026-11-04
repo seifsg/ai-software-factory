@@ -94,4 +94,27 @@ printf '{"isSidechain":false}\n' > "$e/p/-home-x-F/sF.jsonl"
 ge() { printf '{"session_id":"%s","transcript_path":"%s","cwd":"%s","last_assistant_message":"x"}' "$1" "$e/p/$2/$1.jsonl" "$e/r" | HOME="$e" XDG_CACHE_HOME="$e" sh "$sg" stop; }
 ge sA -home-x-A >/dev/null
 case $(ge sF -home-x-F) in *'Gate A has not'* | *'not posted'*) fail "a run moved to a session in another project folder lost its proof" ;; esac
+
+# Stop rules: only a real wait stops a run; a finish holds once seen; no remote passes; a skipped step or a wall of text never finishes.
+h=$w/h; mkdir -p "$h/.factory"; git init -q "$h"; git -C "$h" -c user.name=t -c user.email=t@t -c commit.gpgsign=false commit -q --allow-empty -m i; a=$w/hp/-home-x-H/sH/subagents; mkdir -p "$a"
+hs() { printf '{"session_id":"sH","transcript_path":"%s","cwd":"%s","last_assistant_message":"x"}' "$w/hp/-home-x-H/sH.jsonl" "$h" | HOME="$h" XDG_CACHE_HOME="$h" sh "$sg" stop; }
+hd() { rm -rf "$h/.factory/guard"; printf '# Run: x\nStatus: open\nNext: 1 Analyze · analyze-start\n%s\n' "$1" > "$h/.factory/run.md"; }
+# A run file with these steps ticked and every gate proven on HEAD.
+full() {
+  sha=$(git -C "$h" rev-parse HEAD)
+  for g in A B C; do { printf '{"message":"Role: checker. Gate %s"}\n' $g; printf '{"message":{"role":"assistant","content":[{"type":"text","text":"Gate %s: PASS @%s"}]}}\n' $g "$sha"; } > "$a/agent-c$g.jsonl"; done
+  { printf '{"message":"Role: reviewer."}\n'; printf '{"message":{"role":"assistant","content":[{"type":"text","text":"verdict: ready @%s"}]}}\n' "$sha"; } > "$a/agent-r.jsonl"
+  { printf '# Run: x\nStatus: closed\nNext: none (closed)\nWaiting: none\n\n'; for s in '0 Ticket' '1 Analyze' '2 Recommend' '2b Challenge' '3 Plan' '4 Before' '5 Build' '6 Verify' '7 PR' '8 Review'; do case " $1 " in *" ${s%% *} "*) printf '## %s ✔\n' "$s" ;; *) printf '## %s\n' "$s" ;; esac; done
+    printf 'Gate A: PASS (checker cA) @%s\nGate B: PASS (checker cB) @%s\nReview: ready (reviewer r) @%s\nGate C: PASS (checker cC) @%s\n' "$sha" "$sha" "$sha" "$sha"; } > "$h/.factory/run.md"
+}
+all='0 1 2 2b 3 4 5 6 7 8'
+for x in '**Waiting:** none' '- Waiting: none' ''; do hd "$x"; case $(hs) in *'"decision":"block"'*'Waiting: none'*) ;; *) fail "a Waiting line reading '$x' let the agent stop" ;; esac; done
+for x in 'Waiting: owner: q' 'Waiting: jobs: x (max 9 min)'; do hd "$x"; [ -z "$(hs)" ] || fail "'$x' did not end the turn"; done
+rm -rf "$h/.factory/guard"; full "$all"; [ -z "$(hs)" ] || fail "a proven run with no remote did not finish"
+git -C "$h" -c user.name=t -c user.email=t@t -c commit.gpgsign=false commit -q --allow-empty -m later; [ -z "$(hs)" ] || fail "a finished closed run was asked again after its checkout moved on"
+printf '# Run: x\nStatus: closed\nNext: none (closed)\nWaiting: none\n\n## 0 Ticket ✔\n' > "$h/.factory/run.md"; [ -n "$(hs)" ] || fail "a closed run with no gates in a used checkout passed"
+rm -rf "$h/.factory/guard"; full '0 1 2 2b 3 4 6 7 8'; case $(hs) in *'Steps not ticked: 5'*) ;; *) fail "a skipped step was not named" ;; esac
+rm -rf "$h/.factory/guard"; full "$all"; awk 'BEGIN { for (i = 0; i < 31; i++) printf "ten chars "; print "" }' >> "$h/.factory/run.md"; case $(hs) in *'over 300 characters'*) ;; *) fail "a wall of text passed" ;; esac
+rm -rf "$h/.factory/guard"; git -C "$h" remote add origin "$h/none.git"; full "$all"; [ -n "$(hs)" ] || fail "an unpushed head with a remote passed Gate C"
+if command -v cygpath >/dev/null; then case $(hs) in *'factory run in /'*) fail "a prompt named a Git Bash path" ;; esac; fi
 exit $bad

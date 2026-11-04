@@ -84,7 +84,7 @@ Ruthless code review. Find every problem.
 
 ## Output Format
 
-**Do NOT factor development time. Focus purely on impact to the application.**
+**Ignore development time. Judge impact on the application only.**
 
 ```markdown
 ## Deep Review Report

@@ -5,7 +5,7 @@ description: "Plans the build from a finished analysis and recommendation: files
 
 # Get Ready To Code: plan first, self-critique, then execute the loop
 
-Prepare to build from the analysis (`analyze-start`) and the picked option (`recommend`). Part A produces the plan; Part B is the loop every change goes through.
+Prepare build from analysis (`analyze-start`) and picked option (`recommend`). Part A: the plan. Part B: the loop every change goes through.
 
 Keep required quality. Complete working iterations, tiny bug or full product. Never downgrade the result because the correct change takes more work.
 
@@ -45,10 +45,10 @@ Do no coding while producing the plan.
 4  Step 3 found an issue → back to step 1.
 ```
 
-- After each todo's real use, run only the tests that cover its changed files. The full suite waits for verify.
+- After each todo's real use: only tests covering its changed files. Full suite waits for verify.
 - Tick the todo in the ticket and write its log line once its own use-check passes: `T3 pre: <before> do: <change> post: <check>`.
 - Second related failure or edge case: find the shared cause and why the previous fix failed, fix the cause and its consumers, state what prevents recurrence. No endless symptom patches.
-- A ticket is finished when every item is ticked and its definition of done is proven. Until then the loop continues.
+- Ticket finished: every item ticked, definition of done proven. Until then the loop continues.
 
 ## Light plan
 
