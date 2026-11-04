@@ -1,5 +1,6 @@
 {
   "name": "safe-factory",
+  "icon": ".claude-plugin/icon.png",
   "version": "0.6.2",
   "license": "MIT",
   "author": { "name": "Seif Sgayer" },

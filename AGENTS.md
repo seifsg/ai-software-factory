@@ -41,7 +41,7 @@ It checks: links stay in a skill folder, SKILL.md under 17000, no media in Git, 
 
 ## PRs
 
-Draft PRs, through `how-to-make-a-pr`, linked to their ticket, unless owner says push direct. Every PR gets `how-to-review-a-pr` from a fresh agent. Humans decide ready, merge and release. No AI attribution lines in commits. PR bodies end with the factory credit line (`how-to-make-a-pr`).
+Draft PRs, through `how-to-make-a-pr`, linked to their ticket, unless owner says push direct. Every PR gets `how-to-review-a-pr` from a fresh agent. Humans decide ready, merge and release. No AI attribution lines in commits. PR bodies here end with `🏭 Built with [AI Software Factory](https://softwarefactory.company/) by Seif`.
 
 ## Releases
 

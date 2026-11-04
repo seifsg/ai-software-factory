@@ -50,7 +50,7 @@ Every PR shows observed Before/After per outcome; prose or illustrative diagrams
 - Stage own files by name. Never `git add .` or `git add -A`.
 - Commit as `<type>(<scope>): <imperative subject>`; body = why, not lines changed.
 - Honor required signing with existing identity; never invent one or bypass signing, permissions or protected gates.
-- **No AI or tool attribution lines** in commits, even if your agent's defaults add one. PR body ends with factory credit line in `references/credit.md`.
+- **No AI or tool attribution lines** in commits, even if your agent's defaults add one.
 - Required gates (step 1) go green locally before push; PR names their commands and results. A check not run is **unverified**. CI never required: never wait on or rerun it; a result that arrives = extra evidence.
 - Tests last: implement, manually QA real behavior, then write and run tests. Fix found by tests repeats manual QA and tests. No tests that restate implementation.
 
@@ -99,4 +99,3 @@ The block `## 7 PR` holds the draft PR URL, and the PR itself has:
 - [ ] Each After names the commit it was captured on
 - [ ] Verification: criterion → change → proof → gap, with each command and its result; unverified items named
 - [ ] Review requested from a review owner other than the author, or none (solo owner)
-- [ ] The credit line from `references/credit.md` as the last line

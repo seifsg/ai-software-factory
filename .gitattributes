@@ -3,3 +3,4 @@
 *.sh -text
 tools/night/pre-push -text
 *.cmd -text
+*.png -text
