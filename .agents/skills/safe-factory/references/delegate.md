@@ -19,7 +19,7 @@ Use the role's tier/edit access; keep method reports (UX, `deep-review`, checker
 - `left: <item>: <what it learned>` per unfinished item, when it stops early;
 - at most one refusal, as its last line: `too-big. split: <one-line jobs>`, `needs-confirm. op: <command>` or `ambiguous. ask: <one question>`.
 
-Read refusals first: split, confirm or clarify before briefing again.
+Refusals first: split, confirm or clarify, then brief again.
 
 ## Brief
 
@@ -42,18 +42,18 @@ G3 MANUAL <outcome>: <what the reviewer judges>
 - One coherent job per agent. Combine related checks; separate only useful independent jobs.
 - Split briefs with over three outcomes, multiple commits or a whole unrelated document; one change across files counts once.
 - Large spec: an analyst returns focused briefs with required rules and affected paths.
-- Changes smaller than their brief stay local.
+- Change smaller than its brief stays local.
 - Only the coordinator spawns, and a reviewer its lens agents; extra agents need `too-big. split:`.
 - Preserve early groundwork (`left:`) in the next brief.
 
 ## Tier
 
-- Pick the lowest role that can pass the gates. To spend less, lower effort before tier.
+- Lowest role that can pass the gates. To spend less, lower effort before tier.
 - Escalate, don't coach: after two failed gate rounds, job and handbacks go to fresh delegate one tier up, same edit access (runner to analyst, analyst to reviewer, maker to builder). A deep job that fails twice comes back to you (Authority and stops, rule 4).
-- Your session is the ceiling: a role above your session's tier runs on your session's model.
-- The owner's override beats every role. Never change the owner's session model or effort.
+- Session is ceiling: a role above its tier runs on its model.
+- Owner's override beats every role. Never change owner's session model or effort.
 
 ## Rounds
 
-- Keep one maker and one independent reviewer through a repair batch; the reviewer checks deltas. Replace either on lost context, and a reviewer that repaired.
+- One maker, one independent reviewer per repair batch; reviewer checks deltas. Replace either on lost context, and a reviewer that repaired.
 - First review goes to fresh reviewer with baseline its method names (requirements, plan, rules, the diff and raw evidence such as logs, transcripts and QA notes), never builder's reasoning or a verdict.

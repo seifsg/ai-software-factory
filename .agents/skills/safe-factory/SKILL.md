@@ -30,7 +30,7 @@ Build systems that outlast their creator. No breakage.
 - Stay on task: touch only what change and its root fix need; ticket unrelated issues.
 - The owner's explicit words beat every method default (placeholders, copy, scope, style) except step blocks: always posted in full.
 - Additive: never disable, hide or replace a host capability you would use without the factory (live preview, screenshots, background agents, task list).
-- Output: lead with the answer or result, in specific words; no preamble, filler, restated question or closing recap, no em dashes or invented claims. Keep code, commands, paths, errors, numbers and quotes verbatim; never drop not, never, no, only or except. Status between blocks: one short line. Full plain sentences for security warnings, irreversible or destructive actions, order-sensitive steps and questions to the owner. Persisted artifacts (tickets, PRs, run files, docs) keep their own layouts.
+- Output: answer or result first, specific words; no preamble, filler, restated question, closing recap, em dashes or invented claims. Keep code, commands, paths, errors, numbers, quotes verbatim; never drop not, never, no, only, except. Status between blocks: one short line. Full plain sentences for security warnings, irreversible or destructive actions, order-sensitive steps, owner questions. Tickets, PRs, docs keep own layouts; all else: Block format.
 
 ## Mode and kind
 
@@ -54,6 +54,26 @@ Every run keeps project rules and never puts secrets in code or Git. Build what 
 - After each step: write its block under the step's heading, tick heading `✔` once contract holds, set `Next:` to next step and its skill.
 - `Waiting:` stays `none` while you work. Before ending a turn on purpose, set `owner: <question>` or `jobs: <what runs> (max <minutes> min)`; back to `none` on resume.
 - `Status: closed` only after step 8 and gates A, B and C pass or owner waives one. Owner stop: `Status: stopped (<reason>)`.
+
+## Block format
+
+Run file, chat blocks, handbacks. Caveman: short words, every fact kept. Reader skims.
+
+- One fact per line; no paragraphs. No line over 300 characters outside tables and fences.
+- `**Label:**` then value or bullets. Same fields on 2+ things: table.
+- Flow or state: ASCII in a `text` fence. Numbers: bars.
+- Marks: ✅ done, ❌ failed, ⚠️ risk, ⏳ waiting. Never on lines hooks read: `Status:`, `Next:`, `Waiting:`, `Gate`, `Review:`, `Left running:`, step headings.
+- Richer visual: host artifact or `.factory/visuals/<step>-<name>.html`, linked; block alone holds every fact.
+
+```text
+**Verdict:** ⚠️ 1 of 2 pass
+| Check | Result |
+|---|---|
+| Build | ✅ 12 s |
+| Login | ❌ 500 on empty password |
+Load  before ████████ 800 ms
+      after  ███ 300 ms
+```
 
 ## Steps
 
