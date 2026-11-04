@@ -89,7 +89,7 @@ else ev=.; if [ -f "$tp" ]; then fb=1; set -- "$tp"; else nov=1; fi; fi
 t=${tp%/*/*}; for q in $g_sessions; do for f in "$t"/*/"$q.jsonl"; do [ -f "$f" ] && [ "$fb$f" != "1$tp" ] && set -- "$@" "$f"; done; done
 lh=${in#*\"last_assistant_message\":\"## }; lh=${lh%% *}; case $lh in [0-8] | [0-8]b) ;; *) lh= ;; esac
 head=$(git -C "$d" rev-parse HEAD 2>/dev/null) up=$(git -C "$d" rev-parse '@{u}' 2>/dev/null)
-if [ -n "$up" ] || [ -n "$(git -C "$d" remote 2>/dev/null)" ]; then { [ -f "$g/remote" ] || { mkdir -p "$g" && : > "$g/remote"; }; }
+if [ -n "$up" ] || [ -n "$(git -C "$d" remote 2>/dev/null)" ]; then { [ -f "$g/remote" ] || [ ! -d "$g" ] || : > "$g/remote"; }
 elif [ ! -f "$g/remote" ]; then up=$head; fi  # no remote, ever: nothing to push to. A branch never pushed still has one
 night=0; [ "${g_night_until:-0}" -gt 0 ] 2>/dev/null && night=1
 # One awk pass over the run file and the evidence files. Only a strict "<step> <name> · <skill>" Next value

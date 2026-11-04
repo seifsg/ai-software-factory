@@ -114,7 +114,7 @@ hd '**Waiting:** none'; hs >/dev/null; case $(hs true) in *idle*) ;; *) fail "th
 for x in 'Waiting: owner: q' 'Waiting: jobs: x (max 9 min)'; do hd "$x"; [ -z "$(hs)" ] || fail "'$x' did not end the turn"; done
 rm -rf "$h/.factory/guard"; full "$all"; [ -z "$(hs)" ] || fail "a proven run with no remote did not finish"
 git -C "$h" -c user.name=t -c user.email=t@t -c commit.gpgsign=false commit -q --allow-empty -m later; [ -z "$(hs)" ] || fail "a finished closed run was asked again after its checkout moved on"
-printf '# Run: x\nStatus: closed\nNext: none (closed)\nWaiting: none\n\n## 0 Ticket ✔\n' > "$h/.factory/run.md"; [ -n "$(hs)" ] || fail "a closed run with no gates in a used checkout passed"
+printf '# Run: x\nStatus: closed\nNext: none (closed)\nWaiting: none\n\n## 0 Ticket ✔\n' > "$h/.factory/run.md"; case $(hs) in *'"decision":"block"'*) ;; *) fail "a closed run with no gates in a used checkout passed" ;; esac
 printf '# Run: x\nStatus: open\nNext: 5 Build · get-ready-to-code\nWaiting: none\n\n## 3 Plan ✔\n' > "$h/.factory/run.md"; rm -rf "$h/.factory/guard"; case $(hs) in *'Steps not ticked: 0,1,2,2b'*) ;; *) fail "a step skipped before the plan was not named" ;; esac
 rm -rf "$h/.factory/guard"; full '0 1 2 2b 3 4 6 7 8'; case $(hs) in *'Steps not ticked: 5'*) ;; *) fail "a skipped step was not named" ;; esac
 sed 's/^Waiting: none/Waiting: owner: q/' "$h/.factory/run.md" > "$h/n" && mv "$h/n" "$h/.factory/run.md"; case $(hs) in *'Steps not ticked: 5'*) ;; *) fail "a wait hid a skipped step" ;; esac
@@ -125,7 +125,7 @@ hd 'Waiting: none'; printf '| %s |\n' "$L" >> "$h/.factory/run.md"; case $(hs) i
 hd 'Waiting: none'; printf '%s\n%s\n%s\n' '```' "$L" '```' >> "$h/.factory/run.md"; case $(hs) in *'over 300'*) fail "a long line in a fence was refused" ;; esac
 hd 'Waiting: none'; printf '%s\n%s\n' '```' "$L" >> "$h/.factory/run.md"; case $(hs) in *'over 300'*) ;; *) fail "an unclosed fence hid a wall of text" ;; esac
 hd 'Waiting: none'; awk 'BEGIN { for (i = 0; i < 110; i++) printf "█"; print "" }' >> "$h/.factory/run.md"; case $(hs) in *'over 300'*) fail "the line limit counted bytes" ;; esac
-rm -rf "$h/.factory/guard"; git -C "$h" remote add origin "$h/none.git"; full "$all"; [ -n "$(hs)" ] || fail "an unpushed head with a remote passed Gate C"
-git -C "$h" remote remove origin; [ -n "$(hs)" ] || fail "removing the remote skipped Gate C's push"
+rm -rf "$h/.factory/guard"; git -C "$h" remote add origin "$h/none.git"; full "$all"; case $(hs) in *'"decision":"block"'*'Gate C'*) ;; *) fail "an unpushed head with a remote passed Gate C" ;; esac
+hs >/dev/null; git -C "$h" remote remove origin; case $(hs) in *'"decision":"block"'*'Gate C'*) ;; *) fail "removing the remote skipped Gate C's push" ;; esac
 if command -v cygpath >/dev/null; then case $(hs) in *'factory run in /'*) fail "a prompt named a Git Bash path" ;; esac; fi
 exit $bad
