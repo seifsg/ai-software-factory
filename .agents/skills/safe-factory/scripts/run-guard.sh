@@ -94,7 +94,7 @@ night=0; [ "${g_night_until:-0}" -gt 0 ] 2>/dev/null && night=1
 # One awk pass over the run file and the evidence files. Only a strict "<step> <name> · <skill>" Next value
 # is kept for the reply. The step is the later of Next and the last ticked heading, so a malformed Next never
 # skips a gate. gate: the first gate the run has reached without proof; R: step 8 without a proven review.
-read -r stopped waiting finished ticks gate sig jobs jmax crit fA fB fC fR unp skip step next <<EOF
+read -r stopped waiting finished ticks gate sig jobs jmax crit fA fB fC fR unp skip long step next <<EOF
 $(cd "$ev" && awk -v R="$run" -v lh="$lh" -v fb=$fb -v nov=$nov -v head="$head" -v up="$up" -v night=$night -v clr="$g_clear" -v bs="${g_base_A:-0} ${g_base_B:-0} ${g_base_C:-0} ${g_base_R:-0}" '
   BEGIN { split(bs, b); split("A B C R", k); split("3 6 8 8", sp); for (i = 1; i <= 4; i++) { base[k[i]] = b[i]; st[k[i]] = sp[i] } }  # the step of each loop; rounds count since the last clear
   function pre(a, b,  n) { n = length(a) < length(b) ? length(a) : length(b); return n >= 7 && substr(a, 1, n) == substr(b, 1, n) }
@@ -126,6 +126,7 @@ $(cd "$ev" && awk -v R="$run" -v lh="$lh" -v fb=$fb -v nov=$nov -v head="$head" 
     if (n == "" && match($0, /^Next: *[0-8]b? [A-Za-z]+ · [a-z-]+/)) { n = substr($0, RSTART, RLENGTH); sub(/^Next: */, "", n) }
     if (/^Gate [ABC]: PASS \(checker [^ )]+\) @[0-9a-f]+/) { x = substr($0, 6, 1); gid[x] = $5; sub(/\)$/, "", gid[x]); gsha[x] = at($6); want[gid[x]] = 1 }
     if (/^## /) sec = $2
+    if (/^```/) fc = !fc; else if (!fc && !/^\|/ && length($0) > 300) ll = ll (ll == "" ? "" : ",") FNR  # a wall of text
     if (/^CRITICAL: /) crs[sec] = 1
     if (match($0, /^(Gate [ABC]: PASS|Review: ready) \(cap, 3 rounds, no CRITICAL\) @[0-9a-f]+/)) { x = /^R/ ? "R" : substr($0, 6, 1); cs[x] = at(substr($0, 1, RLENGTH)) }
     if (/^Gate [ABC]: WAIVED by owner/) wv[substr($0, 6, 1)] = 1
@@ -165,11 +166,12 @@ $(cd "$ev" && awk -v R="$run" -v lh="$lh" -v fb=$fb -v nov=$nov -v head="$head" 
     # Past the plan, its steps must be ticked; at the end, all of them. Earlier, a blocked step may wait its turn.
     if (step > 3 || r) for (i = split(r ? "0 1 2 2b 3 4 5 6 7" : "0 1 2 2b 3", q, " "); i > 0; i--) if (!(q[i] in dn)) sk = q[i] (sk == "" ? "" : ",") sk
     sent[lh] = 1; if (cx) for (i = 1; i <= c; i++) if (!sent[tk[i]]) u = u (u == "" ? "" : ",") tk[i]  # Claude Code transcripts only
-    printf "%d %d %d %d %s %d %d %d %s %d %d %d %d %s %s %d %s\n", s, !(o || j), r && g == "-" && sk == "", c, g, p, j, jm, oc == "" ? "-" : oc, f["A"], f["B"], f["C"], f["R"], u == "" ? "-" : u, sk == "" ? "-" : sk, step, n
+    printf "%d %d %d %d %s %d %d %d %s %d %d %d %d %s %s %s %d %s\n", s, !(o || j), r && g == "-" && sk == "" && ll == "", c, g, p, j, jm, oc == "" ? "-" : oc, f["A"], f["B"], f["C"], f["R"], u == "" ? "-" : u, sk == "" ? "-" : sk, ll == "" ? "-" : ll, step, n
   }' "$run" "$@")
 EOF
 [ "$gate" = - ] && gate=
 [ "$skip" = - ] && skip=
+[ "$long" = - ] && long=
 [ -f "$st" ] || [ ! -d "$g" ] || [ "${ticks:-0}" -le 1 ] || [ -n "$g_ticks" ] || note='guard state was lost'  # no folder yet: hooks just added
 [ -n "$note" ] && g_halt="$note"  # never trusted, never reset: the owner looks, then clears
 prev=${g_ticks:-$ticks}
@@ -269,6 +271,8 @@ save
 # One step per turn: the next step's prompt arrives only after the last answer is complete, as if the owner typed it.
 if [ -n "$skip" ]; then
   todo="Steps not ticked: $skip. Do each now, in order: load its skill, post its block, tick it. Only the owner skips a step: \`Waiting: owner:\` to ask."
+elif [ -n "$long" ]; then
+  todo="Run file lines over 300 characters: $long. Split each into short bullets or a table, every fact kept."
 elif [ "$batched" = 1 ]; then
   todo="Batched: more than one step heading was ticked in one turn. Redo the last ticked step as its own fresh pass, run any open gate, then end your turn."
 elif [ "$rounds" -ge 3 ] && case $crit in *"$lx"*) false ;; *) true ;; esac; then  # the max-rounds loop, no open CRITICAL in its step
