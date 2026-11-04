@@ -79,7 +79,7 @@ blob $skills/safe-factory/SKILL.md | sed -n '2,/^---/p' | grep -q 'type: prompt'
 fm=$(blob $skills/safe-factory/SKILL.md | sed -n '2,/^---/p')
 printf '%s\n' "$fm" | grep -Eq 'type: *(command|agent|http)' && fail "frontmatter hook other than prompt: command and agent hooks need a Verified organization"
 [ "$(printf '%s\n' "$fm" | grep 'prompt:' | tr -cd "'" | wc -c)" -eq 2 ] || fail "hook prompt: an apostrophe inside it breaks the YAML, and the hook never loads"
-blob .gitattributes | grep -Eq 'eol=|filter=|export-' && fail ".gitattributes rewrites files: the portal cannot read the repository"
+blob .gitattributes | grep -v '^#' | grep -Eq 'eol=|filter=|export-' && fail ".gitattributes rewrites files: the portal cannot read the repository"
 git ls-tree -r --name-only "$ref" .agents/hooks | grep -Eq 'night|watchdog|pre-push|claude-settings' && fail "night tools inside the plugin: they belong in tools/night"
 git grep -qw pass "$ref" -- .agents && fail 'the word pass in the plugin: the portal reads a password tool'
 git grep -qE '[$]PWD|[^a-z]keys[^a-z]|_key[^a-z]' "$ref" -- '.agents/skills/*/scripts/*' && fail 'a credential-looking name in the scripts: $PWD, keys or _key'
