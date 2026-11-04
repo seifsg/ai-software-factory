@@ -67,6 +67,8 @@ printf '{\n\t"permissions": {},\n\t"hooks": {"Stop": [{"hooks": [{"command": "sh
 dr() { HOME="$h" CLAUDE_PROJECT_DIR="$h/p" XDG_CACHE_HOME="$h" sh $skills/safe-factory/scripts/doctor.sh "$@" >/dev/null; }
 dr && fail "doctor missed a leftover"
 dr --fix; [ -f "$h/.codex/hooks.json" ] && fail "doctor --fix left the old hook"
+mkdir -p "$h/.codex/rules"; echo stale > "$h/.codex/rules/factory.rules"; dr --fix || fail "doctor --fix died on a stale rules copy"
+CODEX_HOME="$h/.codex" dr --fix; cmp -s "$h/.codex/rules/factory.rules" tools/night/codex.rules || fail "doctor --fix did not refresh the rules copy"
 [ -f "$h/.cursor/hooks.json" ] && [ -f "$h/p/.claude/settings.json" ] || fail "doctor --fix moved a file holding more than old hooks"
 
 # Guard wiring: Stop lives in the skill on Claude Code; the portable file serves the other hosts.
