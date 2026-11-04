@@ -12,10 +12,8 @@ export LC_ALL=C  # bytes, not characters: a UTF-8 sed stops at a 4-byte emoji an
 mode=${1:-stop}
 if [ "$mode" = check ]; then
   grep -qs '^Night:' .factory/run.md && { echo 'Factory check: may stop. Night: a command guard drives this run.'; exit 0; }
-  # plays the Stop event from the session's files; the step just ticked counts as posted, its block ends this turn
-  tp=$(ls "${CLAUDE_CONFIG_DIR:-$HOME/.claude}"/projects/*/"$2.jsonl" 2>/dev/null | head -n 1)
-  lh=$(sed -n 's/^## \([0-8]b\{0,1\}\) .*✔.*/\1/p' .factory/run.md 2>/dev/null | tail -n 1)
-  o=$(printf '{"session_id":"%s","cwd":"%s","transcript_path":"%s","last_assistant_message":"## %s "}' "$2" "$(pwd)" "$tp" "$lh" | sh "$0" stop)
+  # Plays the Stop event from the run file and Git alone: never a transcript, so gate lines count as text and the Stop hook's evaluator judges them.
+  o=$(printf '{"session_id":"%s","cwd":"%s"}' "$2" "$(pwd)" | sh "$0" stop)
   o=$(printf '%s' "$o" | sed 's/^{"decision":"block","reason":"\(.*\)"}$/\1/; s/^{"systemMessage":"\(.*\)"}$/\1/')
   case $o in '') echo 'Factory check: may stop. On the next owner message, load safe-factory first.' ;; 'Factory run idle'* | 'Factory run halted'* | 'Factory run relayed'*) printf 'Factory check: may stop. %s\n' "$o" ;; *) printf 'Factory check: continue. %s\n' "$o" ;; esac
   exit 0
