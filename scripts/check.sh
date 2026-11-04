@@ -70,7 +70,7 @@ dr --fix; [ -f "$h/.codex/hooks.json" ] && fail "doctor --fix left the old hook"
 [ -f "$h/.cursor/hooks.json" ] && [ -f "$h/p/.claude/settings.json" ] || fail "doctor --fix moved a file holding more than old hooks"
 
 # Guard wiring: Stop lives in the skill on Claude Code; the portable file serves the other hosts.
-blob .agents/hooks/hooks.json | grep -q '"Stop"' && fail "Stop hook in hooks.json: every Claude Code session would run it"
+git cat-file -e "$ref:.agents/hooks/hooks.json" 2>/dev/null && fail "hooks.json: Claude Code must run no command hook; every session would run it"
 blob .agents/hooks/portable.json | grep -q '"Stop"' || fail "no Stop hook in portable.json"
 for m in codex cursor; do blob ".agents/.$m-plugin/plugin.json" | grep -qF hooks/portable.json || fail "$m manifest does not name hooks/portable.json"; done
 blob $skills/safe-factory/SKILL.md | sed -n '2,/^---/p' | grep -q 'type: prompt' || fail "no Stop hook in safe-factory's frontmatter"
