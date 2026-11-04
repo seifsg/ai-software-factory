@@ -3,5 +3,6 @@
   "version": "0.5.0",
   "description": "AI Software Factory: ten visible steps from ticket to reviewed draft PR, with a run file and checker gates.",
   "skills": "./skills/",
+  "hooks": "./hooks/portable.json",
   "agents": "./agents/"
 }

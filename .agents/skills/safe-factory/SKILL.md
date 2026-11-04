@@ -1,6 +1,12 @@
 ---
 name: safe-factory
 description: "Delivers games, apps, services, tools and libraries end to end in ten visible steps: ticket, analyze, recommend, challenge, plan, Before proof, build, verify, PR and review. Fast by default, Safe on request. Use when asked to build, extend, fix or resume software with the factory."
+hooks:
+  Stop:
+    - hooks:
+        - type: command
+          command: sh "${CLAUDE_PLUGIN_ROOT}/skills/safe-factory/scripts/run-guard.sh" stop
+          timeout: 10
 ---
 
 # Safe Factory
