@@ -27,7 +27,7 @@ old() { [ -n "$(find "$1" -mmin +"$2" 2>/dev/null)" ]; }  # file older than $2 m
 # Ends: notify once, start nothing.
 if grep -qE '^Status: (closed|stopped)' "$run" || [ "$g_end" = done ]; then notify done 'done; see the draft PR in .factory/run.md.'; exit 0; fi
 [ -n "$g_halt" ] && { notify halt "halted ($g_halt); the packet is in .factory/run.md."; exit 0; }
-wl=$(sed -n '/^Waiting: /{p;q;}' "$run")  # the header line: an old question in a block is no wait
+wl=$(sed -n '/^## /q;/^Waiting: /{p;q;}' "$run")  # the header line: an old question in a block is no wait
 case $wl in 'Waiting: owner'*) notify owner "waiting on the owner: ${wl#Waiting: owner: }"; exit 0 ;; esac
 [ -n "$w_notified" ] && { w_notified=; save; }  # running again: the next end notifies anew
 # A guard that stopped firing while the run file moves: the hooks are off.

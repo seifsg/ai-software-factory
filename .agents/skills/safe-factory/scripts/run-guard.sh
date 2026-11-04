@@ -116,7 +116,7 @@ $(cd "$ev" && awk -v R="$run" -v lh="$lh" -v fb=$fb -v nov=$nov -v head="$head" 
     return proven(id, x, gsha[x]) && (nov || fb || last[id] ~ /^Gate .: PASS/) && (x != "C" || (pre(gsha[x], head) && head == up))
   }
   FILENAME == R {
-    if (/^Status: stopped/) s = 1
+    if (sec == "" && /^Status: stopped/) s = 1
     if (sec == "" && /^Waiting: / && !hw++) {  # the header line: an old question in a block decides nothing
       if (/^Waiting: owner/) o = 1
       if (/^Waiting: jobs:/) { j = 1; if (match($0, /\(max [0-9]+ min\)/)) jm = substr($0, RSTART + 5, RLENGTH - 10) + 0 }

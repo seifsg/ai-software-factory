@@ -18,7 +18,7 @@ Keep required quality. Complete working iterations, tiny bug or full product. Ne
 5. **The entire plan.** Written out so no agent guesses: interfaces, this checkout's dev ports.
 6. **Proof and tests.** The proof list for the PR's Before and After: one short id per changed view, state, journey or command; interactive elements share their journey's id, never one id each. The test map: command running tests covering each changed file, and project's full-suite command for verify.
 
-Do no coding while producing the plan.
+No coding while planning.
 
 ### Todos
 

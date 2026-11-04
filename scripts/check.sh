@@ -111,6 +111,7 @@ all='0 1 2 2b 3 4 5 6 7 8'
 for x in '**Waiting:** none' '- Waiting: none' ''; do hd "$x"; case $(hs) in *'"decision":"block"'*'Waiting: none'*) ;; *) fail "a Waiting line reading '$x' let the agent stop" ;; esac; done
 hd 'Waiting: none'; printf 'Waiting: owner: old\n' >> "$h/.factory/run.md"; [ -n "$(hs)" ] || fail "an old Waiting line in a block let the agent stop"
 hd '**Waiting:** none'; printf '## 0 Ticket\nWaiting: owner: old\n' >> "$h/.factory/run.md"; case $(hs) in *'header is wrong'*) ;; *) fail "a body Waiting line stood in for a misspelled header" ;; esac
+hd 'Waiting: none'; printf '## 0 Ticket\nStatus: stopped (old)\n' >> "$h/.factory/run.md"; [ -n "$(hs)" ] || fail "a body Status line stopped the run"
 hd '**Waiting:** none'; hs >/dev/null; case $(hs true) in *idle*) ;; *) fail "the loop guard no longer ends an idle run" ;; esac
 for x in 'Waiting: owner: q' 'Waiting: jobs: x (max 9 min)'; do hd "$x"; [ -z "$(hs)" ] || fail "'$x' did not end the turn"; done
 rm -rf "$h/.factory/guard"; full "$all"; [ -z "$(hs)" ] || fail "a proven run with no remote did not finish"

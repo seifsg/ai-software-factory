@@ -26,7 +26,7 @@ Round 2 on: recheck only MISSING lines of round 1's handback; the rest stay met.
 | B | 4–6 | `how-to-make-a-pr` (Before proof), `get-ready-to-code` (0–4 loop), `deep-review` |
 | C | 7–8, the PR | `how-to-make-a-pr` (`## 7 PR`), plus the list below |
 
-`## 7 PR` `local only ("<owner's words>") @<sha>` with `git remote` empty: PR lines lapse. `Skipped by owner ("<their words>")` meets its step's lines.
+`## 7 PR` `local only ("<owner's words>") @<sha>` with `git remote` empty: PR lines lapse. `Skipped by owner ("<their words>")` meets its step's lines. Not at night.
 
 Gate C's list, besides `## 7 PR`:
 
