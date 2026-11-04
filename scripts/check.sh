@@ -73,7 +73,7 @@ dr --fix; [ -f "$h/.codex/hooks.json" ] && fail "doctor --fix left the old hook"
 blob .agents/hooks/hooks.json | grep -q '"Stop"' && fail "Stop hook in hooks.json: every Claude Code session would run it"
 blob .agents/hooks/portable.json | grep -q '"Stop"' || fail "no Stop hook in portable.json"
 for m in codex cursor; do blob ".agents/.$m-plugin/plugin.json" | grep -qF hooks/portable.json || fail "$m manifest does not name hooks/portable.json"; done
-blob $skills/safe-factory/SKILL.md | sed -n '2,/^---/p' | grep -q 'run-guard.sh" stop' || fail "no Stop hook in safe-factory's frontmatter"
+blob $skills/safe-factory/SKILL.md | sed -n '2,/^---/p' | grep -q 'type: prompt' || fail "no Stop hook in safe-factory's frontmatter"
 
 # Session binding: a step block binds a run in another repository; a plain session stays quiet.
 b=$w/g; mkdir -p "$b/a/.git" "$b/b/.factory"; printf '# Run: x · fast · change\nStatus: open\nNext: 3 Plan · get-ready-to-code\nWaiting: none\n\n## 0 Ticket ✔\n' > "$b/b/.factory/run.md"

@@ -4,9 +4,9 @@ description: "Delivers games, apps, services, tools and libraries end to end in 
 hooks:
   Stop:
     - hooks:
-        - type: command
-          command: sh "${CLAUDE_PLUGIN_ROOT}/skills/safe-factory/scripts/run-guard.sh" stop
-          timeout: 10
+        - type: prompt
+          prompt: 'One stop of a factory session. Input: $ARGUMENTS. Read last_assistant_message. Answer ok true if it contains "Factory check: may stop", or says it is blocked and names what blocks it. Otherwise answer ok false, reason: "Run the factory check in safe-factory, then do what it prints."'
+          timeout: 30
 ---
 
 # Safe Factory
@@ -82,7 +82,7 @@ Load  before █████ 800 ms
 
 ## Steps
 
-Live guard: one step per turn: load its skill, do that step's own work with fresh reading, searching or running, post its block as last message, update run file, end turn. Stop guard then sends next prompt. Step 5 takes one todo per turn. Host without hooks: Fast chains steps in one turn, never ending one open with `Waiting: none`; Safe ends each with `Say go for step <n>`. Before each step load its skill fresh (skill command or file), even one read earlier. Same skill as last step: rereading this step's section is enough.
+Live guard: one step per turn: load its skill, do that step's own work with fresh reading, searching or running, post its block as last message, update run file, end turn. Stop guard then sends next prompt; told to run the factory check: `sh "${CLAUDE_SKILL_DIR}/scripts/run-guard.sh" check ${CLAUDE_SESSION_ID}`, do what it prints, and end a turn on purpose only by quoting its `may stop` line (set `Waiting:` first). Step 5 takes one todo per turn. Host with no Stop hook of any kind: Fast chains steps in one turn, never ending one open with `Waiting: none`; Safe ends each with `Say go for step <n>`. Before each step load its skill fresh (skill command or file), even one read earlier. Same skill as last step: rereading this step's section is enough.
 
 Each step ends with its block: post full block as own chat message opening with its heading (never summary, never only a file or tool output), then write to run file. Fold in any owner reply before next step reads it. Ticket gets a comment only on status change (steps 0, 5, 7 and 8) or relay, linking run file's blocks.
 

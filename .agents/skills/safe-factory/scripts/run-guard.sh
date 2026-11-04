@@ -7,8 +7,17 @@
 # a step block names. A bound session reaches a run anywhere; an unbound one with no run exits at once.
 # Its own state lives in .factory/guard/; proof comes from files the host writes, never from run-file text alone.
 #   clear    the owner's command after a halt (clear <run folder>): the guard drives the run again, loop caps count from here.
+#   check    a host with no command hook: the method runs it (check <session id>); same rules as stop, as one plain line.
 export LC_ALL=C  # bytes, not characters: a UTF-8 sed stops at a 4-byte emoji and leaks the input into the state
 mode=${1:-stop}
+if [ "$mode" = check ]; then  # plays the Stop event from the session's files; the step just ticked counts as posted, its block ends this turn
+  tp=$(ls "${CLAUDE_CONFIG_DIR:-$HOME/.claude}"/projects/*/"$2.jsonl" 2>/dev/null | head -n 1)
+  lh=$(sed -n 's/^## \([0-8]b\{0,1\}\) .*✔.*/\1/p' .factory/run.md 2>/dev/null | tail -n 1)
+  o=$(printf '{"session_id":"%s","cwd":"%s","transcript_path":"%s","last_assistant_message":"## %s "}' "$2" "$PWD" "$tp" "$lh" | sh "$0" stop)
+  o=$(printf '%s' "$o" | sed 's/^{"decision":"block","reason":"\(.*\)"}$/\1/; s/^{"systemMessage":"\(.*\)"}$/\1/')
+  case $o in '') echo 'Factory check: may stop' ;; 'Factory run idle'* | 'Factory run halted'* | 'Factory run relayed'*) printf 'Factory check: may stop. %s\n' "$o" ;; *) printf 'Factory check: continue. %s\n' "$o" ;; esac
+  exit 0
+fi
 self=$0; case $self in *run-guard.sh) ;; *) self=${g:-run-guard.sh} ;; esac  # an older plugin hook sourced it from $g
 self=$(printf '%s' "$self" | tr '\\' /)  # a Windows path's backslashes would break the JSON replies
 in=; [ "$mode" = clear ] || in=$(cat)
