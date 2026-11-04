@@ -60,7 +60,7 @@ Fill project's PR template first, then use these blocks inside it. Skip what doe
 **Video:** [<journey through its result, 00:00-00:35>](https://<host>/<journey>.mp4)
 ```
 
-- Compare variants across dimensions in a table; mark what is new.
+- Variants: table across dimensions; mark what is new.
 - Monospace diagrams in code blocks. Bold only key terms.
 
 ## Writing rules

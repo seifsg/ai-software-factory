@@ -13,7 +13,7 @@ has() { t=$1; shift; grep -qs -- "$t" "$@"; }  # has <text> <files...>: any file
 cfg=${CLAUDE_CONFIG_DIR:-$HOME/.claude}
 # 1. The run: open, not waiting on the owner.
 grep -q '^Status: open' "$run" 2>/dev/null && say ok 'run file open' || say MISSING "open run file $run"
-grep -q '^Waiting: owner' "$run" 2>/dev/null && say MISSING 'the run waits on the owner: answer first'
+sed -n '/^Waiting: /{p;q;}' "$run" 2>/dev/null | grep -q '^Waiting: owner' && say MISSING 'the run waits on the owner: answer first'
 # 2. The guard is wired for this host.
 if [ "$host" = claude ]; then
   { has safe-factory/scripts/run-guard.sh "$cfg/settings.json" "$P/.claude/settings.json" "$P/.claude/settings.local.json" || has 'safe-factory@' "$cfg/settings.json"; } \

@@ -1,6 +1,6 @@
 # Ticket layout
 
-Brief words, full meaning. Human or fresh agent must understand ticket without the chat.
+Brief words, full meaning. Human or fresh agent must understand ticket without chat.
 
 **Title:** concrete change + outcome, reader's language; explain needed jargon.
 

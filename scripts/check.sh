@@ -110,20 +110,25 @@ full() {
 all='0 1 2 2b 3 4 5 6 7 8'
 for x in '**Waiting:** none' '- Waiting: none' ''; do hd "$x"; case $(hs) in *'"decision":"block"'*'Waiting: none'*) ;; *) fail "a Waiting line reading '$x' let the agent stop" ;; esac; done
 hd 'Waiting: none'; printf 'Waiting: owner: old\n' >> "$h/.factory/run.md"; [ -n "$(hs)" ] || fail "an old Waiting line in a block let the agent stop"
+hd '**Waiting:** none'; printf '## 0 Ticket\nWaiting: owner: old\n' >> "$h/.factory/run.md"; case $(hs) in *'header is wrong'*) ;; *) fail "a body Waiting line stood in for a misspelled header" ;; esac
 hd '**Waiting:** none'; hs >/dev/null; case $(hs true) in *idle*) ;; *) fail "the loop guard no longer ends an idle run" ;; esac
 for x in 'Waiting: owner: q' 'Waiting: jobs: x (max 9 min)'; do hd "$x"; [ -z "$(hs)" ] || fail "'$x' did not end the turn"; done
 rm -rf "$h/.factory/guard"; full "$all"; [ -z "$(hs)" ] || fail "a proven run with no remote did not finish"
 git -C "$h" -c user.name=t -c user.email=t@t -c commit.gpgsign=false commit -q --allow-empty -m later; [ -z "$(hs)" ] || fail "a finished closed run was asked again after its checkout moved on"
-printf '# Run: x\nStatus: closed\nNext: none (closed)\nWaiting: none\n\n## 0 Ticket ✔\n' > "$h/.factory/run.md"; case $(hs) in *'"decision":"block"'*) ;; *) fail "a closed run with no gates in a used checkout passed" ;; esac
+sed 's/^Status: closed/Status: open/' "$h/.factory/run.md" > "$h/n" && mv "$h/n" "$h/.factory/run.md"; hs >/dev/null; sed 's/^Status: open/Status: closed/' "$h/.factory/run.md" > "$h/n" && mv "$h/n" "$h/.factory/run.md"; case $(hs) in *'"decision":"block"'*) ;; *) fail "a reopened run kept its old finish" ;; esac
+printf '# Run: x\nStatus: closed\nNext: none (closed)\nWaiting: none\n\n## 0 Ticket ✔\n' > "$h/.factory/run.md"; rm -rf "$h/.factory/guard"; case $(hs) in *'says closed'*'Do only'*) fail "the closed-run reply kept the step tail" ;; *'says closed'*) ;; *) fail "a closed run with no gates in a used checkout passed" ;; esac
 printf '# Run: x\nStatus: open\nNext: 5 Build · get-ready-to-code\nWaiting: none\n\n## 3 Plan ✔\n' > "$h/.factory/run.md"; rm -rf "$h/.factory/guard"; case $(hs) in *'Steps not ticked: 0,1,2,2b'*) ;; *) fail "a step skipped before the plan was not named" ;; esac
 rm -rf "$h/.factory/guard"; full '0 1 2 2b 3 4 6 7 8'; case $(hs) in *'Steps not ticked: 5'*) ;; *) fail "a skipped step was not named" ;; esac
 sed 's/^Waiting: none/Waiting: owner: q/' "$h/.factory/run.md" > "$h/n" && mv "$h/n" "$h/.factory/run.md"; case $(hs) in *'Steps not ticked: 5'*) ;; *) fail "a wait hid a skipped step" ;; esac
-[ -z "$(hs true)" ] || fail "a wait with a skipped step never released"
+[ -z "$(hs true)" ] && [ -z "$(hs)" ] || fail "a wait with a skipped step never released"
 rm -rf "$h/.factory/guard"; full "$all"; awk 'BEGIN { for (i = 0; i < 31; i++) printf "ten chars "; print "" }' >> "$h/.factory/run.md"; case $(hs) in *'over 300 characters'*) ;; *) fail "a wall of text passed" ;; esac
 L=$(awk 'BEGIN { for (i = 0; i < 31; i++) printf "ten chars " }')
 hd 'Waiting: none'; printf '| %s |\n' "$L" >> "$h/.factory/run.md"; case $(hs) in *'over 300'*) fail "a long table row was refused" ;; esac
 hd 'Waiting: none'; printf '%s\n%s\n%s\n' '```' "$L" '```' >> "$h/.factory/run.md"; case $(hs) in *'over 300'*) fail "a long line in a fence was refused" ;; esac
 hd 'Waiting: none'; printf '%s\n%s\n' '```' "$L" >> "$h/.factory/run.md"; case $(hs) in *'over 300'*) ;; *) fail "an unclosed fence hid a wall of text" ;; esac
+hd 'Waiting: none'; printf '  %s\n  %s\n  %s\n' '```' "$L" '```' >> "$h/.factory/run.md"; case $(hs) in *'over 300'*) fail "a long line in an indented fence was refused" ;; esac
+hd 'Waiting: none'; printf '%s\n%s\n%s\n%s\n' '```' "$L" '```' '```' >> "$h/.factory/run.md"; case $(hs) in *'over 300'*) fail "a closed fence was refused for a later open one" ;; esac
+hd 'Waiting: none'; hs >/dev/null; printf '## 0 Ticket ✔\n## 1 Analyze ✔\n## 2 Recommend ✔\n%s\n' "$L" >> "$h/.factory/run.md"; case $(hs) in *Batched*) ;; *) fail "a long line hid a batched turn" ;; esac
 hd 'Waiting: none'; awk 'BEGIN { for (i = 0; i < 110; i++) printf "█"; print "" }' >> "$h/.factory/run.md"; case $(hs) in *'over 300'*) fail "the line limit counted bytes" ;; esac
 rm -rf "$h/.factory/guard"; git -C "$h" remote add origin "$h/none.git"; full "$all"; case $(hs) in *'"decision":"block"'*'Gate C'*) ;; *) fail "an unpushed head with a remote passed Gate C" ;; esac
 hs >/dev/null; git -C "$h" remote remove origin; case $(hs) in *'"decision":"block"'*'Gate C'*) ;; *) fail "removing the remote skipped Gate C's push" ;; esac

@@ -142,7 +142,7 @@ Lenses may run as isolated parallel reviewers. Give each: scope, baseline, raw e
 
 ### Scale to the change
 
-- Bounded fix: one independent reviewer covers changed lines, surrounding code, consumers and applicable lenses together. No whole-project audit, alternative designs or unrelated fixes.
+- Bounded fix: one independent reviewer covers changed lines, surrounding code, consumers and applicable lenses. No whole-project audit, alternative designs or unrelated fixes.
 - Update to reviewed change: review delta and its consumers; carry unresolved earlier findings. Do not re-audit accepted code.
 - Repeat checks only for changed code or inputs, failures or unresolved concerns.
 - State exact verdict scope. Narrow review never approves an unreviewed whole.
@@ -162,7 +162,7 @@ Scope also names baseline, lenses run and verdict scope; `### Unknowns` (require
 - Confidence: HIGH / MED / LOW.
 - Load-bearing code is not over-engineering: mark **KEEP** with reason.
 - Edge-case fix: at root cause, first rung that fits (impossible by design; normalized or rejected loudly at entry; specified, logged behavior); state beyond data, config and platform in use: one loud assertion. One cause, one finding.
-- Out-of-scope opportunities: list as notes, not findings.
+- Out-of-scope opportunities: notes, not findings.
 - Clean pass is valid. Invent no findings.
 
 ### Verdict

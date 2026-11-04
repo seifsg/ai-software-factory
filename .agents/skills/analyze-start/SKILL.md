@@ -13,7 +13,7 @@ Analysis only. Learn the feature, task or PR end to end, then explain it so a te
 
 0. **Start from the inputs.** Read the ticket (requested items, criteria), any kickoff research and an owner-named size; know which step this is and what comes next.
 1. **Learn it.** Read the feature or PR and everything it touches. Follow the code, not the summary. Skim what doesn't matter; focus on core logic.
-2. **Explain it back.** Own words: what it does, why it exists, what success means. New product or feature: who uses it, the jobs they need done, each requested item mapped to what it needs, and the non-functional needs (speed, accessibility, security). Why stated nowhere: say so; no rationale is a finding.
+2. **Explain it back in full detail.** Own words: what it does, why it exists, what success means. New product or feature: who uses it, the jobs they need done, each requested item mapped to what it needs, and the non-functional needs (speed, accessibility, security). Why stated nowhere: say so; no rationale is a finding.
 3. **Map every call site.** Everywhere this code is called, used or depended on: callers, consumers, route/DTO/schema references, event names, storage keys, tests. List with paths; regression review builds on it. Prefer search and reading over assumption.
 4. **Draw ASCII charts.** Flow and architecture, trigger → layers → data/persistence → result; mark where the change sits.
 

@@ -27,13 +27,14 @@ old() { [ -n "$(find "$1" -mmin +"$2" 2>/dev/null)" ]; }  # file older than $2 m
 # Ends: notify once, start nothing.
 if grep -qE '^Status: (closed|stopped)' "$run" || [ "$g_end" = done ]; then notify done 'done; see the draft PR in .factory/run.md.'; exit 0; fi
 [ -n "$g_halt" ] && { notify halt "halted ($g_halt); the packet is in .factory/run.md."; exit 0; }
-grep -q '^Waiting: owner' "$run" && { notify owner "waiting on the owner: $(sed -n 's/^Waiting: owner: *//p' "$run" | head -n 1)"; exit 0; }
+wl=$(sed -n '/^Waiting: /{p;q;}' "$run")  # the header line: an old question in a block is no wait
+case $wl in 'Waiting: owner'*) notify owner "waiting on the owner: ${wl#Waiting: owner: }"; exit 0 ;; esac
 [ -n "$w_notified" ] && { w_notified=; save; }  # running again: the next end notifies anew
 # A guard that stopped firing while the run file moves: the hooks are off.
 [ -f "$st" ] && [ "$run" -nt "$st" ] && old "$st" "$silent" && ! old "$run" "$stall" && { notify hooks "the run file changes but the guard has not run for $silent min: check the hooks."; exit 0; }
 [ "$now" -lt "${w_backoff_until:-0}" ] && { say "backing off until $(date -d "@$w_backoff_until" '+%H:%M' 2>/dev/null || echo "$w_backoff_until")"; exit 0; }
 # A background job inside its deadline: its result wakes the session; past it, the resume asks about it.
-max=$(sed -n 's/^Waiting: jobs:.*(max \([0-9][0-9]*\) min).*/\1/p' "$run" | head -n 1)
+max=$(printf '%s\n' "$wl" | sed -n 's/^Waiting: jobs:.*(max \([0-9][0-9]*\) min).*/\1/p')
 [ -n "$max" ] && [ "$now" -lt $(( ${g_jobs_since:-0} + max * 60 )) ] && { say 'waiting on a job inside its deadline'; exit 0; }
 # Still working: the run file, the transcript or one of its subagents moved recently.
 busy() { [ -n "$g_transcript" ] && [ -n "$(find "$g_transcript" "${g_transcript%.jsonl}" -type f -mmin -"$stall" 2>/dev/null | head -n 1)" ]; }

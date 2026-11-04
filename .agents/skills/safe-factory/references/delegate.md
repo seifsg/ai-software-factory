@@ -44,7 +44,7 @@ G3 MANUAL <outcome>: <what the reviewer judges>
 - Large spec: analyst returns focused briefs with required rules and affected paths.
 - Change smaller than its brief stays local.
 - Only the coordinator spawns, and a reviewer its lens agents; extra agents need `too-big. split:`.
-- Preserve early groundwork (`left:`) in the next brief.
+- Keep early groundwork (`left:`) in next brief.
 
 ## Tier
 

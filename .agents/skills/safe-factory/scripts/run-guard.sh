@@ -117,7 +117,7 @@ $(cd "$ev" && awk -v R="$run" -v lh="$lh" -v fb=$fb -v nov=$nov -v head="$head" 
   }
   FILENAME == R {
     if (/^Status: stopped/) s = 1
-    if (/^Waiting: / && !hw++) {  # the header line: an old question in a block decides nothing
+    if (!sec && /^Waiting: / && !hw++) {  # the header line: an old question in a block decides nothing
       if (/^Waiting: owner/) o = 1
       if (/^Waiting: jobs:/) { j = 1; if (match($0, /\(max [0-9]+ min\)/)) jm = substr($0, RSTART + 5, RLENGTH - 10) + 0 }
     }
@@ -128,7 +128,7 @@ $(cd "$ev" && awk -v R="$run" -v lh="$lh" -v fb=$fb -v nov=$nov -v head="$head" 
     if (n == "" && match($0, /^Next: *[0-8]b? [A-Za-z]+ · [a-z-]+/)) { n = substr($0, RSTART, RLENGTH); sub(/^Next: */, "", n) }
     if (/^Gate [ABC]: PASS \(checker [^ )]+\) @[0-9a-f]+/) { x = substr($0, 6, 1); gid[x] = $5; sub(/\)$/, "", gid[x]); gsha[x] = at($6); want[gid[x]] = 1 }
     if (/^## /) sec = $2
-    if (/^ *```/) fc = !fc
+    if (/^ *```/) { if (fc) lf = ""; fc = !fc }  # a closed fence exempts what it held
     else if (!/^ *\|/ && length($0) > 300) {  # a wall of text: characters, so UTF-8 continuation bytes do not count
       x = $0; gsub(/[\200-\277]/, "", x)
       if (length(x) > 300) { if (fc) lf = lf "," FNR; else ll = ll (ll == "" ? "" : ",") FNR }
@@ -255,8 +255,8 @@ save
 # Only a real wait stops a run: any other Waiting spelling is driven. A wait never hides a skipped step: one block, then it holds.
 if [ "$waiting" != 1 ]; then
   [ -n "$skip" ] || exit 0
-  [ -f "$g/nudge" ] && [ ! "$run" -nt "$g/nudge" ] && exit 0
-  : > "$g/nudge"
+  [ "$skip" = "$(cat "$g/skipwait" 2>/dev/null)" ] && exit 0  # one block per set of skipped steps
+  printf '%s' "$skip" > "$g/skipwait"
   printf '{"decision":"block","reason":"If this session runs the factory run in '"$rf"': Steps not ticked: %s. Do each now, in order, or name them in Waiting: owner: only the owner skips a step."}\n' "$skip"
   exit 0
 fi
@@ -311,6 +311,6 @@ else
     '') grep -q '^Status: closed' "$run" && todo='This run says closed but its gates and review are not proven here. Set `Status: open` with a real `Next:`, or `Status: stopped (<reason>)`.' || todo='Run file header is wrong. Fix these lines, spelled exactly: `Status: open`, `Next: <step> <name> · <skill>`, `Waiting: none`. Then do that step.' ;;
     *) todo="Next: $next. Load that skill fresh." ;;
   esac
-  [ "${next%% *}" = 5 ] || todo="$todo Do only this step: post its full block as your last message, update $run (tick, Next), then end your turn."
+  case ${next%% *}:$todo in 5:* | *:'This run says closed'*) ;; *) todo="$todo Do only this step: post its full block as your last message, update $run (tick, Next), then end your turn." ;; esac
 fi
 printf '{"decision":"block","reason":"If this session runs the factory run in '"$rf"': %s%s Ending on purpose? Set Waiting: owner: <question> or Waiting: jobs: <what runs> (max <minutes> min)."}\n' "$todo" "${note:+ Note: $note}"
