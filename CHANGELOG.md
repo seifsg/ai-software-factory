@@ -8,6 +8,7 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ### Added
 
+- Let a run the owner keeps local finish with no PR ([#290])
 - Add one clean format for run files, chat blocks and handbacks: short lines, tables, ASCII graphs, status marks, optional linked visuals ([#290])
 
 ### Changed
@@ -16,6 +17,7 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ### Fixed
 
+- Fix the guard doing nothing under the awk macOS ships: every stop passed silently, so no step or gate was enforced ([#290])
 - Fix a misspelled or missing `Waiting:` line letting an agent stop silently: the guard drives the run and shows the exact header ([#290])
 - Fix a skipped step going unnoticed: the guard names it, and a run cannot finish with one ([#290])
 - Fix walls of text in the run file: the guard names any line over 300 characters ([#290])
