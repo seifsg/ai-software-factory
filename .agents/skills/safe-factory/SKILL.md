@@ -39,7 +39,7 @@ Build systems that outlast their creator. No breakage.
 | `feature` | big feature with product choices | same |
 | `change` | bug fix, small change, follow-up, factory maintenance | none; every block stays short |
 
-Every run keeps project rules and never puts secrets in code or Git. Build what asked, best quality. Never assume a size (POC, MVP) the owner did not name: [sizes](references/sizes.md).
+Every run keeps project rules and never puts secrets in code or Git. Never assume a size (POC, MVP) the owner did not name: [sizes](references/sizes.md).
 
 ## The run file
 
@@ -78,7 +78,7 @@ Load  before █████ 800 ms
 
 Live guard: one step per turn: load its skill fresh, even if read earlier (same skill: reread its section), do that step's work, read, search or run fresh, update run file, then load `stop-check` and post its block or todo line as last message, end turn. Any stop, even a wait, spends it. Stop guard sends next step. Check asked: in run's folder, `sh "${CLAUDE_SKILL_DIR}/scripts/run-guard.sh" check ${CLAUDE_SESSION_ID}`, do what it prints; to stop, set `Waiting:`, then quote its `may stop` line, only then. End turns on a block or todo line, each number once: else run ends. Step 5 takes one todo per turn. Host with no Stop hook: Fast chains steps in one turn, never ending one open with `Waiting: none`; Safe ends each with `Say go for step <n>`.
 
-Each step ends with its block: write to run file, then post full block as own chat message opening with its heading (never summary, never only a file or tool output). Fold in any owner reply before next step reads it. Ticket gets a comment only on status change (steps 0, 5, 7, 8) or relay, linking run file's blocks.
+Each step ends with its block: post full block as own chat message opening with its heading (never summary, never only a file or tool output). Fold in any owner reply before next step reads it. Ticket gets a comment only on status change (steps 0, 5, 7, 8) or relay, linking run file's blocks.
 
 | Step | Skill | Block |
 |---|---|---|
@@ -139,7 +139,7 @@ After steps 3, 6 and 8, start the [checker](references/checker.md): a fresh ligh
 1. Continue to agreed outcome. Defer only what needs owner's hands or missing hardware. Pause dependent work only for: missing access or tools after real discovery, owner-reserved decisions, a gate you cannot repair, explicit owner stop. Keep independent work moving.
 2. Discover before asking: files, config, run files, integrations, current docs.
 3. Never invent identities, commands, access, status or evidence. A host, path, command, version or status written anywhere is a claim: test before use or report. A stand-in proves only itself. Unverified means this machine cannot run the check, never that you skipped it.
-4. Retry only with diagnosed cause or new evidence. Second related failure: find shared cause and why last fix failed, fix cause and its consumers, state what prevents recurrence.
+4. Retry only with diagnosed cause or new evidence.
 5. Reconcile uncertain pushes, comments and other external effects before retrying. No duplicates.
 6. Notify, merge, release, deploy and spend only with explicit authority. PRs stay draft.
 7. Stop only processes you started; graceful first. Anything outside project folder needs owner's approval.

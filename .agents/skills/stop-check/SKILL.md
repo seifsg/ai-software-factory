@@ -5,7 +5,9 @@ hooks:
   Stop:
     - hooks:
         - type: prompt
-          prompt: 'Stop: $ARGUMENTS. Answer ok false only if last_assistant_message: 1. opens with a step heading (## then a step number) or T<n> pre: line whose number no earlier message opened with, and lacks "Factory check: may stop": reason "Run the factory check." 2. has a new Gate or Review line lacking backing (delegate handback; waiver: owner message; cap: 3 failed handbacks): reason "Run that delegate." Anything else: ok true.'
+          prompt: 'Stop: $ARGUMENTS. Answer ok false only if last_assistant_message opens with a step heading (## then a step number) or T<n> pre: line whose number no other message opened with, and lacks "Factory check: may stop": reason "Run the factory check." Anything else: ok true.'
+        - type: prompt
+          prompt: 'Stop: $ARGUMENTS. Answer ok false only if last_assistant_message has a new Gate or Review line lacking backing (only another message counts: delegate handback; waiver: user message granting it; cap: 3 failed handbacks): reason "Run that delegate." Anything else: ok true.'
 ---
 
 Armed.
