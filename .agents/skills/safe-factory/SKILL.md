@@ -57,7 +57,7 @@ Run file, chat blocks, handbacks. Caveman: short words, every fact kept.
 - `**Label:**` then value or bullets. Same fields on 2+ things: table.
 - Flow or state: ASCII in a `text` fence. Numbers: bars.
 - Marks: ✅ done, ❌ failed, ⚠️ risk, ⏳ waiting.
-- Lines hooks read stay bare, no bold, bullet or mark: `Status:`, `Next:`, `Waiting:`, `Gate`, `Review:`, `Left running:`, `CRITICAL:`, step headings.
+- Lines hooks read stay bare, no bold, bullet or mark: `Status:`, `Next:`, `Waiting:`, `Gate`, `Review:`, `Left running:`, `CRITICAL:`, step headings, `T<n> pre:`.
 - Richer visual: host artifact or `.factory/visuals/<step>-<name>.html`, linked; block alone holds every fact.
 
 ````text
@@ -76,9 +76,9 @@ Load  before █████ 800 ms
 
 ## Steps
 
-Live guard: one step per turn: load its skill, do that step's own work with fresh reading, searching or running, post its block as last message, update run file, end turn. Stop guard sends next step. Check asked: from run's folder, `sh "${CLAUDE_SKILL_DIR}/scripts/run-guard.sh" check ${CLAUDE_SESSION_ID}`, do what it prints; to stop, set header's `Waiting:`, then quote its `may stop` line, only then. End turns on a block or todo line: else run ends. After any stop load `stop-check`. Step 5 takes one todo per turn. Host with no Stop hook: Fast chains steps in one turn, never ending one open with `Waiting: none`; Safe ends each with `Say go for step <n>`. Before each step load `stop-check`, then its skill fresh, even if read earlier. Same skill as last step: rereading this step's section is enough.
+Live guard: one step per turn: load its skill fresh, even if read earlier (same as last step: reread its section), do that step's work, reading, searching or running fresh, update run file, then load `stop-check` and post its block or todo line as last message, end turn. Any stop, even a wait, spends it. Stop guard sends next step. Check asked: from run's folder, `sh "${CLAUDE_SKILL_DIR}/scripts/run-guard.sh" check ${CLAUDE_SESSION_ID}`, do what it prints; to stop, set header's `Waiting:`, then quote its `may stop` line, only then. End turns on a block or todo line: else run ends. Step 5 takes one todo per turn. Host with no Stop hook: Fast chains steps in one turn, never ending one open with `Waiting: none`; Safe ends each with `Say go for step <n>`.
 
-Each step ends with its block: post full block as own chat message opening with its heading (never summary, never only a file or tool output), then write to run file. Fold in any owner reply before next step reads it. Ticket gets a comment only on status change (steps 0, 5, 7, 8) or relay, linking run file's blocks.
+Each step ends with its block: write to run file, then post full block as own chat message opening with its heading (never summary, never only a file or tool output). Fold in any owner reply before next step reads it. Ticket gets a comment only on status change (steps 0, 5, 7, 8) or relay, linking run file's blocks.
 
 | Step | Skill | Block |
 |---|---|---|
@@ -154,7 +154,7 @@ After steps 3, 6 and 8, start the [checker](references/checker.md): a fresh ligh
 
 ## Resume
 
-Read run file and ticket, load `stop-check` and `Next:` skill fresh, continue there. Outside run's folder: first turn ends on a message opening with `Next:`'s heading and `**Workspace:**`. Run file and ticket disagree: test both against checkout, keep what holds; log correction in ticket's activity. `Next:` past a gate without its PASS: run that gate's checker first. Never restart a run.
+Read run file and ticket, load `Next:` skill fresh, continue there. Outside run's folder: first turn ends on a message opening with `Next:`'s heading and `**Workspace:**`. Run file and ticket disagree: test both against checkout, keep what holds; log correction in ticket's activity. `Next:` past a gate without its PASS: run that gate's checker first. Never restart a run.
 
 ## Factory fault
 

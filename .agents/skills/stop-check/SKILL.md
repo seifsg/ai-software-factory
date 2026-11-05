@@ -1,6 +1,6 @@
 ---
 name: stop-check
-description: "Arms a factory run's Stop check. Use only in a run, before each step."
+description: "Arms a factory run's Stop check. Only in a run, right before a block or todo line."
 hooks:
   Stop:
     - hooks:
