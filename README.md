@@ -151,7 +151,7 @@ Rules: [AGENTS.md](AGENTS.md). Changes go through `improve-factory`; checks: `sh
 ```text
 .agents/skills/                  the skills (canonical methods)
 .agents/agents/                  delegate roles for Claude Code (runner, analyst, maker, builder, reviewer, checker)
-.agents/skills/stop-check/       Claude Code's prompt Stop hook
+.agents/skills/stop-check/       Claude Code's prompt Stop hooks
 .agents/skills/safe-factory/     the coordinator; scripts/ holds the guard, update check, doctor
 .agents/hooks/portable.json      Stop guard, compact hook and update check (Codex, Cursor)
 tools/night/                     overnight runs, from a clone: night.sh, watchdog.sh, deny rules, pre-push
