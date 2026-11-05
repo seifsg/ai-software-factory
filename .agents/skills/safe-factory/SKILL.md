@@ -105,7 +105,7 @@ Only what those skills leave out:
 
 ## Gates
 
-After steps 3, 6 and 8, start the [checker](references/checker.md): a fresh light read-only delegate that gets only contracts and outputs, never your reasoning. Paste its PASS as `Gate A: PASS (checker <agent id>) @<sha>` (B, C), then go on; guard accepts it only when that checker's own handback says so; Gate C's commit is the pushed HEAD (no remote: HEAD).
+After steps 3, 6 and 8, start the [checker](references/checker.md): a fresh light read-only delegate that gets only contracts and outputs, never your reasoning. Paste its PASS as `Gate A: PASS (checker <agent id>) @<sha>` (B, C), then load `stop-check`, post block; guard accepts it only when that checker's own handback says so; Gate C's commit is the pushed HEAD (no remote: HEAD).
 
 - No source edit before Gate A passes (a background delegate may start Before captures during the Gate A turn); no PR before Gate B passes.
 - Paste only what a checker handed back, plus the id it started under; never write a gate line yourself, except a cap line or an owner's waiver (run file).
