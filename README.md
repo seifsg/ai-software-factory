@@ -85,25 +85,25 @@ Products and big features add `research-market` and kickoff questions at step 0;
 
 ## 🛡️ How it stays on track
 
-<img src="docs/assets/guard.svg" alt="Load the step's skill fresh, do the step, write its block to .factory/run.md, then the Stop guard sends the next step on the next turn. After compaction the compact hook re-injects Next. Gates A, B and C need a fresh checker's pass on the commit." width="100%">
+<img src="docs/assets/guard.svg" alt="Load the step's skill fresh, do the step, write its block to .factory/run.md, then the Stop guard sends the next step on the next turn. After compaction the next stop or a compact hook sends Next. Gates A, B and C need a fresh checker's pass on the commit." width="100%">
 
 Long runs lose skill text when the host compacts context. The factory works around it instead of hoping:
 
-- The run cannot close without step 8, three gates and a review, each proven by the host's record of that checker or reviewer on that commit; Gate C and the review on the pushed HEAD (no remote: HEAD).
-- Loops never stall: after 3 failed rounds with no open `CRITICAL:` line the gate or review passes by cap (`Gate X: PASS (cap, 3 rounds, no CRITICAL)`) and leftovers go to follow-ups; rounds 4-5 only while a `CRITICAL:` is open. After round 5, or 6 turns without progress, the guard halts the run with one packet for you. `sh run-guard.sh clear <run folder>` resumes it.
+- The run cannot close without step 8, three gates and a review; Gate C and the review on the pushed HEAD (no remote: HEAD). Claude Code: a small model judges each gate line from the conversation, and an agent could still fool it; the check tests that the line exists, and Gate C and the review on the pushed HEAD. Codex, Cursor and night runs: the host's record of that checker or reviewer on that commit proves it.
+- Loops never stall (counted on command-guard hosts; on plain Claude Code the agent keeps the count): after 3 failed rounds with no open `CRITICAL:` line the gate or review passes by cap (`Gate X: PASS (cap, 3 rounds, no CRITICAL)`) and leftovers go to follow-ups; rounds 4-5 only while a `CRITICAL:` is open. After round 5, or 6 turns without progress, the guard halts the run with one packet for you. `sh run-guard.sh clear <run folder>` resumes it.
 - Waiting on you is allowed (`Waiting: owner:`); waiting on background jobs needs a deadline (`(max <n> min)`), past which the guard wakes the run.
-- After two compactions the run moves to a fresh session that reads only the run file and the ticket.
-- The guard reads the run file and the run's subagent files: about 0.4 s per turn end with a run on Windows, nothing per tool call.
+- Codex, Cursor and night runs: after two compactions the run moves to a fresh session that reads only the run file and the ticket.
+- Claude Code: once the skill loads, a small model checks each turn end, and a session with no run spends one extra turn per message; the check script reads the run file and Git, never the conversation. Codex, Cursor and night runs: a command guard reads the run file and the run's subagent files, about 0.4 s per turn end on Windows. Nothing per tool call.
 
 ### 🌙 Overnight runs
 
-`night.sh` refuses to start unless the run can finish unattended (guard wired, deny rules, own branch, `pre-push` hook, push dry run, tracker sign-in), then starts a session that denies instead of prompting. Owner questions get recorded defaults, owner-only items are parked, and nothing leaves the machine but the run's branch, draft PR and tickets. A watchdog from the OS scheduler resumes a stalled run, waits out usage limits, starts relays and tells you once how it ended. Setup: [install](docs/install.md#overnight-runs).
+`tools/night/night.sh` refuses to start unless the run can finish unattended (guard wired, deny rules, own branch, `pre-push` hook, push dry run, tracker sign-in), then starts a session that denies instead of prompting. Owner questions get recorded defaults, owner-only items are parked, and nothing leaves the machine but the run's branch, draft PR and tickets. A watchdog from the OS scheduler resumes a stalled run, waits out usage limits, starts relays and tells you once how it ended. Setup: [install](docs/install.md#overnight-runs).
 
 Details: [run file](.agents/skills/safe-factory/references/run-file.md), [checker](.agents/skills/safe-factory/references/checker.md), [night mode](.agents/skills/safe-factory/references/night.md), [hosts](docs/hosts.md).
 
 ## 🔄 Update
 
-- Each session start checks for a newer release (cached, about 0.2 s on Windows) and says so before a run ([update check](docs/install.md#update-check)). It also lists leftovers of old versions; `doctor.sh --fix` moves them to a backup ([clean up](docs/install.md#clean-up-and-uninstall)).
+- A run's first step (Claude Code) or each session start (Codex, Cursor) checks for a newer release (cached, about 0.2 s on Windows) and says so before a run ([update check](docs/install.md#update-check)). It also lists leftovers of old versions; `doctor.sh --fix` moves them to a backup ([clean up](docs/install.md#clean-up-and-uninstall)).
 - **Claude Code:** `claude plugin update safe-factory@ai-software-factory`. Auto-update is off for third-party marketplaces: turn it on in `/plugin`, Marketplaces, `ai-software-factory`, Enable auto-update.
 - **Codex:** `codex plugin marketplace upgrade ai-software-factory`, then trust the hooks again in `/hooks`. Copied skills: `git -C <clone> pull`, copy again.
 - **Cursor:** Marketplace installs update by themselves; team imports do once an admin enables Auto Refresh. A GitHub install has no proven update path: Cursor staff advise against uninstalling and reinstalling, and report such installs stay on their first commit. Not run live.
@@ -150,13 +150,15 @@ Rules: [AGENTS.md](AGENTS.md). Changes go through `improve-factory`; checks: `sh
 ```text
 .agents/skills/                  the skills (canonical methods)
 .agents/agents/                  delegate roles for Claude Code (runner, analyst, maker, builder, reviewer, checker)
-.agents/hooks/hooks.json         compact hook and update check (Claude Code); the Stop guard is in safe-factory's frontmatter
+.agents/skills/safe-factory/     SKILL.md carries Claude Code's prompt Stop hook; scripts/ holds the guard, update check, doctor
 .agents/hooks/portable.json      Stop guard, compact hook and update check (Codex, Cursor)
+tools/night/                     overnight runs, from a clone: night.sh, watchdog.sh, deny rules, pre-push
 .agents/.claude-plugin/          plugin manifests (also .codex-plugin/, .cursor-plugin/); the plugin root is .agents/
 .claude-plugin/marketplace.json  the marketplace (Claude Code, Codex), pinned to the release tag
 .cursor-plugin/marketplace.json  the Cursor marketplace
 docs/                            install, hosts, releasing; docs/assets/ holds the README images
 CHANGELOG.md, UPGRADING.md       what changed per release, and what to do
+PRIVACY.md, SECURITY.md          what leaves your machine; how to report a vulnerability
 ```
 
 ## 📄 License

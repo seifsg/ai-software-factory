@@ -1,4 +1,6 @@
-# Shell scripts must keep LF endings on every checkout: POSIX sh fails on CRLF.
-*.sh text eol=lf
-.agents/hooks/pre-push text eol=lf
-*.cmd text eol=crlf
+# Scripts keep the line endings stored in Git on every checkout: POSIX sh fails on CRLF, cmd.exe needs it.
+# -text, not eol=: a clone must match the download, which Anthropic's directory checks.
+*.sh -text
+tools/night/pre-push -text
+*.cmd -text
+*.png -text

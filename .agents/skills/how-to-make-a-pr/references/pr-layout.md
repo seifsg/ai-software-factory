@@ -22,8 +22,6 @@ Fill project's PR template first, then use these blocks inside it. Skip what doe
 ## ✅ Verification        criterion → actual change → exact-candidate proof → gap
 ## 🚦 Progress / next     done, left, blockers, review state, human step
 ## 📝 Adjustment history  WHAT / WHY / WHO / result
----
-<credit line>           the last line, exactly as in credit.md
 ```
 
 - **Header:** credit requester and deciders; say who wrote the code (a person, or factory run for its owner); separate original work from port or adaptation.
@@ -70,7 +68,7 @@ Fill project's PR template first, then use these blocks inside it. Skip what doe
 - Specific nouns, active verbs, consistent terms, short bullets, narrow tables. Emojis only to label sections, aid scanning.
 - No invented facts, metrics, benefits, tests, visuals, authorship or consent; charts need measured values; screenshots show real, relevant proof. Label illustrative examples. Verify names, numbers, units, dates.
 - Fold long machine data; keep purpose, outcome, proof, gaps, next action visible.
-- Finishing pass: can a cold reader say what, why, before, after and next, open every outcome's proof, and find every requested detail?
+- Last look: can a cold reader say what, why, before, after and next, open every outcome's proof, and find every requested detail?
 
 ## Example
 
@@ -136,5 +134,3 @@ NEW settings/theme-save     single save path, returns error result
 
 - Draft; tests and independent review pending. A human decides ready and merge.
 
----
-<the credit line from credit.md>

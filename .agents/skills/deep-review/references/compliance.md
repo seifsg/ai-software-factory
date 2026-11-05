@@ -86,7 +86,7 @@ Proof must be bound to the reviewed candidate. Closed ticket, ready flag or gree
 
 ### Stats
 - Requirements: X met | X partial | X missing | X incorrect | X unclear | X drift
-- Rules: X pass | X fail | X unknown | X n/a
+- Rules: X met | X fail | X unknown | X n/a
 - Delta: X matched | X partial | X missing | X extra | X deviation
 - Confidence: HIGH / MEDIUM / LOW
 

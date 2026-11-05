@@ -2,6 +2,12 @@
 
 What installs and active runs must do for each release, newest first. What changed: [CHANGELOG.md](CHANGELOG.md).
 
+## Unreleased
+
+1. **Night and watchdog moved:** `night.sh`, `watchdog.sh`, `claude-settings.json`, `pre-push` and `codex.rules` are now in `tools/night/`. Update any schedule or copied path from `<clone>/.agents/hooks/` to `<clone>/tools/night/`.
+2. **Claude Code:** start a new session, then `/safe-factory:safe-factory Resume <folder>` for an open run. The hook is now a prompt; approve `run-guard.sh check` once with always allow. Remove any `Bash(sh *run-guard.sh check *)` rule you added: it is too wide.
+3. **Night or pre-push copies:** `doctor.sh` compares copies only from a clone. Copy `tools/night/pre-push` and `tools/night/codex.rules` again after an update.
+
 ## 0.6.0
 
 1. **Claude Code:** start a new session. Starting a run may ask once to allow the `safe-factory` skill; the allow rule `Skill(safe-factory:*)` skips it. Night mode needs nothing new. An open run: `safe-factory Resume <run folder>`.

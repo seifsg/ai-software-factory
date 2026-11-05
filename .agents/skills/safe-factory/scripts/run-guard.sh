@@ -7,18 +7,26 @@
 # a step block names. A bound session reaches a run anywhere; an unbound one with no run exits at once.
 # Its own state lives in .factory/guard/; proof comes from files the host writes, never from run-file text alone.
 #   clear    the owner's command after a halt (clear <run folder>): the guard drives the run again, loop caps count from here.
+#   check    a host with no command hook: the method runs it (check <session id>); stop's rules from the run file and Git, as one plain line: a gate line counts as text, rounds as zero.
 export LC_ALL=C  # bytes, not characters: a UTF-8 sed stops at a 4-byte emoji and leaks the input into the state
 mode=${1:-stop}
+if [ "$mode" = check ]; then
+  # Plays the Stop event from the run file and Git alone: never a transcript, so gate lines count as text and the Stop hook's evaluator judges them.
+  o=$(printf '{"session_id":"%s","cwd":"%s"}' "$2" "$(pwd)" | sh "$0" stop)
+  o=$(printf '%s' "$o" | sed 's/^{"decision":"block","reason":"\(.*\)"}$/\1/; s/^{"systemMessage":"\(.*\)"}$/\1/')
+  case $o in '') [ -f .factory/run.md ] && echo 'Factory check: may stop. The Stop check ends with this stop: on the next message, before anything else, load the safe-factory skill again, or the run goes unguarded.' || echo 'Factory check: may stop. No run file in this folder: if this session has a run, go to its folder and check again.' ;; 'Factory run idle'* | 'Factory run halted'* | 'Factory run relayed'*) printf 'Factory check: may stop. %s\n' "$o" ;; *) printf 'Factory check: continue. %s\n' "$o" ;; esac
+  exit 0
+fi
 self=$0; case $self in *run-guard.sh) ;; *) self=${g:-run-guard.sh} ;; esac  # an older plugin hook sourced it from $g
 self=$(printf '%s' "$self" | tr '\\' /)  # a Windows path's backslashes would break the JSON replies
 in=; [ "$mode" = clear ] || in=$(cat)
 val() { printf '%s' "$in" | sed -n "s/.*\"$1\": *\"\([^\"]*\)\".*/\1/p" | head -n 1; }  # one JSON string field
-# Walk from the session's folder (input cwd), else $PWD: a hook may start elsewhere, as in desktop worktree sessions.
+# Walk from the session's folder (input cwd), else this folder: a hook may start elsewhere, as in desktop worktree sessions.
 c=${in#*\"cwd\":}; [ "$c" = "$in" ] || { c=${c#*\"}; c=${c%%\"*}; cd "$c" 2>/dev/null; }  # no fork: runs at every turn end; Git Bash cd takes JSON's G:\\x
 [ "$mode" = clear ] && [ -n "$2" ] && { cd "$2" || exit 1; }
-# Nearest run file inside this checkout, stopping at the checkout or drive root (C: too). No fork.
+# Nearest run file inside this checkout, stopping at the checkout or drive root (C: too).
 walk() {
-  d=$PWD
+  d=$(pwd)
   while [ ! -f "$d/.factory/run.md" ]; do
     { [ -e "$d/.git" ] || [ "$d" = "${d%/*}" ]; } && { d=; return; }
     d=${d%/*}
@@ -45,7 +53,7 @@ d= bad=
 [ -z "$bad$d" ] && [ -n "$s" ] && [ -f "$b" ] && { read -r d < "$b"; [ -f "$d/.factory/run.md" ] || d=; }
 [ -n "$d" ] || walk
 if [ -z "$d" ]; then
-  [ "$mode" = clear ] && { echo "run-guard: no run file here; pass its folder: clear <run folder>" >&2; exit 1; }
+  [ "$mode" = clear ] && { echo "run-guard: no run file here; give its folder: clear <run folder>" >&2; exit 1; }
   [ -n "$h" ] && [ "$mode" = stop ] || exit 0  # no step block either: not a factory session
   case $in in
     *\"stop_hook_active\":true* | *\"stop_hook_active\":\ true*) printf '{"systemMessage":"Factory step block posted, but no usable run file found: this run may have no guard."}\n' ;;
@@ -63,15 +71,15 @@ sid=$(val session_id) tp=$(val transcript_path | sed 's/\\\\/\//g' | tr -d "'") 
 # State: single-quoted g_* lines only the guard writes, counters digits only, no $ or backquote anywhere.
 # Anything else is never sourced: the run halts until the owner clears it (a lost state halts the same way).
 note=
-num='ticks|seen|night_until|sig|idle|base_[ABCR]|sstep|rstep|compacts|jobs_since|jobs_key|clear'
+num='ticks|seen|night_until|sig|idle|base_[ABCR]|sstep|rstep|compacts|jobs_[a-z]*|clear'
 if [ -f "$st" ]; then
   if grep -qvE "^g_($num)='[0-9]*'\$|^g_(session|sessions|transcript|halt|end|relay|csession)='[^'\$\`]*'\$" "$st"; then note='guard state was edited outside the guard'; else . "$st"; fi
 fi
 ns=; [ -f "$st" ] || ns=1
 [ -f "$run.ticks" ] && { g_ticks=$(cat "$run.ticks"); rm -f "$run.ticks" "$run.nudge"; }  # state of an older guard
 case $sid in '' | *[!A-Za-z0-9_-]*) ;; *) case " $g_sessions " in *" $sid "*) ;; *) g_sessions="${g_sessions:+$g_sessions }$sid" ;; esac ;; esac
-keys='ticks session sessions transcript seen night_until sig idle halt end clear base_A base_B base_C base_R sstep relay rstep compacts csession jobs_since jobs_key'
-save() { mkdir -p "$g" && for k in $keys; do eval "printf \"g_%s='%s'\\n\" $k \"\$g_$k\""; done > "$st"; }
+fields='ticks session sessions transcript seen night_until sig idle halt end clear base_A base_B base_C base_R sstep relay rstep compacts csession jobs_since jobs_id'
+save() { mkdir -p "$g" && for k in $fields; do eval "printf \"g_%s='%s'\\n\" $k \"\$g_$k\""; done > "$st"; }
 if [ "$mode" = clear ]; then  # also ends night mode: the owner is back; keeps the run's sessions for gate proof
   [ -n "$g_sessions" ] || g_sessions=$(sed -n "s/^g_sessions='\([A-Za-z0-9_ -]*\)'\$/\1/p" "$st" 2>/dev/null)
   g_halt= g_end= g_idle=0 g_clear=1 g_night_until=0; save
@@ -93,7 +101,7 @@ head=$(git -C "$d" rev-parse HEAD 2>/dev/null) up=$(git -C "$d" rev-parse '@{u}'
 if [ -n "$up" ] || [ -n "$(git -C "$d" remote 2>/dev/null)" ]; then { [ -f "$g/remote" ] || [ ! -d "$g" ] || : > "$g/remote"; }
 elif [ ! -f "$g/remote" ]; then up=$head; fi  # no remote, ever: nothing to push to. A branch never pushed still has one
 night=0; [ "${g_night_until:-0}" -gt 0 ] 2>/dev/null && night=1
-# One awk pass over the run file and the evidence files. Only a strict "<step> <name> · <skill>" Next value
+# One awk run over the run file and the evidence files. Only a strict "<step> <name> · <skill>" Next value
 # is kept for the reply. The step is the later of Next and the last ticked heading, so a malformed Next never
 # skips a gate. gate: the first gate the run has reached without proof; R: step 8 without a proven review.
 read -r stopped waiting finished ticks gate sig jobs jmax crit fA fB fC fR unp skip long step next <<EOF
@@ -107,7 +115,7 @@ $(cd "$ev" && awk -v R="$run" -v lh="$lh" -v fb=$fb -v nov=$nov -v head="$head" 
     return kind[id] == k && pre(sha, at(last[id]))
   }
   function opn(x) { return crs[st[x]] || x == "R" && rcr }  # an open CRITICAL in the own step of the loop, or in the last review
-  function capped(x) {  # a cap line: 3 failed rounds and no open CRITICAL in its step pass the loop; C and R on the pushed HEAD
+  function capped(x) {  # a cap line: 3 failed rounds and no open CRITICAL in its step end the loop; C and R on the pushed HEAD
     return cs[x] != "" && !opn(x) && (nov || fb && !cc || f[x] - base[x] >= 3) && (x ~ /[AB]/ || pre(cs[x], head) && head == up)
   }
   function ok(x,  id) {
@@ -231,13 +239,13 @@ for x in A B C R; do eval "n=\$((f$x - \${g_base_$x:-0}))"; [ "$n" -gt "$rounds"
 todo=
 if [ "$jobs" = 1 ]; then
   k=$(grep '^Waiting: jobs:' "$run" | cksum | cut -d ' ' -f 1)  # a new job text starts a new deadline
-  [ -n "$g_jobs_since" ] && [ "$g_jobs_key" = "$k" ] || g_jobs_since=$now g_jobs_key=$k
+  [ -n "$g_jobs_since" ] && [ "$g_jobs_id" = "$k" ] || g_jobs_since=$now g_jobs_id=$k
   [ "$jmax" -gt "${FACTORY_JOB_MAX:-120}" ] && jmax=${FACTORY_JOB_MAX:-120}
   if [ "$jmax" = 0 ]; then todo='Waiting: jobs: needs a deadline: write it as `Waiting: jobs: <what runs> (max <minutes> min)`, then end your turn.'
   elif [ $(( now - g_jobs_since )) -gt $(( jmax * 60 )) ]; then
     todo="The job in Waiting: jobs: is past its deadline ($jmax min): check it, stop it if it hangs, record its result or failure in $run, update Waiting, then end your turn."
   fi
-else g_jobs_since= g_jobs_key=; fi
+else g_jobs_since= g_jobs_id=; fi
 # Progress budget: blocked turns without a new tick or proven gate. Rounds 1-3 run, then a cap line passes the loop;
 # 4 and 5 only while the run file names an open CRITICAL; after 5, idle too long or past the night budget: halt.
 idle() { [ "$sig" = "$g_sig" ] && g_idle=$(( ${g_idle:-0} + 1 )) || g_idle=0; g_sig=$sig; }
@@ -286,7 +294,7 @@ fi
 save
 # One step per turn: the next step's prompt arrives only after the last answer is complete, as if the owner typed it.
 if [ "$batched" = 1 ]; then
-  todo="Batched: more than one step heading was ticked in one turn. Redo the last ticked step as its own fresh pass, run any open gate, then end your turn."
+  todo="Batched: more than one step heading was ticked in one turn. Redo the last ticked step as its own fresh round, run any open gate, then end your turn."
 elif [ -n "$skip" ]; then
   todo="Steps not ticked: $skip. Do each now, in order: load its skill, post its block, tick it. Only the owner skips a step: \`Waiting: owner:\` to ask."
 elif [ -n "$long" ]; then
@@ -307,7 +315,7 @@ else
     3) todo='Step 3 Plan: load `get-ready-to-code` fresh and write Part A: the plan, the todo checklist, the proof list and the test map.' ;;
     4) todo='Step 4 Before: load `how-to-make-a-pr` fresh and capture every Before proof the plan lists, before any source edit.' ;;
     5) todo='Step 5 Build: load Part B of `get-ready-to-code` fresh. Take only the next unticked todo through its loop (before, change, light check, mapped tests), post its log line as your last message, then end your turn. Tick `## 5 Build` and set Next to 6 only after the last todo, then post the full `## 5 Build` block.' ;;
-    6) todo='Step 6 Verify: load `deep-review` fresh. Review the whole build, make the final manual pass with After captures, run the full suite once.' ;;
+    6) todo='Step 6 Verify: load `deep-review` fresh. Review the whole build, make the final manual round with After captures, run the full suite once.' ;;
     7) todo='Step 7 PR: load `how-to-make-a-pr` fresh and open the draft PR.' ;;
     8) todo='Step 8 Review: load `how-to-review-a-pr` fresh and brief a fresh reviewer that did not build it.' ;;
     '') grep -q '^Status: closed' "$run" && todo='This run says closed but its gates and review are not proven here. Set `Status: open` with a real `Next:`, or `Status: stopped (<reason>)`.' || todo='Run file header is wrong. Fix these lines, spelled exactly: `Status: open`, `Next: <step> <name> · <skill>`, `Waiting: none`. Then do that step.' ;;

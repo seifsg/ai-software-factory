@@ -16,7 +16,7 @@
       "Bash(*run-guard.sh clear*)", "Bash(*.factory/guard*)",
       "Edit(.claude/settings*.json)", "Edit(~/.claude/settings*.json)", "Edit(~/.codex/**)",
       "Edit(//**/.factory/guard/**)", "Edit(//**/run-guard.sh)", "Edit(//**/hooks.json)", "Edit(//**/.git/hooks/**)",
-      "Edit(//**/.agents/hooks/**)"
+      "Edit(//**/.agents/hooks/**)", "Edit(//**/tools/night/**)", "Edit(//**/.factory/night-settings.json)"
     ],
     "allow": [
       "Read", "Glob", "Grep", "Agent", "Skill", "WebSearch", "WebFetch", "Edit(./**)",
@@ -28,5 +28,9 @@
       "Bash(git push origin *:refs/proof/*)", "Bash(git hash-object *)", "Bash(git mktree*)", "Bash(git commit-tree *)",
       "Bash(gh pr create --draft *)", "Bash(gh pr view *)", "Bash(gh pr list*)", "Bash(gh pr diff *)", "Bash(gh pr edit *)", "Bash(gh pr comment *)"
     ]
+  },
+  "hooks": {
+    "Stop": [{ "hooks": [{ "type": "command", "command": "sh \"__GUARD__\" stop", "timeout": 10 }] }],
+    "SessionStart": [{ "matcher": "compact|resume", "hooks": [{ "type": "command", "command": "sh \"__GUARD__\" compact", "timeout": 10 }] }]
   }
 }

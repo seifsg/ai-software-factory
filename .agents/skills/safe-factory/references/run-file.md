@@ -47,11 +47,13 @@ T1 pre: <before> do: <change> post: <check> ✔
 
 ## What the hooks do
 
-Both run `scripts/run-guard.sh` (`stop` or `compact`) on this session's run: its binding, nearest in its checkout, then its step block's `Workspace`. The Stop guard ignores a run file untouched for 12 hours; both ignore `Status: stopped` and a finished run (step 8 ticked, gates A, B and C and the review proven). Run-guard state lives in `.factory/guard/`: never edit it.
+Both use `scripts/run-guard.sh` on this session's run: its binding, nearest in its checkout, then its step block's `Workspace`. Ignored: untouched 12 hours (Stop), `Status: stopped`, finished (step 8 ticked, gates A, B, C and review proven). State: `.factory/guard/`, never edit.
 
 | Hook | When | Does |
 |---|---|---|
-| Stop guard | your turn ends | unless `Waiting: owner:`, `Waiting: jobs:` or background tasks the host reports: blocks the stop, sends a step not ticked, a line over 300 characters, first unproven gate, else fixed prompt for `Next:`'s step. A wait gets one block for a step not ticked. Past round 5, 6 turns without progress or a spent night budget: one packet prompt, then halted. |
-| Compact hook | after compaction or a resume | prints `Next:` with "load that skill fresh"; resume also says to load `safe-factory` |
+| Stop guard | turn ends | unless `Waiting: owner:`, `Waiting: jobs:` or reported background tasks: blocks, sends a step not ticked, a line over 300 characters, first unproven gate, else `Next:`'s prompt. A wait gets one block for a step not ticked. Past round 5, 6 idle turns or spent night budget: packet prompt, then halted. |
+| Compact | compaction or resume | prints `Next:`, "load that skill fresh"; resume: load `safe-factory` |
 
-Proof is the host's: gate or review line counts only when the named id's subagent file holds that handback on that commit.
+A prompt Stop hook applies these through `check`; compaction's place comes at next stop.
+
+Command guard: gate or review line counts only when the named id's subagent file holds that handback on that commit.

@@ -94,7 +94,7 @@ Severity: CRITICAL definite existing-behavior break, incompatible-runtime crash 
 [Finding rows]
 
 ### Verdict
-PASS - Safe to proceed / FAIL - Issues must be addressed
+PASS: safe to proceed / FAIL: issues must be addressed
 ```
 
 No issues: clean PASS verdict with confidence level.

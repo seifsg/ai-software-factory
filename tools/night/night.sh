@@ -3,22 +3,22 @@
 #   sh night.sh <claude|codex> <hours> [--check]     run from the project; --check stops after the preflight
 # Refuses to start when anything the run needs would prompt, fail or go unguarded. FACTORY_START overrides
 # the start command (run with sh -c; $P is the project); FACTORY_CLAUDE and FACTORY_CODEX name a CLI off PATH.
-host=$1 hours=$2 check=$3 here=$(cd "$(dirname "$0")" && pwd) P=$PWD
+host=$1 hours=$2 check=$3 here=$(cd "$(dirname "$0")" && pwd) P=$(pwd)
+ag=$(cd "$here/../../.agents" && pwd) guard=$ag/skills/safe-factory/scripts/run-guard.sh
 run="$P/.factory/run.md" st="$P/.factory/guard/state" bad=0
 say() { printf '%-8s %s\n' "$1" "$2"; [ "$1" = ok ] || bad=1; }
 case $host in claude) cli=${FACTORY_CLAUDE:-claude} ;; codex) cli=${FACTORY_CODEX:-codex} ;; *) echo 'usage: sh night.sh <claude|codex> <hours> [--check]' >&2; exit 2 ;; esac
 case $cli in /* | ?:*) ;; */*) cli=$P/$cli ;; esac  # a relative override must survive the probe's cd
 case $hours in '' | *[!0-9]*) echo 'hours: a whole number' >&2; exit 2 ;; esac
 has() { t=$1; shift; grep -qs -- "$t" "$@"; }  # has <text> <files...>: any file contains the text
-cfg=${CLAUDE_CONFIG_DIR:-$HOME/.claude}
 # 1. The run: open, not waiting on the owner.
 grep -q '^Status: open' "$run" 2>/dev/null && say ok 'run file open' || say MISSING "open run file $run"
 sed -n '/^## /q;/^Waiting: /{p;q;}' "$run" 2>/dev/null | grep -q '^Waiting: owner' && say MISSING 'the run waits on the owner: answer first'
 # 2. The guard is wired for this host.
 if [ "$host" = claude ]; then
-  { has safe-factory/scripts/run-guard.sh "$cfg/settings.json" "$P/.claude/settings.json" "$P/.claude/settings.local.json" || has 'safe-factory@' "$cfg/settings.json"; } \
-    && say ok 'guard hooks wired' || say MISSING 'guard hooks (plugin or settings)'
-  [ -f "$here/claude-settings.json" ] && say ok 'deny/allow template' || say MISSING "$here/claude-settings.json"
+  [ -f "$guard" ] && say ok 'guard script' || say MISSING "$guard"
+  has 'safe-factory@' "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/settings.json" && say ok 'plugin enabled' || say MISSING 'the safe-factory plugin, enabled in your settings'
+  has __GUARD__ "$here/claude-settings.json" && say ok 'deny/allow and guard template' || say MISSING "$here/claude-settings.json"
 else
   has safe-factory/scripts/run-guard.sh "$HOME/.codex/hooks.json" && say ok 'guard hooks wired' || say MISSING "guard hooks in $HOME/.codex/hooks.json"
   has OWNER "$HOME/.codex/rules/factory.rules" && say ok 'forbidden rules' || say MISSING "$HOME/.codex/rules/factory.rules"
@@ -49,5 +49,5 @@ grep -v '^Night:' "$run" | awk -v n="Night: until $(date -d "@$until" '+%Y-%m-%d
 echo "Preflight passed. Night budget: $hours h."
 export P
 [ -n "$FACTORY_START" ] && exec sh -c "$FACTORY_START"
-[ "$host" = claude ] && exec "$cli" -p --permission-mode dontAsk --settings "$here/claude-settings.json" "/safe-factory Resume $P"
+[ "$host" = claude ] && { ns=$P/.factory/night-settings.json; sed "s|__GUARD__|$(printf '%s' "$guard" | sed 's/[&|\\]/\\&/g')|g" "$here/claude-settings.json" > "$ns" && exec "$cli" -p --permission-mode dontAsk --settings "$ns" "/safe-factory Resume $P"; }
 exec "$cli" exec -s workspace-write -c 'approval_policy="never"' "\$safe-factory Resume $P"

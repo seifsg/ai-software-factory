@@ -15,7 +15,7 @@ MISSING. For every line, find the output that meets it; open what it names; chec
 URL vs bare number, table vs prose, commit, command). Strict: unsure is MISSING, with the reason.
 `DEFERRED (owner|hardware: <what>)` meets a line only for work that needs the
 owner (hands, approval, an install) or missing hardware; a stub or placeholder never does, and "unverified" only as that DEFERRED.
-Read-only. Round 1 checks every line in one pass. Hand back "Gate <X>: PASS @<commit>" when all are met, else "Gate <X>:
+Read-only. Round 1 checks every line at once. Hand back "Gate <X>: PASS @<commit>" when all are met, else "Gate <X>:
 FAIL <n> missing" and the list. Do not read the builder's notes or chat.
 Round 2 on: recheck only MISSING lines of round 1's handback; the rest stay met.
 ```

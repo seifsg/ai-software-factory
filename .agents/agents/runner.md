@@ -1,6 +1,6 @@
 ---
 name: runner
-description: "Factory delegate: use only when a factory brief names this role. Light tier, no edits. Runs a brief's scripted commands with a pass/fail (tests, builds, the full suite), searches, inventories, comparisons and log reads exactly as written. Use when the answer is command output or a list of places. Not for edits or design calls."
+description: "Factory delegate: use only when a factory brief names this role. Light tier, no edits. Runs a brief's scripted commands with a yes/no result (tests, builds, the full suite), searches, inventories, comparisons and log reads exactly as written. Use when the answer is command output or a list of places. Not for edits or design calls."
 model: haiku
 effort: low
 tools: Bash, PowerShell, Read, Grep, Glob

@@ -17,7 +17,7 @@ Find real repository, branches, release policy, PR template, signing rule, check
 - No ticket only if a project exemption covers the whole diff, or the change is trivial and the run kept it without one: PR body says why.
 - Link both ways: on open, PR link in ticket activity; clickable ticket link in PR body.
 - Finished ticket = Ready for QA while PR open, Done on merge; status follows `ticketing`.
-- Ticket with confirmed contract: refresh before opening or updating. Pending scope, drift or failed refresh leaves the dependent step open. Draft or local pass never replaces owner's current expectation.
+- Ticket with confirmed contract: refresh before opening or updating. Pending scope, drift or failed refresh leaves the dependent step open. Draft or local success never replaces owner's current expectation.
 
 ## 3. Branch from the right base
 
@@ -42,7 +42,7 @@ Every PR shows observed Before/After per outcome; prose or illustrative diagrams
 2. Brand-new surface: no Before capture, Before = "did not exist". Capture every other Before now, before any source edit, into `.factory/proof/<ticket>/before-<id>.png` (screens) or `before-<id>.txt` (commands, responses, text). Screens: capture from the preview owner watches, else host's built-in browser; keep that one server for After. No Playwright, headless browsers or capture scripts unless owner asks. Host cannot save screenshot as file: write what it shows into `before-<id>.txt` as `pane:` observation; valid proof, no waiver needed.
 3. Inspect every capture: right screen, readable, no secrets.
 4. Missed a Before after editing: text and command proof come from base (`git show <base>:<path>`, base build output); screenshot no longer takeable: state it as missing in PR. Never a second checkout or server just for a picture.
-5. Capture After during verify's manual pass, same server, same ids: `after-<id>.*`. Later fix recaptures only ids it affects.
+5. Capture After during verify's manual round, same server, same ids: `after-<id>.*`. Later fix recaptures only ids it affects.
 
 ## 5. Make the change
 
@@ -50,8 +50,8 @@ Every PR shows observed Before/After per outcome; prose or illustrative diagrams
 - Stage own files by name. Never `git add .` or `git add -A`.
 - Commit as `<type>(<scope>): <imperative subject>`; body = why, not lines changed.
 - Honor required signing with existing identity; never invent one or bypass signing, permissions or protected gates.
-- **No AI or tool attribution lines** in commits, even if your agent's defaults add one. PR body ends with factory credit line in `references/credit.md`.
-- Required gates (step 1) pass locally before push; PR names their commands and results. A check not run is **unverified**. CI never required: never wait on or rerun it; a result that arrives = extra evidence.
+- **No AI or tool attribution lines** in commits, even if your agent's defaults add one.
+- Required gates (step 1) go green locally before push; PR names their commands and results. A check not run is **unverified**. CI never required: never wait on or rerun it; a result that arrives = extra evidence.
 - Tests last: implement, manually QA real behavior, then write and run tests. Fix found by tests repeats manual QA and tests. No tests that restate implementation.
 
 ## 6. Open the draft
@@ -99,4 +99,3 @@ The block `## 7 PR` holds the draft PR URL, and the PR itself has:
 - [ ] Each After names the commit it was captured on
 - [ ] Verification: criterion → change → proof → gap, with each command and its result; unverified items named
 - [ ] Review requested from a review owner other than the author, or none (solo owner)
-- [ ] The credit line from `references/credit.md` as the last line

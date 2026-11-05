@@ -6,6 +6,25 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking:** Move night tools, `pre-push` and Codex rules to `tools/night/`; update schedules and copied paths ([#295])
+- Make Claude Code runs use a prompt Stop check instead of command hooks, so the plugin meets Anthropic's directory rules with no exception ([#295])
+- Show the update notice at a run's first step on Claude Code, not at every session start ([#295])
+- Reload `safe-factory` after any allowed stop on Claude Code, because a stop removes its check ([#295])
+
+### Removed
+
+- Remove the credit line from pull requests the factory writes in other repositories ([#295])
+
+### Added
+
+- Add a plugin README, `PRIVACY.md`, `SECURITY.md` and an icon for the directory listing ([#295])
+
+### Security
+
+- Stop reading conversation files on Claude Code: gates are judged by a small model, and no script checks that blocks reached chat ([#295])
+
 ## [0.6.2] - 2026-11-04
 
 ### Added
@@ -309,6 +328,7 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 [1.1.0]: https://github.com/seifsg/ai-software-factory/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/seifsg/ai-software-factory/releases/tag/v1.0.0
 
+[#295]: https://github.com/seifsg/ai-software-factory/pull/295
 [#292]: https://github.com/seifsg/ai-software-factory/pull/292
 [#290]: https://github.com/seifsg/ai-software-factory/pull/290
 [#232]: https://github.com/seifsg/ai-software-factory/pull/232

@@ -9,7 +9,7 @@ claude plugin marketplace add https://github.com/seifsg/ai-software-factory.git
 claude plugin install safe-factory@ai-software-factory
 ```
 
-The Stop guard loads with the `safe-factory` skill: starting a run may ask once to allow it (skip the ask with the allow rule `Skill(safe-factory:*)`). In a session, the same as `/plugin marketplace add …` and `/plugin install …`. Use the HTTPS URL; `owner/repo` shorthand tries SSH first. Update: `claude plugin update safe-factory@ai-software-factory`, then a new session. Plugin screens read the local listing, so they can say latest until it refreshes. Auto mode: new projects need `gh repo create` and `git push` allowed. Add `Bash(gh repo create:*)` and `Bash(git push:*)` to your permission allow rules, or approve once when step 0 asks. Plugin brings every skill, delegate roles, the run hooks and the update check; follows release tags. Start a new session.
+The Stop check loads with the `safe-factory` skill: starting a run may ask once to allow it (allow rule `Skill(safe-factory:*)`), and once for `run-guard.sh check`: choose always allow. In a session, the same as `/plugin marketplace add …` and `/plugin install …`. Use the HTTPS URL; `owner/repo` shorthand tries SSH first. Update: `claude plugin update safe-factory@ai-software-factory`, then a new session. Plugin screens read the local listing, so they can say latest until it refreshes. Auto mode: new projects need `gh repo create` and `git push` allowed. Add `Bash(gh repo create:*)` and `Bash(git push:*)` to your permission allow rules, or approve once when step 0 asks. Plugin brings every skill, delegate roles, the Stop check and the update check; follows release tags. Start a new session.
 
 Desktop app without terminal: add to `~/.claude/settings.json`, start a new session, then install from `/plugin` if missing:
 
@@ -70,7 +70,7 @@ Plugin (not yet run live): in a session, `/plugin marketplace add https://github
 
 ## Update check
 
-At session start the plugin hook reads a cached latest release (no network, about 0.2 s on Windows) and refreshes it in the background each time (written only when the fetch succeeds, so a failure retries next start) with `gh api`, or `curl` when `gh` is missing or signed out. Check by hand: compare the README version badge, or the [Latest release](https://github.com/seifsg/ai-software-factory/releases/latest), with your agent's installed plugin version. A newer release: the agent tells you before any run and links what's new. The same hook also lists leftovers of old versions (see below) and the agent offers to clean them; it never stops a run for it. Off: `FACTORY_NO_UPDATE_CHECK=1`.
+At a run's first step (Claude Code) or at session start (Codex, Cursor) the check reads a cached latest release at once (about 0.2 s on Windows) and refreshes it from GitHub in the background each time (written only when the fetch succeeds, so a failure retries next start) with `gh api`, or `curl` when `gh` is missing or signed out. Check by hand: compare the README version badge, or the [Latest release](https://github.com/seifsg/ai-software-factory/releases/latest), with your agent's installed plugin version. A newer release: the agent tells you before any run and links what's new. The same check also lists leftovers of old versions (see below) and the agent offers to clean them; it never stops a run for it. Off: `FACTORY_NO_UPDATE_CHECK=1`.
 
 ## Clean up and uninstall
 
@@ -92,17 +92,17 @@ Optional. All below is per project and stays on your machine. `<clone>` = factor
 1. **Push guard** (both hosts), from the project:
 
    ```text
-   cp <clone>/.agents/hooks/pre-push "$(git rev-parse --git-path hooks/pre-push)"
+   cp <clone>/tools/night/pre-push "$(git rev-parse --git-path hooks/pre-push)"
    chmod +x "$(git rev-parse --git-path hooks/pre-push)"
    ```
 
    Blocks pushes to default branch, force pushes, branch deletes, added token shapes. Pair with host's server-side rules (GitHub: ruleset on default branch that blocks force pushes and requires a pull request) and secret push protection: only those hold against a shell that skips local hooks.
-2. **Deny rules.** Claude Code: nothing to copy; `night.sh` passes `<clone>/.agents/hooks/claude-settings.json` with `--settings`. Same deny list by day: merge its `deny` array into `~/.claude/settings.json`. Add project's test and build commands to project's own `.claude/settings.json` `allow` list (plugin updates replace the template). Codex: `cp <clone>/.agents/hooks/codex.rules ~/.codex/rules/factory.rules`.
+2. **Deny rules.** Claude Code: nothing to copy; `night.sh` passes `<clone>/tools/night/claude-settings.json`, which also brings the command guard, with `--settings`. Same deny list by day: merge its `deny` array into `~/.claude/settings.json`. Add project's test and build commands to project's own `.claude/settings.json` `allow` list (plugin updates replace the template). Codex: `cp <clone>/tools/night/codex.rules ~/.codex/rules/factory.rules`.
 3. **Start a night run** from the project, once run is open and past any owner question:
 
    ```text
-   sh <clone>/.agents/hooks/night.sh claude 8 --check   # preflight only
-   sh <clone>/.agents/hooks/night.sh claude 8           # preflight, then start
+   sh <clone>/tools/night/night.sh claude 8 --check   # preflight only
+   sh <clone>/tools/night/night.sh claude 8           # preflight, then start
    ```
 
    CLI installed off PATH (desktop apps): set `FACTORY_CLAUDE` or `FACTORY_CODEX` to its path. Codex preflight also runs one sandboxed command (up to `FACTORY_PROBE_S`, 180 s), refuses when it does not run.
@@ -110,8 +110,8 @@ Optional. All below is per project and stays on your machine. `<clone>` = factor
 4. **Watchdog** every 30 minutes, outside the session:
 
    ```text
-   cron:    */30 * * * * sh <clone>/.agents/hooks/watchdog.sh claude <project>
-   Windows: schtasks /create /tn factory-watchdog /sc minute /mo 30 /tr "\"C:\Program Files\Git\bin\sh.exe\" <clone>/.agents/hooks/watchdog.sh claude <project>"
+   cron:    */30 * * * * sh <clone>/tools/night/watchdog.sh claude <project>
+   Windows: schtasks /create /tn factory-watchdog /sc minute /mo 30 /tr "\"C:\Program Files\Git\bin\sh.exe\" <clone>/tools/night/watchdog.sh claude <project>"
    ```
 
    Set `FACTORY_NOTIFY` to a command that reaches you (gets `$MSG`), for example `curl -d "$MSG" ntfy.sh/<your-topic>`; without it notices go to `.factory/guard/notices`. Sleeping machine runs nothing: keep it awake overnight.

@@ -10,7 +10,7 @@ run="$P/.factory/run.md" g="$P/.factory/guard"
 st="$g/state" w="$g/watch" now=$(date +%s)
 [ -f "$run" ] || exit 0
 stall=${FACTORY_STALL_MIN:-30} silent=${FACTORY_SILENT_MIN:-90}
-num='ticks|seen|night_until|sig|idle|base_[ABCR]|sstep|rstep|compacts|jobs_since|jobs_key|clear|backoff_until'
+num='ticks|seen|night_until|sig|idle|base_[ABCR]|sstep|rstep|compacts|jobs_[a-z]*|clear|backoff_until'
 load() { [ -f "$1" ] && ! grep -qvE "^[gw]_($num)='[0-9]*'\$|^[gw]_(session|sessions|transcript|halt|end|relay|csession|notified)='[^'\$\`]*'\$|^\$" "$1" && . "$1"; }  # as the guard: never source a value that runs
 load "$st"; load "$w"
 mkdir "$g/watch.lock" 2>/dev/null || { [ -n "$(find "$g/watch.lock" -mmin +720)" ] && rmdir "$g/watch.lock" && mkdir "$g/watch.lock"; } || exit 0
@@ -42,7 +42,7 @@ if [ -n "$g_relay" ]; then old "$st" 10 || { say 'relay starting'; exit 0; }; mo
 elif old "$run" "$stall" && ! busy; then mode=resume
 else say running; exit 0; fi
 S=$g_session MSG='The factory watchdog found this run stalled. Load safe-factory, read .factory/run.md and continue its Next step.'; export P S MSG
-tpl="$here/claude-settings.json"; [ "$host" = codex ] && CLI=${FACTORY_CODEX:-codex} || CLI=${FACTORY_CLAUDE:-claude}; export CLI
+tpl=$P/.factory/night-settings.json; sed "s|__GUARD__|$(printf '%s' "$here/../../.agents/skills/safe-factory/scripts/run-guard.sh" | sed 's/[&|\\]/\\&/g')|g" "$here/claude-settings.json" > "$tpl"; [ "$host" = codex ] && CLI=${FACTORY_CODEX:-codex} || CLI=${FACTORY_CLAUDE:-claude}; export CLI
 nf="-c 'approval_policy=\"never\"' -c 'sandbox_mode=\"workspace-write\"'" cf='--permission-mode dontAsk --settings "'"$tpl"'"'  # night flags (resume takes no -s)
 if [ "$mode" = fresh ]; then
   say "starting a fresh session (relay)"

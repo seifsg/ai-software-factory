@@ -32,7 +32,7 @@ Skip what does not apply. Keep blocks separate. Never bury purpose, context or p
 - Short bullets, narrow tables, flow diagrams. Emojis only to label sections and help scanning.
 - No invented facts, metrics, benefits, quotes, tests or consent. Label illustrative examples. Verify names, numbers, units, dates.
 - Keep owner's words, reasons, examples; never compress away context. Fold long machine data; keep purpose, outcome, proof, gaps, next action visible.
-- One finishing pass: can cold reader say what, why, before, after, next? Does every requested detail have a home?
+- One last look: can cold reader say what, why, before, after, next? Does every requested detail have a home?
 
 ## Example
 

@@ -13,7 +13,7 @@ Review any PR (teammate, customer, agent) end to end. Every factory-opened PR ge
 
 - Review-only or analysis-only request: stop after phase 4 with the report. Fixes, pushes, comments need request or authorization covering them.
 - Run review in a separate fresh-context agent, on a fresh checkout of exact remote base and head; remote or cloud when delivery requires. Record provider/task identity, base/head, evidence, verdict.
-- Asked to review a PR: you are the reviewer. If delivery requires remote or cloud review, local pass does not replace it. Missing remote access blocks that review and merge, not independent local work.
+- Asked to review a PR: you are the reviewer. If delivery requires remote or cloud review, local success does not replace it. Missing remote access blocks that review and merge, not independent local work.
 - Clean checkout. Dirty work: keep in an isolated checkout; never silently stash or switch.
 - Learn product, architecture, rules, checks, authority from the project. Use existing toolchain; install nothing unrelated. Review the real system, incl. consumers outside the repo.
 
@@ -44,7 +44,7 @@ Run `analyze-start` on the PR. Read real code, never only the diff.
 2. ASCII flow of real path, mark where changes sit.
 3. Cross-reference every touched symbol: callers, routes/commands, shared state, cache keys, schemas, events, tests. Seeds change-guard.
 4. Claim vs diff: `| Claimed behavior | Where (file:line) | Delivered? YES / PARTIAL / NO | Note |`
-   Proof: apply `how-to-make-a-pr`. Compare its view/journey inventory to ticket and entire diff, incl. effects of shared logic; inspect every screenshot pair, play every journey video through its result. Check empty/seeded setup, changed failure/recovery paths, candidate identity, capture restart after fixes, explicit owner sources for scoped waivers. Missing outcomes, declarations, media, stale captures, inaccessible proof block evidence completion; parser pass does not prove coverage or quality. Server-only and nonvisual outcomes keep matched input/output or command/diff proof, with explanatory diagrams when useful; no media waiver needed without an affected interactive UI journey. Verify the claimed owner benefit. Keep proof near top of PR.
+   Proof: apply `how-to-make-a-pr`. Compare its view/journey inventory to ticket and entire diff, incl. effects of shared logic; inspect every screenshot pair, play every journey video through its result. Check empty/seeded setup, changed failure/recovery paths, candidate identity, capture restart after fixes, explicit owner sources for scoped waivers. Missing outcomes, declarations, media, stale captures, inaccessible proof block evidence completion; parser success does not prove coverage or quality. Server-only and nonvisual outcomes keep matched input/output or command/diff proof, with explanatory diagrams when useful; no media waiver needed without an affected interactive UI journey. Verify the claimed owner benefit. Keep proof near top of PR.
 5. Hypotheses and open questions, apart from verified facts.
 
 ## 1b. Three solutions (no code)
@@ -82,7 +82,7 @@ Run `deep-review`'s analysis categories and every applicable lens it lists: secu
 | `APPROVE` | Delivers the claim; no blocking finding; nothing to fix. | `ready` |
 | `APPROVE-WITH-FIXES` | Delivers the claim; the fix-set clears every blocking finding; only flags remain. | `ready after fixes` |
 | `REQUEST-CHANGES` | HIGH remains that we cannot safely fix, or open questions block correctness. | `not ready` |
-| `BLOCK` | CRITICAL unresolved: claim not delivered, existing behavior or supported runtime broken, secret shipped, or required gates cannot pass. | `not ready` |
+| `BLOCK` | CRITICAL unresolved: claim not delivered, existing behavior or supported runtime broken, secret shipped, or required gates cannot go green. | `not ready` |
 
 Factory run handback (brief names a run file) ends `verdict: <factory line> @<reviewed head sha>`.
 
@@ -97,7 +97,7 @@ Before writing to PR, ask user the open questions in this session. Fold answers 
 Apply only agreed fix-set, each through the `get-ready-to-code` 0-4 loop.
 
 - Smallest change that removes the finding's cause; match surrounding style. Harden, never replace author's feature.
-- Never weaken security handling (protected secrets, TLS, input/origin/permission checks) to make anything pass.
+- Never weaken security handling (protected secrets, TLS, input/origin/permission checks) to make anything go green.
 - No new circular dependencies.
 - Keep before/after note per fix.
 - Fix touches necessary complexity: stop, demote to flag.
@@ -111,7 +111,7 @@ Apply only agreed fix-set, each through the `get-ready-to-code` 0-4 loop.
 
 Remote builds, paid services, signing or publishing without authority: report the gap. Never substitute an unrelated green check. Unknown applicability = UNKNOWN; justify real N/A.
 
-Fresh independent reviewer then assesses fixes; 3 rounds without open CRITICAL pass by cap, rest to follow-ups; 4 and 5 only while one remains, then owner decides.
+Fresh independent reviewer then assesses fixes; 3 rounds without open CRITICAL end by cap, rest to follow-ups; 4 and 5 only while one remains, then owner decides.
 
 ## 7. Push (checkpoint)
 
@@ -133,7 +133,7 @@ Show draft before posting unless pre-authorized. Comment = only author-visible o
 **Ticket:** <link, confirmed scope revision, refresh result or gap>
 **Verdict:** <APPROVE | APPROVE-WITH-FIXES | REQUEST-CHANGES | BLOCK> - <one-line reason>
 **Manual QA:** <actions, candidate, observed outcomes, limits>
-**Gate:** <checks and pass/fail/unverified> | **Pushed:** <sha(s), or no push: see Handoff>
+**Gate:** <checks and met/fail/unverified> | **Pushed:** <sha(s), or no push: see Handoff>
 
 ### What this PR claims
 > <claim, quoted and trimmed>
