@@ -1,6 +1,6 @@
 # Night mode
 
-Unattended run: owner starts it with host's night command, reads result in the morning. Run file header shows `Night: until <time>`; guard holds the deadline and halts run there.
+Unattended run: owner starts it, reads result in the morning. Run file header shows `Night: until <time>`; guard holds the deadline and halts run there.
 
 Night command refuses to start unless the run can finish unattended. Started session denies instead of prompting: a command the rules do not allow fails, never waits.
 
