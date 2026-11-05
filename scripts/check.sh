@@ -74,10 +74,10 @@ mkdir -p "$h/.codex/rules"; echo stale > "$h/.codex/rules/factory.rules"; dr --f
 git cat-file -e "$ref:.agents/hooks/hooks.json" 2>/dev/null && fail "hooks.json: Claude Code must run no command hook; every session would run it"
 blob .agents/hooks/portable.json | grep -q '"Stop"' || fail "no Stop hook in portable.json"
 for m in codex cursor; do blob ".agents/.$m-plugin/plugin.json" | grep -qF hooks/portable.json || fail "$m manifest does not name hooks/portable.json"; done
-blob $skills/safe-factory/SKILL.md | sed -n '2,/^---/p' | grep -q 'type: prompt' || fail "no Stop hook in safe-factory's frontmatter"
+blob $skills/stop-check/SKILL.md | sed -n '2,/^---/p' | grep -q 'type: prompt' || fail "no Stop hook in stop-check's frontmatter"
 
 # Directory form: what Anthropic's portal refuses or holds fails here first.
-fm=$(blob $skills/safe-factory/SKILL.md | sed -n '2,/^---/p')
+fm=$(blob $skills/stop-check/SKILL.md | sed -n '2,/^---/p')
 printf '%s\n' "$fm" | grep -Eq 'type: *(command|agent|http)' && fail "frontmatter hook other than prompt: command and agent hooks need a Verified organization"
 [ "$(printf '%s\n' "$fm" | grep 'prompt:' | tr -cd "'" | wc -c)" -eq 2 ] || fail "hook prompt: an apostrophe inside it breaks the YAML, and the hook never loads"
 blob .gitattributes | grep -v '^#' | grep -Eq 'eol=|filter=|export-' && fail ".gitattributes rewrites files: the portal cannot read the repository"

@@ -1,11 +1,6 @@
 ---
 name: safe-factory
 description: "Delivers games, apps, services, tools and libraries end to end in ten visible steps: ticket, analyze, recommend, challenge, plan, Before proof, build, verify, PR and review. Fast by default, Safe on request. Use when asked to build, extend, fix or resume software with the factory."
-hooks:
-  Stop:
-    - hooks:
-        - type: prompt
-          prompt: 'Stop: $ARGUMENTS. Read last_assistant_message. Answer ok false only in two cases. One: it opens with a step heading (## then a step number) or a T<n> pre: line, that text did not end an earlier turn, and it lacks "Factory check: may stop": reason "Run the factory check in safe-factory." Two: it has a Gate or Review line not seen earlier and lacking backing (delegate handback; waiver: owner message; cap: 3 failed handbacks): reason "Run that delegate." Anything else: ok true.'
 ---
 
 # Safe Factory
@@ -81,7 +76,7 @@ Load  before █████ 800 ms
 
 ## Steps
 
-Live guard: one step per turn: load its skill, do that step's own work with fresh reading, searching or running, post its block as last message, update run file, end turn. Stop guard sends next step. Check asked for: from run's folder, `sh "${CLAUDE_SKILL_DIR}/scripts/run-guard.sh" check ${CLAUDE_SESSION_ID}`, do what it prints; to stop, set header's `Waiting:`, then quote its `may stop` line. A stop spends the hook: next message, reload this skill. Step 5 takes one todo per turn. Host with no Stop hook: Fast chains steps in one turn, never ending one open with `Waiting: none`; Safe ends each with `Say go for step <n>`. Before each step load its skill fresh, even if read earlier. Same skill as last step: rereading this step's section is enough.
+Live guard: one step per turn: load its skill, do that step's own work with fresh reading, searching or running, post its block as last message, update run file, end turn. Stop guard sends next step. Check asked for: from run's folder, `sh "${CLAUDE_SKILL_DIR}/scripts/run-guard.sh" check ${CLAUDE_SESSION_ID}`, do what it prints; to stop, set header's `Waiting:`, then quote its `may stop` line. A stop spends the hook: the next step reloads it. Step 5 takes one todo per turn. Host with no Stop hook: Fast chains steps in one turn, never ending one open with `Waiting: none`; Safe ends each with `Say go for step <n>`. Before each step load `stop-check`, then its skill fresh, even if read earlier. Same skill as last step: rereading this step's section is enough.
 
 Each step ends with its block: post full block as own chat message opening with its heading (never summary, never only a file or tool output), then write to run file. Fold in any owner reply before next step reads it. Ticket gets a comment only on status change (steps 0, 5, 7, 8) or relay, linking run file's blocks.
 
