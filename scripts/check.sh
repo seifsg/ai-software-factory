@@ -78,8 +78,8 @@ blob $skills/stop-check/SKILL.md | sed -n '2,/^---/p' | grep -q 'type: prompt' |
 
 # Directory form: what Anthropic's portal refuses or holds fails here first.
 fm=$(blob $skills/stop-check/SKILL.md | sed -n '2,/^---/p')
-git grep -qE '^ *(- )?type: *(command|agent|http)' "$ref" -- "$skills/*/SKILL.md" && fail "frontmatter hook other than prompt: command and agent hooks need a Verified organization"
-printf '%s\n' "$fm" | grep -q 'ok false only if' && printf '%s\n' "$fm" | grep -q 'Anything else: ok true' || fail "Stop check lost its limit: it must continue only on a new step block or todo line, or a looping agent spends without end"
+git grep -qE 'type: *"?(command|agent|http)' "$ref" -- "$skills/*/SKILL.md" && fail "frontmatter hook other than prompt: command and agent hooks need a Verified organization"
+[ "$(printf '%s\n' "$fm" | grep -c 'ok false only if.*Anything else: ok true')" -eq 2 ] || fail "Stop check lost its limit: it must continue only on a new step block or todo line, or a looping agent spends without end"
 blob $skills/safe-factory/SKILL.md | grep -q 'then load `stop-check` and post' || fail "safe-factory does not load stop-check right before each block: any stop spends the hook, and the run stalls"
 [ "$(printf '%s\n' "$fm" | grep 'prompt:' | tr -cd "'" | wc -c)" -eq 4 ] || fail "hook prompts: an apostrophe inside one breaks the YAML, and the hook never loads"
 blob .gitattributes | grep -v '^#' | grep -Eq 'eol=|filter=|export-' && fail ".gitattributes rewrites files: the portal cannot read the repository"
@@ -121,7 +121,7 @@ printf "$R"'## 4 Before\n' > "$b/d/.factory/run.md"; rm -rf "$b/d/.factory/guard
 case $(cm d) in *'Gate A has not'*) ;; *) fail "check let a missing gate through" ;; esac
 mkdir -p "$b/e/.factory" "$b/e/.git"; printf '# Run: x · fast · change\nStatus: open\nNext: 1 Analyze · analyze-start\nWaiting: none\n\n## 0 Ticket ✔\n## 1 Analyze\n## 2 Recommend\n' > "$b/e/.factory/run.md"; cm e >/dev/null
 sed 's/^## 1 Analyze$/## 1 Analyze ✔/; s/^## 2 Recommend$/## 2 Recommend ✔/; s/^Next: .*/Next: 2b Challenge · recommend/' "$b/e/.factory/run.md" > "$b/e/n" && mv "$b/e/n" "$b/e/.factory/run.md"
-case $(cm e) in *Batched*) ;; *) fail "check let two ticks through" ;; esac
+case $(cm e) in *Batched*'run this check'*) ;; *) fail "check let two ticks through, or its redo would end the run on a repeated number" ;; esac
 
 # A moved run keeps its proof: session A proved Gate A in one project folder, session F drives it from another.
 e=$w/e; mkdir -p "$e/p/-home-x-A/sA/subagents" "$e/p/-home-x-F" "$e/r/.factory"; git init -q "$e/r"; git -C "$e/r" -c user.name=t -c user.email=t@t -c commit.gpgsign=false commit -q --allow-empty -m i; sha=$(git -C "$e/r" rev-parse HEAD)

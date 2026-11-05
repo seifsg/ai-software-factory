@@ -42,7 +42,7 @@ text{font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;fill:#c9d1d
 <text x="1110" y="166" text-anchor="middle" font-size="15" fill="#fff">reviewed ✓</text>
 </g>
 <text x="70" y="262" font-size="18"><tspan fill="#6E56CF">●</tspan> each step loads its skill fresh and prints its block</text>
-<text x="70" y="292" font-size="18"><tspan fill="#2EA44F">◆</tspan> gates A, B, C: a fresh checker, proven on the commit</text>
+<text x="70" y="292" font-size="18"><tspan fill="#2EA44F">◆</tspan> gates A, B, C: a fresh checker on the commit</text>
 <text x="640" y="262" font-size="18"><tspan fill="#8b949e">▸</tspan> Before/After proof captured, not described</text>
 <text x="640" y="292" font-size="18"><tspan fill="#8b949e">▸</tspan> Stop guard sends the next step after each block</text>
 </svg>

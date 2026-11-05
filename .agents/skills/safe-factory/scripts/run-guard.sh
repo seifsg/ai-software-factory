@@ -14,7 +14,7 @@ if [ "$mode" = check ]; then
   # Plays the Stop event from the run file and Git alone: never a transcript, so gate lines count as text and the Stop hook's evaluator judges them.
   o=$(printf '{"session_id":"%s","cwd":"%s"}' "$2" "$(pwd)" | sh "$0" stop)
   o=$(printf '%s' "$o" | sed 's/^{"decision":"block","reason":"\(.*\)"}$/\1/; s/^{"systemMessage":"\(.*\)"}$/\1/')
-  case $o in '') [ -f .factory/run.md ] && echo 'Factory check: may stop. The Stop check ends with this stop: load stop-check right before the next block.' || echo 'Factory check: may stop. No run file in this folder: if this session has a run, go to its folder and check again.' ;; 'Factory run idle'* | 'Factory run halted'* | 'Factory run relayed'*) printf 'Factory check: may stop. %s\n' "$o" ;; *) printf 'Factory check: continue. %s Load stop-check right before your block or todo line.\n' "$o" ;; esac
+  case $o in '') [ -f .factory/run.md ] && echo 'Factory check: may stop. This stop ends the Stop check: load stop-check before the next block.' || echo 'Factory check: may stop. No run file in this folder: if this session has a run, go to its folder and check again.' ;; 'Factory run idle'* | 'Factory run halted'* | 'Factory run relayed'*) printf 'Factory check: may stop. %s\n' "$o" ;; *) printf 'Factory check: continue. %s Load stop-check before your block or todo line.\n' "$o" ;; esac
   exit 0
 fi
 self=$0; case $self in *run-guard.sh) ;; *) self=${g:-run-guard.sh} ;; esac  # an older plugin hook sourced it from $g
@@ -294,7 +294,7 @@ fi
 save
 # One step per turn: the next step's prompt arrives only after the last answer is complete, as if the owner typed it.
 if [ "$batched" = 1 ]; then
-  todo="Batched: more than one step heading was ticked in one turn. Redo the last ticked step as its own fresh round, run any open gate, then end your turn."
+  todo="Batched: 2+ step headings ticked in one turn. Redo the last ticked step fresh, run any open gate, post its block, then run this check in the same turn: a repeated number ends it."
 elif [ -n "$skip" ]; then
   todo="Steps not ticked: $skip. Do each now, in order: load its skill, post its block, tick it. Only the owner skips a step: \`Waiting: owner:\` to ask."
 elif [ -n "$long" ]; then
