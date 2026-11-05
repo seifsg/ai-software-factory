@@ -42,7 +42,6 @@ G3 MANUAL <outcome>: <what the reviewer judges>
 - One coherent job per agent. Combine related checks; separate only useful independent jobs.
 - Split briefs with over three outcomes, multiple commits or a whole unrelated document; one change across files counts once.
 - Large spec: analyst returns focused briefs with required rules and affected paths.
-- Change smaller than its brief stays local.
 - Only the coordinator spawns, and a reviewer its lens agents; extra agents need `too-big. split:`.
 - Keep early groundwork (`left:`) in next brief.
 
