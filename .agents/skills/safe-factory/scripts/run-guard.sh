@@ -321,6 +321,6 @@ else
     '') grep -q '^Status: closed' "$run" && todo='This run says closed but its gates and review are not proven here. Set `Status: open` with a real `Next:`, or `Status: stopped (<reason>)`.' || todo='Run file header is wrong. Fix these lines, spelled exactly: `Status: open`, `Next: <step> <name> · <skill>`, `Waiting: none`. Then do that step.' ;;
     *) todo="Next: $next. Load that skill fresh." ;;
   esac
-  case ${next%% *}:$todo in 5:* | *:'This run says closed'*) ;; *) todo="$todo Do only this step: post its full block as your last message, update $run (tick, Next), then end your turn." ;; esac
+  case ${next%% *}:$todo in 5:* | *:'This run says closed'*) ;; *) todo="$todo Do only this step: update $run (tick, Next), post its full block as your last message, then end your turn." ;; esac
 fi
 printf '{"decision":"block","reason":"If this session runs the factory run in '"$rf"': %s%s Ending on purpose? Set Waiting: owner: <question> or Waiting: jobs: <what runs> (max <minutes> min)."}\n' "$todo" "${note:+ Note: $note}"
