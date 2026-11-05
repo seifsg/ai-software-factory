@@ -13,7 +13,7 @@
 
 </div>
 
-Coding agents jump straight to code, forget the method as context grows, and tell you it works. The factory is a set of skills that gives your agent a team's process, plus one small hook script that keeps the run going until every step is done and checked. No runtime, no Python, nothing on every tool call.
+Coding agents jump straight to code, forget the method as context grows, and tell you it works. The factory is a set of skills that gives your agent a team's process, plus one small hook script that sends the next step after each block. No runtime, no Python, nothing on every tool call.
 
 <table>
 <tr>
@@ -25,8 +25,8 @@ Ten steps in order, every time. Each step loads its skill fresh, prints its bloc
 </td>
 <td width="33%" valign="top">
 
-### 🔒 Gates it cannot skip
-After plan, verify and review, a fresh checker compares the outputs with each skill's contract. The run cannot close until all three pass on the commit, or you waive one.
+### 🔒 Gates on every run
+After plan, verify and review, a fresh checker compares the outputs with each skill's contract. The run cannot close until all three pass on the commit, or you waive one. On plain Claude Code a small model judges the line, and an agent could still fool it.
 
 </td>
 <td width="33%" valign="top">
