@@ -23,7 +23,7 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ### Security
 
-- Stop a looping agent from spending tokens without limit: the Stop check continues only after a new step block or todo line ([#297])
+- Cut how long a looping agent runs: the Stop check continues only after a new step block or todo line; a small model keeps this limit ([#297])
 - Stop reading conversation files on Claude Code: gates are judged by a small model, and no script checks that blocks reached chat ([#295])
 
 ## [0.6.2] - 2026-11-04
