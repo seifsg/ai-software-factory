@@ -6,6 +6,15 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+### Changed
+
+- Run the Stop check as two small hooks, one more model call per stop in a run; tested limits are in `docs/hosts.md` ([#302])
+
+### Fixed
+
+- Fix a looping agent running to the turn limit on Sonnet: a repeated step or todo number now ends it ([#302])
+- Fix runs ending after a wait because the Stop check was already spent ([#302])
+
 ## [0.7.0] - 2026-11-05
 
 ### Changed
@@ -354,3 +363,4 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 [#280]: https://github.com/seifsg/ai-software-factory/pull/280
 [#283]: https://github.com/seifsg/ai-software-factory/pull/283
 [#286]: https://github.com/seifsg/ai-software-factory/pull/286
+[#302]: https://github.com/seifsg/ai-software-factory/pull/302
