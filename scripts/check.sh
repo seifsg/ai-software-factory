@@ -79,6 +79,8 @@ blob $skills/stop-check/SKILL.md | sed -n '2,/^---/p' | grep -q 'type: prompt' |
 # Directory form: what Anthropic's portal refuses or holds fails here first.
 fm=$(blob $skills/stop-check/SKILL.md | sed -n '2,/^---/p')
 printf '%s\n' "$fm" | grep -Eq 'type: *(command|agent|http)' && fail "frontmatter hook other than prompt: command and agent hooks need a Verified organization"
+printf '%s\n' "$fm" | grep -q 'ok false only if' && printf '%s\n' "$fm" | grep -q 'Anything else: ok true' || fail "Stop check lost its limit: it must continue only on a new step block or todo line, or a looping agent spends without end"
+blob $skills/safe-factory/SKILL.md | grep -q 'load `stop-check`' || fail "safe-factory does not load stop-check before each step"
 [ "$(printf '%s\n' "$fm" | grep 'prompt:' | tr -cd "'" | wc -c)" -eq 2 ] || fail "hook prompt: an apostrophe inside it breaks the YAML, and the hook never loads"
 blob .gitattributes | grep -v '^#' | grep -Eq 'eol=|filter=|export-' && fail ".gitattributes rewrites files: the portal cannot read the repository"
 git ls-tree -r --name-only "$ref" .agents/hooks | grep -Eq 'night|watchdog|pre-push|claude-settings' && fail "night tools inside the plugin: they belong in tools/night"
