@@ -10,7 +10,7 @@ Delivers games, apps, services, tools and libraries in ten visible steps: ticket
 
 ## What it runs
 
-- A prompt Stop hook, added when a step loads the `stop-check` skill: at each turn end a small model reads the last message, and sends the next step only after a new step block or todo line. Nothing runs in sessions that never load it. Any other message ends the turn, so in tests a looping agent stopped within a few turns: very likely, not certain. Esc always stops a run.
+- A prompt Stop hook, added when a run loads the `stop-check` skill right before a block or todo line: at that turn end a small model reads the last message, and sends the next step only on a step or todo number not seen yet. Nothing runs in sessions that never load it. Any other message ends the turn, so in scripted tests on Haiku and Sonnet a looping agent stopped below the turn limit: very likely, not certain. A run can also stop early: say go on. Esc always stops a run.
 - `scripts/run-guard.sh check`, which the skill tells the agent to run: reads `.factory/run.md` and Git, prints the next step. It reads no conversation.
 - `scripts/update-check.sh` at step 0, and `scripts/doctor.sh`, which lists leftovers of old versions by reading your agent settings; `--fix` moves them to a backup.
 - `git` and `gh`, as each step needs them. Your agent's permissions still decide.
