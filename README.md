@@ -93,7 +93,7 @@ Long runs lose skill text when the host compacts context. The factory works arou
 - Loops never stall (counted on command-guard hosts; on plain Claude Code the agent keeps the count): after 3 failed rounds with no open `CRITICAL:` line the gate or review passes by cap (`Gate X: PASS (cap, 3 rounds, no CRITICAL)`) and leftovers go to follow-ups; rounds 4-5 only while a `CRITICAL:` is open. After round 5, or 6 turns without progress, the guard halts the run with one packet for you. `sh run-guard.sh clear <run folder>` resumes it.
 - Waiting on you is allowed (`Waiting: owner:`); waiting on background jobs needs a deadline (`(max <n> min)`), past which the guard wakes the run.
 - Codex, Cursor and night runs: after two compactions the run moves to a fresh session that reads only the run file and the ticket.
-- Claude Code: once the skill loads, a small model checks each turn end, and a session with no run spends one extra turn per message; the check script reads the run file and Git, never the conversation. Codex, Cursor and night runs: a command guard reads the run file and the run's subagent files, about 0.4 s per turn end on Windows. Nothing per tool call.
+- Claude Code: once a step loads `stop-check`, a small model checks each turn end and continues only after a new step block or todo line, so a looping agent stops within a few turns (very likely, not certain; [token limit](docs/hosts.md)); the check script reads the run file and Git, never the conversation. Codex, Cursor and night runs: a command guard reads the run file and the run's subagent files, about 0.4 s per turn end on Windows. Nothing per tool call.
 
 ### 🌙 Overnight runs
 
@@ -134,6 +134,7 @@ Projects keep `.factory/` folders until you delete them.
 |---|---|
 | `safe-factory` | the ten-step coordinator, run file and gates |
 | `ticketing` | backlog, epics, tickets, checklists and statuses |
+| `stop-check` | arms the Stop check before each step |
 | `analyze-start` | analysis before any code |
 | `recommend` | three solutions, one pick, and the step 2b challenge |
 | `get-ready-to-code` | the plan and the 0–4 build loop |
@@ -150,7 +151,8 @@ Rules: [AGENTS.md](AGENTS.md). Changes go through `improve-factory`; checks: `sh
 ```text
 .agents/skills/                  the skills (canonical methods)
 .agents/agents/                  delegate roles for Claude Code (runner, analyst, maker, builder, reviewer, checker)
-.agents/skills/safe-factory/     SKILL.md carries Claude Code's prompt Stop hook; scripts/ holds the guard, update check, doctor
+.agents/skills/stop-check/       Claude Code's prompt Stop hook
+.agents/skills/safe-factory/     the coordinator; scripts/ holds the guard, update check, doctor
 .agents/hooks/portable.json      Stop guard, compact hook and update check (Codex, Cursor)
 tools/night/                     overnight runs, from a clone: night.sh, watchdog.sh, deny rules, pre-push
 .agents/.claude-plugin/          plugin manifests (also .codex-plugin/, .cursor-plugin/); the plugin root is .agents/
