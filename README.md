@@ -13,7 +13,7 @@
 
 </div>
 
-Coding agents jump straight to code, forget the method as context grows, and tell you it works. The factory is a set of skills that gives your agent a team's process, plus one small hook script that keeps the run going until every step is done and checked. No runtime, no Python, nothing on every tool call.
+Coding agents jump straight to code, forget the method as context grows, and tell you it works. The factory is a set of skills that gives your agent a team's process, plus one small hook script that sends the next step after each block. No runtime, no Python, nothing on every tool call.
 
 <table>
 <tr>
@@ -25,8 +25,8 @@ Ten steps in order, every time. Each step loads its skill fresh, prints its bloc
 </td>
 <td width="33%" valign="top">
 
-### 🔒 Gates it cannot skip
-After plan, verify and review, a fresh checker compares the outputs with each skill's contract. The run cannot close until all three pass on the commit, or you waive one.
+### 🔒 Gates on every run
+After plan, verify and review, a fresh checker compares the outputs with each skill's contract. The run cannot close until all three pass on the commit, or you waive one. On plain Claude Code a small model judges the line, and an agent could still fool it.
 
 </td>
 <td width="33%" valign="top">
@@ -93,7 +93,7 @@ Long runs lose skill text when the host compacts context. The factory works arou
 - Loops never stall (counted on command-guard hosts; on plain Claude Code the agent keeps the count): after 3 failed rounds with no open `CRITICAL:` line the gate or review passes by cap (`Gate X: PASS (cap, 3 rounds, no CRITICAL)`) and leftovers go to follow-ups; rounds 4-5 only while a `CRITICAL:` is open. After round 5, or 6 turns without progress, the guard halts the run with one packet for you. `sh run-guard.sh clear <run folder>` resumes it.
 - Waiting on you is allowed (`Waiting: owner:`); waiting on background jobs needs a deadline (`(max <n> min)`), past which the guard wakes the run.
 - Codex, Cursor and night runs: after two compactions the run moves to a fresh session that reads only the run file and the ticket.
-- Claude Code: once a step loads `stop-check`, a small model checks each turn end and continues only after a new step block or todo line, so in tests a looping agent stopped within a few turns (very likely, not certain; [token limit](docs/hosts.md)); the check script reads the run file and Git, never the conversation. Codex, Cursor and night runs: a command guard reads the run file and the run's subagent files, about 0.4 s per turn end on Windows. Nothing per tool call.
+- Claude Code: `stop-check`, loaded right before each block or todo line, has a small model check that turn end and continue only on a step or todo number or a backed gate line not seen yet, so a looping agent stopped below the turn limit in every scripted test on Haiku and Sonnet (very likely, not certain; a run can also stop early: [token limit](docs/hosts.md)); the check script reads the run file and Git, never the conversation. Codex, Cursor and night runs: a command guard reads the run file and the run's subagent files, about 0.4 s per turn end on Windows. Nothing per tool call.
 
 ### 🌙 Overnight runs
 
@@ -134,7 +134,7 @@ Projects keep `.factory/` folders until you delete them.
 |---|---|
 | `safe-factory` | the ten-step coordinator, run file and gates |
 | `ticketing` | backlog, epics, tickets, checklists and statuses |
-| `stop-check` | arms the Stop check before each step |
+| `stop-check` | arms the Stop check before each block or todo line |
 | `analyze-start` | analysis before any code |
 | `recommend` | three solutions, one pick, and the step 2b challenge |
 | `get-ready-to-code` | the plan and the 0–4 build loop |
@@ -151,7 +151,7 @@ Rules: [AGENTS.md](AGENTS.md). Changes go through `improve-factory`; checks: `sh
 ```text
 .agents/skills/                  the skills (canonical methods)
 .agents/agents/                  delegate roles for Claude Code (runner, analyst, maker, builder, reviewer, checker)
-.agents/skills/stop-check/       Claude Code's prompt Stop hook
+.agents/skills/stop-check/       Claude Code's prompt Stop hooks
 .agents/skills/safe-factory/     the coordinator; scripts/ holds the guard, update check, doctor
 .agents/hooks/portable.json      Stop guard, compact hook and update check (Codex, Cursor)
 tools/night/                     overnight runs, from a clone: night.sh, watchdog.sh, deny rules, pre-push

@@ -9,7 +9,7 @@ cd "$(git rev-parse --show-toplevel)" || exit 1
 w=$(mktemp -d) || exit 1; trap 'rm -rf "$w"' EXIT  # short POSIX temp path: a C:/ path would split PATH at its colon
 fail() { echo "FAIL: $*"; bad=1; }
 skills=.agents/skills
-read_set='safe-factory/SKILL.md stop-check/SKILL.md safe-factory/references/run-file.md safe-factory/references/checker.md safe-factory/references/sizes.md safe-factory/references/delegate.md safe-factory/references/owner-reports.md safe-factory/references/worth-it.md ticketing/SKILL.md ticketing/references/ticket-layout.md analyze-start/SKILL.md recommend/SKILL.md get-ready-to-code/SKILL.md how-to-make-a-pr/SKILL.md how-to-make-a-pr/references/media-proof.md how-to-make-a-pr/references/pr-layout.md how-to-make-a-pr/references/github.md how-to-make-a-pr/references/credit.md deep-review/SKILL.md deep-review/references/change-guard.md deep-review/references/compliance.md'
+read_set='safe-factory/SKILL.md stop-check/SKILL.md safe-factory/references/run-file.md safe-factory/references/checker.md safe-factory/references/sizes.md safe-factory/references/delegate.md safe-factory/references/owner-reports.md safe-factory/references/worth-it.md ticketing/SKILL.md ticketing/references/ticket-layout.md analyze-start/SKILL.md recommend/SKILL.md get-ready-to-code/SKILL.md how-to-make-a-pr/SKILL.md how-to-make-a-pr/references/media-proof.md how-to-make-a-pr/references/pr-layout.md how-to-make-a-pr/references/github.md deep-review/SKILL.md deep-review/references/change-guard.md deep-review/references/compliance.md'
 
 # Method bytes of a ref: "<all methods> <read set>".
 bytes() {
@@ -78,10 +78,10 @@ blob $skills/stop-check/SKILL.md | sed -n '2,/^---/p' | grep -q 'type: prompt' |
 
 # Directory form: what Anthropic's portal refuses or holds fails here first.
 fm=$(blob $skills/stop-check/SKILL.md | sed -n '2,/^---/p')
-printf '%s\n' "$fm" | grep -Eq 'type: *(command|agent|http)' && fail "frontmatter hook other than prompt: command and agent hooks need a Verified organization"
-printf '%s\n' "$fm" | grep -q 'ok false only if' && printf '%s\n' "$fm" | grep -q 'Anything else: ok true' || fail "Stop check lost its limit: it must continue only on a new step block or todo line, or a looping agent spends without end"
-blob $skills/safe-factory/SKILL.md | grep -q 'load `stop-check`' || fail "safe-factory does not load stop-check before each step"
-[ "$(printf '%s\n' "$fm" | grep 'prompt:' | tr -cd "'" | wc -c)" -eq 2 ] || fail "hook prompt: an apostrophe inside it breaks the YAML, and the hook never loads"
+git grep -qE 'type: *"?(command|agent|http)' "$ref" -- "$skills/*/SKILL.md" && fail "frontmatter hook other than prompt: command and agent hooks need a Verified organization"
+[ "$(printf '%s\n' "$fm" | grep -c 'ok false only if.*Anything else: ok true')" -eq 2 ] || fail "Stop check lost its limit: it must continue only on a new step block or todo line, or a looping agent spends without end"
+blob $skills/safe-factory/SKILL.md | grep -q 'then load `stop-check` and post' || fail "safe-factory does not load stop-check right before each block: any stop spends the hook, and the run stalls"
+[ "$(printf '%s\n' "$fm" | grep 'prompt:' | tr -cd "'" | wc -c)" -eq 4 ] || fail "hook prompts: an apostrophe inside one breaks the YAML, and the hook never loads"
 blob .gitattributes | grep -v '^#' | grep -Eq 'eol=|filter=|export-' && fail ".gitattributes rewrites files: the portal cannot read the repository"
 git ls-tree -r --name-only "$ref" .agents/hooks | grep -Eq 'night|watchdog|pre-push|claude-settings' && fail "night tools inside the plugin: they belong in tools/night"
 git grep -qw pass "$ref" -- .agents && fail 'the word pass in the plugin: the portal reads a password tool'
@@ -121,7 +121,7 @@ printf "$R"'## 4 Before\n' > "$b/d/.factory/run.md"; rm -rf "$b/d/.factory/guard
 case $(cm d) in *'Gate A has not'*) ;; *) fail "check let a missing gate through" ;; esac
 mkdir -p "$b/e/.factory" "$b/e/.git"; printf '# Run: x · fast · change\nStatus: open\nNext: 1 Analyze · analyze-start\nWaiting: none\n\n## 0 Ticket ✔\n## 1 Analyze\n## 2 Recommend\n' > "$b/e/.factory/run.md"; cm e >/dev/null
 sed 's/^## 1 Analyze$/## 1 Analyze ✔/; s/^## 2 Recommend$/## 2 Recommend ✔/; s/^Next: .*/Next: 2b Challenge · recommend/' "$b/e/.factory/run.md" > "$b/e/n" && mv "$b/e/n" "$b/e/.factory/run.md"
-case $(cm e) in *Batched*) ;; *) fail "check let two ticks through" ;; esac
+case $(cm e) in *Batched*'run this check'*) ;; *) fail "check let two ticks through, or its redo would end the run on a repeated number" ;; esac
 
 # A moved run keeps its proof: session A proved Gate A in one project folder, session F drives it from another.
 e=$w/e; mkdir -p "$e/p/-home-x-A/sA/subagents" "$e/p/-home-x-F" "$e/r/.factory"; git init -q "$e/r"; git -C "$e/r" -c user.name=t -c user.email=t@t -c commit.gpgsign=false commit -q --allow-empty -m i; sha=$(git -C "$e/r" rev-parse HEAD)
