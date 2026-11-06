@@ -9,6 +9,7 @@ The public surface is the skill names, the run file format, and the hook scripts
 ### Changed
 
 - Run the Stop check as two small hooks, one more model call per stop in a run; tested limits are in `docs/hosts.md` ([#302])
+- Make a review's run audit check each gate line's backing, because the Stop check's small model can pass a forged one ([#302])
 
 ### Fixed
 
