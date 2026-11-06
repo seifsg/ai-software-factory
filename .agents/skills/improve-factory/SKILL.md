@@ -36,7 +36,7 @@ Load `safe-factory`. Run as factory run of kind `change` on its maintenance tick
 
 - Record invariants: project goal, selected decisions, complete methods, owner stops, human release. Changing one needs owner. Never weaken a check that failed.
 - Exclude unrelated improvements. New skill, hook, rule or reference needs a demonstrated gap; no universal rule for an isolated complaint.
-- Goal: shorter and faster. Plan states method bytes before and after per changed file and in total, from Git blobs (`git ls-tree -l <ref>`). Net growth needs owner's OK with reason.
+- Goal: shorter and faster. Plan states method bytes before and after per changed file and in total, from Git blobs (`git ls-tree -l <ref>`).
 - Lasting rules go once in the skill that owns them. Remove stale or duplicate prose.
 
 ## Proof (steps 4 to 6)
