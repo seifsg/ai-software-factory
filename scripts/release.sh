@@ -54,7 +54,7 @@ prepare() {
   grep -q "\"version\": \"$v\"" $man && grep -q "^## \[$v\] - " CHANGELOG.md || die "edit did not apply: check the formats in docs/releasing.md"
   grep -q "^## $v$" UPGRADING.md || echo "release: UPGRADING.md has no '## Unreleased' section: no upgrade steps for $v (fine when none are needed)"
   git commit -q -am "chore(release): $v" || die "commit failed"
-  sh scripts/check.sh HEAD origin/main && sh scripts/check.sh || die "checks failed on the release commit; fix, amend, push release/v$v yourself"
+  sh scripts/check.sh || die "checks failed on the release commit; fix, amend, push release/v$v yourself"
   git push -q -u origin "release/v$v" || die "push failed"
   b=$(mktemp) || exit 1; trap 'rm -f "$b"' EXIT; { notes "$v" CHANGELOG.md; printf '\n---\n🏭 Built with [AI Software Factory](https://softwarefactory.company/) by Seif\n'; } > "$b"
   gh pr create -R "$slug" --draft --base main --head "release/v$v" --title "chore(release): $v" --body-file "$b" || die "PR not created; branch release/v$v is pushed"

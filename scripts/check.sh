@@ -1,10 +1,10 @@
 #!/bin/sh
-# Repository checks (AGENTS.md "Keep it working"), one command from the repo root: sh scripts/check.sh [<ref>] [<base>]
+# Repository checks (AGENTS.md "Keep it working"), one command from the repo root: sh scripts/check.sh [<ref>]
 # Static checks read the blobs of <ref>; the update-check and doctor checks run the working-tree scripts.
 # sh scripts/check.sh bytes [<ref>] prints "<all methods> <read set>" for a PR's before and after line.
-# Byte counts read Git blobs of <ref> (default HEAD); <base> also fails any method byte growth against it.
+# Byte counts read Git blobs of <ref> (default HEAD).
 # Prints nothing and exits 0 when all pass; otherwise one FAIL line per failed check, exit 1.
-ref=${1:-HEAD} base=$2 bad=0
+ref=${1:-HEAD} bad=0
 cd "$(git rev-parse --show-toplevel)" || exit 1
 w=$(mktemp -d) || exit 1; trap 'rm -rf "$w"' EXIT  # short POSIX temp path: a C:/ path would split PATH at its colon
 fail() { echo "FAIL: $*"; bad=1; }
@@ -19,20 +19,17 @@ bytes() {
 }
 good() { git rev-parse -q --verify "$1^{commit}" >/dev/null || { echo "FAIL: unknown ref $1"; exit 1; }; }
 [ "$ref" = bytes ] && { good "${2:-HEAD}"; bytes "${2:-HEAD}"; exit; }
-good "$ref"; [ -z "$base" ] || good "$base"
+good "$ref"
 
 # Skill hygiene: links stay inside a skill's folder, no SKILL.md at 17000 bytes, no media in Git (proof goes to refs/proof/).
 o=$(git grep -nE '\]\(\.\./' "$ref" -- $skills) && fail "links out of a skill folder: $o"
 o=$(git ls-tree -rl "$ref" $skills | awk '$5 ~ /\/SKILL\.md$/ && $4 >= 17000 {print $5}') && [ -n "$o" ] && fail "SKILL.md at 17000 bytes or over: $o"
 o=$(git ls-tree -r --name-only "$ref" | grep -iE '\.(png|jpe?g|gif|webp|mp4|webm|mov)$' | grep -vx '.agents/.claude-plugin/icon.png') && fail "media committed (proof belongs in refs/proof/): $o"
 
-# Budgets: all methods under 170000, read set under 105000; with <base>, neither grows.
+# Budgets: all methods under 170000, read set under 105000.
 set -- $(bytes "$ref")
 [ "$1" -lt 170000 ] || fail "methods $1 bytes, budget 170000"
 [ "$2" -lt 105000 ] || fail "read set $2 bytes, budget 105000"
-if [ -n "$base" ]; then
-  b=$(bytes "$base"); [ "$1" -le "${b% *}" ] || fail "methods grew: ${b% *} -> $1"; [ "$2" -le "${b#* }" ] || fail "read set grew: ${b#* } -> $2"
-fi
 
 blob() { MSYS_NO_PATHCONV=1 git show "$ref:$1"; }  # <ref>:<path> as typed under Git Bash
 

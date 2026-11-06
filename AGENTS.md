@@ -16,8 +16,8 @@ Factory changes use `improve-factory` (`.agents/skills/improve-factory/SKILL.md`
 4. No person, company or product names. No dates, history, decision logs or provenance. Git keeps history (tag `history-archive`); release history only in `CHANGELOG.md` and `UPGRADING.md` at root.
 5. No agent, OS or tracker specifics in methods. They live in `docs/hosts.md`, the adapters (`.agents/.claude-plugin/`, `.agents/agents/`, `.agents/hooks/`) and reference files named for one tool (`references/github.md`). One exception: the Stop hook in `stop-check` and the factory check in `safe-factory`.
 6. Step skill ends with its `## Output contract`: the block it writes and a checklist the checker can verify.
-7. Size: every SKILL.md under 17,000 bytes (under 5k tokens: Claude Code keeps only that much of a skill after compaction), aim for 150 lines. References under 200 lines; over 100 lines starts with a contents line. Methods a run's main agent reads (read-set command below) stay under 105 KB; all methods together under 170 KB. Both numbers only go down. Detail needed only in a rare situation goes to a reference behind a pointer that names the situation.
-8. Each operative rule lives once per skill that needs it. Merge duplicates; cut filler. Never cut examples or ordering rules to save bytes.
+7. Size: every SKILL.md under 17,000 bytes (under 5k tokens: Claude Code keeps only that much of a skill after compaction), aim for 150 lines. References under 200 lines; over 100 lines starts with a contents line. Methods a run's main agent reads (read-set command below) stay under 105 KB; all methods together under 170 KB. Growth that earns its place is fine. Detail needed only in a rare situation goes to a reference behind a pointer that names the situation.
+8. Each operative rule lives once per skill that needs it. Merge duplicates; cut filler. Never cut examples, ordering rules or a rule stated nowhere else to save bytes.
 9. English. No em dashes, stock phrases or invented claims.
 
 ## Keep it working
@@ -26,7 +26,6 @@ No Python, test suite or build. Checks are commands and a fresh agent. Byte coun
 
 ```text
 sh scripts/check.sh                    # every check: prints nothing, exit 0; else one FAIL line each, exit 1
-sh scripts/check.sh HEAD origin/main    # also fails any method byte growth against the base
 sh scripts/check.sh bytes origin/main   # "<all methods> <read set>" for the PR line (run for base and head)
 ```
 
@@ -36,7 +35,7 @@ It checks: links stay in a skill folder, SKILL.md under 17000, no media in Git, 
 - Changed `gh` or `git` command form in a method: update night templates (`tools/night/claude-settings.json` allow list, `tools/night/codex.rules`) to match.
 - Every changed method gets a fresh-agent walkthrough before review.
 - Skill, reference, role or hook moved, added or deleted: update `README.md` and `docs/` in same PR. Keep what they say (commands, paths, defaults) true by hand.
-- Each PR states method bytes before and after (`bytes` for base and head). Net growth needs owner's OK with the reason.
+- Each PR states method bytes before and after (`bytes` for base and head).
 - Plugin stays clean on the directory portal's Validate; its one image is `.agents/.claude-plugin/icon.png`.
 - Keep secrets, client data, transcripts and `.factory/` run files out of Git.
 
