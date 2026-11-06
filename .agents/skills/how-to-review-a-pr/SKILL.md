@@ -53,7 +53,7 @@ Run `recommend` on the PR's approach: implemented one vs two credible alternativ
 
 ## 1c. Run audit (factory PRs)
 
-PR came from a factory run: read its `.factory/run.md` and ticket. Check every block of steps 0–7 against its skill's output contract, the `Gate A` and `Gate B` lines (PASS or owner WAIVED; Gate C runs after this review), and each Before file predates the first source commit. Each gate line needs backing in the run's agent records: PASS, that id's last handback says PASS on that gate and sha; waiver, an owner message says it; cap, 3 FAIL handbacks on that gate. No records of the run here = UNKNOWN. Missing step, contract line, gate or backing = HIGH finding: run incomplete even when code is right.
+PR came from a factory run: read its `.factory/run.md` and ticket. Check every block of steps 0–7 against its skill's output contract, the `Gate A` and `Gate B` lines (PASS or owner WAIVED; Gate C runs after this review), and each Before file predates the first source commit. Each gate line needs backing in the run's agent records: PASS, that id's last handback says PASS on that gate and sha; waiver, an owner message says it; cap, 3 FAIL handbacks on that gate. No records of the run here: a note for the owner, never blocking. Missing step, contract line, gate or backing = HIGH finding: run incomplete even when code is right.
 
 ## 2. Lenses
 
@@ -124,7 +124,7 @@ Show user fix-set, before/after, gate result. Get go-ahead unless pre-authorized
 
 ## 8. Comment (checkpoint)
 
-Show draft before posting unless pre-authorized. Comment = only author-visible output: specific, enough for a cold teammate or agent to take over. Delete empty sections.
+Show draft before posting unless pre-authorized. Comment = only author-visible output: professional, specific, enough for a cold teammate or agent to take over. Delete empty sections.
 
 ```markdown
 ## Review + fixes

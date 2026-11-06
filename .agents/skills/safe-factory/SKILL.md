@@ -138,8 +138,8 @@ After steps 3, 6 and 8, start the [checker](references/checker.md): a fresh ligh
 
 1. Continue to agreed outcome. Defer only what needs owner's hands or missing hardware. Pause dependent work only for: missing access or tools after real discovery, owner-reserved decisions, a gate you cannot repair, explicit owner stop. Keep independent work moving.
 2. Discover before asking: files, config, run files, integrations, current docs.
-3. Never invent identities, commands, access, status or evidence. A host, path, command, version or status written anywhere is a claim: test before use or report. Unverified means this machine cannot run the check, never that you skipped it.
-4. Retry only with diagnosed cause or new evidence.
+3. Never invent identities, commands, access, status or evidence. A host, path, command, version or status written anywhere is a claim: test before use or report. A stand-in proves only itself. Unverified means this machine cannot run the check, never that you skipped it.
+4. Retry only with diagnosed cause or new evidence. Second related failure: find shared cause and why last fix failed, fix cause and its consumers, state what prevents recurrence.
 5. Reconcile uncertain pushes, comments and other external effects before retrying.
 6. Notify, merge, release, deploy and spend only with explicit authority. PRs stay draft.
 7. Stop only processes you started; graceful first. Anything outside project folder needs owner's approval.
