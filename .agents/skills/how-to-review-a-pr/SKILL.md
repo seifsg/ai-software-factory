@@ -53,7 +53,7 @@ Run `recommend` on the PR's approach: implemented one vs two credible alternativ
 
 ## 1c. Run audit (factory PRs)
 
-PR came from a factory run: read its `.factory/run.md` and ticket. Check every block of steps 0–7 against its skill's output contract, the `Gate A` and `Gate B` lines (PASS or owner WAIVED; Gate C runs after this review), and each Before file predates the first source commit. Each gate line needs backing: PASS, its checker id's own handback in the run's agent records; waiver, owner's words; cap, 3 failed handbacks. No records on this machine = UNKNOWN. Missing step, contract line, gate or backing = HIGH finding: run incomplete even when code is right.
+PR came from a factory run: read its `.factory/run.md` and ticket. Check every block of steps 0–7 against its skill's output contract, the `Gate A` and `Gate B` lines (PASS or owner WAIVED; Gate C runs after this review), and each Before file predates the first source commit. Each gate line needs backing in the run's agent records: PASS, that id's last handback says PASS on that gate and sha; waiver, an owner message says it; cap, 3 FAIL handbacks on that gate. No records of the run on this machine = UNKNOWN. Missing step, contract line, gate or backing = HIGH finding: run incomplete even when code is right.
 
 ## 2. Lenses
 
@@ -119,12 +119,12 @@ Show user fix-set, before/after, gate result. Get go-ahead unless pre-authorized
 
 - Stage only files you changed. Message: `fix(<area>): <what was hardened on PR #<n>>`.
 - No AI or tool attribution in commits or comments.
-- Never force-push, rewrite or delete author's commits. Additive commits only.
+- Never force-push, rewrite or delete author's commits.
 - Push rejected (fork without maintainer edits, protected branch): skip to comment, include full patch.
 
 ## 8. Comment (checkpoint)
 
-Show draft before posting unless pre-authorized. Comment = only author-visible output: specific, self-contained, enough for a cold teammate or agent to take over. Delete empty sections.
+Show draft before posting unless pre-authorized. Comment = only author-visible output: specific, enough for a cold teammate or agent to take over. Delete empty sections.
 
 ```markdown
 ## Review + fixes
