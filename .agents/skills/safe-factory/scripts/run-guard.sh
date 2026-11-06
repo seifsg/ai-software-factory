@@ -294,7 +294,7 @@ fi
 save
 # One step per turn: the next step's prompt arrives only after the last answer is complete, as if the owner typed it.
 if [ "$batched" = 1 ]; then
-  todo="Batched: 2+ step headings ticked in one turn. Redo the last ticked step fresh, run any open gate, post its block, then run this check in the same turn: a repeated number ends it."
+  todo="Batched: 2+ step headings ticked in one turn. Redo the last ticked step fresh, run any open gate, repost no heading, then run this check in the same turn and do what it prints."
 elif [ -n "$skip" ]; then
   todo="Steps not ticked: $skip. Do each now, in order: load its skill, post its block, tick it. Only the owner skips a step: \`Waiting: owner:\` to ask."
 elif [ -n "$long" ]; then
