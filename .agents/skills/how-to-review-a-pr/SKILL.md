@@ -12,7 +12,7 @@ Review any PR (teammate, customer, agent) end to end. Every factory-opened PR ge
 ## Boundaries
 
 - Review-only or analysis-only request: stop after phase 4 with the report. Fixes, pushes, comments need request or authorization covering them.
-- Run review in a separate fresh-context agent, on a fresh checkout of exact remote base and head; remote or cloud when delivery requires. Record provider/task identity, base/head, evidence, verdict.
+- Run review in a separate fresh-context agent, on a fresh checkout of exact remote base and head. Record provider/task identity, base/head, evidence, verdict.
 - Asked to review a PR: you are the reviewer. If delivery requires remote or cloud review, local success does not replace it. Missing remote access blocks that review and merge, not independent local work.
 - Clean checkout. Dirty work: keep in an isolated checkout; never silently stash or switch.
 - Learn product, architecture, rules, checks, authority from the project. Use existing toolchain; install nothing unrelated. Review the real system, incl. consumers outside the repo.
@@ -36,7 +36,7 @@ CLAIM (verbatim, trimmed): "<what it does and why>"
 
 PR with no stated why = a finding.
 
-## 1. Analysis (no code)
+## 1. Analysis
 
 Run `analyze-start` on the PR. Read real code, never only the diff.
 
@@ -47,13 +47,13 @@ Run `analyze-start` on the PR. Read real code, never only the diff.
    Proof: apply `how-to-make-a-pr`. Compare its view/journey inventory to ticket and entire diff, incl. effects of shared logic; inspect every screenshot pair, play every journey video through its result. Check empty/seeded setup, changed failure/recovery paths, candidate identity, capture restart after fixes, explicit owner sources for scoped waivers. Missing outcomes, declarations, media, stale captures, inaccessible proof block evidence completion; parser success does not prove coverage or quality. Server-only and nonvisual outcomes keep matched input/output or command/diff proof, with explanatory diagrams when useful; no media waiver needed without an affected interactive UI journey. Verify the claimed owner benefit. Keep proof near top of PR.
 5. Hypotheses and open questions, apart from verified facts.
 
-## 1b. Three solutions (no code)
+## 1b. Three solutions
 
 Run `recommend` on the PR's approach: implemented one vs two credible alternatives. Keeping approved design can be best; never manufacture a defect or rewrite. New substantive choice = recommendation for owner.
 
 ## 1c. Run audit (factory PRs)
 
-PR came from a factory run: read its `.factory/run.md` and ticket. Check every block of steps 0–7 against its skill's output contract, the `Gate A` and `Gate B` lines (PASS or owner WAIVED; Gate C runs after this review), and each Before file predates the first source commit. Missing step, contract line or gate = HIGH finding: run incomplete even when code is right.
+PR came from a factory run: read its `.factory/run.md` and ticket. Check every block of steps 0–7 against its skill's output contract, the `Gate A` and `Gate B` lines (PASS or owner WAIVED; Gate C runs after this review), and each Before file predates the first source commit. Each gate line needs backing: PASS, its checker id's own handback in the run's agent records; waiver, owner's words; cap, 3 failed handbacks. No records on this machine = UNKNOWN. Missing step, contract line, gate or backing = HIGH finding: run incomplete even when code is right.
 
 ## 2. Lenses
 
@@ -124,7 +124,7 @@ Show user fix-set, before/after, gate result. Get go-ahead unless pre-authorized
 
 ## 8. Comment (checkpoint)
 
-Show draft before posting unless pre-authorized. Comment = only author-visible output: professional, specific, self-contained, enough for a cold teammate or agent to take over. Facts, not verdicts about the author. Delete empty sections.
+Show draft before posting unless pre-authorized. Comment = only author-visible output: specific, self-contained, enough for a cold teammate or agent to take over. Delete empty sections.
 
 ```markdown
 ## Review + fixes
@@ -177,7 +177,6 @@ Factory run's reviewer skips phases 5 to 7, never pushes, may post the phase 8 c
 ## Safety
 
 - No code in phases 0-4. Reading only.
-- Confirm before push and before comment; one combined checkpoint fine if pre-authorized.
 - Never notify, merge, release, deploy without explicit authority.
 
 ## Output contract
