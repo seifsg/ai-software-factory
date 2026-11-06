@@ -6,6 +6,8 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-11-06
+
 ### Changed
 
 - Run the Stop check as two small hooks, one more model call per stop in a run; tested limits are in `docs/hosts.md` ([#302])
@@ -321,7 +323,8 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 - Leaner runs (#137): product, feature and change runs each read 24% less method text, every gate message is shorter with the same facts, `scripts/token_report.py` measures both, and tests hold every method file and the gate's fixture messages to a byte budget and the product and change loads to 80% of their earlier size.
 - Self-update (#139): a clone install moves only to a release tag on `main` whose files match its manifest, records the previous revision, rolls back a failed install and shows a one-time notice naming both versions.
 
-[Unreleased]: https://github.com/seifsg/ai-software-factory/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/seifsg/ai-software-factory/compare/v0.7.1...HEAD
+[0.7.1]: https://github.com/seifsg/ai-software-factory/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/seifsg/ai-software-factory/compare/v0.6.2...v0.7.0
 [0.6.2]: https://github.com/seifsg/ai-software-factory/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/seifsg/ai-software-factory/compare/v0.6.0...v0.6.1
