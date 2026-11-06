@@ -11,7 +11,7 @@ Analysis, planning or review requests stay in that phase: no code.
 
 ## Work rules
 
-Build systems that outlast their creator. No breakage.
+Build systems that outlast their creator.
 
 - Least code, least CPU and memory: logic only (backend, frontend logic). No one-off wrappers, duplicate checks or over-engineering; O(1) or as close as workload allows; measure before claiming speed.
 - UI/UX: no code-size limit; still fast. Best look and feel, any size. Responsive from start.
@@ -76,7 +76,7 @@ Load  before █████ 800 ms
 
 ## Steps
 
-Live guard: one step per turn: load its skill fresh, even if read earlier (same skill: reread its section), do that step's work, read, search or run fresh, update run file, then load `stop-check` and post its block or todo line as last message, end turn. Any stop, even a wait, spends it. Stop guard sends next step. Check asked: in run's folder, `sh "${CLAUDE_SKILL_DIR}/scripts/run-guard.sh" check ${CLAUDE_SESSION_ID}`, do what it prints; to stop, set `Waiting:`, then quote its `may stop` line, only then. End turns on a block or todo line, each number once: else run ends. Step 5 takes one todo per turn. Host with no Stop hook: Fast chains steps in one turn, never ending one open with `Waiting: none`; Safe ends each with `Say go for step <n>`.
+Live guard: one step per turn: load its skill fresh (same skill: reread its section), do that step's work, read, search or run fresh, update run file, then load `stop-check` and post its block or todo line as last message, end turn. Any stop, even a wait, spends it. Check asked: in run's folder, `sh "${CLAUDE_SKILL_DIR}/scripts/run-guard.sh" check ${CLAUDE_SESSION_ID}`, do what it prints; to stop, set `Waiting:`, then quote its `may stop` line, only then. End turns on a block or todo line, each number once: else run ends. Step 5 takes one todo per turn. Host with no Stop hook: Fast chains steps in one turn, never ending one open with `Waiting: none`; Safe ends each with `Say go for step <n>`.
 
 Each step ends with its block: post full block as own chat message opening with its heading (never summary, never only a file or tool output). Fold in any owner reply before next step reads it. Ticket gets a comment only on status change (steps 0, 5, 7, 8) or relay, linking run file's blocks.
 
@@ -105,7 +105,7 @@ Only what those skills leave out:
 
 ## Gates
 
-After steps 3, 6 and 8, start the [checker](references/checker.md): a fresh light read-only delegate that gets only contracts and outputs, never your reasoning. Paste its PASS as `Gate A: PASS (checker <agent id>) @<sha>` (B, C), then load `stop-check`, post block; guard accepts it only when that checker's own handback says so; Gate C's commit is the pushed HEAD (no remote: HEAD).
+After steps 3, 6 and 8, start the [checker](references/checker.md): a fresh light read-only delegate that gets only contracts and outputs, never your reasoning. Paste its PASS as `Gate A: PASS (checker <agent id>) @<sha>` (B, C), then load `stop-check`, post block; guard accepts it only on that checker's own handback; Gate C's commit is the pushed HEAD (no remote: HEAD).
 
 - No source edit before Gate A passes (a background delegate may start Before captures during the Gate A turn); no PR before Gate B passes.
 - Paste only what a checker handed back, plus the id it started under; never write a gate line yourself, except a cap line or an owner's waiver (run file).
@@ -140,7 +140,7 @@ After steps 3, 6 and 8, start the [checker](references/checker.md): a fresh ligh
 2. Discover before asking: files, config, run files, integrations, current docs.
 3. Never invent identities, commands, access, status or evidence. A host, path, command, version or status written anywhere is a claim: test before use or report. A stand-in proves only itself. Unverified means this machine cannot run the check, never that you skipped it.
 4. Retry only with diagnosed cause or new evidence.
-5. Reconcile uncertain pushes, comments and other external effects before retrying. No duplicates.
+5. Reconcile uncertain pushes, comments and other external effects before retrying.
 6. Notify, merge, release, deploy and spend only with explicit authority. PRs stay draft.
 7. Stop only processes you started; graceful first. Anything outside project folder needs owner's approval.
 
