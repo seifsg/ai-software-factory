@@ -1,6 +1,6 @@
 # Delegate: roles, briefs and gates
 
-Models, overrides: `docs/hosts.md`. A skill project rules name for delegation loads before the first brief; it changes only who does a job, never role, brief contents, gates, handback form or acceptance.
+Models, overrides: `docs/hosts.md`. A skill project rules name for delegation loads before the first brief; it may change who does a job and the form of its brief and handback, never role, gates or acceptance.
 
 ## Roles
 
