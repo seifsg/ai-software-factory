@@ -8,7 +8,7 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ### Added
 
-- Let a project's rules name a skill to load before delegating; it may change who does a job and how briefs and handbacks read, never roles, gates or acceptance ([#309])
+- Let a project's rules name a skill to load before delegating; it may change who does a job and how build briefs and handbacks read, never gates or acceptance ([#309])
 
 ## [0.7.1] - 2026-11-06
 
