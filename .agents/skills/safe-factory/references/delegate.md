@@ -1,6 +1,6 @@
 # Delegate: roles, briefs and gates
 
-Cheapest capable role; models, overrides: `docs/hosts.md`.
+Models, overrides: `docs/hosts.md`. A skill project rules name for delegation loads before the first brief; it changes only who does a job, never role, brief contents, gates, handback form or acceptance.
 
 ## Roles
 
@@ -13,7 +13,7 @@ Cheapest capable role; models, overrides: `docs/hosts.md`.
 | checker | light | its gate line only | gate checks ([checker](checker.md)) | its handback |
 | reviewer | deep | no | final and independent review (`deep-review`), judgement calls that change no file: unclear bugs, architecture | `<path:line or URL> <severity>: <problem>. <fix>.` most severe first, the factory `verdict:` line of `how-to-review-a-pr` last; with no diff, `decision: <choice> because <reason>` instead |
 
-Use the role's tier/edit access; keep method reports (UX, `deep-review`, checker). Every handback except the checker's (its lines only) then adds:
+Keep method reports (UX, `deep-review`, checker). Every handback except the checker's (its lines only) then adds:
 
 - `G<n> PASS <evidence>` or `G<n> FAIL <evidence>` per gate in the brief;
 - `left: <item>: <what it learned>` per unfinished item, when it stops early;
@@ -25,7 +25,7 @@ Refusals first: split, confirm or clarify, then brief again.
 
 Carry goal, role, absolute paths, edit limits, branch, handback and a scratch folder under `.factory/`. Quote needed rules; whole methods only for walkthroughs/reviews. Fresh context: request, decisions, interface, stops, evidence paths; full chat needs a reason. Keep bulky returns in files; give needed fields and paths. Never resend unchanged methods or transcripts. Host controls: adapter.
 
-Verify working folder before writes; stop on mismatch. Background delegates: set `Waiting: jobs: <what>` in the run file before ending turn; result comes back. End with a gate per required outcome:
+Verify working folder before writes; stop on mismatch. Background delegate: `Waiting: jobs:` before ending turn; result comes back. End with a gate per required outcome:
 
 ```text
 G1 <outcome> CHECK: <command> EXPECT: <text its output must show>
@@ -33,7 +33,7 @@ G2 NEG <outcome> CHECK: <set the fix aside as a patch file, run its test, restor
 G3 MANUAL <outcome>: <what the reviewer judges>
 ```
 
-- Every fix a test is said to pin gets a NEG gate. Set it aside with a patch file, never a stash. A gate that cannot fail proves nothing.
+- Every fix a test is said to pin gets a NEG gate; patch file as above, never a stash. A gate that cannot fail proves nothing.
 - A maker's last gate is the narrow test for its change. Slow checks (full suite, long builds) run once on a runner after the wave, on files nobody edits until they end, writing command and output to a file in scratch folder; diagnose a red run before fixing or delegating it.
 - Keep the full tool return, command, session ID and exit result. Pending or missing exit is no PASS. Reuse PASS only with matching source, command, runtime/environment and intact evidence; changed, failed or untrusted receipts need execution. A delegate verdict is not independent acceptance. Read slow-check logs; MANUAL goes to the reviewer.
 
@@ -50,7 +50,7 @@ G3 MANUAL <outcome>: <what the reviewer judges>
 - Lowest role that can clear the gates. To spend less, lower effort before tier.
 - Escalate, don't coach: after two failed gate rounds, job and handbacks go to fresh delegate one tier up, same edit access (runner to analyst, analyst to reviewer, maker to builder). A deep job that fails twice comes back to you (Authority and stops, rule 4).
 - Session is ceiling: a role above session tier runs on session model.
-- Owner's override beats every role. Never change owner's session model or effort.
+- Never change owner's session model or effort.
 
 ## Rounds
 
