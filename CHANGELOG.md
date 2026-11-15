@@ -6,6 +6,10 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+### Added
+
+- Let a project's rules name a skill to load before delegating; it may change who does a job and how build briefs and handbacks read, never gates or acceptance ([#309])
+
 ## [0.7.1] - 2026-11-06
 
 ### Changed
@@ -368,3 +372,4 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 [#283]: https://github.com/seifsg/ai-software-factory/pull/283
 [#286]: https://github.com/seifsg/ai-software-factory/pull/286
 [#302]: https://github.com/seifsg/ai-software-factory/pull/302
+[#309]: https://github.com/seifsg/ai-software-factory/pull/309
