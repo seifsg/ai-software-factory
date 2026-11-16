@@ -2,7 +2,7 @@
 
 Needs Git, read access to the repository (`gh auth login` lets Git use your GitHub credentials over HTTPS) and, on Windows, Git Bash for the hooks.
 
-On Windows, set `MSYS_NO_PATHCONV=1` where the agent's shell and the hooks inherit it: Claude Code `"env": {"MSYS_NO_PATHCONV": "1"}` in `~/.claude/settings.json`, other agents `setx MSYS_NO_PATHCONV 1` and a new session. Without it Git Bash rewrites `git show origin/main:.agents/x` into `origin\main;.agents\x` and the command fails; with it, every `<ref>:<path>` command in the methods works as typed.
+On Windows, Git Bash rewrites `<ref>:<path>` arguments: `git show origin/main:.agents/x` becomes `origin\main;.agents\x` and fails. In Git Bash, prefix such a command with `MSYS_NO_PATHCONV=1` (`MSYS_NO_PATHCONV=1 git show origin/main:.agents/x`); PowerShell needs nothing. Never set it globally (settings `env`, `setx`): Git Bash then stops converting POSIX paths such as `/tmp/x` for native programs, and `git -C /tmp/x` fails.
 
 ## Claude Code
 

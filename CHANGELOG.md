@@ -17,7 +17,7 @@ The public surface is the skill names, the run file format, and the hook scripts
 ### Added
 
 - Add `(ask)` criteria: every explicit request in the brief becomes a criterion that Gate C checks ([#316])
-- Add the `MSYS_NO_PATHCONV=1` setting to the Windows notes so `git show <ref>:<path>` works in Git Bash ([#316])
+- Add a Windows note: in Git Bash, prefix `git show <ref>:<path>` with `MSYS_NO_PATHCONV=1`, never set it globally ([#316])
 
 ### Fixed
 
