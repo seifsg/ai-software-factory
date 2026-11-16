@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "./scripts/factory.cmd guard stop",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/factory.cmd guard stop",
             "timeout": 10
           }
         ]
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "./scripts/factory.cmd guard compact",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/factory.cmd guard compact",
             "timeout": 10
           }
         ]
@@ -27,7 +27,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "./scripts/factory.cmd update-check .",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/factory.cmd update-check ${CLAUDE_PLUGIN_ROOT}",
             "timeout": 5
           }
         ]

@@ -25,7 +25,7 @@ pub fn upstream(repo: &Repo) -> Option<String> {
         merge
     } else {
         let key = format!("remote.{remote}.fetch");
-        repo.config.all(&key).filter_map(|spec| map_refspec(spec, &merge)).last()?
+        repo.config.all(&key).find_map(|spec| map_refspec(spec, &merge))?
     };
     read(repo, &tracking, 0)
 }

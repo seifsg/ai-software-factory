@@ -75,3 +75,11 @@ pub fn write_atomic(p: &Path, data: &[u8]) -> std::io::Result<()> {
         let _ = std::fs::remove_file(&tmp);
     })
 }
+
+/// Empties a file and sets its mtime to now, as sh `: > file` does. Why: on Windows a write of no bytes to
+/// an empty file keeps its old mtime, and the loop guard compares that mtime with the run file's.
+pub fn touch(p: &Path) {
+    if let Ok(f) = std::fs::File::create(p) {
+        let _ = f.set_modified(SystemTime::now());
+    }
+}

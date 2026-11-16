@@ -115,15 +115,33 @@ pub fn full_pass_for(repo: Option<&Repo>, commit: &str) -> bool {
     repo.is_some_and(|r| find_pass(r, commit, "full").is_some())
 }
 
-/// A fresh receipt for the work tree at `folder` (one `git add` spawn for the tree id).
-pub fn stamp(folder: &Path, suite: &str, pass: bool, cmd: &str, secs: u64, runtime: &str, log: &str) -> Result<(PathBuf, Receipt), String> {
+/// What a receipt stands on: the work tree and HEAD at one moment (one `git add` spawn for the tree id).
+pub struct Snapshot {
+    pub work: PathBuf,
+    pub tree: String,
+    pub head: String,
+    pub clean: bool,
+}
+
+/// Takes the snapshot. A suite's receipt takes it before the suite starts: what the suite tested.
+pub fn snapshot(folder: &Path) -> Result<Snapshot, String> {
     let repo = Repo::discover(folder).ok_or("not in a Git work tree")?;
-    let t = tree::worktree_tree(&repo.work)?;
-    let head = repo.info().head;
-    let clean = repo.commit_tree(&head).is_some_and(|h| h == t);
-    let r = Receipt { suite: suite.into(), tree: t, head, clean, pass, cmd: cmd.into(), runtime: runtime.into(), secs, at: utc_iso(crate::paths::now()), log: log.into() };
-    let p = write(&repo.work, &r).map_err(|e| format!("cannot write the receipt: {e}"))?;
+    let tree = tree::tree_of(&repo)?;
+    let head = crate::git::refs::head(&repo);
+    let clean = repo.commit_tree(&head).is_some_and(|h| h == tree);
+    Ok(Snapshot { work: repo.work, tree, head, clean })
+}
+
+/// Writes the receipt of a suite run on snapshot `s`.
+pub fn record(s: Snapshot, suite: &str, pass: bool, cmd: &str, secs: u64, runtime: &str, log: &str) -> Result<(PathBuf, Receipt), String> {
+    let r = Receipt { suite: suite.into(), tree: s.tree, head: s.head, clean: s.clean, pass, cmd: cmd.into(), runtime: runtime.into(), secs, at: utc_iso(crate::paths::now()), log: log.into() };
+    let p = write(&s.work, &r).map_err(|e| format!("cannot write the receipt: {e}"))?;
     Ok((p, r))
+}
+
+/// A receipt for the work tree as it is now (`receipt write`, after a suite another runner ran).
+pub fn stamp(folder: &Path, suite: &str, pass: bool, cmd: &str, secs: u64, runtime: &str, log: &str) -> Result<(PathBuf, Receipt), String> {
+    record(snapshot(folder)?, suite, pass, cmd, secs, runtime, log)
 }
 
 /// `factory receipt run|write|check ...`
@@ -138,6 +156,13 @@ pub fn cli(args: &[&str]) -> u8 {
             };
             let Some((prog, argv)) = cmd.split_first() else { return usage() };
             let suite = opt(opts, "--suite").unwrap_or("full");
+            let before = match snapshot(&here) {
+                Ok(s) => s,
+                Err(e) => {
+                    eprintln!("factory receipt: {e}");
+                    return 1;
+                }
+            };
             let started = std::time::Instant::now();
             let status = std::process::Command::new(prog).args(argv).status();
             let code = match status {
@@ -147,8 +172,9 @@ pub fn cli(args: &[&str]) -> u8 {
                     return 1;
                 }
             };
-            report(stamp(&here, suite, code == 0, &cmd.join(" "), started.elapsed().as_secs(), &runtime, ""));
-            code.clamp(0, 255) as u8
+            report(record(before, suite, code == 0, &cmd.join(" "), started.elapsed().as_secs(), &runtime, ""));
+            // The suite's own code, never 0 for a failure (Windows codes can be negative or above 255).
+            if code == 0 { 0 } else { u8::try_from(code).ok().filter(|c| *c != 0).unwrap_or(1) }
         }
         ["write", opts @ ..] => {
             // The result as `--result PASS|FAIL` or the suite's `--exit <code>`; the suite defaults to `full`.

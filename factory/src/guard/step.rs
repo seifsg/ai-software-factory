@@ -2,7 +2,7 @@
 //! edits of block text), ticks its heading, sets `Next:`, and answers with the Stop rules as one plain line,
 //! so the run goes on in the same turn. `T<k>` lines go under `## 5 Build` without ticking it.
 
-use crate::receipt::opt;
+
 use std::io::Read;
 use std::path::Path;
 
@@ -23,8 +23,8 @@ pub const STEPS: [(&str, &str, &str); 10] = [
 const TICK: &str = "\u{2714}";
 
 pub fn cli(args: &[&str]) -> u8 {
-    let Some((label, opts)) = args.split_first() else {
-        eprintln!("usage: factory guard step <n|Tk> [--session <id>] [--transcript <path>] < block");
+    let [label] = args else {
+        eprintln!("usage: factory guard step <n|Tk> < block   (run in the run's folder)");
         return 2;
     };
     let mut block = String::new();
@@ -32,15 +32,19 @@ pub fn cli(args: &[&str]) -> u8 {
         eprintln!("factory guard step: the posted block comes on stdin, e.g. factory guard step {label} <<'EOF' (the block) EOF");
         return 2;
     }
-    let here = super::cwd();
-    let session = opt(opts, "--session").unwrap_or("");
-    let found = crate::run::locate::find(&here, session, "");
-    let Some(dir) = found.dir else {
-        eprintln!("factory guard step: no run file from this folder");
+    let Some(dir) = crate::run::locate::walk(&super::cwd()) else {
+        eprintln!("factory guard step: no .factory/run.md from this folder");
         return 1;
     };
     let run = Path::new(&dir).join(".factory/run.md");
-    let text = std::fs::read_to_string(&run).unwrap_or_default();
+    // Never write from a failed read: an unreadable or non-UTF-8 run file stays as it is.
+    let text = match std::fs::read(&run).map(String::from_utf8) {
+        Ok(Ok(t)) if !t.is_empty() => t,
+        _ => {
+            eprintln!("factory guard step: {} is empty, unreadable or not UTF-8; left as it is", crate::paths::text(&run));
+            return 1;
+        }
+    };
     let updated = match write(&text, label, &block) {
         Ok(t) => t,
         Err(e) => {
@@ -52,21 +56,21 @@ pub fn cli(args: &[&str]) -> u8 {
         eprintln!("factory guard step: cannot write {}: {e}", crate::paths::text(&run));
         return 1;
     }
-    // A command Stop hook records its session and transcript in the state: the step then judges with the
-    // same evidence (gate handbacks, posted blocks) and keeps that record for the hook's next call.
+    // A command Stop hook records its session and transcript in the state: the step judges with that same
+    // evidence (gate handbacks, posted blocks) and keeps the record as it is for the hook's next call.
     let state = match crate::run::state::State::load(&Path::new(&dir).join(".factory/guard/state")) {
         crate::run::state::Loaded::Valid(s) => s,
         _ => crate::run::state::State::default(),
     };
     let hooked = !state.get("transcript").is_empty();
     let input = crate::hook::Input {
-        session_id: if session.is_empty() { state.get("session").into() } else { session.into() },
-        transcript_path: opt(opts, "--transcript").unwrap_or(state.get("transcript")).into(),
+        session_id: state.get("session").into(),
+        transcript_path: state.get("transcript").into(),
         cwd: dir.clone(),
         last_assistant_message: format!("## {label} "),
         ..Default::default()
     };
-    let r = super::flow::run(&input, super::flow::Mode::Stop, Path::new(&dir));
+    let r = super::flow::run(&input, super::flow::Mode::Step, Path::new(&dir));
     print!("{}", super::reply::step_line(r.as_ref().map_or("", crate::hook::Reply::inner), hooked));
     0
 }
@@ -126,9 +130,11 @@ pub fn write(text: &str, label: &str, block: &str) -> Result<String, String> {
     lines.splice(start + 1..end, section);
     if let Some((m, mname, skill)) = STEPS.get(i + 1).filter(|_| n != "8") {
         let next = format!("Next: {m} {mname} \u{b7} {skill}");
-        match lines.iter().position(|l| l.starts_with("Next:")) {
-            Some(p) => lines[p] = next,
-            None => return Err("the run file has no `Next:` line".into()),
+        let Some(p) = lines.iter().position(|l| l.starts_with("Next:")) else { return Err("the run file has no `Next:` line".into()) };
+        // Next only moves forward: reposting an earlier block (an amended plan) keeps the run where it is.
+        let current = STEPS.iter().position(|(s, _, _)| lines[p].strip_prefix("Next: ").and_then(|v| v.split(' ').next()) == Some(*s));
+        if current.is_none_or(|c| i + 1 > c) {
+            lines[p] = next;
         }
     }
     Ok(lines.join("\n") + "\n")
@@ -172,6 +178,20 @@ mod tests {
         assert!(out.contains("## 3 Plan \u{2714}\n**Files:** a\nGate A: PASS (checker c) @abc1234\n\n## 4 Before"));
         assert!(out.contains("Next: 4 Before \u{b7} how-to-make-a-pr"));
         assert!(!out.contains("old"));
+    }
+
+    #[test]
+    fn reposting_an_earlier_block_keeps_next() {
+        let run = "Next: 7 PR {b7} how-to-make-a-pr
+
+## 3 Plan {2714}
+old
+
+## 4 Before
+";
+        assert!(write(run, "3", "## 3 Plan
+new
+").unwrap().contains("Next: 7 PR"));
     }
 
     #[test]

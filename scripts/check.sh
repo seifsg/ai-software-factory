@@ -253,16 +253,17 @@ t=$(tree) || { t=; echo "check: no tree id for the working tree; no receipt this
 r=.factory/receipts/$t-full.txt
 if [ -n "$t" ] && [ "$FACTORY_CHECK_FRESH" != 1 ] && [ -f "$r" ] &&
   [ "$(grep -cxF -e 'factory-receipt 1' -e 'suite full' -e "tree $t" -e "ref-tree $rt" -e 'result PASS' -e "runtime $rn" "$r")" -eq 6 ]; then
-  echo "check: PASS reused (tree $t)" >&2; exit 0
+  exit 0  # a PASS on this very tree and runtime: nothing to print
 fi
 
-# --changed: a diff of docs only (*.md anywhere, docs/) needs the static checks alone.
+# --changed: a diff of docs only (*.md anywhere but factory/, whose files are test inputs; docs/) needs the static checks alone.
 suite=full
 if [ -n "$base" ]; then
   d=$(git diff --name-only "$base...$ref") || { echo "FAIL: no merge base for $base...$ref"; exit 1; }
   { printf '%s\n' "$d"; git status --porcelain -uall | awk '{ s = substr($0, 4); n = index(s, " -> "); if (n) { print substr(s, 1, n - 1); s = substr(s, n + 4) } print s }'; } |
-    grep -v '^$' | grep -qvE '\.md$|^docs/' || suite=static
+    awk '$0 != "" && (/^factory\// || !(/\.md$/ || /^docs\//)) { f = 1 } END { exit !f }' || suite=static
 fi
 if [ $suite = static ]; then par static; else par static updates doctor binding moved waits stops rounds parity; fi
-[ $bad = 0 ] && [ $suite = full ] && [ -n "$t" ] && receipt
+# A receipt also stands for the static checks, which read <ref>: only a run whose <ref> is this very tree writes one.
+[ $bad = 0 ] && [ $suite = full ] && [ -n "$t" ] && [ "$rt" = "$t" ] && receipt
 exit $bad

@@ -7,7 +7,7 @@ use crate::git::{index, Repo};
 use crate::paths;
 use std::path::{Path, PathBuf};
 
-const OLD: [&str; 4] = ["fast_gate", "run-gate.sh", "skills/safe-engine/", "resolve_bundle"];
+const OLD: [&str; 5] = ["fast_gate", "run-gate.sh", "skills/safe-engine/", "resolve_bundle", "hooks/windows.cmd"];
 
 struct Doctor {
     fix: bool,
@@ -52,7 +52,7 @@ pub fn run(root: &Path, fix: bool) -> (Vec<String>, bool) {
             if only_old_hooks(&text) {
                 d.mv(f, "hooks of an old factory version; the plugin brings its own (copied skills: add hooks again, install.md)");
             } else {
-                d.todo(f, "hooks of an old factory version; delete entries naming fast_gate, run-gate.sh or skills/safe-engine/");
+                d.todo(f, "hooks of an old factory version; delete entries naming fast_gate, run-gate.sh, skills/safe-engine/ or hooks/windows.cmd");
             }
         } else if on && paths::text(f).contains("/.claude/") && text.lines().any(|l| l.find("\"command\"").is_some_and(|i| l[i..].contains("run-guard.sh"))) {
             d.todo(f, "second Stop guard: the plugin already runs it; delete that entry");
@@ -95,7 +95,7 @@ impl Doctor {
             }
         };
         self.last = paths::text(&t);
-        let ok = std::fs::create_dir_all(&b).is_ok() && std::fs::rename(f, &t).is_ok();
+        let ok = std::fs::create_dir_all(&b).is_ok() && move_path(f, &t).is_ok();
         if ok {
             use std::io::Write;
             let line = format!("{}\t{}\n", paths::text(&t), paths::text(f));
@@ -151,7 +151,8 @@ fn tracked(repo: &Repo, dir: &Path) -> bool {
     let rel = paths::text(dir).strip_prefix(&format!("{}/", paths::text(&repo.work))).map(|s| format!("{s}/"));
     let Some(rel) = rel else { return false };
     let data = std::fs::read(repo.gitdir.join("index")).unwrap_or_default();
-    index::parse(&data).is_ok_and(|e| e.iter().any(|e| e.path.starts_with(rel.as_bytes())))
+    // An index this reader refuses (split, sparse) counts as tracked: never move what Git may track.
+    !data.is_empty() && index::parse(&data).map_or(true, |e| e.iter().any(|e| e.path.starts_with(rel.as_bytes())))
 }
 
 fn read(p: &Path) -> String {
@@ -227,7 +228,28 @@ pub fn cli(args: &[&str]) -> u8 {
     u8::from(left)
 }
 
-/// The plugin root: the folder above this binary's `bin/`.
+/// The plugin root: the folder above this binary's `scripts/`.
 pub fn plugin_root() -> PathBuf {
     std::env::current_exe().ok().and_then(|p| Some(p.parent()?.parent()?.to_path_buf())).unwrap_or_else(|| PathBuf::from("."))
+}
+
+/// Moves a file or folder like `mv`: a rename, else (another volume) a copy, then removal of the source.
+fn move_path(from: &Path, to: &Path) -> std::io::Result<()> {
+    if std::fs::rename(from, to).is_ok() {
+        return Ok(());
+    }
+    copy_all(from, to)?;
+    if from.is_dir() { std::fs::remove_dir_all(from) } else { std::fs::remove_file(from) }
+}
+
+fn copy_all(from: &Path, to: &Path) -> std::io::Result<()> {
+    if !from.is_dir() {
+        return std::fs::copy(from, to).map(|_| ());
+    }
+    std::fs::create_dir_all(to)?;
+    for e in std::fs::read_dir(from)? {
+        let e = e?;
+        copy_all(&e.path(), &to.join(e.file_name()))?;
+    }
+    Ok(())
 }

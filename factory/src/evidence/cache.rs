@@ -1,8 +1,8 @@
 //! The offsets cache, `.factory/guard/scan` (JSON, its own file: older guards never read it).
 //! Per transcript: size, mtime, the offset after its last full line, a hash of the bytes before that offset,
 //! and the scanner state there. A shrunk or rewritten file is rescanned from 0; an unchanged one is not opened.
-//! Per projects folder: which project folders hold each session, refreshed by folder mtime, so the
-//! guard never stats every project folder on every turn.
+//! Per project folder: its mtime and the sessions it holds, probed again only when that mtime moves, so a
+//! call lists the projects folder once and stats only folders that changed.
 
 use super::scan::{Session, Sub};
 use super::FileRef;
@@ -20,13 +20,15 @@ pub struct Cache {
 }
 
 impl Cache {
+    /// Loads the cache; a cache from another binary version, or of another shape, starts empty.
     pub fn load(guard: &Path) -> Cache {
         let path = guard.join("scan");
+        let fresh = || json!({"v": crate::VERSION, "files": {}, "homes": {}, "ids": {}});
         let data = std::fs::read(&path)
             .ok()
             .and_then(|b| serde_json::from_slice::<Value>(&b).ok())
-            .filter(|v| v.get("v") == Some(&json!(1)))
-            .unwrap_or_else(|| json!({"v": 1, "files": {}, "homes": {}}));
+            .filter(|v| v["v"] == crate::VERSION && ["files", "homes", "ids"].iter().all(|k| v[k].is_object()))
+            .unwrap_or_else(fresh);
         Cache { path, data, dirty: false }
     }
 
@@ -37,39 +39,30 @@ impl Cache {
         }
     }
 
-    /// For each session, the project folders under `projects` holding `<session>.jsonl` or `<session>/`.
-    /// One directory listing per call; only folders whose mtime moved, and new sessions, are probed.
-    /// For each session, the project folders under `projects` holding `<session>.jsonl` or `<session>/`.
-    /// A session found in the hook transcript's own project folder is looked up nowhere else; any other is
-    /// probed across all project folders once, and again only after the projects folder changed. Why: a full
-    /// probe stats every project folder (thousands); a session living in two project folders is rare.
-    pub fn session_homes(&mut self, projects: &Path, own: &str, sessions: &[String]) -> HashMap<String, Vec<String>> {
+    /// For each session, the project folders under `projects` holding `<session>.jsonl` or `<session>/`, as
+    /// the sh guard's glob over every project folder finds them. One listing of the projects folder per call
+    /// (on Windows its entries carry their mtimes); a folder is probed again only when its mtime moved, and
+    /// for a session not seen before.
+    pub fn session_homes(&mut self, projects: &Path, sessions: &[String]) -> HashMap<String, Vec<String>> {
         let key = crate::paths::text(projects);
-        let stamp = crate::paths::mtime_ns(projects).unwrap_or(0) as u64;
         let old = self.data["homes"][&key].clone();
-        let same_stamp = old["m"].as_u64() == Some(stamp);
-        let mut listing: Option<Vec<String>> = None;
+        let checked: Vec<&str> = old["checked"].as_array().map(|a| a.iter().filter_map(Value::as_str).collect()).unwrap_or_default();
+        let mut dirs = Map::new();
         let mut homes: HashMap<String, Vec<String>> = HashMap::new();
-        let mut saved = Map::new();
-        for q in sessions {
-            let cached: Option<Vec<String>> = old["s"][q].as_array().map(|a| a.iter().filter_map(|v| v.as_str().map(String::from)).collect());
-            let in_own = !own.is_empty() && holds(&projects.join(own), q);
-            let mut found = match cached {
-                Some(c) if !c.is_empty() || same_stamp => c,
-                _ if in_own => vec![own.to_string()],
-                _ => {
-                    let names = listing.get_or_insert_with(|| project_dirs(projects));
-                    names.iter().filter(|p| holds(&projects.join(p), q)).cloned().collect()
-                }
-            };
-            if in_own && !found.iter().any(|p| p == own) {
-                found.push(own.to_string());
-                found.sort();
+        for (name, mtime) in project_dirs(projects) {
+            let prev = &old["dirs"][&name];
+            let fresh = prev["m"].as_u64() == Some(mtime);
+            let had = |q: &str| prev["s"].as_array().is_some_and(|a| a.iter().any(|v| v.as_str() == Some(q)));
+            let held: Vec<&String> = sessions
+                .iter()
+                .filter(|q| if fresh && checked.contains(&q.as_str()) { had(q) } else { holds(&projects.join(&name), q) })
+                .collect();
+            for q in &held {
+                homes.entry((*q).clone()).or_default().push(name.clone());
             }
-            saved.insert(q.clone(), json!(found));
-            homes.insert(q.clone(), found);
+            dirs.insert(name, if held.is_empty() { json!({"m": mtime}) } else { json!({"m": mtime, "s": held}) });
         }
-        let entry = json!({"m": stamp, "s": saved});
+        let entry = json!({"checked": sessions, "dirs": dirs});
         if self.data["homes"][&key] != entry {
             self.data["homes"][&key] = entry;
             self.dirty = true;
@@ -87,18 +80,27 @@ impl Cache {
         self.scan(f)
     }
 
-    /// True when `id` occurs anywhere in the file (fallback proof); cached per file size and mtime.
+    /// True when `id` occurs anywhere in the file (fallback proof). Read from the saved offset, overlapping
+    /// by the id's length; a found id stays found while the file only grows, a shrunk file is read again.
     pub fn contains(&mut self, f: &FileRef, id: &str) -> bool {
         let key = format!("{}#{}", crate::paths::text(&f.path), id);
-        let stamp = json!([f.size, f.mtime]);
         let e = &self.data["ids"][&key];
-        if e["at"] == stamp {
-            return e["hit"].as_bool().unwrap_or(false);
+        let (mut off, hit) = (e["off"].as_u64().unwrap_or(0), e["hit"].as_bool().unwrap_or(false));
+        if off > f.size {
+            off = 0;
+        } else if hit {
+            return true;
         }
-        let hit = std::fs::read(&f.path).is_ok_and(|b| memchr::memmem::find(&b, id.as_bytes()).is_some());
-        self.data["ids"][&key] = json!({"at": stamp, "hit": hit});
+        let start = off.saturating_sub(id.len() as u64);
+        let mut rest = Vec::new();
+        let read = std::fs::File::open(&f.path).and_then(|mut file| {
+            file.seek(SeekFrom::Start(start))?;
+            file.read_to_end(&mut rest)
+        });
+        let found = read.is_ok() && memchr::memmem::find(&rest, id.as_bytes()).is_some();
+        self.data["ids"][&key] = json!({"off": start + rest.len() as u64, "hit": found});
         self.dirty = true;
-        hit
+        found
     }
 
     /// Feeds the file's new full lines to a scanner restored at the saved offset, saves it there, then
@@ -196,14 +198,17 @@ fn tail_hash(file: &mut std::fs::File, off: u64) -> Option<String> {
     Some(format!("{h:016x}"))
 }
 
-/// Project folder names under `projects`, sorted as a glob lists them (hidden names left out).
-fn project_dirs(projects: &Path) -> Vec<String> {
-    let mut v: Vec<String> = std::fs::read_dir(projects)
+/// Project folder names under `projects` with their mtimes, sorted as a glob lists them (hidden names left out).
+fn project_dirs(projects: &Path) -> Vec<(String, u64)> {
+    let mut v: Vec<(String, u64)> = std::fs::read_dir(projects)
         .map(|rd| {
             rd.flatten()
                 .filter(|e| e.file_type().is_ok_and(|t| t.is_dir() || (t.is_symlink() && e.path().is_dir())))
-                .map(|e| e.file_name().to_string_lossy().into_owned())
-                .filter(|n| !n.starts_with('.'))
+                .map(|e| {
+                    let m = e.metadata().ok().and_then(|m| m.modified().ok()).map_or(0, crate::paths::ns) as u64;
+                    (e.file_name().to_string_lossy().into_owned(), m)
+                })
+                .filter(|(n, _)| !n.starts_with('.'))
                 .collect()
         })
         .unwrap_or_default();

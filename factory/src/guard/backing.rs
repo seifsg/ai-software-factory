@@ -79,7 +79,7 @@ fn receipt(repo: Option<&Repo>, x: char, sha: &str) -> (bool, String) {
         return (true, String::new());
     }
     match repo.and_then(|r| crate::receipt::find_pass(r, sha, "full")) {
-        Some((p, _)) => (true, format!("; receipt {}", crate::paths::text(&p))),
+        Some((p, r)) => (true, format!("; receipt {} (`{}`, {} s, clean {})", crate::paths::text(&p), r.cmd, r.secs, if r.clean { "yes" } else { "no" })),
         None => (false, format!("; no full-suite receipt for the tree of {sha}")),
     }
 }

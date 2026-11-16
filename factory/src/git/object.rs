@@ -4,6 +4,9 @@
 use super::Repo;
 use std::path::{Path, PathBuf};
 
+/// Delta chain limit: far past what Git writes (depth 50, aggressive 250), well inside a 1 MB Windows stack.
+const MAX_DEPTH: u16 = 1000;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Kind {
     Commit,
@@ -55,6 +58,11 @@ pub fn resolve(repo: &Repo, prefix: &str) -> Option<String> {
 
 /// Reads an object's kind and body by full sha.
 pub fn read(repo: &Repo, sha: &str) -> Option<(Kind, Vec<u8>)> {
+    read_at_depth(repo, sha, 0)
+}
+
+/// Reads an object, counting delta depth across REF deltas too (a cyclic pack ends, never overflows).
+fn read_at_depth(repo: &Repo, sha: &str, depth: u16) -> Option<(Kind, Vec<u8>)> {
     let dirs = object_dirs(repo);
     for dir in &dirs {
         if let Some(o) = read_loose(&dir.join(&sha[..2]).join(&sha[2..])) {
@@ -66,7 +74,7 @@ pub fn read(repo: &Repo, sha: &str) -> Option<(Kind, Vec<u8>)> {
         for idx in pack_indexes(dir) {
             if let Some(off) = Index::open(&idx).and_then(|i| i.offset(&raw)) {
                 let mut pack = Pack { file: std::fs::File::open(idx.with_extension("pack")).ok()? };
-                return unpack(repo, &mut pack, off, 0);
+                return unpack(repo, &mut pack, off, depth);
             }
         }
     }
@@ -180,8 +188,8 @@ impl Pack {
 }
 
 /// Reads the object at `off` in a pack, applying OFS and REF deltas (depth-limited).
-fn unpack(repo: &Repo, pack: &mut Pack, off: u64, depth: u8) -> Option<(Kind, Vec<u8>)> {
-    if depth > 50 {
+fn unpack(repo: &Repo, pack: &mut Pack, off: u64, depth: u16) -> Option<(Kind, Vec<u8>)> {
+    if depth > MAX_DEPTH {
         return None;
     }
     let head = pack.window(off, 32)?;
@@ -217,7 +225,7 @@ fn unpack(repo: &Repo, pack: &mut Pack, off: u64, depth: u8) -> Option<(Kind, Ve
         7 => {
             let base_sha = to_hex(head.get(i..i + 20)?);
             let delta = pack.inflate(off + i as u64 + 20, size)?;
-            let (kind, base) = read(repo, &base_sha)?;
+            let (kind, base) = read_at_depth(repo, &base_sha, depth + 1)?;
             Some((kind, apply_delta(&base, &delta)?))
         }
         _ => None,

@@ -88,7 +88,7 @@ pub fn check(i: &Input) -> Report {
         Some(dir) => labels(&secs, steps, skills, dir, run_kind(i.run), &mut r),
         None => r.notes.push("no skills folder found: contract labels not checked (pass --skills <dir>)".into()),
     }
-    let lenses = i.skills.map(lens_names).unwrap_or_else(|| ["change-guard", "compliance", "security", "performance", "journey"].map(String::from).to_vec());
+    let lenses = lenses(i.skills);
     match i.gate {
         'A' => gate_a(&secs, i.run, &mut r),
         'B' => {
@@ -241,7 +241,7 @@ fn first_sha(l: &str) -> Option<String> {
 }
 
 /// Gate C: stamps on HEAD, the review's card, claim, tables and verdict, `Left running:` last, gates A and B.
-fn gate_c(secs: &[Section], i: &Input, lenses: &[String], r: &mut Report) {
+fn gate_c(secs: &[Section], i: &Input, lenses: &Lenses, r: &mut Report) {
     let find = |l: &str| secs.iter().find(|s| s.label == l);
     for s in secs.iter().filter(|s| s.label == "7" || s.label == "8") {
         for l in &s.lines {
@@ -300,26 +300,44 @@ fn file_line(l: &str) -> bool {
     })
 }
 
-/// Lens names from deep-review's lens table (`| [name](references/...)`).
-fn lens_names(skills: &Path) -> Vec<String> {
-    let text = std::fs::read_to_string(skills.join("deep-review/SKILL.md")).unwrap_or_default();
-    let v: Vec<String> = text
+/// The lenses deep-review lists and the verdict words each may end with.
+pub struct Lenses {
+    pub names: Vec<String>,
+    /// PASS, FAIL, CONDITIONAL, BLOCK, plus each lens reference's own `VERDICT: <a | b>` words (`clean`, `delivers`).
+    pub verdicts: Vec<String>,
+}
+
+/// Lens names from deep-review's table (`| [name](references/name.md)`), verdict words from their references.
+fn lenses(skills: Option<&Path>) -> Lenses {
+    const NAMES: [&str; 5] = ["change-guard", "compliance", "security", "performance", "journey"];
+    let mut verdicts: Vec<String> = ["PASS", "FAIL", "CONDITIONAL", "BLOCK"].map(String::from).to_vec();
+    let Some(dir) = skills else { return Lenses { names: NAMES.map(String::from).to_vec(), verdicts } };
+    let text = std::fs::read_to_string(dir.join("deep-review/SKILL.md")).unwrap_or_default();
+    let mut names: Vec<String> = text
         .lines()
         .filter_map(|l| l.strip_prefix("| [")?.split_once("](references/").map(|(n, _)| n.to_string()))
         .collect();
-    if v.is_empty() { ["change-guard", "compliance", "security", "performance", "journey"].map(String::from).to_vec() } else { v }
+    if names.is_empty() {
+        names = NAMES.map(String::from).to_vec();
+    }
+    for n in &names {
+        let reference = std::fs::read_to_string(dir.join(format!("deep-review/references/{n}.md"))).unwrap_or_default();
+        if let Some(words) = reference.split("VERDICT: <").nth(1).and_then(|s| s.split('>').next()) {
+            verdicts.extend(words.split('|').map(|w| w.trim().to_string()).filter(|w| !w.is_empty()));
+        }
+    }
+    Lenses { names, verdicts }
 }
 
-/// Each lens line carries its findings (a table or "no findings") and a verdict; compliance always runs.
 /// Each lens carries its findings (a table, or "no findings") and a verdict; compliance always runs.
 /// A lens's text runs from its `**<lens>:**` line to the next lens or `**Label:**` line, so a review's
 /// lens subsections (heading line, prose, table, verdict) count as one.
-fn lens_lines(s: &Section, lenses: &[String], r: &mut Report) {
+fn lens_lines(s: &Section, lenses: &Lenses, r: &mut Report) {
     let starts: Vec<(usize, &String)> = s
         .lines
         .iter()
         .enumerate()
-        .filter_map(|(k, l)| lenses.iter().find(|n| l.trim_start_matches(['-', ' ']).starts_with(&format!("**{n}"))).map(|n| (k, n)))
+        .filter_map(|(k, l)| lenses.names.iter().find(|n| l.trim_start_matches(['-', ' ']).starts_with(&format!("**{n}"))).map(|n| (k, n)))
         .collect();
     for (j, (k, name)) in starts.iter().enumerate() {
         let next_label = s.lines[k + 1..]
@@ -334,12 +352,13 @@ fn lens_lines(s: &Section, lenses: &[String], r: &mut Report) {
         let low = body.join("\n").to_ascii_lowercase();
         let table = body.iter().skip(1).any(|x| x.trim_start().starts_with('|'));
         let named = s.lines.iter().any(|x| x.trim_start().starts_with('|') && x.contains(&format!("| {name} |")));
-        let severity = ["low", "medium", "high", "critical", "finding"].iter().any(|w| low.contains(w)) && s.lines.iter().any(|x| x.trim_start().starts_with('|') && ["LOW", "MEDIUM", "HIGH", "CRITICAL"].iter().any(|w| x.contains(w)));
+        let severity = ["low", "medium", "high", "critical", "finding"].iter().any(|w| low.contains(w))
+            && s.lines.iter().any(|x| x.trim_start().starts_with('|') && ["LOW", "MEDIUM", "HIGH", "CRITICAL"].iter().any(|w| x.contains(w)));
         if !(low.contains("no findings") || table || named || severity) {
             r.gaps.push(format!("{}: **{name}:** has no findings table or \"no findings\"", s.heading));
         }
-        if !body.iter().any(|l| ["PASS", "FAIL", "CONDITIONAL", "BLOCK"].iter().any(|v| l.contains(v))) {
-            r.gaps.push(format!("{}: **{name}:** has no verdict (PASS, FAIL, CONDITIONAL)", s.heading));
+        if !body.iter().any(|l| lenses.verdicts.iter().any(|v| l.contains(v.as_str()))) {
+            r.gaps.push(format!("{}: **{name}:** has no verdict ({})", s.heading, lenses.verdicts.join(", ")));
         }
     }
     if !starts.iter().any(|(_, n)| n.as_str() == "compliance") {

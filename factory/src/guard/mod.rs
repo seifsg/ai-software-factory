@@ -37,7 +37,7 @@ pub fn cli(args: &[&str]) -> u8 {
         ["clear", dir] => clear(Some(dir)),
         ["step", rest @ ..] => step::cli(rest),
         _ => {
-            eprintln!("usage: factory guard stop|compact | check [<session id>] | clear [<run folder>] | step <n|Tk> [--session <id>]");
+            eprintln!("usage: factory guard stop|compact | check [<session id>] | clear [<run folder>] | step <n|Tk> < block");
             2
         }
     }

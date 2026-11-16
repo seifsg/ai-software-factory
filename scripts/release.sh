@@ -3,7 +3,7 @@
 #   sh scripts/release.sh prepare X.Y.Z   branch from origin/main, bump, move CHANGELOG and UPGRADING, check, open the release PR
 #   sh scripts/release.sh publish X.Y.Z   after the owner merged that PR: tag its merge commit, push the tag, move stable, publish as Latest with the binaries
 cmd=$1 v=$2
-# The factory binaries release-binaries.yml bundles in .agents/bin with SHA256SUMS, one per target.
+# The factory binaries release-binaries.yml bundles in .agents/scripts with SHA256SUMS and SOURCE, one per target.
 bins="factory-x86_64-pc-windows-msvc.exe factory-aarch64-pc-windows-msvc.exe factory-x86_64-apple-darwin factory-aarch64-apple-darwin factory-x86_64-unknown-linux-musl factory-aarch64-unknown-linux-musl"
 die() { echo "release: $*" >&2; exit 1; }
 case $cmd:$v in prepare:[0-9]*.[0-9]*.[0-9]* | publish:[0-9]*.[0-9]*.[0-9]*) ;; *) die "usage: sh scripts/release.sh prepare|publish X.Y.Z" ;; esac
@@ -101,6 +101,9 @@ publish() {
     set -- "$@" "$b.d/$f"
   done
   [ "$(grep -c . "$b.d/SHA256SUMS")" -eq 6 ] && (cd "$b.d" && sums -c SHA256SUMS >/dev/null) || die ".agents/scripts/SHA256SUMS at $m does not match its six binaries"
+  # The bundle names the factory/ tree it was built from: a later change to factory/ needs a new bundle.
+  src=$(MSYS_NO_PATHCONV=1 git cat-file blob "$m:.agents/scripts/SOURCE" 2>/dev/null)
+  [ -n "$src" ] && [ "$src" = "$(MSYS_NO_PATHCONV=1 git rev-parse "$m:factory")" ] || die ".agents/scripts/SOURCE at $m does not name the factory/ tree of $m: push to release/v$v again so the bundle rebuilds"
   if [ -z "$t" ]; then
     git tag -a "v$v" -m "v$v" "$m" || die "cannot tag"
     git push -q origin "refs/tags/v$v" || { git tag -d "v$v" >/dev/null; die "tag push failed; local tag removed, rerun"; }

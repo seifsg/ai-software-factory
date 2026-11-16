@@ -6,6 +6,7 @@ tools/night/pre-push -text
 *.png -text
 # Bundled binaries, their checksums and the parity corpus keep their bytes: the guard reads them as stored.
 .agents/scripts/SHA256SUMS -text
+.agents/scripts/SOURCE -text
 .agents/scripts/factory-* -text
 factory/parity/** -text
 factory/tests/fixtures/** -text

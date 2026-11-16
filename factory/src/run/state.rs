@@ -63,12 +63,12 @@ impl State {
         FIELDS.iter().map(|k| format!("g_{k}='{}'\n", self.get(k))).collect::<String>().into_bytes()
     }
 
-    /// Writes the state, creating the guard folder.
+    /// Writes the state, creating the guard folder; through a rename, so a reader never sees half a state.
     pub fn save(&self, path: &Path) {
         if let Some(dir) = path.parent() {
             let _ = std::fs::create_dir_all(dir);
         }
-        let _ = std::fs::write(path, self.bytes());
+        let _ = crate::paths::write_atomic(path, &self.bytes());
     }
 }
 

@@ -21,7 +21,7 @@ pub fn parse(data: &[u8]) -> Result<Vec<Entry>, String> {
         return Err(format!("index version {version} not supported"));
     }
     let count = be32(data, 8) as usize;
-    let mut out = Vec::with_capacity(count);
+    let mut out = Vec::with_capacity(count.min(data.len() / 62));
     let mut at = 12;
     let mut prev: Vec<u8> = Vec::new();
     for _ in 0..count {
@@ -43,14 +43,14 @@ pub fn parse(data: &[u8]) -> Result<Vec<Entry>, String> {
         let path = if version == 4 {
             let (strip, n) = varint(data, p)?;
             p += n;
-            let end = p + data[p..].iter().position(|&b| b == 0).ok_or("path not ended")?;
+            let end = p + data.get(p..).ok_or("index entry cut short")?.iter().position(|&b| b == 0).ok_or("path not ended")?;
             let keep = prev.len().checked_sub(strip).ok_or("bad path prefix")?;
             let mut full = prev[..keep].to_vec();
             full.extend_from_slice(&data[p..end]);
             at = end + 1;
             full
         } else {
-            let end = p + data[p..].iter().position(|&b| b == 0).ok_or("path not ended")?;
+            let end = p + data.get(p..).ok_or("index entry cut short")?.iter().position(|&b| b == 0).ok_or("path not ended")?;
             let path = data[p..end].to_vec();
             at += (end - at + 8) & !7; // entries pad with 1 to 8 NULs to a multiple of 8
             path
@@ -60,7 +60,7 @@ pub fn parse(data: &[u8]) -> Result<Vec<Entry>, String> {
             out.push(Entry { mode, sha, path });
         }
     }
-    if data[at..].windows(4).next() == Some(b"link") {
+    if data.get(at..).ok_or("index entry cut short")?.starts_with(b"link") {
         return Err("split index not supported".into());
     }
     Ok(out)

@@ -17,6 +17,15 @@ pub enum Mode {
     Stop,
     Compact,
     Clear,
+    /// `guard step`: a turn end inside the turn; it neither reads nor writes the loop guard's nudge.
+    Step,
+}
+
+impl Mode {
+    /// Stop and step both end a step: they record ticks and the session in the state.
+    fn turn_end(self) -> bool {
+        matches!(self, Mode::Stop | Mode::Step)
+    }
 }
 
 /// Runs the guard for one event. `start` is where the walk begins when the input names no usable cwd.
@@ -27,7 +36,7 @@ pub fn run(input: &Input, mode: Mode, start: &Path) -> Option<Reply> {
     };
     let found = locate::find(&start, &input.session_id, &input.last_assistant_message);
     let Some(d) = found.dir else {
-        if mode != Mode::Stop || !found.step_block {
+        if !mode.turn_end() || !found.step_block {
             return None;
         }
         return Some(if input.stop_hook_active { Reply::System(reply::NO_RUN_ACTIVE.into()) } else { Reply::Block(reply::NO_RUN.into()) });
@@ -37,7 +46,7 @@ pub fn run(input: &Input, mode: Mode, start: &Path) -> Option<Reply> {
     let g = dir.join(".factory/guard");
     let st = g.join("state");
     let rf = format!("{d}/.factory/run.md");
-    if mode == Mode::Stop && paths::age_secs(&run).is_some_and(|a| a > 720 * 60) {
+    if mode.turn_end() && paths::age_secs(&run).is_some_and(|a| a > 720 * 60) {
         return None;
     }
     let sid = input.session_id.as_str();
@@ -183,7 +192,7 @@ impl Ctx<'_> {
         if self.f.finished {
             self.s.set("end", "done");
         }
-        if self.mode == Mode::Stop {
+        if self.mode.turn_end() {
             if self.s.get("session") != self.sid {
                 self.s.set("sstep", self.f.step.to_string());
             }
@@ -196,7 +205,7 @@ impl Ctx<'_> {
             self.s.set("transcript", self.tp.clone());
         }
         let unp = self.f.unposted.clone();
-        if self.mode == Mode::Stop && !unp.is_empty() && !self.f.stopped && self.s.get("halt").is_empty() && unp != self.read_marker("unposted") {
+        if self.mode.turn_end() && !unp.is_empty() && !self.f.stopped && self.s.get("halt").is_empty() && unp != self.read_marker("unposted") {
             self.save();
             let _ = std::fs::write(self.g.join("unposted"), &unp);
             return Some(Reply::Block(reply::unposted(&self.rf, &unp)));
@@ -205,7 +214,7 @@ impl Ctx<'_> {
             if let Some(link) = locate::session_file(&self.input.session_id) {
                 let _ = std::fs::remove_file(link);
             }
-            if self.mode == Mode::Stop {
+            if self.mode.turn_end() {
                 self.save();
             }
             return None;
@@ -313,10 +322,12 @@ impl Ctx<'_> {
             return None;
         }
         let nudge = self.g.join("nudge");
-        if self.input.stop_hook_active && nudge.is_file() && paths::mtime_ns(&self.run) <= paths::mtime_ns(&nudge) {
-            return Some(Reply::System(reply::idle_stop(&self.rf)));
+        if self.mode == Mode::Stop {
+            if self.input.stop_hook_active && nudge.is_file() && paths::mtime_ns(&self.run) <= paths::mtime_ns(&nudge) {
+                return Some(Reply::System(reply::idle_stop(&self.rf)));
+            }
+            paths::touch(&nudge);
         }
-        let _ = std::fs::write(&nudge, b"");
         self.idle();
         if let Some(r) = self.halt(lp, rounds) {
             return Some(r);

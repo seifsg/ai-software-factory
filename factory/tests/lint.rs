@@ -140,3 +140,21 @@ fn placeholders_in_left_running_are_flagged() {
     let r = lint("r4", 'C', HEAD_R4, &[("**Fixes:**", "Left running: worktree, stop: `git worktree remove <this folder>`\n**Fixes:**")]);
     flags(&r, "placeholder <this folder>");
 }
+
+/// The final runs passed their gates: the lint must find nothing a checker would not, except form gaps the
+/// contract names and that run's lenient checker let through (listed here, so a new gap fails the test).
+#[test]
+fn final_runs_have_only_known_gaps() {
+    for (run, head) in [("r3", HEAD_R3), ("r4", HEAD_R4)] {
+        for gate in ['A', 'B', 'C'] {
+            let r = lint(run, gate, head, &[]);
+            let known: &[&str] = match (run, gate) {
+                ("r3", 'B') => &["**compliance:** has no findings"],
+                ("r3", 'C') => &["PR card lacks `author:`", "PR card lacks `state:`", "PR card lacks `mergeable:`"],
+                _ => &[],
+            };
+            let unknown: Vec<&String> = r.gaps.iter().filter(|g| !known.iter().any(|k| g.contains(k))).collect();
+            assert!(unknown.is_empty(), "{run} gate {gate}: {unknown:#?}");
+        }
+    }
+}

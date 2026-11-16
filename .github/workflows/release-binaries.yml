@@ -24,15 +24,21 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      id-token: write # build provenance: a signed record of the workflow run that built each binary
+      attestations: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           ref: ${{ github.sha }} # the commit the binaries were built from; the push fails if the branch moved
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           pattern: factory-*
           path: .agents/scripts
           merge-multiple: true
+      # Anyone can check a bundled binary came from this workflow: gh attestation verify <file> -R <this repo>.
+      - uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2.4.0
+        with:
+          subject-path: .agents/scripts/factory-*
       - name: Commit the binaries and SHA256SUMS
         env:
           BRANCH: ${{ github.ref_name }}
@@ -44,7 +50,9 @@ jobs:
           set -- factory-*-*
           [ "$#" -eq 6 ] && [ -f "$1" ] || { echo "::error::expected 6 binaries, got: $*"; exit 1; }
           sha256sum "$@" > SHA256SUMS
-          git add "$@" SHA256SUMS
+          # The factory/ tree the binaries were built from: publish refuses a bundle from other source.
+          git rev-parse "${GITHUB_SHA}:factory" > SOURCE
+          git add "$@" SHA256SUMS SOURCE
           git update-index --chmod=+x factory-*-apple-darwin factory-*-linux-musl
           if git diff --cached --quiet; then echo "binaries and SHA256SUMS unchanged"; exit 0; fi
           git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \

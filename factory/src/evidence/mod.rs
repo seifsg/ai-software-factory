@@ -55,8 +55,7 @@ fn sh_dirname(s: &str) -> &str {
 pub fn collect(tp: &str, sessions: &[String], want: &[String], guard: &Path) -> Evidence {
     let projects = sh_dirname(sh_dirname(tp)).to_string();
     let mut c = cache::Cache::load(guard);
-    let own = sh_dirname(tp).rsplit('/').next().unwrap_or("");
-    let homes = if projects.is_empty() { HashMap::new() } else { c.session_homes(Path::new(&projects), own, sessions) };
+    let homes = if projects.is_empty() { HashMap::new() } else { c.session_homes(Path::new(&projects), sessions) };
     let mut subs: Vec<FileRef> = Vec::new();
     for q in sessions {
         for p in homes.get(q).into_iter().flatten() {
@@ -90,6 +89,11 @@ pub fn collect(tp: &str, sessions: &[String], want: &[String], guard: &Path) -> 
         ev.sent.extend(s.sent.iter().cloned());
         if ev.fallback {
             ev.claude_fallback |= s.sidechain;
+        }
+    }
+    // Fallback proof: wanted ids in the transcripts; moot once a Claude Code transcript makes the mode unproven.
+    if ev.fallback && !ev.claude_fallback {
+        for f in &sessions_files {
             for id in want {
                 if c.contains(f, id) {
                     ev.seen.insert(id.clone());

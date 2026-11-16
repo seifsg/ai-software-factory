@@ -6,7 +6,7 @@ const USAGE: &str = "usage: factory <command>
   guard stop|compact          hook JSON on stdin
   guard check [<session id>]  with an id: the Stop rules as one line; without: gate backing
   guard clear [<run folder>]  the owner's command after a halt
-  guard step <n|Tk> [--session <id>] < block
+  guard step <n|Tk> < block    in the run's folder
   doctor [<plugin root>] [--fix]
   update-check [<plugin root>]
   lint <A|B|C> [--skills <dir>] [<run folder>]
