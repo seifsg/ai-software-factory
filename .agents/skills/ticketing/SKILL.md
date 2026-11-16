@@ -70,7 +70,7 @@ Open tickets are the backlog, kept current in every mode, autonomously unless ow
 
 ## Definition of done and checklist
 
-1. Write definition of done (criteria with IDs) at creation, checklist (plan's todos as task items) at plan time.
+1. Write definition of done (criteria with IDs) at creation, checklist (plan's todos as task items) at plan time. Every explicit ask in the owner's brief or request (a report, link, answer, number, file) becomes a criterion quoting it: `**A7 (ask):**`.
 2. Each item runs `get-ready-to-code` 0–4 loop; tick only after its check passed (real effect used and seen working), proof beside the tick.
 3. Independent items and tickets run in parallel as far as files, dependencies, capacity allow; each item ticked after own check, each ticket keeps own checklist loop. One writer per ticket body: coordinator ticks, delegates report. Parallel tickets, handoffs to other sessions, dependencies between tickets: [parallel work](references/parallel-work.md).
 4. Finished: every item ticked and every criterion proven; otherwise loop on failing item until it passes. Blocked only when run cannot clear it (access, capability, owner decision): reason, next action, who unblocks; independent items continue.
@@ -111,5 +111,5 @@ In a factory run this is step 0. Block `## 0 Ticket` holds:
 
 - [ ] The ticket link, or `local: .factory/ticket.md` with the reason
 - [ ] Reused or new, with the search terms used
-- [ ] The definition of done as labelled criteria
+- [ ] The definition of done as labelled criteria, every explicit ask of the brief among them as `(ask)`
 - [ ] The checklist (filled from the plan's todos at step 3) and the status
