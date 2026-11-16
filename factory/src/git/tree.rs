@@ -4,7 +4,7 @@
 
 use super::{Repo, index};
 use std::path::Path;
-use std::process::{Command, Stdio};
+use std::process::Stdio;
 
 /// Tree id of the work tree holding `folder`, as `git add -A -- . ':(exclude).factory'` then
 /// `git write-tree` would give it (tracked `.factory/` entries stay as the index has them).
@@ -54,35 +54,13 @@ fn hash_into(repo: &Repo, private: &Path) -> Result<String, String> {
 
 /// One `git add -A` into the private index, with or without the `.factory` exclude.
 fn add(repo: &Repo, private: &Path, exclude: bool) -> Result<std::process::Output, String> {
-    let mut cmd = Command::new("git");
-    cmd.arg("-C").arg(&repo.work).args([
-        "-c",
-        "core.splitIndex=false",
-        "-c",
-        "index.sparse=false",
-        "-c",
-        "core.safecrlf=false",
-        "add",
-        "-A",
-        "--",
-        ".",
-    ]);
+    let mut cmd = super::command(repo);
+    cmd.args(["-c", "core.splitIndex=false", "-c", "index.sparse=false", "-c", "core.safecrlf=false", "add", "-A", "--", "."]);
     if exclude {
         cmd.arg(":(exclude).factory");
     }
-    for v in ["GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES"] {
-        cmd.env_remove(v);
-    }
-    // English messages: the ignored-folder retry reads stderr.
-    cmd.env("GIT_INDEX_FILE", private)
-        .env("GIT_OPTIONAL_LOCKS", "0")
-        .env("LC_ALL", "C")
-        .env("LANGUAGE", "")
-        .stdin(Stdio::null())
-        .stdout(Stdio::null())
-        .stderr(Stdio::piped())
-        .output()
-        .map_err(|e| format!("cannot run git: {e}"))
+    // English messages (the shared command sets LC_ALL): the ignored-folder retry reads stderr.
+    cmd.env("GIT_INDEX_FILE", private).stdout(Stdio::null()).stderr(Stdio::piped()).output().map_err(|e| format!("cannot run git: {e}"))
 }
 
 /// The checkout's own ignore files name `.factory` (the factory adds `.factory/` to `.gitignore`).

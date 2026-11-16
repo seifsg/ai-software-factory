@@ -1,5 +1,5 @@
 //! Git objects read natively: loose (zlib) and packed (idx v2, deltas), with alternates.
-//! Only what receipts need: find a commit by sha prefix and read its body.
+//! What receipts and the Before rule need: find a commit by sha prefix, read commits.
 
 use super::Repo;
 use std::path::{Path, PathBuf};
@@ -15,70 +15,69 @@ pub enum Kind {
     Tag,
 }
 
-/// Object folders: the repo's, then each alternate's.
-fn object_dirs(repo: &Repo) -> Vec<PathBuf> {
-    let main = repo.common.join("objects");
-    let mut dirs = vec![main.clone()];
-    if let Ok(text) = std::fs::read_to_string(main.join("info/alternates")) {
-        for l in text.lines().map(str::trim).filter(|l| !l.is_empty() && !l.starts_with('#')) {
-            let p = PathBuf::from(crate::paths::norm(l));
-            dirs.push(if p.is_absolute() || crate::paths::is_abs(l) { p } else { main.join(p) });
-        }
-    }
-    dirs
+/// A repository's object folders with their pack indexes read once: a walk over many commits pays one read
+/// per index, not one per object.
+pub struct Store {
+    dirs: Vec<PathBuf>,
+    /// Each pack's index and its `.pack` path.
+    packs: Vec<(Index, PathBuf)>,
 }
 
-/// The unique full sha starting with `prefix`, across loose objects and pack indexes.
-pub fn resolve(repo: &Repo, prefix: &str) -> Option<String> {
-    let p = prefix.to_ascii_lowercase();
-    if p.len() < 4 || p.len() > 40 || !p.bytes().all(|b| b.is_ascii_hexdigit()) {
-        return None;
+impl Store {
+    /// Object folders (the repo's, then each alternate's) and their readable v2 pack indexes.
+    pub fn open(repo: &Repo) -> Store {
+        let main = repo.common.join("objects");
+        let mut dirs = vec![main.clone()];
+        if let Ok(text) = std::fs::read_to_string(main.join("info/alternates")) {
+            for l in text.lines().map(str::trim).filter(|l| !l.is_empty() && !l.starts_with('#')) {
+                let p = PathBuf::from(crate::paths::norm(l));
+                dirs.push(if p.is_absolute() || crate::paths::is_abs(l) { p } else { main.join(p) });
+            }
+        }
+        let packs = dirs.iter().flat_map(|d| pack_indexes(d)).filter_map(|p| Some((Index::open(&p)?, p.with_extension("pack")))).collect();
+        Store { dirs, packs }
     }
-    let mut found: Vec<String> = Vec::new();
-    for dir in object_dirs(repo) {
-        if let Ok(rd) = std::fs::read_dir(dir.join(&p[..2])) {
-            for e in rd.flatten() {
-                let name = e.file_name().to_string_lossy().into_owned();
-                let full = format!("{}{}", &p[..2], name);
-                if name.len() == 38 && full.starts_with(&p) {
-                    found.push(full);
+
+    /// The unique full sha starting with `prefix`, across loose objects and pack indexes.
+    pub fn resolve(&self, prefix: &str) -> Option<String> {
+        let p = prefix.to_ascii_lowercase();
+        if p.len() < 4 || p.len() > 40 || !p.bytes().all(|b| b.is_ascii_hexdigit()) {
+            return None;
+        }
+        let mut found: Vec<String> = Vec::new();
+        for dir in &self.dirs {
+            if let Ok(rd) = std::fs::read_dir(dir.join(&p[..2])) {
+                for e in rd.flatten() {
+                    let name = e.file_name().to_string_lossy().into_owned();
+                    let full = format!("{}{}", &p[..2], name);
+                    if name.len() == 38 && full.starts_with(&p) {
+                        found.push(full);
+                    }
                 }
             }
         }
-        for idx in pack_indexes(&dir) {
-            if let Some(i) = Index::open(&idx) {
-                found.extend(i.with_prefix(&p));
-            }
-        }
+        found.extend(self.packs.iter().flat_map(|(i, _)| i.with_prefix(&p)));
+        found.sort();
+        found.dedup();
+        (found.len() == 1).then(|| found.remove(0))
     }
-    found.sort();
-    found.dedup();
-    (found.len() == 1).then(|| found.remove(0))
-}
 
-/// Reads an object's kind and body by full sha.
-pub fn read(repo: &Repo, sha: &str) -> Option<(Kind, Vec<u8>)> {
-    read_at_depth(repo, sha, 0)
-}
+    /// Reads an object's kind and body by full sha.
+    pub fn read(&self, sha: &str) -> Option<(Kind, Vec<u8>)> {
+        self.read_at_depth(sha, 0)
+    }
 
-/// Reads an object, counting delta depth across REF deltas too (a cyclic pack ends, never overflows).
-fn read_at_depth(repo: &Repo, sha: &str, depth: u16) -> Option<(Kind, Vec<u8>)> {
-    let dirs = object_dirs(repo);
-    for dir in &dirs {
-        if let Some(o) = read_loose(&dir.join(&sha[..2]).join(&sha[2..])) {
+    /// Reads an object, counting delta depth across REF deltas too (a cyclic pack ends, never overflows).
+    fn read_at_depth(&self, sha: &str, depth: u16) -> Option<(Kind, Vec<u8>)> {
+        (sha.len() == 40).then_some(())?;
+        if let Some(o) = self.dirs.iter().find_map(|d| read_loose(&d.join(&sha[..2]).join(&sha[2..]))) {
             return Some(o);
         }
+        let raw = hex(sha)?;
+        let (off, pack) = self.packs.iter().find_map(|(i, pack)| Some((i.offset(&raw)?, pack)))?;
+        let mut pack = Pack { file: std::fs::File::open(pack).ok()? };
+        unpack(self, &mut pack, off, depth)
     }
-    let raw = hex(sha)?;
-    for dir in &dirs {
-        for idx in pack_indexes(dir) {
-            if let Some(off) = Index::open(&idx).and_then(|i| i.offset(&raw)) {
-                let mut pack = Pack { file: std::fs::File::open(idx.with_extension("pack")).ok()? };
-                return unpack(repo, &mut pack, off, depth);
-            }
-        }
-    }
-    None
 }
 
 /// A loose object: zlib of `<kind> <size>\0<body>`.
@@ -188,7 +187,7 @@ impl Pack {
 }
 
 /// Reads the object at `off` in a pack, applying OFS and REF deltas (depth-limited).
-fn unpack(repo: &Repo, pack: &mut Pack, off: u64, depth: u16) -> Option<(Kind, Vec<u8>)> {
+fn unpack(store: &Store, pack: &mut Pack, off: u64, depth: u16) -> Option<(Kind, Vec<u8>)> {
     if depth > MAX_DEPTH {
         return None;
     }
@@ -219,13 +218,13 @@ fn unpack(repo: &Repo, pack: &mut Pack, off: u64, depth: u16) -> Option<(Kind, V
                 rel = ((rel + 1) << 7) | (c & 0x7f) as u64;
             }
             let delta = pack.inflate(off + i as u64 + 1, size)?;
-            let (kind, base) = unpack(repo, pack, off.checked_sub(rel)?, depth + 1)?;
+            let (kind, base) = unpack(store, pack, off.checked_sub(rel)?, depth + 1)?;
             Some((kind, apply_delta(&base, &delta)?))
         }
         7 => {
             let base_sha = to_hex(head.get(i..i + 20)?);
             let delta = pack.inflate(off + i as u64 + 20, size)?;
-            let (kind, base) = read_at_depth(repo, &base_sha, depth + 1)?;
+            let (kind, base) = store.read_at_depth(&base_sha, depth + 1)?;
             Some((kind, apply_delta(&base, &delta)?))
         }
         _ => None,

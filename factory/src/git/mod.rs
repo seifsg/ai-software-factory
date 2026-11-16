@@ -1,7 +1,8 @@
 //! Git read natively: repository discovery, HEAD, upstream, remotes and commit trees with no `git` process.
 //! Why: a `git.exe` spawn costs 20 to 80 ms on Windows; the Stop guard runs at every turn end.
-//! One spawn remains, only where Git must compute: the work tree's hash (`tree`) and the rare repos whose
-//! refs or config this module cannot read alone (reftable, `includeIf` in the repo's own config).
+//! One spawn remains, only where Git must compute: the work tree's hash (`tree`), its changed paths
+//! (`history::worktree_first`) and the rare repos whose refs or config this module cannot read alone
+//! (reftable, `includeIf` in the repo's own config).
 
 pub mod config;
 pub mod index;
@@ -79,17 +80,30 @@ impl Repo {
 
     /// Full sha of the one commit whose id starts with `prefix` (4+ hex), or None (missing or ambiguous).
     pub fn resolve(&self, prefix: &str) -> Option<String> {
-        object::resolve(self, prefix)
+        object::Store::open(self).resolve(prefix)
     }
 
     /// Tree sha of a commit (full or unique prefix), read from loose or packed objects.
     pub fn commit_tree(&self, commit: &str) -> Option<String> {
-        let full = self.resolve(commit)?;
-        let (kind, data) = object::read(self, &full)?;
+        let store = object::Store::open(self);
+        let full = store.resolve(commit)?;
+        let (kind, data) = store.read(&full)?;
         (kind == object::Kind::Commit).then_some(())?;
         let line = data.split(|&b| b == b'\n').next()?;
         line.strip_prefix(b"tree ").map(|t| String::from_utf8_lossy(t).into_owned())
     }
+}
+
+/// A `git` command on this work tree that ignores the caller's Git environment, takes no optional locks
+/// and prints English: the spawns that read Git's own computation share it.
+pub(crate) fn command(repo: &Repo) -> std::process::Command {
+    let mut cmd = std::process::Command::new("git");
+    cmd.arg("-C").arg(&repo.work);
+    for v in ["GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE", "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES"] {
+        cmd.env_remove(v);
+    }
+    cmd.env("GIT_OPTIONAL_LOCKS", "0").env("LC_ALL", "C").env("LANGUAGE", "").stdin(std::process::Stdio::null());
+    cmd
 }
 
 /// The Git folder a `.git` entry names: the folder itself, or the target of a `gitdir:` file.
