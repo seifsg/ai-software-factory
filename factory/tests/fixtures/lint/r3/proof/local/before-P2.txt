@@ -1,0 +1,16 @@
+
+> delegation-smoke@0.1.0 test
+> node --test
+
+✔ basic (0.8318ms)
+✔ accents (0.1478ms)
+✔ non-string throws (0.3639ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 97.0042
+exit 0

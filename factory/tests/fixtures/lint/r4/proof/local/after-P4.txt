@@ -1,0 +1,4 @@
+commit adc6ac8
+hello-2 a-2
+RangeError: maxLength too small for suffix
+RangeError: title yields an empty slug

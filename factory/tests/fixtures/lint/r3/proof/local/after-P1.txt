@@ -1,0 +1,43 @@
+# commit 2ffc440
+✔ basic (1.3069ms)
+✔ accents (0.1864ms)
+✔ non-string throws (0.384ms)
+✔ slugify maxLength cuts before a trailing dash (0.1747ms)
+✔ slugify maxLength drops a dash on the limit (0.1236ms)
+✔ slugify maxLength keeps the longest dash prefix (0.1217ms)
+✔ slugify maxLength hard-cuts when no dash fits (0.1269ms)
+✔ slugify maxLength allows a one character cap (0.1047ms)
+✔ slugify maxLength leaves a short slug as is (0.1217ms)
+✔ slugify maxLength skips a missing cap (0.2455ms)
+✔ slugify maxLength rejects a bad cap (0.2319ms)
+✔ slugify maxLength rejects non-object options (0.8035ms)
+✔ slugify maxLength still rejects a non-string title (0.24ms)
+✔ uniqueSlug returns the base when it is free (0.1389ms)
+✔ uniqueSlug skips taken numbers (0.1146ms)
+✔ uniqueSlug accepts a Set (0.1019ms)
+✔ uniqueSlug fits the suffix inside maxLength (0.0758ms)
+✔ uniqueSlug shortens the base so the suffix fits (0.0716ms)
+✔ uniqueSlug throws when no suffix fits (0.0975ms)
+✔ uniqueSlug throws when the next suffix outgrows maxLength (0.105ms)
+✔ uniqueSlug throws on an empty slug (0.1149ms)
+✔ uniqueSlug rejects a bad existing (0.1461ms)
+✔ uniqueSlug rejects a bad title and a bad maxLength (0.1039ms)
+✔ slugify maxLength keeps a slug that already equals the limit (0.0651ms)
+✔ uniqueSlug recuts the base when the suffix grows to two digits (0.0819ms)
+✔ slugify maxLength zero says positive integer (0.4087ms)
+✔ uniqueSlug empty slug says slug is empty (0.1118ms)
+✔ uniqueSlug non-collection says array or a Set (0.0943ms)
+✔ uniqueSlug tiny maxLength says too small (0.094ms)
+✔ slugify maxLength cuts at a dash that sits on the limit (0.0689ms)
+✔ uniqueSlug keeps a dash-boundary stem when the suffix is added (0.0695ms)
+✔ uniqueSlug leaves existing unchanged (0.491ms)
+✔ slugify maxLength cuts after accents are stripped (0.0778ms)
+ℹ tests 33
+ℹ suites 0
+ℹ pass 33
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 106.9721
+exit 0

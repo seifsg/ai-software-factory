@@ -1,0 +1,3 @@
+slugify("Hello, World!") => "hello-world"
+slugify("Hello, World!",{maxLength:0}) => "hello-world"
+uniqueSlug export: undefined

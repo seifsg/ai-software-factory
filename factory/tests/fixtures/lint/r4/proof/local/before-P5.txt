@@ -1,0 +1,12 @@
+
+✔ basic (0.9436ms)
+✔ accents (0.2961ms)
+✔ non-string throws (0.3459ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 85.7806

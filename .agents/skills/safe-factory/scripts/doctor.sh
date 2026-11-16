@@ -6,7 +6,7 @@
 r=${0%/*}/../../..; fix=; for a; do case $a in --fix) fix=1 ;; *) r=$a ;; esac; done
 H=$HOME; P=$CLAUDE_PROJECT_DIR; [ -n "$P" ] || P=$(pwd); X=${CODEX_HOME:-$H/.codex}; left=0; stamp=; n=0
 [ "$P" = "$H" ] && P=/nonexistent  # project is home: check each file once
-old='fast_gate|run-gate[.]sh|skills/safe-engine/|resolve_bundle'
+old='fast_gate|run-gate[.]sh|skills/safe-engine/|resolve_bundle|hooks/windows[.]cmd'
 bak="${XDG_CACHE_HOME:-$H/.cache}/ai-software-factory/removed"
 [ -n "$fix" ] && stamp=$(date +%Y%m%d-%H%M%S)
 say() { printf '%s: %s\n' "$1" "$2"; }
@@ -54,7 +54,7 @@ while IFS= read -r f; do
     if awk -v p="$old" '{ m = split($0, a, /"command":/); for (i = 2; i <= m; i++) { n++; if (a[i] ~ p) k++ } } /"type": *"[^c]/ { o++ }
       NR == 2 && !/^  "/ { o++ } /^  "/ && !/^  "(hooks|version)"/ { o++ }
       END { exit !(NR > 2 && n && n == k && !o) }' "$f"; then move "$f" "hooks of an old factory version; the plugin brings its own (copied skills: add hooks again, install.md)"
-    else todo "$f" "hooks of an old factory version; delete entries naming fast_gate, run-gate.sh or skills/safe-engine/"; fi
+    else todo "$f" "hooks of an old factory version; delete entries naming fast_gate, run-gate.sh, skills/safe-engine/ or hooks/windows.cmd"; fi
   elif [ -n "$on" ] && case $f in */.claude/*) grep -q '"command".*run-guard[.]sh' "$f" ;; *) false ;; esac; then
     todo "$f" "second Stop guard: the plugin already runs it; delete that entry"
   fi

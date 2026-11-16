@@ -8,14 +8,22 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ### Changed
 
+- **Breaking:** Make the hooks run the bundled `factory` binary through `scripts/factory.cmd`: the guard answers in about 25 ms instead of 2 s, with no Git Bash on Windows ([#320])
 - Make runs with the `factory` command chain steps in one turn: the guard writes each posted block into the run file, and Stop prompt hooks load only when it asks ([#316])
 - Make the step-6 review and the PR reviewer start together on the verify candidate, with one merged fix round and the full suite run once on the final head ([#316])
 - Make a change run read about 40% less skill text: rare cases load on demand, and a coded run loads each skill once ([#316])
 - Cap reviewer and checker handbacks at 2,000 characters; the full review report goes to a file ([#316])
 - Keep an After capture valid while its proof's input files are unchanged, and take non-visual Before proof from the base commit in the background ([#316])
+- Make Gate B, Gate C and review lines count only with a passing full-suite receipt for their commit's tree, and Gate C only when that suite passed once ([#320])
+- Make `factory receipt run` reuse a passing receipt for an unchanged tree instead of running the suite again; the guard flags a second run ([#320])
+- Make step 5 wait until every proof-list Before is saved, and saved before the branch's first source change ([#320])
+- Make `scripts/check.sh` reuse a passing run for an unchanged tree and run only static checks for a docs-only diff with `--changed <base>` ([#320])
 
 ### Added
 
+- Add `factory guard step <n|Tk>`: writes the posted block into the run file, ticks it and moves `Next:` forward ([#320])
+- Add `factory lint <gate>`, `contracts`, `proof-hash`, `tree` and `receipt`, so a checker sees fewer form gaps ([#320])
+- Add `factory` binaries for x86_64 and aarch64 Windows, macOS and Linux, with checksums, built and checked by CI ([#320])
 - Add `(ask)` criteria: every explicit request in the brief becomes a criterion that Gate C checks ([#316])
 - Add a Windows note: in Git Bash, prefix `git show <ref>:<path>` with `MSYS_NO_PATHCONV=1`, never set it globally ([#316])
 
@@ -396,3 +404,4 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 [#309]: https://github.com/seifsg/ai-software-factory/pull/309
 [#312]: https://github.com/seifsg/ai-software-factory/pull/312
 [#316]: https://github.com/seifsg/ai-software-factory/pull/316
+[#320]: https://github.com/seifsg/ai-software-factory/pull/320

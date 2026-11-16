@@ -1,0 +1,9 @@
+# commit 2ffc440
+hello-3
+hello-2
+hello-2
+abc-2
+RangeError: slug is empty
+RangeError: maxLength too small for a unique slug
+TypeError: existing must be an array or a Set
+exit 0

@@ -4,8 +4,12 @@ What installs and active runs must do for each release, newest first. What chang
 
 ## Unreleased
 
-1. **Night mode that copied the allow list** (`claude-settings.json`) or `codex.rules`: copy both from `tools/night/` again; they allow the `factory` commands the methods call and deny `factory guard clear`.
-2. **Open runs:** past step 3, finish under the version that started them, or resume after updating and recapture each After with its input hash (After rule) and name the base commit in each non-visual Before. Without the `factory` command a run keeps today's one step per turn.
+1. **Codex:** trust the hooks again in `/hooks`: they now call `scripts/factory.cmd`, the bundled binary, instead of Git Bash.
+2. **Cursor:** trust the hooks again if it asks: the plugin now reads `hooks/cursor.json`.
+3. **Open runs past step 6:** the guard now refuses a Gate B, Gate C or review line without a passing full-suite receipt for its commit's tree, and Gate C when that receipt counts more than one passing run. Run the suite once on that commit with `<plugin root>/scripts/factory.cmd receipt run --suite full -- <full-suite command>`, then go on.
+4. **Night mode that copied the allow list** (`claude-settings.json`) or `codex.rules`: copy both from `tools/night/` again. Both allow the `factory` commands the methods call and forbid `factory guard clear` and `factory receipt write`; the Claude template also runs its hooks through `scripts/factory.cmd` and denies edits to `.agents/scripts/` and `.factory/receipts/`. Codex rules match a bare `factory` only.
+5. **Open runs at step 4 or 5:** the guard now refuses the step 5 block and each `T<n> pre:` line while a proof-list id has no `before-<id>` file under `.factory/proof/`, or one saved after the branch's first source change. Save a file for every id, a new surface's saying `did not exist`, before the first edit; a Before taken late is captured again from the base.
+6. **Open runs:** past step 3, finish under the version that started them, or resume after updating and recapture each After with its input hash (After rule) and name the base commit in each non-visual Before. Without the `factory` command a run keeps today's one step per turn.
 
 ## 0.7.0
 

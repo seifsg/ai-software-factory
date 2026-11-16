@@ -13,9 +13,9 @@
       "Bash(gh api --paginate * --raw-field*)", "Bash(gh api --paginate * --input*)",
       "Bash(gh * -R *)", "Bash(gh * --repo *)",
       "Bash(rm -rf /*)", "Bash(rm -rf ~*)", "Bash(rm -rf ../*)", "Bash(rm -rf $HOME*)", "Bash(rm -r /*)", "Bash(rm -r ~*)", "Bash(rm -r ../*)",
-      "Bash(*run-guard.sh clear*)", "Bash(*factory guard clear*)", "Bash(*.factory/guard*)",
+      "Bash(*run-guard.sh clear*)", "Bash(*guard clear*)", "Bash(*receipt write*)", "Bash(*.factory/guard*)", "Bash(*.factory/receipts*)",
       "Edit(.claude/settings*.json)", "Edit(~/.claude/settings*.json)", "Edit(~/.codex/**)",
-      "Edit(//**/.factory/guard/**)", "Edit(//**/run-guard.sh)", "Edit(//**/hooks.json)", "Edit(//**/.git/hooks/**)",
+      "Edit(//**/.factory/guard/**)", "Edit(//**/.factory/receipts/**)", "Edit(//**/run-guard.sh)", "Edit(//**/.agents/scripts/**)", "Edit(//**/hooks.json)", "Edit(//**/.git/hooks/**)",
       "Edit(//**/.agents/hooks/**)", "Edit(//**/tools/night/**)", "Edit(//**/.factory/night-settings.json)"
     ],
     "allow": [
@@ -31,7 +31,7 @@
     ]
   },
   "hooks": {
-    "Stop": [{ "hooks": [{ "type": "command", "command": "sh \"__GUARD__\" stop", "timeout": 10 }] }],
-    "SessionStart": [{ "matcher": "compact|resume", "hooks": [{ "type": "command", "command": "sh \"__GUARD__\" compact", "timeout": 10 }] }]
+    "Stop": [{ "hooks": [{ "type": "command", "command": "sh \"__GUARD__\" guard stop", "timeout": 10 }] }],
+    "SessionStart": [{ "matcher": "compact|resume", "hooks": [{ "type": "command", "command": "sh \"__GUARD__\" guard compact", "timeout": 10 }] }]
   }
 }

@@ -1,0 +1,15 @@
+commit adc6ac8
+✔ uniqueSlug ignores non-strings and does not mutate (0.827ms)
+✔ uniqueSlug fits the suffix inside maxLength (0.2274ms)
+✔ uniqueSlug checks options, existing, then an empty slug (0.3035ms)
+✔ slugify as a map callback throws (0.1827ms)
+✔ error messages are exact (0.2456ms)
+✔ uniqueSlug cuts the base and the head under a limit (0.101ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 89.7766

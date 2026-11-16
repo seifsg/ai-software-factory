@@ -13,4 +13,8 @@ prefix_rule(pattern = ["gh", "pr", ["merge", "ready"]], decision = "forbidden", 
 prefix_rule(pattern = ["gh", "repo", ["delete", "edit"]], decision = "forbidden", justification = OWNER)
 prefix_rule(pattern = ["factory", "guard", "clear"], decision = "forbidden", justification = OWNER,
     match = ["factory guard clear"], not_match = ["factory guard step 3"])
+# A night run records its suite with `factory receipt run`; a receipt written by hand would back a gate unseen.
+# Prefix rules match a bare `factory` only, never a launcher path such as the one a halt reply names.
+prefix_rule(pattern = ["factory", "receipt", "write"], decision = "forbidden", justification = OWNER,
+    match = ["factory receipt write --exit 0 --cmd x"], not_match = ["factory receipt run -- sh t.sh"])
 prefix_rule(pattern = ["rm", ["-rf", "-r"], ["/", "~", ".."]], decision = "forbidden", justification = OWNER)
