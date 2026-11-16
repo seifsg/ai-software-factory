@@ -17,6 +17,7 @@ cmd <command line>
 runtime <stamp>            optional; the writer's own stamp (tools, platform)
 secs <n>
 at 2026-11-16T18:30:00Z    UTC
+log <path>                 optional: where the suite's output was saved
 ```
 
 Readers ignore lines they do not know, so a writer may add its own (the pro gate runner adds `ref-tree`).
@@ -28,7 +29,7 @@ Readers ignore lines they do not know, so a writer may add its own (the pro gate
 | Writer | Command |
 |---|---|
 | Any suite | `factory receipt run --suite full -- <full-suite command>`: runs it, writes the receipt, exits with the suite's code |
-| A runner that ran the suite itself | `factory receipt write --suite full --result PASS --cmd "<command>" --secs <n>` |
+| A runner that ran the suite itself | `factory receipt write --cmd "<command>" --exit <code> [--log <path>] [--secs <n>]` (`--suite` defaults to `full`; `--result PASS|FAIL` in place of `--exit`) |
 | This repository | `sh scripts/check.sh`: a full PASS writes `<tree>-full.txt`; the next run on the same tree prints nothing and exits 0 |
 
 `factory` is `<plugin root>/scripts/factory.cmd` (sh or cmd), or a built `factory/target/release/factory`.

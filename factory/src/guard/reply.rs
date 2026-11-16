@@ -133,3 +133,14 @@ pub fn check_line(reply: &str, has_run_here: bool) -> String {
     }
     format!("Factory check: continue. {reply} Load stop-check right before your block or todo line.\n")
 }
+
+/// The line `guard step` prints: the check line, minus the stop-check advice when a command Stop hook
+/// already guards the run (the method loads `stop-check` only where none does).
+pub fn step_line(reply: &str, hooked: bool) -> String {
+    let line = check_line(reply, true);
+    if !hooked {
+        return line;
+    }
+    line.replace(" Load stop-check right before your block or todo line.", "")
+        .replace(" This stop ends the Stop check: load stop-check right before the next block.", "")
+}

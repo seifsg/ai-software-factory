@@ -29,6 +29,8 @@ pub struct Receipt {
     pub runtime: String,
     pub secs: u64,
     pub at: String,
+    /// Where the suite's output was saved, when the writer kept it (optional line).
+    pub log: String,
 }
 
 impl Receipt {
@@ -49,6 +51,7 @@ impl Receipt {
                 "runtime" => r.runtime = v.into(),
                 "secs" => r.secs = v.parse().unwrap_or(0),
                 "at" => r.at = v.into(),
+                "log" => r.log = v.into(),
                 _ => {}
             }
         }
@@ -58,8 +61,9 @@ impl Receipt {
     /// The receipt's text.
     pub fn render(&self) -> String {
         let one = |s: &str| s.replace(['\n', '\r'], " ");
+        let log = if self.log.is_empty() { String::new() } else { format!("log {}\n", one(&self.log)) };
         format!(
-            "factory-receipt 1\nsuite {}\ntree {}\nhead {}\nclean {}\nresult {}\ncmd {}\nruntime {}\nsecs {}\nat {}\n",
+            "factory-receipt 1\nsuite {}\ntree {}\nhead {}\nclean {}\nresult {}\ncmd {}\nruntime {}\nsecs {}\nat {}\n{log}",
             one(&self.suite),
             self.tree,
             self.head,
@@ -112,12 +116,12 @@ pub fn full_pass_for(repo: Option<&Repo>, commit: &str) -> bool {
 }
 
 /// A fresh receipt for the work tree at `folder` (one `git add` spawn for the tree id).
-pub fn stamp(folder: &Path, suite: &str, pass: bool, cmd: &str, secs: u64, runtime: &str) -> Result<(PathBuf, Receipt), String> {
+pub fn stamp(folder: &Path, suite: &str, pass: bool, cmd: &str, secs: u64, runtime: &str, log: &str) -> Result<(PathBuf, Receipt), String> {
     let repo = Repo::discover(folder).ok_or("not in a Git work tree")?;
     let t = tree::worktree_tree(&repo.work)?;
     let head = repo.info().head;
     let clean = repo.commit_tree(&head).is_some_and(|h| h == t);
-    let r = Receipt { suite: suite.into(), tree: t, head, clean, pass, cmd: cmd.into(), runtime: runtime.into(), secs, at: utc_iso(crate::paths::now()) };
+    let r = Receipt { suite: suite.into(), tree: t, head, clean, pass, cmd: cmd.into(), runtime: runtime.into(), secs, at: utc_iso(crate::paths::now()), log: log.into() };
     let p = write(&repo.work, &r).map_err(|e| format!("cannot write the receipt: {e}"))?;
     Ok((p, r))
 }
@@ -143,17 +147,25 @@ pub fn cli(args: &[&str]) -> u8 {
                     return 1;
                 }
             };
-            report(stamp(&here, suite, code == 0, &cmd.join(" "), started.elapsed().as_secs(), &runtime));
+            report(stamp(&here, suite, code == 0, &cmd.join(" "), started.elapsed().as_secs(), &runtime, ""));
             code.clamp(0, 255) as u8
         }
         ["write", opts @ ..] => {
-            let (Some(suite), Some(result), Some(cmd)) = (opt(opts, "--suite"), opt(opts, "--result"), opt(opts, "--cmd")) else { return usage() };
-            if result != "PASS" && result != "FAIL" {
-                return usage();
-            }
+            // The result as `--result PASS|FAIL` or the suite's `--exit <code>`; the suite defaults to `full`.
+            let pass = match (opt(opts, "--result"), opt(opts, "--exit")) {
+                (Some("PASS"), None) => true,
+                (Some("FAIL"), None) => false,
+                (None, Some(code)) => match code.parse::<i64>() {
+                    Ok(c) => c == 0,
+                    Err(_) => return usage(),
+                },
+                _ => return usage(),
+            };
+            let Some(cmd) = opt(opts, "--cmd") else { return usage() };
+            let suite = opt(opts, "--suite").unwrap_or("full");
             let secs = opt(opts, "--secs").and_then(|s| s.parse().ok()).unwrap_or(0);
             let rt = opt(opts, "--runtime").map_or(runtime, String::from);
-            report(stamp(&here, suite, result == "PASS", cmd, secs, &rt))
+            report(stamp(&here, suite, pass, cmd, secs, &rt, opt(opts, "--log").unwrap_or("")))
         }
         ["check", opts @ ..] => {
             let suite = opt(opts, "--suite").unwrap_or("full");
@@ -191,7 +203,7 @@ fn report(r: Result<(PathBuf, Receipt), String>) -> u8 {
 }
 
 fn usage() -> u8 {
-    eprintln!("usage: factory receipt run [--suite <name>] -- <command>... | write --suite <name> --result PASS|FAIL --cmd <command> [--secs <n>] [--runtime <s>] | check [--commit <sha>] [--suite <name>]");
+    eprintln!("usage: factory receipt run [--suite <name>] -- <command>... | write --cmd <command> (--exit <code> | --result PASS|FAIL) [--suite <name>] [--secs <n>] [--log <path>] [--runtime <s>] | check [--commit <sha>] [--suite <name>]");
     2
 }
 
@@ -222,7 +234,7 @@ mod tests {
 
     #[test]
     fn round_trips_and_dates() {
-        let r = Receipt { suite: "full".into(), tree: "t".into(), head: "h".into(), clean: true, pass: true, cmd: "sh x".into(), runtime: "r".into(), secs: 3, at: "a".into() };
+        let r = Receipt { suite: "full".into(), tree: "t".into(), head: "h".into(), clean: true, pass: true, cmd: "sh x".into(), runtime: "r".into(), secs: 3, at: "a".into(), log: "l".into() };
         assert_eq!(Receipt::parse(&r.render()), Some(r));
         assert_eq!(utc_iso(0), "1970-01-01T00:00:00Z");
         assert_eq!(utc_iso(1_794_808_234), "2026-11-16T05:50:34Z");

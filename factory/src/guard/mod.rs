@@ -6,6 +6,7 @@
 //!   clear    the owner's command after a halt
 //!   step     writes a posted block under its heading, ticks it, then answers like check
 
+pub mod backing;
 pub mod flow;
 pub mod reply;
 pub mod rules;
@@ -19,6 +20,15 @@ pub fn cli(args: &[&str]) -> u8 {
     match args {
         ["stop"] => emit(flow::run(&Input::from_stdin(), flow::Mode::Stop, &cwd())),
         ["compact"] => emit(flow::run(&Input::from_stdin(), flow::Mode::Compact, &cwd())),
+        ["check"] => {
+            let Some(dir) = crate::run::locate::walk(&cwd()) else {
+                println!("no .factory/run.md from this folder");
+                return 1;
+            };
+            let (text, all) = backing::report(Path::new(&dir));
+            print!("{text}");
+            u8::from(!all)
+        }
         ["check", sid] => {
             print!("{}", check(sid, &cwd()));
             0
@@ -27,7 +37,7 @@ pub fn cli(args: &[&str]) -> u8 {
         ["clear", dir] => clear(Some(dir)),
         ["step", rest @ ..] => step::cli(rest),
         _ => {
-            eprintln!("usage: factory guard stop|compact | check <session id> | clear [<run folder>] | step <n|Tk> [--session <id>]");
+            eprintln!("usage: factory guard stop|compact | check [<session id>] | clear [<run folder>] | step <n|Tk> [--session <id>]");
             2
         }
     }

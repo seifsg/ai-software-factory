@@ -4,7 +4,7 @@ use std::process::ExitCode;
 
 const USAGE: &str = "usage: factory <command>
   guard stop|compact          hook JSON on stdin
-  guard check <session id>    a host with no command hook
+  guard check [<session id>]  with an id: the Stop rules as one line; without: gate backing
   guard clear [<run folder>]  the owner's command after a halt
   guard step <n|Tk> [--session <id>] < block
   doctor [<plugin root>] [--fix]
@@ -14,7 +14,7 @@ const USAGE: &str = "usage: factory <command>
   tree [<folder>]
   proof-hash <file>...
   receipt run [--suite <name>] -- <command>...
-  receipt write --suite <name> --result PASS|FAIL --cmd <command> [--secs <n>]
+  receipt write --cmd <command> (--exit <code> | --result PASS|FAIL) [--suite <name>] [--secs <n>] [--log <path>]
   receipt check [--commit <sha>] [--suite <name>]
   --version";
 

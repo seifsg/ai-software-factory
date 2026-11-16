@@ -29,7 +29,7 @@ pub fn cli(args: &[&str]) -> u8 {
     };
     let mut block = String::new();
     if std::io::stdin().read_to_string(&mut block).is_err() || block.trim().is_empty() {
-        eprintln!("factory guard step: the block comes on stdin");
+        eprintln!("factory guard step: the posted block comes on stdin, e.g. factory guard step {label} <<'EOF' (the block) EOF");
         return 2;
     }
     let here = super::cwd();
@@ -52,14 +52,22 @@ pub fn cli(args: &[&str]) -> u8 {
         eprintln!("factory guard step: cannot write {}: {e}", crate::paths::text(&run));
         return 1;
     }
+    // A command Stop hook records its session and transcript in the state: the step then judges with the
+    // same evidence (gate handbacks, posted blocks) and keeps that record for the hook's next call.
+    let state = match crate::run::state::State::load(&Path::new(&dir).join(".factory/guard/state")) {
+        crate::run::state::Loaded::Valid(s) => s,
+        _ => crate::run::state::State::default(),
+    };
+    let hooked = !state.get("transcript").is_empty();
     let input = crate::hook::Input {
-        session_id: session.into(),
-        transcript_path: opt(opts, "--transcript").unwrap_or("").into(),
+        session_id: if session.is_empty() { state.get("session").into() } else { session.into() },
+        transcript_path: opt(opts, "--transcript").unwrap_or(state.get("transcript")).into(),
         cwd: dir.clone(),
+        last_assistant_message: format!("## {label} "),
         ..Default::default()
     };
     let r = super::flow::run(&input, super::flow::Mode::Stop, Path::new(&dir));
-    print!("{}", super::reply::check_line(r.as_ref().map_or("", crate::hook::Reply::inner), true));
+    print!("{}", super::reply::step_line(r.as_ref().map_or("", crate::hook::Reply::inner), hooked));
     0
 }
 
