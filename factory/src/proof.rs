@@ -7,9 +7,14 @@ use sha1_smol::Sha1;
 
 /// The combined hash of files; an unreadable file is an error, never a skipped input.
 pub fn hash(files: &[&str]) -> Result<String, String> {
+    hash_in(std::path::Path::new("."), files)
+}
+
+/// The same with each path read from `base` (a run folder) and hashed as written.
+pub fn hash_in(base: &std::path::Path, files: &[&str]) -> Result<String, String> {
     let mut lines: Vec<String> = Vec::with_capacity(files.len());
     for f in files {
-        let data = std::fs::read(crate::paths::norm(f)).map_err(|e| format!("{f}: {e}"))?;
+        let data = std::fs::read(base.join(crate::paths::norm(f))).map_err(|e| format!("{f}: {e}"))?;
         let path = crate::paths::norm(f);
         let path = path.strip_prefix("./").unwrap_or(&path).to_string();
         lines.push(format!("{} {path}\n", to_hex(&hash_object("blob", &data))));

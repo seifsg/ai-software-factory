@@ -125,7 +125,7 @@ fn r4_b1_journey_line_and_old_after_commit() {
         &[("- **journey:** no findings, real calls match A1 to A4 · PASS", "- **journey:** real calls match A1 to A4 · PASS")],
     );
     flags(&r, "**journey:** has no findings");
-    flags(&r, "does not name HEAD");
+    flags(&r, "names no HEAD");
 }
 
 #[test]

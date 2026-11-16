@@ -201,10 +201,8 @@ fn proof_files(secs: &[Section], i: &Input, r: &mut Report) {
             match hit {
                 None => r.gaps.push(format!("{}: {name} names no file under .factory/proof/", s.heading)),
                 Some(f) if name.starts_with("after-") && !i.head.is_empty() => {
-                    let first = std::fs::read_to_string(f).unwrap_or_default();
-                    let sha = first.lines().next().and_then(first_sha);
-                    if !sha.is_some_and(|c| pre(&c, i.head)) {
-                        r.gaps.push(format!("{}: {name} does not name HEAD {}", s.heading, &i.head[..i.head.len().min(8)]));
+                    if let Some(gap) = after_gap(f, i) {
+                        r.gaps.push(format!("{}: {name} {gap}", s.heading));
                     }
                 }
                 _ => {}
@@ -517,4 +515,26 @@ fn whole_word(l: &str, w: &str) -> bool {
         let after = b.get(i + w.len());
         !before.is_some_and(|c| c.is_ascii_alphanumeric() || *c == b'-') && !after.is_some_and(|c| c.is_ascii_alphanumeric() || *c == b'-')
     })
+}
+
+/// An After file stands on HEAD, or (the After rule) on a `proof-hash <hash> <input file>...` line whose
+/// inputs, read now from the run folder, still hash the same. Else the gap.
+fn after_gap(f: &Path, i: &Input) -> Option<String> {
+    let text = std::fs::read_to_string(f).unwrap_or_default();
+    if text.lines().next().and_then(first_sha).is_some_and(|c| pre(&c, i.head)) {
+        return None;
+    }
+    let short = &i.head[..i.head.len().min(8)];
+    let Some(line) = text.lines().find_map(|l| l.trim_start_matches(['-', ' ', '#']).strip_prefix("proof-hash ")) else {
+        return Some(format!("names no HEAD {short} and no proof-hash of its inputs"));
+    };
+    let mut words = line.split_whitespace();
+    let want = words.next().unwrap_or("");
+    let files: Vec<&str> = words.collect();
+    let run = i.proof.parent().and_then(Path::parent).unwrap_or(i.proof);
+    match crate::proof::hash_in(run, &files) {
+        Ok(h) if h == want => None,
+        Ok(h) => Some(format!("inputs changed since its capture (proof-hash {want}, now {h}): recapture it")),
+        Err(e) => Some(format!("proof-hash inputs unreadable: {e}")),
+    }
 }
