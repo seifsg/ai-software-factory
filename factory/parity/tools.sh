@@ -33,5 +33,5 @@ printf '== doctor stale\n'; d "$plugin"
 printf '== doctor stale fix\n'; d "$plugin" --fix
 printf -- '-- rules copy\n'; cmp -s "$h/.codex/rules/factory.rules" "$here/../../tools/night/codex.rules" && echo same || echo differs
 printf -- '-- files left\n'; (cd "$h" && find . -type f | grep -v '/removed/' | sort)
-printf -- '-- backup index\n'; cat "$h"/ai-software-factory/removed/*/index 2>/dev/null | sed 's/^[^\t]*\t//' | sort
+printf -- '-- backup index\n'; cat "$h"/ai-software-factory/removed/*/index 2>/dev/null | cut -f2- | sort
 printf '== update with leftovers\n'; mkdir -p "$h/.safe-engine"; HOME="$h" CLAUDE_PROJECT_DIR="$h/p" XDG_CACHE_HOME="$h" FACTORY_NO_UPDATE_CHECK= uc
