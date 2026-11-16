@@ -146,6 +146,9 @@ fn todo_line(text: &str, prefix: &str, line: &str) -> String {
     let mut lines: Vec<String> = text.lines().map(String::from).collect();
     let start = lines.iter().position(|l| l.starts_with("## 5 Build"));
     let start = start.unwrap_or_else(|| {
+        if lines.last().is_some_and(|l| !l.is_empty()) {
+            lines.push(String::new());
+        }
         lines.push("## 5 Build".into());
         lines.len() - 1
     });
