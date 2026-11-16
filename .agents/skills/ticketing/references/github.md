@@ -51,7 +51,7 @@ gh issue comment <n> --body-file <file>
 ## Backlog
 
 - First check `gh auth status` for `project` scope: without it `projectItems` reads empty, board looks absent. Missing: ask owner to run `gh auth refresh -s project`, or use labels and say so.
-- Project board with Status field (`projectItems`): set status there, priority too if board has that field.
+- Project board with Status field (`projectItems`): `github-board.md`.
 - Otherwise labels, at most one of each per issue: `status: backlog`, `status: to do`, `status: in progress`, `status: dev done`, `status: ready for qa`, `status: blocked`; `priority: P0` to `priority: P3`. Status labels count on open issues only: open without one = Backlog, closed as completed = Done, closed as not planned = Cancelled. Run's tickets always carry one.
 
 ```text
@@ -59,9 +59,6 @@ gh label list --limit 200 --json name
 gh label create "status: dev done" --description "Backlog status"
 gh issue list --state open --limit 200 --json number,title,labels,assignees,updatedAt
 gh issue edit <n> --remove-label "status: to do" --add-label "status: in progress" --add-assignee @me
-gh project list --owner <owner>
-gh project item-add <project-number> --owner <owner> --url <issue-url>
-gh project item-edit <project-number> --owner <owner> --url <issue-url> --field Status --value "In progress"
 gh pr list --state <closed|open> --limit 1000 --json number,url,state,body,baseRefName,mergedAt,closedAt
 gh pr view <n> --json comments --jq '.comments[-3:][] | [.author.login, .body] | @tsv'
 gh api --paginate repos/{owner}/{repo}/issues/<n>/events --jq '.[] | select(.event == "reopened" or ((.event == "labeled" or .event == "unlabeled") and (.label.name | ascii_downcase | startswith("status:")))) | [.event, (.label.name // "-"), .created_at] | @tsv'
@@ -74,5 +71,4 @@ gh issue reopen <n>
 - Done comes from merge: closing keywords close ticket when its PR merges into default branch. Intake closed-PR list catches the rest; `state` reads `MERGED` or `CLOSED`. Full list (1000 rows): read on with `--search "closed:<<closedAt of the oldest listed>"`, stop once older than oldest open ticket.
 - Merged into any base: per open ticket its `body` names with a closing keyword, read board status if it has one (board moves don't show in issue events) and events (`issues/<n>/events`); close per intake rule when nothing follows `mergedAt`. Closed unmerged: intake rule, same events check after `closedAt`.
 - Close first, then drop status label: completed for Done, not planned for Cancelled. Back from either: reopen and label.
-- Boards: keep built-in workflows that set Done when item closes or its PR merges. Board without Blocked status: add `status: blocked` label too. New issues on a board: `item-add` first.
 - Each move pairs with one activity comment (`gh issue comment`); close with `--comment` is both.

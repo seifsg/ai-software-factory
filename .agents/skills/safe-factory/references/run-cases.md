@@ -52,3 +52,11 @@ Both use `scripts/run-guard.sh` on this session's run: its binding, nearest in i
 Prompt Stop hook: same through `check`; place comes at next block.
 
 Command guard: gate or review line counts only when the named id's subagent file holds that handback on that commit.
+
+## Escalation
+
+Escalate, don't coach: after two failed gate rounds, job and handbacks go to fresh delegate one tier up, same edit access (runner to analyst, analyst to reviewer, maker to builder). A deep job that fails twice comes back to you (Authority and stops, rule 4).
+
+## UI check
+
+UI check (step 2 look): fresh `analyst` lists each miss vs that look + refs on the primary platform, with the capture. A miss of the picked look = HIGH.

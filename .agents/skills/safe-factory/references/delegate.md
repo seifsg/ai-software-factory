@@ -48,7 +48,7 @@ G3 MANUAL <outcome>: <what the reviewer judges>
 ## Tier
 
 - Lowest role that can clear the gates. To spend less, lower effort before tier.
-- Escalate, don't coach: after two failed gate rounds, job and handbacks go to fresh delegate one tier up, same edit access (runner to analyst, analyst to reviewer, maker to builder). A deep job that fails twice comes back to you (Authority and stops, rule 4).
+- Two failed gate rounds: [escalation](run-cases.md#escalation).
 - Session is ceiling: a role above session tier runs on session model.
 - Never change owner's session model or effort.
 
