@@ -40,7 +40,7 @@ Every PR shows observed Before/After per outcome; prose or illustrative diagrams
 1. Take plan's proof list. Changed views, states, motion, interactions or affected UI journeys: read [visual and journey proof](references/media-proof.md) now; its rules apply in full.
 2. Brand-new surface: no Before capture, Before = "did not exist". Non-visual Before (commands, responses, text) comes from base, frozen in Git, into `.factory/proof/<ticket>/before-<id>.txt`, by a background runner while the plan finishes: base output run before any edit, or `git show <base>:<path>` anytime; it names the base commit. Capture every screen Before now, before any source edit, into `before-<id>.png`. Screens: capture from the preview owner watches, else host's built-in browser; keep that one server for After. No Playwright, headless browsers or capture scripts unless owner asks. Host cannot save screenshot as file: write what it shows into `before-<id>.txt` as `pane:` observation; valid proof, no waiver needed.
 3. Inspect every capture: right screen, readable, no secrets.
-4. Missed a screen Before after editing: state it as missing in PR. Never a second checkout or server just for a picture.
+4. Missed a Before after editing: text and command proof come from base (`git show <base>:<path>`, base build output); screenshot no longer takeable: state it as missing in PR. Never a second checkout or server just for a picture.
 5. **After rule:** capture After during verify's manual round, same server, same ids: `after-<id>.*`, naming its commit and `factory proof-hash <the id's input files>` (no `factory` command: `git log -1 --format=%h -- <input files>`). It stays valid while that hash holds; a change to an input file recaptures that id, and only that id.
 
 ## 5. Make the change
@@ -55,7 +55,7 @@ Every PR shows observed Before/After per outcome; prose or illustrative diagrams
 
 ## 6. Open the draft
 
-1. Write body to a file with `references/pr-layout.md`. Upload Before/After media first (`references/github.md`), link with `https` URLs.
+1. Write body to a file with `references/pr-layout.md`. Upload Before/After media first (`references/github-media.md`), link with `https` URLs.
 2. Push, then open as **draft** against base. Commands: `references/github.md`.
 3. Closing keyword only on each sub-issue or change ticket this PR finishes; epic always gets plain reference.
 4. Request review only from a review owner other than PR author, via supported mechanism, at draft time. Notify only authorized recipient or channel. Reminders only when asked.

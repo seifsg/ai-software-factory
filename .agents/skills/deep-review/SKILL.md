@@ -193,5 +193,5 @@ In a factory run this is step 6, Verify: fresh agents run this review on the ver
 - [ ] compliance, change-guard when existing code, contracts or data changed, and each other lens run, each named with its verdict and a findings table only where it has findings, e.g. `**compliance:** no findings · PASS`
 - [ ] An `after-<id>` file for every proof-list id, same ids as Before, valid on the final head by `how-to-make-a-pr`'s After rule; a full-suite id is that final run
 - [ ] UI check (new UI): analyst misses vs step 2 look + refs, primary platform; else `existing` or `no UI`
-- [ ] The full suite: command and result, run once on the final head, after manual use
+- [ ] The full suite: command and result, run once on the final head
 - [ ] The verdict; blocking findings fixed through the build loop before the gate

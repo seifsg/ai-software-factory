@@ -6,7 +6,7 @@ What installs and active runs must do for each release, newest first. What chang
 
 1. **Windows:** set `MSYS_NO_PATHCONV=1` for the agent's shell and hooks (Claude Code: `"env": {"MSYS_NO_PATHCONV": "1"}` in `~/.claude/settings.json`; others: `setx MSYS_NO_PATHCONV 1`), then start a new session. `git show <ref>:<path>` then works as typed.
 2. **Night mode that copied the allow list** (`claude-settings.json`) or `codex.rules`: copy both from `tools/night/` again; they allow the `factory` commands the methods call and deny `factory guard clear`.
-3. **Open runs:** nothing to do. Without the `factory` command a run keeps today's one step per turn; with it, steps chain in one turn.
+3. **Open runs:** past step 3, finish under the version that started them, or resume after updating and recapture each After with its input hash (After rule) and name the base commit in each non-visual Before. Without the `factory` command a run keeps today's one step per turn.
 
 ## 0.7.0
 

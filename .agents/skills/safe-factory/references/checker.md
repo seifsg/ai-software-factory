@@ -35,7 +35,7 @@ Gate C's list, besides `## 7 PR`:
 - [ ] PR body: a closing keyword per sub-issue or change ticket it finishes (`how-to-make-a-pr`); an epic only a plain reference
 - [ ] `## 8 Review` holds the reviewer's verdict, or its cap line, on the PR's current head
 - [ ] Every After file valid on the final head by `how-to-make-a-pr`'s After rule
-- [ ] Each `(ask)` criterion answered: its answer or link in `## 8 Review` or the owner's final report
+- [ ] Each `(ask)` criterion answered: its answer or link in `## 8 Review` or the PR body
 - [ ] `## 8 Review` has `Left running:` as its last line before any Gate C line, with each item's stop command, or `none`
 
 ## Handback
