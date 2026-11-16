@@ -9,7 +9,7 @@ The public surface is the skill names, the run file format, and the hook scripts
 ### Added
 
 - Let a project's rules name a skill to load before delegating; it may change who does a job and how build briefs and handbacks read, never gates or acceptance ([#309])
-- Make every run load installed add-ons in any project: skills whose description opens `Factory add-on:` are listed at step 0 and load when they say ([#311])
+- Make every run load installed add-ons in any project: skills whose description opens `Factory add-on:` are listed at step 0 and load when they say ([#312])
 
 ## [0.7.1] - 2026-11-06
 
@@ -374,4 +374,4 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 [#286]: https://github.com/seifsg/ai-software-factory/pull/286
 [#302]: https://github.com/seifsg/ai-software-factory/pull/302
 [#309]: https://github.com/seifsg/ai-software-factory/pull/309
-[#311]: https://github.com/seifsg/ai-software-factory/issues/311
+[#312]: https://github.com/seifsg/ai-software-factory/pull/312
