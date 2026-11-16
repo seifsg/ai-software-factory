@@ -16,7 +16,7 @@ Keep required quality. Complete working iterations, tiny bug or full product. Ne
 3. **Steps or phases.** Ordered by user value: first the smallest real journey someone can see and use. Before dependent work, settle the shared state owner, invariants and who enforces them, entry points, limits, compatibility and failure behavior. Root fix, not patch; big or risky ones go to the owner.
 4. **The entire todo list.** Every todo concrete, checkable; becomes the ticket's checklist. Order never drops scope: every requested item maps to a todo, or stays open in its ticket when the owner narrowed this iteration.
 5. **The entire plan.** Written out so no agent guesses: interfaces, this checkout's dev ports.
-6. **Proof and tests.** The proof list for the PR's Before and After: one short id per changed view, state, journey or command; interactive elements share their journey's id, never one id each. The test map: command running tests covering each changed file, and project's full-suite command for verify.
+6. **Proof and tests.** The proof list for the PR's Before and After: one short id per changed view, state, journey or command, with its input files (whose change alters its result); interactive elements share their journey's id, never one id each. The test map: command running tests covering each changed file, and project's full-suite command for verify.
 
 No coding while planning.
 
@@ -62,7 +62,7 @@ The block `## 3 Plan` holds:
 - [ ] **Phases:** ordered, smallest real journey first (product, feature or new UI; a `change` omits it)
 - [ ] **Todos:** `T1..Tn`, each an outcome with ticket and criteria; every criterion maps to at least one todo; the ticket checklist matches
 - [ ] **Plan:** interfaces and ports (product, feature, new UI or delegated work; a `change` omits it)
-- [ ] **Proof list:** every changed view, state, journey or command with an id
+- [ ] **Proof list:** every changed view, state, journey or command with an id and its input files
 - [ ] **Test map:** per-file or changed-only test command and the full-suite command, or `none (<reason>)`: no logic, or owner-named POC
 - [ ] No source file changed during this step
 
