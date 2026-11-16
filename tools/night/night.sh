@@ -4,7 +4,7 @@
 # Refuses to start when anything the run needs would prompt, fail or go unguarded. FACTORY_START overrides
 # the start command (run with sh -c; $P is the project); FACTORY_CLAUDE and FACTORY_CODEX name a CLI off PATH.
 host=$1 hours=$2 check=$3 here=$(cd "$(dirname "$0")" && pwd) P=$(pwd)
-ag=$(cd "$here/../../.agents" && pwd) guard=$ag/skills/safe-factory/scripts/run-guard.sh
+ag=$(cd "$here/../../.agents" && pwd) guard=$ag/bin/factory.cmd
 run="$P/.factory/run.md" st="$P/.factory/guard/state" bad=0
 say() { printf '%-8s %s\n' "$1" "$2"; [ "$1" = ok ] || bad=1; }
 case $host in claude) cli=${FACTORY_CLAUDE:-claude} ;; codex) cli=${FACTORY_CODEX:-codex} ;; *) echo 'usage: sh night.sh <claude|codex> <hours> [--check]' >&2; exit 2 ;; esac
@@ -16,11 +16,11 @@ grep -q '^Status: open' "$run" 2>/dev/null && say ok 'run file open' || say MISS
 sed -n '/^## /q;/^Waiting: /{p;q;}' "$run" 2>/dev/null | grep -q '^Waiting: owner' && say MISSING 'the run waits on the owner: answer first'
 # 2. The guard is wired for this host.
 if [ "$host" = claude ]; then
-  [ -f "$guard" ] && say ok 'guard script' || say MISSING "$guard"
+  [ -f "$guard" ] && say ok 'guard launcher' || say MISSING "$guard"
   has 'safe-factory@' "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/settings.json" && say ok 'plugin enabled' || say MISSING 'the safe-factory plugin, enabled in your settings'
   has __GUARD__ "$here/claude-settings.json" && say ok 'deny/allow and guard template' || say MISSING "$here/claude-settings.json"
 else
-  has safe-factory/scripts/run-guard.sh "$HOME/.codex/hooks.json" && say ok 'guard hooks wired' || say MISSING "guard hooks in $HOME/.codex/hooks.json"
+  { has bin/factory.cmd "$HOME/.codex/hooks.json" || has safe-factory/scripts/run-guard.sh "$HOME/.codex/hooks.json"; } && say ok 'guard hooks wired' || say MISSING "guard hooks in $HOME/.codex/hooks.json"
   has OWNER "$HOME/.codex/rules/factory.rules" && say ok 'forbidden rules' || say MISSING "$HOME/.codex/rules/factory.rules"
 fi
 command -v "$cli" >/dev/null && say ok "$host CLI" || say MISSING "$host CLI: on PATH, or set FACTORY_CLAUDE / FACTORY_CODEX"
