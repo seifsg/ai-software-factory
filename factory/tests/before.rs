@@ -2,9 +2,10 @@
 //! no `before-<id>` file or one saved after the branch's first source change; a run whose Befores came first
 //! passes. Each case is a scratch repository with fixed commit dates and file times.
 
-use std::io::Write;
+mod common;
+
+use common::git;
 use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 const RUN: &str = "# Run: x\nStatus: open\nNext: 5 Build \u{b7} get-ready-to-code\nWaiting: none\n\n## 3 Plan \u{2714}\n**Proof list:**\n| Id | What |\n|---|---|\n| P1 | a |\n| P2 | b |\n**Test map:** none\n\n## 4 Before \u{2714}\nsaved\n";
@@ -14,29 +15,13 @@ fn at(h: u64) -> SystemTime {
     UNIX_EPOCH + Duration::from_secs(1_767_225_600 + h * 3600)
 }
 
-fn git(dir: &Path, args: &[&str], hour: u64) {
-    let date = format!("2026-01-01T{hour:02}:00:00Z");
-    let ok = Command::new("git")
-        .arg("-C")
-        .arg(dir)
-        .args(["-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false"])
-        .args(args)
-        .env("GIT_AUTHOR_DATE", &date)
-        .env("GIT_COMMITTER_DATE", &date)
-        .stdout(Stdio::null())
-        .status()
-        .is_ok_and(|s| s.success());
-    assert!(ok, "git {args:?}");
-}
-
 fn set_time(p: &Path, t: SystemTime) {
     std::fs::File::options().write(true).open(p).and_then(|f| f.set_modified(t)).expect("set mtime");
 }
 
 /// A repository with a base commit on `main` at 08:00 and the branch's own commit at 10:00.
 fn repo(name: &str) -> PathBuf {
-    let d = std::env::temp_dir().join(format!("factory-before-{}-{name}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&d);
+    let d = common::scratch(name);
     std::fs::create_dir_all(d.join(".factory/proof/1")).unwrap();
     git(&d, &["init", "-q", "-b", "main"], 8);
     std::fs::write(d.join("a.txt"), "a\n").unwrap();
@@ -56,28 +41,14 @@ fn before(d: &Path, id: &str, h: u64) {
     set_time(&p, at(h));
 }
 
-/// Runs the binary in `d` with `input` on stdin and a private home; exit code and stdout + stderr.
+/// Runs the binary in `d`, its own home.
 fn factory(d: &Path, args: &[&str], input: &str) -> (i32, String) {
-    let mut child = Command::new(env!("CARGO_BIN_EXE_factory"))
-        .args(args)
-        .current_dir(d)
-        .env("HOME", d)
-        .env("USERPROFILE", d)
-        .env("XDG_CACHE_HOME", d)
-        .env_remove("PWD")
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .expect("run factory");
-    child.stdin.take().unwrap().write_all(input.as_bytes()).unwrap();
-    let out = child.wait_with_output().unwrap();
-    (out.status.code().unwrap_or(-1), format!("{}{}", String::from_utf8_lossy(&out.stdout), String::from_utf8_lossy(&out.stderr)))
+    common::factory(d, d, args, input)
 }
 
 /// The Stop hook's reply to a turn that ends on `msg`.
 fn stop(d: &Path, msg: &str) -> String {
-    let cwd = d.to_string_lossy().replace('\\', "/");
+    let cwd = common::json_path(d);
     let json = format!(r#"{{"session_id":"s1","cwd":"{cwd}","last_assistant_message":"{msg}"}}"#);
     factory(d, &["guard", "stop"], &json).1
 }
