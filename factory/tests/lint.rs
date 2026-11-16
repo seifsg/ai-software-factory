@@ -1,4 +1,5 @@
-//! Lint against two recorded runs (fixtures r3, r4: their final run and ticket files). Each case puts one
+//! Lint against two recorded runs (fixtures r3, r4: their final run file, ticket and proof files, kept out of a
+//! `.factory/` folder so Git keeps them). Each case puts one
 //! round-1 checker miss of that run back into its block and asserts the lint flags it before a checker would.
 
 use factory::lint::{check, Input, Report};
@@ -13,8 +14,8 @@ fn root() -> PathBuf {
 
 fn fixture(run: &str) -> (PathBuf, String, String) {
     let dir = root().join("tests/fixtures/lint").join(run);
-    let text = std::fs::read_to_string(dir.join(".factory/run.md")).unwrap();
-    let ticket = std::fs::read_to_string(dir.join(".factory/ticket.md")).unwrap();
+    let text = std::fs::read_to_string(dir.join("run.md")).unwrap();
+    let ticket = std::fs::read_to_string(dir.join("ticket.md")).unwrap();
     (dir, text, ticket)
 }
 
@@ -26,7 +27,7 @@ fn lint(run: &str, gate: char, head: &str, edits: &[(&str, &str)]) -> Report {
         text = text.replacen(old, new, 1);
     }
     let skills = root().join("../.agents/skills");
-    check(&Input { gate, run: &text, ticket: Some(&ticket), head, has_remote: false, skills: Some(&skills), dir: &dir })
+    check(&Input { gate, run: &text, ticket: Some(&ticket), head, has_remote: false, skills: Some(&skills), proof: &dir.join("proof") })
 }
 
 fn flags(r: &Report, needle: &str) {

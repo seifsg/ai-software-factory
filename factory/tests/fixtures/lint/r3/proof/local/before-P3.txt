@@ -1,0 +1,2 @@
+"hello-world-foo" maxLength ignored on base
+maxLength 0: no throw on base

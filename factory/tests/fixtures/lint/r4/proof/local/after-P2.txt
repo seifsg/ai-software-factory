@@ -1,0 +1,9 @@
+commit adc6ac8
+"hello-world"
+0 RangeError
+-1 RangeError
+1.5 RangeError
+NaN RangeError
+5 RangeError
+null RangeError
+true RangeError

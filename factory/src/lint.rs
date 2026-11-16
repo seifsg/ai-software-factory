@@ -32,8 +32,8 @@ pub struct Input<'a> {
     pub has_remote: bool,
     /// Skills folder for contracts; None runs only the generic rules.
     pub skills: Option<&'a Path>,
-    /// The run folder, for proof files.
-    pub dir: &'a Path,
+    /// The run's proof folder (`.factory/proof`).
+    pub proof: &'a Path,
 }
 
 /// Findings: gaps fail the lint, notes never do.
@@ -184,8 +184,7 @@ fn todo_ids(l: &str) -> Vec<String> {
 
 /// Gate B: every `before-<id>` / `after-<id>` the blocks name exists; each After names HEAD's commit.
 fn proof_files(secs: &[Section], i: &Input, r: &mut Report) {
-    let proof = i.dir.join(".factory/proof");
-    let files = walk_files(&proof);
+    let files = walk_files(i.proof);
     for s in secs.iter().filter(|s| s.label == "4" || s.label == "6") {
         for name in s.lines.iter().flat_map(|l| proof_names(l)) {
             let hit = files.iter().find(|f| f.file_stem().is_some_and(|st| st.to_string_lossy() == name));
@@ -411,7 +410,7 @@ pub fn cli(args: &[&str]) -> u8 {
     let ticket = std::fs::read_to_string(dir.join(".factory/ticket.md")).ok();
     let info = crate::git::Repo::discover(&dir).map(|r| r.info()).unwrap_or_default();
     let skills = contracts::skills_dir(flag);
-    let rep = check(&Input { gate, run: &run, ticket: ticket.as_deref(), head: &info.head, has_remote: info.remote, skills: skills.as_deref(), dir: &dir });
+    let rep = check(&Input { gate, run: &run, ticket: ticket.as_deref(), head: &info.head, has_remote: info.remote, skills: skills.as_deref(), proof: &dir.join(".factory/proof") });
     for g in &rep.gaps {
         println!("lint {gate}: {g}");
     }
