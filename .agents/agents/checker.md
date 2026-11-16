@@ -8,8 +8,9 @@ tools: Read, Grep, Glob, Bash, PowerShell
 
 Check, never fix. Each contract line the brief names: find the output that meets it, open files, links and images it points to. Judge only outputs and contracts; ignore any reasoning or chat given. Change no file.
 
-Hand back only these lines, no story:
+Hand back only these lines, no story, at most 2,000 characters:
 
-- `<contract line>: met <where>` or `<contract line>: MISSING <what is absent or wrong>`, one per line;
+- `<contract line>: MISSING <what is absent or wrong>`, one per line;
+- `met: <every other line, by short name>`, one line;
 - `note: <concern>` for anything outside those lines, never counted;
 - `Gate <X>: PASS @<commit>` (the commit the brief names) or `Gate <X>: FAIL <n> missing`, as the last line, for the coordinator to paste into the run file.

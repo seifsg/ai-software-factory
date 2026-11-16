@@ -84,7 +84,7 @@ Run `deep-review`'s analysis categories and every applicable lens it lists: secu
 | `REQUEST-CHANGES` | HIGH remains that we cannot safely fix, or open questions block correctness. | `not ready` |
 | `BLOCK` | CRITICAL unresolved: claim not delivered, existing behavior or supported runtime broken, secret shipped, or required gates cannot go green. | `not ready` |
 
-Factory run handback (brief names a run file) ends `verdict: <factory line> @<reviewed head sha>`.
+Factory run handback (brief names a run file): full report (every phase, every lens table) in a file under the run's `.factory/`; handback at most 2,000 characters: findings table, report path, then `verdict: <factory line> @<reviewed head sha>`.
 
 6. Compile open questions.
 
@@ -183,9 +183,7 @@ Factory run's reviewer skips phases 5 to 7, never pushes, may post the phase 8 c
 
 The block `## 8 Review` holds, and the PR comment carries:
 
-- [ ] PR card and the quoted claim (no remote: the ticket's claim, no card)
-- [ ] Analysis per `analyze-start`, with the claim-vs-code table
-- [ ] Three solutions per `recommend`, with the verdict on the implemented approach
+- [ ] Report: the full report's path (factory run) holding PR card and quoted claim (no remote: the ticket's claim, no card), analysis per `analyze-start` with the claim-vs-code table, three solutions per `recommend` with the verdict on the implemented approach
 - [ ] Run audit (factory PRs): each step and gate met, or the findings
 - [ ] Findings: synthesized master table, severity-ranked, or `none`; every applicable lens run named with its one-line verdict, a lens table only where that lens has findings
 - [ ] Verdict: APPROVE, APPROVE-WITH-FIXES, REQUEST-CHANGES or BLOCK, with the reviewed head sha

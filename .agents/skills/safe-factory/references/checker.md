@@ -39,8 +39,11 @@ Gate C's list, besides `## 7 PR`:
 
 ## Handback
 
+At most 2,000 characters:
+
 ```text
-<contract line>: met <where> | MISSING <what is absent or wrong>
+<contract line>: MISSING <what is absent or wrong>
+met: <every other line, by short name>
 note: <concern outside the contract lines, never counted>
 Gate <X>: PASS @<commit> | FAIL <n> missing
 ```
