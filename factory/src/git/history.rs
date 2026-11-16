@@ -77,18 +77,26 @@ impl Walk {
     }
 }
 
-/// Committer time of the earliest commit reachable from `head` and not from `base`; None when there is
-/// none, or the walk passes its limit.
-pub fn first_own_commit(repo: &Repo, head: &str, base: &str) -> Option<i64> {
+/// The branch's own commits, as the Before rule needs them.
+pub struct Own {
+    /// Committer time and sha of the earliest commit reachable from HEAD and not from the base.
+    pub first: Option<(i64, String)>,
+    /// Committer time of the newest commit both reach (where the branch left its base).
+    pub fork: Option<i64>,
+}
+
+/// Walks HEAD against `base`; None when the base cannot be read or the walk passes its limit.
+pub fn own_commits(repo: &Repo, head: &str, base: &str) -> Option<Own> {
     let mut w = Walk { store: Store::open(repo), nodes: HashMap::new(), heap: BinaryHeap::new(), live: 0 };
     w.mark(base, BASE);
     // An unreadable base (shallow, pruned) would make all of HEAD's history its own: judge no commits.
     w.nodes.contains_key(base).then_some(())?;
     w.mark(head, OWN);
-    let mut first: Option<i64> = None;
+    let mut first: Option<(i64, String)> = None;
     for _ in 0..MAX_COMMITS {
         if w.live == 0 {
-            return first;
+            let fork = w.nodes.values().filter(|n| n.flags == OWN | BASE).map(|n| n.time).max();
+            return Some(Own { first, fork });
         }
         let (time, sha) = w.heap.pop()?;
         let Some(n) = w.nodes.get_mut(&sha) else { continue };
@@ -96,7 +104,9 @@ pub fn first_own_commit(repo: &Repo, head: &str, base: &str) -> Option<i64> {
         let (flags, parents) = (n.flags, n.parents.clone());
         if flags & BASE == 0 {
             w.live -= 1;
-            first = Some(first.map_or(time, |f| f.min(time)));
+            if first.as_ref().is_none_or(|(f, _)| time <= *f) {
+                first = Some((time, sha));
+            }
         }
         for p in &parents {
             w.mark(p, flags);
@@ -105,11 +115,22 @@ pub fn first_own_commit(repo: &Repo, head: &str, base: &str) -> Option<i64> {
     None
 }
 
-/// Modification time (ns) of the oldest changed or untracked path outside `.factory/`, as `git status`
-/// lists them; a deleted path counts by its folder's time. None when the tree is clean or Git cannot run.
-pub fn worktree_first(repo: &Repo) -> Option<u128> {
+/// Modification time (ns) and path of the oldest changed or untracked path outside `.factory/` that is
+/// newer than `floor` (ns: where the branch left its base; an older file is no work of this branch), as
+/// `git status` lists them; a deleted path counts by its folder's time. None when there is none or Git
+/// cannot run.
+pub fn worktree_first(repo: &Repo, floor: u128) -> Option<(u128, String)> {
     let out = super::command(repo)
-        .args(["status", "--porcelain=v1", "-z", "--untracked-files=all", "--no-renames", "--ignore-submodules=all"])
+        .args([
+            "-c",
+            "core.fsmonitor=false",
+            "status",
+            "--porcelain=v1",
+            "-z",
+            "--untracked-files=all",
+            "--no-renames",
+            "--ignore-submodules=all",
+        ])
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
         .output()
@@ -119,12 +140,13 @@ pub fn worktree_first(repo: &Repo) -> Option<u128> {
         .split(|&b| b == 0)
         .filter(|r| r.len() > 3)
         .filter_map(|r| {
-            let path = String::from_utf8_lossy(&r[3..]);
+            let path = String::from_utf8_lossy(&r[3..]).into_owned();
             if path.split('/').any(|c| c == ".factory") {
                 return None;
             }
-            let p = repo.work.join(path.as_ref());
-            crate::paths::mtime_ns(&p).or_else(|| crate::paths::mtime_ns(p.parent()?))
+            let p = repo.work.join(&path);
+            let t = crate::paths::mtime_ns(&p).or_else(|| crate::paths::mtime_ns(p.parent()?))?;
+            (t >= floor).then_some((t, path))
         })
-        .min()
+        .min_by_key(|(t, _)| *t)
 }

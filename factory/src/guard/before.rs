@@ -4,7 +4,7 @@
 //! work began cannot show where it started.
 
 use crate::git::{Repo, history};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 /// The message posts the step 5 block or a todo line.
 pub fn posted(msg: &str) -> bool {
@@ -53,7 +53,7 @@ pub fn ids(run: &str) -> Vec<String> {
 /// `.factory/guard/before`, keyed by the Befores and their times: work after a pass is always later than
 /// each Before, so the pass holds until a Before changes, and later todos skip Git.
 pub fn refusal(dir: &Path, run: &str, repo: Option<&Repo>, head: &str) -> Option<String> {
-    let files = crate::proof::files(&dir.join(".factory/proof"));
+    let files = crate::proof::files(&proof_dir(dir, run));
     let (mut missing, mut saved) = (Vec::new(), Vec::new());
     for id in ids(run) {
         let want = format!("before-{id}");
@@ -73,22 +73,41 @@ pub fn refusal(dir: &Path, run: &str, repo: Option<&Repo>, head: &str) -> Option
         return None;
     }
     let start = if saved.is_empty() { None } else { first_change(repo, head) };
-    let late: Vec<String> = start.map_or_else(Vec::new, |c| saved.into_iter().filter(|(_, t)| *t > c).map(|(id, _)| id).collect());
+    let late: Vec<String> =
+        start.as_ref().map_or_else(Vec::new, |(c, _)| saved.into_iter().filter(|(_, t)| t > c).map(|(id, _)| id).collect());
     if missing.is_empty() && late.is_empty() {
         let _ = std::fs::write(&cache, key); // no guard folder yet: no cache, the next todo checks again
         return None;
     }
-    Some(super::reply::before_first(&missing.join(", "), &late.join(", ")))
+    let began = start.filter(|_| !late.is_empty()).map_or_else(String::new, |(t, what)| {
+        format!("{what} at {}", crate::receipt::utc_iso(u64::try_from(t / 1_000_000_000).unwrap_or(0)))
+    });
+    Some(super::reply::before_first(&missing.join(", "), &late.join(", "), &began))
 }
 
-/// When the branch's own work began (ns): its first commit after the base (the last instant of that
-/// commit's second: commit times are whole seconds), or its oldest uncommitted change, whichever is first.
-fn first_change(repo: Option<&Repo>, head: &str) -> Option<u128> {
+/// The run's own proof folder: `.factory/proof/<ticket>/` for the ticket at the end of the `# Run:` line's
+/// first word (a ticket URL or id), when that folder exists; else the whole proof folder. Another run's
+/// Before with the same id never stands in for this one's.
+fn proof_dir(dir: &Path, run: &str) -> PathBuf {
+    let all = dir.join(".factory/proof");
+    let first = run.lines().next().and_then(|l| l.strip_prefix("# Run: ")).and_then(|r| r.split_whitespace().next()).unwrap_or("");
+    let id = first.trim_end_matches('/').rsplit(['/', '#']).next().unwrap_or("");
+    let safe = !id.is_empty() && id.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_');
+    Some(all.join(id)).filter(|p| safe && p.is_dir()).unwrap_or(all)
+}
+
+/// When the branch's own work began (ns) and what began it: its first commit after the base (the last
+/// instant of that commit's second: commit times are whole seconds), or its oldest uncommitted change
+/// made after the branch left its base, whichever is first.
+fn first_change(repo: Option<&Repo>, head: &str) -> Option<(u128, String)> {
     let repo = repo?;
-    let commit = history::base(repo)
-        .and_then(|b| history::first_own_commit(repo, head, &b))
-        .map(|s| (u128::try_from(s).unwrap_or(0) + 1) * 1_000_000_000 - 1);
-    [commit, history::worktree_first(repo)].into_iter().flatten().min()
+    let walk = history::base(repo).and_then(|b| history::own_commits(repo, head, &b));
+    let secs = |s: i64| u128::try_from(s).unwrap_or(0) * 1_000_000_000;
+    let commit =
+        walk.as_ref().and_then(|w| w.first.as_ref()).map(|(t, sha)| (secs(*t + 1) - 1, format!("commit {}", &sha[..sha.len().min(8)])));
+    let floor = walk.as_ref().and_then(|w| w.fork).map_or(0, secs);
+    let change = history::worktree_first(repo, floor).map(|(t, path)| (t, format!("uncommitted `{path}`")));
+    [commit, change].into_iter().flatten().min_by_key(|(t, _)| *t)
 }
 
 #[cfg(test)]

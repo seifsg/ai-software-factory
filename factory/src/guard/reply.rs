@@ -50,15 +50,16 @@ pub fn cap(x: char, rounds: i64) -> String {
 }
 
 /// The step 5 block or a todo line came while a Before is missing or was saved after the work began.
-pub fn before_first(missing: &str, late: &str) -> String {
+/// `began` names what started the work and when (`commit <sha> at <time>`), for late Befores.
+pub fn before_first(missing: &str, late: &str, began: &str) -> String {
     let mut s = String::from(
-        "Before proof comes first: step 5 and its todo lines wait until every proof-list id has its `before-<id>` file under .factory/proof/, saved before the first source change.",
+        "Before proof comes first: step 5 and its todo lines wait until every proof-list id has its `before-<id>` file under .factory/proof/<ticket>/ (a new surface's file says `did not exist`), saved before the first source change.",
     );
     if !missing.is_empty() {
         s.push_str(&format!(" No Before file: {missing}."));
     }
     if !late.is_empty() {
-        s.push_str(&format!(" Saved after the work began: {late}."));
+        s.push_str(&format!(" Saved after the work began ({began}): {late}."));
     }
     s + " Never capture a Before after the work: set the work aside (commit it to a side branch or stash it), put the checkout back at its base, capture each of these Befores there, then build again; or set `Waiting: owner: <question>` and end your turn."
 }

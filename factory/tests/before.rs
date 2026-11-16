@@ -8,7 +8,7 @@ use common::git;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-const RUN: &str = "# Run: x\nStatus: open\nNext: 5 Build \u{b7} get-ready-to-code\nWaiting: none\n\n## 3 Plan \u{2714}\n**Proof list:**\n| Id | What |\n|---|---|\n| P1 | a |\n| P2 | b |\n**Test map:** none\n\n## 4 Before \u{2714}\nsaved\n";
+const RUN: &str = "# Run: https://example.test/issues/1 \u{b7} Fast \u{b7} change\nStatus: open\nNext: 5 Build \u{b7} get-ready-to-code\nWaiting: none\n\n## 3 Plan \u{2714}\n**Proof list:**\n| Id | What |\n|---|---|\n| P1 | a |\n| P2 | b |\n**Test map:** none\n\n## 4 Before \u{2714}\nsaved\n";
 
 /// 2026-01-01 at `h` hours UTC.
 fn at(h: u64) -> SystemTime {
@@ -77,10 +77,10 @@ fn a_before_saved_after_the_first_commit_refuses_step_5() {
     before(&d, "P2", 11);
     let (code, out) = factory(&d, &["guard", "step", "5"], "## 5 Build\nT1 pre: a do: b post: c \u{2714}");
     assert_eq!(code, 1, "{out}");
-    assert!(out.contains("Saved after the work began: P2.") && !out.contains("No Before file"), "{out}");
+    assert!(out.contains("Saved after the work began (commit ") && out.contains("): P2.") && !out.contains("No Before file"), "{out}");
     assert_eq!(run_file(&d), RUN);
     let reply = stop(&d, "## 5 Build x");
-    assert!(reply.contains("Saved after the work began: P2."), "{reply}");
+    assert!(reply.contains("): P2."), "{reply}");
     let _ = std::fs::remove_dir_all(&d);
 }
 
@@ -93,7 +93,10 @@ fn an_uncommitted_change_older_than_a_before_refuses_it() {
     set_time(&d.join("new.txt"), at(8)); // untracked, between the two Befores and before the 10:00 commit
     let (code, out) = factory(&d, &["guard", "step", "T1"], "T1 pre: a do: b post: c");
     assert_eq!(code, 1, "{out}");
-    assert!(out.contains("Saved after the work began: P2.") && !out.contains(": P1"), "{out}");
+    assert!(
+        out.contains("Saved after the work began (uncommitted `new.txt` at 2026-01-01T08:00:00Z): P2.") && !out.contains(": P1"),
+        "{out}"
+    );
     let _ = std::fs::remove_dir_all(&d);
 }
 
@@ -111,6 +114,31 @@ fn befores_saved_first_pass_and_the_line_is_written() {
     assert!(std::fs::read_to_string(d.join(".factory/guard/before")).is_ok_and(|k| k.starts_with("P1 ")));
     before(&d, "P1", 11);
     let (code, out) = factory(&d, &["guard", "step", "T2"], "T2 pre: a do: b post: c");
-    assert!(code == 1 && out.contains("Saved after the work began: P1."), "{out}");
+    assert!(code == 1 && out.contains("): P1."), "{out}");
+    let _ = std::fs::remove_dir_all(&d);
+}
+
+#[test]
+fn another_tickets_before_never_stands_in() {
+    let d = repo("other-ticket");
+    before(&d, "P1", 9);
+    let other = d.join(".factory/proof/9/before-P2.txt");
+    std::fs::create_dir_all(other.parent().unwrap()).unwrap();
+    std::fs::write(&other, "did not exist\n").unwrap();
+    set_time(&other, at(9));
+    let (code, out) = factory(&d, &["guard", "step", "T1"], "T1 pre: a do: b post: c");
+    assert!(code == 1 && out.contains("No Before file: P2."), "this run's folder is .factory/proof/1/: {out}");
+    let _ = std::fs::remove_dir_all(&d);
+}
+
+#[test]
+fn an_untracked_file_older_than_the_branch_is_not_its_work() {
+    let d = repo("old-file");
+    before(&d, "P1", 9);
+    before(&d, "P2", 9);
+    std::fs::write(d.join("old.txt"), "x\n").unwrap();
+    set_time(&d.join("old.txt"), at(7)); // before the 08:00 base commit the branch left from
+    let (code, out) = factory(&d, &["guard", "step", "T1"], "T1 pre: a do: b post: c");
+    assert_eq!(code, 0, "{out}");
     let _ = std::fs::remove_dir_all(&d);
 }
