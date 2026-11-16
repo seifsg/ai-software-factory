@@ -1,0 +1,52 @@
+# Release branch: build the six factory binaries (factory.yml) and commit them with their checksums to the branch.
+# The bundle commit only touches .agents/bin, which this workflow ignores, so it never triggers itself.
+name: release-binaries
+
+on:
+  push:
+    branches: ['release/v*']
+    paths-ignore: ['.agents/bin/**']
+
+permissions:
+  contents: read
+
+# A newer push to the branch supersedes the bundle of an older one.
+concurrency:
+  group: release-binaries-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  factory:
+    uses: ./.github/workflows/factory.yml
+
+  bundle:
+    needs: factory
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }} # the commit the binaries were built from; the push fails if the branch moved
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: factory-*
+          path: .agents/bin
+          merge-multiple: true
+      - name: Commit the binaries and SHA256SUMS
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          set -eu
+          v=$(grep -o '"version": "[^"]*"' .agents/.claude-plugin/plugin.json | cut -d'"' -f4)
+          cd .agents/bin
+          export LC_ALL=C # sorted by file name
+          set -- factory-*-*
+          [ "$#" -eq 6 ] && [ -f "$1" ] || { echo "::error::expected 6 binaries, got: $*"; exit 1; }
+          sha256sum "$@" > SHA256SUMS
+          git add "$@" SHA256SUMS
+          git update-index --chmod=+x factory-*-apple-darwin factory-*-linux-musl
+          if git diff --cached --quiet; then echo "binaries and SHA256SUMS unchanged"; exit 0; fi
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+            commit -q -m "chore(release): bundle factory binaries $v"
+          git push -q origin "HEAD:refs/heads/$BRANCH"

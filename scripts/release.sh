@@ -1,8 +1,10 @@
 #!/bin/sh
 # Release in two commands (docs/releasing.md). Humans run it; it never moves a tag or re-publishes a version.
 #   sh scripts/release.sh prepare X.Y.Z   branch from origin/main, bump, move CHANGELOG and UPGRADING, check, open the release PR
-#   sh scripts/release.sh publish X.Y.Z   after the owner merged that PR: tag its merge commit, push the tag, move stable, publish as Latest
+#   sh scripts/release.sh publish X.Y.Z   after the owner merged that PR: tag its merge commit, push the tag, move stable, publish as Latest with the binaries
 cmd=$1 v=$2
+# The factory binaries release-binaries.yml bundles in .agents/bin with SHA256SUMS, one per target.
+bins="factory-x86_64-pc-windows-msvc.exe factory-aarch64-pc-windows-msvc.exe factory-x86_64-apple-darwin factory-aarch64-apple-darwin factory-x86_64-unknown-linux-musl factory-aarch64-unknown-linux-musl"
 die() { echo "release: $*" >&2; exit 1; }
 case $cmd:$v in prepare:[0-9]*.[0-9]*.[0-9]* | publish:[0-9]*.[0-9]*.[0-9]*) ;; *) die "usage: sh scripts/release.sh prepare|publish X.Y.Z" ;; esac
 case $v in *[!0-9.]* | *..* | *.*.*.*) die "version must be plain X.Y.Z, got $v" ;; esac
@@ -28,6 +30,13 @@ $2
 EOF
   [ "$a" -gt "$x" ] || { [ "$a" -eq "$x" ] && { [ "$b" -gt "$y" ] || { [ "$b" -eq "$y" ] && [ "$c" -gt "$z" ]; }; }; }
 }
+# Set the factory crate's version from $old to $v in Cargo file $1: Cargo.toml's [package], Cargo.lock's factory entry.
+crate() {
+  awk -v o="version = \"$old\"" -v n="version = \"$v\"" '{sub(/\r$/, "")} /^\[/ {s = $0; f = 0} $0 == "name = \"factory\"" {f = 1}
+    $0 == o && (s == "[package]" || s == "[[package]]" && f) {$0 = n} {print}' "$1" > "$1.n" && mv "$1.n" "$1"
+}
+# SHA-256 lines as sha256sum writes them; macOS may only have shasum.
+sums() { if command -v sha256sum >/dev/null; then sha256sum "$@"; else shasum -a 256 "$@"; fi; }
 # The CHANGELOG section of $1 from file $2, links made absolute for release notes.
 notes() {
   awk -v h="## [$1]" '{sub(/\r$/, "")} index($0, h) == 1 {on = 1; next} on && /^## \[/ {exit} on' "$2" |
@@ -45,6 +54,7 @@ prepare() {
     sub "s/\"version\": \"$old\"/\"version\": \"$v\"/" "$f"
   done
   sub "s/\"ref\": \"v$old\"/\"ref\": \"v$v\"/" .claude-plugin/marketplace.json
+  crate factory/Cargo.toml; crate factory/Cargo.lock
   awk -v v="$v" -v o="$old" -v d="$(date +%Y-%m-%d)" -v u="https://github.com/$slug/compare" '
     {sub(/\r$/, "")}
     /^## \[Unreleased\]$/ {print; print ""; print "## [" v "] - " d; next}
@@ -52,13 +62,16 @@ prepare() {
     {print}' CHANGELOG.md > CHANGELOG.md.n && mv CHANGELOG.md.n CHANGELOG.md
   sub "s/^## Unreleased$/## $v/" UPGRADING.md
   grep -q "\"version\": \"$v\"" $man && grep -q "^## \[$v\] - " CHANGELOG.md || die "edit did not apply: check the formats in docs/releasing.md"
+  for f in factory/Cargo.toml factory/Cargo.lock; do
+    git diff --quiet -- "$f" && die "factory crate version in $f is not $old: fix it on main first"
+  done
   grep -q "^## $v$" UPGRADING.md || echo "release: UPGRADING.md has no '## Unreleased' section: no upgrade steps for $v (fine when none are needed)"
   git commit -q -am "chore(release): $v" || die "commit failed"
   sh scripts/check.sh || die "checks failed on the release commit; fix, amend, push release/v$v yourself"
   git push -q -u origin "release/v$v" || die "push failed"
   b=$(mktemp) || exit 1; trap 'rm -f "$b"' EXIT; { notes "$v" CHANGELOG.md; printf '\n---\n🏭 Built with [AI Software Factory](https://softwarefactory.company/) by Seif\n'; } > "$b"
   gh pr create -R "$slug" --draft --base main --head "release/v$v" --title "chore(release): $v" --body-file "$b" || die "PR not created; branch release/v$v is pushed"
-  echo "release: PR for $v open. After the owner merges it: sh scripts/release.sh publish $v"
+  echo "release: PR for $v open. Wait for the commit 'chore(release): bundle factory binaries $v' that release-binaries.yml pushes to release/v$v, then the owner merges it. After that: sh scripts/release.sh publish $v"
 }
 
 publish() {
@@ -77,15 +90,24 @@ publish() {
   fi
   # Everything that can fail runs before the irreversible tag push.
   gh auth status >/dev/null 2>&1 || die "gh is not signed in: run gh auth login, then rerun"
-  b=$(mktemp) || exit 1; trap 'rm -f "$b" "$b.c"' EXIT; show "$m:CHANGELOG.md" > "$b.c"; notes "$v" "$b.c" > "$b"
+  b=$(mktemp) || exit 1; trap 'rm -rf "$b" "$b.c" "$b.d"' EXIT; show "$m:CHANGELOG.md" > "$b.c"; notes "$v" "$b.c" > "$b"
   [ -s "$b" ] || die "no ## [$v] section in CHANGELOG.md at $m: fix it on main first"
+  # The bundle commit's binaries and SHA256SUMS, as release assets: present, built for $v, matching their sums.
+  mkdir "$b.d" || exit 1; set --
+  for f in $bins SHA256SUMS; do
+    [ -n "$(git ls-tree "$m" -- ".agents/bin/$f")" ] || die ".agents/bin/$f is missing at $m: merge the bundle commit from release-binaries.yml first"
+    MSYS_NO_PATHCONV=1 git cat-file blob "$m:.agents/bin/$f" > "$b.d/$f" || die "cannot read .agents/bin/$f at $m"
+    [ "$f" = SHA256SUMS ] || grep -aqF "$v" "$b.d/$f" || die ".agents/bin/$f at $m is not built for $v: merge the bundle commit for $v first"
+    set -- "$@" "$b.d/$f"
+  done
+  [ "$(grep -c . "$b.d/SHA256SUMS")" -eq 6 ] && (cd "$b.d" && sums -c SHA256SUMS >/dev/null) || die ".agents/bin/SHA256SUMS at $m does not match its six binaries"
   if [ -z "$t" ]; then
     git tag -a "v$v" -m "v$v" "$m" || die "cannot tag"
     git push -q origin "refs/tags/v$v" || { git tag -d "v$v" >/dev/null; die "tag push failed; local tag removed, rerun"; }
   fi
   # stable: what a store listing follows, released commits only. Never forced; before the release, so a rerun retries it.
   git push -q origin "$m:refs/heads/stable" || die "stable push failed, it did not move (tag v$v is pushed): fix the cause, then rerun publish $v"
-  gh release create "v$v" -R "$slug" --verify-tag --latest --title "v$v" --notes-file "$b" || die "release not created (tag v$v is pushed): rerun publish $v"
+  gh release create "v$v" -R "$slug" --verify-tag --latest --title "v$v" --notes-file "$b" "$@" || die "release not created (tag v$v is pushed): rerun publish $v"
   echo "release: v$v published as Latest from $m"
 }
 

@@ -1,0 +1,85 @@
+# The factory binary: tests and sh parity on three systems, then a release build per bundled target.
+# release-binaries.yml calls this same workflow, so CI and the release build the same way.
+name: factory
+
+on:
+  push:
+    branches-ignore: ['release/v*'] # release-binaries.yml runs this on release branches
+    paths: &paths
+      - 'factory/**'
+      - '.agents/bin/factory.cmd'
+      - '.agents/hooks/**'
+      - '.agents/skills/*/scripts/**'
+      - 'scripts/**'
+      - '.github/workflows/**'
+  pull_request:
+    paths: *paths
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+defaults:
+  run:
+    shell: bash # Git Bash on Windows runners
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: cargo test --locked --manifest-path factory/Cargo.toml
+      - run: cargo build --release --locked --manifest-path factory/Cargo.toml
+      - name: Parity with the sh scripts
+        run: |
+          ext=; [ "$RUNNER_OS" = Windows ] && ext=.exe
+          sh factory/parity/run.sh "factory/target/release/factory$ext"
+
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { target: x86_64-pc-windows-msvc, os: windows-latest, ext: .exe, native: true }
+          - { target: aarch64-pc-windows-msvc, os: windows-11-arm, ext: .exe, native: true }
+          - { target: x86_64-apple-darwin, os: macos-latest, ext: '', native: false }
+          - { target: aarch64-apple-darwin, os: macos-latest, ext: '', native: true }
+          - { target: x86_64-unknown-linux-musl, os: ubuntu-latest, ext: '', native: true }
+          - { target: aarch64-unknown-linux-musl, os: ubuntu-24.04-arm, ext: '', native: true }
+    runs-on: ${{ matrix.os }}
+    env:
+      TARGET: ${{ matrix.target }}
+      BIN: factory/target/${{ matrix.target }}/release/factory${{ matrix.ext }}
+      OUT: dist/factory-${{ matrix.target }}${{ matrix.ext }}
+    steps:
+      - uses: actions/checkout@v4
+      - if: contains(matrix.target, 'musl')
+        run: sudo apt-get update -q && sudo apt-get install -y musl-tools
+      - run: rustup target add "$TARGET"
+      - run: cargo build --release --locked --manifest-path factory/Cargo.toml --target "$TARGET"
+      # The binary must carry the plugin version: run it where it is native, else find the string in it.
+      - name: Version equals the plugin version
+        env:
+          NATIVE: ${{ matrix.native }}
+        run: |
+          v=$(grep -o '"version": "[^"]*"' .agents/.claude-plugin/plugin.json | cut -d'"' -f4)
+          [ -n "$v" ] || { echo "::error::no version in plugin.json"; exit 1; }
+          if [ "$NATIVE" = true ]; then
+            got=$("$BIN" --version | tr -d '\r')
+            [ "$got" = "factory $v" ] || { echo "::error::$TARGET prints '$got', want 'factory $v'"; exit 1; }
+          else
+            grep -aqF "$v" "$BIN" || { echo "::error::$TARGET binary does not carry $v"; exit 1; }
+          fi
+      - run: mkdir -p dist && cp "$BIN" "$OUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: factory-${{ matrix.target }}
+          path: ${{ env.OUT }}
+          if-no-files-found: error
