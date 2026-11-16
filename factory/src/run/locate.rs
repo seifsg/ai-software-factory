@@ -111,7 +111,8 @@ fn run_at(dir: &str) -> bool {
 
 /// Nearest folder holding `.factory/run.md`, from `start` up to the checkout top (a `.git` entry) or the root.
 pub fn walk(start: &Path) -> Option<String> {
-    let mut d = Some(start);
+    let start = std::path::absolute(start).unwrap_or_else(|_| start.to_path_buf());
+    let mut d = Some(start.as_path());
     while let Some(dir) = d {
         if dir.join(".factory/run.md").is_file() {
             return Some(paths::text(dir));

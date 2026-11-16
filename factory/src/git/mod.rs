@@ -36,7 +36,8 @@ pub struct Info {
 impl Repo {
     /// Finds the repository holding `start`, walking up like Git (no ceiling or GIT_DIR handling).
     pub fn discover(start: &Path) -> Option<Repo> {
-        let mut dir = Some(start);
+        let start = std::path::absolute(start).unwrap_or_else(|_| start.to_path_buf());
+        let mut dir = Some(start.as_path());
         while let Some(d) = dir {
             if let Some(gitdir) = gitdir_at(&d.join(".git")) {
                 let common = std::fs::read_to_string(gitdir.join("commondir"))

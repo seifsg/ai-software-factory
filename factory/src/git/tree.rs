@@ -24,7 +24,7 @@ fn hash_into(repo: &Repo, private: &Path) -> Result<String, String> {
     let out = Command::new("git")
         .arg("-C")
         .arg(&repo.work)
-        .args(["-c", "core.splitIndex=false", "add", "-A", "--", ".", ":(exclude).factory"])
+        .args(["-c", "core.splitIndex=false", "-c", "core.safecrlf=false", "add", "-A", "--", "."])
         .env("GIT_INDEX_FILE", private)
         .env("GIT_OPTIONAL_LOCKS", "0")
         .stdin(Stdio::null())
@@ -39,7 +39,9 @@ fn hash_into(repo: &Repo, private: &Path) -> Result<String, String> {
     if data.is_empty() {
         return Ok(index::tree_id(&[]));
     }
-    Ok(index::tree_id(&index::parse(&data)?))
+    // `.factory/` is left out here, not by an exclude pathspec: Git refuses one that names an ignored folder.
+    let entries: Vec<index::Entry> = index::parse(&data)?.into_iter().filter(|e| !e.path.starts_with(b".factory/")).collect();
+    Ok(index::tree_id(&entries))
 }
 
 /// `factory tree [<folder>]`: prints the work tree's id.

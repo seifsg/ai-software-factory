@@ -99,6 +99,8 @@ pub fn check(i: &Input) -> Report {
         }
         _ => gate_c(&secs, i, &lenses, &mut r),
     }
+    let mut seen = std::collections::HashSet::new();
+    r.gaps.retain(|g| seen.insert(g.clone()));
     r
 }
 
@@ -274,7 +276,7 @@ fn gate_c(secs: &[Section], i: &Input, lenses: &[String], r: &mut Report) {
     if !(text.contains("CLAIM") || quoted(&text)) {
         r.gaps.push(format!("{}: no quoted claim", s8.heading));
     }
-    if !text.lines().any(|l| l.trim_start().starts_with('|') && file_line(l)) {
+    if !claim_table(&s8.lines) {
         r.gaps.push(format!("{}: no claim-vs-code table row naming file:line", s8.heading));
     }
     if !["APPROVE", "REQUEST-CHANGES", "BLOCK"].iter().any(|v| text.contains(v)) {
@@ -440,4 +442,24 @@ fn has_label(sec: &Section, label: &str) -> bool {
 fn no_change_line(sec: &Section, phrase: &str) -> bool {
     let p = phrase.to_ascii_lowercase();
     sec.lines.iter().map(|l| l.to_ascii_lowercase()).any(|l| l.contains(&p) || (l.contains("changed this step") && l.contains("none")))
+}
+
+/// A claim-vs-code table: a header naming the claim or its delivery, then a row naming `file:line`.
+fn claim_table(lines: &[&str]) -> bool {
+    let mut in_claim = false;
+    for (k, l) in lines.iter().enumerate() {
+        let row = l.trim_start().starts_with('|');
+        if !row {
+            in_claim = false;
+            continue;
+        }
+        let header = lines.get(k + 1).is_some_and(|n| n.trim_start().starts_with("|---") || n.trim_start().starts_with("| ---"));
+        if header {
+            let low = l.to_ascii_lowercase();
+            in_claim = low.contains("claim") || low.contains("delivered");
+        } else if in_claim && file_line(l) {
+            return true;
+        }
+    }
+    false
 }
