@@ -2,13 +2,13 @@
 
 Fresh light read-only delegate (role `checker`, or any light read-only agent given this brief). Judges outputs against contracts, never work quality.
 
-Before each brief, commit and check each contract line yourself, as strictly; a form FAIL costs a round.
+Before each brief, commit and run `factory lint <gate>`; fix each line it flags at its step first. No `factory` command: check each contract line yourself, as strictly. A form FAIL costs a round.
 
 ## Brief
 
 ```text
 Role: checker. Gate <A|B|C>. Project: <absolute path>. Commit: <HEAD sha>.
-Contracts: the "Output contract" checklist of <skill paths for the gate's steps>.
+Contracts: <`factory contracts <the gate's skills>` output, pasted; no `factory`: the "Output contract" checklist of their paths>.
 Outputs: .factory/run.md, steps <range>; <PR URL for gate C>.
 Only those checklist lines (and Gate C's list below) count; any other concern is a "note:", never
 MISSING. For every line, find the output that meets it; open what it names; check its form too (layout,
