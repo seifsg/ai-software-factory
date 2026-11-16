@@ -25,7 +25,7 @@ No coding while planning.
 - Each todo reads as an outcome the owner understands, then its ticket and criteria. Example: `T4 Download button → click it and the PDF saves (#12, A2)`. Not `T4 add store_true option`.
 - Each todo: pre-step, step, post-step, so the loop applies.
 - A todo that depends on an unproven capability (platform API, device, third-party access) goes first as a bounded spike: one question, one stop condition. A failed spike blocks only that item.
-- Group useful parallel jobs by files and dependencies; keep tasks shorter than their delegation overhead local. A delegated todo names the lowest tier that can clear its checks: light (commands with a yes/no, search; no edits), standard (planned edits, research, walkthroughs) or deep (architecture, schema, security, unclear bugs).
+- Todos that touch the same files form one delegate job; no two jobs share a file. Group the rest by dependencies; keep tasks shorter than their delegation overhead local. A delegated todo names the lowest tier that can clear its checks: light (commands with a yes/no, search; no edits), standard (planned edits, research, walkthroughs) or deep (architecture, schema, security, unclear bugs).
 
 ## Part B: the 0–4 loop (absolute for every todo)
 
@@ -61,7 +61,7 @@ The block `## 3 Plan` holds:
 - [ ] **Files:** the summary, then the critique and what it changed
 - [ ] **Phases:** ordered, smallest real journey first (product, feature or new UI; a `change` omits it)
 - [ ] **Todos:** `T1..Tn`, each an outcome with ticket and criteria; every criterion maps to at least one todo; the ticket checklist matches
-- [ ] **Plan:** interfaces and ports (product, feature, new UI or delegated work; a `change` omits it)
+- [ ] **Plan:** interfaces and ports, delegated jobs one per file set (product, feature, new UI or delegated work; a `change` omits it)
 - [ ] **Proof list:** every changed view, state, journey or command with an id and its input files
 - [ ] **Test map:** per-file or changed-only test command and the full-suite command, or `none (<reason>)`: no logic, or owner-named POC
 - [ ] No source file changed during this step
