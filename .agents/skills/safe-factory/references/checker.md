@@ -26,7 +26,7 @@ Round 2 on: recheck only MISSING lines of round 1's handback; the rest stay met.
 | B | 4–6 | `how-to-make-a-pr` (Before proof), `get-ready-to-code` (0–4 loop), `deep-review` |
 | C | 7–8, the PR | `how-to-make-a-pr` (`## 7 PR`), plus the list below |
 
-`## 7 PR` `local only ("<owner's words>") @<sha>` with `git remote` empty: PR lines lapse. `Skipped by owner ("<their words>")` meets its step's lines. Not at night.
+`## 7 PR` `local only ("<owner's words>") @<sha>` with `git remote` empty: PR lines lapse, and so do `## 8 Review`'s PR card and comment lines and this list's PR-body line. `Skipped by owner ("<their words>")` meets its step's lines. Not at night.
 
 Gate C's list, besides `## 7 PR`:
 
@@ -34,7 +34,7 @@ Gate C's list, besides `## 7 PR`:
 - [ ] Gates A and B: PASS or WAIVED
 - [ ] PR body: a closing keyword per sub-issue or change ticket it finishes (`how-to-make-a-pr`); an epic only a plain reference
 - [ ] `## 8 Review` holds the reviewer's verdict, or its cap line, on the PR's current head
-- [ ] Each After file `## 8 Review` names as recaptured names a commit at or after its fix
+- [ ] Every After file valid on the final head by `how-to-make-a-pr`'s After rule
 - [ ] `## 8 Review` has `Left running:` as its last line before any Gate C line, with each item's stop command, or `none`
 
 ## Handback

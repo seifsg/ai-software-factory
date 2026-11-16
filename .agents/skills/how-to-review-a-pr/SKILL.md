@@ -23,7 +23,7 @@ Review any PR (teammate, customer, agent) end to end. Every factory-opened PR ge
 2. Check out PR head. Record the branch you came from.
 3. Find touched areas from paths, imports, manifests. Flag separately shipped parts (client/server, scripts/binaries, plugins/host, schema/save formats) for change-guard.
 4. Refresh linked ticket: latest confirmed criteria, approved scope changes, owner source.
-5. Emit PR card, quote claim:
+5. Emit PR card, quote claim (no remote: no card, quote the ticket's claim):
 
 ```
 PR #<n> <title>
@@ -183,11 +183,11 @@ Factory run's reviewer skips phases 5 to 7, never pushes, may post the phase 8 c
 
 The block `## 8 Review` holds, and the PR comment carries:
 
-- [ ] PR card and the quoted claim
+- [ ] PR card and the quoted claim (no remote: the ticket's claim, no card)
 - [ ] Analysis per `analyze-start`, with the claim-vs-code table
 - [ ] Three solutions per `recommend`, with the verdict on the implemented approach
 - [ ] Run audit (factory PRs): each step and gate met, or the findings
-- [ ] Every applicable lens run, each with its findings table (possibly empty) and one-line verdict
-- [ ] Synthesized master table and one verdict: APPROVE, APPROVE-WITH-FIXES, REQUEST-CHANGES or BLOCK
+- [ ] Findings: synthesized master table, severity-ranked, or `none`; every applicable lens run named with its one-line verdict, a lens table only where that lens has findings
+- [ ] Verdict: APPROVE, APPROVE-WITH-FIXES, REQUEST-CHANGES or BLOCK, with the reviewed head sha
 - [ ] Fixes through the 0–4 loop with their gate result, or "no fixes"
-- [ ] The comment's link, read back; the PR still draft
+- [ ] The comment's link, read back; the PR still draft (no remote: lapses)
