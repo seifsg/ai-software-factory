@@ -172,7 +172,7 @@ Show draft before posting unless pre-authorized. Comment = only author-visible o
 
 ## Own draft PR
 
-Factory run's reviewer skips phases 5 to 7, never pushes, may post the phase 8 comment: hands back fix-set, checks delta once builder applied it. Otherwise, draft PR your agent opened: question gate, push, comment checkpoints pre-authorized. Open questions go in comment. Push only to that PR's branch, never force. Humans own ready, merge, release. Anyone else's PR keeps every checkpoint.
+Factory run's reviewer starts at verify on the pushed candidate, beside the step-6 review (no PR yet: card from branch and head, completed once the PR opens); skips phases 5 to 7, never pushes, may post the phase 8 comment: hands back fix-set, checks delta once builder applied it. Otherwise, draft PR your agent opened: question gate, push, comment checkpoints pre-authorized. Open questions go in comment. Push only to that PR's branch, never force. Humans own ready, merge, release. Anyone else's PR keeps every checkpoint.
 
 ## Safety
 
