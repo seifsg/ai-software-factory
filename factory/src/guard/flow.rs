@@ -173,7 +173,10 @@ impl Ctx<'_> {
         let prev = if g_ticks.is_empty() || !g_ticks.bytes().all(|b| b.is_ascii_digit()) { ticks } else { g_ticks.parse().unwrap_or(ticks) };
         if self.s.get("end") == "done" {
             let still = self.has_line(b"Status: closed") && (self.has_line(b"Gate C: PASS") || self.has_line(b"Gate C: WAIVED"));
-            if !still {
+            // A finish the guard saw holds while the run says closed, wherever HEAD went since.
+            if still {
+                self.f.finished = true;
+            } else {
                 self.s.set("end", "");
             }
         }
@@ -296,7 +299,7 @@ impl Ctx<'_> {
                 return Some(r);
             }
             self.save();
-            return Some(Reply::Block(reply::drive(&self.rf, &todo, &self.note)));
+            return Some(Reply::Block(reply::for_run(&self.rf, &todo)));
         }
         if !f.driven {
             if f.skipped.is_empty() || f.skipped == self.read_marker("skipwait") {

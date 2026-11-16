@@ -160,7 +160,7 @@ tools/night/                     overnight runs, from a clone: night.sh, watchdo
 .agents/.claude-plugin/          plugin manifests (also .codex-plugin/, .cursor-plugin/); the plugin root is .agents/
 .claude-plugin/marketplace.json  the marketplace (Claude Code, Codex), pinned to the release tag
 .cursor-plugin/marketplace.json  the Cursor marketplace
-docs/                            install, hosts, releasing; docs/assets/ holds the README images
+docs/                            install, hosts, releasing, receipts; docs/assets/ holds the README images
 CHANGELOG.md, UPGRADING.md       what changed per release, and what to do
 PRIVACY.md, SECURITY.md          what leaves your machine; how to report a vulnerability
 ```

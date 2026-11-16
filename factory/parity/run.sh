@@ -9,7 +9,8 @@ bin=${1:?usage: sh factory/parity/run.sh <factory binary>}
 here=$(cd "$(dirname "$0")" && pwd)
 repo=$(cd "$here/../.." && pwd)
 sg=$repo/.agents/skills/safe-factory/scripts/run-guard.sh
-[ -x "$bin" ] || [ -f "$bin" ] || { echo "parity: no binary at $bin"; exit 1; }
+[ -f "$bin" ] || { echo "parity: no binary at $bin"; exit 1; }
+bin=$(cd "$(dirname "$bin")" && pwd)/$(basename "$bin")  # absolute: the cases change folders
 w=$(mktemp -d) || exit 1
 trap 'rm -rf "$w"' EXIT
 # The path form the agent's tools read: C:/x on Windows, as both guards print it.
@@ -17,17 +18,19 @@ native() { if command -v cygpath >/dev/null; then cygpath -m "$1"; else printf '
 for side in sh bin; do
   mkdir -p "$w/$side"
   if [ "$side" = sh ]; then g="sh $sg"; else g="$bin guard"; fi
-  for part in cases corpus; do
+  for part in cases corpus tools; do
     W=$(native "$w/$side/$part") G=$g BIN=$bin SIDE=$side sh "$here/$part.sh" > "$w/$side.$part" 2>&1
   done
 done
-# Replies name the run folder (each side has its own) and, after a halt, the guard program itself.
+# Replies name the run folder (each side has its own) and the program the owner runs next: after a halt
+# (`clear`) and for leftovers (`doctor --fix`). A doctor backup folder is named for the clock.
 norm() {
   sed -e "s#$(native "$w")/[a-z]*/#W/#g" -e "s#$w/[a-z]*/#W/#g" \
-    -e 's#resumes with: [^"]* clear #resumes with: CLEAR #' -e 's#resumes it: [^"]* clear #resumes it: CLEAR #' "$1"
+    -e 's#resumes with: [^"]* clear #resumes with: CLEAR #' -e 's#resumes it: [^"]* clear #resumes it: CLEAR #' \
+    -e 's#(`[^`]* --fix` moves#(`DOCTOR --fix` moves#' -e 's#/removed/[0-9-]*/#/removed/STAMP/#g' "$1"
 }
 bad=0 n=0
-for part in cases corpus; do
+for part in cases corpus tools; do
   norm "$w/sh.$part" > "$w/a"; norm "$w/bin.$part" > "$w/b"
   n=$((n + $(grep -c '^== ' "$w/a")))
   if ! cmp -s "$w/a" "$w/b"; then
