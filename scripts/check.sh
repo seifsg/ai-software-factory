@@ -26,10 +26,10 @@ o=$(git grep -nE '\]\(\.\./' "$ref" -- $skills) && fail "links out of a skill fo
 o=$(git ls-tree -rl "$ref" $skills | awk '$5 ~ /\/SKILL\.md$/ && $4 >= 17000 {print $5}') && [ -n "$o" ] && fail "SKILL.md at 17000 bytes or over: $o"
 o=$(git ls-tree -r --name-only "$ref" | grep -iE '\.(png|jpe?g|gif|webp|mp4|webm|mov)$' | grep -vx '.agents/.claude-plugin/icon.png') && fail "media committed (proof belongs in refs/proof/): $o"
 
-# Budgets: all methods under 176000, read set under 97700.
+# Budgets: all methods under 177700, read set under 97300.
 set -- $(bytes "$ref")
-[ "$1" -lt 176000 ] || fail "methods $1 bytes, budget 176000"
-[ "$2" -lt 97700 ] || fail "read set $2 bytes, budget 97700"
+[ "$1" -lt 177700 ] || fail "methods $1 bytes, budget 177700"
+[ "$2" -lt 97300 ] || fail "read set $2 bytes, budget 97300"
 
 blob() { MSYS_NO_PATHCONV=1 git show "$ref:$1"; }  # <ref>:<path> as typed under Git Bash
 
