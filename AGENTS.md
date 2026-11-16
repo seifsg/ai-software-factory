@@ -16,7 +16,7 @@ Factory changes use `improve-factory` (`.agents/skills/improve-factory/SKILL.md`
 4. No person, company or product names. No dates, history, decision logs or provenance. Git keeps history (tag `history-archive`); release history only in `CHANGELOG.md` and `UPGRADING.md` at root.
 5. No agent, OS or tracker specifics in methods. They live in `docs/hosts.md`, the adapters (`.agents/.claude-plugin/`, `.agents/agents/`, `.agents/hooks/`) and reference files named for one tool (`references/github.md`). One exception: the Stop hook in `stop-check` and the factory check in `safe-factory`.
 6. Step skill ends with its `## Output contract`: the block it writes and a checklist the checker can verify.
-7. Size: every SKILL.md under 17,000 bytes (under 5k tokens: Claude Code keeps only that much of a skill after compaction), aim for 150 lines. References under 200 lines; over 100 lines starts with a contents line. Methods a run's main agent reads (read-set command below) stay under 103 KB; all methods together under 176 KB. Growth that earns its place is fine. Detail needed only in a rare situation goes to a reference behind a pointer that names the situation.
+7. Size: every SKILL.md under 17,000 bytes (under 5k tokens: Claude Code keeps only that much of a skill after compaction), aim for 150 lines. References under 200 lines; over 100 lines starts with a contents line. Methods a run's main agent reads (read-set command below) stay under 97.7 KB; all methods together under 176 KB. Growth that earns its place is fine. Detail needed only in a rare situation goes to a reference behind a pointer that names the situation.
 8. Each operative rule lives once per skill that needs it. Merge duplicates; cut filler. Never cut examples, ordering rules or a rule stated nowhere else to save bytes.
 9. English. No em dashes, stock phrases or invented claims.
 
@@ -29,7 +29,7 @@ sh scripts/check.sh                    # every check: prints nothing, exit 0; el
 sh scripts/check.sh bytes origin/main   # "<all methods> <read set>" for the PR line (run for base and head)
 ```
 
-It checks: links stay in a skill folder, SKILL.md under 17000, no media in Git, methods under 176000 and read set under 103000 (Git blobs), manifests agree, update check offline (newer tells, older quiet, curl fallback), doctor moves only old-only files, guard wiring (Stop in the skill, portable file for other hosts), session binding, stop rules, license, the check, directory form (no command or agent hook, no rewriting attributes, night tools out of the plugin, words the portal reads as credentials, README, privacy, security).
+It checks: links stay in a skill folder, SKILL.md under 17000, no media in Git, methods under 176000 and read set under 97700 (Git blobs), manifests agree, update check offline (newer tells, older quiet, curl fallback), doctor moves only old-only files, guard wiring (Stop in the skill, portable file for other hosts), session binding, stop rules, license, the check, directory form (no command or agent hook, no rewriting attributes, night tools out of the plugin, words the portal reads as credentials, README, privacy, security).
 
 - Changed `run-guard.sh` runs on fixture run files (`improve-factory`, Proof). Stays POSIX `sh` with LF endings and one `awk` pass.
 - Changed `gh` or `git` command form in a method: update night templates (`tools/night/claude-settings.json` allow list, `tools/night/codex.rules`) to match.
