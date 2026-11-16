@@ -38,9 +38,9 @@ git switch -c <scope>/<short-name> origin/<base>
 Every PR shows observed Before/After per outcome; prose or illustrative diagrams never replace results. Nonvisual proof, in a `diff`: API, one request's status and body; CLI or script, one command's output; method or prose, a fresh walkthrough's changed result and key text. Speed/size/cost proof measures same workload. Internal module proves its changed screen, endpoint or command. New nonvisual result: prior output is "did not exist". Name `**Visual:**` and `**Journey:**` under each outcome (`references/pr-layout.md`), with reason when no. Map shared backend effects to UI journeys.
 
 1. Take plan's proof list. Changed views, states, motion, interactions or affected UI journeys: read [visual and journey proof](references/media-proof.md) now; its rules apply in full.
-2. Brand-new surface: no Before capture, Before = "did not exist". Capture every other Before now, before any source edit, into `.factory/proof/<ticket>/before-<id>.png` (screens) or `before-<id>.txt` (commands, responses, text). Screens: capture from the preview owner watches, else host's built-in browser; keep that one server for After. No Playwright, headless browsers or capture scripts unless owner asks. Host cannot save screenshot as file: write what it shows into `before-<id>.txt` as `pane:` observation; valid proof, no waiver needed.
+2. Brand-new surface: no Before capture, Before = "did not exist". Non-visual Before (commands, responses, text) comes from base, frozen in Git, into `.factory/proof/<ticket>/before-<id>.txt`, by a background runner while the plan finishes: base output run before any edit, or `git show <base>:<path>` anytime; it names the base commit. Capture every screen Before now, before any source edit, into `before-<id>.png`. Screens: capture from the preview owner watches, else host's built-in browser; keep that one server for After. No Playwright, headless browsers or capture scripts unless owner asks. Host cannot save screenshot as file: write what it shows into `before-<id>.txt` as `pane:` observation; valid proof, no waiver needed.
 3. Inspect every capture: right screen, readable, no secrets.
-4. Missed a Before after editing: text and command proof come from base (`git show <base>:<path>`, base build output); screenshot no longer takeable: state it as missing in PR. Never a second checkout or server just for a picture.
+4. Missed a screen Before after editing: state it as missing in PR. Never a second checkout or server just for a picture.
 5. **After rule:** capture After during verify's manual round, same server, same ids: `after-<id>.*`, naming its commit and `factory proof-hash <the id's input files>` (no `factory` command: `git log -1 --format=%h -- <input files>`). It stays valid while that hash holds; a change to an input file recaptures that id, and only that id.
 
 ## 5. Make the change
@@ -86,7 +86,7 @@ Open one every run, unasked, unless its wave's draft PR is open (`references/pr-
 The block `## 4 Before` holds:
 
 - [ ] Every proof-list id with its `before-<id>` file under `.factory/proof/<ticket>/`, or "did not exist" for a new surface
-- [ ] Saved before the first source edit
+- [ ] Screens saved before the first source edit; non-visual ones taken from base, naming it
 - [ ] Each capture inspected, or none to inspect: every id "did not exist"
 
 The block `## 7 PR` holds the draft PR URL, and the PR itself has:
