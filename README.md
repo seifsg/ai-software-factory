@@ -32,7 +32,7 @@ After plan, verify and review, a fresh checker compares the outputs with each sk
 <td width="33%" valign="top">
 
 ### 📸 Proof, not claims
-Screen Before is captured before the first edit, command Before comes from base, After during verify and kept while its inputs stay unchanged; all land in the draft PR. A fresh agent that did not build it reviews the PR.
+Every Before is captured before the first edit, After during verify and kept while its inputs stay unchanged; all land in the draft PR. A fresh agent that did not build it reviews the PR.
 
 </td>
 </tr>
