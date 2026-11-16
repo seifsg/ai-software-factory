@@ -45,7 +45,7 @@ Every run keeps project rules and never puts secrets in code or Git. Never assum
 
 `.factory/run.md` in project holds the run: [format](references/run-file.md). Create at step 0; Git ignores `.factory/`.
 
-- After each step: write its block under the step's heading, tick heading `✔` once contract holds, set `Next:` to next step and its skill.
+- After each step: write its block under the step's heading, tick heading `✔` once contract holds, set `Next:` to next step and its skill (coded run: the guard does).
 - `Waiting:` stays `none` while you work. Before ending a turn on purpose, set `owner: <question>` or `jobs: <what runs> (max <minutes> min)`; back to `none` on resume.
 - `Status: closed` only after step 8 and gates A, B, C proven or owner waives one. Owner stop: `Status: stopped (<reason>)`.
 
@@ -76,7 +76,7 @@ Load  before █████ 800 ms
 
 ## Steps
 
-Live guard: one step per turn: load its skill fresh (same skill: reread its section), do that step's work, read, search or run fresh, update run file, then load `stop-check` and post its block or todo line as last message, end turn. Any stop, even a wait, spends it. Check asked: in run's folder, `sh "${CLAUDE_SKILL_DIR}/scripts/run-guard.sh" check ${CLAUDE_SESSION_ID}`, do what it prints; to stop, set `Waiting:`, then quote its `may stop` line, only then. End turns on a block or todo line, each number once: else run ends. Step 5 takes one todo per turn. Host with no Stop hook: Fast chains steps in one turn, never ending one open with `Waiting: none`; Safe ends each with `Say go for step <n>`.
+`factory guard step <n>` runs: [coded run](references/coded-run.md) replaces this paragraph. Else live guard: one step per turn: load its skill fresh (same skill: reread its section), do that step's work, read, search or run fresh, update run file, then load `stop-check` and post its block or todo line as last message, end turn. Any stop, even a wait, spends it. Check asked: in run's folder, `sh "${CLAUDE_SKILL_DIR}/scripts/run-guard.sh" check ${CLAUDE_SESSION_ID}`, do what it prints; to stop, set `Waiting:`, then quote its `may stop` line, only then. End turns on a block or todo line, each number once: else run ends. Step 5 takes one todo per turn. Host with no Stop hook: Fast chains steps in one turn, never ending one open with `Waiting: none`; Safe ends each with `Say go for step <n>`.
 
 Each step ends with its block: post full block as own chat message opening with its heading (never summary, never only a file or tool output). Fold in any owner reply before next step reads it. Ticket gets a comment only on status change (steps 0, 5, 7, 8) or relay, linking run file's blocks.
 
