@@ -102,3 +102,51 @@ fn a_second_run_on_the_same_tree_is_reused_or_flagged() {
     );
     let _ = std::fs::remove_dir_all(&d);
 }
+
+fn head(r: &Path) -> String {
+    let out = std::process::Command::new("git").arg("-C").arg(r).args(["rev-parse", "HEAD"]).output().unwrap();
+    String::from_utf8_lossy(&out.stdout).trim().to_string()
+}
+
+#[test]
+fn a_failed_run_then_a_pass_counts_one_pass() {
+    let d = common::scratch("fail-pass");
+    let r = closed_run(&d);
+    let (code, _) = factory(&r, &d, &["receipt", "run", "--suite", "full", "--", env!("CARGO_BIN_EXE_factory"), "no-such-command"], "");
+    assert_ne!(code, 0, "the failing suite's own code");
+    let (code, out) = suite(&d, &r, false);
+    assert_eq!(code, 0, "a FAIL is never reused: {out}");
+    assert!(
+        std::fs::read_dir(r.join(".factory/receipts")).unwrap().flatten().any(|e| {
+            std::fs::read_to_string(e.path()).is_ok_and(|t| t.contains("\nruns 2\npasses 1\n") && t.contains("\nresult PASS\n"))
+        })
+    );
+    assert_eq!(stop(&d, &r), "", "one passing run: Gate C stands and the run is finished (a finished run is never flagged)");
+    let _ = std::fs::remove_dir_all(&d);
+}
+
+#[test]
+fn a_review_with_no_receipt_for_its_commit_is_not_backed() {
+    let d = common::scratch("review-receipt");
+    let r = closed_run(&d);
+    suite(&d, &r, false);
+    std::fs::write(r.join("a.txt"), "b\n").unwrap();
+    git(&r, &["commit", "-q", "-am", "b"], 9);
+    let new = head(&r);
+    let run = std::fs::read_to_string(r.join(".factory/run.md")).unwrap();
+    let run: String = run
+        .lines()
+        .map(|l| if l.starts_with("Review: ") { format!("Review: ready (reviewer r) @{new}\n") } else { format!("{l}\n") })
+        .collect();
+    std::fs::write(r.join(".factory/run.md"), run).unwrap();
+    let a = d.join("hp/s1/subagents/agent-r.jsonl");
+    let body = std::fs::read_to_string(&a).unwrap();
+    let old = body.rsplit_once("verdict: ready @").map(|(_, s)| s[..40].to_string()).unwrap();
+    std::fs::write(&a, body.replace(&old, &new)).unwrap();
+    stop(&d, &r);
+    let (code, report) = factory(&r, &d, &["guard", "check"], "");
+    assert_eq!(code, 1, "{report}");
+    let line = report.lines().find(|l| l.starts_with("Review:")).unwrap_or("");
+    assert!(line.contains("NOT backed") && line.contains(&format!("no full-suite receipt for the tree of {new}")), "{report}");
+    let _ = std::fs::remove_dir_all(&d);
+}

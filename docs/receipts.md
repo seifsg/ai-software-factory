@@ -19,6 +19,7 @@ secs <n>
 at 2026-11-16T18:30:00Z    UTC
 log <path>                 optional: where the suite's output was saved
 runs 1                     full runs of this suite recorded on this tree; absent counts 1
+passes 1                   passing runs among them; absent: 1 for a PASS, 0 for a FAIL
 ```
 
 Readers ignore lines they do not know, so a writer may add its own (the pro gate runner adds `ref-tree`).
@@ -37,6 +38,6 @@ Readers ignore lines they do not know, so a writer may add its own (the pro gate
 
 ## What the guard accepts
 
-A Gate B, Gate C or review line stands only with a receipt where `suite` is `full`, `result` is `PASS`, and `tree` equals the tree of the commit the gate line names (`@<sha>`); Gate C, on the final head, only with one whose `runs` is 1: the full suite runs once per run. The Stop hook flags, once, each tree whose receipt counts a second run. Reviewers and checkers read receipts and never run the suite. A receipt whose `head` starts with that sha and says `clean yes` matches without reading Git objects. An owner's waiver needs no receipt. `factory receipt check [--commit <sha>]` prints the receipt the guard would use, or why there is none.
+A Gate B, Gate C or review line stands only with a receipt where `suite` is `full`, `result` is `PASS`, and `tree` equals the tree of the commit the gate line names (`@<sha>`); Gate C, on the final head, only with one whose `passes` is 1: the full suite passes once per run. The Stop hook flags, once, each tree whose receipt counts a second run, failed or not. Reviewers and checkers read receipts and never run the suite. A receipt whose `head` starts with that sha and says `clean yes` matches without reading Git objects. An owner's waiver needs no receipt. `factory receipt check [--commit <sha>]` prints the receipt the guard would use, or why there is none.
 
 A file that is untracked but not ignored is part of `tree`: commit or ignore it before the suite runs, or the receipt will not match the commit.
