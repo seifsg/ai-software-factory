@@ -16,7 +16,7 @@ Find real repository, branches, release policy, PR template, signing rule, check
 - Every PR belongs to a ticket. Search by symptom, area, files, title, branch; none found: run `ticketing`.
 - No ticket only if a project exemption covers the whole diff, or the change is trivial and the run kept it without one: PR body says why.
 - Link both ways: on open, PR link in ticket activity; clickable ticket link in PR body.
-- Finished ticket = Ready for QA while PR open, Done on merge; status follows `ticketing`.
+- On open, move finished ticket to Ready for QA; Done on merge; status follows `ticketing`.
 - Ticket with confirmed contract: refresh before opening or updating. Pending scope, drift or failed refresh leaves the dependent step open. Draft or local success never replaces owner's current expectation.
 
 ## 3. Branch from the right base
