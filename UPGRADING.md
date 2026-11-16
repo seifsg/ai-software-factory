@@ -2,6 +2,13 @@
 
 What installs and active runs must do for each release, newest first. What changed: [CHANGELOG.md](CHANGELOG.md).
 
+## Unreleased
+
+1. **Codex:** trust the hooks again in `/hooks`: they now call `bin/factory.cmd`, the bundled binary, instead of Git Bash.
+2. **Cursor:** trust the hooks again if it asks: the plugin now reads `hooks/cursor.json`.
+3. **Open runs past step 6:** the guard now refuses a Gate B or Gate C line without a passing full-suite receipt for its commit's tree. Run the suite once on that commit with `<plugin root>/bin/factory.cmd receipt run --suite full -- <full-suite command>`, then go on.
+4. **Night mode copies:** copy `tools/night/claude-settings.json` again: its hooks call `bin/factory.cmd` and its deny rules cover `guard clear` and `.agents/bin/`.
+
 ## 0.7.0
 
 1. **Night and watchdog moved:** `night.sh`, `watchdog.sh`, `claude-settings.json`, `pre-push` and `codex.rules` are now in `tools/night/`. Update any schedule or copied path from `<clone>/.agents/hooks/` to `<clone>/tools/night/`.

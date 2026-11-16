@@ -153,7 +153,9 @@ Rules: [AGENTS.md](AGENTS.md). Changes go through `improve-factory`; checks: `sh
 .agents/agents/                  delegate roles for Claude Code (runner, analyst, maker, builder, reviewer, checker)
 .agents/skills/stop-check/       Claude Code's prompt Stop hooks
 .agents/skills/safe-factory/     the coordinator; scripts/ holds the guard, update check, doctor
-.agents/hooks/portable.json      Stop guard, compact hook and update check (Codex, Cursor)
+.agents/hooks/portable.json      Stop guard, compact hook and update check (Codex); cursor.json, the same for Cursor
+.agents/bin/                     factory.cmd, the launcher hooks call, and the bundled factory binaries
+factory/                         the factory binary's Rust crate (guard, update check, doctor, lint, receipts); parity/ diffs it against the sh scripts
 tools/night/                     overnight runs, from a clone: night.sh, watchdog.sh, deny rules, pre-push
 .agents/.claude-plugin/          plugin manifests (also .codex-plugin/, .cursor-plugin/); the plugin root is .agents/
 .claude-plugin/marketplace.json  the marketplace (Claude Code, Codex), pinned to the release tag
