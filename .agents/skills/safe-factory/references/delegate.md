@@ -1,6 +1,6 @@
 # Delegate: roles, briefs and gates
 
-Models, overrides: `docs/hosts.md`. A skill project rules name for delegation loads before the first brief; it may change who does a job and maker/builder brief and handback form, never role, gates or acceptance.
+Models, overrides: `docs/hosts.md`. A skill project rules name for delegation loads before the first brief; it, or an add-on (step 0), may change who does a job and maker/builder brief and handback form, never role, gates or acceptance. Named both ways: loads once.
 
 ## Roles
 
@@ -25,7 +25,7 @@ Refusals first: split, confirm or clarify, then brief again.
 
 Carry goal, role, absolute paths, edit limits, branch, handback and a scratch folder under `.factory/`. Quote needed rules; whole methods only for walkthroughs/reviews. Fresh context: request, decisions, interface, stops, evidence paths; full chat needs a reason. Keep bulky returns in files; give needed fields and paths. Never resend unchanged methods or transcripts. Host controls: adapter.
 
-Verify working folder before writes; stop on mismatch. Background delegate: `Waiting: jobs:` before ending turn; result comes back. End with a gate per required outcome:
+Verify working folder before writes; stop on mismatch. End with a gate per required outcome:
 
 ```text
 G1 <outcome> CHECK: <command> EXPECT: <text its output must show>
