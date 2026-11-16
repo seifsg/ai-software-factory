@@ -14,7 +14,7 @@ Factory changes use `improve-factory` (`.agents/skills/improve-factory/SKILL.md`
 2. Write like `analyze-start` and `get-ready-to-code`: short imperative lines, numbered steps when order matters, explicit stops. Only what an agent would get wrong without it.
 3. Self-contained: link only to files in the skill's own folder, one level deep. Name other skills in backticks; never link them. Phase skills never name the coordinator.
 4. No person, company or product names. No dates, history, decision logs or provenance. Git keeps history (tag `history-archive`); release history only in `CHANGELOG.md` and `UPGRADING.md` at root.
-5. No agent, OS or tracker specifics in methods. They live in `docs/hosts.md`, the adapters (`.agents/.claude-plugin/`, `.agents/agents/`, `.agents/hooks/`) and reference files named for one tool (`references/github.md`). One exception: the Stop hook in `stop-check` and the factory check in `safe-factory`.
+5. No agent, OS or tracker specifics in methods. They live in `docs/hosts.md`, the adapters (`.agents/.claude-plugin/`, `.agents/agents/`, `.agents/hooks/`, `.agents/scripts/`) and reference files named for one tool (`references/github.md`). One exception: the Stop hook in `stop-check` and the factory check in `safe-factory`.
 6. Step skill ends with its `## Output contract`: the block it writes and a checklist the checker can verify.
 7. Size: every SKILL.md under 17,000 bytes (under 5k tokens: Claude Code keeps only that much of a skill after compaction), aim for 150 lines. References under 200 lines; over 100 lines starts with a contents line. Methods a run's main agent reads (read-set command below) stay under 97.3 KB; all methods together under 177.7 KB. Growth that earns its place is fine. Detail needed only in a rare situation goes to a reference behind a pointer that names the situation.
 8. Each operative rule lives once per skill that needs it. Merge duplicates; cut filler. Never cut examples, ordering rules or a rule stated nowhere else to save bytes.
@@ -22,22 +22,25 @@ Factory changes use `improve-factory` (`.agents/skills/improve-factory/SKILL.md`
 
 ## Keep it working
 
-No Python, test suite or build. Checks are commands and a fresh agent. Byte counts come from Git blobs, same on every checkout and line ending: commit first, or name the base (`origin/main`) in place of `HEAD`.
+No Python. The one build is the `factory` binary (`factory/`, Rust): `cargo test` and `sh factory/parity/run.sh <binary>` (zero diffs against the sh guard) cover it; every other check is a command or a fresh agent. Byte counts come from Git blobs, same on every checkout and line ending: commit first, or name the base (`origin/main`) in place of `HEAD`.
 
 ```text
 sh scripts/check.sh                    # every check: prints nothing, exit 0; else one FAIL line each, exit 1
 sh scripts/check.sh bytes origin/main   # "<all methods> <read set>" for the PR line (run for base and head)
+sh scripts/check.sh --changed origin/main  # a docs-only diff: the static checks only
 ```
 
-It checks: links stay in a skill folder, SKILL.md under 17000, no media in Git, methods under 177700 and read set under 97300 (Git blobs), manifests agree, update check offline (newer tells, older quiet, curl fallback), doctor moves only old-only files, guard wiring (Stop in the skill, portable file for other hosts), session binding, stop rules, license, the check, directory form (no command or agent hook, no rewriting attributes, night tools out of the plugin, words the portal reads as credentials, README, privacy, security).
+A full PASS on a clean tree writes `.factory/receipts/<tree>-full.txt`; the same tree and runtime reuse it and exit 0 at once (`FACTORY_CHECK_FRESH=1` runs everything). With a built `factory` binary it also runs the parity harness, once per set of its inputs.
 
-- Changed `run-guard.sh` runs on fixture run files (`improve-factory`, Proof). Stays POSIX `sh` with LF endings and one `awk` pass.
+It checks: links stay in a skill folder, SKILL.md under 17000, no media in Git, methods under 177700 and read set under 97300 (Git blobs), manifests agree, update check offline (newer tells, older quiet, curl fallback), doctor moves only old-only files, guard wiring (Stop in the skill, `portable.json` for Codex and `cursor.json` for Cursor, both through `.agents/scripts/factory.cmd`, one LF file, no `git` alias, no top-level `bin/`), session binding, stop rules, license, the check, directory form (no command or agent hook, no rewriting attributes, night tools out of the plugin, words the portal reads as credentials, README, privacy, security).
+
+- Changed `run-guard.sh` runs on fixture run files (`improve-factory`, Proof). Stays POSIX `sh` with LF endings and one `awk` pass. The binary changes with it: `sh factory/parity/run.sh` shows zero diffs before review.
 - Changed `gh` or `git` command form in a method: update night templates (`tools/night/claude-settings.json` allow list, `tools/night/codex.rules`) to match.
 - Every changed method gets a fresh-agent walkthrough before review.
 - Skill, reference, role or hook moved, added or deleted: update `README.md` and `docs/` in same PR. Keep what they say (commands, paths, defaults) true by hand.
 - Each PR states method bytes before and after (`bytes` for base and head).
 - Plugin stays clean on the directory portal's Validate; its one image is `.agents/.claude-plugin/icon.png`.
-- Keep secrets, client data, transcripts and `.factory/` run files out of Git.
+- Keep secrets, client data, transcripts and `.factory/` run files out of Git. Exception, by the owner's ticket: the parity corpus (`factory/parity/corpus/`: recorded smoke runs, transcripts stripped to the lines the guard reads) and the lint fixtures (`factory/tests/fixtures/`: two smoke runs' final run, ticket and proof files, names removed).
 
 ## PRs
 

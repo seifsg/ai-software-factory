@@ -1,14 +1,17 @@
 #!/bin/sh
-# Repository checks (AGENTS.md "Keep it working"), one command from the repo root: sh scripts/check.sh [<ref>]
-# Static checks read the blobs of <ref>; the update-check and doctor checks run the working-tree scripts.
+# Repository checks (AGENTS.md "Keep it working"), one command from the repo root: sh scripts/check.sh [--changed <base>] [<ref>]
+# Static checks read the blobs of <ref>; dynamic checks (update check, doctor, run guard, parity) run the working-tree scripts.
+# --changed <base>: a diff from <base>...<ref> plus uncommitted and untracked changes that touches only docs (*.md, docs/) runs static checks only.
+# A full pass on a clean tree (<ref> is the working tree) writes .factory/receipts/<tree>-full.txt; the same working tree, <ref> tree and runtime reuse it (FACTORY_CHECK_FRESH=1 runs anyway).
 # sh scripts/check.sh bytes [<ref>] prints "<all methods> <read set>" for a PR's before and after line.
 # Byte counts read Git blobs of <ref> (default HEAD).
 # Prints nothing and exits 0 when all pass; otherwise one FAIL line per failed check, exit 1.
-ref=${1:-HEAD} bad=0
+s0=$(date +%s) bad=0
 cd "$(git rev-parse --show-toplevel)" || exit 1
 w=$(mktemp -d) || exit 1; trap 'rm -rf "$w"' EXIT  # short POSIX temp path: a C:/ path would split PATH at its colon
 fail() { echo "FAIL: $*"; bad=1; }
 skills=.agents/skills
+sg=$PWD/$skills/safe-factory/scripts/run-guard.sh
 read_set='safe-factory/SKILL.md stop-check/SKILL.md safe-factory/references/run-file.md safe-factory/references/checker.md safe-factory/references/sizes.md safe-factory/references/delegate.md safe-factory/references/owner-reports.md safe-factory/references/coded-run.md ticketing/SKILL.md ticketing/references/ticket-layout.md analyze-start/SKILL.md recommend/SKILL.md get-ready-to-code/SKILL.md how-to-make-a-pr/SKILL.md how-to-make-a-pr/references/media-proof.md how-to-make-a-pr/references/pr-layout.md how-to-make-a-pr/references/github.md deep-review/SKILL.md deep-review/references/worth-it.md'
 
 # Method bytes of a ref: "<all methods> <read set>".
@@ -18,121 +21,142 @@ bytes() {
   echo "$a $r"
 }
 good() { git rev-parse -q --verify "$1^{commit}" >/dev/null || { echo "FAIL: unknown ref $1"; exit 1; }; }
-[ "$ref" = bytes ] && { good "${2:-HEAD}"; bytes "${2:-HEAD}"; exit; }
-good "$ref"
-
-# Skill hygiene: links stay inside a skill's folder, no SKILL.md at 17000 bytes, no media in Git (proof goes to refs/proof/).
-o=$(git grep -nE '\]\(\.\./' "$ref" -- $skills) && fail "links out of a skill folder: $o"
-o=$(git ls-tree -rl "$ref" $skills | awk '$5 ~ /\/SKILL\.md$/ && $4 >= 17000 {print $5}') && [ -n "$o" ] && fail "SKILL.md at 17000 bytes or over: $o"
-o=$(git ls-tree -r --name-only "$ref" | grep -iE '\.(png|jpe?g|gif|webp|mp4|webm|mov)$' | grep -vx '.agents/.claude-plugin/icon.png') && fail "media committed (proof belongs in refs/proof/): $o"
-
-# Budgets: all methods under 177700, read set under 97300.
-set -- $(bytes "$ref")
-[ "$1" -lt 177700 ] || fail "methods $1 bytes, budget 177700"
-[ "$2" -lt 97300 ] || fail "read set $2 bytes, budget 97300"
-
 blob() { MSYS_NO_PATHCONV=1 git show "$ref:$1"; }  # <ref>:<path> as typed under Git Bash
+[ "$1" = bytes ] && { good "${2:-HEAD}"; bytes "${2:-HEAD}"; exit; }
+base=; [ "$1" = --changed ] && { base=$2; [ -n "$base" ] || { echo "FAIL: --changed needs a base ref"; exit 1; }; shift 2; }
+ref=${1:-HEAD}
+good "$ref"; [ -z "$base" ] || good "$base"
 
-# A store refuses a plugin with no license: the file and every manifest name it.
-blob LICENSE | grep -q '^MIT License' || fail "no MIT LICENSE at the root"
-[ "$(blob LICENSE)" = "$(blob .agents/LICENSE)" ] || fail "the plugin folder's LICENSE differs from the root's"
-for m in claude codex cursor; do blob ".agents/.$m-plugin/plugin.json" | grep -q '"license": "MIT"' || fail "$m manifest names no MIT license"; done
-# Every manifest agrees with the canonical version.
-v=$(blob .agents/.claude-plugin/plugin.json | grep -o '"version": "[^"]*"' | cut -d'"' -f4)
-[ -n "$v" ] || fail "no version in .agents/.claude-plugin/plugin.json"
-for f in .agents/.codex-plugin/plugin.json .agents/.cursor-plugin/plugin.json .claude-plugin/marketplace.json; do
-  blob "$f" | grep -qF "\"$v\"" || blob "$f" | grep -qF "\"v$v\"" || fail "$f disagrees with version $v"
-done
+# Static checks: blobs of <ref> only.
+static() {
+  # Skill hygiene: links stay inside a skill's folder, no SKILL.md at 17000 bytes, no media in Git (proof goes to refs/proof/).
+  o=$(git grep -nE '\]\(\.\./' "$ref" -- $skills) && fail "links out of a skill folder: $o"
+  o=$(git ls-tree -rl "$ref" $skills | awk '$5 ~ /\/SKILL\.md$/ && $4 >= 17000 {print $5}') && [ -n "$o" ] && fail "SKILL.md at 17000 bytes or over: $o"
+  o=$(git ls-tree -r --name-only "$ref" | grep -iE '\.(png|jpe?g|gif|webp|mp4|webm|mov)$' | grep -vx '.agents/.claude-plugin/icon.png') && fail "media committed (proof belongs in refs/proof/): $o"
+
+  # Budgets: all methods under 177700, read set under 97300.
+  set -- $(bytes "$ref")
+  [ "$1" -lt 177700 ] || fail "methods $1 bytes, budget 177700"
+  [ "$2" -lt 97300 ] || fail "read set $2 bytes, budget 97300"
+
+  # A store refuses a plugin with no license: the file and every manifest name it.
+  blob LICENSE | grep -q '^MIT License' || fail "no MIT LICENSE at the root"
+  [ "$(blob LICENSE)" = "$(blob .agents/LICENSE)" ] || fail "the plugin folder's LICENSE differs from the root's"
+  for m in claude codex cursor; do blob ".agents/.$m-plugin/plugin.json" | grep -q '"license": "MIT"' || fail "$m manifest names no MIT license"; done
+  # Every manifest and the factory crate agree with the canonical version.
+  v=$(blob .agents/.claude-plugin/plugin.json | grep -o '"version": "[^"]*"' | cut -d'"' -f4)
+  [ -n "$v" ] || fail "no version in .agents/.claude-plugin/plugin.json"
+  for f in .agents/.codex-plugin/plugin.json .agents/.cursor-plugin/plugin.json .claude-plugin/marketplace.json; do
+    blob "$f" | grep -qF "\"$v\"" || blob "$f" | grep -qF "\"v$v\"" || fail "$f disagrees with version $v"
+  done
+  blob factory/Cargo.toml 2>/dev/null | grep -qxF "version = \"$v\"" || fail "factory/Cargo.toml disagrees with version $v"
+
+  # Guard wiring: Stop lives in the skill on Claude Code; the portable file serves Codex, cursor.json serves Cursor, both through scripts/factory.cmd.
+  git cat-file -e "$ref:.agents/hooks/hooks.json" 2>/dev/null && fail "hooks.json: Claude Code must run no command hook; every session would run it"
+  p=$(blob .agents/hooks/portable.json)
+  printf '%s\n' "$p" | grep -q '"Stop"' || fail "no Stop hook in portable.json"
+  printf '%s\n' "$p" | grep -qF 'git --git-dir' && fail "portable.json runs git --git-dir: hooks call scripts/factory.cmd"
+  # The Stop array, brackets counted from its key to its close, names scripts/factory.cmd.
+  printf '%s\n' "$p" | awk '/"Stop"/ { s = 1 } s { d += gsub(/\[/, "[") - gsub(/\]/, "]"); if (/scripts\/factory\.cmd/) f = 1; if (d <= 0 && /\]/) exit } END { exit !f }' || fail "portable.json's Stop command does not name scripts/factory.cmd"
+  blob .agents/.codex-plugin/plugin.json | grep -qF hooks/portable.json || fail "codex manifest does not name hooks/portable.json"
+  blob .agents/.cursor-plugin/plugin.json | grep -qF hooks/cursor.json || fail "cursor manifest does not name hooks/cursor.json"
+  blob .agents/hooks/cursor.json 2>/dev/null | grep -qi '"stop"' || fail "no Stop hook in cursor.json"
+  blob $skills/stop-check/SKILL.md | sed -n '2,/^---/p' | grep -q 'type: prompt' || fail "no Stop hook in stop-check's frontmatter"
+
+  # Directory form: what Anthropic's portal refuses or holds fails here first.
+  fm=$(blob $skills/stop-check/SKILL.md | sed -n '2,/^---/p')
+  git grep -qE 'type: *"?(command|agent|http)' "$ref" -- "$skills/*/SKILL.md" && fail "frontmatter hook other than prompt: command and agent hooks need a Verified organization"
+  [ "$(printf '%s\n' "$fm" | grep -c 'ok false only if.*Anything else: ok true')" -eq 2 ] || fail "Stop check lost its limit: it must continue only on a new step block or todo line, or a looping agent spends without end"
+  blob $skills/safe-factory/SKILL.md | grep -q 'then load `stop-check` and post' || fail "safe-factory does not load stop-check right before each block: any stop spends the hook, and the run stalls"
+  [ "$(printf '%s\n' "$fm" | grep 'prompt:' | tr -cd "'" | wc -c)" -eq 4 ] || fail "hook prompts: an apostrophe inside one breaks the YAML, and the hook never loads"
+  blob .gitattributes | grep -v '^#' | grep -Eq 'eol=|filter=|export-' && fail ".gitattributes rewrites files: the portal cannot read the repository"
+  git ls-tree -r --name-only "$ref" .agents/hooks | grep -Eq 'night|watchdog|pre-push|claude-settings' && fail "night tools inside the plugin: they belong in tools/night"
+  git grep -qIw pass "$ref" -- .agents && fail 'the word pass in the plugin: the portal reads a password tool'
+  git grep -qIE '[$]PWD|[^a-z]keys[^a-z]|_key[^a-z]' "$ref" -- '.agents/skills/*/scripts/*' && fail 'a credential-looking name in the scripts: $PWD, keys or _key'
+  [ "$(blob .agents/README.md | wc -w)" -ge 40 ] || fail "plugin README under 40 words"
+  for f in PRIVACY.md SECURITY.md; do git cat-file -e "$ref:$f" 2>/dev/null || fail "no $f"; done
+  git grep -q "$(printf '\r')" "$ref" -- '*.sh' tools/night/pre-push && fail "a CR in a shell script blob: sh fails on it"
+  git cat-file -e "$ref:.agents/scripts/factory.cmd" 2>/dev/null || fail "no .agents/scripts/factory.cmd"
+  git grep -q "$(printf '\r')" "$ref" -- .agents/scripts/factory.cmd && fail ".agents/scripts/factory.cmd has a CR: sh and cmd both read it as one LF file"
+  git ls-tree -d --name-only "$ref" .agents/bin | grep -q . && fail "a top-level bin/ in the plugin: claude.ai and Cowork refuse to install it; executables go in scripts/"
+}
 
 # Update check, offline: newer release tells the owner, older stays quiet; gh signed out still finds it through curl.
-uc() { PATH="$1/b:$PATH" FACTORY_NO_UPDATE_CHECK= HOME="$1" CLAUDE_PROJECT_DIR="$1" XDG_CACHE_HOME="$1" sh $skills/safe-factory/scripts/update-check.sh .agents; }
-bins() { mkdir -p "$1/b" "$1/ai-software-factory"; printf '#!/bin/sh\nexit 4\n' > "$1/b/gh"; printf '#!/bin/sh\n%s\n' "$2" > "$1/b/curl"; chmod +x "$1/b/gh" "$1/b/curl"; }
-bins "$w/u" 'exit 4'
-for c in 9.9.9:out 0.0.1:quiet; do
-  echo "${c%:*}" > "$w/u/ai-software-factory/latest"; o=$(uc "$w/u")
-  case "${c#*:}:$o" in out:*"is out"*|quiet:) ;; *) fail "update check wrong for ${c%:*}";; esac
-done
-bins "$w/c" 'echo "  \"tag_name\": \"v9.9.9\","'; uc "$w/c"
-for i in 1 2 3 4 5; do [ -s "$w/c/ai-software-factory/latest" ] && break; sleep 1; done
-grep -qx 9.9.9 "$w/c/ai-software-factory/latest" 2>/dev/null || fail "update check: no curl fallback"
+updates() {
+  uc() { PATH="$1/b:$PATH" FACTORY_NO_UPDATE_CHECK= HOME="$1" CLAUDE_PROJECT_DIR="$1" XDG_CACHE_HOME="$1" sh $skills/safe-factory/scripts/update-check.sh .agents; }
+  bins() { mkdir -p "$1/b" "$1/ai-software-factory"; printf '#!/bin/sh\nexit 4\n' > "$1/b/gh"; printf '#!/bin/sh\n%s\n' "$2" > "$1/b/curl"; chmod +x "$1/b/gh" "$1/b/curl"; }
+  bins "$w/u" 'exit 4'
+  for c in 9.9.9:out 0.0.1:quiet; do
+    echo "${c%:*}" > "$w/u/ai-software-factory/latest"; o=$(uc "$w/u")
+    case "${c#*:}:$o" in out:*"is out"*|quiet:) ;; *) fail "update check wrong for ${c%:*}";; esac
+  done
+  bins "$w/c" 'echo "  \"tag_name\": \"v9.9.9\","'; uc "$w/c"
+  for i in 1 2 3 4 5; do [ -s "$w/c/ai-software-factory/latest" ] && break; sleep 1; done
+  grep -qx 9.9.9 "$w/c/ai-software-factory/latest" 2>/dev/null || fail "update check: no curl fallback"
+}
 
 # Doctor: a file holding only old hooks moves; a mixed or other-settings file stays.
-h=$w/d; mkdir -p "$h/.codex" "$h/.cursor" "$h/p/.claude"
-printf '{\n  "hooks": {\n    "Stop": [{"hooks": [{"command": "sh x/run-gate.sh"}]}]\n  }\n}\n' > "$h/.codex/hooks.json"
-printf '{\n  "hooks": {\n    "stop": [{"command": "sh x/run-gate.sh"}, {"command": "sh x/skills/safe-factory/scripts/run-guard.sh"}]\n  }\n}\n' > "$h/.cursor/hooks.json"
-printf '{\n\t"permissions": {},\n\t"hooks": {"Stop": [{"hooks": [{"command": "sh x/run-gate.sh"}]}]}\n}\n' > "$h/p/.claude/settings.json"
-dr() { HOME="$h" CLAUDE_PROJECT_DIR="$h/p" XDG_CACHE_HOME="$h" sh $skills/safe-factory/scripts/doctor.sh "$@" >/dev/null; }
-dr && fail "doctor missed a leftover"
-dr --fix; [ -f "$h/.codex/hooks.json" ] && fail "doctor --fix left the old hook"
-mkdir -p "$h/.codex/rules"; echo stale > "$h/.codex/rules/factory.rules"; dr --fix; cmp -s "$h/.codex/rules/factory.rules" tools/night/codex.rules || fail "doctor --fix did not refresh the rules copy"
-[ -f "$h/.cursor/hooks.json" ] && [ -f "$h/p/.claude/settings.json" ] || fail "doctor --fix moved a file holding more than old hooks"
-
-# Guard wiring: Stop lives in the skill on Claude Code; the portable file serves the other hosts.
-git cat-file -e "$ref:.agents/hooks/hooks.json" 2>/dev/null && fail "hooks.json: Claude Code must run no command hook; every session would run it"
-blob .agents/hooks/portable.json | grep -q '"Stop"' || fail "no Stop hook in portable.json"
-for m in codex cursor; do blob ".agents/.$m-plugin/plugin.json" | grep -qF hooks/portable.json || fail "$m manifest does not name hooks/portable.json"; done
-blob $skills/stop-check/SKILL.md | sed -n '2,/^---/p' | grep -q 'type: prompt' || fail "no Stop hook in stop-check's frontmatter"
-
-# Directory form: what Anthropic's portal refuses or holds fails here first.
-fm=$(blob $skills/stop-check/SKILL.md | sed -n '2,/^---/p')
-git grep -qE 'type: *"?(command|agent|http)' "$ref" -- "$skills/*/SKILL.md" && fail "frontmatter hook other than prompt: command and agent hooks need a Verified organization"
-[ "$(printf '%s\n' "$fm" | grep -c 'ok false only if.*Anything else: ok true')" -eq 2 ] || fail "Stop check lost its limit: it must continue only on a new step block or todo line, or a looping agent spends without end"
-blob $skills/safe-factory/SKILL.md | grep -q 'then load `stop-check` and post' || fail "safe-factory does not load stop-check right before each block: any stop spends the hook, and the run stalls"
-[ "$(printf '%s\n' "$fm" | grep 'prompt:' | tr -cd "'" | wc -c)" -eq 4 ] || fail "hook prompts: an apostrophe inside one breaks the YAML, and the hook never loads"
-blob .gitattributes | grep -v '^#' | grep -Eq 'eol=|filter=|export-' && fail ".gitattributes rewrites files: the portal cannot read the repository"
-git ls-tree -r --name-only "$ref" .agents/hooks | grep -Eq 'night|watchdog|pre-push|claude-settings' && fail "night tools inside the plugin: they belong in tools/night"
-git grep -qw pass "$ref" -- .agents && fail 'the word pass in the plugin: the portal reads a password tool'
-git grep -qE '[$]PWD|[^a-z]keys[^a-z]|_key[^a-z]' "$ref" -- '.agents/skills/*/scripts/*' && fail 'a credential-looking name in the scripts: $PWD, keys or _key'
-[ "$(blob .agents/README.md | wc -w)" -ge 40 ] || fail "plugin README under 40 words"
-for f in PRIVACY.md SECURITY.md; do git cat-file -e "$ref:$f" 2>/dev/null || fail "no $f"; done
-git grep -q "$(printf '\r')" "$ref" -- '*.sh' tools/night/pre-push && fail "a CR in a shell script blob: sh fails on it"
-git grep -q "$(printf '\r')" "$ref" -- '*.cmd' || fail "windows.cmd blob has no CRLF"
+doctor() {
+  h=$w/d; mkdir -p "$h/.codex" "$h/.cursor" "$h/p/.claude"
+  printf '{\n  "hooks": {\n    "Stop": [{"hooks": [{"command": "sh x/run-gate.sh"}]}]\n  }\n}\n' > "$h/.codex/hooks.json"
+  printf '{\n  "hooks": {\n    "stop": [{"command": "sh x/run-gate.sh"}, {"command": "sh x/skills/safe-factory/scripts/run-guard.sh"}]\n  }\n}\n' > "$h/.cursor/hooks.json"
+  printf '{\n\t"permissions": {},\n\t"hooks": {"Stop": [{"hooks": [{"command": "sh x/run-gate.sh"}]}]}\n}\n' > "$h/p/.claude/settings.json"
+  dr() { HOME="$h" CLAUDE_PROJECT_DIR="$h/p" XDG_CACHE_HOME="$h" sh $skills/safe-factory/scripts/doctor.sh "$@" >/dev/null; }
+  dr && fail "doctor missed a leftover"
+  dr --fix; [ -f "$h/.codex/hooks.json" ] && fail "doctor --fix left the old hook"
+  mkdir -p "$h/.codex/rules"; echo stale > "$h/.codex/rules/factory.rules"; dr --fix; cmp -s "$h/.codex/rules/factory.rules" tools/night/codex.rules || fail "doctor --fix did not refresh the rules copy"
+  [ -f "$h/.cursor/hooks.json" ] && [ -f "$h/p/.claude/settings.json" ] || fail "doctor --fix moved a file holding more than old hooks"
+}
 
 # Session binding: a step block binds a run in another repository; a plain session stays quiet.
-b=$w/g; mkdir -p "$b/a/.git" "$b/b/.factory"; printf '# Run: x · fast · change\nStatus: open\nNext: 3 Plan · get-ready-to-code\nWaiting: none\n\n## 0 Ticket ✔\n' > "$b/b/.factory/run.md"
-gd() { printf '{"session_id":"%s","cwd":"%s","last_assistant_message":"%s"}' "$1" "$b/a" "$2" | HOME="$b" XDG_CACHE_HOME="$b" sh $skills/safe-factory/scripts/run-guard.sh stop; }
-[ -z "$(gd plain 'hello')" ] && [ -z "$(gd plain '## 1 Overview')" ] || fail "guard spoke to a plain session"
-p=$b/b; command -v cygpath >/dev/null && p=$(cygpath -w "$p" | sed 's/\\/\\\\/g')  # Windows: the path as JSON carries it
-case $(gd s1 "## 0 Ticket\\n- **Workspace:** \`$p\`") in *'"decision":"block"'*) ;; *) fail "guard did not bind a run in another repository" ;; esac
-[ -f "$b/b/.factory/guard/state" ] || fail "no guard state in the bound run's folder"
-[ -f "$b/ai-software-factory/sessions/s1" ] || fail "no session file for the bound session"
-case $(gd s2 '## 1 Analyze') in *'no run file found'*) ;; *) fail "a step block with no run did not ask" ;; esac
-case $(gd s1 "## 1 Analyze **Workspace:** \`/nope\`") in *'no run file found'*) ;; *) fail "a bound session with a bad Workspace did not ask" ;; esac
-case $(printf '{"session_id":"s3","cwd":"%s","last_assistant_message":"## 1 Analyze **Workspace:** `/nope`"}' "$b/b" | HOME="$b" XDG_CACHE_HOME="$b" sh $skills/safe-factory/scripts/run-guard.sh stop) in *'no run file found'*) fail "an own-folder run with a bad Workspace was not driven" ;; esac
-sg=$PWD/$skills/safe-factory/scripts/run-guard.sh
-mkdir "$b/none"; (cd "$b/none" && sh "$sg" clear) 2>/dev/null && fail "clear with no run passed silently"
-[ "$(grep -c 'clear %s' "$sg")" -ge 2 ] || fail "a halt reply does not name the run's folder for clear"
-# The check, a host with no command hook: an open run continues, a real wait may stop.
-cm() { (cd "$b/$1" && HOME="$b" XDG_CACHE_HOME="$b" sh "$sg" check c1); }
-mkdir -p "$b/c/.factory" "$b/c/.git"; printf '# Run: x · fast · change\nStatus: open\nNext: 1 Analyze · analyze-start\nWaiting: none\n\n## 0 Ticket ✔\n\n## 1 Analyze\n' > "$b/c/.factory/run.md"
-case $(cm c) in 'Factory check: continue.'*'Step 1 Analyze'*) ;; *) fail "check did not send an open run on" ;; esac
-sed 's/^Waiting: none/Waiting: owner: ok?/' "$b/c/.factory/run.md" > "$b/c/w" && mv "$b/c/w" "$b/c/.factory/run.md"
-case $(cm c) in 'Factory check: may stop'*) ;; *) fail "check did not let a real wait stop" ;; esac
-case $(cm none) in 'Factory check: may stop'*) ;; *) fail "check spoke up with no run" ;; esac
-# Rule 1G: a planted delegate file saying FAIL is never read; a missing gate still stops the run; two ticks at once are refused.
-mkdir -p "$b/.claude/projects/pj/c1/subagents"; printf '{"role":"assistant","content":"Role: checker. Gate A"}\nGate A: FAIL\n' > "$b/.claude/projects/pj/c1/subagents/agent-x.jsonl"; : > "$b/.claude/projects/pj/c1.jsonl"
-mkdir -p "$b/d/.factory" "$b/d/.git"; R='# Run: x · fast · change\nStatus: open\nNext: 4 Before · how-to-make-a-pr\nWaiting: none\n\n## 0 Ticket ✔\n## 1 Analyze ✔\n## 2 Recommend ✔\n## 2b Challenge ✔\n## 3 Plan ✔\n'
-printf "$R"'Gate A: PASS (checker x) @1234567\n## 4 Before\n' > "$b/d/.factory/run.md"; cm d >/dev/null
-case $(cm d) in *'Gate A has not'*) fail "check read a delegate file: rule 1G" ;; esac
-printf "$R"'## 4 Before\n' > "$b/d/.factory/run.md"; rm -rf "$b/d/.factory/guard"; cm d >/dev/null
-case $(cm d) in *'Gate A has not'*) ;; *) fail "check let a missing gate through" ;; esac
-mkdir -p "$b/e/.factory" "$b/e/.git"; printf '# Run: x · fast · change\nStatus: open\nNext: 1 Analyze · analyze-start\nWaiting: none\n\n## 0 Ticket ✔\n## 1 Analyze\n## 2 Recommend\n' > "$b/e/.factory/run.md"; cm e >/dev/null
-sed 's/^## 1 Analyze$/## 1 Analyze ✔/; s/^## 2 Recommend$/## 2 Recommend ✔/; s/^Next: .*/Next: 2b Challenge · recommend/' "$b/e/.factory/run.md" > "$b/e/n" && mv "$b/e/n" "$b/e/.factory/run.md"
-case $(cm e) in *Batched*'run this check'*) ;; *) fail "check let two ticks through, or its redo would end the run on a repeated number" ;; esac
+binding() {
+  b=$w/g; mkdir -p "$b/a/.git" "$b/b/.factory"; printf '# Run: x · fast · change\nStatus: open\nNext: 3 Plan · get-ready-to-code\nWaiting: none\n\n## 0 Ticket ✔\n' > "$b/b/.factory/run.md"
+  gd() { printf '{"session_id":"%s","cwd":"%s","last_assistant_message":"%s"}' "$1" "$b/a" "$2" | HOME="$b" XDG_CACHE_HOME="$b" sh $skills/safe-factory/scripts/run-guard.sh stop; }
+  [ -z "$(gd plain 'hello')" ] && [ -z "$(gd plain '## 1 Overview')" ] || fail "guard spoke to a plain session"
+  p=$b/b; command -v cygpath >/dev/null && p=$(cygpath -w "$p" | sed 's/\\/\\\\/g')  # Windows: the path as JSON carries it
+  case $(gd s1 "## 0 Ticket\\n- **Workspace:** \`$p\`") in *'"decision":"block"'*) ;; *) fail "guard did not bind a run in another repository" ;; esac
+  [ -f "$b/b/.factory/guard/state" ] || fail "no guard state in the bound run's folder"
+  [ -f "$b/ai-software-factory/sessions/s1" ] || fail "no session file for the bound session"
+  case $(gd s2 '## 1 Analyze') in *'no run file found'*) ;; *) fail "a step block with no run did not ask" ;; esac
+  case $(gd s1 "## 1 Analyze **Workspace:** \`/nope\`") in *'no run file found'*) ;; *) fail "a bound session with a bad Workspace did not ask" ;; esac
+  case $(printf '{"session_id":"s3","cwd":"%s","last_assistant_message":"## 1 Analyze **Workspace:** `/nope`"}' "$b/b" | HOME="$b" XDG_CACHE_HOME="$b" sh $skills/safe-factory/scripts/run-guard.sh stop) in *'no run file found'*) fail "an own-folder run with a bad Workspace was not driven" ;; esac
+  mkdir "$b/none"; (cd "$b/none" && sh "$sg" clear) 2>/dev/null && fail "clear with no run passed silently"
+  [ "$(grep -c 'clear %s' "$sg")" -ge 2 ] || fail "a halt reply does not name the run's folder for clear"
+  # The check, a host with no command hook: an open run continues, a real wait may stop.
+  cm() { (cd "$b/$1" && HOME="$b" XDG_CACHE_HOME="$b" sh "$sg" check c1); }
+  mkdir -p "$b/c/.factory" "$b/c/.git"; printf '# Run: x · fast · change\nStatus: open\nNext: 1 Analyze · analyze-start\nWaiting: none\n\n## 0 Ticket ✔\n\n## 1 Analyze\n' > "$b/c/.factory/run.md"
+  case $(cm c) in 'Factory check: continue.'*'Step 1 Analyze'*) ;; *) fail "check did not send an open run on" ;; esac
+  sed 's/^Waiting: none/Waiting: owner: ok?/' "$b/c/.factory/run.md" > "$b/c/w" && mv "$b/c/w" "$b/c/.factory/run.md"
+  case $(cm c) in 'Factory check: may stop'*) ;; *) fail "check did not let a real wait stop" ;; esac
+  case $(cm none) in 'Factory check: may stop'*) ;; *) fail "check spoke up with no run" ;; esac
+  # Rule 1G: a planted delegate file saying FAIL is never read; a missing gate still stops the run; two ticks at once are refused.
+  mkdir -p "$b/.claude/projects/pj/c1/subagents"; printf '{"role":"assistant","content":"Role: checker. Gate A"}\nGate A: FAIL\n' > "$b/.claude/projects/pj/c1/subagents/agent-x.jsonl"; : > "$b/.claude/projects/pj/c1.jsonl"
+  mkdir -p "$b/d/.factory" "$b/d/.git"; R='# Run: x · fast · change\nStatus: open\nNext: 4 Before · how-to-make-a-pr\nWaiting: none\n\n## 0 Ticket ✔\n## 1 Analyze ✔\n## 2 Recommend ✔\n## 2b Challenge ✔\n## 3 Plan ✔\n'
+  printf "$R"'Gate A: PASS (checker x) @1234567\n## 4 Before\n' > "$b/d/.factory/run.md"; cm d >/dev/null
+  case $(cm d) in *'Gate A has not'*) fail "check read a delegate file: rule 1G" ;; esac
+  printf "$R"'## 4 Before\n' > "$b/d/.factory/run.md"; rm -rf "$b/d/.factory/guard"; cm d >/dev/null
+  case $(cm d) in *'Gate A has not'*) ;; *) fail "check let a missing gate through" ;; esac
+  mkdir -p "$b/e/.factory" "$b/e/.git"; printf '# Run: x · fast · change\nStatus: open\nNext: 1 Analyze · analyze-start\nWaiting: none\n\n## 0 Ticket ✔\n## 1 Analyze\n## 2 Recommend\n' > "$b/e/.factory/run.md"; cm e >/dev/null
+  sed 's/^## 1 Analyze$/## 1 Analyze ✔/; s/^## 2 Recommend$/## 2 Recommend ✔/; s/^Next: .*/Next: 2b Challenge · recommend/' "$b/e/.factory/run.md" > "$b/e/n" && mv "$b/e/n" "$b/e/.factory/run.md"
+  case $(cm e) in *Batched*'run this check'*) ;; *) fail "check let two ticks through, or its redo would end the run on a repeated number" ;; esac
+}
 
 # A moved run keeps its proof: session A proved Gate A in one project folder, session F drives it from another.
-e=$w/e; mkdir -p "$e/p/-home-x-A/sA/subagents" "$e/p/-home-x-F" "$e/r/.factory"; git init -q "$e/r"; git -C "$e/r" -c user.name=t -c user.email=t@t -c commit.gpgsign=false commit -q --allow-empty -m i; sha=$(git -C "$e/r" rev-parse HEAD)
-{ printf '{"message":"Role: checker. Gate A"}\n'; printf '{"message":{"role":"assistant","content":[{"type":"text","text":"Gate A: PASS @%s"}]}}\n' "$sha"; } > "$e/p/-home-x-A/sA/subagents/agent-chk.jsonl"
-{ printf '# Run: x · fast · change\nStatus: open\nNext: 4 Before · how-to-make-a-pr\nWaiting: none\n\n'; for h in '0 Ticket' '1 Analyze' '2 Recommend' '2b Challenge' '3 Plan'; do printf '## %s ✔\nx\n' "$h"; done; printf 'Gate A: PASS (checker chk) @%s\n' "$sha"; } > "$e/r/.factory/run.md"
-for h in '0 Ticket' '1 Analyze' '2 Recommend' '2b Challenge' '3 Plan'; do printf '{"isSidechain":false,"message":{"role":"assistant","content":[{"type":"text","text":"## %s x"}]}}\n' "$h"; done > "$e/p/-home-x-A/sA.jsonl"
-printf '{"isSidechain":false}\n' > "$e/p/-home-x-F/sF.jsonl"
-ge() { printf '{"session_id":"%s","transcript_path":"%s","cwd":"%s","last_assistant_message":"x"}' "$1" "$e/p/$2/$1.jsonl" "$e/r" | HOME="$e" XDG_CACHE_HOME="$e" sh "$sg" stop; }
-ge sA -home-x-A >/dev/null
-case $(ge sF -home-x-F) in *'Gate A has not'* | *'not posted'*) fail "a run moved to a session in another project folder lost its proof" ;; esac
+moved() {
+  e=$w/e; mkdir -p "$e/p/-home-x-A/sA/subagents" "$e/p/-home-x-F" "$e/r/.factory"; git init -q "$e/r"; git -C "$e/r" -c user.name=t -c user.email=t@t -c commit.gpgsign=false commit -q --allow-empty -m i; sha=$(git -C "$e/r" rev-parse HEAD)
+  { printf '{"message":"Role: checker. Gate A"}\n'; printf '{"message":{"role":"assistant","content":[{"type":"text","text":"Gate A: PASS @%s"}]}}\n' "$sha"; } > "$e/p/-home-x-A/sA/subagents/agent-chk.jsonl"
+  { printf '# Run: x · fast · change\nStatus: open\nNext: 4 Before · how-to-make-a-pr\nWaiting: none\n\n'; for h in '0 Ticket' '1 Analyze' '2 Recommend' '2b Challenge' '3 Plan'; do printf '## %s ✔\nx\n' "$h"; done; printf 'Gate A: PASS (checker chk) @%s\n' "$sha"; } > "$e/r/.factory/run.md"
+  for h in '0 Ticket' '1 Analyze' '2 Recommend' '2b Challenge' '3 Plan'; do printf '{"isSidechain":false,"message":{"role":"assistant","content":[{"type":"text","text":"## %s x"}]}}\n' "$h"; done > "$e/p/-home-x-A/sA.jsonl"
+  printf '{"isSidechain":false}\n' > "$e/p/-home-x-F/sF.jsonl"
+  ge() { printf '{"session_id":"%s","transcript_path":"%s","cwd":"%s","last_assistant_message":"x"}' "$1" "$e/p/$2/$1.jsonl" "$e/r" | HOME="$e" XDG_CACHE_HOME="$e" sh "$sg" stop; }
+  ge sA -home-x-A >/dev/null
+  case $(ge sF -home-x-F) in *'Gate A has not'* | *'not posted'*) fail "a run moved to a session in another project folder lost its proof" ;; esac
+}
 
 # Stop rules: only a real wait stops a run; a finish holds once seen; no remote passes; a skipped step or a wall of text never finishes.
-h=$w/h; mkdir -p "$h/.factory"; git init -q "$h"; git -C "$h" -c user.name=t -c user.email=t@t -c commit.gpgsign=false commit -q --allow-empty -m i; a=$w/hp/-home-x-H/sH/subagents; mkdir -p "$a"
-hs() { printf '{"session_id":"sH","transcript_path":"%s","cwd":"%s","stop_hook_active":%s,"last_assistant_message":"x"}' "$w/hp/-home-x-H/sH.jsonl" "$h" "${1:-false}" | HOME="$h" XDG_CACHE_HOME="$h" sh "$sg" stop; }
+# A fresh run checkout at $w/$1 with one commit and an empty transcript folder: the waits and the finishes each get their own, so they run at once.
+hrepo() { h=$w/$1; mkdir -p "$h/.factory"; git init -q "$h"; git -C "$h" -c user.name=t -c user.email=t@t -c commit.gpgsign=false commit -q --allow-empty -m i; a=$w/$1p/-home-x-H/sH/subagents; mkdir -p "$a"; }
+hs() { printf '{"session_id":"sH","transcript_path":"%s","cwd":"%s","stop_hook_active":%s,"last_assistant_message":"x"}' "${a%/subagents}.jsonl" "$h" "${1:-false}" | HOME="$h" XDG_CACHE_HOME="$h" sh "$sg" stop; }
 hd() { rm -rf "$h/.factory/guard"; printf '# Run: x\nStatus: open\nNext: 1 Analyze · analyze-start\n%s\n' "$1" > "$h/.factory/run.md"; }
 # A run file with these steps ticked and every gate proven on HEAD.
 full() {
@@ -142,43 +166,116 @@ full() {
   { printf '# Run: x\nStatus: closed\nNext: none (closed)\nWaiting: none\n\n'; for s in '0 Ticket' '1 Analyze' '2 Recommend' '2b Challenge' '3 Plan' '4 Before' '5 Build' '6 Verify' '7 PR' '8 Review'; do case " $1 " in *" ${s%% *} "*) printf '## %s ✔\n' "$s" ;; *) printf '## %s\n' "$s" ;; esac; done
     printf 'Gate A: PASS (checker cA) @%s\nGate B: PASS (checker cB) @%s\nReview: ready (reviewer r) @%s\nGate C: PASS (checker cC) @%s\n' "$sha" "$sha" "$sha" "$sha"; } > "$h/.factory/run.md"
 }
-all='0 1 2 2b 3 4 5 6 7 8'
-for x in '**Waiting:** none' '- Waiting: none' ''; do hd "$x"; case $(hs) in *'"decision":"block"'*'Waiting: none'*) ;; *) fail "a Waiting line reading '$x' let the agent stop" ;; esac; done
-hd 'Waiting: none'; printf 'Waiting: owner: old\n' >> "$h/.factory/run.md"; [ -n "$(hs)" ] || fail "an old Waiting line in a block let the agent stop"
-hd '**Waiting:** none'; printf '## 0 Ticket\nWaiting: owner: old\n' >> "$h/.factory/run.md"; case $(hs) in *'header is wrong'*) ;; *) fail "a body Waiting line stood in for a misspelled header" ;; esac
-hd 'Waiting: none'; printf '## 0 Ticket\nStatus: stopped (old)\n' >> "$h/.factory/run.md"; [ -n "$(hs)" ] || fail "a body Status line stopped the run"
-hd '**Waiting:** none'; hs >/dev/null; case $(hs true) in *idle*) ;; *) fail "the loop guard no longer ends an idle run" ;; esac
-for x in 'Waiting: owner: q' 'Waiting: jobs: x (max 9 min)'; do hd "$x"; [ -z "$(hs)" ] || fail "'$x' did not end the turn"; done
-rm -rf "$h/.factory/guard"; full "$all"; [ -z "$(hs)" ] || fail "a proven run with no remote did not finish"
-git -C "$h" -c user.name=t -c user.email=t@t -c commit.gpgsign=false commit -q --allow-empty -m later; [ -z "$(hs)" ] || fail "a finished closed run was asked again after its checkout moved on"
-sed 's/^Status: closed/Status: open/' "$h/.factory/run.md" > "$h/n" && mv "$h/n" "$h/.factory/run.md"; hs >/dev/null; sed 's/^Status: open/Status: closed/' "$h/.factory/run.md" > "$h/n" && mv "$h/n" "$h/.factory/run.md"; case $(hs) in *'"decision":"block"'*) ;; *) fail "a reopened run kept its old finish" ;; esac
-printf '# Run: x\nStatus: closed\nNext: none (closed)\nWaiting: none\n\n## 0 Ticket ✔\n' > "$h/.factory/run.md"; rm -rf "$h/.factory/guard"; case $(hs) in *'says closed'*'Do only'*) fail "the closed-run reply kept the step tail" ;; *'says closed'*) ;; *) fail "a closed run with no gates in a used checkout passed" ;; esac
-printf '# Run: x\nStatus: open\nNext: 5 Build · get-ready-to-code\nWaiting: none\n\n## 3 Plan ✔\n' > "$h/.factory/run.md"; rm -rf "$h/.factory/guard"; case $(hs) in *'Steps not ticked: 0,1,2,2b'*) ;; *) fail "a step skipped before the plan was not named" ;; esac
-rm -rf "$h/.factory/guard"; full '0 1 2 2b 3 4 6 7 8'; case $(hs) in *'Steps not ticked: 5'*) ;; *) fail "a skipped step was not named" ;; esac
-sed 's/^Waiting: none/Waiting: owner: q/' "$h/.factory/run.md" > "$h/n" && mv "$h/n" "$h/.factory/run.md"; case $(hs) in *'Steps not ticked: 5'*) ;; *) fail "a wait hid a skipped step" ;; esac
-[ -z "$(hs true)" ] && [ -z "$(hs)" ] || fail "a wait with a skipped step never released"
-rm -rf "$h/.factory/guard"; full "$all"; awk 'BEGIN { for (i = 0; i < 31; i++) printf "ten chars "; print "" }' >> "$h/.factory/run.md"; case $(hs) in *'over 300 characters'*) ;; *) fail "a wall of text passed" ;; esac
-L=$(awk 'BEGIN { for (i = 0; i < 31; i++) printf "ten chars " }')
-hd 'Waiting: none'; printf '| %s |\n' "$L" >> "$h/.factory/run.md"; case $(hs) in *'over 300'*) fail "a long table row was refused" ;; esac
-hd 'Waiting: none'; printf '%s\n%s\n%s\n' '```' "$L" '```' >> "$h/.factory/run.md"; case $(hs) in *'over 300'*) fail "a long line in a fence was refused" ;; esac
-hd 'Waiting: none'; printf '%s\n%s\n' '```' "$L" >> "$h/.factory/run.md"; case $(hs) in *'over 300'*) ;; *) fail "an unclosed fence hid a wall of text" ;; esac
-hd 'Waiting: none'; printf '  %s\n  %s\n  %s\n' '```' "$L" '```' >> "$h/.factory/run.md"; case $(hs) in *'over 300'*) fail "a long line in an indented fence was refused" ;; esac
-hd 'Waiting: none'; printf '%s\n%s\n%s\n%s\n' '```' "$L" '```' '```' >> "$h/.factory/run.md"; case $(hs) in *'over 300'*) fail "a closed fence was refused for a later open one" ;; esac
-hd 'Waiting: none'; hs >/dev/null; printf '## 0 Ticket ✔\n## 1 Analyze ✔\n## 2 Recommend ✔\n%s\n' "$L" >> "$h/.factory/run.md"; case $(hs) in *Batched*) ;; *) fail "a long line hid a batched turn" ;; esac
-hd 'Waiting: none'; awk 'BEGIN { for (i = 0; i < 110; i++) printf "█"; print "" }' >> "$h/.factory/run.md"; case $(hs) in *'over 300'*) fail "the line limit counted bytes" ;; esac
-rm -rf "$h/.factory/guard"; git -C "$h" remote add origin "$h/none.git"; full "$all"; case $(hs) in *'"decision":"block"'*'Gate C'*) ;; *) fail "an unpushed head with a remote passed Gate C" ;; esac
-hs >/dev/null; git -C "$h" remote remove origin; case $(hs) in *'"decision":"block"'*'Gate C'*) ;; *) fail "removing the remote skipped Gate C's push" ;; esac
-if command -v cygpath >/dev/null; then case $(hs) in *'factory run in /'*) fail "a prompt named a Git Bash path" ;; esac; fi
+waits() {
+  hrepo h
+  for x in '**Waiting:** none' '- Waiting: none' ''; do hd "$x"; case $(hs) in *'"decision":"block"'*'Waiting: none'*) ;; *) fail "a Waiting line reading '$x' let the agent stop" ;; esac; done
+  hd 'Waiting: none'; printf 'Waiting: owner: old\n' >> "$h/.factory/run.md"; [ -n "$(hs)" ] || fail "an old Waiting line in a block let the agent stop"
+  hd '**Waiting:** none'; printf '## 0 Ticket\nWaiting: owner: old\n' >> "$h/.factory/run.md"; case $(hs) in *'header is wrong'*) ;; *) fail "a body Waiting line stood in for a misspelled header" ;; esac
+  hd 'Waiting: none'; printf '## 0 Ticket\nStatus: stopped (old)\n' >> "$h/.factory/run.md"; [ -n "$(hs)" ] || fail "a body Status line stopped the run"
+  hd '**Waiting:** none'; hs >/dev/null; case $(hs true) in *idle*) ;; *) fail "the loop guard no longer ends an idle run" ;; esac
+  for x in 'Waiting: owner: q' 'Waiting: jobs: x (max 9 min)'; do hd "$x"; [ -z "$(hs)" ] || fail "'$x' did not end the turn"; done
+}
+stops() {
+  hrepo f; all='0 1 2 2b 3 4 5 6 7 8'
+  rm -rf "$h/.factory/guard"; full "$all"; [ -z "$(hs)" ] || fail "a proven run with no remote did not finish"
+  git -C "$h" -c user.name=t -c user.email=t@t -c commit.gpgsign=false commit -q --allow-empty -m later; [ -z "$(hs)" ] || fail "a finished closed run was asked again after its checkout moved on"
+  sed 's/^Status: closed/Status: open/' "$h/.factory/run.md" > "$h/n" && mv "$h/n" "$h/.factory/run.md"; hs >/dev/null; sed 's/^Status: open/Status: closed/' "$h/.factory/run.md" > "$h/n" && mv "$h/n" "$h/.factory/run.md"; case $(hs) in *'"decision":"block"'*) ;; *) fail "a reopened run kept its old finish" ;; esac
+  printf '# Run: x\nStatus: closed\nNext: none (closed)\nWaiting: none\n\n## 0 Ticket ✔\n' > "$h/.factory/run.md"; rm -rf "$h/.factory/guard"; case $(hs) in *'says closed'*'Do only'*) fail "the closed-run reply kept the step tail" ;; *'says closed'*) ;; *) fail "a closed run with no gates in a used checkout passed" ;; esac
+  printf '# Run: x\nStatus: open\nNext: 5 Build · get-ready-to-code\nWaiting: none\n\n## 3 Plan ✔\n' > "$h/.factory/run.md"; rm -rf "$h/.factory/guard"; case $(hs) in *'Steps not ticked: 0,1,2,2b'*) ;; *) fail "a step skipped before the plan was not named" ;; esac
+  rm -rf "$h/.factory/guard"; full '0 1 2 2b 3 4 6 7 8'; case $(hs) in *'Steps not ticked: 5'*) ;; *) fail "a skipped step was not named" ;; esac
+  sed 's/^Waiting: none/Waiting: owner: q/' "$h/.factory/run.md" > "$h/n" && mv "$h/n" "$h/.factory/run.md"; case $(hs) in *'Steps not ticked: 5'*) ;; *) fail "a wait hid a skipped step" ;; esac
+  [ -z "$(hs true)" ] && [ -z "$(hs)" ] || fail "a wait with a skipped step never released"
+  rm -rf "$h/.factory/guard"; full "$all"; awk 'BEGIN { for (i = 0; i < 31; i++) printf "ten chars "; print "" }' >> "$h/.factory/run.md"; case $(hs) in *'over 300 characters'*) ;; *) fail "a wall of text passed" ;; esac
+  L=$(awk 'BEGIN { for (i = 0; i < 31; i++) printf "ten chars " }')
+  hd 'Waiting: none'; printf '| %s |\n' "$L" >> "$h/.factory/run.md"; case $(hs) in *'over 300'*) fail "a long table row was refused" ;; esac
+  hd 'Waiting: none'; printf '%s\n%s\n%s\n' '```' "$L" '```' >> "$h/.factory/run.md"; case $(hs) in *'over 300'*) fail "a long line in a fence was refused" ;; esac
+  hd 'Waiting: none'; printf '%s\n%s\n' '```' "$L" >> "$h/.factory/run.md"; case $(hs) in *'over 300'*) ;; *) fail "an unclosed fence hid a wall of text" ;; esac
+  hd 'Waiting: none'; printf '  %s\n  %s\n  %s\n' '```' "$L" '```' >> "$h/.factory/run.md"; case $(hs) in *'over 300'*) fail "a long line in an indented fence was refused" ;; esac
+  hd 'Waiting: none'; printf '%s\n%s\n%s\n%s\n' '```' "$L" '```' '```' >> "$h/.factory/run.md"; case $(hs) in *'over 300'*) fail "a closed fence was refused for a later open one" ;; esac
+  hd 'Waiting: none'; hs >/dev/null; printf '## 0 Ticket ✔\n## 1 Analyze ✔\n## 2 Recommend ✔\n%s\n' "$L" >> "$h/.factory/run.md"; case $(hs) in *Batched*) ;; *) fail "a long line hid a batched turn" ;; esac
+  hd 'Waiting: none'; awk 'BEGIN { for (i = 0; i < 110; i++) printf "█"; print "" }' >> "$h/.factory/run.md"; case $(hs) in *'over 300'*) fail "the line limit counted bytes" ;; esac
+  rm -rf "$h/.factory/guard"; git -C "$h" remote add origin "$h/none.git"; full "$all"; case $(hs) in *'"decision":"block"'*'Gate C'*) ;; *) fail "an unpushed head with a remote passed Gate C" ;; esac
+  hs >/dev/null; git -C "$h" remote remove origin; case $(hs) in *'"decision":"block"'*'Gate C'*) ;; *) fail "removing the remote skipped Gate C's push" ;; esac
+  if command -v cygpath >/dev/null; then case $(hs) in *'factory run in /'*) fail "a prompt named a Git Bash path" ;; esac; fi
+}
+
 # A new run in a session that already failed a gate starts at zero rounds.
-n=$w/n; mkdir -p "$n/r/.factory" "$n/p/x/s/subagents"; git init -q "$n/r"; printf '{}\n' > "$n/p/x/s.jsonl"
-for i in 1 2 3; do { printf '{"message":"Role: checker. Gate B"}\n'; printf '{"message":{"role":"assistant","content":[{"type":"text","text":"Gate B: FAIL 1 missing"}]}}\n'; } > "$n/p/x/s/subagents/agent-c$i.jsonl"; done
-printf '# Run: x\nStatus: open\nNext: 1 Analyze · analyze-start\nWaiting: none\n' > "$n/r/.factory/run.md"
-case $(printf '{"session_id":"s","transcript_path":"%s/p/x/s.jsonl","cwd":"%s","last_assistant_message":"x"}' "$n" "$n/r" | HOME="$n" XDG_CACHE_HOME="$n" sh "$sg" stop) in *'Step 1 Analyze'*) ;; *) fail "a new run inherited the session's failed rounds" ;; esac
-# The same in a checkout with an earlier run's state; an old run keeps its rounds; deleting state lifts no halt.
-ns() { printf '{"session_id":"s","transcript_path":"%s/p/x/s.jsonl","cwd":"%s","last_assistant_message":"x"}' "$n" "$n/r" | HOME="$n" XDG_CACHE_HOME="$n" sh "$sg" stop; }
-nf() { { printf '# Run: x\nStatus: open\nNext: 7 PR · how-to-make-a-pr\nWaiting: none\n\n'; for s in '0 Ticket' '1 Analyze' '2 Recommend' '2b Challenge' '3 Plan' '4 Before' '5 Build' '6 Verify'; do printf '## %s ✔\n' "$s"; done; } > "$n/r/.factory/run.md"; }
-rm -rf "$n/r/.factory/guard"; nf; ns >/dev/null; printf '# Run: y\nStatus: open\nNext: 1 Analyze · analyze-start\nWaiting: none\n\n## 0 Ticket ✔\nx\n' > "$n/r/.factory/run.md"; case $(ns) in *'Step 1 Analyze'*) ;; *) fail "a new run in a used checkout inherited the failed rounds" ;; esac
-rm -rf "$n/r/.factory/guard"; nf; ns >/dev/null; case $(ns) in *'by cap'*) ;; *) fail "a run past its plan lost its rounds" ;; esac
-for i in 4 5; do cp "$n/p/x/s/subagents/agent-c1.jsonl" "$n/p/x/s/subagents/agent-c$i.jsonl"; done
-rm -rf "$n/r/.factory/guard"; nf; ns >/dev/null; ns >/dev/null; rm -rf "$n/r/.factory/guard"; ns >/dev/null; case $(ns) in *HALT* | *halted*) ;; *) fail "deleting guard state lifted a halt" ;; esac
+rounds() {
+  n=$w/n; mkdir -p "$n/r/.factory" "$n/p/x/s/subagents"; git init -q "$n/r"; printf '{}\n' > "$n/p/x/s.jsonl"
+  for i in 1 2 3; do { printf '{"message":"Role: checker. Gate B"}\n'; printf '{"message":{"role":"assistant","content":[{"type":"text","text":"Gate B: FAIL 1 missing"}]}}\n'; } > "$n/p/x/s/subagents/agent-c$i.jsonl"; done
+  printf '# Run: x\nStatus: open\nNext: 1 Analyze · analyze-start\nWaiting: none\n' > "$n/r/.factory/run.md"
+  ns() { printf '{"session_id":"s","transcript_path":"%s/p/x/s.jsonl","cwd":"%s","last_assistant_message":"x"}' "$n" "$n/r" | HOME="$n" XDG_CACHE_HOME="$n" sh "$sg" stop; }
+  case $(ns) in *'Step 1 Analyze'*) ;; *) fail "a new run inherited the session's failed rounds" ;; esac
+  # The same in a checkout with an earlier run's state; an old run keeps its rounds; deleting state lifts no halt.
+  nf() { { printf '# Run: x\nStatus: open\nNext: 7 PR · how-to-make-a-pr\nWaiting: none\n\n'; for s in '0 Ticket' '1 Analyze' '2 Recommend' '2b Challenge' '3 Plan' '4 Before' '5 Build' '6 Verify'; do printf '## %s ✔\n' "$s"; done; } > "$n/r/.factory/run.md"; }
+  rm -rf "$n/r/.factory/guard"; nf; ns >/dev/null; printf '# Run: y\nStatus: open\nNext: 1 Analyze · analyze-start\nWaiting: none\n\n## 0 Ticket ✔\nx\n' > "$n/r/.factory/run.md"; case $(ns) in *'Step 1 Analyze'*) ;; *) fail "a new run in a used checkout inherited the failed rounds" ;; esac
+  rm -rf "$n/r/.factory/guard"; nf; ns >/dev/null; case $(ns) in *'by cap'*) ;; *) fail "a run past its plan lost its rounds" ;; esac
+  for i in 4 5; do cp "$n/p/x/s/subagents/agent-c1.jsonl" "$n/p/x/s/subagents/agent-c$i.jsonl"; done
+  rm -rf "$n/r/.factory/guard"; nf; ns >/dev/null; ns >/dev/null; rm -rf "$n/r/.factory/guard"; ns >/dev/null; case $(ns) in *HALT* | *halted*) ;; *) fail "deleting guard state lifted a halt" ;; esac
+}
+
+# The factory binary answers as the scripts do; skipped until factory/parity/run.sh exists or with no binary built.
+parity() {
+  [ -f factory/parity/run.sh ] || return 0
+  [ -z "$FACTORY_BIN" ] || [ -f "$FACTORY_BIN" ] || { fail "parity: no binary at FACTORY_BIN $FACTORY_BIN"; return; }
+  [ -n "$bin" ] || return 0
+  # Its inputs (the binary, the sh scripts it is held to, the harness and corpus) as one number: a PASS on the
+  # same inputs is reused, since the sh side alone takes minutes on Windows.
+  k=$({ cksum < "$bin"; find .agents/skills/safe-factory/scripts factory/parity -type f | LC_ALL=C sort | xargs cat; } | cksum | cut -d' ' -f1)
+  pr=.factory/receipts/parity-$k.txt
+  [ "$FACTORY_CHECK_FRESH" != 1 ] && grep -qx 'result PASS' "$pr" 2>/dev/null && return 0
+  o=$(sh factory/parity/run.sh "$bin" 2>&1) || { fail "parity: $(printf '%s\n' "$o" | tail -n 1)"; return; }
+  mkdir -p .factory/receipts && printf 'factory-receipt 1\nsuite parity\nresult PASS\ncmd sh factory/parity/run.sh %s\nsummary %s\nat %s\n' "$bin" "$(printf '%s\n' "$o" | tail -n 1)" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$pr.$$" && mv "$pr.$$" "$pr"
+}
+
+# Runs the named groups at once, each in its own folder under $w, then prints their output in order; any FAIL line fails the run.
+par() {
+  for grp; do "$grp" > "$w/$grp.out" & done; wait
+  for grp; do cat "$w/$grp.out"; done
+  for grp; do grep -q '^FAIL:' "$w/$grp.out" && bad=1; done
+}
+
+# Tree id of the working tree as `git add -A` would stage it, built in a copy of the index: the real index is never touched.
+tree() {
+  i=$(git rev-parse --git-path index); [ -f "$i" ] && cp "$i" "$w/index"
+  x=; git check-ignore -q .factory || x=':(exclude).factory'  # an exclude naming an ignored path makes git add exit 1
+  GIT_OPTIONAL_LOCKS=0 GIT_INDEX_FILE=$w/index git -c core.safecrlf=false add -A -- . $x && GIT_INDEX_FILE=$w/index git write-tree
+}
+
+# The receipt of a passed full run, written whole or not at all; `runs` counts full runs on this tree,
+# `passes` the passing ones (absent: 1 for a PASS, 0 for a FAIL).
+receipt() {
+  mkdir -p "${r%/*}" || return
+  c=no; [ "$t" = "$ht" ] && c=yes
+  n=0 p=0
+  if [ -f "$r" ]; then
+    n=$(sed -n 's/^runs \([0-9][0-9]*\)$/\1/p' "$r"); n=${n:-1}
+    p=$(sed -n 's/^passes \([0-9][0-9]*\)$/\1/p' "$r"); [ -n "$p" ] || { p=0; grep -qx 'result PASS' "$r" && p=1; }
+  fi
+  printf 'factory-receipt 1\nsuite full\ntree %s\nref-tree %s\nhead %s\nclean %s\nresult PASS\ncmd sh scripts/check.sh\nruntime %s\nsecs %s\nat %s\nruns %s\npasses %s\n' \
+    "$t" "$rt" "$hc" "$c" "$rn" "$(( $(date +%s) - s0 ))" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$((n + 1))" "$((p + 1))" > "$r.$$" && mv "$r.$$" "$r"
+}
+
+bin=$FACTORY_BIN
+[ -n "$bin" ] || for f in factory/target/release/factory.exe factory/target/release/factory; do [ -f "$f" ] && { bin=$f; break; }; done
+# Runtime: platform, Git and the parity binary, as one number; a receipt from another runtime is never reused.
+rn=$({ uname -srm; git --version; [ -f "$bin" ] && { echo "$bin"; cksum < "$bin"; }; } | cksum | cut -d' ' -f1)
+set -- $(git rev-parse "$ref^{tree}" HEAD "HEAD^{tree}"); rt=$1 hc=$2 ht=$3
+t=$(tree) || { t=; echo "check: no tree id for the working tree; no receipt this run" >&2; }
+r=.factory/receipts/$t-full.txt
+if [ -n "$t" ] && [ "$FACTORY_CHECK_FRESH" != 1 ] && [ -f "$r" ] &&
+  [ "$(grep -cxF -e 'factory-receipt 1' -e 'suite full' -e "tree $t" -e "ref-tree $rt" -e 'result PASS' -e "runtime $rn" "$r")" -eq 6 ]; then
+  exit 0  # a PASS on this very tree and runtime: nothing to print
+fi
+
+# --changed: a diff of docs only (*.md anywhere but factory/, whose files are test inputs; docs/) needs the static checks alone.
+suite=full
+if [ -n "$base" ]; then
+  d=$(git diff --name-only "$base...$ref") || { echo "FAIL: no merge base for $base...$ref"; exit 1; }
+  { printf '%s\n' "$d"; git status --porcelain -uall | awk '{ s = substr($0, 4); n = index(s, " -> "); if (n) { print substr(s, 1, n - 1); s = substr(s, n + 4) } print s }'; } |
+    awk '$0 != "" && (/^factory\// || !(/\.md$/ || /^docs\//)) { f = 1 } END { exit !f }' || suite=static
+fi
+if [ $suite = static ]; then par static; else par static updates doctor binding moved waits stops rounds parity; fi
+# A receipt also stands for the static checks, which read <ref>: only a run whose <ref> is this very tree writes one.
+[ $bad = 0 ] && [ $suite = full ] && [ -n "$t" ] && [ "$rt" = "$t" ] && receipt
 exit $bad

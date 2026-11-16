@@ -1,0 +1,10 @@
+# commit 2ffc440
+"hello"
+RangeError 0
+RangeError -1
+RangeError 1.5
+RangeError 5
+RangeError null
+RangeError NaN
+RangeError Infinity
+exit 0
