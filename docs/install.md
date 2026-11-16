@@ -2,6 +2,8 @@
 
 Needs Git, read access to the repository (`gh auth login` lets Git use your GitHub credentials over HTTPS) and, on Windows, Git Bash for the hooks.
 
+On Windows, set `MSYS_NO_PATHCONV=1` where the agent's shell and the hooks inherit it: Claude Code `"env": {"MSYS_NO_PATHCONV": "1"}` in `~/.claude/settings.json`, other agents `setx MSYS_NO_PATHCONV 1` and a new session. Without it Git Bash rewrites `git show origin/main:.agents/x` into `origin\main;.agents\x` and the command fails; with it, every `<ref>:<path>` command in the methods works as typed.
+
 ## Claude Code
 
 ```text
