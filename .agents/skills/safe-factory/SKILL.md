@@ -46,8 +46,8 @@ Every run keeps project rules and never puts secrets in code or Git. Never assum
 `.factory/run.md` in project holds the run: [format](references/run-file.md). Create at step 0; Git ignores `.factory/`.
 
 - After each step: write its block under the step's heading, tick heading `✔` once contract holds, set `Next:` to next step and its skill.
-- `Waiting:` stays `none` while you work. Before ending a turn on purpose, set `owner: <question>` or `jobs: <what runs, who reports back> (max <minutes> min)`, whose results come back; back to `none` on resume.
-- `Status: closed` only after step 8 and gates A, B, C proven or owner waives one.
+- `Waiting:` stays `none` while you work. Before ending a turn on purpose, set `owner: <question>` or `jobs: <what runs, who reports back> (max <minutes> min)`; back to `none` on resume.
+- `Status: closed` only after step 8 and gates A, B, C proven or owner waives one. Owner stop: `Status: stopped (<reason>)`.
 
 ## Block format
 
