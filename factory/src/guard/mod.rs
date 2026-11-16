@@ -7,6 +7,7 @@
 //!   step     writes a posted block under its heading, ticks it, then answers like check
 
 pub mod backing;
+pub mod before;
 pub mod flow;
 pub mod reply;
 pub mod rules;

@@ -5,6 +5,7 @@
 //! (reftable, `includeIf` in the repo's own config).
 
 pub mod config;
+pub mod history;
 pub mod index;
 pub mod object;
 pub mod refs;

@@ -1,0 +1,145 @@
+//! Before proof comes first: `guard step 5|T<k>` and the Stop hook refuse the build while a proof-list id has
+//! no `before-<id>` file or one saved after the branch's first source change; a run whose Befores came first
+//! passes. Each case is a scratch repository with fixed commit dates and file times.
+
+use std::io::Write;
+use std::path::{Path, PathBuf};
+use std::process::{Command, Stdio};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+
+const RUN: &str = "# Run: x\nStatus: open\nNext: 5 Build \u{b7} get-ready-to-code\nWaiting: none\n\n## 3 Plan \u{2714}\n**Proof list:**\n| Id | What |\n|---|---|\n| P1 | a |\n| P2 | b |\n**Test map:** none\n\n## 4 Before \u{2714}\nsaved\n";
+
+/// 2026-01-01 at `h` hours UTC.
+fn at(h: u64) -> SystemTime {
+    UNIX_EPOCH + Duration::from_secs(1_767_225_600 + h * 3600)
+}
+
+fn git(dir: &Path, args: &[&str], hour: u64) {
+    let date = format!("2026-01-01T{hour:02}:00:00Z");
+    let ok = Command::new("git")
+        .arg("-C")
+        .arg(dir)
+        .args(["-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false"])
+        .args(args)
+        .env("GIT_AUTHOR_DATE", &date)
+        .env("GIT_COMMITTER_DATE", &date)
+        .stdout(Stdio::null())
+        .status()
+        .is_ok_and(|s| s.success());
+    assert!(ok, "git {args:?}");
+}
+
+fn set_time(p: &Path, t: SystemTime) {
+    std::fs::File::options().write(true).open(p).and_then(|f| f.set_modified(t)).expect("set mtime");
+}
+
+/// A repository with a base commit on `main` at 08:00 and the branch's own commit at 10:00.
+fn repo(name: &str) -> PathBuf {
+    let d = std::env::temp_dir().join(format!("factory-before-{}-{name}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&d);
+    std::fs::create_dir_all(d.join(".factory/proof/1")).unwrap();
+    git(&d, &["init", "-q", "-b", "main"], 8);
+    std::fs::write(d.join("a.txt"), "a\n").unwrap();
+    git(&d, &["add", "a.txt"], 8);
+    git(&d, &["commit", "-q", "-m", "base"], 8);
+    git(&d, &["switch", "-q", "-c", "work"], 8);
+    std::fs::write(d.join("a.txt"), "b\n").unwrap();
+    git(&d, &["commit", "-q", "-am", "work"], 10);
+    std::fs::write(d.join(".factory/run.md"), RUN).unwrap();
+    d
+}
+
+/// Saves `before-<id>.txt` with its time set to `h` o'clock.
+fn before(d: &Path, id: &str, h: u64) {
+    let p = d.join(format!(".factory/proof/1/before-{id}.txt"));
+    std::fs::write(&p, "did not exist\n").unwrap();
+    set_time(&p, at(h));
+}
+
+/// Runs the binary in `d` with `input` on stdin and a private home; exit code and stdout + stderr.
+fn factory(d: &Path, args: &[&str], input: &str) -> (i32, String) {
+    let mut child = Command::new(env!("CARGO_BIN_EXE_factory"))
+        .args(args)
+        .current_dir(d)
+        .env("HOME", d)
+        .env("USERPROFILE", d)
+        .env("XDG_CACHE_HOME", d)
+        .env_remove("PWD")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .expect("run factory");
+    child.stdin.take().unwrap().write_all(input.as_bytes()).unwrap();
+    let out = child.wait_with_output().unwrap();
+    (out.status.code().unwrap_or(-1), format!("{}{}", String::from_utf8_lossy(&out.stdout), String::from_utf8_lossy(&out.stderr)))
+}
+
+/// The Stop hook's reply to a turn that ends on `msg`.
+fn stop(d: &Path, msg: &str) -> String {
+    let cwd = d.to_string_lossy().replace('\\', "/");
+    let json = format!(r#"{{"session_id":"s1","cwd":"{cwd}","last_assistant_message":"{msg}"}}"#);
+    factory(d, &["guard", "stop"], &json).1
+}
+
+fn run_file(d: &Path) -> String {
+    std::fs::read_to_string(d.join(".factory/run.md")).unwrap()
+}
+
+#[test]
+fn a_missing_before_refuses_the_todo_line_and_the_stop() {
+    let d = repo("missing");
+    before(&d, "P1", 9);
+    let (code, out) = factory(&d, &["guard", "step", "T1"], "T1 pre: a do: b post: c");
+    assert_eq!(code, 1, "{out}");
+    assert!(out.contains("refused, nothing written") && out.contains("No Before file: P2.") && !out.contains("Saved after"), "{out}");
+    assert_eq!(run_file(&d), RUN, "a refused line is never written");
+    let reply = stop(&d, "T1 pre: a do: b post: c");
+    assert!(reply.contains("\"decision\":\"block\"") && reply.contains("No Before file: P2."), "{reply}");
+    let _ = std::fs::remove_dir_all(&d);
+}
+
+#[test]
+fn a_before_saved_after_the_first_commit_refuses_step_5() {
+    let d = repo("late");
+    before(&d, "P1", 9);
+    before(&d, "P2", 11);
+    let (code, out) = factory(&d, &["guard", "step", "5"], "## 5 Build\nT1 pre: a do: b post: c \u{2714}");
+    assert_eq!(code, 1, "{out}");
+    assert!(out.contains("Saved after the work began: P2.") && !out.contains("No Before file"), "{out}");
+    assert_eq!(run_file(&d), RUN);
+    let reply = stop(&d, "## 5 Build x");
+    assert!(reply.contains("Saved after the work began: P2."), "{reply}");
+    let _ = std::fs::remove_dir_all(&d);
+}
+
+#[test]
+fn an_uncommitted_change_older_than_a_before_refuses_it() {
+    let d = repo("worktree");
+    before(&d, "P1", 7);
+    before(&d, "P2", 9);
+    std::fs::write(d.join("new.txt"), "x\n").unwrap();
+    set_time(&d.join("new.txt"), at(8)); // untracked, between the two Befores and before the 10:00 commit
+    let (code, out) = factory(&d, &["guard", "step", "T1"], "T1 pre: a do: b post: c");
+    assert_eq!(code, 1, "{out}");
+    assert!(out.contains("Saved after the work began: P2.") && !out.contains(": P1"), "{out}");
+    let _ = std::fs::remove_dir_all(&d);
+}
+
+#[test]
+fn befores_saved_first_pass_and_the_line_is_written() {
+    let d = repo("clean");
+    before(&d, "P1", 9);
+    before(&d, "P2", 9);
+    let (code, out) = factory(&d, &["guard", "step", "T1"], "T1 pre: a do: b post: c \u{2714}");
+    assert_eq!(code, 0, "{out}");
+    assert!(!out.contains("Before proof comes first"), "{out}");
+    assert!(run_file(&d).contains("## 5 Build\nT1 pre: a do: b post: c \u{2714}\n"));
+    assert!(!stop(&d, "T1 pre: a do: b post: c").contains("Before proof comes first"));
+    // The pass is kept; a Before saved again (later than the work) is judged anew and refused.
+    assert!(std::fs::read_to_string(d.join(".factory/guard/before")).is_ok_and(|k| k.starts_with("P1 ")));
+    before(&d, "P1", 11);
+    let (code, out) = factory(&d, &["guard", "step", "T2"], "T2 pre: a do: b post: c");
+    assert!(code == 1 && out.contains("Saved after the work began: P1."), "{out}");
+    let _ = std::fs::remove_dir_all(&d);
+}

@@ -111,7 +111,11 @@ pub fn run(input: &Input, mode: Mode, start: &Path) -> Option<Reply> {
         posted: &posted,
         receipt: &receipt,
     });
-    Ctx { mode, input, s, f, d, run, g, st, rf, note, new_state, now, text, sid: sid.to_string(), tp }.after_judge()
+    // Only a posted step 5 block or todo line reads the Before files (and Git, when one exists).
+    let before = (mode == Mode::Stop && super::before::posted(&input.last_assistant_message))
+        .then(|| super::before::refusal(&dir, &String::from_utf8_lossy(&text), repo.as_ref(), &head))
+        .flatten();
+    Ctx { mode, input, s, f, d, run, g, st, rf, note, new_state, now, text, sid: sid.to_string(), tp, before }.after_judge()
 }
 
 /// Clear: the owner's command after a halt; also ends night mode. Keeps the run's sessions for gate proof.
@@ -157,6 +161,8 @@ struct Ctx<'a> {
     text: Vec<u8>,
     sid: String,
     tp: String,
+    /// Why this turn's step 5 block or todo line is refused (a Before missing or late).
+    before: Option<String>,
 }
 
 impl Ctx<'_> {
@@ -312,6 +318,9 @@ impl Ctx<'_> {
         } else {
             self.s.set("jobs_since", "");
             self.s.set("jobs_id", "");
+        }
+        if todo.is_empty() {
+            todo = self.before.clone().unwrap_or_default();
         }
         self.save();
         if !todo.is_empty() {

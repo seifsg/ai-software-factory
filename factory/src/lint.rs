@@ -194,7 +194,7 @@ fn todo_ids(l: &str) -> Vec<String> {
 
 /// Gate B: every `before-<id>` / `after-<id>` the blocks name exists; each After names HEAD's commit.
 fn proof_files(secs: &[Section], i: &Input, r: &mut Report) {
-    let files = walk_files(i.proof);
+    let files = crate::proof::files(i.proof);
     for s in secs.iter().filter(|s| s.label == "4" || s.label == "6") {
         for name in s.lines.iter().flat_map(|l| proof_names(l)) {
             let hit = files.iter().find(|f| f.file_stem().is_some_and(|st| st.to_string_lossy() == name));
@@ -209,20 +209,6 @@ fn proof_files(secs: &[Section], i: &Input, r: &mut Report) {
             }
         }
     }
-}
-
-fn walk_files(d: &Path) -> Vec<std::path::PathBuf> {
-    let mut out = Vec::new();
-    let Ok(rd) = std::fs::read_dir(d) else { return out };
-    for e in rd.flatten() {
-        let p = e.path();
-        if p.is_dir() {
-            out.extend(walk_files(&p));
-        } else {
-            out.push(p);
-        }
-    }
-    out
 }
 
 /// `before-P1`, `after-x2` tokens (a proof id is letters, digits, `_` or `-`).

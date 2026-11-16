@@ -26,6 +26,21 @@ pub fn hash_in(base: &std::path::Path, files: &[&str]) -> Result<String, String>
     Ok(h.digest().to_string())
 }
 
+/// Every file under a proof folder, at any depth (`.factory/proof/<ticket>/...`); none when it is missing.
+pub fn files(dir: &std::path::Path) -> Vec<std::path::PathBuf> {
+    let mut out = Vec::new();
+    let Ok(rd) = std::fs::read_dir(dir) else { return out };
+    for e in rd.flatten() {
+        let p = e.path();
+        if p.is_dir() {
+            out.extend(files(&p));
+        } else {
+            out.push(p);
+        }
+    }
+    out
+}
+
 /// `factory proof-hash <file>...`
 pub fn cli(args: &[&str]) -> u8 {
     if args.is_empty() {

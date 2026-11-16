@@ -44,6 +44,14 @@ pub fn cli(args: &[&str]) -> u8 {
             return 1;
         }
     };
+    if *label == "5" || label.starts_with('T') {
+        let repo = crate::git::Repo::discover(Path::new(&dir));
+        let head = repo.as_ref().map(|r| r.info().head).unwrap_or_default();
+        if let Some(why) = super::before::refusal(Path::new(&dir), &text, repo.as_ref(), &head) {
+            eprintln!("factory guard step: refused, nothing written. {why}");
+            return 1;
+        }
+    }
     let updated = match write(&text, label, &block) {
         Ok(t) => t,
         Err(e) => {
