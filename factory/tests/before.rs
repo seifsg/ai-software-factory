@@ -142,3 +142,15 @@ fn an_untracked_file_older_than_the_branch_is_not_its_work() {
     assert_eq!(code, 0, "{out}");
     let _ = std::fs::remove_dir_all(&d);
 }
+
+#[test]
+fn a_run_with_no_proof_folder_of_its_own_is_refused() {
+    let d = repo("no-own-folder");
+    let run = RUN.replace("issues/1 ", "issues/9 ");
+    std::fs::write(d.join(".factory/run.md"), &run).unwrap();
+    before(&d, "P1", 9); // in .factory/proof/1/: another ticket's folder
+    before(&d, "P2", 9);
+    let (code, out) = factory(&d, &["guard", "step", "T1"], "T1 pre: a do: b post: c");
+    assert!(code == 1 && out.contains("No Before file: P1, P2."), "issue 9 has no proof folder yet: {out}");
+    let _ = std::fs::remove_dir_all(&d);
+}

@@ -85,15 +85,16 @@ pub fn refusal(dir: &Path, run: &str, repo: Option<&Repo>, head: &str) -> Option
     Some(super::reply::before_first(&missing.join(", "), &late.join(", "), &began))
 }
 
-/// The run's own proof folder: `.factory/proof/<ticket>/` for the ticket at the end of the `# Run:` line's
-/// first word (a ticket URL or id), when that folder exists; else the whole proof folder. Another run's
-/// Before with the same id never stands in for this one's.
+/// The run's own proof folder: `.factory/proof/<ticket>/` when the `# Run:` line's first word is a ticket
+/// link (`.../issues/314`) or reference (`#314`), whether or not the folder exists yet (then every Before
+/// is missing); else the whole proof folder. Another run's Before with the same id never stands in.
 fn proof_dir(dir: &Path, run: &str) -> PathBuf {
     let all = dir.join(".factory/proof");
     let first = run.lines().next().and_then(|l| l.strip_prefix("# Run: ")).and_then(|r| r.split_whitespace().next()).unwrap_or("");
+    let link = first.contains('/') || first.starts_with('#');
     let id = first.trim_end_matches('/').rsplit(['/', '#']).next().unwrap_or("");
     let safe = !id.is_empty() && id.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_');
-    Some(all.join(id)).filter(|p| safe && p.is_dir()).unwrap_or(all)
+    if link && safe { all.join(id) } else { all }
 }
 
 /// When the branch's own work began (ns) and what began it: its first commit after the base (the last
