@@ -4,9 +4,9 @@
 //! Per project folder: its mtime and the sessions it holds, probed again only when that mtime moves, so a
 //! call lists the projects folder once and stats only folders that changed.
 
-use super::scan::{Session, Sub};
 use super::FileRef;
-use serde_json::{json, Map, Value};
+use super::scan::{Session, Sub};
+use serde_json::{Map, Value, json};
 use std::collections::HashMap;
 use std::io::{Read, Seek, SeekFrom};
 use std::path::{Path, PathBuf};
@@ -205,7 +205,9 @@ fn project_dirs(projects: &Path) -> Vec<(String, u64)> {
             rd.flatten()
                 .filter(|e| e.file_type().is_ok_and(|t| t.is_dir() || (t.is_symlink() && e.path().is_dir())))
                 .map(|e| {
-                    let m = e.metadata().ok().and_then(|m| m.modified().ok()).map_or(0, crate::paths::ns) as u64;
+                    // A symlinked folder: its target's mtime, which moves when a session lands there.
+                    let md = if e.file_type().is_ok_and(|t| t.is_symlink()) { std::fs::metadata(e.path()) } else { e.metadata() };
+                    let m = md.ok().and_then(|m| m.modified().ok()).map_or(0, crate::paths::ns) as u64;
                     (e.file_name().to_string_lossy().into_owned(), m)
                 })
                 .filter(|(n, _)| !n.starts_with('.'))

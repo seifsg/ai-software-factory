@@ -3,7 +3,7 @@
 //! `--fix` moves each safe item into a dated backup (never deletes) and refreshes stale copies; a config
 //! file holding anything else is only reported. Exit 1 while anything is left to do.
 
-use crate::git::{index, Repo};
+use crate::git::{Repo, index};
 use crate::paths;
 use std::path::{Path, PathBuf};
 
@@ -22,9 +22,15 @@ struct Doctor {
 /// Runs the doctor; returns its lines and whether anything is left to do.
 pub fn run(root: &Path, fix: bool) -> (Vec<String>, bool) {
     let h = paths::home();
-    let p = std::env::var_os("CLAUDE_PROJECT_DIR").filter(|v| !v.is_empty()).map(|v| PathBuf::from(paths::norm(&v.to_string_lossy()))).unwrap_or_else(crate::guard::cwd);
+    let p = std::env::var_os("CLAUDE_PROJECT_DIR")
+        .filter(|v| !v.is_empty())
+        .map(|v| PathBuf::from(paths::norm(&v.to_string_lossy())))
+        .unwrap_or_else(crate::guard::cwd);
     let p = if paths::text(&p) == paths::text(&h) { PathBuf::from("/nonexistent") } else { p };
-    let x = std::env::var_os("CODEX_HOME").filter(|v| !v.is_empty()).map(|v| PathBuf::from(paths::norm(&v.to_string_lossy()))).unwrap_or_else(|| h.join(".codex"));
+    let x = std::env::var_os("CODEX_HOME")
+        .filter(|v| !v.is_empty())
+        .map(|v| PathBuf::from(paths::norm(&v.to_string_lossy())))
+        .unwrap_or_else(|| h.join(".codex"));
     let mut d = Doctor { fix, out: Vec::new(), left: false, stamp: if fix { stamp() } else { String::new() }, n: 0, last: String::new() };
     for base in [&h, &p] {
         if base.join(".agents/.claude-plugin/plugin.json").is_file() {
@@ -42,7 +48,15 @@ pub fn run(root: &Path, fix: bool) -> (Vec<String>, bool) {
         d.mv(&h.join(".safe-engine"), "1.x run state and self-updater");
     }
     let on = read(&h.join(".claude/settings.json")).contains("safe-factory@") || cursor_plugin(&h);
-    let files = [x.join("hooks.json"), h.join(".cursor/hooks.json"), h.join(".claude/settings.json"), p.join(".claude/settings.json"), p.join(".claude/settings.local.json"), p.join(".codex/hooks.json"), p.join(".cursor/hooks.json")];
+    let files = [
+        x.join("hooks.json"),
+        h.join(".cursor/hooks.json"),
+        h.join(".claude/settings.json"),
+        p.join(".claude/settings.json"),
+        p.join(".claude/settings.local.json"),
+        p.join(".codex/hooks.json"),
+        p.join(".cursor/hooks.json"),
+    ];
     for f in files.iter().filter(|f| hit(&read(f))) {
         let text = read(f);
         if text.contains("safe-engine@ai-software-factory") {
@@ -54,7 +68,10 @@ pub fn run(root: &Path, fix: bool) -> (Vec<String>, bool) {
             } else {
                 d.todo(f, "hooks of an old factory version; delete entries naming fast_gate, run-gate.sh, skills/safe-engine/ or hooks/windows.cmd");
             }
-        } else if on && paths::text(f).contains("/.claude/") && text.lines().any(|l| l.find("\"command\"").is_some_and(|i| l[i..].contains("run-guard.sh"))) {
+        } else if on
+            && paths::text(f).contains("/.claude/")
+            && text.lines().any(|l| l.find("\"command\"").is_some_and(|i| l[i..].contains("run-guard.sh")))
+        {
             d.todo(f, "second Stop guard: the plugin already runs it; delete that entry");
         }
     }
@@ -99,7 +116,8 @@ impl Doctor {
         if ok {
             use std::io::Write;
             let line = format!("{}\t{}\n", paths::text(&t), paths::text(f));
-            let _ = std::fs::OpenOptions::new().create(true).append(true).open(b.join("index")).and_then(|mut i| i.write_all(line.as_bytes()));
+            let _ =
+                std::fs::OpenOptions::new().create(true).append(true).open(b.join("index")).and_then(|mut i| i.write_all(line.as_bytes()));
             let msg = format!("{why}; moved to {}", paths::text(&t));
             self.say(f, &msg);
         } else {
@@ -142,7 +160,10 @@ impl Doctor {
             .ok()
             .and_then(|t| t.trim().strip_prefix("ref: refs/remotes/origin/").map(String::from))
             .unwrap_or_else(|| "main".into());
-        self.todo(Path::new(&ck), &format!("old factory checkout (tracks {what}); --fix leaves it: git -C \"{ck}\" switch {db} && git -C \"{ck}\" pull"));
+        self.todo(
+            Path::new(&ck),
+            &format!("old factory checkout (tracks {what}); --fix leaves it: git -C \"{ck}\" switch {db} && git -C \"{ck}\" pull"),
+        );
     }
 }
 
@@ -167,7 +188,9 @@ fn hit(text: &str) -> bool {
 /// A Cursor install of the plugin (it runs the guard too).
 fn cursor_plugin(h: &Path) -> bool {
     let root = h.join(".cursor/plugins");
-    let level = |d: &Path| std::fs::read_dir(d).map(|rd| rd.flatten().map(|e| e.path()).filter(|p| p.is_dir()).collect::<Vec<_>>()).unwrap_or_default();
+    let level = |d: &Path| {
+        std::fs::read_dir(d).map(|rd| rd.flatten().map(|e| e.path()).filter(|p| p.is_dir()).collect::<Vec<_>>()).unwrap_or_default()
+    };
     level(&root).iter().any(|a| a.join("safe-factory").is_dir() || level(a).iter().any(|b| b.join("safe-factory").is_dir()))
 }
 

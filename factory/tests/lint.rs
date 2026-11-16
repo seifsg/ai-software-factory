@@ -2,7 +2,7 @@
 //! `.factory/` folder so Git keeps them). Each case puts one
 //! round-1 checker miss of that run back into its block and asserts the lint flags it before a checker would.
 
-use factory::lint::{check, Input, Report};
+use factory::lint::{Input, Report, check};
 use std::path::{Path, PathBuf};
 
 const HEAD_R3: &str = "2ffc440cacbe7a1fa497c259f27ae2099292d1d5";
@@ -47,9 +47,18 @@ fn r3_b1_lens_lines_without_findings() {
         'B',
         HEAD_R3,
         &[
-            ("**compliance:** A1 to A7 and D1 to D8 met (J2); 3 LOW left (below), deferred pending owner · PASS", "**compliance:** A1 to A7 and D1 to D8 met (J2) · PASS"),
-            ("**change-guard:** no findings (3 original tests byte-identical, no-option output unchanged, J2) · PASS", "**change-guard:** 3 original tests byte-identical (J2) · PASS"),
-            ("**security:** no findings (pure string functions, no network, files, secrets or logging touched) · PASS", "**security:** N/A, pure string functions"),
+            (
+                "**compliance:** A1 to A7 and D1 to D8 met (J2); 3 LOW left (below), deferred pending owner · PASS",
+                "**compliance:** A1 to A7 and D1 to D8 met (J2) · PASS",
+            ),
+            (
+                "**change-guard:** no findings (3 original tests byte-identical, no-option output unchanged, J2) · PASS",
+                "**change-guard:** 3 original tests byte-identical (J2) · PASS",
+            ),
+            (
+                "**security:** no findings (pure string functions, no network, files, secrets or logging touched) · PASS",
+                "**security:** N/A, pure string functions",
+            ),
         ],
     );
     flags(&r, "**compliance:** has no findings");
@@ -59,7 +68,8 @@ fn r3_b1_lens_lines_without_findings() {
 
 #[test]
 fn r3_c1_stale_sha_quote_lenses_and_verdict() {
-    let quote = "local only (\"This repo has no remote: stop after verify and review (no PR step).\") @2ffc440cacbe7a1fa497c259f27ae2099292d1d5";
+    let quote =
+        "local only (\"This repo has no remote: stop after verify and review (no PR step).\") @2ffc440cacbe7a1fa497c259f27ae2099292d1d5";
     let r = lint(
         "r3",
         'C',
@@ -95,7 +105,10 @@ fn r4_a1_checklist_and_research() {
         'A',
         HEAD_R4,
         &[
-            ("**Checklist:** `- [ ] T1 slugify maxLength cut, uniqueSlug, tests (A1-A5)` (matches step 3 and .factory/ticket.md)", "**Checklist:** filled at step 3"),
+            (
+                "**Checklist:** `- [ ] T1 slugify maxLength cut, uniqueSlug, tests (A1-A5)` (matches step 3 and .factory/ticket.md)",
+                "**Checklist:** filled at step 3",
+            ),
             ("research summary: none (kickoff research skipped, owner's brief fixes the scope), ", ""),
         ],
     );
@@ -105,7 +118,12 @@ fn r4_a1_checklist_and_research() {
 
 #[test]
 fn r4_b1_journey_line_and_old_after_commit() {
-    let r = lint("r4", 'B', "562933a000000000000000000000000000000000", &[("- **journey:** no findings, real calls match A1 to A4 · PASS", "- **journey:** real calls match A1 to A4 · PASS")]);
+    let r = lint(
+        "r4",
+        'B',
+        "562933a000000000000000000000000000000000",
+        &[("- **journey:** no findings, real calls match A1 to A4 · PASS", "- **journey:** real calls match A1 to A4 · PASS")],
+    );
     flags(&r, "**journey:** has no findings");
     flags(&r, "does not name HEAD");
 }
@@ -121,9 +139,15 @@ fn r4_c1_quote_card_claim_table_and_lens_tables() {
     let claim_start = text.find("| Claimed behavior | Where | Delivered? | Note |").unwrap();
     let claim_end = text.find("**Three solutions:**").unwrap();
     let mut edits: Vec<(String, String)> = vec![
-        ("local only (\"This repo has no remote: stop after verify and review (no PR step).\")".into(), "local only (\"This repo has no remote; review only.\")".into()),
+        (
+            "local only (\"This repo has no remote: stop after verify and review (no PR step).\")".into(),
+            "local only (\"This repo has no remote; review only.\")".into(),
+        ),
         (text[card_start..card_end].to_string(), "- Branch `feat/slug-max-length-unique`, head `adc6ac8`.\n".into()),
-        (text[lens_start..lens_end].to_string(), "**Lenses:** compliance PASS, change-guard PASS (1 MEDIUM), journey PASS, security PASS, performance PASS.\n\n".into()),
+        (
+            text[lens_start..lens_end].to_string(),
+            "**Lenses:** compliance PASS, change-guard PASS (1 MEDIUM), journey PASS, security PASS, performance PASS.\n\n".into(),
+        ),
     ];
     edits.push((text[claim_start..claim_end].to_string(), String::new()));
     let refs: Vec<(&str, &str)> = edits.iter().map(|(a, b)| (a.as_str(), b.as_str())).collect();

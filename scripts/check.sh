@@ -2,7 +2,7 @@
 # Repository checks (AGENTS.md "Keep it working"), one command from the repo root: sh scripts/check.sh [--changed <base>] [<ref>]
 # Static checks read the blobs of <ref>; dynamic checks (update check, doctor, run guard, parity) run the working-tree scripts.
 # --changed <base>: a diff from <base>...<ref> plus uncommitted and untracked changes that touches only docs (*.md, docs/) runs static checks only.
-# A full pass writes .factory/receipts/<tree>-full.txt; the same working tree, <ref> tree and runtime reuse it (FACTORY_CHECK_FRESH=1 runs anyway).
+# A full pass on a clean tree (<ref> is the working tree) writes .factory/receipts/<tree>-full.txt; the same working tree, <ref> tree and runtime reuse it (FACTORY_CHECK_FRESH=1 runs anyway).
 # sh scripts/check.sh bytes [<ref>] prints "<all methods> <read set>" for a PR's before and after line.
 # Byte counts read Git blobs of <ref> (default HEAD).
 # Prints nothing and exits 0 when all pass; otherwise one FAIL line per failed check, exit 1.

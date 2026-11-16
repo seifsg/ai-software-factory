@@ -40,9 +40,8 @@ impl Repo {
         let mut dir = Some(start.as_path());
         while let Some(d) = dir {
             if let Some(gitdir) = gitdir_at(&d.join(".git")) {
-                let common = std::fs::read_to_string(gitdir.join("commondir"))
-                    .map(|c| gitdir.join(c.trim()))
-                    .unwrap_or_else(|_| gitdir.clone());
+                let common =
+                    std::fs::read_to_string(gitdir.join("commondir")).map(|c| gitdir.join(c.trim())).unwrap_or_else(|_| gitdir.clone());
                 let mut config = config::Config::load(&common.join("config"));
                 if config.bool("extensions.worktreeconfig") {
                     let wt = config::Config::load(&gitdir.join("config.worktree"));

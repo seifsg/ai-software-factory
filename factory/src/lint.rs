@@ -18,8 +18,18 @@ fn scope(gate: char) -> Option<(&'static [&'static str], &'static [&'static str]
 }
 
 const PLACEHOLDERS: [&str; 12] = [
-    "<this folder>", "<absolute run folder>", "<run folder>", "<sha>", "<id>", "<agent id>", "<PR URL>", "<ticket link>",
-    "<owner's words>", "<their words>", "<question>", "<what runs>",
+    "<this folder>",
+    "<absolute run folder>",
+    "<run folder>",
+    "<sha>",
+    "<id>",
+    "<agent id>",
+    "<PR URL>",
+    "<ticket link>",
+    "<owner's words>",
+    "<their words>",
+    "<question>",
+    "<what runs>",
 ];
 
 /// What the lint reads.
@@ -237,7 +247,9 @@ fn proof_names(l: &str) -> Vec<String> {
 
 /// The first hex token of 7 to 40 characters in a line.
 fn first_sha(l: &str) -> Option<String> {
-    l.split(|c: char| !c.is_ascii_alphanumeric()).find(|w| (7..=40).contains(&w.len()) && w.bytes().all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))).map(String::from)
+    l.split(|c: char| !c.is_ascii_alphanumeric())
+        .find(|w| (7..=40).contains(&w.len()) && w.bytes().all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b)))
+        .map(String::from)
 }
 
 /// Gate C: stamps on HEAD, the review's card, claim, tables and verdict, `Left running:` last, gates A and B.
@@ -303,30 +315,31 @@ fn file_line(l: &str) -> bool {
 /// The lenses deep-review lists and the verdict words each may end with.
 pub struct Lenses {
     pub names: Vec<String>,
-    /// PASS, FAIL, CONDITIONAL, BLOCK, plus each lens reference's own `VERDICT: <a | b>` words (`clean`, `delivers`).
-    pub verdicts: Vec<String>,
+    /// Per lens, the words of its reference's own `VERDICT: <a | b>` line (`clean`, `delivers`); every lens also
+    /// takes PASS, FAIL, CONDITIONAL or BLOCK.
+    pub own: std::collections::HashMap<String, Vec<String>>,
 }
+
+const VERDICTS: [&str; 4] = ["PASS", "FAIL", "CONDITIONAL", "BLOCK"];
 
 /// Lens names from deep-review's table (`| [name](references/name.md)`), verdict words from their references.
 fn lenses(skills: Option<&Path>) -> Lenses {
     const NAMES: [&str; 5] = ["change-guard", "compliance", "security", "performance", "journey"];
-    let mut verdicts: Vec<String> = ["PASS", "FAIL", "CONDITIONAL", "BLOCK"].map(String::from).to_vec();
-    let Some(dir) = skills else { return Lenses { names: NAMES.map(String::from).to_vec(), verdicts } };
+    let mut own = std::collections::HashMap::new();
+    let Some(dir) = skills else { return Lenses { names: NAMES.map(String::from).to_vec(), own } };
     let text = std::fs::read_to_string(dir.join("deep-review/SKILL.md")).unwrap_or_default();
-    let mut names: Vec<String> = text
-        .lines()
-        .filter_map(|l| l.strip_prefix("| [")?.split_once("](references/").map(|(n, _)| n.to_string()))
-        .collect();
+    let mut names: Vec<String> =
+        text.lines().filter_map(|l| l.strip_prefix("| [")?.split_once("](references/").map(|(n, _)| n.to_string())).collect();
     if names.is_empty() {
         names = NAMES.map(String::from).to_vec();
     }
     for n in &names {
         let reference = std::fs::read_to_string(dir.join(format!("deep-review/references/{n}.md"))).unwrap_or_default();
         if let Some(words) = reference.split("VERDICT: <").nth(1).and_then(|s| s.split('>').next()) {
-            verdicts.extend(words.split('|').map(|w| w.trim().to_string()).filter(|w| !w.is_empty()));
+            own.insert(n.clone(), words.split('|').map(|w| w.trim().to_string()).filter(|w| !w.is_empty()).collect());
         }
     }
-    Lenses { names, verdicts }
+    Lenses { names, own }
 }
 
 /// Each lens carries its findings (a table, or "no findings") and a verdict; compliance always runs.
@@ -353,12 +366,17 @@ fn lens_lines(s: &Section, lenses: &Lenses, r: &mut Report) {
         let table = body.iter().skip(1).any(|x| x.trim_start().starts_with('|'));
         let named = s.lines.iter().any(|x| x.trim_start().starts_with('|') && x.contains(&format!("| {name} |")));
         let severity = ["low", "medium", "high", "critical", "finding"].iter().any(|w| low.contains(w))
-            && s.lines.iter().any(|x| x.trim_start().starts_with('|') && ["LOW", "MEDIUM", "HIGH", "CRITICAL"].iter().any(|w| x.contains(w)));
+            && s.lines
+                .iter()
+                .any(|x| x.trim_start().starts_with('|') && ["LOW", "MEDIUM", "HIGH", "CRITICAL"].iter().any(|w| x.contains(w)));
         if !(low.contains("no findings") || table || named || severity) {
             r.gaps.push(format!("{}: **{name}:** has no findings table or \"no findings\"", s.heading));
         }
-        if !body.iter().any(|l| lenses.verdicts.iter().any(|v| l.contains(v.as_str()))) {
-            r.gaps.push(format!("{}: **{name}:** has no verdict ({})", s.heading, lenses.verdicts.join(", ")));
+        let words = lenses.own.get(*name).map(Vec::as_slice).unwrap_or_default();
+        let verdict = |l: &&str| VERDICTS.iter().any(|v| l.contains(v)) || words.iter().any(|w| whole_word(l, w));
+        if !body.iter().any(verdict) {
+            let all: Vec<&str> = VERDICTS.iter().copied().chain(words.iter().map(String::as_str)).collect();
+            r.gaps.push(format!("{}: **{name}:** has no verdict ({})", s.heading, all.join(", ")));
         }
     }
     if !starts.iter().any(|(_, n)| n.as_str() == "compliance") {
@@ -429,7 +447,15 @@ pub fn cli(args: &[&str]) -> u8 {
     let ticket = std::fs::read_to_string(dir.join(".factory/ticket.md")).ok();
     let info = crate::git::Repo::discover(&dir).map(|r| r.info()).unwrap_or_default();
     let skills = contracts::skills_dir(flag);
-    let rep = check(&Input { gate, run: &run, ticket: ticket.as_deref(), head: &info.head, has_remote: info.remote, skills: skills.as_deref(), proof: &dir.join(".factory/proof") });
+    let rep = check(&Input {
+        gate,
+        run: &run,
+        ticket: ticket.as_deref(),
+        head: &info.head,
+        has_remote: info.remote,
+        skills: skills.as_deref(),
+        proof: &dir.join(".factory/proof"),
+    });
     for g in &rep.gaps {
         println!("lint {gate}: {g}");
     }
@@ -448,9 +474,10 @@ fn run_kind(run: &str) -> &str {
 /// form the label names: a table for `Table`, a fenced diagram for `Flow`.
 fn has_label(sec: &Section, label: &str) -> bool {
     let bold = format!("**{label}");
-    let labeled = sec.lines.iter().any(|l| {
-        l.match_indices(&bold).any(|(i, _)| matches!(l[i + bold.len()..].chars().next(), Some(':' | ' ' | '(' | '*')))
-    });
+    let labeled = sec
+        .lines
+        .iter()
+        .any(|l| l.match_indices(&bold).any(|(i, _)| matches!(l[i + bold.len()..].chars().next(), Some(':' | ' ' | '(' | '*'))));
     labeled
         || (label == "Table" && sec.lines.iter().any(|l| l.trim_start().starts_with('|')))
         || (label == "Flow" && sec.lines.iter().any(|l| l.trim_start().starts_with("```")))
@@ -480,4 +507,14 @@ fn claim_table(lines: &[&str]) -> bool {
         }
     }
     false
+}
+
+/// `w` stands as a whole word in `l` (`clean`, not `unclean`).
+fn whole_word(l: &str, w: &str) -> bool {
+    let b = l.as_bytes();
+    l.match_indices(w).any(|(i, _)| {
+        let before = i.checked_sub(1).and_then(|k| b.get(k));
+        let after = b.get(i + w.len());
+        !before.is_some_and(|c| c.is_ascii_alphanumeric() || *c == b'-') && !after.is_some_and(|c| c.is_ascii_alphanumeric() || *c == b'-')
+    })
 }

@@ -30,16 +30,23 @@ pub fn batched() -> String {
 }
 
 pub fn skipped(skip: &str) -> String {
-    format!("Steps not ticked: {skip}. Do each now, in order: load its skill, post its block, tick it. Only the owner skips a step: `Waiting: owner:` to ask.")
+    format!(
+        "Steps not ticked: {skip}. Do each now, in order: load its skill, post its block, tick it. Only the owner skips a step: `Waiting: owner:` to ask."
+    )
 }
 
 pub fn long(lines: &str) -> String {
-    format!("Run file lines over 300 characters: {lines}. Split each into short bullets or a table, every fact kept; shorten exact lines (Status, Gate, T1 pre), never split them.")
+    format!(
+        "Run file lines over 300 characters: {lines}. Split each into short bullets or a table, every fact kept; shorten exact lines (Status, Gate, T1 pre), never split them."
+    )
 }
 
 pub fn cap(x: char, rounds: i64) -> String {
-    let (cl, ln) = if x == 'R' { ("Review: ready".to_string(), "review".to_string()) } else { (format!("Gate {x}: PASS"), format!("Gate {x}")) };
-    format!("{ln}: {rounds} failed rounds, no open CRITICAL: the loop passes by cap. Write `{cl} (cap, 3 rounds, no CRITICAL) @<sha>` under its step (Gate C and review: on the pushed HEAD, or HEAD with no remote), move what is left to the ticket's follow-ups, then go on with the run.")
+    let (cl, ln) =
+        if x == 'R' { ("Review: ready".to_string(), "review".to_string()) } else { (format!("Gate {x}: PASS"), format!("Gate {x}")) };
+    format!(
+        "{ln}: {rounds} failed rounds, no open CRITICAL: the loop passes by cap. Write `{cl} (cap, 3 rounds, no CRITICAL) @<sha>` under its step (Gate C and review: on the pushed HEAD, or HEAD with no remote), move what is left to the ticket's follow-ups, then go on with the run."
+    )
 }
 
 pub fn review() -> String {
@@ -48,12 +55,16 @@ pub fn review() -> String {
 
 pub fn gate(x: char) -> String {
     let push = if x == 'C' { ", HEAD pushed, unless no remote" } else { "" };
-    format!("Gate {x} has not passed: its line needs a checker result on its commit (`Gate {x}: PASS (checker <id>) @<sha>`{push}). Run the checker for Gate {x}, paste its line, then end your turn.")
+    format!(
+        "Gate {x} has not passed: its line needs a checker result on its commit (`Gate {x}: PASS (checker <id>) @<sha>`{push}). Run the checker for Gate {x}, paste its line, then end your turn."
+    )
 }
 
 /// Gate B or C is proven but its commit's tree has no full-suite receipt (new with the binary guard).
 pub fn receipt(x: char, exe: &str) -> String {
-    format!("Gate {x} has no full-suite receipt for the tree of its commit: run the full suite on that commit with `{exe} receipt run --suite full -- <full-suite command>` (commit or ignore any untracked file first), then end your turn.")
+    format!(
+        "Gate {x} has no full-suite receipt for the tree of its commit: run the full suite on that commit with `{exe} receipt run --suite full -- <full-suite command>` (commit or ignore any untracked file first), then end your turn."
+    )
 }
 
 pub fn jobs_deadline() -> String {
@@ -61,13 +72,17 @@ pub fn jobs_deadline() -> String {
 }
 
 pub fn jobs_late(max: i64, run: &str) -> String {
-    format!("The job in Waiting: jobs: is past its deadline ({max} min): check it, stop it if it hangs, record its result or failure in {run}, update Waiting, then end your turn.")
+    format!(
+        "The job in Waiting: jobs: is past its deadline ({max} min): check it, stop it if it hangs, record its result or failure in {run}, update Waiting, then end your turn."
+    )
 }
 
 /// Wraps a todo: the run it belongs to, an optional note, the way to end a turn on purpose.
 pub fn drive(run: &str, todo: &str, note: &str) -> String {
     let note = if note.is_empty() { String::new() } else { format!(" Note: {note}") };
-    format!("If this session runs the factory run in {run}: {todo}{note} Ending on purpose? Set Waiting: owner: <question> or Waiting: jobs: <what runs> (max <minutes> min).")
+    format!(
+        "If this session runs the factory run in {run}: {todo}{note} Ending on purpose? Set Waiting: owner: <question> or Waiting: jobs: <what runs> (max <minutes> min)."
+    )
 }
 
 pub fn for_run(run: &str, text: &str) -> String {
@@ -75,7 +90,12 @@ pub fn for_run(run: &str, text: &str) -> String {
 }
 
 pub fn unposted(run: &str, unp: &str) -> String {
-    for_run(run, &format!("Step blocks not posted in chat: {unp}. Post each full block from {run} now, each as its own message opening with its heading (## <step> <name>), then go on with the run."))
+    for_run(
+        run,
+        &format!(
+            "Step blocks not posted in chat: {unp}. Post each full block from {run} now, each as its own message opening with its heading (## <step> <name>), then go on with the run."
+        ),
+    )
 }
 
 pub fn wait_skipped(run: &str, skip: &str) -> String {
@@ -87,11 +107,15 @@ pub fn halted_notice(halt: &str, run: &str, clear: &str) -> String {
 }
 
 pub fn halt_block(halt: &str, clear: &str) -> String {
-    format!("HALT ({halt}): the guard stops driving this run. Start no new round. Write the owner packet under the current step: findings per round (new vs repeated), the shared cause, options (extend, amend scope, cancel). Set Waiting: owner: <question>, then end your turn. Only the owner resumes it: {clear}")
+    format!(
+        "HALT ({halt}): the guard stops driving this run. Start no new round. Write the owner packet under the current step: findings per round (new vs repeated), the shared cause, options (extend, amend scope, cancel). Set Waiting: owner: <question>, then end your turn. Only the owner resumes it: {clear}"
+    )
 }
 
 pub fn relay(why: &str, run: &str, dir: &str) -> String {
-    format!("Relay ({why}): this session stops driving the run. Make sure {run} and the ticket hold everything the next step needs: the next session reads only those. Start a fresh session with your session tool if you have one, prompt: safe-factory Resume {dir}; otherwise the watchdog starts it. Set Waiting: jobs: relay to a fresh session (max 30 min), then end your turn.")
+    format!(
+        "Relay ({why}): this session stops driving the run. Make sure {run} and the ticket hold everything the next step needs: the next session reads only those. Start a fresh session with your session tool if you have one, prompt: safe-factory Resume {dir}; otherwise the watchdog starts it. Set Waiting: jobs: relay to a fresh session (max 30 min), then end your turn."
+    )
 }
 
 pub fn relayed(dir: &str) -> String {

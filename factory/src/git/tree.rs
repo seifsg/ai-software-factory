@@ -2,7 +2,7 @@
 //! (its clean filters: autocrlf, `.gitattributes`) into a private copy of the index, then read natively.
 //! One `git` spawn. The real index is never touched or locked.
 
-use super::{index, Repo};
+use super::{Repo, index};
 use std::path::Path;
 use std::process::{Command, Stdio};
 
@@ -24,16 +24,15 @@ pub fn tree_of(repo: &Repo) -> Result<String, String> {
 /// Copies the index (its stat cache keeps `git add` fast), adds everything, parses the result.
 fn hash_into(repo: &Repo, private: &Path) -> Result<String, String> {
     let real = repo.gitdir.join("index");
-    let before = if real.is_file() {
+    if real.is_file() {
         std::fs::copy(&real, private).map_err(|e| format!("cannot copy the index: {e}"))?;
-        index::parse(&std::fs::read(private).unwrap_or_default())?
-    } else {
-        Vec::new()
-    };
+    }
     // Git refuses an exclude pathspec that names an ignored folder, so it goes only where .factory is not ignored;
     // a rule elsewhere (a global excludes file) costs one more spawn, without it.
-    let mut out = add(repo, private, !factory_ignored(repo))?;
-    if !out.status.success() && String::from_utf8_lossy(&out.stderr).contains("ignored by one of your") {
+    let mut exclude = !factory_ignored(repo);
+    let mut out = add(repo, private, exclude)?;
+    if exclude && !out.status.success() && String::from_utf8_lossy(&out.stderr).contains("ignored by one of your") {
+        exclude = false;
         out = add(repo, private, false)?;
     }
     if !out.status.success() {
@@ -41,8 +40,13 @@ fn hash_into(repo: &Repo, private: &Path) -> Result<String, String> {
     }
     let data = std::fs::read(private).unwrap_or_default();
     let after = if data.is_empty() { Vec::new() } else { index::parse(&data)? };
-    // `.factory/` as the index had it before the add: only tracked entries, untouched, as the exclude keeps them.
+    if exclude {
+        return Ok(index::tree_id(&after)); // the exclude left tracked `.factory/` entries as they were
+    }
+    // Without it, the add may have restaged tracked `.factory/` files: take them from the real index instead
+    // (one Git may write split or sparse; then `.factory/` stays out, as untracked ones are).
     let factory = |e: &index::Entry| e.path.starts_with(b".factory/");
+    let before = index::parse(&std::fs::read(&real).unwrap_or_default()).unwrap_or_default();
     let mut entries: Vec<index::Entry> = after.into_iter().filter(|e| !factory(e)).chain(before.into_iter().filter(factory)).collect();
     entries.sort_by(|a, b| a.path.cmp(&b.path));
     Ok(index::tree_id(&entries))
@@ -51,15 +55,29 @@ fn hash_into(repo: &Repo, private: &Path) -> Result<String, String> {
 /// One `git add -A` into the private index, with or without the `.factory` exclude.
 fn add(repo: &Repo, private: &Path, exclude: bool) -> Result<std::process::Output, String> {
     let mut cmd = Command::new("git");
-    cmd.arg("-C").arg(&repo.work).args(["-c", "core.splitIndex=false", "-c", "index.sparse=false", "-c", "core.safecrlf=false", "add", "-A", "--", "."]);
+    cmd.arg("-C").arg(&repo.work).args([
+        "-c",
+        "core.splitIndex=false",
+        "-c",
+        "index.sparse=false",
+        "-c",
+        "core.safecrlf=false",
+        "add",
+        "-A",
+        "--",
+        ".",
+    ]);
     if exclude {
         cmd.arg(":(exclude).factory");
     }
     for v in ["GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES"] {
         cmd.env_remove(v);
     }
+    // English messages: the ignored-folder retry reads stderr.
     cmd.env("GIT_INDEX_FILE", private)
         .env("GIT_OPTIONAL_LOCKS", "0")
+        .env("LC_ALL", "C")
+        .env("LANGUAGE", "")
         .stdin(Stdio::null())
         .stdout(Stdio::null())
         .stderr(Stdio::piped())
@@ -70,7 +88,8 @@ fn add(repo: &Repo, private: &Path, exclude: bool) -> Result<std::process::Outpu
 /// The checkout's own ignore files name `.factory` (the factory adds `.factory/` to `.gitignore`).
 fn factory_ignored(repo: &Repo) -> bool {
     let listed = |p: &Path| {
-        std::fs::read_to_string(p).is_ok_and(|t| t.lines().map(str::trim).any(|l| matches!(l, ".factory" | ".factory/" | "/.factory" | "/.factory/")))
+        std::fs::read_to_string(p)
+            .is_ok_and(|t| t.lines().map(str::trim).any(|l| matches!(l, ".factory" | ".factory/" | "/.factory" | "/.factory/")))
     };
     listed(&repo.work.join(".gitignore")) || listed(&repo.common.join("info/exclude"))
 }

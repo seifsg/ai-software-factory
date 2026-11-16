@@ -107,7 +107,8 @@ impl RunFile {
             if let Some((x, sha)) = cap_line(l) {
                 r.cap.insert(x, sha);
             }
-            if let Some(g) = l.strip_prefix("Gate ").filter(|s| s.as_bytes().get(1..).is_some_and(|r| r.starts_with(b": WAIVED by owner"))) {
+            if let Some(g) = l.strip_prefix("Gate ").filter(|s| s.as_bytes().get(1..).is_some_and(|r| r.starts_with(b": WAIVED by owner")))
+            {
                 if let Some(c) = g.chars().next().filter(|c| "ABC".contains(*c)) {
                     r.waived.insert(c);
                 }

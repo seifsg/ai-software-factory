@@ -6,8 +6,28 @@ use std::path::Path;
 
 /// Fields in the order the guard writes them.
 pub const FIELDS: [&str; 22] = [
-    "ticks", "session", "sessions", "transcript", "seen", "night_until", "sig", "idle", "halt", "end", "clear",
-    "base_A", "base_B", "base_C", "base_R", "sstep", "relay", "rstep", "compacts", "csession", "jobs_since", "jobs_id",
+    "ticks",
+    "session",
+    "sessions",
+    "transcript",
+    "seen",
+    "night_until",
+    "sig",
+    "idle",
+    "halt",
+    "end",
+    "clear",
+    "base_A",
+    "base_B",
+    "base_C",
+    "base_R",
+    "sstep",
+    "relay",
+    "rstep",
+    "compacts",
+    "csession",
+    "jobs_since",
+    "jobs_id",
 ];
 
 /// Loaded state; an unknown or malformed line means someone else edited it.
@@ -83,11 +103,7 @@ fn valid_line(line: &str) -> Option<(&str, &str)> {
     let numeric = NUMERIC.contains(&name)
         || matches!(name, "base_A" | "base_B" | "base_C" | "base_R")
         || name.strip_prefix("jobs_").is_some_and(|s| s.bytes().all(|b| b.is_ascii_lowercase()));
-    let ok = if numeric {
-        value.bytes().all(|b| b.is_ascii_digit())
-    } else {
-        TEXT.contains(&name) && !value.contains(['\'', '$', '`'])
-    };
+    let ok = if numeric { value.bytes().all(|b| b.is_ascii_digit()) } else { TEXT.contains(&name) && !value.contains(['\'', '$', '`']) };
     ok.then_some((name, value))
 }
 

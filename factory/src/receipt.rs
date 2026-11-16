@@ -15,7 +15,7 @@
 //! ```
 //! Readers ignore unknown lines. Gate B and C lines stand only on a `full` PASS receipt for their commit's tree.
 
-use crate::git::{tree, Repo};
+use crate::git::{Repo, tree};
 use std::path::{Path, PathBuf};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -134,7 +134,18 @@ pub fn snapshot(folder: &Path) -> Result<Snapshot, String> {
 
 /// Writes the receipt of a suite run on snapshot `s`.
 pub fn record(s: Snapshot, suite: &str, pass: bool, cmd: &str, secs: u64, runtime: &str, log: &str) -> Result<(PathBuf, Receipt), String> {
-    let r = Receipt { suite: suite.into(), tree: s.tree, head: s.head, clean: s.clean, pass, cmd: cmd.into(), runtime: runtime.into(), secs, at: utc_iso(crate::paths::now()), log: log.into() };
+    let r = Receipt {
+        suite: suite.into(),
+        tree: s.tree,
+        head: s.head,
+        clean: s.clean,
+        pass,
+        cmd: cmd.into(),
+        runtime: runtime.into(),
+        secs,
+        at: utc_iso(crate::paths::now()),
+        log: log.into(),
+    };
     let p = write(&s.work, &r).map_err(|e| format!("cannot write the receipt: {e}"))?;
     Ok((p, r))
 }
@@ -229,7 +240,9 @@ fn report(r: Result<(PathBuf, Receipt), String>) -> u8 {
 }
 
 fn usage() -> u8 {
-    eprintln!("usage: factory receipt run [--suite <name>] -- <command>... | write --cmd <command> (--exit <code> | --result PASS|FAIL) [--suite <name>] [--secs <n>] [--log <path>] [--runtime <s>] | check [--commit <sha>] [--suite <name>]");
+    eprintln!(
+        "usage: factory receipt run [--suite <name>] -- <command>... | write --cmd <command> (--exit <code> | --result PASS|FAIL) [--suite <name>] [--secs <n>] [--log <path>] [--runtime <s>] | check [--commit <sha>] [--suite <name>]"
+    );
     2
 }
 
@@ -260,7 +273,18 @@ mod tests {
 
     #[test]
     fn round_trips_and_dates() {
-        let r = Receipt { suite: "full".into(), tree: "t".into(), head: "h".into(), clean: true, pass: true, cmd: "sh x".into(), runtime: "r".into(), secs: 3, at: "a".into(), log: "l".into() };
+        let r = Receipt {
+            suite: "full".into(),
+            tree: "t".into(),
+            head: "h".into(),
+            clean: true,
+            pass: true,
+            cmd: "sh x".into(),
+            runtime: "r".into(),
+            secs: 3,
+            at: "a".into(),
+            log: "l".into(),
+        };
         assert_eq!(Receipt::parse(&r.render()), Some(r));
         assert_eq!(utc_iso(0), "1970-01-01T00:00:00Z");
         assert_eq!(utc_iso(1_794_808_234), "2026-11-16T05:50:34Z");

@@ -7,9 +7,9 @@ use crate::evidence;
 use crate::git::{Info, Repo};
 use crate::hook::{Input, Reply};
 use crate::paths;
+use crate::run::RunFile;
 use crate::run::locate;
 use crate::run::state::{Loaded, State};
-use crate::run::RunFile;
 use std::path::{Path, PathBuf};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -32,7 +32,9 @@ impl Mode {
 pub fn run(input: &Input, mode: Mode, start: &Path) -> Option<Reply> {
     let start = match mode {
         Mode::Clear => start.to_path_buf(),
-        _ => Some(PathBuf::from(paths::norm(&input.cwd))).filter(|p| !input.cwd.is_empty() && p.is_dir()).unwrap_or_else(|| start.to_path_buf()),
+        _ => Some(PathBuf::from(paths::norm(&input.cwd)))
+            .filter(|p| !input.cwd.is_empty() && p.is_dir())
+            .unwrap_or_else(|| start.to_path_buf()),
     };
     let found = locate::find(&start, &input.session_id, &input.last_assistant_message);
     let Some(d) = found.dir else {
@@ -117,7 +119,9 @@ fn clear(s: &mut State, st: &Path, run: &Path) -> Reply {
     if s.get("sessions").is_empty() {
         let raw = std::fs::read_to_string(st).unwrap_or_default();
         let recovered = raw.lines().find_map(|l| {
-            l.strip_prefix("g_sessions='")?.strip_suffix('\'').filter(|v| v.bytes().all(|b| b.is_ascii_alphanumeric() || b" _-".contains(&b)))
+            l.strip_prefix("g_sessions='")?
+                .strip_suffix('\'')
+                .filter(|v| v.bytes().all(|b| b.is_ascii_alphanumeric() || b" _-".contains(&b)))
         });
         s.set("sessions", recovered.unwrap_or(""));
     }
@@ -127,7 +131,8 @@ fn clear(s: &mut State, st: &Path, run: &Path) -> Reply {
     s.save(st);
     let text = std::fs::read(run).unwrap_or_default();
     let body = text.strip_suffix(b"\n").unwrap_or(&text);
-    let kept: Vec<&[u8]> = if text.is_empty() { Vec::new() } else { body.split(|&b| b == b'\n').filter(|l| !l.starts_with(b"Night:")).collect() };
+    let kept: Vec<&[u8]> =
+        if text.is_empty() { Vec::new() } else { body.split(|&b| b == b'\n').filter(|l| !l.starts_with(b"Night:")).collect() };
     let out = with_newlines(&kept);
     let tmp = run.with_extension("md.n");
     if std::fs::write(&tmp, &out).is_ok() && !kept.is_empty() {
@@ -179,7 +184,8 @@ impl Ctx<'_> {
         if !self.note.is_empty() {
             self.s.set("halt", self.note.clone());
         }
-        let prev = if g_ticks.is_empty() || !g_ticks.bytes().all(|b| b.is_ascii_digit()) { ticks } else { g_ticks.parse().unwrap_or(ticks) };
+        let prev =
+            if g_ticks.is_empty() || !g_ticks.bytes().all(|b| b.is_ascii_digit()) { ticks } else { g_ticks.parse().unwrap_or(ticks) };
         if self.s.get("end") == "done" {
             let still = self.has_line(b"Status: closed") && (self.has_line(b"Gate C: PASS") || self.has_line(b"Gate C: WAIVED"));
             // A finish the guard saw holds while the run says closed, wherever HEAD went since.
@@ -205,7 +211,12 @@ impl Ctx<'_> {
             self.s.set("transcript", self.tp.clone());
         }
         let unp = self.f.unposted.clone();
-        if self.mode.turn_end() && !unp.is_empty() && !self.f.stopped && self.s.get("halt").is_empty() && unp != self.read_marker("unposted") {
+        if self.mode.turn_end()
+            && !unp.is_empty()
+            && !self.f.stopped
+            && self.s.get("halt").is_empty()
+            && unp != self.read_marker("unposted")
+        {
             self.save();
             let _ = std::fs::write(self.g.join("unposted"), &unp);
             return Some(Reply::Block(reply::unposted(&self.rf, &unp)));

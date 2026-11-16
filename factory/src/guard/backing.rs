@@ -6,7 +6,7 @@ use super::rules::pre;
 use crate::evidence::{self, Evidence};
 use crate::git::Repo;
 use crate::run::state::{Loaded, State};
-use crate::run::{after_at, RunFile};
+use crate::run::{RunFile, after_at};
 use std::path::Path;
 
 /// The report and whether every line is backed.
@@ -63,7 +63,11 @@ fn handback(ev: &Evidence, id: &str, k: char, sha: &str) -> (bool, String) {
     if role != Some(k) {
         return (false, format!("{id} is no {want} for this line (its brief names {})", role.map_or("no role".into(), |r| r.to_string())));
     }
-    let passed = if k == 'R' { last == "verdict: ready" || last.starts_with("verdict: ready @") } else { last.get(6..).is_some_and(|s| s.starts_with(": PASS")) };
+    let passed = if k == 'R' {
+        last == "verdict: ready" || last.starts_with("verdict: ready @")
+    } else {
+        last.get(6..).is_some_and(|s| s.starts_with(": PASS"))
+    };
     if !passed {
         return (false, format!("{id}'s last handback is `{last}`"));
     }
@@ -79,7 +83,10 @@ fn receipt(repo: Option<&Repo>, x: char, sha: &str) -> (bool, String) {
         return (true, String::new());
     }
     match repo.and_then(|r| crate::receipt::find_pass(r, sha, "full")) {
-        Some((p, r)) => (true, format!("; receipt {} (`{}`, {} s, clean {})", crate::paths::text(&p), r.cmd, r.secs, if r.clean { "yes" } else { "no" })),
+        Some((p, r)) => (
+            true,
+            format!("; receipt {} (`{}`, {} s, clean {})", crate::paths::text(&p), r.cmd, r.secs, if r.clean { "yes" } else { "no" }),
+        ),
         None => (false, format!("; no full-suite receipt for the tree of {sha}")),
     }
 }

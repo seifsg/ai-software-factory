@@ -2,7 +2,7 @@
 //! reached chat, how many rounds each loop failed. Pure: run-file facts and evidence in, facts out.
 
 use crate::evidence::Evidence;
-use crate::run::{after_at, push_list, RunFile};
+use crate::run::{RunFile, after_at, push_list};
 
 /// Loops in round order, with the step whose `CRITICAL:` lines open rounds 4 and 5.
 pub const LOOPS: [(char, &str); 4] = [('A', "3"), ('B', "6"), ('C', "8"), ('R', "8")];
@@ -109,7 +109,9 @@ impl Judge<'_> {
         };
         let ev = self.i.ev;
         self.proven(id, x, sha)
-            && (ev.none || ev.fallback || ev.last.get(id).is_some_and(|l| l.starts_with("Gate ") && l.get(6..).is_some_and(|s| s.starts_with(": PASS"))))
+            && (ev.none
+                || ev.fallback
+                || ev.last.get(id).is_some_and(|l| l.starts_with("Gate ") && l.get(6..).is_some_and(|s| s.starts_with(": PASS"))))
             && (x != 'C' || (pre(sha, self.i.head) && self.i.head == self.i.up))
     }
 

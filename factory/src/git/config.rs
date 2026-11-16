@@ -167,7 +167,10 @@ mod tests {
     #[test]
     fn reads_sections_and_values() {
         let mut s = String::new();
-        let v = parse("[remote \"origin\"]\n\turl = https://x/y.git ; c\n[branch \"main\"]\n\tremote = origin\n\tmerge = \"refs/heads/main\"\n", &mut s);
+        let v = parse(
+            "[remote \"origin\"]\n\turl = https://x/y.git ; c\n[branch \"main\"]\n\tremote = origin\n\tmerge = \"refs/heads/main\"\n",
+            &mut s,
+        );
         assert_eq!(v[0], ("remote.origin.url".into(), "https://x/y.git".into()));
         assert_eq!(v[2], ("branch.main.merge".into(), "refs/heads/main".into()));
     }

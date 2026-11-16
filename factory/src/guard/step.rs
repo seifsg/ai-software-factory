@@ -2,7 +2,6 @@
 //! edits of block text), ticks its heading, sets `Next:`, and answers with the Stop rules as one plain line,
 //! so the run goes on in the same turn. `T<k>` lines go under `## 5 Build` without ticking it.
 
-
 use std::io::Read;
 use std::path::Path;
 
@@ -114,11 +113,8 @@ pub fn write(text: &str, label: &str, block: &str) -> Result<String, String> {
         }
     };
     let end = lines[start + 1..].iter().position(|l| l.starts_with("## ")).map_or(lines.len(), |e| start + 1 + e);
-    let kept: Vec<String> = lines[start + 1..end]
-        .iter()
-        .filter(|l| is_proof(l) && !body.lines().any(|b| b == l.as_str()))
-        .cloned()
-        .collect();
+    let kept: Vec<String> =
+        lines[start + 1..end].iter().filter(|l| is_proof(l) && !body.lines().any(|b| b == l.as_str())).cloned().collect();
     if !lines[start].contains(TICK) {
         lines[start] = format!("{} {TICK}", lines[start].trim_end());
     }
@@ -182,16 +178,9 @@ mod tests {
 
     #[test]
     fn reposting_an_earlier_block_keeps_next() {
-        let run = "Next: 7 PR {b7} how-to-make-a-pr
-
-## 3 Plan {2714}
-old
-
-## 4 Before
-";
-        assert!(write(run, "3", "## 3 Plan
-new
-").unwrap().contains("Next: 7 PR"));
+        let run = "Next: 7 PR \u{b7} how-to-make-a-pr\n\n## 3 Plan \u{2714}\nold\n\n## 4 Before\n";
+        let out = write(run, "3", "## 3 Plan\nnew\n").unwrap();
+        assert!(out.contains("Next: 7 PR \u{b7} how-to-make-a-pr") && out.contains("## 3 Plan \u{2714}\nnew\n"));
     }
 
     #[test]

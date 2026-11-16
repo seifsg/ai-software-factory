@@ -30,7 +30,7 @@ Readers ignore lines they do not know, so a writer may add its own (the pro gate
 |---|---|
 | Any suite | `factory receipt run --suite full -- <full-suite command>`: runs it, writes the receipt, exits with the suite's code |
 | A runner that ran the suite itself | `factory receipt write --cmd "<command>" --exit <code> [--log <path>] [--secs <n>]` (`--suite` defaults to `full`; `--result PASS` or `--result FAIL` in place of `--exit`) |
-| This repository | `sh scripts/check.sh`: a full PASS writes `<tree>-full.txt`; the next run on the same tree prints nothing and exits 0 |
+| This repository | `sh scripts/check.sh`: a full PASS on a clean tree (`<ref>` is the work tree) writes `<tree>-full.txt`; the next run on that tree prints nothing and exits 0 |
 
 `factory` is `<plugin root>/scripts/factory.cmd` (sh or cmd), or a built `factory/target/release/factory`.
 

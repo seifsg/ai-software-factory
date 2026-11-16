@@ -61,7 +61,8 @@ pub fn of(skills: &Path, skill: &str) -> Result<String, String> {
 /// `factory contracts [--skills <dir>] <skill>...`
 pub fn cli(args: &[&str]) -> u8 {
     let flag = crate::receipt::opt(args, "--skills");
-    let names: Vec<&str> = args.iter().enumerate().filter(|(i, a)| **a != "--skills" && (*i == 0 || args[i - 1] != "--skills")).map(|(_, a)| *a).collect();
+    let names: Vec<&str> =
+        args.iter().enumerate().filter(|(i, a)| **a != "--skills" && (*i == 0 || args[i - 1] != "--skills")).map(|(_, a)| *a).collect();
     if names.is_empty() {
         eprintln!("usage: factory contracts [--skills <dir>] <skill>...");
         return 2;
