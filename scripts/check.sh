@@ -219,7 +219,13 @@ parity() {
   [ -f factory/parity/run.sh ] || return 0
   [ -z "$FACTORY_BIN" ] || [ -f "$FACTORY_BIN" ] || { fail "parity: no binary at FACTORY_BIN $FACTORY_BIN"; return; }
   [ -n "$bin" ] || return 0
-  o=$(sh factory/parity/run.sh "$bin" 2>&1) || fail "parity: $(printf '%s\n' "$o" | tail -n 1)"
+  # Its inputs (the binary, the sh scripts it is held to, the harness and corpus) as one number: a PASS on the
+  # same inputs is reused, since the sh side alone takes minutes on Windows.
+  k=$({ cksum < "$bin"; find .agents/skills/safe-factory/scripts factory/parity -type f | LC_ALL=C sort | xargs cat; } | cksum | cut -d' ' -f1)
+  pr=.factory/receipts/parity-$k.txt
+  [ "$FACTORY_CHECK_FRESH" != 1 ] && grep -qx 'result PASS' "$pr" 2>/dev/null && return 0
+  o=$(sh factory/parity/run.sh "$bin" 2>&1) || { fail "parity: $(printf '%s\n' "$o" | tail -n 1)"; return; }
+  mkdir -p .factory/receipts && printf 'factory-receipt 1\nsuite parity\nresult PASS\ncmd sh factory/parity/run.sh %s\nsummary %s\nat %s\n' "$bin" "$(printf '%s\n' "$o" | tail -n 1)" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$pr.$$" && mv "$pr.$$" "$pr"
 }
 
 # Runs the named groups at once, each in its own folder under $w, then prints their output in order; any FAIL line fails the run.

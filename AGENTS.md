@@ -27,7 +27,10 @@ No Python. The one build is the `factory` binary (`factory/`, Rust): `cargo test
 ```text
 sh scripts/check.sh                    # every check: prints nothing, exit 0; else one FAIL line each, exit 1
 sh scripts/check.sh bytes origin/main   # "<all methods> <read set>" for the PR line (run for base and head)
+sh scripts/check.sh --changed origin/main  # a docs-only diff: the static checks only
 ```
+
+A full PASS on a clean tree writes `.factory/receipts/<tree>-full.txt`; the same tree and runtime reuse it and exit 0 at once (`FACTORY_CHECK_FRESH=1` runs everything). With a built `factory` binary it also runs the parity harness, once per set of its inputs.
 
 It checks: links stay in a skill folder, SKILL.md under 17000, no media in Git, methods under 177700 and read set under 97300 (Git blobs), manifests agree, update check offline (newer tells, older quiet, curl fallback), doctor moves only old-only files, guard wiring (Stop in the skill, `portable.json` for Codex and `cursor.json` for Cursor, both through `.agents/scripts/factory.cmd`, one LF file, no `git` alias, no top-level `bin/`), session binding, stop rules, license, the check, directory form (no command or agent hook, no rewriting attributes, night tools out of the plugin, words the portal reads as credentials, README, privacy, security).
 
