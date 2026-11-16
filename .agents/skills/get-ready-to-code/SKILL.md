@@ -45,7 +45,7 @@ No coding while planning.
 4  Step 3 found an issue → back to step 1.
 ```
 
-- After each todo's real use: only tests covering its changed files. Full suite waits for verify.
+- After each todo's real use: only tests covering its changed files (the project's changed-only check, such as `check --changed <base>`, where it has one). Full suite waits for verify: once, on the final head.
 - Tick todo in ticket, write its log line once its use-check passes: `T3 pre: <before> do: <change> post: <check>`.
 - Second related failure or edge case: shared cause, why the previous fix failed; fix cause and consumers, state what prevents recurrence. No endless symptom patches.
 - Ticket finished: every item ticked, definition of done proven. Until then the loop continues.
@@ -63,7 +63,7 @@ The block `## 3 Plan` holds:
 - [ ] **Todos:** `T1..Tn`, each an outcome with ticket and criteria; every criterion maps to at least one todo; the ticket checklist matches
 - [ ] **Plan:** interfaces and ports (product, feature, new UI or delegated work; a `change` omits it)
 - [ ] **Proof list:** every changed view, state, journey or command with an id
-- [ ] **Test map:** per-file test command and the full-suite command, or `none (<reason>)`: no logic, or owner-named POC
+- [ ] **Test map:** per-file or changed-only test command and the full-suite command, or `none (<reason>)`: no logic, or owner-named POC
 - [ ] No source file changed during this step
 
 The block `## 5 Build` holds:
