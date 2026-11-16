@@ -13,7 +13,7 @@ Delivers games, apps, services, tools and libraries in ten visible steps: ticket
 - Two prompt Stop hooks, added when a run loads the `stop-check` skill right before a block or todo line: at that turn end a small model reads the last message. One hook sends the next step only on a step or todo number not seen yet; one sends the agent to run a new gate line's missing delegate, or on to the next step after a backed one. Nothing runs in sessions that never load it. Any other message ends the turn, so in scripted tests on Haiku and Sonnet a looping agent stopped below the turn limit: very likely, not certain. A run can also stop early: say go on. Esc always stops a run.
 - `scripts/run-guard.sh check`, which the skill tells the agent to run: reads `.factory/run.md` and Git, prints the next step. It reads no conversation.
 - `scripts/update-check.sh` at step 0, and `scripts/doctor.sh`, which lists leftovers of old versions by reading your agent settings; `--fix` moves them to a backup.
-- `bin/factory.cmd`, which starts the bundled `factory` binary for your machine: Codex and Cursor hooks call it, with no Git Bash. Its source is `factory/` in the repository; `bin/SHA256SUMS` holds each binary's checksum.
+- `scripts/factory.cmd`, which starts the bundled `factory` binary for your machine: Codex and Cursor hooks call it, with no Git Bash. Its source is `factory/` in the repository; `scripts/SHA256SUMS` holds each binary's checksum.
 - `git` and `gh`, as each step needs them. Your agent's permissions still decide.
 
 ## What it sends and fetches

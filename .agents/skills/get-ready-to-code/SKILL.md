@@ -16,7 +16,7 @@ Keep required quality. Complete working iterations, tiny bug or full product. Ne
 3. **Steps or phases.** Ordered by user value: first the smallest real journey someone can see and use. Before dependent work, settle the shared state owner, invariants and who enforces them, entry points, limits, compatibility and failure behavior. Root fix, not patch; big or risky ones go to the owner.
 4. **The entire todo list.** Every todo concrete, checkable; becomes the ticket's checklist. Order never drops scope: every requested item maps to a todo, or stays open in its ticket when the owner narrowed this iteration.
 5. **The entire plan.** Written out so no agent guesses: interfaces, this checkout's dev ports.
-6. **Proof and tests.** The proof list for the PR's Before and After: one short id per changed view, state, journey or command; interactive elements share their journey's id, never one id each. The test map: command running tests covering each changed file, and project's full-suite command for verify.
+6. **Proof and tests.** The proof list for the PR's Before and After: one short id per changed view, state, journey or command, with its input files (whose change alters its result); interactive elements share their journey's id, never one id each. The test map: command running tests covering each changed file, and project's full-suite command for verify.
 
 No coding while planning.
 
@@ -25,7 +25,7 @@ No coding while planning.
 - Each todo reads as an outcome the owner understands, then its ticket and criteria. Example: `T4 Download button → click it and the PDF saves (#12, A2)`. Not `T4 add store_true option`.
 - Each todo: pre-step, step, post-step, so the loop applies.
 - A todo that depends on an unproven capability (platform API, device, third-party access) goes first as a bounded spike: one question, one stop condition. A failed spike blocks only that item.
-- Group useful parallel jobs by files and dependencies; keep tasks shorter than their delegation overhead local. A delegated todo names the lowest tier that can clear its checks: light (commands with a yes/no, search; no edits), standard (planned edits, research, walkthroughs) or deep (architecture, schema, security, unclear bugs).
+- Todos that touch the same files form one delegate job; no two jobs share a file. Group the rest by dependencies; keep tasks shorter than their delegation overhead local. A delegated todo names the lowest tier that can clear its checks: light (commands with a yes/no, search; no edits), standard (planned edits, research, walkthroughs) or deep (architecture, schema, security, unclear bugs).
 
 ## Part B: the 0–4 loop (absolute for every todo)
 
@@ -45,7 +45,7 @@ No coding while planning.
 4  Step 3 found an issue → back to step 1.
 ```
 
-- After each todo's real use: only tests covering its changed files. Full suite waits for verify.
+- After each todo's real use: only tests covering its changed files (the project's changed-only check, such as `check --changed <base>`, where it has one). Full suite waits for verify: once, on the final head.
 - Tick todo in ticket, write its log line once its use-check passes: `T3 pre: <before> do: <change> post: <check>`.
 - Second related failure or edge case: shared cause, why the previous fix failed; fix cause and consumers, state what prevents recurrence. No endless symptom patches.
 - Ticket finished: every item ticked, definition of done proven. Until then the loop continues.
@@ -61,9 +61,9 @@ The block `## 3 Plan` holds:
 - [ ] **Files:** the summary, then the critique and what it changed
 - [ ] **Phases:** ordered, smallest real journey first (product, feature or new UI; a `change` omits it)
 - [ ] **Todos:** `T1..Tn`, each an outcome with ticket and criteria; every criterion maps to at least one todo; the ticket checklist matches
-- [ ] **Plan:** interfaces and ports (product, feature, new UI or delegated work; a `change` omits it)
-- [ ] **Proof list:** every changed view, state, journey or command with an id
-- [ ] **Test map:** per-file test command and the full-suite command, or `none (<reason>)`: no logic, or owner-named POC
+- [ ] **Plan:** interfaces and ports, delegated jobs one per file set (product, feature, new UI or delegated work; a `change` omits it)
+- [ ] **Proof list:** every changed view, state, journey or command with an id and its input files
+- [ ] **Test map:** per-file or changed-only test command and the full-suite command, or `none (<reason>)`: no logic, or owner-named POC
 - [ ] No source file changed during this step
 
 The block `## 5 Build` holds:

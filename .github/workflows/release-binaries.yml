@@ -1,11 +1,11 @@
 # Release branch: build the six factory binaries (factory.yml) and commit them with their checksums to the branch.
-# The bundle commit only touches .agents/bin, which this workflow ignores, so it never triggers itself.
+# The bundle commit only touches .agents/scripts, which this workflow ignores, so it never triggers itself.
 name: release-binaries
 
 on:
   push:
     branches: ['release/v*']
-    paths-ignore: ['.agents/bin/**']
+    paths-ignore: ['.agents/scripts/**']
 
 permissions:
   contents: read
@@ -31,7 +31,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           pattern: factory-*
-          path: .agents/bin
+          path: .agents/scripts
           merge-multiple: true
       - name: Commit the binaries and SHA256SUMS
         env:
@@ -39,7 +39,7 @@ jobs:
         run: |
           set -eu
           v=$(grep -o '"version": "[^"]*"' .agents/.claude-plugin/plugin.json | cut -d'"' -f4)
-          cd .agents/bin
+          cd .agents/scripts
           export LC_ALL=C # sorted by file name
           set -- factory-*-*
           [ "$#" -eq 6 ] && [ -f "$1" ] || { echo "::error::expected 6 binaries, got: $*"; exit 1; }

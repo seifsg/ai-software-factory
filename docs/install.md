@@ -2,6 +2,8 @@
 
 Needs Git, read access to the repository (`gh auth login` lets Git use your GitHub credentials over HTTPS) and, on Windows, Git Bash for the hooks.
 
+On Windows, Git Bash rewrites `<ref>:<path>` arguments: `git show origin/main:.agents/x` becomes `origin\main;.agents\x` and fails. In Git Bash, prefix such a command with `MSYS_NO_PATHCONV=1` (`MSYS_NO_PATHCONV=1 git show origin/main:.agents/x`); PowerShell needs nothing. Never set it globally (settings `env`, `setx`): Git Bash then stops converting POSIX paths such as `/tmp/x` for native programs, and `git -C /tmp/x` fails.
+
 ## Claude Code
 
 ```text
@@ -31,7 +33,7 @@ codex plugin add safe-factory@ai-software-factory
 
 Or pick it in `/plugins`. Start a new session, trust its hooks in `/hooks` (again after each update: trust follows each hook's hash). Update: `codex plugin marketplace upgrade ai-software-factory`. `--sparse` fetches only the plugin, so add and upgrade finish inside Codex's 30 s clone limit; a full clone of this repository takes longer. Remove: `codex plugin remove safe-factory@ai-software-factory`. Codex reads the repo's `.claude-plugin/marketplace.json`; the plugin root is `.agents/` (`.codex-plugin/plugin.json`, `skills/`, `hooks/portable.json`). Plugin hooks run only for manual installs.
 
-On Windows, `commandWindows` runs `bin/factory.cmd` through `cmd.exe`, which starts the bundled `factory-<arch>-pc-windows-msvc.exe` for the Stop, compact and startup hooks. No Git Bash, PowerShell execution-policy change or extra runtime is needed. A missing binary (a development checkout) prints what to build; the factory does not continue without it. Check a new run advances from the ticket response to a separate analysis prompt and full response. An installed skill or trusted hook entry alone does not prove that chain.
+On Windows, `commandWindows` runs `scripts/factory.cmd` through `cmd.exe`, which starts the bundled `factory-<arch>-pc-windows-msvc.exe` for the Stop, compact and startup hooks. No Git Bash, PowerShell execution-policy change or extra runtime is needed. A missing binary (a development checkout) prints what to build; the factory does not continue without it. Check a new run advances from the ticket response to a separate analysis prompt and full response. An installed skill or trusted hook entry alone does not prove that chain.
 
 The bounded native test reached ticket, analysis, recommendation and challenge through three automatically injected prompts, retained four complete responses in chat, then stopped. Codex records those hook-driven rounds within one outer native turn ID; each injected prompt is a user-role history item and each phase output is a separate final assistant message. Later delivery phases and other operating systems remain outside that live-test scope.
 

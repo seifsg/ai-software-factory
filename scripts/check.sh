@@ -12,7 +12,7 @@ w=$(mktemp -d) || exit 1; trap 'rm -rf "$w"' EXIT  # short POSIX temp path: a C:
 fail() { echo "FAIL: $*"; bad=1; }
 skills=.agents/skills
 sg=$PWD/$skills/safe-factory/scripts/run-guard.sh
-read_set='safe-factory/SKILL.md stop-check/SKILL.md safe-factory/references/run-file.md safe-factory/references/checker.md safe-factory/references/sizes.md safe-factory/references/delegate.md safe-factory/references/owner-reports.md safe-factory/references/worth-it.md ticketing/SKILL.md ticketing/references/ticket-layout.md analyze-start/SKILL.md recommend/SKILL.md get-ready-to-code/SKILL.md how-to-make-a-pr/SKILL.md how-to-make-a-pr/references/media-proof.md how-to-make-a-pr/references/pr-layout.md how-to-make-a-pr/references/github.md deep-review/SKILL.md deep-review/references/change-guard.md deep-review/references/compliance.md'
+read_set='safe-factory/SKILL.md stop-check/SKILL.md safe-factory/references/run-file.md safe-factory/references/checker.md safe-factory/references/sizes.md safe-factory/references/delegate.md safe-factory/references/owner-reports.md safe-factory/references/coded-run.md ticketing/SKILL.md ticketing/references/ticket-layout.md analyze-start/SKILL.md recommend/SKILL.md get-ready-to-code/SKILL.md how-to-make-a-pr/SKILL.md how-to-make-a-pr/references/media-proof.md how-to-make-a-pr/references/pr-layout.md how-to-make-a-pr/references/github.md deep-review/SKILL.md deep-review/references/worth-it.md'
 
 # Method bytes of a ref: "<all methods> <read set>".
 bytes() {
@@ -34,10 +34,10 @@ static() {
   o=$(git ls-tree -rl "$ref" $skills | awk '$5 ~ /\/SKILL\.md$/ && $4 >= 17000 {print $5}') && [ -n "$o" ] && fail "SKILL.md at 17000 bytes or over: $o"
   o=$(git ls-tree -r --name-only "$ref" | grep -iE '\.(png|jpe?g|gif|webp|mp4|webm|mov)$' | grep -vx '.agents/.claude-plugin/icon.png') && fail "media committed (proof belongs in refs/proof/): $o"
 
-  # Budgets: all methods under 170000, read set under 105000.
+  # Budgets: all methods under 177700, read set under 97300.
   set -- $(bytes "$ref")
-  [ "$1" -lt 170000 ] || fail "methods $1 bytes, budget 170000"
-  [ "$2" -lt 105000 ] || fail "read set $2 bytes, budget 105000"
+  [ "$1" -lt 177700 ] || fail "methods $1 bytes, budget 177700"
+  [ "$2" -lt 97300 ] || fail "read set $2 bytes, budget 97300"
 
   # A store refuses a plugin with no license: the file and every manifest name it.
   blob LICENSE | grep -q '^MIT License' || fail "no MIT LICENSE at the root"
@@ -51,13 +51,13 @@ static() {
   done
   blob factory/Cargo.toml 2>/dev/null | grep -qxF "version = \"$v\"" || fail "factory/Cargo.toml disagrees with version $v"
 
-  # Guard wiring: Stop lives in the skill on Claude Code; the portable file serves Codex, cursor.json serves Cursor, both through bin/factory.cmd.
+  # Guard wiring: Stop lives in the skill on Claude Code; the portable file serves Codex, cursor.json serves Cursor, both through scripts/factory.cmd.
   git cat-file -e "$ref:.agents/hooks/hooks.json" 2>/dev/null && fail "hooks.json: Claude Code must run no command hook; every session would run it"
   p=$(blob .agents/hooks/portable.json)
   printf '%s\n' "$p" | grep -q '"Stop"' || fail "no Stop hook in portable.json"
-  printf '%s\n' "$p" | grep -qF 'git --git-dir' && fail "portable.json runs git --git-dir: hooks call bin/factory.cmd"
-  # The Stop array, brackets counted from its key to its close, names bin/factory.cmd.
-  printf '%s\n' "$p" | awk '/"Stop"/ { s = 1 } s { d += gsub(/\[/, "[") - gsub(/\]/, "]"); if (/bin\/factory\.cmd/) f = 1; if (d <= 0 && /\]/) exit } END { exit !f }' || fail "portable.json's Stop command does not name bin/factory.cmd"
+  printf '%s\n' "$p" | grep -qF 'git --git-dir' && fail "portable.json runs git --git-dir: hooks call scripts/factory.cmd"
+  # The Stop array, brackets counted from its key to its close, names scripts/factory.cmd.
+  printf '%s\n' "$p" | awk '/"Stop"/ { s = 1 } s { d += gsub(/\[/, "[") - gsub(/\]/, "]"); if (/scripts\/factory\.cmd/) f = 1; if (d <= 0 && /\]/) exit } END { exit !f }' || fail "portable.json's Stop command does not name scripts/factory.cmd"
   blob .agents/.codex-plugin/plugin.json | grep -qF hooks/portable.json || fail "codex manifest does not name hooks/portable.json"
   blob .agents/.cursor-plugin/plugin.json | grep -qF hooks/cursor.json || fail "cursor manifest does not name hooks/cursor.json"
   blob .agents/hooks/cursor.json 2>/dev/null | grep -qi '"stop"' || fail "no Stop hook in cursor.json"
@@ -76,8 +76,9 @@ static() {
   [ "$(blob .agents/README.md | wc -w)" -ge 40 ] || fail "plugin README under 40 words"
   for f in PRIVACY.md SECURITY.md; do git cat-file -e "$ref:$f" 2>/dev/null || fail "no $f"; done
   git grep -q "$(printf '\r')" "$ref" -- '*.sh' tools/night/pre-push && fail "a CR in a shell script blob: sh fails on it"
-  git cat-file -e "$ref:.agents/bin/factory.cmd" 2>/dev/null || fail "no .agents/bin/factory.cmd"
-  git grep -q "$(printf '\r')" "$ref" -- .agents/bin/factory.cmd && fail ".agents/bin/factory.cmd has a CR: sh and cmd both read it as one LF file"
+  git cat-file -e "$ref:.agents/scripts/factory.cmd" 2>/dev/null || fail "no .agents/scripts/factory.cmd"
+  git grep -q "$(printf '\r')" "$ref" -- .agents/scripts/factory.cmd && fail ".agents/scripts/factory.cmd has a CR: sh and cmd both read it as one LF file"
+  git ls-tree -d --name-only "$ref" .agents/bin | grep -q . && fail "a top-level bin/ in the plugin: claude.ai and Cowork refuse to install it; executables go in scripts/"
 }
 
 # Update check, offline: newer release tells the owner, older stays quiet; gh signed out still finds it through curl.

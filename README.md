@@ -32,7 +32,7 @@ After plan, verify and review, a fresh checker compares the outputs with each sk
 <td width="33%" valign="top">
 
 ### 📸 Proof, not claims
-Before is captured before the first edit, After during verify, and both land in the draft PR. A fresh agent that did not build it reviews the PR.
+Screen Before is captured before the first edit, command Before comes from base, After during verify and kept while its inputs stay unchanged; all land in the draft PR. A fresh agent that did not build it reviews the PR.
 
 </td>
 </tr>
@@ -99,7 +99,7 @@ Long runs lose skill text when the host compacts context. The factory works arou
 
 `tools/night/night.sh` refuses to start unless the run can finish unattended (guard wired, deny rules, own branch, `pre-push` hook, push dry run, tracker sign-in), then starts a session that denies instead of prompting. Owner questions get recorded defaults, owner-only items are parked, and nothing leaves the machine but the run's branch, draft PR and tickets. A watchdog from the OS scheduler resumes a stalled run, waits out usage limits, starts relays and tells you once how it ended. Setup: [install](docs/install.md#overnight-runs).
 
-Details: [run file](.agents/skills/safe-factory/references/run-file.md), [checker](.agents/skills/safe-factory/references/checker.md), [night mode](.agents/skills/safe-factory/references/night.md), [hosts](docs/hosts.md).
+Details: [run file](.agents/skills/safe-factory/references/run-file.md), [coded run](.agents/skills/safe-factory/references/coded-run.md), [checker](.agents/skills/safe-factory/references/checker.md), [night mode](.agents/skills/safe-factory/references/night.md), [hosts](docs/hosts.md).
 
 ## 🔄 Update
 
@@ -154,7 +154,7 @@ Rules: [AGENTS.md](AGENTS.md). Changes go through `improve-factory`; checks: `sh
 .agents/skills/stop-check/       Claude Code's prompt Stop hooks
 .agents/skills/safe-factory/     the coordinator; scripts/ holds the guard, update check, doctor
 .agents/hooks/portable.json      Stop guard, compact hook and update check (Codex); cursor.json, the same for Cursor
-.agents/bin/                     factory.cmd, the launcher hooks call, and the bundled factory binaries
+.agents/scripts/                 factory.cmd, the launcher hooks call, and the bundled factory binaries
 factory/                         the factory binary's Rust crate (guard, update check, doctor, lint, receipts); parity/ diffs it against the sh scripts
 tools/night/                     overnight runs, from a clone: night.sh, watchdog.sh, deny rules, pre-push
 .agents/.claude-plugin/          plugin manifests (also .codex-plugin/, .cursor-plugin/); the plugin root is .agents/

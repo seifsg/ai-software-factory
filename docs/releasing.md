@@ -55,13 +55,13 @@ Bad: `- Continuous runs (#253): a gate or review loop with 3 failed rounds ... c
 2. `sh scripts/release.sh prepare X.Y.Z`: refuses a dirty tree, a version not above `main`'s, an existing tag or an empty Unreleased section; branches `release/vX.Y.Z` from `origin/main`; sets `version` in the three plugin manifests, the `factory` crate (`factory/Cargo.toml` `[package]`, its `factory/Cargo.lock` entry) and the marketplace `source.ref` to `vX.Y.Z` (`source.path` stays `.agents`); moves `## [Unreleased]` into `## [X.Y.Z] - <today>` with its compare links; runs `sh scripts/check.sh`; commits, pushes and opens the draft release PR.
 3. Wait for the [bundle commit](#binaries) `chore(release): bundle factory binaries X.Y.Z` on `release/vX.Y.Z`. Pull before pushing another fix to the branch; each push rebuilds and bundles again.
 4. The owner merges the release PR.
-5. `sh scripts/release.sh publish X.Y.Z`: refuses until `main` carries `X.Y.Z` and once its release is published; refuses when the merge commit lacks `.agents/bin/SHA256SUMS` or one of the six binaries, a binary does not carry `X.Y.Z`, or the sums do not match; a rerun resumes after a failed step; tags the commit that set the version (the release merge, even with later merges on top), pushes the tag right away (Claude Code installs fetch the tag the marketplace names; until it exists a new install fails), moves `stable` to that commit (never forced), then `gh release create vX.Y.Z --latest` with the CHANGELOG section, links made absolute, and the six binaries plus `SHA256SUMS` as assets.
+5. `sh scripts/release.sh publish X.Y.Z`: refuses until `main` carries `X.Y.Z` and once its release is published; refuses when the merge commit lacks `.agents/scripts/SHA256SUMS` or one of the six binaries, a binary does not carry `X.Y.Z`, or the sums do not match; a rerun resumes after a failed step; tags the commit that set the version (the release merge, even with later merges on top), pushes the tag right away (Claude Code installs fetch the tag the marketplace names; until it exists a new install fails), moves `stable` to that commit (never forced), then `gh release create vX.Y.Z --latest` with the CHANGELOG section, links made absolute, and the six binaries plus `SHA256SUMS` as assets.
 
 A step that fails says what is already done; rerun resumes there. A failed release leaves `stable` on a tag with no release until the rerun. Never move a tag to retry.
 
 ## Binaries
 
-The plugin ships the `factory` binary for six targets at `.agents/bin/factory-<target>[.exe]`; `.agents/bin/factory.cmd` runs the one for the machine.
+The plugin ships the `factory` binary for six targets at `.agents/scripts/factory-<target>[.exe]`; `.agents/scripts/factory.cmd` runs the one for the machine.
 
 | Target | Built on |
 |---|---|
@@ -73,9 +73,9 @@ The plugin ships the `factory` binary for six targets at `.agents/bin/factory-<t
 | `aarch64-unknown-linux-musl` | `ubuntu-24.04-arm` |
 
 - **CI:** `.github/workflows/factory.yml` runs `cargo test`, a release build and `sh factory/parity/run.sh` (the binary matches the sh scripts byte for byte) on Linux, Windows and macOS, then builds all six targets. Each native build checks `factory --version` prints `factory X.Y.Z` from the plugin manifest; the cross-built one checks the binary carries `X.Y.Z`.
-- **Bundle commit:** on every push to `release/v*`, `.github/workflows/release-binaries.yml` runs that workflow, places the six binaries in `.agents/bin` (exec bit on the macOS and Linux ones), writes `.agents/bin/SHA256SUMS` (`sha256sum` format, sorted by file name) and pushes `chore(release): bundle factory binaries X.Y.Z` to the branch as `github-actions[bot]`. Nothing changed: no commit. A push that touches only `.agents/bin` does not run it.
+- **Bundle commit:** on every push to `release/v*`, `.github/workflows/release-binaries.yml` runs that workflow, places the six binaries in `.agents/scripts` (exec bit on the macOS and Linux ones), writes `.agents/scripts/SHA256SUMS` (`sha256sum` format, sorted by file name) and pushes `chore(release): bundle factory binaries X.Y.Z` to the branch as `github-actions[bot]`. Nothing changed: no commit. A push that touches only `.agents/scripts` does not run it.
 - **Release assets:** `publish` attaches the six binaries and `SHA256SUMS` from the merge commit to the GitHub release.
-- **Verify:** download `SHA256SUMS` and the six binaries from the release into one folder, then `sha256sum -c SHA256SUMS` there (macOS: `shasum -a 256 -c SHA256SUMS`); each file says `OK`. In a checkout at the tag: `cd .agents/bin && sha256sum -c SHA256SUMS`.
+- **Verify:** download `SHA256SUMS` and the six binaries from the release into one folder, then `sha256sum -c SHA256SUMS` there (macOS: `shasum -a 256 -c SHA256SUMS`); each file says `OK`. In a checkout at the tag: `cd .agents/scripts && sha256sum -c SHA256SUMS`.
 
 ## What follows a release
 

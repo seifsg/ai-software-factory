@@ -95,12 +95,12 @@ publish() {
   # The bundle commit's binaries and SHA256SUMS, as release assets: present, built for $v, matching their sums.
   mkdir "$b.d" || exit 1; set --
   for f in $bins SHA256SUMS; do
-    [ -n "$(git ls-tree "$m" -- ".agents/bin/$f")" ] || die ".agents/bin/$f is missing at $m: merge the bundle commit from release-binaries.yml first"
-    MSYS_NO_PATHCONV=1 git cat-file blob "$m:.agents/bin/$f" > "$b.d/$f" || die "cannot read .agents/bin/$f at $m"
-    [ "$f" = SHA256SUMS ] || grep -aqF "$v" "$b.d/$f" || die ".agents/bin/$f at $m is not built for $v: merge the bundle commit for $v first"
+    [ -n "$(git ls-tree "$m" -- ".agents/scripts/$f")" ] || die ".agents/scripts/$f is missing at $m: merge the bundle commit from release-binaries.yml first"
+    MSYS_NO_PATHCONV=1 git cat-file blob "$m:.agents/scripts/$f" > "$b.d/$f" || die "cannot read .agents/scripts/$f at $m"
+    [ "$f" = SHA256SUMS ] || grep -aqF "$v" "$b.d/$f" || die ".agents/scripts/$f at $m is not built for $v: merge the bundle commit for $v first"
     set -- "$@" "$b.d/$f"
   done
-  [ "$(grep -c . "$b.d/SHA256SUMS")" -eq 6 ] && (cd "$b.d" && sums -c SHA256SUMS >/dev/null) || die ".agents/bin/SHA256SUMS at $m does not match its six binaries"
+  [ "$(grep -c . "$b.d/SHA256SUMS")" -eq 6 ] && (cd "$b.d" && sums -c SHA256SUMS >/dev/null) || die ".agents/scripts/SHA256SUMS at $m does not match its six binaries"
   if [ -z "$t" ]; then
     git tag -a "v$v" -m "v$v" "$m" || die "cannot tag"
     git push -q origin "refs/tags/v$v" || { git tag -d "v$v" >/dev/null; die "tag push failed; local tag removed, rerun"; }

@@ -42,7 +42,7 @@ Open tickets are the backlog, kept current in every mode, autonomously unless ow
 2. Move run's tickets to To do. Sort by priority, then user value, then proven dependencies.
 3. Priority: P0 broken or blocking, P1 next, P2 planned, P3 later. Every ticket run creates or owns has one; change it only on those, with reason.
 4. Move at boundaries: build starts → In progress, every item ticked → Dev done, every criterion proven and PR open → Ready for QA, PR merged → Done, check failed → In progress. Agents never set Done; merge closes ticket, or intake records a merge that did not. Blocked any time; back to prior status once cleared.
-5. Epic follows its sub-issues. In progress: first one starts. Ready for QA: all still in run are Ready for QA or Done, and no requested item outside run is open unless owner-deferred. A sub-issue Blocked, moved to a later iteration or going back: [epic cases](references/epic-cases.md). Done: every in-scope sub-issue (not follow-ups, owner-deferred or cancelled) Done and own checklist ticked; intake closes it, as PRs never use a closing keyword for an epic. A `change` run's single ticket moves like a sub-issue.
+5. Epics follow their sub-issues: [epics](references/epics.md). A `change` run's single ticket moves like a sub-issue.
 6. In progress needs actionable criteria, authority, assignee or session, usable workspace, met dependencies for items it starts; Safe also confirmed scope. Assign builder at In progress; unassign only on return to Backlog or To do.
 7. Keep owned tickets' context, description, links, progress current; scope changes follow Refresh and drift.
 8. Implemented, checked, independently reviewed, merged, released stay distinct. Owner stop or cancellation persists across sessions.
@@ -70,7 +70,7 @@ Open tickets are the backlog, kept current in every mode, autonomously unless ow
 
 ## Definition of done and checklist
 
-1. Write definition of done (criteria with IDs) at creation, checklist (plan's todos as task items) at plan time.
+1. Write definition of done (criteria with IDs) at creation, checklist (plan's todos as task items) at plan time. Every explicit ask in the owner's brief or request (a report, link, answer, number, file) becomes a criterion quoting it: `**A7 (ask):**`.
 2. Each item runs `get-ready-to-code` 0–4 loop; tick only after its check passed (real effect used and seen working), proof beside the tick.
 3. Independent items and tickets run in parallel as far as files, dependencies, capacity allow; each item ticked after own check, each ticket keeps own checklist loop. One writer per ticket body: coordinator ticks, delegates report. Parallel tickets, handoffs to other sessions, dependencies between tickets: [parallel work](references/parallel-work.md).
 4. Finished: every item ticked and every criterion proven; otherwise loop on failing item until it passes. Blocked only when run cannot clear it (access, capability, owner decision): reason, next action, who unblocks; independent items continue.
@@ -81,11 +81,8 @@ Open tickets are the backlog, kept current in every mode, autonomously unless ow
 
 No contract or confirmation round. Same tracker, layout, backlog, authority rules.
 
-Product and feature runs list every requested item and approved addition as R1, R2, ...; owner-deferred one stays listed as `R2 (owner-deferred: <decision link>)`, needs no criterion. Checker refuses gaps: at plan (gate A), a requested item no criterion names, and a criterion no checklist item names.
-
-1. Product and feature runs: create epic after owner's kickoff answers with owner's words, answers, every layout section. Change runs update ticket they follow up, create one only for new outcome, none when trivial.
-2. Create sub-issues in user-value order, linked as native sub-issues; optional ideas go to follow-ups ticket.
-3. Write into step 0 block of run file (`.factory/run.md`): epic URL (a `change` run: ticket URL, or `none (<why>)`), each sub-issue URL in the run, R-ids (product and feature runs), owned, affected, untouched backlog items, follow-ups included. At PR step, add each owned ticket's final status: Ready for QA with its PR (naming items deferred to owner or hardware), Blocked, or Backlog when owner-deferred.
+Product and feature runs: [epics](references/epics.md), Fast. Change runs update ticket they follow up, create one only for new outcome, none when trivial.
+Write into step 0 block of run file (`.factory/run.md`): epic URL (a `change` run: ticket URL, or `none (<why>)`), each sub-issue URL in the run, R-ids (product and feature runs), owned, affected, untouched backlog items, follow-ups included. At PR step, add each owned ticket's final status: Ready for QA with its PR (naming items deferred to owner or hardware), Blocked, or Backlog when owner-deferred.
 
 ## Safe
 
@@ -107,7 +104,6 @@ Safe runs, or moving an epic to Safe: [the contract](references/safe-contract.md
 3. Approved deviations keep authority and reason. Pending changes cannot redefine success. Unresolved drift, unknown required scope, missing evidence block dependent acceptance.
 4. PRs and reviews carry ticket and epic links, confirmed criteria, before/after proof, decisions, unresolved findings, resume step.
 5. Update ticket with actual outcome and openable, sanitized proof. Preserve blocked and cancelled work and open human decisions.
-6. Closed child list does not certify epic: it needs combined journey evidence; combined QA waits until its tickets finish implementation.
 
 ## Output contract
 
@@ -115,5 +111,5 @@ In a factory run this is step 0. Block `## 0 Ticket` holds:
 
 - [ ] The ticket link, or `local: .factory/ticket.md` with the reason
 - [ ] Reused or new, with the search terms used
-- [ ] The definition of done as labelled criteria
+- [ ] The definition of done as labelled criteria, every explicit ask of the brief among them as `(ask)`
 - [ ] The checklist (filled from the plan's todos at step 3) and the status

@@ -31,7 +31,7 @@ Readers ignore lines they do not know, so a writer may add its own (the pro gate
 | A runner that ran the suite itself | `factory receipt write --suite full --result PASS --cmd "<command>" --secs <n>` |
 | This repository | `sh scripts/check.sh`: a full PASS writes `<tree>-full.txt`; the next run on the same tree prints nothing and exits 0 |
 
-`factory` is `<plugin root>/bin/factory.cmd` (sh or cmd), or a built `factory/target/release/factory`.
+`factory` is `<plugin root>/scripts/factory.cmd` (sh or cmd), or a built `factory/target/release/factory`.
 
 ## What the guard accepts
 

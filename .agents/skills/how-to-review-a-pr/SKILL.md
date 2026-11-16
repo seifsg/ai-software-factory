@@ -19,11 +19,13 @@ Review any PR (teammate, customer, agent) end to end. Every factory-opened PR ge
 
 ## 0. Intake and claim
 
+Factory run: first call starts the full suite in the background on the head, unless the brief names its log (running or done) or a receipt for that head's tree (`factory receipt check`): then read that, never rerun. Read code while it runs.
+
 1. Resolve PR. Fetch metadata, diff, commits, comments, reviews, linked issues.
 2. Check out PR head. Record the branch you came from.
 3. Find touched areas from paths, imports, manifests. Flag separately shipped parts (client/server, scripts/binaries, plugins/host, schema/save formats) for change-guard.
 4. Refresh linked ticket: latest confirmed criteria, approved scope changes, owner source.
-5. Emit PR card, quote claim:
+5. Emit PR card, quote claim (no remote: no card, quote the ticket's claim):
 
 ```
 PR #<n> <title>
@@ -53,7 +55,7 @@ Run `recommend` on the PR's approach: implemented one vs two credible alternativ
 
 ## 1c. Run audit (factory PRs)
 
-PR came from a factory run: read its `.factory/run.md` and ticket. Check every block of steps 0–7 against its skill's output contract, the `Gate A` and `Gate B` lines (PASS or owner WAIVED; Gate C runs after this review), and each Before file predates the first source commit. Each gate line needs backing in the run's agent records: PASS, that id's last handback says PASS on that gate and sha; waiver, an owner message says it; cap, 3 FAIL handbacks on that gate. No records of the run here: a note for the owner, never blocking. Missing step, contract line, gate or backing = HIGH finding: run incomplete even when code is right.
+PR came from a factory run: read its `.factory/run.md` and ticket. Check every block of steps 0–7 against its skill's output contract, the `Gate A` and `Gate B` lines (PASS or owner WAIVED; Gate C runs after this review), and each screen Before file predates the first source commit (non-visual ones name their base commit). Started at verify: audit steps 0 to 5 first, 6 and 7 at the delta check. Run `factory guard check` yourself in the run file's folder (the brief's absolute path): its verdict lines settle gate backing; without `factory`, each gate line needs backing in the run's agent records: PASS, that id's last handback says PASS on that gate and sha; waiver, an owner message says it; cap, 3 FAIL handbacks on that gate. No records of the run here: a note for the owner, never blocking. Missing step, contract line, gate or backing = HIGH finding: run incomplete even when code is right.
 
 ## 2. Lenses
 
@@ -84,7 +86,7 @@ Run `deep-review`'s analysis categories and every applicable lens it lists: secu
 | `REQUEST-CHANGES` | HIGH remains that we cannot safely fix, or open questions block correctness. | `not ready` |
 | `BLOCK` | CRITICAL unresolved: claim not delivered, existing behavior or supported runtime broken, secret shipped, or required gates cannot go green. | `not ready` |
 
-Factory run handback (brief names a run file) ends `verdict: <factory line> @<reviewed head sha>`.
+Factory run handback (brief names a run file): full report (every phase, every lens table) in a file under the run's `.factory/`; handback at most 2,000 characters: findings table, report path, then `verdict: <factory line> @<reviewed head sha>`.
 
 6. Compile open questions.
 
@@ -172,7 +174,7 @@ Show draft before posting unless pre-authorized. Comment = only author-visible o
 
 ## Own draft PR
 
-Factory run's reviewer skips phases 5 to 7, never pushes, may post the phase 8 comment: hands back fix-set, checks delta once builder applied it. Otherwise, draft PR your agent opened: question gate, push, comment checkpoints pre-authorized. Open questions go in comment. Push only to that PR's branch, never force. Humans own ready, merge, release. Anyone else's PR keeps every checkpoint.
+Factory run's reviewer starts at verify on the pushed candidate, in the worktree its brief names, beside the step-6 review (no PR yet: card from branch and head, completed once the PR opens; no remote: the local head, no card, comment or push); skips phases 5 to 7, never pushes, may post the phase 8 comment: hands back fix-set, checks delta once builder applied it. Otherwise, draft PR your agent opened: question gate, push, comment checkpoints pre-authorized. Open questions go in comment. Push only to that PR's branch, never force. Humans own ready, merge, release. Anyone else's PR keeps every checkpoint.
 
 ## Safety
 
@@ -183,11 +185,9 @@ Factory run's reviewer skips phases 5 to 7, never pushes, may post the phase 8 c
 
 The block `## 8 Review` holds, and the PR comment carries:
 
-- [ ] PR card and the quoted claim
-- [ ] Analysis per `analyze-start`, with the claim-vs-code table
-- [ ] Three solutions per `recommend`, with the verdict on the implemented approach
+- [ ] Report (block: its path; comment: its sections): the full report holding PR card and quoted claim (no remote: the ticket's claim, no card), analysis per `analyze-start` with the claim-vs-code table, three solutions per `recommend` with the verdict on the implemented approach
 - [ ] Run audit (factory PRs): each step and gate met, or the findings
-- [ ] Every applicable lens run, each with its findings table (possibly empty) and one-line verdict
-- [ ] Synthesized master table and one verdict: APPROVE, APPROVE-WITH-FIXES, REQUEST-CHANGES or BLOCK
+- [ ] Findings: synthesized master table, severity-ranked, or `none`; every applicable lens run named with its one-line verdict, a lens table only where that lens has findings
+- [ ] Verdict: APPROVE, APPROVE-WITH-FIXES, REQUEST-CHANGES or BLOCK, with the reviewed head sha
 - [ ] Fixes through the 0–4 loop with their gate result, or "no fixes"
-- [ ] The comment's link, read back; the PR still draft
+- [ ] The comment's link, read back; the PR still draft (no remote: lapses)

@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "./bin/factory.cmd guard stop",
+            "command": "./scripts/factory.cmd guard stop",
             "timeout": 10
           }
         ]
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "./bin/factory.cmd guard compact",
+            "command": "./scripts/factory.cmd guard compact",
             "timeout": 10
           }
         ]
@@ -27,7 +27,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "./bin/factory.cmd update-check .",
+            "command": "./scripts/factory.cmd update-check .",
             "timeout": 5
           }
         ]

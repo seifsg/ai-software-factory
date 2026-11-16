@@ -7,7 +7,7 @@ on:
     branches-ignore: ['release/v*'] # release-binaries.yml runs this on release branches
     paths: &paths
       - 'factory/**'
-      - '.agents/bin/factory.cmd'
+      - '.agents/scripts/factory.cmd'
       - '.agents/hooks/**'
       - '.agents/skills/*/scripts/**'
       - 'scripts/**'

@@ -4,10 +4,11 @@ What installs and active runs must do for each release, newest first. What chang
 
 ## Unreleased
 
-1. **Codex:** trust the hooks again in `/hooks`: they now call `bin/factory.cmd`, the bundled binary, instead of Git Bash.
+1. **Codex:** trust the hooks again in `/hooks`: they now call `scripts/factory.cmd`, the bundled binary, instead of Git Bash.
 2. **Cursor:** trust the hooks again if it asks: the plugin now reads `hooks/cursor.json`.
-3. **Open runs past step 6:** the guard now refuses a Gate B or Gate C line without a passing full-suite receipt for its commit's tree. Run the suite once on that commit with `<plugin root>/bin/factory.cmd receipt run --suite full -- <full-suite command>`, then go on.
-4. **Night mode copies:** copy `tools/night/claude-settings.json` again: its hooks call `bin/factory.cmd` and its deny rules cover `guard clear` and `.agents/bin/`.
+3. **Open runs past step 6:** the guard now refuses a Gate B or Gate C line without a passing full-suite receipt for its commit's tree. Run the suite once on that commit with `<plugin root>/scripts/factory.cmd receipt run --suite full -- <full-suite command>`, then go on.
+4. **Night mode that copied the allow list** (`claude-settings.json`) or `codex.rules`: copy both from `tools/night/` again; they allow the `factory` commands the methods call, run their hooks through `scripts/factory.cmd`, and deny `guard clear` and edits to `.agents/scripts/`.
+5. **Open runs:** past step 3, finish under the version that started them, or resume after updating and recapture each After with its input hash (After rule) and name the base commit in each non-visual Before. Without the `factory` command a run keeps today's one step per turn.
 
 ## 0.7.0
 

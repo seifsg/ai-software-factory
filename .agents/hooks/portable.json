@@ -5,8 +5,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/bin/factory.cmd\" guard stop",
-            "commandWindows": "cmd.exe /d /c call \"${PLUGIN_ROOT}/bin/factory.cmd\" guard stop",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/factory.cmd\" guard stop",
+            "commandWindows": "cmd.exe /d /c call \"${PLUGIN_ROOT}/scripts/factory.cmd\" guard stop",
             "timeout": 10
           }
         ]
@@ -18,8 +18,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/bin/factory.cmd\" guard compact",
-            "commandWindows": "cmd.exe /d /c call \"${PLUGIN_ROOT}/bin/factory.cmd\" guard compact",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/factory.cmd\" guard compact",
+            "commandWindows": "cmd.exe /d /c call \"${PLUGIN_ROOT}/scripts/factory.cmd\" guard compact",
             "timeout": 10
           }
         ]
@@ -29,8 +29,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/bin/factory.cmd\" update-check \"${CLAUDE_PLUGIN_ROOT}\"",
-            "commandWindows": "cmd.exe /d /c call \"${PLUGIN_ROOT}/bin/factory.cmd\" update-check \"${PLUGIN_ROOT}\"",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/factory.cmd\" update-check \"${CLAUDE_PLUGIN_ROOT}\"",
+            "commandWindows": "cmd.exe /d /c call \"${PLUGIN_ROOT}/scripts/factory.cmd\" update-check \"${PLUGIN_ROOT}\"",
             "timeout": 5
           }
         ]

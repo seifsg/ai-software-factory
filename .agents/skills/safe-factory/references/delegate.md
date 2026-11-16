@@ -10,8 +10,8 @@ Models, overrides: `docs/hosts.md`. A skill project rules name for delegation lo
 | analyst | standard | no | research, per-area analysis, one-lens reviews, UX verdicts, read-only method walkthroughs, scouting a large spec | `<path:line or URL>: <finding>` per finding, then `<n> findings` |
 | maker | standard | yes | planned or mechanical edits, fix rounds that spell out each fix, walkthroughs that run the change | `<path:lines>: <change>` per change, then `T<n> pre: <before> do: <change> post: <check>` per todo |
 | builder | deep | yes | edits that need design calls: architecture, schema, security, unclear bugs | `<path:lines>: <change>` per change, then `decision: <choice> because <reason>` per call made and `T<n> pre: <before> do: <change> post: <check>` per todo |
-| checker | light | its gate line only | gate checks ([checker](checker.md)) | its handback |
-| reviewer | deep | no | final and independent review (`deep-review`), judgement calls that change no file: unclear bugs, architecture | `<path:line or URL> <severity>: <problem>. <fix>.` most severe first, the factory `verdict:` line of `how-to-review-a-pr` last; with no diff, `decision: <choice> because <reason>` instead |
+| checker | light | its gate line only | gate checks ([checker](checker.md)) | its handback, at most 2,000 characters |
+| reviewer | deep | no | final and independent review (`deep-review`), judgement calls that change no file: unclear bugs, architecture | at most 2,000 characters: `<path:line or URL> <severity>: <problem>. <fix>.` most severe first, its full report's path, the factory `verdict:` line of `how-to-review-a-pr` last; with no diff, `decision: <choice> because <reason>` instead |
 
 Keep method reports (UX, `deep-review`, checker). Every handback except the checker's (its lines only) then adds:
 
@@ -39,7 +39,7 @@ G3 MANUAL <outcome>: <what the reviewer judges>
 
 ## Size
 
-- One coherent job per agent. Combine related checks; separate only useful independent jobs.
+- One coherent job per agent; todos on the same files are one job. Combine related checks; separate only useful independent jobs.
 - Split briefs with over three outcomes, multiple commits or a whole unrelated document; one change across files counts once.
 - Large spec: analyst returns focused briefs with required rules and affected paths.
 - Only the coordinator spawns, and a reviewer its lens agents; extra agents need `too-big. split:`.
@@ -48,7 +48,7 @@ G3 MANUAL <outcome>: <what the reviewer judges>
 ## Tier
 
 - Lowest role that can clear the gates. To spend less, lower effort before tier.
-- Escalate, don't coach: after two failed gate rounds, job and handbacks go to fresh delegate one tier up, same edit access (runner to analyst, analyst to reviewer, maker to builder). A deep job that fails twice comes back to you (Authority and stops, rule 4).
+- Two failed gate rounds: [escalation](run-cases.md#escalation).
 - Session is ceiling: a role above session tier runs on session model.
 - Never change owner's session model or effort.
 

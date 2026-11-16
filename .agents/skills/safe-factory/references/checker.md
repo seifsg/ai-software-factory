@@ -2,13 +2,13 @@
 
 Fresh light read-only delegate (role `checker`, or any light read-only agent given this brief). Judges outputs against contracts, never work quality.
 
-Before each brief, commit and check each contract line yourself, as strictly; a form FAIL costs a round.
+Before each brief, commit and run `factory lint <gate>`; fix each line it flags at its step first. No `factory` command: check each contract line yourself, as strictly. A form FAIL costs a round.
 
 ## Brief
 
 ```text
 Role: checker. Gate <A|B|C>. Project: <absolute path>. Commit: <HEAD sha>.
-Contracts: the "Output contract" checklist of <skill paths for the gate's steps>.
+Contracts: <`factory contracts <the gate's skills>` output, pasted; no `factory`: the "Output contract" checklist of their paths>.
 Outputs: .factory/run.md, steps <range>; <PR URL for gate C>.
 Only those checklist lines (and Gate C's list below) count; any other concern is a "note:", never
 MISSING. For every line, find the output that meets it; open what it names; check its form too (layout,
@@ -26,7 +26,7 @@ Round 2 on: recheck only MISSING lines of round 1's handback; the rest stay met.
 | B | 4–6 | `how-to-make-a-pr` (Before proof), `get-ready-to-code` (0–4 loop), `deep-review` |
 | C | 7–8, the PR | `how-to-make-a-pr` (`## 7 PR`), plus the list below |
 
-`## 7 PR` `local only ("<owner's words>") @<sha>` with `git remote` empty: PR lines lapse. `Skipped by owner ("<their words>")` meets its step's lines. Not at night.
+`## 7 PR` `local only ("<owner's words>") @<sha>` with `git remote` empty: PR lines lapse, and so do `## 8 Review`'s PR card and comment lines and this list's PR-body line. `Skipped by owner ("<their words>")` meets its step's lines. Not at night.
 
 Gate C's list, besides `## 7 PR`:
 
@@ -34,13 +34,17 @@ Gate C's list, besides `## 7 PR`:
 - [ ] Gates A and B: PASS or WAIVED
 - [ ] PR body: a closing keyword per sub-issue or change ticket it finishes (`how-to-make-a-pr`); an epic only a plain reference
 - [ ] `## 8 Review` holds the reviewer's verdict, or its cap line, on the PR's current head
-- [ ] Each After file `## 8 Review` names as recaptured names a commit at or after its fix
+- [ ] Every After file valid on the final head by `how-to-make-a-pr`'s After rule
+- [ ] Each `(ask)` criterion answered: its answer or link in `## 8 Review` or the PR body
 - [ ] `## 8 Review` has `Left running:` as its last line before any Gate C line, with each item's stop command, or `none`
 
 ## Handback
 
+At most 2,000 characters:
+
 ```text
-<contract line>: met <where> | MISSING <what is absent or wrong>
+<contract line>: MISSING <what is absent or wrong>
+met: <every other line, by short name>
 note: <concern outside the contract lines, never counted>
 Gate <X>: PASS @<commit> | FAIL <n> missing
 ```

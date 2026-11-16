@@ -11,4 +11,6 @@ prefix_rule(pattern = ["git", "config", "core.hooksPath"], decision = "forbidden
 prefix_rule(pattern = ["gh", "pr", ["merge", "ready"]], decision = "forbidden", justification = OWNER,
     match = ["gh pr merge 3"], not_match = ["gh pr view 3"])
 prefix_rule(pattern = ["gh", "repo", ["delete", "edit"]], decision = "forbidden", justification = OWNER)
+prefix_rule(pattern = ["factory", "guard", "clear"], decision = "forbidden", justification = OWNER,
+    match = ["factory guard clear"], not_match = ["factory guard step 3"])
 prefix_rule(pattern = ["rm", ["-rf", "-r"], ["/", "~", ".."]], decision = "forbidden", justification = OWNER)
