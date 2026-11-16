@@ -1,5 +1,5 @@
 //! `guard check` with no session id: one verdict line per gate and review line in the run file, backed by
-//! its delegate's own handback on that commit, or not, plus each Gate B and C line's suite receipt.
+//! its delegate's own handback on that commit, or not, plus each Gate B, C and review line's suite receipt.
 //! It reads the transcripts the Stop hook last recorded; it changes no run or state file.
 
 use super::rules::pre;
@@ -40,7 +40,8 @@ pub fn report(dir: &Path) -> (String, bool) {
     }
     if let Some((id, sha)) = &run.review {
         let (ok, why) = handback(&ev, id, 'R', sha);
-        line("Review", ok, why);
+        let (rok, rwhy) = receipt(repo.as_ref(), 'R', sha);
+        line("Review", ok && rok, format!("{why}{rwhy}"));
     }
     if out.is_empty() {
         out.push_str("no gate or review line in the run file\n");
@@ -77,12 +78,16 @@ fn handback(ev: &Evidence, id: &str, k: char, sha: &str) -> (bool, String) {
     (true, format!("{id} handed back `{last}`"))
 }
 
-/// Gate B and C need a passing full-suite receipt for their commit's tree.
+/// Gate B, C and the review need a passing full-suite receipt for their commit's tree; Gate C one that
+/// counts a single run.
 fn receipt(repo: Option<&Repo>, x: char, sha: &str) -> (bool, String) {
-    if !matches!(x, 'B' | 'C') {
+    if !matches!(x, 'B' | 'C' | 'R') {
         return (true, String::new());
     }
     match repo.and_then(|r| crate::receipt::find_pass(r, sha, "full")) {
+        Some((_, r)) if x == 'C' && r.run_count() > 1 => {
+            (false, format!("; its receipt counts {} full runs on the tree: Gate C needs exactly one", r.run_count()))
+        }
         Some((p, r)) => (
             true,
             format!("; receipt {} (`{}`, {} s, clean {})", crate::paths::text(&p), r.cmd, r.secs, if r.clean { "yes" } else { "no" }),

@@ -1,0 +1,104 @@
+//! The full suite runs once per tree: a run with one passing full run on its final head finishes; a second
+//! run on that unchanged tree is flagged once, and Gate C stops standing on a receipt that counts two runs.
+//! `receipt run` reuses a PASS already on the tree and never runs the suite again unless told `--again`.
+
+mod common;
+
+use common::{factory, git, json_path};
+use std::path::{Path, PathBuf};
+
+const STEPS: [&str; 10] =
+    ["0 Ticket", "1 Analyze", "2 Recommend", "2b Challenge", "3 Plan", "4 Before", "5 Build", "6 Verify", "7 PR", "8 Review"];
+
+/// A closed run in `<d>/r` (no remote: HEAD counts as pushed), every gate and the review on HEAD, each backed
+/// by its delegate's handback in `<d>/hp/s1/subagents`. Returns the checkout.
+fn closed_run(d: &Path) -> PathBuf {
+    let r = d.join("r");
+    std::fs::create_dir_all(r.join(".factory")).unwrap();
+    git(&r, &["init", "-q", "-b", "main"], 8);
+    std::fs::write(r.join("a.txt"), "a\n").unwrap();
+    git(&r, &["add", "a.txt"], 8);
+    git(&r, &["commit", "-q", "-m", "a"], 8);
+    let sha = std::process::Command::new("git").arg("-C").arg(&r).args(["rev-parse", "HEAD"]).output().unwrap();
+    let sha = String::from_utf8_lossy(&sha.stdout).trim().to_string();
+    let a = d.join("hp/s1/subagents");
+    std::fs::create_dir_all(&a).unwrap();
+    let say = |text: &str| format!("{{\"message\":{{\"role\":\"assistant\",\"content\":[{{\"type\":\"text\",\"text\":\"{text}\"}}]}}}}\n");
+    for g in ['A', 'B', 'C'] {
+        let body = format!("{{\"message\":\"Role: checker. Gate {g}\"}}\n{}", say(&format!("Gate {g}: PASS @{sha}")));
+        std::fs::write(a.join(format!("agent-c{g}.jsonl")), body).unwrap();
+    }
+    std::fs::write(a.join("agent-r.jsonl"), format!("{{\"message\":\"Role: reviewer.\"}}\n{}", say(&format!("verdict: ready @{sha}"))))
+        .unwrap();
+    let mut run = String::from("# Run: x\nStatus: closed\nNext: none (closed)\nWaiting: none\n\n");
+    STEPS.iter().for_each(|s| run.push_str(&format!("## {s} \u{2714}\n")));
+    run.push_str(&format!(
+        "Gate A: PASS (checker cA) @{sha}\nGate B: PASS (checker cB) @{sha}\nReview: ready (reviewer r) @{sha}\nGate C: PASS (checker cC) @{sha}\n"
+    ));
+    std::fs::write(r.join(".factory/run.md"), run).unwrap();
+    r
+}
+
+/// The Stop hook's reply for session s1 in checkout `r`.
+fn stop(d: &Path, r: &Path) -> String {
+    let json = format!(
+        r#"{{"session_id":"s1","transcript_path":"{}","cwd":"{}","stop_hook_active":false,"last_assistant_message":"x"}}"#,
+        json_path(&d.join("hp/s1.jsonl")),
+        json_path(r)
+    );
+    factory(r, d, &["guard", "stop"], &json).1
+}
+
+/// `factory receipt run` with the binary itself as a suite that passes.
+fn suite(d: &Path, r: &Path, again: bool) -> (i32, String) {
+    let exe = env!("CARGO_BIN_EXE_factory");
+    let mut args = vec!["receipt", "run", "--suite", "full"];
+    if again {
+        args.push("--again");
+    }
+    args.extend(["--", exe, "--version"]);
+    factory(r, d, &args, "")
+}
+
+fn runs_line(r: &Path) -> String {
+    let rd = std::fs::read_dir(r.join(".factory/receipts")).unwrap();
+    let f = rd.flatten().find(|e| e.file_name().to_string_lossy().ends_with("-full.txt")).unwrap();
+    std::fs::read_to_string(f.path()).unwrap().lines().find(|l| l.starts_with("runs ")).unwrap_or("").to_string()
+}
+
+#[test]
+fn a_run_with_one_full_suite_finishes() {
+    let d = common::scratch("once");
+    let r = closed_run(&d);
+    let missing = stop(&d, &r);
+    assert!(missing.contains("Gate B has no full-suite receipt"), "no receipt yet: {missing}");
+    let (code, out) = suite(&d, &r, false);
+    assert_eq!(code, 0, "{out}");
+    assert_eq!(runs_line(&r), "runs 1");
+    assert_eq!(stop(&d, &r), "", "one passing full run on the final head: the run is finished");
+    let _ = std::fs::remove_dir_all(&d);
+}
+
+#[test]
+fn a_second_run_on_the_same_tree_is_reused_or_flagged() {
+    let d = common::scratch("twice");
+    let r = closed_run(&d);
+    suite(&d, &r, false);
+    let (code, out) = suite(&d, &r, false);
+    assert!(code == 0 && out.contains("reused, not run again"), "an unchanged tree reuses its PASS: {out}");
+    assert_eq!(runs_line(&r), "runs 1");
+    let (code, _) = suite(&d, &r, true);
+    assert_eq!(code, 0);
+    assert_eq!(runs_line(&r), "runs 2");
+    let flag = stop(&d, &r);
+    assert!(
+        flag.contains("\"decision\":\"block\"") && flag.contains("ran more than once on an unchanged tree") && flag.contains(": 2 runs"),
+        "{flag}"
+    );
+    let gate = stop(&d, &r);
+    assert!(
+        gate.contains("Gate C needs exactly one passing full-suite run") && gate.contains("counts 2"),
+        "flagged once, then Gate C: {gate}"
+    );
+    let _ = std::fs::remove_dir_all(&d);
+}

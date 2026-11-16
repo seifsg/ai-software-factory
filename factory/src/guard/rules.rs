@@ -2,6 +2,7 @@
 //! reached chat, how many rounds each loop failed. Pure: run-file facts and evidence in, facts out.
 
 use crate::evidence::Evidence;
+use crate::receipt::Standing;
 use crate::run::{RunFile, after_at, push_list};
 
 /// Loops in round order, with the step whose `CRITICAL:` lines open rounds 4 and 5.
@@ -24,8 +25,8 @@ pub struct Inputs<'a> {
     pub base: [i64; 4],
     /// The step label of the heading posted this turn.
     pub posted: &'a str,
-    /// A full-suite receipt exists for the tree of this commit (Gate B and C lines need one).
-    pub receipt: &'a dyn Fn(&str) -> bool,
+    /// Where a Gate B, C or review commit stands on suite receipts (`receipt::standing`).
+    pub receipt: &'a dyn Fn(char, &str) -> Standing,
 }
 
 /// The guard's facts about the run.
@@ -53,8 +54,8 @@ pub struct Facts {
     pub long_lines: String,
     pub step: u32,
     pub next: String,
-    /// Gate B or C lacks only its suite receipt.
-    pub no_receipt: Option<char>,
+    /// Gate B, C or the review lacks only its suite receipt, or (Gate C) one that counts a single run.
+    pub no_receipt: Option<(char, Standing)>,
 }
 
 /// First `min(len)` characters agree, at least 7 (a short sha against a full one).
@@ -115,24 +116,36 @@ impl Judge<'_> {
             && (x != 'C' || (pre(sha, self.i.head) && self.i.head == self.i.up))
     }
 
-    /// The commit a proven Gate B or C line stands on; None for a waiver (it needs no receipt).
+    /// The commit a proven Gate B, C or review line stands on; None for a waiver (it needs no receipt).
     fn gate_commit(&self, x: char) -> Option<&str> {
         if self.capped(x) {
             return self.i.run.cap.get(&x).map(String::as_str);
         }
-        self.i.run.gate.get(&x).map(|(_, sha)| sha.as_str())
+        match x {
+            'R' => self.i.run.review.as_ref().map(|(_, sha)| sha.as_str()),
+            _ => self.i.run.gate.get(&x).map(|(_, sha)| sha.as_str()),
+        }
     }
 
     fn ok(&self, x: char) -> bool {
-        self.proven_gate(x) && self.has_receipt(x)
+        self.proven_gate(x) && self.standing(x) == Standing::Ok
     }
 
-    /// Gate B and C stand only with a full-suite receipt for their commit's tree.
-    fn has_receipt(&self, x: char) -> bool {
-        !matches!(x, 'B' | 'C') || self.gate_commit(x).is_none_or(|c| (self.i.receipt)(c))
+    /// Gate B, C and the review judge a head: each stands only on a full-suite receipt for its commit's tree
+    /// (Gate C on one that counts a single run). Gate A judges a plan and needs none.
+    fn standing(&self, x: char) -> Standing {
+        match self.gate_commit(x) {
+            Some(c) if matches!(x, 'B' | 'C' | 'R') => (self.i.receipt)(x, c),
+            _ => Standing::Ok,
+        }
     }
 
     fn review_ok(&self) -> bool {
+        self.review_proven() && self.standing('R') == Standing::Ok
+    }
+
+    /// The review line is proven (reviewer handback or cap), receipts aside.
+    fn review_proven(&self) -> bool {
         if self.capped('R') {
             return true;
         }
@@ -169,10 +182,9 @@ pub fn judge(i: &Inputs) -> Facts {
     } else {
         None
     };
-    if let Some(g @ ('B' | 'C')) = gate {
-        if j.proven_gate(g) {
-            no_receipt = Some(g);
-        }
+    let proven = |g: char| if g == 'R' { j.review_proven() } else { j.proven_gate(g) };
+    if let Some(g @ ('B' | 'C' | 'R')) = gate.filter(|g| proven(*g)) {
+        no_receipt = Some((g, j.standing(g)));
     }
     let sig = run.tick_lines as i64 + ['A', 'B', 'C'].iter().filter(|&&x| j.ok(x)).count() as i64 + i64::from(rok);
     let critical: String = LOOPS.iter().filter(|(x, _)| j.open(*x)).map(|(x, _)| *x).collect();

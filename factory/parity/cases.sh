@@ -9,7 +9,7 @@ say() { printf '== %s\n' "$1"; }
 # Prints the guard state with the clock fields masked (each side runs at its own second).
 state() { printf -- '-- state %s\n' "$1"; sed "s/^g_seen='[0-9]*'/g_seen='T'/; s/^g_jobs_since='[0-9][0-9]*'/g_jobs_since='T'/" "$W/$1/.factory/guard/state" 2>/dev/null; for f in unposted skipwait remote; do [ -f "$W/$1/.factory/guard/$f" ] && printf -- '-- %s: %s\n' "$f" "$(cat "$W/$1/.factory/guard/$f")"; done; }
 commit() { git -C "$1" -c user.name=t -c user.email=t@t -c commit.gpgsign=false commit -q --allow-empty -m "${2:-i}"; }
-receipt() { (cd "$1" && "$BIN" receipt write --suite full --result PASS --cmd parity 2>/dev/null); }
+receipt() { rm -f "$1"/.factory/receipts/*-full.txt; (cd "$1" && "$BIN" receipt write --suite full --result PASS --cmd parity 2>/dev/null); }
 
 # Session binding: a step block binds a run in another repository; a plain session stays quiet.
 b=$W/g; mkdir -p "$b/a/.git" "$b/b/.factory"

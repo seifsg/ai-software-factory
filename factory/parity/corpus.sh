@@ -10,10 +10,10 @@ here=$(cd "$(dirname "$0")" && pwd)
 mkdir -p "$W"
 state() { printf -- '-- state\n'; sed "s/^g_seen='[0-9]*'/g_seen='T'/; s/^g_jobs_since='[0-9][0-9]*'/g_jobs_since='T'/" "$1/.factory/guard/state" 2>/dev/null; }
 k=0
-# Writes a full-suite PASS receipt for every Gate B, Gate C and cap sha the run file names.
+# Writes a full-suite PASS receipt for every Gate B, Gate C, review and cap sha the run file names.
 receipts() {
   mkdir -p "$1/.factory/receipts"
-  for s in $(sed -n -E 's/^Gate [BC]: PASS .*@([0-9a-f]{7,40}).*/\1/p' "$1/.factory/run.md"); do
+  for s in $(sed -n -E 's/^(Gate [BC]: PASS|Review: ready) .*@([0-9a-f]{7,40}).*/\2/p' "$1/.factory/run.md" | sort -u); do
     printf 'factory-receipt 1\nsuite full\ntree x\nhead %s\nclean yes\nresult PASS\ncmd parity\n' "$s" > "$1/.factory/receipts/$s-full.txt"
   done
 }
@@ -27,7 +27,7 @@ variant() {
   head=$(git -C "$v/r" rev-parse HEAD)
   cp "$2" "$v/r/.factory/run.md"
   if [ -n "$3" ]; then sed "s#@TP@#$v/projects/p/$sid.jsonl#; s#^g_seen='@NOW@'#g_seen='1'#" "$3" > "$v/r/.factory/guard/state"; else rmdir "$v/r/.factory/guard"; fi
-  # The binary guard also wants a passing full-suite receipt for each Gate B and C commit (sh reads none):
+  # The binary guard also wants a passing full-suite receipt for each Gate B, C and review commit (sh reads none):
   # one per gate sha, matched on its head. A receipt is data, so both guards get the same files.
   receipts "$v/r"
   if [ "${4:-}" = onhead ]; then

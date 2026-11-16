@@ -74,10 +74,24 @@ pub fn gate(x: char) -> String {
     )
 }
 
-/// Gate B or C is proven but its commit's tree has no full-suite receipt (new with the binary guard).
-pub fn receipt(x: char, exe: &str) -> String {
+/// Gate B, C or the review is proven but its commit's tree has no full-suite receipt, or (Gate C) one that
+/// counts more than one run (new with the binary guard).
+pub fn receipt(x: char, standing: crate::receipt::Standing, exe: &str) -> String {
+    let line = if x == 'R' { "The review".to_string() } else { format!("Gate {x}") };
+    match standing {
+        crate::receipt::Standing::Repeated(n) => format!(
+            "Gate C needs exactly one passing full-suite run on HEAD's tree; its receipt counts {n}. The suite runs once per run, on the final head: the owner decides (`Waiting: owner: <question>`), never another run on this tree."
+        ),
+        _ => format!(
+            "{line} has no full-suite receipt for the tree of its commit, so nothing it judged is proven: run the full suite once on that commit with `{exe} receipt run --suite full -- <full-suite command>` (commit or ignore any untracked file first), in the background; reviewers and checkers read its receipt, never run it. Then end your turn."
+        ),
+    }
+}
+
+/// The full suite ran again on a tree it already ran on.
+pub fn repeat(list: &str) -> String {
     format!(
-        "Gate {x} has no full-suite receipt for the tree of its commit: run the full suite on that commit with `{exe} receipt run --suite full -- <full-suite command>` (commit or ignore any untracked file first), then end your turn."
+        "The full suite ran more than once on an unchanged tree ({list}). It runs once per run, on the final head, in the background; every other check reads its receipt or runs only the affected tests. Do not run it again on that tree."
     )
 }
 

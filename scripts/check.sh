@@ -242,12 +242,13 @@ tree() {
   GIT_OPTIONAL_LOCKS=0 GIT_INDEX_FILE=$w/index git -c core.safecrlf=false add -A -- . $x && GIT_INDEX_FILE=$w/index git write-tree
 }
 
-# The receipt of a passed full run, written whole or not at all.
+# The receipt of a passed full run, written whole or not at all; `runs` counts full runs on this tree.
 receipt() {
   mkdir -p "${r%/*}" || return
   c=no; [ "$t" = "$ht" ] && c=yes
-  printf 'factory-receipt 1\nsuite full\ntree %s\nref-tree %s\nhead %s\nclean %s\nresult PASS\ncmd sh scripts/check.sh\nruntime %s\nsecs %s\nat %s\n' \
-    "$t" "$rt" "$hc" "$c" "$rn" "$(( $(date +%s) - s0 ))" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$r.$$" && mv "$r.$$" "$r"
+  n=0; [ -f "$r" ] && { n=$(sed -n 's/^runs \([0-9][0-9]*\)$/\1/p' "$r"); n=${n:-1}; }
+  printf 'factory-receipt 1\nsuite full\ntree %s\nref-tree %s\nhead %s\nclean %s\nresult PASS\ncmd sh scripts/check.sh\nruntime %s\nsecs %s\nat %s\nruns %s\n' \
+    "$t" "$rt" "$hc" "$c" "$rn" "$(( $(date +%s) - s0 ))" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$((n + 1))" > "$r.$$" && mv "$r.$$" "$r"
 }
 
 bin=$FACTORY_BIN

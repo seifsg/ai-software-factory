@@ -96,7 +96,7 @@ pub fn run(input: &Input, mode: Mode, start: &Path) -> Option<Reply> {
         up.clone_from(&head);
     }
     let night = s.num("night_until", 0) > 0;
-    let receipt = |commit: &str| crate::receipt::full_pass_for(repo.as_ref(), commit);
+    let receipt = |x: char, commit: &str| crate::receipt::standing(repo.as_ref(), commit, x);
     let base = ["base_A", "base_B", "base_C", "base_R"].map(|k| s.num(k, 0));
     let f = rules::judge(&Inputs {
         run: &rfile,
@@ -115,7 +115,16 @@ pub fn run(input: &Input, mode: Mode, start: &Path) -> Option<Reply> {
     let before = (mode == Mode::Stop && super::before::posted(&input.last_assistant_message))
         .then(|| super::before::refusal(&dir, &String::from_utf8_lossy(&text), repo.as_ref(), &head))
         .flatten();
-    Ctx { mode, input, s, f, d, run, g, st, rf, note, new_state, now, text, sid: sid.to_string(), tp, before }.after_judge()
+    // Full-suite receipts that count a repeat run on their tree, as `tree: n runs` (short trees).
+    let repeat = repo
+        .as_ref()
+        .map(|r| crate::receipt::repeats(&r.work))
+        .unwrap_or_default()
+        .iter()
+        .map(|(t, n)| format!("{}: {n} runs", &t[..t.len().min(8)]))
+        .collect::<Vec<_>>()
+        .join(", ");
+    Ctx { mode, input, s, f, d, run, g, st, rf, note, new_state, now, text, sid: sid.to_string(), tp, before, repeat }.after_judge()
 }
 
 /// Clear: the owner's command after a halt; also ends night mode. Keeps the run's sessions for gate proof.
@@ -163,6 +172,8 @@ struct Ctx<'a> {
     tp: String,
     /// Why this turn's step 5 block or todo line is refused (a Before missing or late).
     before: Option<String>,
+    /// Trees the full suite ran on more than once; flagged once per new repeat.
+    repeat: String,
 }
 
 impl Ctx<'_> {
@@ -322,6 +333,10 @@ impl Ctx<'_> {
         if todo.is_empty() {
             todo = self.before.clone().unwrap_or_default();
         }
+        if todo.is_empty() && !self.repeat.is_empty() && self.repeat != self.read_marker("repeat") {
+            let _ = std::fs::create_dir_all(&self.g).and_then(|()| std::fs::write(self.g.join("repeat"), &self.repeat));
+            todo = reply::repeat(&self.repeat);
+        }
         self.save();
         if !todo.is_empty() {
             self.idle();
@@ -420,8 +435,8 @@ impl Ctx<'_> {
         if let Some(x) = lp.filter(|x| rounds >= 3 && !f.critical.contains(*x)) {
             return reply::cap(x, rounds);
         }
-        if let Some(x) = f.no_receipt {
-            return reply::receipt(x, &super::exe());
+        if let Some((x, standing)) = f.no_receipt {
+            return reply::receipt(x, standing, &super::exe());
         }
         match f.gate {
             Some('R') => return reply::review(),

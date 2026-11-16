@@ -12,8 +12,10 @@
 //! runtime <stamp>     optional, writer-defined
 //! secs <n>
 //! at <UTC ISO 8601>
+//! runs <n>            runs of this suite recorded on this tree; absent = 1
 //! ```
-//! Readers ignore unknown lines. Gate B and C lines stand only on a `full` PASS receipt for their commit's tree.
+//! Readers ignore unknown lines. Gate B and C and review lines stand only on a `full` PASS receipt for their
+//! commit's tree; Gate C only on one that counts a single run: the suite runs once per tree.
 
 use crate::git::{Repo, tree};
 use std::path::{Path, PathBuf};
@@ -31,6 +33,18 @@ pub struct Receipt {
     pub at: String,
     /// Where the suite's output was saved, when the writer kept it (optional line).
     pub log: String,
+    /// Runs of this suite recorded on this tree; 0 when the line is absent (read as 1).
+    pub runs: u32,
+}
+
+/// Where a gate's commit stands on receipts.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Standing {
+    Ok,
+    /// No full-suite PASS receipt for the commit's tree.
+    Missing,
+    /// Gate C: the PASS receipt counts this many full runs on the tree, not one.
+    Repeated(u32),
 }
 
 impl Receipt {
@@ -52,6 +66,7 @@ impl Receipt {
                 "secs" => r.secs = v.parse().unwrap_or(0),
                 "at" => r.at = v.into(),
                 "log" => r.log = v.into(),
+                "runs" => r.runs = v.parse().unwrap_or(0),
                 _ => {}
             }
         }
@@ -63,7 +78,7 @@ impl Receipt {
         let one = |s: &str| s.replace(['\n', '\r'], " ");
         let log = if self.log.is_empty() { String::new() } else { format!("log {}\n", one(&self.log)) };
         format!(
-            "factory-receipt 1\nsuite {}\ntree {}\nhead {}\nclean {}\nresult {}\ncmd {}\nruntime {}\nsecs {}\nat {}\n{log}",
+            "factory-receipt 1\nsuite {}\ntree {}\nhead {}\nclean {}\nresult {}\ncmd {}\nruntime {}\nsecs {}\nat {}\nruns {}\n{log}",
             one(&self.suite),
             self.tree,
             self.head,
@@ -72,8 +87,14 @@ impl Receipt {
             one(&self.cmd),
             one(&self.runtime),
             self.secs,
-            self.at
+            self.at,
+            self.runs.max(1)
         )
+    }
+
+    /// Full runs this receipt counts on its tree (an old receipt with no `runs` line counts one).
+    pub fn run_count(&self) -> u32 {
+        self.runs.max(1)
     }
 }
 
@@ -82,14 +103,44 @@ pub fn dir(work: &Path) -> PathBuf {
     work.join(".factory/receipts")
 }
 
-/// Writes a receipt for its tree and suite; returns its path.
-pub fn write(work: &Path, r: &Receipt) -> std::io::Result<PathBuf> {
-    let d = dir(work);
-    std::fs::create_dir_all(&d)?;
-    let suite: String = r.suite.chars().map(|c| if c.is_ascii_alphanumeric() || c == '-' || c == '_' { c } else { '_' }).collect();
-    let p = d.join(format!("{}-{suite}.txt", r.tree));
+/// The receipt file of a tree and suite.
+fn path_of(work: &Path, tree: &str, suite: &str) -> PathBuf {
+    let suite: String = suite.chars().map(|c| if c.is_ascii_alphanumeric() || c == '-' || c == '_' { c } else { '_' }).collect();
+    dir(work).join(format!("{tree}-{suite}.txt"))
+}
+
+/// The receipt already written for a tree and suite, if any.
+fn existing(work: &Path, tree: &str, suite: &str) -> Option<(PathBuf, Receipt)> {
+    let p = path_of(work, tree, suite);
+    let r = Receipt::parse(&std::fs::read_to_string(&p).ok()?)?;
+    Some((p, r))
+}
+
+/// Writes a receipt for its tree and suite, counting this run after any earlier one on that tree; returns
+/// its path.
+pub fn write(work: &Path, r: &mut Receipt) -> std::io::Result<PathBuf> {
+    r.runs = existing(work, &r.tree, &r.suite).map_or(1, |(_, old)| old.run_count() + 1);
+    std::fs::create_dir_all(dir(work))?;
+    let p = path_of(work, &r.tree, &r.suite);
     crate::paths::write_atomic(&p, r.render().as_bytes())?;
     Ok(p)
+}
+
+/// Full-suite receipts that count more than one run on their tree: `(tree, runs)`, sorted.
+pub fn repeats(work: &Path) -> Vec<(String, u32)> {
+    let Ok(rd) = std::fs::read_dir(dir(work)) else { return Vec::new() };
+    let mut out: Vec<(String, u32)> = rd
+        .flatten()
+        .filter(|e| e.file_name().to_string_lossy().ends_with("-full.txt"))
+        .filter_map(|e| Receipt::parse(&std::fs::read_to_string(e.path()).ok()?))
+        .filter(|r| r.suite == "full" && r.run_count() > 1)
+        .map(|r| {
+            let n = r.run_count();
+            (r.tree, n)
+        })
+        .collect();
+    out.sort();
+    out
 }
 
 /// The passing receipt of `suite` for the tree of `commit` (sha or unique prefix), if any.
@@ -110,9 +161,14 @@ pub fn find_pass(repo: &Repo, commit: &str, suite: &str) -> Option<(PathBuf, Rec
     all.into_iter().find(|(_, r)| r.tree == t)
 }
 
-/// The guard's question: does a full-suite PASS receipt exist for this commit's tree?
-pub fn full_pass_for(repo: Option<&Repo>, commit: &str) -> bool {
-    repo.is_some_and(|r| find_pass(r, commit, "full").is_some())
+/// The guard's question for a Gate B, C or review line on `commit`: a full-suite PASS receipt for its
+/// tree, and for Gate C (the final head) one that counts a single run.
+pub fn standing(repo: Option<&Repo>, commit: &str, gate: char) -> Standing {
+    match repo.and_then(|r| find_pass(r, commit, "full")) {
+        None => Standing::Missing,
+        Some((_, r)) if gate == 'C' && r.run_count() > 1 => Standing::Repeated(r.run_count()),
+        Some(_) => Standing::Ok,
+    }
 }
 
 /// What a receipt stands on: the work tree and HEAD at one moment (one `git add` spawn for the tree id).
@@ -145,8 +201,10 @@ pub fn record(s: Snapshot, suite: &str, pass: bool, cmd: &str, secs: u64, runtim
         secs,
         at: utc_iso(crate::paths::now()),
         log: log.into(),
+        runs: 0,
     };
-    let p = write(&s.work, &r).map_err(|e| format!("cannot write the receipt: {e}"))?;
+    let mut r = r;
+    let p = write(&s.work, &mut r).map_err(|e| format!("cannot write the receipt: {e}"))?;
     Ok((p, r))
 }
 
@@ -174,6 +232,15 @@ pub fn cli(args: &[&str]) -> u8 {
                     return 1;
                 }
             };
+            // The suite runs once per tree: a passing receipt for this very tree is reused, never rerun.
+            if let Some((p, r)) = existing(&before.work, &before.tree, suite).filter(|(_, r)| r.pass && !opts.contains(&"--again")) {
+                eprintln!(
+                    "factory receipt: {suite} already passed on this tree ({}, {} s): reused, not run again. Reviews and gates read it; `--again` runs it anyway and counts a repeat.",
+                    crate::paths::text(&p),
+                    r.secs
+                );
+                return 0;
+            }
             let started = std::time::Instant::now();
             let status = std::process::Command::new(prog).args(argv).status();
             let code = match status {
@@ -241,7 +308,7 @@ fn report(r: Result<(PathBuf, Receipt), String>) -> u8 {
 
 fn usage() -> u8 {
     eprintln!(
-        "usage: factory receipt run [--suite <name>] -- <command>... | write --cmd <command> (--exit <code> | --result PASS|FAIL) [--suite <name>] [--secs <n>] [--log <path>] [--runtime <s>] | check [--commit <sha>] [--suite <name>]"
+        "usage: factory receipt run [--suite <name>] [--again] -- <command>... | write --cmd <command> (--exit <code> | --result PASS|FAIL) [--suite <name>] [--secs <n>] [--log <path>] [--runtime <s>] | check [--commit <sha>] [--suite <name>]"
     );
     2
 }
@@ -284,8 +351,10 @@ mod tests {
             secs: 3,
             at: "a".into(),
             log: "l".into(),
+            runs: 2,
         };
         assert_eq!(Receipt::parse(&r.render()), Some(r));
+        assert_eq!(Receipt::parse("factory-receipt 1\nsuite full\n").map(|r| r.run_count()), Some(1));
         assert_eq!(utc_iso(0), "1970-01-01T00:00:00Z");
         assert_eq!(utc_iso(1_794_808_234), "2026-11-16T05:50:34Z");
     }
