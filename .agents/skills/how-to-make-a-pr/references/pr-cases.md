@@ -1,6 +1,11 @@
 # PR cases
 
-Rare situations for SKILL.md steps 3 and 7. Commands: `github.md`.
+Rare situations for SKILL.md steps 3, 7 and 8. Commands: `github.md`.
+
+## Epic waves
+
+- Share one integration branch and draft PR. Finished lanes incorporate it, resolve/recheck, then integrate and push without force. Exception: independently complete UI ticket ships own draft after its verify; dependencies must be included and checked. Never wait on unrelated wave tickets.
+- Wave's draft PR open: push to that branch and update that PR: append run's outcomes, criteria verification, remaining steps; refresh summary.
 
 ## Branch
 

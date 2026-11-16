@@ -99,7 +99,7 @@ Long runs lose skill text when the host compacts context. The factory works arou
 
 `tools/night/night.sh` refuses to start unless the run can finish unattended (guard wired, deny rules, own branch, `pre-push` hook, push dry run, tracker sign-in), then starts a session that denies instead of prompting. Owner questions get recorded defaults, owner-only items are parked, and nothing leaves the machine but the run's branch, draft PR and tickets. A watchdog from the OS scheduler resumes a stalled run, waits out usage limits, starts relays and tells you once how it ended. Setup: [install](docs/install.md#overnight-runs).
 
-Details: [run file](.agents/skills/safe-factory/references/run-file.md), [checker](.agents/skills/safe-factory/references/checker.md), [night mode](.agents/skills/safe-factory/references/night.md), [hosts](docs/hosts.md).
+Details: [run file](.agents/skills/safe-factory/references/run-file.md), [coded run](.agents/skills/safe-factory/references/coded-run.md), [checker](.agents/skills/safe-factory/references/checker.md), [night mode](.agents/skills/safe-factory/references/night.md), [hosts](docs/hosts.md).
 
 ## 🔄 Update
 

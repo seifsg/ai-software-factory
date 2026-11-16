@@ -23,8 +23,7 @@ Find real repository, branches, release policy, PR template, signing rule, check
 
 - Work on own branch, `<scope>/<short-name>` (`fix`, `feat`, `docs`, `chore`) or project convention; never commit to base. Protect dirty and foreign work: new branch or isolated checkout.
 - Base = project integration branch, else default branch. Base differs from default branch: say so in PR.
-- **Epic waves:** share one integration branch and draft PR. Finished lanes incorporate it, resolve/recheck, then integrate and push without force. Exception: independently complete UI ticket ships own draft after its verify; dependencies must be included and checked. Never wait on unrelated wave tickets.
-- Dependent ticket, wrong base or hotfix: `references/pr-cases.md`.
+- Epic waves, dependent ticket, wrong base or hotfix: `references/pr-cases.md`.
 - Check remote, not local list: shallow and single-branch clones hide branches.
 
 ```text
@@ -72,7 +71,7 @@ Every PR shows observed Before/After per outcome; prose or illustrative diagrams
 
 ## 8. Every run
 
-Open one every run, unasked, unless its wave's draft PR is open: then push to that branch and update that PR: append run's outcomes, criteria verification, remaining steps; refresh summary.
+Open one every run, unasked, unless its wave's draft PR is open (`references/pr-cases.md`).
 
 - Variations requested: one branch and draft PR each, same rules, own proof.
 - List missing tests, review, baseline as unverified. Link run's epic.
