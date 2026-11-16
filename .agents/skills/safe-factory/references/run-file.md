@@ -45,15 +45,4 @@ T1 pre: <before> do: <change> post: <check> ✔
 - `Review: ready (reviewer <agent id>) @<sha>` under step 8: the reviewer's last verdict, on the pushed head (no remote: its head).
 - `CRITICAL: <finding>` in the current step's block while a critical finding is open, `CRITICAL fixed: <finding>` once the reviewer confirms the fix: it opens loop rounds 4 and 5 ([run cases](run-cases.md#review-loops)).
 
-## What the hooks do
-
-Both use `scripts/run-guard.sh` on this session's run: its binding, nearest in its checkout, then its step block's `Workspace`. Ignored: untouched 12 hours (Stop), `Status: stopped`, finished (step 8 ticked, gates A, B, C and review proven). State: `.factory/guard/`, never edit.
-
-| Hook | When | Does |
-|---|---|---|
-| Stop guard | turn ends | unless `Waiting: owner:`, `Waiting: jobs:` or reported background tasks: blocks, sends a step not ticked, a line over 300 characters, first unproven gate, else `Next:`'s prompt. A wait gets one block for a step not ticked. Past round 5, 6 idle turns or spent night budget: packet prompt, then halted. |
-| Compact | compaction or resume | prints `Next:`, "load that skill fresh"; resume: load `safe-factory` |
-
-Prompt Stop hook: same through `check`; place comes at next block.
-
-Command guard: gate or review line counts only when the named id's subagent file holds that handback on that commit.
+What the hooks do: [run cases](run-cases.md#hooks).

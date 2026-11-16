@@ -1,6 +1,6 @@
 # PR cases
 
-Rare situations for SKILL.md steps 3, 7 and 8. Commands: `github.md`.
+Rare situations for SKILL.md steps 1, 3, 7 and 8. Commands: `github.md`.
 
 ## Epic waves
 
@@ -16,3 +16,7 @@ Rare situations for SKILL.md steps 3, 7 and 8. Commands: `github.md`.
 ## Remote review
 
 Request a fresh one (separate agent, fresh context, exact pushed head); record where it ran, run ID, base/head, verdict. Local review never substitutes; missing remote access leaves review open.
+
+## Released app
+
+Released app: changelog, version, note updates follow its existing format, timing, generators; handoff lists remaining release steps.

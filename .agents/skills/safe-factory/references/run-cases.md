@@ -31,3 +31,24 @@ Owner named a project folder: create if missing; run and code live there, even w
 ## Another session
 
 Work for another session launches the factory, never a bare task: record in its ticket, then a prompt opening with your agent's invoke form of `safe-factory`, naming mode, kind, ticket, project's absolute path, a worktree the new session creates; authority limited to that ticket.
+
+## Update notice
+
+Update notice, new run: before the run file, tell owner, link what's new, ask update or continue (owner-reserved); end turn, no block. Update: notice's command, new session. Resume or night: one line in current block; never wait or update mid-run.
+
+## Guard not live
+
+Step 1 finds no `.factory/guard/state` on a host with hooks: `safe-factory Resume <run folder>` in a fresh session, then stop; still none: `Waiting: owner:` with the cause.
+
+## Hooks
+
+Both use `scripts/run-guard.sh` on this session's run: its binding, nearest in its checkout, then its step block's `Workspace`. Ignored: untouched 12 hours (Stop), `Status: stopped`, finished (step 8 ticked, gates A, B, C and review proven). State: `.factory/guard/`, never edit.
+
+| Hook | When | Does |
+|---|---|---|
+| Stop guard | turn ends | unless `Waiting: owner:`, `Waiting: jobs:` or reported background tasks: blocks, sends a step not ticked, a line over 300 characters, first unproven gate, else `Next:`'s prompt. A wait gets one block for a step not ticked. Past round 5, 6 idle turns or spent night budget: packet prompt, then halted. |
+| Compact | compaction or resume | prints `Next:`, "load that skill fresh"; resume: load `safe-factory` |
+
+Prompt Stop hook: same through `check`; place comes at next block.
+
+Command guard: gate or review line counts only when the named id's subagent file holds that handback on that commit.
