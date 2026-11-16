@@ -15,7 +15,7 @@ MISSING. For every line, find the output that meets it; open what it names; chec
 URL vs bare number, table vs prose, commit, command). Strict: unsure is MISSING, with the reason.
 `DEFERRED (owner|hardware: <what>)` meets a line only for work that needs the
 owner (hands, approval, an install) or missing hardware; a stub or placeholder never does, and "unverified" only as that DEFERRED.
-Read-only. Round 1 checks every line at once. Hand back "Gate <X>: PASS @<commit>" when all are met, else "Gate <X>:
+Read-only; never run the suite (read its receipt). Round 1 checks every line at once. Hand back "Gate <X>: PASS @<commit>" when all are met, else "Gate <X>:
 FAIL <n> missing" and the list. Do not read the builder's notes or chat.
 Round 2 on: recheck only MISSING lines of round 1's handback; the rest stay met.
 ```
@@ -36,6 +36,7 @@ Gate C's list, besides `## 7 PR`:
 - [ ] `## 8 Review` holds the reviewer's verdict, or its cap line, on the PR's current head
 - [ ] Every After file valid on the final head by `how-to-make-a-pr`'s After rule
 - [ ] Each `(ask)` criterion answered: its answer or link in `## 8 Review` or the PR body
+- [ ] One passing full-suite receipt for the final head's tree (no `factory`: the run's log naming it)
 - [ ] `## 8 Review` has `Left running:` as its last line before any Gate C line, with each item's stop command, or `none`
 
 ## Handback

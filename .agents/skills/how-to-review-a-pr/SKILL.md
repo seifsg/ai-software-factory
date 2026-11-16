@@ -19,7 +19,7 @@ Review any PR (teammate, customer, agent) end to end. Every factory-opened PR ge
 
 ## 0. Intake and claim
 
-Factory run: first call starts the full suite in the background on the head, unless the brief names its log (running or done) or a receipt for that head's tree (`factory receipt check`): then read that, never rerun. Read code while it runs.
+Factory run: never run the suite. Read the receipt for the head you judge (`factory receipt check`; no `factory`: the run's log naming that tree); a head without a passing one is `not ready`, so your last verdict waits for the final run.
 
 1. Resolve PR. Fetch metadata, diff, commits, comments, reviews, linked issues.
 2. Check out PR head. Record the branch you came from.
