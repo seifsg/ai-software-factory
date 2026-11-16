@@ -23,9 +23,11 @@ for side in sh bin; do
   done
 done
 # Replies name the run folder (each side has its own) and the program the owner runs next: after a halt
-# (`clear`) and for leftovers (`doctor --fix`). A doctor backup folder is named for the clock.
+# (`clear`) and for leftovers (`doctor --fix`). A doctor backup folder is named for the clock. On Windows the
+# temp folder has a short (8.3) and a long spelling, and either guard may print either.
+long=$w; command -v cygpath >/dev/null && long=$(cygpath -m -l "$w")
 norm() {
-  sed -e "s#$(native "$w")/[a-z]*/#W/#g" -e "s#$w/[a-z]*/#W/#g" \
+  sed -e "s#$(native "$w")/[a-z]*/#W/#g" -e "s#$long/[a-z]*/#W/#g" -e "s#$w/[a-z]*/#W/#g" \
     -e 's#resumes with: [^"]* clear #resumes with: CLEAR #' -e 's#resumes it: [^"]* clear #resumes it: CLEAR #' \
     -e 's#(`[^`]* --fix` moves#(`DOCTOR --fix` moves#' -e 's#/removed/[0-9-]*/#/removed/STAMP/#g' "$1"
 }

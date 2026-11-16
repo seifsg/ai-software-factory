@@ -50,9 +50,13 @@ fn emit(r: Option<Reply>) -> u8 {
     0
 }
 
-/// The current folder, or `.` when unreadable.
+/// The current folder as the shell names it (`$PWD`, so `/var` stays `/var` on macOS, not `/private/var`),
+/// else as the system resolves it, or `.` when unreadable. Why: replies name the run in the agent's spelling.
 pub fn cwd() -> PathBuf {
-    std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."))
+    let real = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+    let shell = std::env::var_os("PWD").map(|p| PathBuf::from(crate::paths::norm(&p.to_string_lossy())));
+    let same = |p: &PathBuf| p.is_absolute() && std::fs::canonicalize(p).ok() == std::fs::canonicalize(&real).ok();
+    shell.filter(same).unwrap_or(real)
 }
 
 /// Plays the Stop event from the run file and Git alone (never a transcript) and says may stop or continue.
