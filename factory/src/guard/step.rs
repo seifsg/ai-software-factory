@@ -1,0 +1,176 @@
+//! `guard step <n|Tk>`: the coordinator posts a block, then this writes it into the run file (no hand
+//! edits of block text), ticks its heading, sets `Next:`, and answers with the Stop rules as one plain line,
+//! so the run goes on in the same turn. `T<k>` lines go under `## 5 Build` without ticking it.
+
+use crate::receipt::opt;
+use std::io::Read;
+use std::path::Path;
+
+/// Steps in order with their names and skills.
+pub const STEPS: [(&str, &str, &str); 10] = [
+    ("0", "Ticket", "ticketing"),
+    ("1", "Analyze", "analyze-start"),
+    ("2", "Recommend", "recommend"),
+    ("2b", "Challenge", "recommend"),
+    ("3", "Plan", "get-ready-to-code"),
+    ("4", "Before", "how-to-make-a-pr"),
+    ("5", "Build", "get-ready-to-code"),
+    ("6", "Verify", "deep-review"),
+    ("7", "PR", "how-to-make-a-pr"),
+    ("8", "Review", "how-to-review-a-pr"),
+];
+
+const TICK: &str = "\u{2714}";
+
+pub fn cli(args: &[&str]) -> u8 {
+    let Some((label, opts)) = args.split_first() else {
+        eprintln!("usage: factory guard step <n|Tk> [--session <id>] [--transcript <path>] < block");
+        return 2;
+    };
+    let mut block = String::new();
+    if std::io::stdin().read_to_string(&mut block).is_err() || block.trim().is_empty() {
+        eprintln!("factory guard step: the block comes on stdin");
+        return 2;
+    }
+    let here = super::cwd();
+    let session = opt(opts, "--session").unwrap_or("");
+    let found = crate::run::locate::find(&here, session, "");
+    let Some(dir) = found.dir else {
+        eprintln!("factory guard step: no run file from this folder");
+        return 1;
+    };
+    let run = Path::new(&dir).join(".factory/run.md");
+    let text = std::fs::read_to_string(&run).unwrap_or_default();
+    let updated = match write(&text, label, &block) {
+        Ok(t) => t,
+        Err(e) => {
+            eprintln!("factory guard step: {e}");
+            return 1;
+        }
+    };
+    if let Err(e) = crate::paths::write_atomic(&run, updated.as_bytes()) {
+        eprintln!("factory guard step: cannot write {}: {e}", crate::paths::text(&run));
+        return 1;
+    }
+    let input = crate::hook::Input {
+        session_id: session.into(),
+        transcript_path: opt(opts, "--transcript").unwrap_or("").into(),
+        cwd: dir.clone(),
+        ..Default::default()
+    };
+    let r = super::flow::run(&input, super::flow::Mode::Stop, Path::new(&dir));
+    print!("{}", super::reply::check_line(r.as_ref().map_or("", crate::hook::Reply::inner), true));
+    0
+}
+
+/// The run file with the block written in: a step block replaces its section and ticks it; a `T<k>` line
+/// replaces or joins the build section's todo lines. Proof lines the block drops (gate, review) are kept.
+pub fn write(text: &str, label: &str, block: &str) -> Result<String, String> {
+    let block = block.replace("\r\n", "\n");
+    let block = block.trim_end_matches('\n');
+    if let Some(k) = label.strip_prefix('T') {
+        k.parse::<u32>().map_err(|_| format!("{label}: not a todo id"))?;
+        let prefix = format!("{label} pre:");
+        if !block.starts_with(&prefix) {
+            return Err(format!("a todo line starts with `{prefix}`"));
+        }
+        return Ok(todo_line(text, &prefix, block));
+    }
+    let i = STEPS.iter().position(|(n, _, _)| *n == label).ok_or_else(|| format!("{label}: not a step (0-8, 2b, or T<k>)"))?;
+    let (n, name, _) = STEPS[i];
+    let body = match block.lines().next() {
+        Some(first) if first.starts_with("## ") => {
+            let want = format!("## {n} {name}");
+            if !first.starts_with(&want) {
+                return Err(format!("the block opens with `{first}`, not `{want}`"));
+            }
+            block.split_once('\n').map_or("", |(_, rest)| rest)
+        }
+        _ => block,
+    };
+    let mut lines: Vec<String> = text.lines().map(String::from).collect();
+    let heading = format!("## {n} {name}");
+    let at = lines.iter().position(|l| l.starts_with(&heading));
+    let start = match at {
+        Some(h) => h,
+        None => {
+            if lines.last().is_some_and(|l| !l.is_empty()) {
+                lines.push(String::new());
+            }
+            lines.push(heading.clone());
+            lines.len() - 1
+        }
+    };
+    let end = lines[start + 1..].iter().position(|l| l.starts_with("## ")).map_or(lines.len(), |e| start + 1 + e);
+    let kept: Vec<String> = lines[start + 1..end]
+        .iter()
+        .filter(|l| is_proof(l) && !body.lines().any(|b| b == l.as_str()))
+        .cloned()
+        .collect();
+    if !lines[start].contains(TICK) {
+        lines[start] = format!("{} {TICK}", lines[start].trim_end());
+    }
+    let mut section: Vec<String> = body.lines().map(String::from).collect();
+    section.extend(kept);
+    if end < lines.len() {
+        section.push(String::new());
+    }
+    lines.splice(start + 1..end, section);
+    if let Some((m, mname, skill)) = STEPS.get(i + 1).filter(|_| n != "8") {
+        let next = format!("Next: {m} {mname} \u{b7} {skill}");
+        match lines.iter().position(|l| l.starts_with("Next:")) {
+            Some(p) => lines[p] = next,
+            None => return Err("the run file has no `Next:` line".into()),
+        }
+    }
+    Ok(lines.join("\n") + "\n")
+}
+
+/// Lines that prove a gate or the review: never dropped by a rewrite.
+fn is_proof(l: &str) -> bool {
+    ["Gate A:", "Gate B:", "Gate C:", "Review: ready"].iter().any(|p| l.starts_with(p)) && !l.contains(": FAIL")
+}
+
+/// Replaces the `T<k> pre:` line under `## 5 Build`, or adds it after the section's last line.
+fn todo_line(text: &str, prefix: &str, line: &str) -> String {
+    let mut lines: Vec<String> = text.lines().map(String::from).collect();
+    let start = lines.iter().position(|l| l.starts_with("## 5 Build"));
+    let start = start.unwrap_or_else(|| {
+        lines.push("## 5 Build".into());
+        lines.len() - 1
+    });
+    let end = lines[start + 1..].iter().position(|l| l.starts_with("## ")).map_or(lines.len(), |e| start + 1 + e);
+    if let Some(p) = lines[start + 1..end].iter().position(|l| l.starts_with(prefix)) {
+        lines[start + 1 + p] = line.to_string();
+    } else {
+        let mut at = end;
+        while at > start + 1 && lines[at - 1].is_empty() {
+            at -= 1;
+        }
+        lines.insert(at, line.to_string());
+    }
+    lines.join("\n") + "\n"
+}
+
+#[cfg(test)]
+mod tests {
+    use super::write;
+
+    const RUN: &str = "# Run: x\nStatus: open\nNext: 3 Plan \u{b7} get-ready-to-code\nWaiting: none\n\n## 3 Plan\nold\nGate A: PASS (checker c) @abc1234\n\n## 4 Before\n";
+
+    #[test]
+    fn writes_ticks_and_moves_next() {
+        let out = write(RUN, "3", "## 3 Plan\n**Files:** a\n").unwrap();
+        assert!(out.contains("## 3 Plan \u{2714}\n**Files:** a\nGate A: PASS (checker c) @abc1234\n\n## 4 Before"));
+        assert!(out.contains("Next: 4 Before \u{b7} how-to-make-a-pr"));
+        assert!(!out.contains("old"));
+    }
+
+    #[test]
+    fn todo_lines_join_the_build_section() {
+        let run = "Next: 5 Build \u{b7} get-ready-to-code\n## 5 Build\nT1 pre: a do: b post: c \u{2714}\n\n## 6 Verify\n";
+        let out = write(run, "T2", "T2 pre: x do: y post: z \u{2714}").unwrap();
+        assert!(out.contains("T1 pre: a do: b post: c \u{2714}\nT2 pre: x do: y post: z \u{2714}\n\n## 6 Verify"));
+        assert!(write(run, "4", "## 5 Build\nx").is_err());
+    }
+}
