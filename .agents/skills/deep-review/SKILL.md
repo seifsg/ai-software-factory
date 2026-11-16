@@ -187,11 +187,11 @@ Disposition decides the gate: `blocking`, `before-exposure` or `accepted-deferra
 
 ## Output contract
 
-In a factory run this is step 6, Verify: builder runs this round, independent review is step 8 (`how-to-review-a-pr`). The block `## 6 Verify` holds:
+In a factory run this is step 6, Verify: fresh agents run this review on the verify candidate while step 8's reviewer (`how-to-review-a-pr`) reviews it too; the builder runs the manual round and one merged fix round. The block `## 6 Verify` holds:
 
 - [ ] Every requested journey used through real controls, with observed results
-- [ ] compliance results, change-guard results when existing code, contracts or data changed, plus each other lens run, each with its findings table (possibly empty) and verdict, e.g. `**compliance:** <its table, or "no findings"> · PASS`
-- [ ] An `after-<id>` file for every proof-list id, same ids as Before, captured in that same round on the verified head, each naming that commit; a later edit recaptures the ids it touches; a full-suite id is that final run
+- [ ] compliance, change-guard when existing code, contracts or data changed, and each other lens run, each named with its verdict and a findings table only where it has findings, e.g. `**compliance:** no findings · PASS`
+- [ ] An `after-<id>` file for every proof-list id, same ids as Before, valid on the final head by `how-to-make-a-pr`'s After rule; a full-suite id is that final run
 - [ ] UI check (new UI): analyst misses vs step 2 look + refs, primary platform; else `existing` or `no UI`
-- [ ] The full suite: command and result, run once after manual use
+- [ ] The full suite: command and result, run once on the final head
 - [ ] The verdict; blocking findings fixed through the build loop before the gate

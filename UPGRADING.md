@@ -2,6 +2,11 @@
 
 What installs and active runs must do for each release, newest first. What changed: [CHANGELOG.md](CHANGELOG.md).
 
+## Unreleased
+
+1. **Night mode that copied the allow list** (`claude-settings.json`) or `codex.rules`: copy both from `tools/night/` again; they allow the `factory` commands the methods call and deny `factory guard clear`.
+2. **Open runs:** past step 3, finish under the version that started them, or resume after updating and recapture each After with its input hash (After rule) and name the base commit in each non-visual Before. Without the `factory` command a run keeps today's one step per turn.
+
 ## 0.7.0
 
 1. **Night and watchdog moved:** `night.sh`, `watchdog.sh`, `claude-settings.json`, `pre-push` and `codex.rules` are now in `tools/night/`. Update any schedule or copied path from `<clone>/.agents/hooks/` to `<clone>/tools/night/`.

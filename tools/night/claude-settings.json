@@ -13,20 +13,21 @@
       "Bash(gh api --paginate * --raw-field*)", "Bash(gh api --paginate * --input*)",
       "Bash(gh * -R *)", "Bash(gh * --repo *)",
       "Bash(rm -rf /*)", "Bash(rm -rf ~*)", "Bash(rm -rf ../*)", "Bash(rm -rf $HOME*)", "Bash(rm -r /*)", "Bash(rm -r ~*)", "Bash(rm -r ../*)",
-      "Bash(*run-guard.sh clear*)", "Bash(*.factory/guard*)",
+      "Bash(*run-guard.sh clear*)", "Bash(*factory guard clear*)", "Bash(*.factory/guard*)",
       "Edit(.claude/settings*.json)", "Edit(~/.claude/settings*.json)", "Edit(~/.codex/**)",
       "Edit(//**/.factory/guard/**)", "Edit(//**/run-guard.sh)", "Edit(//**/hooks.json)", "Edit(//**/.git/hooks/**)",
       "Edit(//**/.agents/hooks/**)", "Edit(//**/tools/night/**)", "Edit(//**/.factory/night-settings.json)"
     ],
     "allow": [
       "Read", "Glob", "Grep", "Agent", "Skill", "WebSearch", "WebFetch", "Edit(./**)",
-      "Bash(git status*)", "Bash(git diff*)", "Bash(git log*)", "Bash(git show*)", "Bash(git rev-parse*)", "Bash(git ls-files*)",
+      "Bash(git status*)", "Bash(git diff*)", "Bash(git log*)", "Bash(git show*)", "Bash(MSYS_NO_PATHCONV=1 git show *)", "Bash(git rev-parse*)", "Bash(git ls-files*)",
       "Bash(git ls-remote*)", "Bash(git fetch*)", "Bash(git add *)", "Bash(git commit *)", "Bash(git switch *)", "Bash(git branch*)",
       "Bash(git push)", "Bash(git push -u origin HEAD)", "Bash(git push origin HEAD)", "Bash(git push --dry-run *)",
       "Bash(gh auth status*)", "Bash(gh issue *)", "Bash(gh label *)", "Bash(gh api repos/*)", "Bash(gh api --paginate repos/*)",
       "Bash(gh api -X POST repos/*/issues/*/sub_issues *)", "Bash(gh repo view*)", "Bash(gh pr checks*)",
-      "Bash(git push origin *:refs/proof/*)", "Bash(git hash-object *)", "Bash(git mktree*)", "Bash(git commit-tree *)",
-      "Bash(gh pr create --draft *)", "Bash(gh pr view *)", "Bash(gh pr list*)", "Bash(gh pr diff *)", "Bash(gh pr edit *)", "Bash(gh pr comment *)"
+      "Bash(git push origin *:refs/proof/*)", "Bash(git worktree add *)", "Bash(git worktree remove *)", "Bash(git hash-object *)", "Bash(git mktree*)", "Bash(git commit-tree *)",
+      "Bash(gh pr create --draft *)", "Bash(gh pr view *)", "Bash(gh pr list*)", "Bash(gh pr diff *)", "Bash(gh pr edit *)", "Bash(gh pr comment *)",
+      "Bash(factory guard step *)", "Bash(factory guard check*)", "Bash(factory lint *)", "Bash(factory contracts *)", "Bash(factory proof-hash *)", "Bash(factory receipt *)"
     ]
   },
   "hooks": {

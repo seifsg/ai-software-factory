@@ -9,7 +9,7 @@ cd "$(git rev-parse --show-toplevel)" || exit 1
 w=$(mktemp -d) || exit 1; trap 'rm -rf "$w"' EXIT  # short POSIX temp path: a C:/ path would split PATH at its colon
 fail() { echo "FAIL: $*"; bad=1; }
 skills=.agents/skills
-read_set='safe-factory/SKILL.md stop-check/SKILL.md safe-factory/references/run-file.md safe-factory/references/checker.md safe-factory/references/sizes.md safe-factory/references/delegate.md safe-factory/references/owner-reports.md safe-factory/references/worth-it.md ticketing/SKILL.md ticketing/references/ticket-layout.md analyze-start/SKILL.md recommend/SKILL.md get-ready-to-code/SKILL.md how-to-make-a-pr/SKILL.md how-to-make-a-pr/references/media-proof.md how-to-make-a-pr/references/pr-layout.md how-to-make-a-pr/references/github.md deep-review/SKILL.md deep-review/references/change-guard.md deep-review/references/compliance.md'
+read_set='safe-factory/SKILL.md stop-check/SKILL.md safe-factory/references/run-file.md safe-factory/references/checker.md safe-factory/references/sizes.md safe-factory/references/delegate.md safe-factory/references/owner-reports.md safe-factory/references/coded-run.md ticketing/SKILL.md ticketing/references/ticket-layout.md analyze-start/SKILL.md recommend/SKILL.md get-ready-to-code/SKILL.md how-to-make-a-pr/SKILL.md how-to-make-a-pr/references/media-proof.md how-to-make-a-pr/references/pr-layout.md how-to-make-a-pr/references/github.md deep-review/SKILL.md deep-review/references/worth-it.md'
 
 # Method bytes of a ref: "<all methods> <read set>".
 bytes() {
@@ -26,10 +26,10 @@ o=$(git grep -nE '\]\(\.\./' "$ref" -- $skills) && fail "links out of a skill fo
 o=$(git ls-tree -rl "$ref" $skills | awk '$5 ~ /\/SKILL\.md$/ && $4 >= 17000 {print $5}') && [ -n "$o" ] && fail "SKILL.md at 17000 bytes or over: $o"
 o=$(git ls-tree -r --name-only "$ref" | grep -iE '\.(png|jpe?g|gif|webp|mp4|webm|mov)$' | grep -vx '.agents/.claude-plugin/icon.png') && fail "media committed (proof belongs in refs/proof/): $o"
 
-# Budgets: all methods under 170000, read set under 105000.
+# Budgets: all methods under 177700, read set under 97300.
 set -- $(bytes "$ref")
-[ "$1" -lt 170000 ] || fail "methods $1 bytes, budget 170000"
-[ "$2" -lt 105000 ] || fail "read set $2 bytes, budget 105000"
+[ "$1" -lt 177700 ] || fail "methods $1 bytes, budget 177700"
+[ "$2" -lt 97300 ] || fail "read set $2 bytes, budget 97300"
 
 blob() { MSYS_NO_PATHCONV=1 git show "$ref:$1"; }  # <ref>:<path> as typed under Git Bash
 

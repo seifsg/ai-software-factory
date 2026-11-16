@@ -39,20 +39,9 @@ T1 pre: <before> do: <change> post: <check> ✔
 
 - `Status:` `open`, `closed`, or `stopped (<owner's reason>)`.
 - `Next:` `<step number> <step name> · <skill>`: the first unticked step, or, while an earlier step is blocked, the step you continue with; the blocked step's block names its blocker. Past step 3 that needs `Waiting: owner:`. Owner skips a step: tick it, block `Skipped by owner ("<their words>")`. A closed run: `none (closed)`.
-- A heading gets `✔` only when its block meets its skill's output contract. A gate line is separate: an open gate never unticks a step.
+- A heading gets `✔` only when its block meets its skill's output contract. A gate line is separate: an open gate never unticks a step. [Coded run](coded-run.md): the guard writes and ticks each posted block; never hand-edit block text.
 - `Gate A|B|C: PASS (checker <agent id>) @<sha>` lines carry a checker's handback (`Gate <X>: PASS @<sha>`), under steps 3, 6 and 8. An owner waiver is `Gate <X>: WAIVED by owner ("<their words>")`; night runs take none. A failed check leaves `Gate <X>: FAIL <missing items>`; each rerun replaces the earlier line for that gate.
 - `Review: ready (reviewer <agent id>) @<sha>` under step 8: the reviewer's last verdict, on the pushed head (no remote: its head).
 - `CRITICAL: <finding>` in the current step's block while a critical finding is open, `CRITICAL fixed: <finding>` once the reviewer confirms the fix: it opens loop rounds 4 and 5 ([run cases](run-cases.md#review-loops)).
 
-## What the hooks do
-
-Both use `scripts/run-guard.sh` on this session's run: its binding, nearest in its checkout, then its step block's `Workspace`. Ignored: untouched 12 hours (Stop), `Status: stopped`, finished (step 8 ticked, gates A, B, C and review proven). State: `.factory/guard/`, never edit.
-
-| Hook | When | Does |
-|---|---|---|
-| Stop guard | turn ends | unless `Waiting: owner:`, `Waiting: jobs:` or reported background tasks: blocks, sends a step not ticked, a line over 300 characters, first unproven gate, else `Next:`'s prompt. A wait gets one block for a step not ticked. Past round 5, 6 idle turns or spent night budget: packet prompt, then halted. |
-| Compact | compaction or resume | prints `Next:`, "load that skill fresh"; resume: load `safe-factory` |
-
-Prompt Stop hook: same through `check`; place comes at next block.
-
-Command guard: gate or review line counts only when the named id's subagent file holds that handback on that commit.
+What the hooks do: [run cases](run-cases.md#hooks).

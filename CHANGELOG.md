@@ -6,6 +6,23 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+### Changed
+
+- Make runs with the `factory` command chain steps in one turn: the guard writes each posted block into the run file, and Stop prompt hooks load only when it asks ([#316])
+- Make the step-6 review and the PR reviewer start together on the verify candidate, with one merged fix round and the full suite run once on the final head ([#316])
+- Make a change run read about 40% less skill text: rare cases load on demand, and a coded run loads each skill once ([#316])
+- Cap reviewer and checker handbacks at 2,000 characters; the full review report goes to a file ([#316])
+- Keep an After capture valid while its proof's input files are unchanged, and take non-visual Before proof from the base commit in the background ([#316])
+
+### Added
+
+- Add `(ask)` criteria: every explicit request in the brief becomes a criterion that Gate C checks ([#316])
+- Add a Windows note: in Git Bash, prefix `git show <ref>:<path>` with `MSYS_NO_PATHCONV=1`, never set it globally ([#316])
+
+### Fixed
+
+- Fix review and Gate C contracts demanding a PR card and comment on runs with no remote ([#316])
+
 ## [0.7.2] - 2026-11-16
 
 ### Added
@@ -378,3 +395,4 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 [#302]: https://github.com/seifsg/ai-software-factory/pull/302
 [#309]: https://github.com/seifsg/ai-software-factory/pull/309
 [#312]: https://github.com/seifsg/ai-software-factory/pull/312
+[#316]: https://github.com/seifsg/ai-software-factory/pull/316

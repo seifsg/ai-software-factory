@@ -2,6 +2,8 @@
 
 Needs Git, read access to the repository (`gh auth login` lets Git use your GitHub credentials over HTTPS) and, on Windows, Git Bash for the hooks.
 
+On Windows, Git Bash rewrites `<ref>:<path>` arguments: `git show origin/main:.agents/x` becomes `origin\main;.agents\x` and fails. In Git Bash, prefix such a command with `MSYS_NO_PATHCONV=1` (`MSYS_NO_PATHCONV=1 git show origin/main:.agents/x`); PowerShell needs nothing. Never set it globally (settings `env`, `setx`): Git Bash then stops converting POSIX paths such as `/tmp/x` for native programs, and `git -C /tmp/x` fails.
+
 ## Claude Code
 
 ```text

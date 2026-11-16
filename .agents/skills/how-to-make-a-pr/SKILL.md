@@ -9,7 +9,7 @@ Open a **draft PR**. Humans decide ready, merge, release. Analysis or review-onl
 
 ## 1. Bind the project
 
-Find real repository, branches, release policy, PR template, signing rule, check commands, tracker, review owner from rules, manifests, CI, remote metadata. Never copy accounts, branches or tools from another project. Ask only consequential gaps. Missing binding blocks its dependent step; keep local work going. Released app: changelog, version, note updates follow its existing format, timing, generators; handoff lists remaining release steps.
+Find real repository, branches, release policy, PR template, signing rule, check commands, tracker, review owner from rules, manifests, CI, remote metadata. Never copy accounts, branches or tools from another project. Ask only consequential gaps. Missing binding blocks its dependent step; keep local work going. Released app: `references/pr-cases.md`.
 
 ## 2. Ticket first
 
@@ -23,8 +23,7 @@ Find real repository, branches, release policy, PR template, signing rule, check
 
 - Work on own branch, `<scope>/<short-name>` (`fix`, `feat`, `docs`, `chore`) or project convention; never commit to base. Protect dirty and foreign work: new branch or isolated checkout.
 - Base = project integration branch, else default branch. Base differs from default branch: say so in PR.
-- **Epic waves:** share one integration branch and draft PR. Finished lanes incorporate it, resolve/recheck, then integrate and push without force. Exception: independently complete UI ticket ships own draft after its verify; dependencies must be included and checked. Never wait on unrelated wave tickets.
-- Dependent ticket, wrong base or hotfix: `references/pr-cases.md`.
+- Epic waves, dependent ticket, wrong base or hotfix: `references/pr-cases.md`.
 - Check remote, not local list: shallow and single-branch clones hide branches.
 
 ```text
@@ -39,10 +38,10 @@ git switch -c <scope>/<short-name> origin/<base>
 Every PR shows observed Before/After per outcome; prose or illustrative diagrams never replace results. Nonvisual proof, in a `diff`: API, one request's status and body; CLI or script, one command's output; method or prose, a fresh walkthrough's changed result and key text. Speed/size/cost proof measures same workload. Internal module proves its changed screen, endpoint or command. New nonvisual result: prior output is "did not exist". Name `**Visual:**` and `**Journey:**` under each outcome (`references/pr-layout.md`), with reason when no. Map shared backend effects to UI journeys.
 
 1. Take plan's proof list. Changed views, states, motion, interactions or affected UI journeys: read [visual and journey proof](references/media-proof.md) now; its rules apply in full.
-2. Brand-new surface: no Before capture, Before = "did not exist". Capture every other Before now, before any source edit, into `.factory/proof/<ticket>/before-<id>.png` (screens) or `before-<id>.txt` (commands, responses, text). Screens: capture from the preview owner watches, else host's built-in browser; keep that one server for After. No Playwright, headless browsers or capture scripts unless owner asks. Host cannot save screenshot as file: write what it shows into `before-<id>.txt` as `pane:` observation; valid proof, no waiver needed.
+2. Brand-new surface: no Before capture, Before = "did not exist". Non-visual Before (commands, responses, text) comes from base, frozen in Git, into `.factory/proof/<ticket>/before-<id>.txt`, by a background runner while the plan finishes: base output run before any edit, or `git show <base>:<path>` anytime; it names the base commit. Capture every screen Before now, before any source edit, into `before-<id>.png`. Screens: capture from the preview owner watches, else host's built-in browser; keep that one server for After. No Playwright, headless browsers or capture scripts unless owner asks. Host cannot save screenshot as file: write what it shows into `before-<id>.txt` as `pane:` observation; valid proof, no waiver needed.
 3. Inspect every capture: right screen, readable, no secrets.
 4. Missed a Before after editing: text and command proof come from base (`git show <base>:<path>`, base build output); screenshot no longer takeable: state it as missing in PR. Never a second checkout or server just for a picture.
-5. Capture After during verify's manual round, same server, same ids: `after-<id>.*`. Later fix recaptures only ids it affects.
+5. **After rule:** capture After during verify's manual round, same server, same ids: `after-<id>.*`, naming its commit and `factory proof-hash <the id's input files>` (no `factory` command: `git log -1 --format=%h -- <input files>`). It stays valid while that hash holds; a change to an input file recaptures that id, and only that id.
 
 ## 5. Make the change
 
@@ -56,7 +55,7 @@ Every PR shows observed Before/After per outcome; prose or illustrative diagrams
 
 ## 6. Open the draft
 
-1. Write body to a file with `references/pr-layout.md`. Upload Before/After media first (`references/github.md`), link with `https` URLs.
+1. Write body to a file with `references/pr-layout.md`. Upload Before/After media first (`references/github-media.md`), link with `https` URLs.
 2. Push, then open as **draft** against base. Commands: `references/github.md`.
 3. Closing keyword only on each sub-issue or change ticket this PR finishes; epic always gets plain reference.
 4. Request review only from a review owner other than PR author, via supported mechanism, at draft time. Notify only authorized recipient or channel. Reminders only when asked.
@@ -72,7 +71,7 @@ Every PR shows observed Before/After per outcome; prose or illustrative diagrams
 
 ## 8. Every run
 
-Open one every run, unasked, unless its wave's draft PR is open: then push to that branch and update that PR: append run's outcomes, criteria verification, remaining steps; refresh summary.
+Open one every run, unasked, unless its wave's draft PR is open (`references/pr-cases.md`).
 
 - Variations requested: one branch and draft PR each, same rules, own proof.
 - List missing tests, review, baseline as unverified. Link run's epic.
@@ -87,7 +86,7 @@ Open one every run, unasked, unless its wave's draft PR is open: then push to th
 The block `## 4 Before` holds:
 
 - [ ] Every proof-list id with its `before-<id>` file under `.factory/proof/<ticket>/`, or "did not exist" for a new surface
-- [ ] Saved before the first source edit
+- [ ] Screens saved before the first source edit; non-visual ones taken from base, naming it
 - [ ] Each capture inspected, or none to inspect: every id "did not exist"
 
 The block `## 7 PR` holds the draft PR URL, and the PR itself has:
@@ -96,6 +95,6 @@ The block `## 7 PR` holds the draft PR URL, and the PR itself has:
 - [ ] A clickable ticket link in the body, and the PR link in the ticket's activity
 - [ ] Purpose & goal, Before & after, Verification and Progress / next, in that order (other sections and their wording are never a FAIL)
 - [ ] One heading per outcome under Before & after, each with `**Visual:**`, `**Journey:**` and either `**Before:**` and `**After:**`, each an `https` image, fenced output or `pane:` observation, or one `**Before → After:**` with a two-column image table (Visual yes) or a `diff` block (Visual no); a new surface or output's Before is `did not exist`
-- [ ] Each After names the commit it was captured on
+- [ ] Each After names its commit and input hash, valid by the After rule
 - [ ] Verification: criterion → change → proof → gap, with each command and its result; unverified items named
 - [ ] Review requested from a review owner other than the author, or none (solo owner)
