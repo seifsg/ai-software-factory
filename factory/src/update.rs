@@ -73,8 +73,32 @@ fn spawn_refresh() {
     {
         use std::os::windows::process::CommandExt;
         c.creation_flags(0x0000_0008 | 0x0800_0000); // DETACHED_PROCESS | CREATE_NO_WINDOW
+        keep_std_handles();
     }
     let _ = c.spawn();
+}
+
+/// Marks this process's stdin, stdout and stderr not inheritable. Why: Windows hands every inheritable
+/// handle to a child, so the background fetch would hold the host's hook pipe open and the host would wait
+/// on it (up to the fetch's 20 s) before it reads this hook's reply.
+#[cfg(windows)]
+fn keep_std_handles() {
+    use std::ffi::c_void;
+    unsafe extern "system" {
+        fn GetStdHandle(n: u32) -> *mut c_void;
+        fn SetHandleInformation(h: *mut c_void, mask: u32, flags: u32) -> i32;
+    }
+    const HANDLE_FLAG_INHERIT: u32 = 1;
+    for n in [-10i32, -11, -12] {
+        // SAFETY: GetStdHandle takes any STD_* id; SetHandleInformation only changes the flag of a handle
+        // this process owns, and a null or invalid handle makes it fail without effect.
+        unsafe {
+            let h = GetStdHandle(n as u32);
+            if !h.is_null() && h as isize != -1 {
+                SetHandleInformation(h, HANDLE_FLAG_INHERIT, 0);
+            }
+        }
+    }
 }
 
 /// The background fetch: the release marked Latest through `gh`, else `curl`, each cut at 20 s; written only

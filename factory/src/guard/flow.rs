@@ -119,7 +119,7 @@ fn clear(s: &mut State, st: &Path, run: &Path) -> Reply {
     let text = std::fs::read(run).unwrap_or_default();
     let body = text.strip_suffix(b"\n").unwrap_or(&text);
     let kept: Vec<&[u8]> = if text.is_empty() { Vec::new() } else { body.split(|&b| b == b'\n').filter(|l| !l.starts_with(b"Night:")).collect() };
-    let out: Vec<u8> = kept.iter().flat_map(|l| l.iter().copied().chain([b'\n'])).collect();
+    let out = with_newlines(&kept);
     let tmp = run.with_extension("md.n");
     if std::fs::write(&tmp, &out).is_ok() && !kept.is_empty() {
         let _ = std::fs::rename(&tmp, run);
@@ -273,7 +273,8 @@ impl Ctx<'_> {
         }
         let mut todo = String::new();
         if f.jobs {
-            let jobs_lines: Vec<u8> = self.text.split(|&b| b == b'\n').filter(|l| l.starts_with(b"Waiting: jobs:")).flat_map(|l| l.iter().copied().chain([b'\n'])).collect();
+            let jobs: Vec<&[u8]> = self.text.split(|&b| b == b'\n').filter(|l| l.starts_with(b"Waiting: jobs:")).collect();
+            let jobs_lines = with_newlines(&jobs);
             let k = super::cksum(&jobs_lines).to_string();
             if self.s.get("jobs_since").is_empty() || self.s.get("jobs_id") != k {
                 self.s.set("jobs_since", self.now.to_string());
@@ -416,4 +417,9 @@ fn env_num(name: &str, default: i64) -> Option<i64> {
         Ok(v) if !v.is_empty() => v.parse().ok(),
         _ => Some(default),
     }
+}
+
+/// Lines joined as `grep` prints them: each one ends in a newline.
+fn with_newlines(lines: &[&[u8]]) -> Vec<u8> {
+    lines.iter().flat_map(|l| l.iter().copied().chain(*b"\n")).collect()
 }
