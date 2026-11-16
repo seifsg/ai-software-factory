@@ -46,8 +46,8 @@ Every run keeps project rules and never puts secrets in code or Git. Never assum
 `.factory/run.md` in project holds the run: [format](references/run-file.md). Create at step 0; Git ignores `.factory/`.
 
 - After each step: write its block under the step's heading, tick heading `✔` once contract holds, set `Next:` to next step and its skill.
-- `Waiting:` stays `none` while you work. Before ending a turn on purpose, set `owner: <question>` or `jobs: <what runs> (max <minutes> min)`; back to `none` on resume.
-- `Status: closed` only after step 8 and gates A, B, C proven or owner waives one. Owner stop: `Status: stopped (<reason>)`.
+- `Waiting:` stays `none` while you work. Before ending a turn on purpose, set `owner: <question>` or `jobs: <what runs, who reports back> (max <minutes> min)`, whose results come back; back to `none` on resume.
+- `Status: closed` only after step 8 and gates A, B, C proven or owner waives one.
 
 ## Block format
 
@@ -101,7 +101,7 @@ Only what those skills leave out:
 - **5:** spike unknown capabilities first. A run of mapped tests that is the whole suite is still only a build check. Commit by phase in project's commit style.
 - **6:** verify is yours; independence comes from checker and step 8. Order: lenses (compliance always; change-guard when existing code, contracts or data changed, so never on a new project; others by `deep-review`'s scale) and UI check, their fixes, then one final manual round through every requested journey that captures After with same ids, then full suite once on that candidate; a proof id that is the full suite is that same run. Before captures of the base never count as that run. UI check (step 2 look): fresh `analyst` lists each miss vs that look + refs on the primary platform, with the capture. A miss of the picked look = HIGH. Run secrets, dependency and static-analysis scans for an MVP, a production slice, or any run with dependencies or a server.
 - **7:** Owner said no remote: no PR; block: `local only ("<their words>") @<sha>`; reviewer gets that head.
-- **8:** reviewer gets run file's absolute path. The reviewer hands back its fix-set, never pushing: you apply it through the 0–4 loop, recapturing After of every proof id a fix touches (named in block). Its brief starts `Role: reviewer.` and names pushed head; each reviewer handback ends with skill's factory `verdict:` line. Paste the last as `Review: ready (reviewer <id>) @<sha>`. You write final verdict as step's block and tick it. Full suite runs again only after those fixes. Then stop what run itself started (servers, watchers, schedules, worktrees, its hooks) except owner's preview; last line before any Gate C line: `Left running:` with each item, preview included, and its stop command, or `none`. Then Gate C, once, on final head; on PASS close run and ask owner to verify and merge.
+- **8:** reviewer gets PR, ticket and run file's absolute path. The reviewer hands back its fix-set, never pushing: you apply it through the 0–4 loop, recapturing After of every proof id a fix touches (named in block), and same reviewer checks the delta. Its brief starts `Role: reviewer.` and names pushed head; each reviewer handback ends with skill's factory `verdict:` line. Paste the last as `Review: ready (reviewer <id>) @<sha>`. You write final verdict as step's block and tick it. Full suite runs again only after those fixes. Then stop what run itself started (servers, watchers, schedules, worktrees, its hooks) except owner's preview; last line before any Gate C line: `Left running:` with each item, preview included, and its stop command, or `none`. Then Gate C, once, on final head; on PASS close run and ask owner to verify and merge.
 
 ## Gates
 
