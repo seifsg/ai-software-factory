@@ -23,4 +23,4 @@ Run a suite that writes its own full receipt directly. For other suites, run `fa
 
 ## Review evidence
 
-Give fresh reviewers one `factory review packet --base <sha> --head <sha>` with named `--context`/ `--proof` files and separate briefs. Before gate handoff run `factory review check` for the role and head. Fix form only. A form check never decides a gate.
+Give fresh reviewers one `factory review packet --base <sha> --head <sha>` with named `--context`/`--proof` files and separate briefs. Validate head-bound handbacks with `factory review check` before gate handoff. A form check never decides a gate.

@@ -58,6 +58,8 @@ The same `factory review packet` and `factory review check` commands work in any
 
 `factory review packet --base <sha> --head <sha> [--context <tracked-file>]... [--proof <.factory-file>]...` reads committed Git text, the run through Build, the local ticket if present, and the named proof. Both commit IDs are full SHAs. For a tracker ticket, include its criteria in the Ticket block or pass a saved snapshot with `--proof`. Binary changes are described by Git and may need a separate attachment. Include only proof intended for the review. Send later receipts and proof on the same head as they arrive.
 
+Use `factory review check --role final --head <sha> --report <full-report> <handback>` for the final reviewer or `factory review check --role checker --head <sha> --gate <A|B|C> <handback>` for a checker. Use `--role deep` for an aggregate deep review with a head-bound verdict. Individual lens handbacks keep their usual format. A well-formed failure still carries a failure verdict.
+
 ## Sources
 
 Claude Code [hooks](https://code.claude.com/docs/en/hooks.md), [hooks guide](https://code.claude.com/docs/en/hooks-guide.md), [skills](https://code.claude.com/docs/en/skills.md), [subagents](https://code.claude.com/docs/en/sub-agents.md), [plugins](https://code.claude.com/docs/en/plugins/marketplace-reference.md) · Codex [hooks](https://learn.chatgpt.com/docs/hooks), [subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents), [skills](https://learn.chatgpt.com/docs/build-skills), compaction in [`codex-rs/core/src/compact.rs`](https://github.com/openai/codex/blob/main/codex-rs/core/src/compact.rs).
