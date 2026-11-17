@@ -14,6 +14,7 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ### Fixed
 
+- Keep the idle budget available when saving valid corrections to a step already ticked.
 - Record suite receipts on clean checkouts with a read-only Git directory.
 
 ## [0.8.0] - 2026-11-17
