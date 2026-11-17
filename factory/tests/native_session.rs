@@ -1,7 +1,7 @@
 mod common;
 
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Output, Stdio};
 
 fn begin(run: &Path, home: &Path, cache: &Path, thread: &str) -> Output {
@@ -17,9 +17,8 @@ fn begin(run: &Path, home: &Path, cache: &Path, thread: &str) -> Output {
         .unwrap()
 }
 
-#[test]
-fn native_begin_binds_the_child_and_rejects_unsafe_or_ambiguous_identity() {
-    let root = common::scratch("native-init");
+fn setup(name: &str) -> (PathBuf, PathBuf, PathBuf) {
+    let root = common::scratch(name);
     let run = root.join("work");
     let home = root.join("codex");
     let cache = root.join("cache");
@@ -33,6 +32,12 @@ fn native_begin_binds_the_child_and_rejects_unsafe_or_ambiguous_identity() {
         )
         .unwrap();
     }
+    (run, home, cache)
+}
+
+#[test]
+fn native_begin_binds_the_child_and_rejects_unsafe_or_ambiguous_identity() {
+    let (run, home, cache) = setup("native-init");
     let result = begin(&run, &home, &cache, "child");
     assert!(result.status.success(), "{}", String::from_utf8_lossy(&result.stderr));
     let route = cache.join("ai-software-factory/sessions/child");
@@ -51,4 +56,37 @@ fn native_begin_binds_the_child_and_rejects_unsafe_or_ambiguous_identity() {
     fs::copy(home.join("sessions/2026/01/01/rollout-child.jsonl"), home.join("sessions/2026/01/02/rollout-child.jsonl")).unwrap();
     assert!(!begin(&run, &home, &cache, "child").status.success());
     assert_eq!(fs::read_to_string(run.join(".factory/guard/state")).unwrap(), state);
+}
+
+#[test]
+fn prebound_native_sessions_still_relay_at_the_night_phase_boundary() {
+    let (run, home, cache) = setup("native-night");
+    assert!(begin(&run, &home, &cache, "child").status.success());
+    let transcript = home.join("sessions/2026/01/01/rollout-child.jsonl");
+    use std::io::Write;
+    writeln!(
+        fs::OpenOptions::new().append(true).open(&transcript).unwrap(),
+        "{{\"type\":\"event_msg\",\"payload\":{{\"message\":\"fixture_gate_a\"}}}}"
+    )
+    .unwrap();
+    let state = run.join(".factory/guard/state");
+    let until = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs() + 3600;
+    let text = fs::read_to_string(&state).unwrap().replace("g_night_until=''", &format!("g_night_until='{until}'"));
+    fs::write(&state, text).unwrap();
+    let input = serde_json::json!({
+        "session_id": "child", "cwd": common::json_path(&run),
+        "transcript_path": common::json_path(&transcript),
+    });
+    assert_eq!(common::factory(&run, &cache, &["guard", "stop"], &input.to_string()).0, 0);
+    let mut last = String::new();
+    for (id, name) in [("0", "Ticket"), ("1", "Analyze"), ("2", "Recommend"), ("2b", "Challenge"), ("3", "Plan")] {
+        let mut block = format!("## {id} {name}\nfixture\n");
+        if id == "3" {
+            block.push_str("Gate A: PASS (checker fixture_gate_a) @aaaaaaa\n");
+        }
+        let (code, output) = common::factory(&run, &cache, &["guard", "step", id], &block);
+        assert_eq!(code, 0, "{output}");
+        last = output;
+    }
+    assert!(last.contains("Relay (night phase boundary before step 4)"), "{last}");
 }

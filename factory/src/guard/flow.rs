@@ -216,7 +216,7 @@ impl Ctx<'_> {
             self.s.set("end", "done");
         }
         if self.mode.turn_end() {
-            if self.s.get("session") != self.sid {
+            if self.s.get("session") != self.sid || self.s.get("sstep").is_empty() {
                 self.s.set("sstep", self.f.step.to_string());
             }
             if !self.s.get("relay").is_empty() && self.s.get("relay") != self.sid {
