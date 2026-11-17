@@ -50,10 +50,10 @@ No code in this phase: no edits, fixes, quick changes. Coding only in a later, e
 The block `## 1 Analyze` holds, in this order:
 
 - [ ] **Inputs:** ticket link, requested-item and criteria ids, research summary, owner-named size or `none`; `step 1, next: Recommend`
-- [ ] **Purpose:** what it does, why it exists, what success means; a missing why is named as a finding
+- [ ] **Purpose:** current purpose, reason for the change (or missing rationale), and success
 - [ ] **Flow:** at least one ASCII diagram with the change located on it
 - [ ] **Used by:** every caller, consumer and dependent, with paths
-- [ ] **Edges:** outside-data entry points; invariants enforced vs assumed
+- [ ] **Edges:** outside-data entry points; current checks and assumptions, then planned changes
 - [ ] **Claims:** the claim-vs-code table, or "no claims to check"
 - [ ] **Scope:** next complete useful result and its dependencies
 - [ ] **Unknowns:** open questions and labeled hypotheses, or "none"
