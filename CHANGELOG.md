@@ -6,6 +6,10 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+### Fixed
+
+- Record suite receipts on clean checkouts with a read-only Git directory.
+
 ## [0.8.0] - 2026-11-17
 
 ### Changed

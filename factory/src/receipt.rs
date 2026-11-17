@@ -208,10 +208,22 @@ pub struct Snapshot {
 /// Takes the snapshot. A suite's receipt takes it before the suite starts: what the suite tested.
 pub fn snapshot(folder: &Path) -> Result<Snapshot, String> {
     let repo = Repo::discover(folder).ok_or("not in a Git work tree")?;
-    let tree = tree::tree_of(&repo)?;
     let head = crate::git::refs::head(&repo);
-    let clean = repo.commit_tree(&head).is_some_and(|h| h == tree);
+    let committed = repo.commit_tree(&head);
+    let tree = match tree::tree_of(&repo) {
+        Ok(tree) => tree,
+        Err(error) => committed.as_ref().filter(|_| clean_at(&repo, &head)).cloned().ok_or(error)?,
+    };
+    let clean = committed.is_some_and(|tree_id| tree_id == tree);
     Ok(Snapshot { work: repo.work, tree, head, clean })
+}
+
+/// A protected Git directory can still prove a clean checkout without writing an index or objects.
+fn clean_at(repo: &Repo, head: &str) -> bool {
+    crate::git::command(repo)
+        .args(["status", "--porcelain=v1", "-z", "--untracked-files=all", "--ignore-submodules=none"])
+        .output()
+        .is_ok_and(|out| out.status.success() && out.stdout.is_empty() && crate::git::refs::head(repo) == head)
 }
 
 /// Writes the receipt of a suite run on snapshot `s`.
@@ -277,9 +289,9 @@ pub fn cli(args: &[&str]) -> u8 {
                     return 1;
                 }
             };
-            report(record(before, suite, code == 0, &cmd.join(" "), started.elapsed().as_secs(), &runtime, ""));
-            // The suite's own code, never 0 for a failure (Windows codes can be negative or above 255).
-            if code == 0 { 0 } else { u8::try_from(code).ok().filter(|c| *c != 0).unwrap_or(1) }
+            let receipt = report(record(before, suite, code == 0, &cmd.join(" "), started.elapsed().as_secs(), &runtime, ""));
+            // A successful suite still needs a receipt. Preserve a failing suite's own exit code.
+            if code == 0 { receipt } else { u8::try_from(code).ok().filter(|c| *c != 0).unwrap_or(1) }
         }
         ["write", opts @ ..] => {
             // The result as `--result PASS|FAIL` or the suite's `--exit <code>`; the suite defaults to `full`.

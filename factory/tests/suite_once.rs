@@ -132,6 +132,40 @@ fn head(r: &Path) -> String {
 }
 
 #[test]
+fn protected_git_index_still_proves_a_clean_receipt() {
+    let d = common::scratch("protected-git");
+    let r = closed_run(&d);
+    std::fs::write(r.join(".git/info/exclude"), ".factory/\n").unwrap();
+    std::fs::create_dir(r.join(format!(".git/factory-tree-{}.index", std::process::id()))).unwrap();
+
+    let expected_head = head(&r);
+    let receipt = || factory::receipt::stamp(&r, "full", true, "suite", 1, "test", "");
+    let (_, saved) = receipt().expect("clean checkout can use its commit tree");
+    assert!(saved.clean);
+    assert_eq!(saved.head, expected_head);
+    let repo = factory::git::Repo::discover(&r).unwrap();
+    assert_eq!(saved.tree, repo.commit_tree(&expected_head).unwrap());
+
+    std::fs::write(r.join("untracked.txt"), "work\n").unwrap();
+    assert!(receipt().is_err(), "untracked work cannot borrow HEAD's tree");
+    std::fs::remove_file(r.join("untracked.txt")).unwrap();
+    std::fs::write(r.join("a.txt"), "different\n").unwrap();
+    assert!(receipt().is_err(), "tracked edits cannot borrow HEAD's tree");
+    let _ = std::fs::remove_dir_all(&d);
+}
+
+#[test]
+fn successful_suite_without_a_writable_receipt_is_an_error() {
+    let d = common::scratch("receipt-write-fails");
+    let r = closed_run(&d);
+    std::fs::write(r.join(".factory/receipts"), "blocks the receipt directory").unwrap();
+    let (code, out) = suite(&d, &r, false);
+    assert_ne!(code, 0, "a PASS with no written receipt is not a successful command");
+    assert!(out.contains("cannot write the receipt"), "{out}");
+    let _ = std::fs::remove_dir_all(&d);
+}
+
+#[test]
 fn a_failed_run_then_a_pass_counts_one_pass() {
     let d = common::scratch("fail-pass");
     let r = closed_run(&d);
