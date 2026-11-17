@@ -82,14 +82,18 @@ fn gate_verdict(text: &str, gate: &str, head: &str) -> Result<(), String> {
         return Ok(());
     }
     if failed {
-        if text.lines().any(|line| {
-            line.split_once(": MISSING ").is_some_and(|(criterion, reason)| !criterion.trim().is_empty() && !reason.trim().is_empty())
-        }) {
+        if text.lines().any(missing_detail) {
             return Ok(());
         }
         return Err(format!("Gate {gate} FAIL needs the missing contract lines and their reasons"));
     }
     Err(format!("last line must be Gate {gate}: PASS @{head} or Gate {gate}: FAIL <positive count> missing"))
+}
+
+fn missing_detail(line: &str) -> bool {
+    let line = line.trim().strip_prefix("- ").unwrap_or(line.trim());
+    line.strip_prefix("MISSING: ").is_some_and(|detail| !detail.trim().is_empty())
+        || line.split_once(": MISSING ").is_some_and(|(criterion, detail)| !criterion.trim().is_empty() && !detail.trim().is_empty())
 }
 
 /// A usable report contains a real table, not a fenced example or an empty heading.
@@ -194,6 +198,7 @@ mod tests {
         assert!(verdict(&format!("verdict: ready @{HEAD}\nSome more text"), HEAD, final_words).is_err());
         assert!(gate_verdict(&format!("met: proof\nGate C: PASS @{HEAD}"), "C", HEAD).is_ok());
         assert!(gate_verdict("Claim table: MISSING candidate citations\nGate C: FAIL 1 missing", "C", HEAD).is_ok());
+        assert!(gate_verdict("- MISSING: claim table\nGate C: FAIL 1 missing", "C", HEAD).is_ok());
         assert!(gate_verdict("Gate C: FAIL 1 missing", "C", HEAD).is_err());
         assert!(gate_verdict("Gate C: FAIL 0 missing", "C", HEAD).is_err());
         assert!(gate_verdict(&format!("Gate B: PASS @{HEAD}"), "C", HEAD).is_err());
