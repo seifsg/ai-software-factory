@@ -23,6 +23,7 @@ fn packet_shares_committed_context_and_only_named_run_proof() {
     std::fs::write(dir.join("code.txt"), "first line\nnew value\nlast line\n").unwrap();
     git(&dir, &["commit", "-qam", "candidate"], 8);
     let candidate = head(&dir);
+    git(&dir, &["replace", &candidate, &base], 8);
     std::fs::write(dir.join("code.txt"), "dirty worktree\n").unwrap();
     std::fs::write(dir.join("context.md"), "dirty context\n").unwrap();
     let run = dir.join(".factory");
