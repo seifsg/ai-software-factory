@@ -82,7 +82,7 @@ fn gate_verdict(text: &str, gate: &str, head: &str) -> Result<(), String> {
         return Ok(());
     }
     if failed {
-        if text.lines().any(missing_detail) {
+        if text.trim_start_matches('\u{feff}').lines().any(missing_detail) {
             return Ok(());
         }
         return Err(format!("Gate {gate} FAIL needs the missing contract lines and their reasons"));
@@ -199,6 +199,7 @@ mod tests {
         assert!(gate_verdict(&format!("met: proof\nGate C: PASS @{HEAD}"), "C", HEAD).is_ok());
         assert!(gate_verdict("Claim table: MISSING candidate citations\nGate C: FAIL 1 missing", "C", HEAD).is_ok());
         assert!(gate_verdict("- MISSING: claim table\nGate C: FAIL 1 missing", "C", HEAD).is_ok());
+        assert!(gate_verdict("\u{feff}MISSING: claim table\nGate C: FAIL 1 missing", "C", HEAD).is_ok());
         assert!(gate_verdict("Gate C: FAIL 1 missing", "C", HEAD).is_err());
         assert!(gate_verdict("Gate C: FAIL 0 missing", "C", HEAD).is_err());
         assert!(gate_verdict(&format!("Gate B: PASS @{HEAD}"), "C", HEAD).is_err());
