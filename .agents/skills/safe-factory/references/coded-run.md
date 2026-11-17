@@ -2,6 +2,8 @@
 
 Where `factory guard step <n>` runs, it applies the Stop guard's rules inline, so steps chain in one turn. "Command not found", or it says the Stop hook still runs `run-guard.sh`: SKILL.md's live guard, unchanged.
 
+After creating a new run header, run `factory guard begin` before Ticket work.
+
 ## Each step
 
 1. Load the step's skill once per run; a later step of the same skill works from it, no reread. Reload a skill after compaction.
@@ -15,7 +17,7 @@ Step 5 runs one todo per guard call, every todo in the same turn.
 
 ## Full suite
 
-Run a suite that writes its own full receipt directly. For other suites, run `factory receipt start --suite full -- <command>` on the clean final head. Cite its launch receipt in Verify. If already run, record it with `factory receipt write` (command, exit, log path). `factory receipt check` finds the base or final PASS. Gate B can finish while the suite runs. Gate C and the final review require a passing receipt on their commit's tree, with exactly one passing run for Gate C.
+Run a suite that writes its own full receipt directly. For other suites, run `factory receipt start --suite full -- <command>` on the clean final head. Cite its launch receipt or reused PASS in Verify. If already run, record it with `factory receipt write` (command, exit, log path). `factory receipt check` finds the base or final PASS. Gate B can finish while the suite runs. Gate C and the final review require a passing receipt on their commit's tree, with exactly one passing run for Gate C.
 
 ## Gate backing
 

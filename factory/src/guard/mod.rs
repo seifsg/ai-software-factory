@@ -37,9 +37,10 @@ pub fn cli(args: &[&str]) -> u8 {
         }
         ["clear"] => clear(None),
         ["clear", dir] => clear(Some(dir)),
+        ["begin"] => timeline::begin(&cwd()),
         ["step", rest @ ..] => step::cli(rest),
         _ => {
-            eprintln!("usage: factory guard stop|compact | check [<session id>] | clear [<run folder>] | step <n|Tk> < block");
+            eprintln!("usage: factory guard stop|compact | begin | check [<session id>] | clear [<run folder>] | step <n|Tk> < block");
             2
         }
     }

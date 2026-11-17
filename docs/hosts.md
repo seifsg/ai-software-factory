@@ -54,7 +54,7 @@ Guard live: step 1 finds `.factory/guard/state` (hooks added mid-session never l
 
 ## Portable review evidence
 
-A native coded run records step starts in `.factory/guard/steps.jsonl` as UTC timestamps and step IDs. These start records work with any host. They contain neither message text nor tool input.
+A native coded run records step starts in `.factory/guard/steps.jsonl` as UTC timestamps and step IDs. Run `factory guard begin` after creating the header for the first step. The guard records later starts as it advances. The records work with any host and contain neither message text nor tool input.
 
 The same `factory review packet` and `factory review check` commands work in any shell that can launch the Factory binary. In a desktop or CLI session, save the packet from stdout, attach it or give its path to the reviewer, and save the returned handback as a text file. A host with no workspace read access can receive the packet as text. Use the owner's model and role policy when starting independent reviews. These commands do not need host APIs, launch a model, or replace gate backing and receipt checks.
 

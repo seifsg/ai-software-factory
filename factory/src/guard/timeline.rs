@@ -6,6 +6,25 @@ use std::fs::{self, OpenOptions};
 use std::io::{self, Write};
 use std::path::Path;
 
+/// Record Ticket after the host creates the header, before its first post-step guard call.
+pub(super) fn begin(start: &Path) -> u8 {
+    let result = (|| -> Result<(), String> {
+        let root = crate::run::locate::walk(start).ok_or("no .factory/run.md from this folder")?;
+        let dir = Path::new(&root).join(".factory");
+        let run = fs::read_to_string(dir.join("run.md")).map_err(|err| err.to_string())?;
+        let header = crate::run::RunFile::parse(run.as_bytes());
+        if run.lines().find(|line| line.starts_with("Status:")) != Some("Status: open") || !header.next.starts_with("0 Ticket ") {
+            return Err("begin requires a new open run at Step 0".into());
+        }
+        save(&dir.join("guard"), "0", crate::paths::now()).map_err(|err| err.to_string())
+    })();
+    if let Err(err) = result {
+        eprintln!("factory guard begin: {err}");
+        return 1;
+    }
+    0
+}
+
 /// A pending checker keeps the work attributed to its step until the guard backs it.
 pub(super) fn mark(guard: &Path, next: &str, gate: Option<char>, now: u64) {
     let step = match gate {
@@ -69,5 +88,30 @@ mod tests {
         mark(&dir, "0 Ticket", None, 6);
         assert_eq!(fs::read_to_string(file).unwrap().lines().count(), 1);
         let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn start_is_recorded_before_ticket_and_later_steps_wait_for_the_owner() {
+        let root = std::env::temp_dir().join(format!("factory-timeline-wait-{}", std::process::id()));
+        let dir = root.join(".factory");
+        std::fs::create_dir_all(&dir).unwrap();
+        let run = dir.join("run.md");
+        let input = crate::hook::Input::default();
+        fs::write(&run, "# Run: test\nStatus: open\nNext: 0 Ticket · ticketing\nWaiting: none\n").unwrap();
+        assert_eq!(begin(&root), 0);
+        let file = dir.join("guard/steps.jsonl");
+        let first = fs::read_to_string(&file).unwrap();
+        for waiting in ["owner: review", "none"] {
+            fs::write(
+                &run,
+                format!("# Run: test\nStatus: open\nNext: 1 Analyze · analyze-start\nWaiting: {waiting}\n## 0 Ticket ✔\n"),
+            )
+            .unwrap();
+            let _ = super::super::flow::run(&input, super::super::flow::Mode::Stop, &root);
+            let current = fs::read_to_string(&file).unwrap();
+            assert_eq!(current.lines().count(), if waiting == "none" { 2 } else { 1 });
+            assert!(current.starts_with(&first));
+        }
+        let _ = fs::remove_dir_all(root);
     }
 }

@@ -154,14 +154,8 @@ fn failed(error: String) -> u8 {
 }
 
 fn background(program: impl AsRef<std::ffi::OsStr>) -> Command {
-    let mut command = Command::new(program);
+    let mut command = paths::quiet_command(program);
     command.stdin(Stdio::null());
-    #[cfg(windows)]
-    {
-        use std::os::windows::process::CommandExt;
-        const CREATE_NO_WINDOW: u32 = 0x08000000;
-        command.creation_flags(CREATE_NO_WINDOW);
-    }
     #[cfg(unix)]
     {
         use std::os::unix::process::CommandExt;

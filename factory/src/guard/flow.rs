@@ -262,9 +262,6 @@ impl Ctx<'_> {
             self.save();
             return Some(Reply::System(reply::relayed(&self.d)));
         }
-        if self.mode.turn_end() && self.f.skipped.is_empty() {
-            super::timeline::mark(&self.g, &self.f.next, self.f.gate, self.now as u64);
-        }
         self.drive(prev)
     }
 
@@ -384,6 +381,9 @@ impl Ctx<'_> {
             self.s.set("rstep", step.to_string());
             self.save();
             return Some(Reply::Block(reply::relay(&why, &self.rf, &self.d)));
+        }
+        if f.skipped.is_empty() {
+            super::timeline::mark(&self.g, &f.next, f.gate, self.now as u64);
         }
         self.save();
         Some(Reply::Block(reply::drive(&self.rf, &self.prompt(batched, lp, rounds), &self.note)))

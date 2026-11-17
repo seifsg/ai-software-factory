@@ -3,6 +3,19 @@
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
+/// The native factory's non-interactive subprocesses never need their own console window.
+pub(crate) fn quiet_command(program: impl AsRef<std::ffi::OsStr>) -> std::process::Command {
+    let command = std::process::Command::new(program);
+    #[cfg(windows)]
+    let command = {
+        use std::os::windows::process::CommandExt;
+        let mut command = command;
+        command.creation_flags(0x08000000); // CREATE_NO_WINDOW
+        command
+    };
+    command
+}
+
 /// A path as text with forward slashes; on Windows an MSYS form `/c/x` becomes `C:/x`.
 /// Why: replies name paths the agent opens with native tools, and Git Bash spellings mean nothing there.
 pub fn norm(p: &str) -> String {
