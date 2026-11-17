@@ -75,7 +75,7 @@ pub fn gate(x: char) -> String {
     )
 }
 
-/// Gate B, C or the review is proven but its commit's tree has no full-suite receipt, or (Gate C) one that
+/// Gate C or the review is proven but its commit's tree has no full-suite receipt, or (Gate C) one that
 /// counts more than one run (new with the binary guard).
 pub fn receipt(x: char, standing: crate::receipt::Standing, exe: &str) -> String {
     let line = if x == 'R' { "The review".to_string() } else { format!("Gate {x}") };

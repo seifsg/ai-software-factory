@@ -27,7 +27,7 @@ variant() {
   head=$(git -C "$v/r" rev-parse HEAD)
   cp "$2" "$v/r/.factory/run.md"
   if [ -n "$3" ]; then sed "s#@TP@#$v/projects/p/$sid.jsonl#; s#^g_seen='@NOW@'#g_seen='1'#" "$3" > "$v/r/.factory/guard/state"; else rmdir "$v/r/.factory/guard"; fi
-  # The binary guard also wants a passing full-suite receipt for each Gate B, C and review commit (sh reads none):
+  # The binary guard also wants a passing full-suite receipt for each Gate C and review commit (sh reads none):
   # one per gate sha, matched on its head. A receipt is data, so both guards get the same files.
   receipts "$v/r"
   if [ "${4:-}" = onhead ]; then

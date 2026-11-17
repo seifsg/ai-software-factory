@@ -25,7 +25,7 @@ pub struct Inputs<'a> {
     pub base: [i64; 4],
     /// The step label of the heading posted this turn.
     pub posted: &'a str,
-    /// Where a Gate B, C or review commit stands on suite receipts (`receipt::standing`).
+    /// Where a Gate C or review commit stands on suite receipts (`receipt::standing`).
     pub receipt: &'a dyn Fn(char, &str) -> Standing,
 }
 
@@ -54,7 +54,7 @@ pub struct Facts {
     pub long_lines: String,
     pub step: u32,
     pub next: String,
-    /// Gate B, C or the review lacks only its suite receipt, or (Gate C) one that counts a single run.
+    /// Gate C or the review lacks only its suite receipt, or (Gate C) one that counts a single run.
     pub no_receipt: Option<(char, Standing)>,
 }
 
@@ -116,7 +116,7 @@ impl Judge<'_> {
             && (x != 'C' || (pre(sha, self.i.head) && self.i.head == self.i.up))
     }
 
-    /// The commit a proven Gate B, C or review line stands on; None for a waiver (it needs no receipt).
+    /// The commit a proven Gate C or review line stands on; None for a waiver (it needs no receipt).
     fn gate_commit(&self, x: char) -> Option<&str> {
         if self.capped(x) {
             return self.i.run.cap.get(&x).map(String::as_str);
@@ -131,11 +131,11 @@ impl Judge<'_> {
         self.proven_gate(x) && self.standing(x) == Standing::Ok
     }
 
-    /// Gate B, C and the review judge a head: each stands only on a full-suite receipt for its commit's tree
+    /// Gate C and the review judge a head: each stands only on a full-suite receipt for its commit's tree
     /// (Gate C on one that counts a single run). Gate A judges a plan and needs none.
     fn standing(&self, x: char) -> Standing {
         match self.gate_commit(x) {
-            Some(c) if matches!(x, 'B' | 'C' | 'R') => (self.i.receipt)(x, c),
+            Some(c) if crate::receipt::required_at(x) => (self.i.receipt)(x, c),
             _ => Standing::Ok,
         }
     }
@@ -183,7 +183,7 @@ pub fn judge(i: &Inputs) -> Facts {
         None
     };
     let proven = |g: char| if g == 'R' { j.review_proven() } else { j.proven_gate(g) };
-    if let Some(g @ ('B' | 'C' | 'R')) = gate.filter(|g| proven(*g)) {
+    if let Some(g) = gate.filter(|g| crate::receipt::required_at(*g) && proven(*g)) {
         no_receipt = Some((g, j.standing(g)));
     }
     let sig = run.tick_lines as i64 + ['A', 'B', 'C'].iter().filter(|&&x| j.ok(x)).count() as i64 + i64::from(rok);

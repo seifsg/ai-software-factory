@@ -1,7 +1,7 @@
 #!/bin/sh
 # check.sh's guard scenarios, printing every reply and state instead of asserting: run.sh plays them
 # through both guards and diffs the bytes. Env: W (a fresh folder, native form), G (the guard command:
-# `sh <run-guard.sh>` or `<binary> guard`), BIN (the binary: writes the suite receipts Gate B and C need).
+# `sh <run-guard.sh>` or `<binary> guard`), BIN (the binary: writes the suite receipts the final review and Gate C need).
 set -u
 export HOME="$W" XDG_CACHE_HOME="$W" LC_ALL=C
 mkdir -p "$W"

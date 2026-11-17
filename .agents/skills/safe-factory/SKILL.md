@@ -89,7 +89,7 @@ Each step ends with its block: post full block as own chat message opening with 
 | 3 Plan | `get-ready-to-code` | five outputs and the proof list, then **Gate A** |
 | 4 Before | `how-to-make-a-pr`, Before proof | the saved Before files |
 | 5 Build | `get-ready-to-code`, 0–4 loop | one line per todo |
-| 6 Verify | `deep-review` | findings, UI check, suite result, After files, then **Gate B** |
+| 6 Verify | `deep-review` | findings, UI check, suite start, After files, then **Gate B** |
 | 7 PR | `how-to-make-a-pr` | draft PR link |
 | 8 Review | `how-to-review-a-pr` | verdict, then **Gate C** |
 
