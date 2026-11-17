@@ -221,9 +221,9 @@ pub fn snapshot(folder: &Path) -> Result<Snapshot, String> {
 /// A protected Git directory can still prove a clean checkout without writing an index or objects.
 fn clean_at(repo: &Repo, head: &str) -> bool {
     crate::git::command(repo)
-        .args(["status", "--porcelain=v1", "-z", "--untracked-files=all", "--ignore-submodules=none"])
+        .args(["-c", "core.fsmonitor=false", "status", "--porcelain=v1", "-z", "--untracked-files=all", "--ignore-submodules=none"])
         .output()
-        .is_ok_and(|out| out.status.success() && out.stdout.is_empty() && crate::git::refs::head(repo) == head)
+        .is_ok_and(|out| out.status.success() && out.stdout.is_empty() && out.stderr.is_empty() && crate::git::refs::head(repo) == head)
 }
 
 /// Writes the receipt of a suite run on snapshot `s`.
