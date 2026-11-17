@@ -8,14 +8,15 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ### Added
 
-- Prepare Gate A's checker brief after checking ticket criteria, caller citations and declared proof inputs locally.
-- Assemble a pinned review evidence packet once for both independent reviewers and validate handback format before gate checks.
-- Start a final suite in the background with a launch receipt and log tied to its clean commit. Record native step starts for timing consumers.
+- Prepare Gate A's checker brief after checking ticket criteria, caller citations and declared proof inputs locally ([#329])
+- Assemble a pinned review evidence packet once for both independent reviewers and validate handback format before gate checks ([#329])
+- Start a final suite in the background with a launch receipt and log tied to its clean commit ([#329])
+- Record native step starts for run reports ([#329])
 
 ### Fixed
 
-- Keep the idle budget available when saving valid corrections to a step already ticked.
-- Record suite receipts on clean checkouts with a read-only Git directory.
+- Keep the idle budget available when saving valid corrections to a step already ticked ([#329])
+- Record suite receipts on clean checkouts with a read-only Git directory ([#329])
 
 ## [0.8.0] - 2026-11-17
 
@@ -420,3 +421,4 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 [#316]: https://github.com/seifsg/ai-software-factory/pull/316
 [#320]: https://github.com/seifsg/ai-software-factory/pull/320
 [#322]: https://github.com/seifsg/ai-software-factory/pull/322
+[#329]: https://github.com/seifsg/ai-software-factory/pull/329
