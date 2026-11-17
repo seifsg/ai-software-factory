@@ -54,7 +54,21 @@ pub(super) fn assemble(args: &[&str]) -> Result<String, String> {
         let oid_path = format!("{head}:{}", crate::paths::text(&path));
         section(&mut out, file, &git(&repo, &["cat-file", "blob", &oid_path])?);
     }
-    let diff = git(&repo, &["diff", "--no-ext-diff", "--no-textconv", "--no-color", "--no-renames", "-U2147483647", base, head, "--"])?;
+    let diff = git(
+        &repo,
+        &[
+            "diff",
+            "--no-ext-diff",
+            "--no-textconv",
+            "--no-color",
+            "--no-renames",
+            "--ignore-submodules=none",
+            "-U2147483647",
+            base,
+            head,
+            "--",
+        ],
+    )?;
     section(&mut out, "Committed diff with full text context", &diff);
     for file in options.proof {
         section(&mut out, file, &proof(&repo, file)?);
@@ -71,7 +85,7 @@ fn commit<'a>(repo: &Repo, value: Option<&'a str>, flag: &str) -> Result<&'a str
 }
 
 fn git(repo: &Repo, args: &[&str]) -> Result<String, String> {
-    let out = command(repo).args(args).output().map_err(|e| format!("could not run git: {e}"))?;
+    let out = command(repo).env("GIT_NO_REPLACE_OBJECTS", "1").args(args).output().map_err(|e| format!("could not run git: {e}"))?;
     if !out.status.success() || !out.stderr.is_empty() {
         return Err(format!("git {} failed: {}", args[0], String::from_utf8_lossy(&out.stderr).trim()));
     }
@@ -103,13 +117,18 @@ fn proof(repo: &Repo, file: &str) -> Result<String, String> {
 
 fn build_record(run: &str) -> &str {
     // Exact step heading outside fences, so examples in the run cannot cut off the record.
-    let mut fence = false;
+    let mut fence = None;
     let mut offset = 0;
     for line in run.split_inclusive('\n') {
-        if line.trim_start().starts_with("```") {
-            fence = !fence;
+        let text = line.trim();
+        let marker = text.as_bytes().first().copied();
+        let width = text.bytes().take_while(|&b| Some(b) == marker).count();
+        match fence {
+            Some((open, min)) if marker == Some(open) && width >= min && width == text.len() => fence = None,
+            None if width >= 3 && matches!(marker, Some(b'`' | b'~')) => fence = marker.map(|m| (m, width)),
+            _ => {}
         }
-        if !fence && ["## 6 Verify", "## 7 PR", "## 8 Review"].iter().any(|heading| line.starts_with(heading)) {
+        if fence.is_none() && ["## 6 Verify", "## 7 PR", "## 8 Review"].iter().any(|heading| line.starts_with(heading)) {
             return &run[..offset];
         }
         offset += line.len();
@@ -132,13 +151,14 @@ mod tests {
 
     #[test]
     fn share_only_the_build_record_and_keep_examples() {
-        let input = "## 5 Build\n```text\n## 6 Verify example\n```\n## 6 Verify ✔\nprevious verdict\n";
+        let input =
+            "## 5 Build\n````text\n```\n## 6 Verify example\n````\n~~~md\n## 8 Review example\n~~~\n## 6 Verify ✔\nprevious verdict\n";
         let cut = build_record(input);
         assert!(cut.contains("## 6 Verify example"));
         assert!(!cut.contains("previous verdict"));
         let mut out = String::new();
         section(&mut out, "run", cut);
-        assert!(out.contains("````text"));
+        assert!(out.contains("`````text"));
     }
 
     #[test]
