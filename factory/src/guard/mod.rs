@@ -11,6 +11,7 @@ pub mod before;
 pub mod flow;
 pub mod reply;
 pub mod rules;
+mod session;
 pub mod step;
 mod timeline;
 

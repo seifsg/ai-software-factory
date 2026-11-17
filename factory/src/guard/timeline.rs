@@ -8,6 +8,11 @@ use std::path::Path;
 
 /// Record Ticket after the host creates the header, before its first post-step guard call.
 pub(super) fn begin(start: &Path) -> u8 {
+    begin_with(start, super::session::initialize)
+}
+
+/// Keep the phase clock test independent of the user's host session.
+fn begin_with(start: &Path, initialize: impl FnOnce(&Path) -> Result<(), String>) -> u8 {
     let result = (|| -> Result<(), String> {
         let root = crate::run::locate::walk(start).ok_or("no .factory/run.md from this folder")?;
         let dir = Path::new(&root).join(".factory");
@@ -16,6 +21,7 @@ pub(super) fn begin(start: &Path) -> u8 {
         if run.lines().find(|line| line.starts_with("Status:")) != Some("Status: open") || !header.next.starts_with("0 Ticket ") {
             return Err("begin requires a new open run at Step 0".into());
         }
+        initialize(Path::new(&root))?;
         save(&dir.join("guard"), "0", crate::paths::now()).map_err(|err| err.to_string())
     })();
     if let Err(err) = result {
@@ -98,7 +104,7 @@ mod tests {
         let run = dir.join("run.md");
         let input = crate::hook::Input::default();
         fs::write(&run, "# Run: test\nStatus: open\nNext: 0 Ticket · ticketing\nWaiting: none\n").unwrap();
-        assert_eq!(begin(&root), 0);
+        assert_eq!(begin_with(&root, |_| Ok(())), 0);
         let file = dir.join("guard/steps.jsonl");
         let first = fs::read_to_string(&file).unwrap();
         for waiting in ["owner: review", "none"] {
