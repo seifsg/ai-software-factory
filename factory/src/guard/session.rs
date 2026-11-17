@@ -48,6 +48,8 @@ fn bind(root: &Path, home: &Path, id: &str, link: &Path) -> Result<(), String> {
     if !sessions.split_whitespace().any(|session| session == id) {
         state.set("sessions", if sessions.is_empty() { id.to_string() } else { format!("{sessions} {id}") });
     }
+    // Begin owns the new Step-0 run, so no prior session's phase may carry forward.
+    state.set("sstep", "0");
     state.set("session", id);
     state.set("transcript", transcript);
     fs::create_dir_all(&guard).map_err(|err| err.to_string())?;
