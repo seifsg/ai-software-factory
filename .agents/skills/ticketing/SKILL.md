@@ -111,5 +111,5 @@ In a factory run this is step 0. Block `## 0 Ticket` holds:
 
 - [ ] The ticket link, or `local: .factory/ticket.md` with the reason
 - [ ] Reused or new, with the search terms used
-- [ ] The definition of done as labelled criteria, every explicit ask of the brief among them as `(ask)`
+- [ ] Copy the ticket's labelled criteria, including each explicit `(ask)`
 - [ ] The checklist (filled from the plan's todos at step 3) and the status

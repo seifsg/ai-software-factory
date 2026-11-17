@@ -17,14 +17,14 @@ pub enum Mode {
     Stop,
     Compact,
     Clear,
-    /// `guard step`: a turn end inside the turn; it neither reads nor writes the loop guard's nudge.
-    Step,
+    /// `guard step`: an inline save which never reads or writes the loop guard's nudge.
+    Step { changed: bool },
 }
 
 impl Mode {
     /// Stop and step both end a step: they record ticks and the session in the state.
     fn turn_end(self) -> bool {
-        matches!(self, Mode::Stop | Mode::Step)
+        matches!(self, Mode::Stop | Mode::Step { .. })
     }
 }
 
@@ -382,6 +382,9 @@ impl Ctx<'_> {
             self.save();
             return Some(Reply::Block(reply::relay(&why, &self.rf, &self.d)));
         }
+        if f.skipped.is_empty() {
+            super::timeline::mark(&self.g, &f.next, f.gate, self.now as u64);
+        }
         self.save();
         Some(Reply::Block(reply::drive(&self.rf, &self.prompt(batched, lp, rounds), &self.note)))
     }
@@ -390,10 +393,11 @@ impl Ctx<'_> {
         self.s.num("night_until", 0) > 0
     }
 
-    /// Progress budget: blocked turns with no new tick or proven gate.
+    /// Saved corrections inside a step preserve the idle budget. A new tick or proven gate resets it.
     fn idle(&mut self) {
         let sig = self.f.sig.to_string();
-        let n = if sig == self.s.get("sig") { self.s.num("idle", 0) + 1 } else { 0 };
+        let valid_save = matches!(self.mode, Mode::Step { changed: true }) && self.f.skipped.is_empty() && self.f.long_lines.is_empty();
+        let n = if sig == self.s.get("sig") { self.s.num("idle", 0) + i64::from(!valid_save) } else { 0 };
         self.s.set("idle", n.to_string());
         self.s.set("sig", sig);
     }

@@ -8,7 +8,7 @@ use crate::guard::rules::pre;
 use std::path::Path;
 
 /// The steps each gate checks, and the skills whose contracts cover them.
-fn scope(gate: char) -> Option<(&'static [&'static str], &'static [&'static str])> {
+pub(crate) fn scope(gate: char) -> Option<(&'static [&'static str], &'static [&'static str])> {
     match gate {
         'A' => Some((&["0", "1", "2", "2b", "3"], &["ticketing", "analyze-start", "recommend", "get-ready-to-code"])),
         'B' => Some((&["4", "5", "6"], &["how-to-make-a-pr", "get-ready-to-code", "deep-review"])),

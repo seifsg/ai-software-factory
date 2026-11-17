@@ -2,6 +2,8 @@
 
 Where `factory guard step <n>` runs, it applies the Stop guard's rules inline, so steps chain in one turn. "Command not found", or it says the Stop hook still runs `run-guard.sh`: SKILL.md's live guard, unchanged.
 
+After creating a new run header, run `factory guard begin` before Ticket work.
+
 ## Each step
 
 1. Load the step's skill once per run; a later step of the same skill works from it, no reread. Reload a skill after compaction.
@@ -15,8 +17,12 @@ Step 5 runs one todo per guard call, every todo in the same turn.
 
 ## Full suite
 
-Run a suite that writes its own full receipt directly. For other suites, run `factory receipt run --suite full -- <command>`, or if already run, record it with `factory receipt write` (command, exit, log path). `factory receipt check` says whether a tree has a passing one: the base commit's is the suite Before, the final head's is the one full-suite run (never rerun that tree). Gate B can finish while the suite runs. Gate C and the final review require a passing receipt for their commit's tree, with exactly one passing run for Gate C.
+Run a suite that writes its own full receipt directly. For other suites, run `factory receipt start --suite full -- <command>` on the clean final head. Cite its launch receipt or reused PASS in Verify. If already run, record it with `factory receipt write` (command, exit, log path). `factory receipt check` finds the base or final PASS. Gate B can finish while the suite runs. Gate C and the final review require a passing receipt on their commit's tree, with exactly one passing run for Gate C.
 
 ## Gate backing
 
 `factory guard check` (read-only) prints one verdict line per gate and review line in run.md: backed by its delegate's handback on that commit, or not. The step-8 reviewer runs it itself.
+
+## Review evidence
+
+Give fresh reviewers one `factory review packet --base <sha> --head <sha>` with named `--context`/`--proof` files and separate briefs. Validate head-bound handbacks with `factory review check` before gate handoff. A form check never decides a gate.

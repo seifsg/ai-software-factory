@@ -68,7 +68,7 @@ impl Repo {
 
     /// The single spawn fallback: `git rev-parse HEAD @{u}` prints HEAD, then the upstream when it exists.
     fn info_by_git(&self, remote: bool) -> Info {
-        let out = std::process::Command::new("git")
+        let out = crate::paths::quiet_command("git")
             .arg("-C")
             .arg(&self.work)
             .args(["rev-parse", "HEAD", "@{u}"])
@@ -98,7 +98,7 @@ impl Repo {
 /// A `git` command on this work tree that ignores the caller's Git environment, takes no optional locks
 /// and prints English: the spawns that read Git's own computation share it.
 pub(crate) fn command(repo: &Repo) -> std::process::Command {
-    let mut cmd = std::process::Command::new("git");
+    let mut cmd = crate::paths::quiet_command("git");
     cmd.arg("-C").arg(&repo.work);
     for v in ["GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE", "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES"] {
         cmd.env_remove(v);

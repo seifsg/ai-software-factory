@@ -22,6 +22,8 @@
 use crate::git::{Repo, tree};
 use std::path::{Path, PathBuf};
 
+mod launch;
+
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Receipt {
     pub suite: String,
@@ -208,10 +210,22 @@ pub struct Snapshot {
 /// Takes the snapshot. A suite's receipt takes it before the suite starts: what the suite tested.
 pub fn snapshot(folder: &Path) -> Result<Snapshot, String> {
     let repo = Repo::discover(folder).ok_or("not in a Git work tree")?;
-    let tree = tree::tree_of(&repo)?;
     let head = crate::git::refs::head(&repo);
-    let clean = repo.commit_tree(&head).is_some_and(|h| h == tree);
+    let committed = repo.commit_tree(&head);
+    let tree = match tree::tree_of(&repo) {
+        Ok(tree) => tree,
+        Err(error) => committed.as_ref().filter(|_| clean_at(&repo, &head)).cloned().ok_or(error)?,
+    };
+    let clean = committed.is_some_and(|tree_id| tree_id == tree);
     Ok(Snapshot { work: repo.work, tree, head, clean })
+}
+
+/// A protected Git directory can still prove a clean checkout without writing an index or objects.
+fn clean_at(repo: &Repo, head: &str) -> bool {
+    crate::git::command(repo)
+        .args(["-c", "core.fsmonitor=false", "status", "--porcelain=v1", "-z", "--untracked-files=all", "--ignore-submodules=none"])
+        .output()
+        .is_ok_and(|out| out.status.success() && out.stdout.is_empty() && out.stderr.is_empty() && crate::git::refs::head(repo) == head)
 }
 
 /// Writes the receipt of a suite run on snapshot `s`.
@@ -245,6 +259,8 @@ pub fn cli(args: &[&str]) -> u8 {
     let here = crate::guard::cwd();
     let runtime = format!("factory {} {}-{}", crate::VERSION, std::env::consts::OS, std::env::consts::ARCH);
     match args {
+        ["start", rest @ ..] => launch::start(rest, &here),
+        ["_worker", rest @ ..] => launch::worker(rest, &here, &runtime),
         ["run", rest @ ..] => {
             let (opts, cmd) = match rest.iter().position(|a| *a == "--") {
                 Some(i) => (&rest[..i], &rest[i + 1..]),
@@ -259,13 +275,29 @@ pub fn cli(args: &[&str]) -> u8 {
                     return 1;
                 }
             };
-            // The suite runs once per tree: a passing receipt for this very tree is reused, never rerun.
-            if let Some((p, r)) = existing(&before.work, &before.tree, suite).filter(|(_, r)| r.pass && !opts.contains(&"--again")) {
-                eprintln!(
-                    "factory receipt: {suite} already passed on this tree ({}, {} s): reused, not run again. Reviews and gates read it; `--again` runs it anyway and counts a repeat.",
-                    crate::paths::text(&p),
-                    r.secs
-                );
+            let reuse = || {
+                if let Some((p, r)) = existing(&before.work, &before.tree, suite).filter(|(_, r)| r.pass && !opts.contains(&"--again")) {
+                    eprintln!(
+                        "factory receipt: {suite} already passed on this tree ({}, {} s): reused, not run again. Reviews and gates read it; `--again` runs it anyway and counts a repeat.",
+                        crate::paths::text(&p),
+                        r.secs
+                    );
+                    return true;
+                }
+                false
+            };
+            if reuse() {
+                return 0;
+            }
+            let _claim = match launch::Claim::take(&before, suite) {
+                Ok(claim) => claim,
+                Err(e) => {
+                    eprintln!("factory receipt: {e}");
+                    return 1;
+                }
+            };
+            // Another caller may have completed the suite while this one was acquiring the claim.
+            if reuse() {
                 return 0;
             }
             let started = std::time::Instant::now();
@@ -277,9 +309,9 @@ pub fn cli(args: &[&str]) -> u8 {
                     return 1;
                 }
             };
-            report(record(before, suite, code == 0, &cmd.join(" "), started.elapsed().as_secs(), &runtime, ""));
-            // The suite's own code, never 0 for a failure (Windows codes can be negative or above 255).
-            if code == 0 { 0 } else { u8::try_from(code).ok().filter(|c| *c != 0).unwrap_or(1) }
+            let receipt = report(record(before, suite, code == 0, &cmd.join(" "), started.elapsed().as_secs(), &runtime, ""));
+            // A successful suite still needs a receipt. Preserve a failing suite's own exit code.
+            if code == 0 { receipt } else { u8::try_from(code).ok().filter(|c| *c != 0).unwrap_or(1) }
         }
         ["write", opts @ ..] => {
             // The result as `--result PASS|FAIL` or the suite's `--exit <code>`; the suite defaults to `full`.
@@ -335,7 +367,7 @@ fn report(r: Result<(PathBuf, Receipt), String>) -> u8 {
 
 fn usage() -> u8 {
     eprintln!(
-        "usage: factory receipt run [--suite <name>] [--again] -- <command>... | write --cmd <command> (--exit <code> | --result PASS|FAIL) [--suite <name>] [--secs <n>] [--log <path>] [--runtime <s>] | check [--commit <sha>] [--suite <name>]"
+        "usage: factory receipt run [--suite <name>] [--again] -- <command>... | start [--suite <name>] -- <command>... | write --cmd <command> (--exit <code> | --result PASS|FAIL) [--suite <name>] [--secs <n>] [--log <path>] [--runtime <s>] | check [--commit <sha>] [--suite <name>]"
     );
     2
 }

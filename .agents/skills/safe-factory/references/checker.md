@@ -2,7 +2,7 @@
 
 Fresh light read-only delegate (role `checker`, or any light read-only agent given this brief). Judges outputs against contracts, never work quality.
 
-Before each brief, commit and run `factory lint <gate>`; fix each line it flags at its step first. No `factory` command: check each contract line yourself, as strictly. A form FAIL costs a round.
+Before briefing, commit. Run `factory review gate-a` for A or `factory lint <gate>` for B/C. Fix gaps before dispatch. No `factory`: self-check each line.
 
 ## Brief
 
@@ -15,7 +15,7 @@ MISSING. For every line, find the output that meets it; open what it names; chec
 URL vs bare number, table vs prose, commit, command). Strict: unsure is MISSING, with the reason.
 `DEFERRED (owner|hardware: <what>)` meets a line only for work that needs the
 owner (hands, approval, an install) or missing hardware; a stub or placeholder never does, and "unverified" only as that DEFERRED.
-Read-only. Never run the suite. Gate C reads its final receipt. Round 1 checks every line at once. Hand back "Gate <X>: PASS @<commit>" when all are met, else "Gate <X>:
+Read-only. Never run the suite. Gate C reads its final receipt. Round 1 lists every gap per line. Hand back "Gate <X>: PASS @<commit>" when all are met, else "Gate <X>:
 FAIL <n> missing" and the list. Do not read the builder's notes or chat.
 Round 2 on: recheck only MISSING lines of round 1's handback; the rest stay met.
 ```

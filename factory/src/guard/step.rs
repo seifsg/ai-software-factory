@@ -77,7 +77,7 @@ pub fn cli(args: &[&str]) -> u8 {
         last_assistant_message: format!("## {label} "),
         ..Default::default()
     };
-    let r = super::flow::run(&input, super::flow::Mode::Step, Path::new(&dir));
+    let r = super::flow::run(&input, super::flow::Mode::Step { changed: updated != text }, Path::new(&dir));
     print!("{}", super::reply::step_line(r.as_ref().map_or("", crate::hook::Reply::inner), hooked));
     0
 }

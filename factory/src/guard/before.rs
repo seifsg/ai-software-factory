@@ -27,7 +27,18 @@ fn is_id(s: &str) -> bool {
 
 /// Proof-list ids under `**Proof list:**` in `## 3 Plan`: a table row's first cell or a bullet's first word.
 pub fn ids(run: &str) -> Vec<String> {
-    let (mut plan, mut list, mut out) = (false, false, Vec::<String>::new());
+    let mut out = Vec::new();
+    for (id, _) in rows(run) {
+        if !out.iter().any(|found| found == id) {
+            out.push(id.to_string());
+        }
+    }
+    out
+}
+
+/// Step 3's proof rows, with their IDs and full text for evidence validation.
+pub(crate) fn rows(run: &str) -> Vec<(&str, &str)> {
+    let (mut plan, mut list, mut out) = (false, false, Vec::new());
     for l in run.lines() {
         if l.starts_with("## ") {
             (plan, list) = (l.starts_with("## 3 Plan"), false);
@@ -40,8 +51,8 @@ pub fn ids(run: &str) -> Vec<String> {
                 None => t.strip_prefix("- ").or_else(|| t.strip_prefix("* ")).and_then(|b| b.split_whitespace().next()),
             };
             let id = first.map_or("", |c| c.trim().trim_matches(['`', '*', ':']));
-            if is_id(id) && !out.iter().any(|x| x == id) {
-                out.push(id.to_string());
+            if is_id(id) {
+                out.push((id, t));
             }
         }
     }
