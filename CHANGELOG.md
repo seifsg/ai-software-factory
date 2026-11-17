@@ -6,14 +6,16 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
-### Changed
-
-- A `change` that is only one new file of under 150 lines runs step 6 without lens agents: the step-8 reviewer covers compliance and journey ([#333])
-
 ### Fixed
 
 - Bind native Codex runs to their verified thread and transcript at initialization, before the first Stop hook. Resolve packaged native launchers when the command is absent from PATH.
 - Replace an explicitly superseded gate or review stamp when a coded step is reposted, preserving omitted proofs without retaining an obsolete reviewed head.
+
+## [0.8.2] - 2026-11-17
+
+### Changed
+
+- A `change` that is only one new file of under 150 lines runs step 6 without lens agents: the step-8 reviewer covers compliance and journey ([#333])
 
 ## [0.8.1] - 2026-11-17
 
@@ -380,7 +382,8 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 - Leaner runs (#137): product, feature and change runs each read 24% less method text, every gate message is shorter with the same facts, `scripts/token_report.py` measures both, and tests hold every method file and the gate's fixture messages to a byte budget and the product and change loads to 80% of their earlier size.
 - Self-update (#139): a clone install moves only to a release tag on `main` whose files match its manifest, records the previous revision, rolls back a failed install and shows a one-time notice naming both versions.
 
-[Unreleased]: https://github.com/seifsg/ai-software-factory/compare/v0.8.1...HEAD
+[Unreleased]: https://github.com/seifsg/ai-software-factory/compare/v0.8.2...HEAD
+[0.8.2]: https://github.com/seifsg/ai-software-factory/compare/v0.8.1...v0.8.2
 [0.8.1]: https://github.com/seifsg/ai-software-factory/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/seifsg/ai-software-factory/compare/v0.7.2...v0.8.0
 [0.7.2]: https://github.com/seifsg/ai-software-factory/compare/v0.7.1...v0.7.2
