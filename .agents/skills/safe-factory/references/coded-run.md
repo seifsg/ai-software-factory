@@ -20,3 +20,9 @@ Run a suite that writes its own full receipt directly. For other suites, run `fa
 ## Gate backing
 
 `factory guard check` (read-only) prints one verdict line per gate and review line in run.md: backed by its delegate's handback on that commit, or not. The step-8 reviewer runs it itself.
+
+## Review evidence
+
+Pin the candidate. Assemble shared inputs once with `factory review packet --base <base sha> --head <candidate sha>`, adding `--context <tracked path>` for unchanged source and `--proof <.factory path>` for each named capture. Give both fresh reviewers the packet and their separate briefs, without each other's reports. Supply later proof on the same head as it arrives. Use direct reads for missing context.
+
+Before sending a handback to a checker, run `factory review check --role deep|final|checker --head <sha> <handback file>` with `--report <file>` for final review or `--gate <A|B|C>` for a checker. Use an exact-head verdict line. Fix form errors before handing off. A valid form carries the delegate's verdict; it never decides a gate.

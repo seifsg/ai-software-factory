@@ -1,6 +1,6 @@
 # Hosts
 
-Contents: first-class hosts · delegation · other agents · sources
+Contents: first-class hosts · delegation · other agents · portable review evidence · sources
 
 Methods are host-neutral. This page = what differs per agent: where skills live, how a step loads its skill fresh, how hooks are wired, how delegates get their model.
 
@@ -51,6 +51,12 @@ Pass request, decisions, interfaces, stops and artifact paths explicitly; full h
 | Anything else | point it at `.agents/skills/safe-factory/SKILL.md` | none |
 
 Guard live: step 1 finds `.factory/guard/state` (hooks added mid-session never load). Not live on a host with hooks: the run moves to a fresh session with `safe-factory Resume <run folder>`; still not live there (hooks not trusted, Git Bash missing): `Waiting: owner:` with the cause. On a host without hooks, Fast chains steps in one turn, one block message per step, never waits and never ends a turn with the run open and `Waiting: none`; Safe ends each step with `Say go for step <n>`. Each step still rereads `.factory/run.md` and loads the `Next:` skill fresh; checker gates and PR review still apply.
+
+## Portable review evidence
+
+The same `factory review packet` and `factory review check` commands work in any shell that can launch the Factory binary. In a desktop or CLI session, save the packet from stdout, attach it or give its path to the reviewer, and save the returned handback as a text file. A host with no workspace read access can receive the packet as text. Use the owner's model and role policy when starting independent reviews. These commands do not need host APIs, launch a model, or replace gate backing and receipt checks.
+
+`factory review packet --base <sha> --head <sha> [--context <tracked-file>]... [--proof <.factory-file>]...` reads committed Git text, ticket and run through Build, and only the proof files named. Both commit IDs are full SHAs. Binary changes are described by Git and may need a separate attachment. Proof is a copy of the explicitly selected local files; include only evidence intended for the review. For later evidence, send the exact-head receipt and proof as they arrive.
 
 ## Sources
 

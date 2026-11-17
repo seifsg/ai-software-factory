@@ -11,6 +11,8 @@ const USAGE: &str = "usage: factory <command>
   update-check [<plugin root>]
   lint <A|B|C> [--skills <dir>] [<run folder>]
   contracts [--skills <dir>] <skill>...
+  review packet --base <sha> --head <sha> [--proof <file>]... [--context <file>]...
+  review check --role <deep|final|checker> --head <sha> [--gate <A|B|C>] [--report <file>] <handback>
   tree [<folder>]
   proof-hash <file>...
   receipt run [--suite <name>] -- <command>...
@@ -31,6 +33,7 @@ fn main() -> ExitCode {
         ["update-check", rest @ ..] => factory::update::cli(rest),
         ["lint", rest @ ..] => factory::lint::cli(rest),
         ["contracts", rest @ ..] => factory::contracts::cli(rest),
+        ["review", rest @ ..] => factory::review::cli(rest),
         ["tree", rest @ ..] => factory::git::tree::cli(rest),
         ["proof-hash", rest @ ..] => factory::proof::cli(rest),
         ["receipt", rest @ ..] => factory::receipt::cli(rest),

@@ -6,6 +6,10 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+### Added
+
+- Assemble a pinned review evidence packet once for both independent reviewers and validate handback format before gate checks.
+
 ### Fixed
 
 - Record suite receipts on clean checkouts with a read-only Git directory.

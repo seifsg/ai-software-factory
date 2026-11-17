@@ -11,6 +11,7 @@ pub mod lint;
 pub mod paths;
 pub mod proof;
 pub mod receipt;
+pub mod review;
 pub mod run;
 pub mod update;
 
