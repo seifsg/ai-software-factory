@@ -6,6 +6,10 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+### Changed
+
+- A `change` that is only one new file of under 150 lines runs step 6 without lens agents: the step-8 reviewer covers compliance and journey.
+
 ## [0.8.1] - 2026-11-17
 
 ### Added
