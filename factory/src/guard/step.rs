@@ -121,8 +121,11 @@ pub fn write(text: &str, label: &str, block: &str) -> Result<String, String> {
         }
     };
     let end = lines[start + 1..].iter().position(|l| l.starts_with("## ")).map_or(lines.len(), |e| start + 1 + e);
-    let kept: Vec<String> =
-        lines[start + 1..end].iter().filter(|l| is_proof(l) && !body.lines().any(|b| b == l.as_str())).cloned().collect();
+    let kept: Vec<String> = lines[start + 1..end]
+        .iter()
+        .filter(|old| proof_kind(old).is_some_and(|kind| !body.lines().any(|new| proof_kind(new) == Some(kind))))
+        .cloned()
+        .collect();
     if !lines[start].contains(TICK) {
         lines[start] = format!("{} {TICK}", lines[start].trim_end());
     }
@@ -144,9 +147,12 @@ pub fn write(text: &str, label: &str, block: &str) -> Result<String, String> {
     Ok(lines.join("\n") + "\n")
 }
 
-/// Lines that prove a gate or the review: never dropped by a rewrite.
-fn is_proof(l: &str) -> bool {
-    ["Gate A:", "Gate B:", "Gate C:", "Review: ready"].iter().any(|p| l.starts_with(p)) && !l.contains(": FAIL")
+/// Omitted proofs survive a rewrite; an explicit replacement supersedes only the same kind.
+fn proof_kind(line: &str) -> Option<&'static str> {
+    if line.contains(": FAIL") {
+        return None;
+    }
+    ["Gate A:", "Gate B:", "Gate C:", "Review: ready"].into_iter().find(|prefix| line.starts_with(prefix))
 }
 
 /// Replaces the `T<k> pre:` line under `## 5 Build`, or adds it after the section's last line.
@@ -192,6 +198,20 @@ mod tests {
         let run = "Next: 7 PR \u{b7} how-to-make-a-pr\n\n## 3 Plan \u{2714}\nold\n\n## 4 Before\n";
         let out = write(run, "3", "## 3 Plan\nnew\n").unwrap();
         assert!(out.contains("Next: 7 PR \u{b7} how-to-make-a-pr") && out.contains("## 3 Plan \u{2714}\nnew\n"));
+    }
+
+    #[test]
+    fn replacement_proof_retires_only_its_previous_stamp() {
+        for prefix in ["Review: ready (reviewer r)", "Gate C: PASS (checker c)"] {
+            let old = format!("{prefix} @aaaaaaa");
+            let new = format!("{prefix} @bbbbbbb");
+            let run = format!("Next: 8 Review · how-to-review-a-pr\n## 8 Review ✔\n{old}\nLeft running: none\n");
+            let body = format!("## 8 Review\n{new}\nLeft running: none\n");
+            let out = write(&run, "8", &body).unwrap();
+            assert!(!out.contains(&old), "{out}");
+            assert!(out.contains(&new) && out.trim_end().ends_with("Left running: none"));
+            assert!(write(&run, "8", "## 8 Review\nno replacement\n").unwrap().contains(&old));
+        }
     }
 
     #[test]
