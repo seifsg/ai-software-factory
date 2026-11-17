@@ -37,7 +37,7 @@ Build systems that outlast their creator.
 |---|---|---|
 | `product` | new app, game, site, tool, service or library | `research-market` kickoff research, kickoff questions |
 | `feature` | big feature with product choices | same |
-| `change` | bug fix, small change, follow-up, factory maintenance | none; every block stays short |
+| `change` | bug fix, small change, follow-up, factory maintenance | none; every block stays short; only a new file <150 lines runs no lens agents: step-8 review fills step 6 |
 
 Every run keeps project rules and never puts secrets in code or Git. Never assume a size (POC, MVP) the owner did not name: [sizes](references/sizes.md).
 
