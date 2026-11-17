@@ -12,6 +12,7 @@ const USAGE: &str = "usage: factory <command>
   update-check [<plugin root>]
   lint <A|B|C> [--skills <dir>] [<run folder>]
   contracts [--skills <dir>] <skill>...
+  review gate-a [--skills <dir>] [--proof-inputs <json>]
   review packet --base <sha> --head <sha> [--proof <file>]... [--context <file>]...
   review check --role <deep|final|checker> --head <sha> [--gate <A|B|C>] [--report <file>] <handback>
   tree [<folder>]

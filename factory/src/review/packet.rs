@@ -92,7 +92,7 @@ fn git(repo: &Repo, args: &[&str]) -> Result<String, String> {
     String::from_utf8(out.stdout).map_err(|_| format!("git {} returned non-UTF-8 data", args[0]))
 }
 
-fn relative(file: &str) -> Result<std::path::PathBuf, String> {
+pub(super) fn relative(file: &str) -> Result<std::path::PathBuf, String> {
     let normalized = crate::paths::norm(file);
     let path = Path::new(&normalized);
     if path.as_os_str().is_empty() || path.components().any(|p| !matches!(p, Component::Normal(_))) {
@@ -101,7 +101,7 @@ fn relative(file: &str) -> Result<std::path::PathBuf, String> {
     Ok(path.to_path_buf())
 }
 
-fn proof(repo: &Repo, file: &str) -> Result<String, String> {
+pub(super) fn proof(repo: &Repo, file: &str) -> Result<String, String> {
     let path = relative(file)?;
     let invalid = || format!("{file}: proof must be a file inside the checkout's .factory directory");
     if !path.starts_with(".factory") {
@@ -116,6 +116,11 @@ fn proof(repo: &Repo, file: &str) -> Result<String, String> {
 }
 
 fn build_record(run: &str) -> &str {
+    through(run, &["## 6 Verify", "## 7 PR", "## 8 Review"])
+}
+
+/// Keep a prefix of the run through a phase, ignoring headings inside fences.
+pub(super) fn through<'a>(run: &'a str, stop_at: &[&str]) -> &'a str {
     // Exact step heading outside fences, so examples in the run cannot cut off the record.
     let mut fence = None;
     let mut offset = 0;
@@ -128,7 +133,7 @@ fn build_record(run: &str) -> &str {
             None if width >= 3 && matches!(marker, Some(b'`' | b'~')) => fence = marker.map(|m| (m, width)),
             _ => {}
         }
-        if fence.is_none() && ["## 6 Verify", "## 7 PR", "## 8 Review"].iter().any(|heading| line.starts_with(heading)) {
+        if fence.is_none() && stop_at.iter().any(|heading| line.starts_with(heading)) {
             return &run[..offset];
         }
         offset += line.len();
@@ -136,7 +141,7 @@ fn build_record(run: &str) -> &str {
     run
 }
 
-fn section(out: &mut String, name: &str, contents: &str) {
+pub(super) fn section(out: &mut String, name: &str, contents: &str) {
     // Pick a delimiter longer than any backtick run in the content.
     let length = contents.split(|c| c != '`').map(str::len).max().unwrap_or(0) + 1;
     let fence = "`".repeat(length.max(3));

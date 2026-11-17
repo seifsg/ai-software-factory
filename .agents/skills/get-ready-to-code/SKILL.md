@@ -62,7 +62,7 @@ The block `## 3 Plan` holds:
 - [ ] **Phases:** ordered, smallest real journey first (product, feature or new UI; a `change` omits it)
 - [ ] **Todos:** `T1..Tn`, each an outcome with ticket and criteria; every criterion maps to at least one todo; the ticket checklist matches
 - [ ] **Plan:** interfaces and ports, delegated jobs one per file set (product, feature, new UI or delegated work; a `change` omits it)
-- [ ] **Proof list:** every changed view, state, journey or command with an id and its input files; the id is a table row's first cell or a bullet's first word
+- [ ] **Proof list:** each changed view, state, journey or command, with ID first in its row or bullet and exact input paths, including generated inputs
 - [ ] **Test map:** per-file or changed-only test command and the full-suite command, or `none (<reason>)`: no logic, or owner-named POC
 - [ ] No source file changed during this step
 

@@ -54,6 +54,8 @@ Guard live: step 1 finds `.factory/guard/state` (hooks added mid-session never l
 
 ## Portable review evidence
 
+`factory review gate-a [--skills <dir>] [--proof-inputs <json>]` runs the form check and prints a brief with the exact HEAD, the installed contracts, the local ticket when present, and the run through Plan. Copy labelled criteria from the ticket into Step 0 and list caller paths in backticks in Analyze. An optional proof manifest maps each proof ID to a list of checkout-relative paths. List those paths in backticks in the matching Plan row, even when the run will generate the files later. Save the brief as UTF-8 and give it to a fresh read-only checker. The checker still decides Gate A.
+
 A native coded run records step starts in `.factory/guard/steps.jsonl` as UTC timestamps and step IDs. Run `factory guard begin` after creating the header for the first step. The guard records later starts as it advances. The records work with any host and contain neither message text nor tool input.
 
 The same `factory review packet` and `factory review check` commands work in any shell that can launch the Factory binary. In a desktop or CLI session, save the packet from stdout, attach it or give its path to the reviewer, and save the returned handback as a text file. A host with no workspace read access can receive the packet as text. Use the owner's model and role policy when starting independent reviews. These commands do not need host APIs, launch a model, or replace gate backing and receipt checks.
