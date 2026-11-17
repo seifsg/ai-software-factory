@@ -94,7 +94,9 @@ fn generates_only_a_checked_gate_a_brief() {
     for input in [".factory/inputs.json", "src/main.js", "test/handler.test.js"] {
         fs::copy(dir.join(input), nested.join(input)).unwrap();
     }
-    let nested_run = RUN.replace("Keep the acceptance receipt.", "Keep the component receipt.");
+    let nested_run = RUN.replace("Keep the acceptance receipt.", "Keep the component receipt.")
+        .replace("`test/handler.test.js`", "`test/handler.test.js#L1-L5`")
+        .replace("`.factory/out/T1/gates.txt`", "``.factory/out/T1/gates.txt``");
     fs::write(nested.join(".factory/run.md"), nested_run).unwrap();
     fs::write(nested.join(".factory/ticket.md"), "**A1 (ask):** Keep the component receipt.\n").unwrap();
     let (code, output) = factory(&nested, &dir, &args, "");

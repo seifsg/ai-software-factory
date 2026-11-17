@@ -37,6 +37,8 @@ pub(super) fn assemble(args: &[&str]) -> Result<String, String> {
     let skills = contracts::skills_dir(skills).ok_or("no skills folder found; pass --skills <dir>")?;
     let rules_file = skills.join("safe-factory/references/checker.md");
     let rules = std::fs::read_to_string(&rules_file).map_err(|err| format!("{}: {err}", paths::text(&rules_file)))?;
+    let (_, brief_rules) = rules.split_once("## Brief").ok_or("checker method is missing its Brief")?;
+    let brief_rules = brief_rules.split_once("## After a FAIL").map_or(brief_rules, |(brief, _)| brief);
     let expected = manifest.map(read_manifest).transpose()?;
     let mut gaps = lint::check(&lint::Input {
         gate: 'A',
@@ -63,7 +65,8 @@ pub(super) fn assemble(args: &[&str]) -> Result<String, String> {
     out.push_str("Check steps 0 through 3 against every relevant contract before deciding. Stay read-only.\n");
     out.push_str("Check the ticket and source where needed. Future proof inputs in the Plan may be produced later.\n");
     out.push_str("Preflight checked form. Judge meaning, completeness and evidence independently.\n\n");
-    out.push_str(&rules);
+    out.push_str("Follow these checker instructions using the project, commit and material in this packet.\n");
+    out.push_str(brief_rules);
     for name in contract_names {
         let contract = contracts::of(&skills, name)?;
         writeln!(out, "\n# {name}\n\n{contract}").unwrap();
@@ -113,7 +116,7 @@ fn check_callers(root: &Path, analysis: String, gaps: &mut Vec<String>) {
             gaps.push("## 1 Analyze: a tab in Used by may be a corrupted file citation".into());
         }
         for span in spans(line) {
-            let path = span.split(':').next().unwrap_or_default();
+            let path = caller_path(span);
             if !path.contains(['/', '\\']) || !path.rsplit(['/', '\\']).next().is_some_and(|name| name.contains('.'))
                 || path.contains(['*', '?', '<', '>', '(', ')', '=']) {
                 continue;
@@ -163,11 +166,37 @@ fn check_proof_inputs(run: &str, expected: &ProofInputs, gaps: &mut Vec<String>)
     }
 }
 
-fn spans(line: &str) -> impl Iterator<Item = &str> {
-    let mut fields = line.split('`').skip(1);
+/// A file citation can carry a symbol, line suffix or a Git-style line fragment.
+fn caller_path(span: &str) -> &str {
+    let path = span.split(':').next().unwrap_or_default();
+    match path.rsplit_once("#L") {
+        Some((base, line)) if line.bytes().next().is_some_and(|byte| byte.is_ascii_digit()) => base,
+        _ => path,
+    }
+}
+
+/// Read inline code spans, including paths quoted with more than one backtick.
+fn spans(mut line: &str) -> impl Iterator<Item = &str> {
     std::iter::from_fn(move || {
-        let inside = fields.next()?;
-        fields.next()?;
-        Some(inside.trim())
+        while let Some((start, width)) = backticks(line) {
+            let body = &line[start + width..];
+            let mut rest = body;
+            while let Some((offset, close)) = backticks(rest) {
+                if width == close {
+                    let end = body.len() - rest.len() + offset;
+                    line = &rest[offset + close..];
+                    return Some(body[..end].trim());
+                }
+                rest = &rest[offset + close..];
+            }
+            line = body;
+        }
+        None
     })
+}
+
+fn backticks(text: &str) -> Option<(usize, usize)> {
+    let start = text.find('`')?;
+    let width = text[start..].bytes().take_while(|byte| *byte == b'`').count();
+    Some((start, width))
 }

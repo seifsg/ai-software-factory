@@ -133,7 +133,9 @@ pub(super) fn through<'a>(run: &'a str, stop_at: &[&str]) -> &'a str {
             None if width >= 3 && matches!(marker, Some(b'`' | b'~')) => fence = marker.map(|m| (m, width)),
             _ => {}
         }
-        if fence.is_none() && stop_at.iter().any(|heading| line.starts_with(heading)) {
+        if fence.is_none() && stop_at.iter().any(|heading| {
+            line.trim_end().strip_prefix(heading).is_some_and(|tail| tail.is_empty() || tail.starts_with(char::is_whitespace))
+        }) {
             return &run[..offset];
         }
         offset += line.len();
