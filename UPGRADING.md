@@ -2,7 +2,7 @@
 
 What installs and active runs must do for each release, newest first. What changed: [CHANGELOG.md](CHANGELOG.md).
 
-## Unreleased
+## 0.8.0
 
 1. **Codex:** trust the hooks again in `/hooks`: they now call `scripts/factory.cmd`, the bundled binary, instead of Git Bash.
 2. **Cursor:** trust the hooks again if it asks: the plugin now reads `hooks/cursor.json`.
