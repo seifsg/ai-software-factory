@@ -86,5 +86,20 @@ fn generates_only_a_checked_gate_a_brief() {
         assert!(output.contains(expected), "{expected}: {output}");
     }
     assert!(!output.contains("LATER STEP CONTENT"));
+
+    let nested = dir.join("component");
+    for folder in [".factory", "src", "test"] {
+        fs::create_dir_all(nested.join(folder)).unwrap();
+    }
+    for input in [".factory/inputs.json", "src/main.js", "test/handler.test.js"] {
+        fs::copy(dir.join(input), nested.join(input)).unwrap();
+    }
+    let nested_run = RUN.replace("Keep the acceptance receipt.", "Keep the component receipt.");
+    fs::write(nested.join(".factory/run.md"), nested_run).unwrap();
+    fs::write(nested.join(".factory/ticket.md"), "**A1 (ask):** Keep the component receipt.\n").unwrap();
+    let (code, output) = factory(&nested, &dir, &args, "");
+    assert_eq!(code, 0, "{output}");
+    assert!(output.contains("Keep the component receipt."));
+    assert!(!output.contains("Keep the acceptance receipt."));
     let _ = fs::remove_dir_all(dir);
 }

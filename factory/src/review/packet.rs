@@ -42,9 +42,9 @@ pub(super) fn assemble(args: &[&str]) -> Result<String, String> {
     let mut out = format!("# Review evidence\n\nBase: {base}\nCandidate: {head}\n\n");
     let ticket = ".factory/ticket.md";
     if repo.work.join(ticket).try_exists().map_err(|e| format!("{ticket}: {e}"))? {
-        section(&mut out, ticket, &proof(&repo, ticket)?);
+        section(&mut out, ticket, &proof(&repo.work, ticket)?);
     }
-    let run = proof(&repo, ".factory/run.md")?;
+    let run = proof(&repo.work, ".factory/run.md")?;
     section(&mut out, ".factory/run.md through Build", build_record(&run));
     for file in options.context {
         let path = relative(file)?;
@@ -71,7 +71,7 @@ pub(super) fn assemble(args: &[&str]) -> Result<String, String> {
     )?;
     section(&mut out, "Committed diff with full text context", &diff);
     for file in options.proof {
-        section(&mut out, file, &proof(&repo, file)?);
+        section(&mut out, file, &proof(&repo.work, file)?);
     }
     Ok(out)
 }
@@ -101,14 +101,14 @@ pub(super) fn relative(file: &str) -> Result<std::path::PathBuf, String> {
     Ok(path.to_path_buf())
 }
 
-pub(super) fn proof(repo: &Repo, file: &str) -> Result<String, String> {
+pub(super) fn proof(work: &Path, file: &str) -> Result<String, String> {
     let path = relative(file)?;
     let invalid = || format!("{file}: proof must be a file inside the checkout's .factory directory");
     if !path.starts_with(".factory") {
         return Err(invalid());
     }
-    let resolved = repo.work.join(path).canonicalize().map_err(|e| format!("{file}: {e}"))?;
-    let work = repo.work.canonicalize().map_err(|e| format!("checkout: {e}"))?;
+    let resolved = work.join(path).canonicalize().map_err(|e| format!("{file}: {e}"))?;
+    let work = work.canonicalize().map_err(|e| format!("checkout: {e}"))?;
     if !resolved.starts_with(work.join(".factory")) || !resolved.is_file() {
         return Err(invalid());
     }

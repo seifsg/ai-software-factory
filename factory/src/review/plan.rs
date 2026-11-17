@@ -23,16 +23,17 @@ pub(super) fn assemble(args: &[&str]) -> Result<String, String> {
         return Err(format!("missing value for {}", pairs.remainder()[0]));
     }
     let dir = crate::run::locate::walk(&crate::guard::cwd()).ok_or("no .factory/run.md from this folder")?;
-    let repo = Repo::discover(Path::new(&dir)).ok_or("Gate A requires a Git checkout")?;
+    let root = Path::new(&dir);
+    let repo = Repo::discover(root).ok_or("Gate A requires a Git checkout")?;
     let info = repo.info();
     if !crate::git::refs::is_sha(&info.head) {
         return Err("Gate A requires a committed HEAD".into());
     }
-    let steps = packet::proof(&repo, ".factory/run.md")?;
+    let steps = packet::proof(root, ".factory/run.md")?;
     let steps = packet::through(&steps, &["## 4 Before", "## 5 Build", "## 6 Verify", "## 7 PR", "## 8 Review"]);
     let ticket_path = ".factory/ticket.md";
-    let ticket = repo.work.join(ticket_path).try_exists().map_err(|err| format!("{ticket_path}: {err}"))?
-        .then(|| packet::proof(&repo, ticket_path)).transpose()?;
+    let ticket = root.join(ticket_path).try_exists().map_err(|err| format!("{ticket_path}: {err}"))?
+        .then(|| packet::proof(root, ticket_path)).transpose()?;
     let skills = contracts::skills_dir(skills).ok_or("no skills folder found; pass --skills <dir>")?;
     let rules_file = skills.join("safe-factory/references/checker.md");
     let rules = std::fs::read_to_string(&rules_file).map_err(|err| format!("{}: {err}", paths::text(&rules_file)))?;
@@ -44,12 +45,12 @@ pub(super) fn assemble(args: &[&str]) -> Result<String, String> {
         head: &info.head,
         has_remote: info.remote,
         skills: Some(&skills),
-        proof: &repo.work.join(".factory/proof"),
+        proof: &root.join(".factory/proof"),
     }).gaps;
     if let Some(ticket) = &ticket {
         check_criteria(ticket, block(steps, "0"), &mut gaps);
     }
-    check_callers(&repo.work, block(steps, "1"), &mut gaps);
+    check_callers(root, block(steps, "1"), &mut gaps);
     if let Some(input) = &expected {
         check_proof_inputs(steps, input, &mut gaps);
     }
@@ -58,7 +59,7 @@ pub(super) fn assemble(args: &[&str]) -> Result<String, String> {
     }
 
     let (_, contract_names) = lint::scope('A').expect("Gate A has contracts");
-    let mut out = format!("Role: checker. Gate A. Project: {}. Commit: {}.\n", paths::text(&repo.work), info.head);
+    let mut out = format!("Role: checker. Gate A. Project: {}. Commit: {}.\n", paths::text(root), info.head);
     out.push_str("Check steps 0 through 3 against every relevant contract before deciding. Stay read-only.\n");
     out.push_str("Check the ticket and source where needed. Future proof inputs in the Plan may be produced later.\n");
     out.push_str("Preflight checked form. Judge meaning, completeness and evidence independently.\n\n");
@@ -76,9 +77,11 @@ pub(super) fn assemble(args: &[&str]) -> Result<String, String> {
 
 fn block(run: &str, id: &str) -> String {
     let prefix = format!("## {id} ");
-    let Some((_, body)) = run.lines().find(|line| line.starts_with(&prefix)).and_then(|heading| run.split_once(heading))
-    else { return String::new() };
-    body.lines().skip(1).take_while(|line| !line.starts_with("## ")).collect::<Vec<_>>().join("\n")
+    let mut lines = run.lines();
+    if !lines.any(|line| line.starts_with(&prefix)) {
+        return String::new();
+    }
+    lines.take_while(|line| !line.starts_with("## ")).collect::<Vec<_>>().join("\n")
 }
 
 /// Labelled criteria already written in the local ticket are the source for the Ticket block.
