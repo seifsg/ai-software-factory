@@ -11,7 +11,7 @@ Every PR shows a skeptical owner truthful before/after proof: what failed or was
 |---|---|
 | Screen, page, section | Screenshot pair per changed view and distinct visual state; no hero image standing in for the rest |
 | Touched interactive journey, motion | Screenshot pairs for each step that changed; a video only when the owner asks or a still cannot show it |
-| New visual surface | Before: "did not exist", no capture; After: new screenshot |
+| New visual surface | Before: its file says `did not exist`, no capture; After: new screenshot |
 
 - **Bug during capture:** stop, keep short sanitized failure note, fix in scope, run affected checks, commit and push checked fix if authorized, reset fixture, then restart whole planned demo on that candidate. Replace failed or stale After media; never edit a failure out to imply success. Fix needing new authority blocks demo with cause and next action; no silent deferral or all-clean claim.
 - **Keep it fast:** plan routes once; reuse build/fixtures; screenshot during QA recording; share clips; batch uploads/body updates. No duplicate angles. Record setup/capture/upload durations and the slow stage; explain material delay in the PR. Never drop required coverage for time.

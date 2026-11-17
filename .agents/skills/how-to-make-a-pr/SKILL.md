@@ -38,9 +38,9 @@ git switch -c <scope>/<short-name> origin/<base>
 Every PR shows observed Before/After per outcome; prose or illustrative diagrams never replace results. Nonvisual proof, in a `diff`: API, one request's status and body; CLI or script, one command's output; method or prose, a fresh walkthrough's changed result and key text. Speed/size/cost proof measures same workload. Internal module proves its changed screen, endpoint or command. New nonvisual result: prior output is "did not exist". Name `**Visual:**` and `**Journey:**` under each outcome (`references/pr-layout.md`), with reason when no. Map shared backend effects to UI journeys.
 
 1. Take plan's proof list. Changed views, states, motion, interactions or affected UI journeys: read [visual and journey proof](references/media-proof.md) now; its rules apply in full.
-2. Brand-new surface: no Before capture, Before = "did not exist". Non-visual Before (commands, responses, text) comes from base, frozen in Git, into `.factory/proof/<ticket>/before-<id>.txt`, by a background runner while the plan finishes: base output run before any edit, or `git show <base>:<path>` anytime; it names the base commit. Capture every screen Before now, before any source edit, into `before-<id>.png`. Screens: capture from the preview owner watches, else host's built-in browser; keep that one server for After. No Playwright, headless browsers or capture scripts unless owner asks. Host cannot save screenshot as file: write what it shows into `before-<id>.txt` as `pane:` observation; valid proof, no waiver needed.
+2. Every proof-list id gets a `before-<id>` file; a brand-new surface's says `did not exist`. Every Before (screens, commands, responses, text, suite timings) is saved before step 5 starts, so before the first source change (the first commit not on base, or the earliest changed or untracked file outside `.factory/`), and names the base commit. Non-visual ones go to `.factory/proof/<ticket>/before-<id>.txt`, taken from base (base output, `git show <base>:<path>`) by a background runner while the plan finishes; it finishes before step 5. A suite Before is the base commit's receipt; none: run it once here. Screens go to `before-<id>.png`. Screens: capture from the preview owner watches, else host's built-in browser; keep that one server for After. No Playwright, headless browsers or capture scripts unless owner asks. Host cannot save screenshot as file: write what it shows into `before-<id>.txt` as `pane:` observation; valid proof, no waiver needed.
 3. Inspect every capture: right screen, readable, no secrets.
-4. Missed a Before after editing: text and command proof come from base (`git show <base>:<path>`, base build output); screenshot no longer takeable: state it as missing in PR. Never a second checkout or server just for a picture.
+4. The plan's proof list fixes the ids; never capture a Before after the first edit, from base or edited code. A Before missed from that list: `Waiting: owner:`. A proof id added at step 6 or 8 (a review fix) has no Before file: its outcome reads `**Before:** finding <id>, no Before (added after build)` and shows its After. Never a second checkout or server just for a picture.
 5. **After rule:** capture After during verify's manual round, same server, same ids: `after-<id>.*`, naming its commit and `factory proof-hash <the id's input files>` (no `factory` command: `git log -1 --format=%h -- <input files>`). It stays valid while that hash holds; a change to an input file recaptures that id, and only that id.
 
 ## 5. Make the change
@@ -50,7 +50,7 @@ Every PR shows observed Before/After per outcome; prose or illustrative diagrams
 - Commit as `<type>(<scope>): <imperative subject>`; body = why, not lines changed.
 - Honor required signing with existing identity; never invent one or bypass signing, permissions or protected gates.
 - **No AI or tool attribution lines** in commits, even if your agent's defaults add one.
-- Required gates (step 1) go green locally before push; PR names their commands and results. A check not run is **unverified**. CI never required: never wait on or rerun it; a result that arrives = extra evidence.
+- Required gates (step 1) go green locally before push; PR names their commands and results; the final suite run joins the PR when its receipt lands, before Gate C. A check not run is **unverified**. CI never required: never wait on or rerun it; a result that arrives = extra evidence.
 - Tests last: implement, manually QA real behavior, then write and run tests. Fix found by tests repeats manual QA and tests. No tests that restate implementation.
 
 ## 6. Open the draft
@@ -85,8 +85,8 @@ Open one every run, unasked, unless its wave's draft PR is open (`references/pr-
 
 The block `## 4 Before` holds:
 
-- [ ] Every proof-list id with its `before-<id>` file under `.factory/proof/<ticket>/`, or "did not exist" for a new surface
-- [ ] Screens saved before the first source edit; non-visual ones taken from base, naming it
+- [ ] Every proof-list id with its `before-<id>` file under `.factory/proof/<ticket>/` (a new surface's says `did not exist`)
+- [ ] Every Before saved before the first source edit, naming the base commit
 - [ ] Each capture inspected, or none to inspect: every id "did not exist"
 
 The block `## 7 PR` holds the draft PR URL, and the PR itself has:
@@ -94,7 +94,7 @@ The block `## 7 PR` holds the draft PR URL, and the PR itself has:
 - [ ] Title `<type>(<scope>): <subject>`; draft; the verified base
 - [ ] A clickable ticket link in the body, and the PR link in the ticket's activity
 - [ ] Purpose & goal, Before & after, Verification and Progress / next, in that order (other sections and their wording are never a FAIL)
-- [ ] One heading per outcome under Before & after, each with `**Visual:**`, `**Journey:**` and either `**Before:**` and `**After:**`, each an `https` image, fenced output or `pane:` observation, or one `**Before → After:**` with a two-column image table (Visual yes) or a `diff` block (Visual no); a new surface or output's Before is `did not exist`
+- [ ] One heading per outcome under Before & after, each with `**Visual:**`, `**Journey:**` and either `**Before:**` and `**After:**`, each an `https` image, fenced output or `pane:` observation, or one `**Before → After:**` with a two-column image table (Visual yes) or a `diff` block (Visual no); a new surface or output's Before is `did not exist`; an id added at step 6 or 8: `finding <id>, no Before (added after build)`
 - [ ] Each After names its commit and input hash, valid by the After rule
 - [ ] Verification: criterion → change → proof → gap, with each command and its result; unverified items named
 - [ ] Review requested from a review owner other than the author, or none (solo owner)

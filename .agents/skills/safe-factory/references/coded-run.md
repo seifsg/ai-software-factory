@@ -15,7 +15,7 @@ Step 5 runs one todo per guard call, every todo in the same turn.
 
 ## Full suite
 
-Run the full suite as `factory receipt run --suite full -- <command>`: it runs and records it (a runner that ran it elsewhere: `factory receipt write`, command, exit, log path). `factory receipt check` says whether HEAD's tree has a passing one; the guard refuses Gate B and Gate C lines without it. A receipt for the final head's tree is the one full-suite run: never rerun that tree.
+Run the full suite as `factory receipt run --suite full -- <command>`: it runs and records it (a runner that ran it elsewhere: `factory receipt write`, command, exit, log path). `factory receipt check` says whether a tree has a passing one: the base commit's is the suite Before, the final head's is the one full-suite run (never rerun that tree). The guard refuses Gate B, Gate C and review lines without a passing receipt for their commit's tree, and Gate C when it counts more than one passing run.
 
 ## Gate backing
 
