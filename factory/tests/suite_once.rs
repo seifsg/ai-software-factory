@@ -67,11 +67,34 @@ fn runs_line(r: &Path) -> String {
 }
 
 #[test]
+fn gate_b_can_advance_while_the_final_suite_runs() {
+    let d = common::scratch("pending-pr");
+    let r = closed_run(&d);
+    let run_path = r.join(".factory/run.md");
+    let closed = std::fs::read_to_string(&run_path).unwrap();
+    let prior_to_pr = closed
+        .lines()
+        .filter(|line| !["## 7 PR", "## 8 Review", "Review:", "Gate C:"].iter().any(|prefix| line.starts_with(prefix)))
+        .collect::<Vec<_>>()
+        .join("\n")
+        .replace("Status: closed", "Status: open")
+        .replace("Next: none (closed)", "Next: 7 PR · how-to-make-a-pr");
+    std::fs::write(&run_path, prior_to_pr).unwrap();
+    let next = stop(&d, &r);
+    assert!(next.contains("Step 7 PR"), "Gate B lets the draft advance while the suite runs: {next}");
+    let (code, report) = factory(&r, &d, &["guard", "check"], "");
+    assert_eq!(code, 0, "{report}");
+    assert!(report.contains("Gate B: backed:"), "{report}");
+
+    let _ = std::fs::remove_dir_all(&d);
+}
+
+#[test]
 fn a_run_with_one_full_suite_finishes() {
     let d = common::scratch("once");
     let r = closed_run(&d);
     let missing = stop(&d, &r);
-    assert!(missing.contains("Gate B has no full-suite receipt"), "no receipt yet: {missing}");
+    assert!(missing.contains("Gate C has no full-suite receipt"), "no receipt yet: {missing}");
     let (code, out) = suite(&d, &r, false);
     assert_eq!(code, 0, "{out}");
     assert_eq!(runs_line(&r), "runs 1");
@@ -122,6 +145,9 @@ fn a_failed_run_then_a_pass_counts_one_pass() {
         })
     );
     assert_eq!(stop(&d, &r), "", "one passing run: Gate C stands and the run is finished (a finished run is never flagged)");
+    let (code, report) = factory(&r, &d, &["guard", "check"], "");
+    assert_eq!(code, 0, "{report}");
+    assert!(report.contains("Gate C: backed:"), "{report}");
     let _ = std::fs::remove_dir_all(&d);
 }
 

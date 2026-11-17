@@ -1,10 +1,11 @@
 //! `guard check` with no session id: one verdict line per gate and review line in the run file, backed by
-//! its delegate's own handback on that commit, or not, plus each Gate B, C and review line's suite receipt.
+//! its delegate's own handback on that commit, or not, plus each Gate C and review line's suite receipt.
 //! It reads the transcripts the Stop hook last recorded; it changes no run or state file.
 
 use super::rules::pre;
 use crate::evidence::{self, Evidence};
 use crate::git::Repo;
+use crate::receipt::{self, Standing};
 use crate::run::state::{Loaded, State};
 use crate::run::{RunFile, after_at};
 use std::path::Path;
@@ -78,20 +79,21 @@ fn handback(ev: &Evidence, id: &str, k: char, sha: &str) -> (bool, String) {
     (true, format!("{id} handed back `{last}`"))
 }
 
-/// Gate B, C and the review need a passing full-suite receipt for their commit's tree; Gate C one that
-/// counts a single run.
+/// Include final receipt evidence in the read-only backing report.
 fn receipt(repo: Option<&Repo>, x: char, sha: &str) -> (bool, String) {
-    if !matches!(x, 'B' | 'C' | 'R') {
+    if !receipt::required_at(x) {
         return (true, String::new());
     }
-    match repo.and_then(|r| crate::receipt::find_pass(r, sha, "full")) {
-        Some((_, r)) if x == 'C' && r.run_count() > 1 => {
-            (false, format!("; its receipt counts {} full runs on the tree: Gate C needs exactly one", r.run_count()))
-        }
-        Some((p, r)) => (
+    let missing = || (false, format!("; no full-suite receipt for the tree of {sha}"));
+    let Some((p, r)) = repo.and_then(|repo| receipt::find_pass(repo, sha, "full")) else {
+        return missing();
+    };
+    match receipt::gate_standing(Some(&r), x) {
+        Standing::Ok => (
             true,
             format!("; receipt {} (`{}`, {} s, clean {})", crate::paths::text(&p), r.cmd, r.secs, if r.clean { "yes" } else { "no" }),
         ),
-        None => (false, format!("; no full-suite receipt for the tree of {sha}")),
+        Standing::Repeated(n) => (false, format!("; its receipt counts {n} passing full runs on the tree: Gate C needs exactly one")),
+        Standing::Missing => missing(),
     }
 }

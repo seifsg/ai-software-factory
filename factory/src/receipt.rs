@@ -15,7 +15,7 @@
 //! runs <n>            runs of this suite recorded on this tree; absent = 1
 //! passes <n>          passing runs among them; absent = 1 for a PASS, 0 for a FAIL
 //! ```
-//! Readers ignore unknown lines. Gate B and C and review lines stand only on a `full` PASS receipt for their
+//! Readers ignore unknown lines. Gate C and review lines stand only on a `full` PASS receipt for their
 //! commit's tree; Gate C only on one that counts a single passing run: the suite runs once per tree, and
 //! the guard flags any rerun on a tree.
 
@@ -174,14 +174,27 @@ pub fn find_pass(repo: &Repo, commit: &str, suite: &str) -> Option<(PathBuf, Rec
     all.into_iter().find(|(_, r)| r.tree == t)
 }
 
-/// The guard's question for a Gate B, C or review line on `commit`: a full-suite PASS receipt for its
-/// tree, and for Gate C (the final head) one that counts a single run.
-pub fn standing(repo: Option<&Repo>, commit: &str, gate: char) -> Standing {
-    match repo.and_then(|r| find_pass(r, commit, "full")) {
-        None => Standing::Missing,
-        Some((_, r)) if gate == 'C' && r.pass_count() > 1 => Standing::Repeated(r.pass_count()),
+/// Only final review and Gate C wait for a passing full suite.
+pub(crate) fn required_at(gate: char) -> bool {
+    matches!(gate, 'C' | 'R')
+}
+
+/// Judge the final receipt consistently in the Stop guard and the read-only backing report.
+pub(crate) fn gate_standing(receipt: Option<&Receipt>, gate: char) -> Standing {
+    match receipt.map(Receipt::pass_count) {
+        None | Some(0) => Standing::Missing,
+        Some(n) if gate == 'C' && n > 1 => Standing::Repeated(n),
         Some(_) => Standing::Ok,
     }
+}
+
+/// Check the full-suite receipt for the tree a final gate or review line names.
+pub fn standing(repo: Option<&Repo>, commit: &str, gate: char) -> Standing {
+    if !required_at(gate) {
+        return Standing::Ok;
+    }
+    let found = repo.and_then(|r| find_pass(r, commit, "full"));
+    gate_standing(found.as_ref().map(|(_, receipt)| receipt), gate)
 }
 
 /// What a receipt stands on: the work tree and HEAD at one moment (one `git add` spawn for the tree id).
