@@ -40,7 +40,10 @@ pub(super) fn assemble(args: &[&str]) -> Result<String, String> {
     let base = commit(&repo, options.base, "--base")?;
     let head = commit(&repo, options.head, "--head")?;
     let mut out = format!("# Review evidence\n\nBase: {base}\nCandidate: {head}\n\n");
-    section(&mut out, ".factory/ticket.md", &proof(&repo, ".factory/ticket.md")?);
+    let ticket = ".factory/ticket.md";
+    if repo.work.join(ticket).try_exists().map_err(|e| format!("{ticket}: {e}"))? {
+        section(&mut out, ticket, &proof(&repo, ticket)?);
+    }
     let run = proof(&repo, ".factory/run.md")?;
     section(&mut out, ".factory/run.md through Build", build_record(&run));
     for file in options.context {

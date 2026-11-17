@@ -48,5 +48,10 @@ fn packet_shares_committed_context_and_only_named_run_proof() {
     let (code, err) = factory(&dir, &dir, &missing, "");
     assert_ne!(code, 0, "{err}");
     assert!(err.contains("missing.txt"), "{err}");
+    std::fs::remove_file(run.join("ticket.md")).unwrap();
+    std::fs::write(run.join("run.md"), "## 0 Ticket ✔\nTracker ticket and acceptance criteria\n## 5 Build ✔\nbuild evidence\n").unwrap();
+    let (code, packet) = factory(&dir, &dir, &args, "");
+    assert_eq!(code, 0, "{packet}");
+    assert!(packet.contains("Tracker ticket and acceptance criteria"), "{packet}");
     let _ = std::fs::remove_dir_all(dir);
 }

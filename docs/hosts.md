@@ -56,7 +56,7 @@ Guard live: step 1 finds `.factory/guard/state` (hooks added mid-session never l
 
 The same `factory review packet` and `factory review check` commands work in any shell that can launch the Factory binary. In a desktop or CLI session, save the packet from stdout, attach it or give its path to the reviewer, and save the returned handback as a text file. A host with no workspace read access can receive the packet as text. Use the owner's model and role policy when starting independent reviews. These commands do not need host APIs, launch a model, or replace gate backing and receipt checks.
 
-`factory review packet --base <sha> --head <sha> [--context <tracked-file>]... [--proof <.factory-file>]...` reads committed Git text, ticket and run through Build, and only the proof files named. Both commit IDs are full SHAs. Binary changes are described by Git and may need a separate attachment. Proof is a copy of the explicitly selected local files; include only evidence intended for the review. For later evidence, send the exact-head receipt and proof as they arrive.
+`factory review packet --base <sha> --head <sha> [--context <tracked-file>]... [--proof <.factory-file>]...` reads committed Git text, the run through Build, the local ticket if present, and the named proof. Both commit IDs are full SHAs. For a tracker ticket, include its criteria in the Ticket block or pass a saved snapshot with `--proof`. Binary changes are described by Git and may need a separate attachment. Include only proof intended for the review. Send later receipts and proof on the same head as they arrive.
 
 ## Sources
 
