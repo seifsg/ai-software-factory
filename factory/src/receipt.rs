@@ -275,6 +275,20 @@ pub fn cli(args: &[&str]) -> u8 {
                     return 1;
                 }
             };
+            let reuse = || {
+                if let Some((p, r)) = existing(&before.work, &before.tree, suite).filter(|(_, r)| r.pass && !opts.contains(&"--again")) {
+                    eprintln!(
+                        "factory receipt: {suite} already passed on this tree ({}, {} s): reused, not run again. Reviews and gates read it; `--again` runs it anyway and counts a repeat.",
+                        crate::paths::text(&p),
+                        r.secs
+                    );
+                    return true;
+                }
+                false
+            };
+            if reuse() {
+                return 0;
+            }
             let _claim = match launch::Claim::take(&before, suite) {
                 Ok(claim) => claim,
                 Err(e) => {
@@ -282,13 +296,8 @@ pub fn cli(args: &[&str]) -> u8 {
                     return 1;
                 }
             };
-            // The suite runs once per tree: a passing receipt for this very tree is reused, never rerun.
-            if let Some((p, r)) = existing(&before.work, &before.tree, suite).filter(|(_, r)| r.pass && !opts.contains(&"--again")) {
-                eprintln!(
-                    "factory receipt: {suite} already passed on this tree ({}, {} s): reused, not run again. Reviews and gates read it; `--again` runs it anyway and counts a repeat.",
-                    crate::paths::text(&p),
-                    r.secs
-                );
+            // Another caller may have completed the suite while this one was acquiring the claim.
+            if reuse() {
                 return 0;
             }
             let started = std::time::Instant::now();

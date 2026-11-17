@@ -16,7 +16,7 @@ pub(super) struct Claim(PathBuf);
 impl Claim {
     pub(super) fn take(s: &Snapshot, suite: &str) -> Result<Self, String> {
         let path = path_of(&s.work, &s.tree, suite).with_extension("running");
-        fs::create_dir_all(super::dir(&s.work)).map_err(|e| e.to_string())?;
+        fs::create_dir_all(super::dir(&s.work)).map_err(|e| format!("cannot write the receipt: {e}"))?;
         if let Err(error) = File::create_new(&path) {
             return Err(format!("cannot reserve {}: {error}; a reserved suite may still be running", text(&path)));
         }
@@ -54,9 +54,13 @@ fn launch(here: &Path, suite: &str, cmd: &[&str]) -> Result<String, String> {
     if !before.clean {
         return Err("background suite requires a clean committed checkout".into());
     }
+    let reuse = || existing(&before.work, &before.tree, suite).filter(|(_, receipt)| receipt.pass).map(|(path, _)| format!("reused {}", text(&path)));
+    if let Some(line) = reuse() {
+        return Ok(line);
+    }
     let claim = Claim::take(&before, suite)?;
-    if let Some((path, _)) = existing(&before.work, &before.tree, suite).filter(|(_, r)| r.pass) {
-        return Ok(format!("reused {}", text(&path)));
+    if let Some(line) = reuse() {
+        return Ok(line);
     }
     let launch_path = claim.0.with_extension("launch.txt");
     if launch_path.is_file() {

@@ -53,6 +53,10 @@ fn proves_the_live_launch_then_records_one_pass() {
     let (code, duplicate) = factory(&dir, &dir, &args, "");
     assert_ne!(code, 0, "{duplicate}");
     assert!(duplicate.contains("reserved suite"), "{duplicate}");
+    args[1] = "run";
+    let (code, foreground) = factory(&dir, &dir, &args, "");
+    assert_ne!(code, 0, "{foreground}");
+    assert!(foreground.contains("reserved suite"), "{foreground}");
     fs::write(dir.join(".factory/release-suite"), "").unwrap();
     assert!(wait_for(&done), "{} did not receive a receipt", done.display());
     let result = fs::read_to_string(done).unwrap();
