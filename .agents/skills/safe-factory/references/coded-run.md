@@ -1,6 +1,6 @@
 # Coded run
 
-Native `factory` (PATH or packaged launcher) applies the guard inline. Use the live guard only if neither launcher works or Stop still runs `run-guard.sh`.
+Use native `factory` from PATH or its package. Use the live guard only when both fail or Stop runs `run-guard.sh`.
 
 After creating a new run header, run `factory guard begin` before Ticket work.
 

@@ -6,6 +6,8 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+- Bind native Codex runs to their verified thread and transcript at initialization, before the first Stop hook. Resolve packaged native launchers when the command is absent from PATH.
+
 ## [0.8.1] - 2026-11-17
 
 ### Added
