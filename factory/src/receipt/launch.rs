@@ -1,0 +1,167 @@
+//! Background suite launch proof. Only the process that starts the suite can publish its launch record.
+
+use super::{Snapshot, existing, path_of, record, snapshot, utc_iso};
+use crate::paths::{self, text};
+use std::fs::{self, File};
+use std::path::{Path, PathBuf};
+use std::process::{Command, Stdio};
+use std::time::{Duration, Instant};
+
+#[cfg(windows)]
+mod windows;
+
+/// A per-tree claim shared by the foreground and background native runners.
+pub(super) struct Claim(PathBuf);
+
+impl Claim {
+    pub(super) fn take(s: &Snapshot, suite: &str) -> Result<Self, String> {
+        let path = path_of(&s.work, &s.tree, suite).with_extension("running");
+        fs::create_dir_all(super::dir(&s.work)).map_err(|e| e.to_string())?;
+        if let Err(error) = File::create_new(&path) {
+            return Err(format!("cannot reserve {}: {error}; a reserved suite may still be running", text(&path)));
+        }
+        Ok(Self(path))
+    }
+}
+
+impl Drop for Claim {
+    fn drop(&mut self) {
+        let _ = fs::remove_file(&self.0);
+    }
+}
+
+pub(super) fn start(args: &[&str], here: &Path) -> u8 {
+    let (suite, cmd) = match args {
+        ["--", cmd @ ..] => ("full", cmd),
+        ["--suite", suite, "--", cmd @ ..]
+            if !suite.is_empty() && suite.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_') =>
+        {
+            (*suite, cmd)
+        }
+        _ => return super::usage(),
+    };
+    if cmd.is_empty() || cmd.iter().any(|arg| arg.contains(['\r', '\n'])) {
+        return super::usage();
+    }
+    launch(here, suite, cmd).map_or_else(failed, |line| {
+        println!("{line}");
+        0
+    })
+}
+
+fn launch(here: &Path, suite: &str, cmd: &[&str]) -> Result<String, String> {
+    let before = snapshot(here)?;
+    if !before.clean {
+        return Err("background suite requires a clean committed checkout".into());
+    }
+    let claim = Claim::take(&before, suite)?;
+    if let Some((path, _)) = existing(&before.work, &before.tree, suite).filter(|(_, r)| r.pass) {
+        return Ok(format!("reused {}", text(&path)));
+    }
+    let launch_path = claim.0.with_extension("launch.txt");
+    if launch_path.is_file() {
+        fs::remove_file(&launch_path).map_err(|e| format!("cannot clear old launch receipt: {e}"))?;
+    }
+    let log_path = claim.0.with_extension("log");
+    let log = File::create(&log_path).map_err(|e| format!("cannot open {}: {e}", text(&log_path)))?;
+    let err = log.try_clone().map_err(|e| format!("cannot clone suite log: {e}"))?;
+    let exe = std::env::current_exe().map_err(|e| format!("cannot locate factory: {e}"))?;
+    let mut command = background(exe.as_os_str());
+    command
+        .args(["receipt", "_worker", suite, &before.head, &before.tree, "--"])
+        .args(cmd)
+        .current_dir(here)
+        .stdout(log)
+        .stderr(err);
+    #[cfg(windows)]
+    let _handles = windows::PrivateStreams::new().map_err(|e| format!("cannot isolate the host streams: {e}"))?;
+    let mut worker = command.spawn().map_err(|e| format!("cannot launch suite supervisor: {e}"))?;
+    // The supervisor owns release from here, including if the calling host disconnects.
+    std::mem::forget(claim);
+    let deadline = Instant::now() + Duration::from_secs(10);
+    loop {
+        if launch_path.is_file() {
+            return Ok(format!("started {}", text(&launch_path)));
+        }
+        if worker.try_wait().map_err(|e| format!("cannot read supervisor status: {e}"))?.is_some() {
+            if launch_path.is_file() {
+                return Ok(format!("started {}", text(&launch_path)));
+            }
+            let launch_error = fs::read_to_string(&log_path).unwrap_or_default();
+            return Err(format!("suite did not start; see {}. {}", text(&log_path), launch_error.trim()));
+        }
+        if Instant::now() >= deadline {
+            return Err(format!("suite start has not been confirmed; see {} and {}", text(&launch_path), text(&log_path)));
+        }
+        std::thread::sleep(Duration::from_millis(20));
+    }
+}
+
+pub(super) fn worker(args: &[&str], here: &Path, runtime: &str) -> u8 {
+    let [suite, head, tree, "--", prog, argv @ ..] = args else { return super::usage() };
+    if !crate::git::refs::is_sha(head) || !crate::git::refs::is_sha(tree) {
+        return super::usage();
+    }
+    let Some(repo) = crate::git::Repo::discover(here) else { return failed("not in a Git work tree".into()) };
+    let path = path_of(&repo.work, tree, suite).with_extension("running");
+    if !path.is_file() {
+        return failed("no active suite reservation".into());
+    }
+    let claim = Claim(path);
+    match run(&claim, here, suite, head, tree, prog, argv, runtime) {
+        Ok(code) => code,
+        Err(e) => failed(e),
+    }
+}
+
+fn run(claim: &Claim, here: &Path, suite: &str, head: &str, tree: &str, prog: &str, argv: &[&str], runtime: &str) -> Result<u8, String> {
+    let before = snapshot(here)?;
+    if !same(&before, head, tree) {
+        return Err("checkout changed before the background suite started".into());
+    }
+    let start = Instant::now();
+    let mut suite_child = background(prog).args(argv).current_dir(here).spawn().map_err(|e| format!("cannot run {prog}: {e}"))?;
+    let log = text(&claim.0.with_extension("log"));
+    let cmd = std::iter::once(prog).chain(argv.iter().copied()).collect::<Vec<_>>().join(" ");
+    let at = utc_iso(paths::now());
+    let proof = format!(
+        "factory-suite-launch 1\nsuite {suite}\nhead {head}\ntree {tree}\nclean yes\nmode background\ncmd {cmd}\nlog {log}\nat {at}\npid {}\n",
+        suite_child.id()
+    );
+    let launched = paths::write_atomic(&claim.0.with_extension("launch.txt"), proof.as_bytes());
+    let status = suite_child.wait().map_err(|e| format!("cannot wait for {prog}: {e}"))?;
+    let unchanged = snapshot(here).is_ok_and(|after| same(&after, head, tree));
+    let (path, _) = record(before, suite, status.success() && unchanged, &cmd, start.elapsed().as_secs(), runtime, &log)?;
+    eprintln!("factory receipt: {}", text(&path));
+    launched.map_err(|e| format!("cannot save the suite launch receipt: {e}"))?;
+    if !unchanged {
+        return Err("checkout changed while the background suite ran; the receipt is FAIL".into());
+    }
+    Ok(if status.success() { 0 } else { status.code().and_then(|code| u8::try_from(code).ok()).unwrap_or(1) })
+}
+
+fn same(snapshot: &Snapshot, head: &str, tree: &str) -> bool {
+    snapshot.clean && snapshot.head == head && snapshot.tree == tree
+}
+
+fn failed(error: String) -> u8 {
+    eprintln!("factory receipt: {error}");
+    1
+}
+
+fn background(program: impl AsRef<std::ffi::OsStr>) -> Command {
+    let mut command = Command::new(program);
+    command.stdin(Stdio::null());
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        command.creation_flags(CREATE_NO_WINDOW);
+    }
+    #[cfg(unix)]
+    {
+        use std::os::unix::process::CommandExt;
+        command.process_group(0);
+    }
+    command
+}

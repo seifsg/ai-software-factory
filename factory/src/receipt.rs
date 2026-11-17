@@ -22,6 +22,8 @@
 use crate::git::{Repo, tree};
 use std::path::{Path, PathBuf};
 
+mod launch;
+
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Receipt {
     pub suite: String,
@@ -257,6 +259,8 @@ pub fn cli(args: &[&str]) -> u8 {
     let here = crate::guard::cwd();
     let runtime = format!("factory {} {}-{}", crate::VERSION, std::env::consts::OS, std::env::consts::ARCH);
     match args {
+        ["start", rest @ ..] => launch::start(rest, &here),
+        ["_worker", rest @ ..] => launch::worker(rest, &here, &runtime),
         ["run", rest @ ..] => {
             let (opts, cmd) = match rest.iter().position(|a| *a == "--") {
                 Some(i) => (&rest[..i], &rest[i + 1..]),
@@ -266,6 +270,13 @@ pub fn cli(args: &[&str]) -> u8 {
             let suite = opt(opts, "--suite").unwrap_or("full");
             let before = match snapshot(&here) {
                 Ok(s) => s,
+                Err(e) => {
+                    eprintln!("factory receipt: {e}");
+                    return 1;
+                }
+            };
+            let _claim = match launch::Claim::take(&before, suite) {
+                Ok(claim) => claim,
                 Err(e) => {
                     eprintln!("factory receipt: {e}");
                     return 1;
@@ -347,7 +358,7 @@ fn report(r: Result<(PathBuf, Receipt), String>) -> u8 {
 
 fn usage() -> u8 {
     eprintln!(
-        "usage: factory receipt run [--suite <name>] [--again] -- <command>... | write --cmd <command> (--exit <code> | --result PASS|FAIL) [--suite <name>] [--secs <n>] [--log <path>] [--runtime <s>] | check [--commit <sha>] [--suite <name>]"
+        "usage: factory receipt run [--suite <name>] [--again] -- <command>... | start [--suite <name>] -- <command>... | write --cmd <command> (--exit <code> | --result PASS|FAIL) [--suite <name>] [--secs <n>] [--log <path>] [--runtime <s>] | check [--commit <sha>] [--suite <name>]"
     );
     2
 }

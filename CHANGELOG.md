@@ -9,6 +9,7 @@ The public surface is the skill names, the run file format, and the hook scripts
 ### Added
 
 - Assemble a pinned review evidence packet once for both independent reviewers and validate handback format before gate checks.
+- Start a final suite in the background with a launch receipt and log tied to its clean commit. Record native step starts for timing consumers.
 
 ### Fixed
 

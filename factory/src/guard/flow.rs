@@ -262,6 +262,9 @@ impl Ctx<'_> {
             self.save();
             return Some(Reply::System(reply::relayed(&self.d)));
         }
+        if self.mode.turn_end() && self.f.skipped.is_empty() {
+            super::timeline::mark(&self.g, &self.f.next, self.f.gate, self.now as u64);
+        }
         self.drive(prev)
     }
 

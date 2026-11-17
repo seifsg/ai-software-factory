@@ -31,10 +31,13 @@ Readers ignore lines they do not know, so a writer may add its own (the pro gate
 | Writer | Command |
 |---|---|
 | A suite that does not write its own receipt | `factory receipt run --suite full -- <full-suite command>` runs it and writes the receipt. Exit 0 requires both a passing suite and a saved or reused PASS receipt. `--again` runs it and counts a repeat. |
+| A suite to start in the background | `factory receipt start --suite full -- <full-suite command>` starts the command on the clean final head and returns the launch receipt path, or reuses an existing PASS. |
 | A runner that ran the suite itself | `factory receipt write --cmd "<command>" --exit <code> [--log <path>] [--secs <n>]` (`--suite` defaults to `full`; `--result PASS` or `--result FAIL` in place of `--exit`) |
 | This repository | `sh scripts/check.sh`: a full PASS on a clean tree (`<ref>` is the work tree) writes `<tree>-full.txt`; the next run on that tree prints nothing and exits 0 |
 
 `factory` is `<plugin root>/scripts/factory.cmd` (sh or cmd), or a built `factory/target/release/factory`.
+
+`receipt start` returns after the command process starts. Its `<tree>-<suite>.launch.txt` records the head, tree, command, start time, process ID and log path. The usual completion receipt records the exit result. Expect a FAIL if the tracked or untracked tree at completion differs from the starting commit. Foreground and background native runners share a reservation for each tree and suite. If a terminated supervisor leaves a `.running` file, confirm the suite process has stopped before removing that reservation and retrying.
 
 ## What the guard accepts
 
