@@ -6,6 +6,12 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+### Changed
+
+- A `change` that is only one new file of under 150 lines runs step 6 without lens agents: the step-8 reviewer covers compliance and journey ([#333])
+
+### Fixed
+
 - Bind native Codex runs to their verified thread and transcript at initialization, before the first Stop hook. Resolve packaged native launchers when the command is absent from PATH.
 
 ## [0.8.1] - 2026-11-17
@@ -427,3 +433,4 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 [#320]: https://github.com/seifsg/ai-software-factory/pull/320
 [#322]: https://github.com/seifsg/ai-software-factory/pull/322
 [#329]: https://github.com/seifsg/ai-software-factory/pull/329
+[#333]: https://github.com/seifsg/ai-software-factory/pull/333
