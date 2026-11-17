@@ -14,7 +14,7 @@ The public surface is the skill names, the run file format, and the hook scripts
 - Make a change run read about 40% less skill text: rare cases load on demand, and a coded run loads each skill once ([#316])
 - Cap reviewer and checker handbacks at 2,000 characters; the full review report goes to a file ([#316])
 - Keep an After capture valid while its proof's input files are unchanged, and take non-visual Before proof from the base commit in the background ([#316])
-- Let Gate B proceed while the full suite runs, and require the final tree's passing receipt at review and Gate C ([#320])
+- Let Gate B proceed while the full suite runs, and require the final tree's passing receipt at review and Gate C ([#320], [#322])
 - Make `factory receipt run` reuse a passing receipt for an unchanged tree instead of running the suite again; the guard flags a second run ([#320])
 - Make step 5 wait until every proof-list Before is saved, and saved before the branch's first source change ([#320])
 - Make `scripts/check.sh` reuse a passing run for an unchanged tree and run only static checks for a docs-only diff with `--changed <base>` ([#320])
@@ -405,3 +405,4 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 [#312]: https://github.com/seifsg/ai-software-factory/pull/312
 [#316]: https://github.com/seifsg/ai-software-factory/pull/316
 [#320]: https://github.com/seifsg/ai-software-factory/pull/320
+[#322]: https://github.com/seifsg/ai-software-factory/pull/322
