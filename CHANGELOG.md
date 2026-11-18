@@ -6,6 +6,14 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+### Added
+
+- Add an examples scan to `research-market`: a `change` that builds a new surface from a short brief with no spec, design or pattern to follow first studies 3 to 5 strong existing examples, which feed Analyze and the look options ([#353])
+
+### Changed
+
+- Brief the step-8 reviewer with `factory review packet`, launch each step-6 delegate once, and draft the PR text while they run instead of idling; trial 6 waited 7 minutes there ([#353])
+
 ## [0.8.9] - 2026-11-18
 
 ### Changed
@@ -522,4 +530,5 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 [#348]: https://github.com/seifsg/ai-software-factory/pull/348
 [#350]: https://github.com/seifsg/ai-software-factory/pull/350
 [#351]: https://github.com/seifsg/ai-software-factory/pull/351
+[#353]: https://github.com/seifsg/ai-software-factory/pull/353
 [#333]: https://github.com/seifsg/ai-software-factory/pull/333
