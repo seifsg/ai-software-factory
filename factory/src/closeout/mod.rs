@@ -37,12 +37,12 @@ pub struct Header {
 impl Header {
     /// Reads `# Run: <link> · ...`, `Status:` and the last `Left running:` line of a run file's text.
     pub fn parse(text: &str) -> Header {
-        let mut h = Header::default();
+        let (mut h, mut seen) = (Header::default(), false);
         for l in text.lines() {
             if let Some(r) = l.strip_prefix("# Run: ") {
                 h.ticket = r.split(" · ").next().unwrap_or("").trim().to_string();
-            } else if let Some(s) = l.strip_prefix("Status: ") {
-                h.open = s.trim() == "open";
+            } else if let Some(s) = l.strip_prefix("Status: ").filter(|_| !seen) {
+                (h.open, seen) = (s.trim().eq_ignore_ascii_case("open"), true);
             } else if let Some(x) = l.strip_prefix("Left running:") {
                 h.left = x.trim().to_string();
             }
@@ -52,9 +52,9 @@ impl Header {
 }
 
 /// The close-out of a merged PR in `run_dir`; `issue` is the fetched ticket when it is a GitHub issue.
-/// Returns the report and whether everything is done. Refuses (Err) on an unmerged PR, touching nothing.
+/// Returns the report and whether everything is done. Refuses (Err) before any effect: see [`check`].
 pub fn run(run_dir: &Path, head: &Header, pr: &Pr, issue: Option<&Issue>, dry: bool) -> Result<(String, bool), String> {
-    pr.require_merged()?;
+    check(run_dir, head, pr)?;
     let t = match issue {
         Some(i) => match ticket::missing(pr, i) {
             m if m.is_empty() => Ticket::Ok(i.url.clone()),
@@ -63,15 +63,23 @@ pub fn run(run_dir: &Path, head: &Header, pr: &Pr, issue: Option<&Issue>, dry: b
         None => Ticket::ByHand(head.ticket.clone()),
     };
     let mut lines = Vec::new();
-    // Processes first (a server may hold files under `.factory/`); an open run still owns its own.
-    if !head.open {
-        let left = stop::stop(run_dir, &head.left, dry, &mut lines);
-        if !dry && !head.left.is_empty() && left != head.left {
-            set_left(run_dir, &left)?;
-        }
+    // Processes first: a server may hold files under `.factory/`.
+    let left = stop::stop(run_dir, &head.left, dry, &mut lines);
+    if !dry && !head.left.is_empty() && left != head.left {
+        set_left(run_dir, &left)?;
     }
-    clean::clean(run_dir, pr, head.open, dry, &mut lines)?;
+    clean::clean(run_dir, pr, dry, &mut lines)?;
     Ok(report(&t, &lines, dry))
+}
+
+/// Err unless the close-out may act: the PR is merged, the run is closed or stopped (an open run owns its
+/// state, and its header may be a newer run's), and the PR's head is in this checkout (this run made it).
+pub fn check(run_dir: &Path, head: &Header, pr: &Pr) -> Result<(), String> {
+    pr.require_merged()?;
+    if head.open {
+        return Err("the run is still open: finish or stop it first".into());
+    }
+    clean::owns(run_dir, pr)
 }
 
 /// Rewrites the run file's last `Left running:` line to `value`: what still runs after the stops.
@@ -95,11 +103,12 @@ fn report(t: &Ticket, lines: &[Line], dry: bool) -> (String, bool) {
     for l in lines {
         match l {
             Line::Removed(x) => s.push_str(&format!("{verb}: {x}\n")),
-            Line::Kept(x, why, _) => s.push_str(&format!("kept: {x} ({why})\n")),
+            Line::Kept(x, why) => s.push_str(&format!("kept: {x} ({why})\n")),
+            Line::Blocked(x, why) => s.push_str(&format!("blocked: {x} ({why})\n")),
         }
     }
-    let done = !matches!(t, Ticket::Needs(..)) && !lines.iter().any(|l| matches!(l, Line::Kept(_, _, true)));
-    let verdict = if done { "done" } else { "incomplete" };
+    let done = !matches!(t, Ticket::Needs(..)) && !lines.iter().any(|l| matches!(l, Line::Blocked(..)));
+    let verdict = if done { "done" } else { "incomplete (act on each blocked: and ticket: needs line, then rerun)" };
     s.push_str(&if dry { format!("closeout: dry run, would be {verdict}\n") } else { format!("closeout: {verdict}\n") });
     (s, done)
 }
@@ -133,7 +142,7 @@ fn fetch_and_run(cwd: &Path, pr_arg: Option<&str>, dry: bool) -> Result<(String,
     let mut args = vec!["pr", "view"];
     args.extend(pr_arg);
     let pr = Pr::parse(&facts::gh(run_dir, &args, facts::PR_FIELDS)?)?;
-    pr.require_merged()?;
+    check(run_dir, &head, &pr)?;
     let issue = match ticket::github_issue(&head.ticket) {
         Some(u) => Some(Issue::parse(&facts::gh(run_dir, &["issue", "view", u], facts::ISSUE_FIELDS)?)?),
         None => None,

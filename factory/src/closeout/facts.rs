@@ -6,9 +6,9 @@ use serde_json::Value;
 use std::path::Path;
 
 /// `gh pr view` fields the close-out needs.
-pub const PR_FIELDS: &str = "state,url,number,headRefName,headRefOid,mergeCommit,closingIssuesReferences";
+pub const PR_FIELDS: &str = "state,url,number,headRefName,headRefOid,baseRefName,isCrossRepository,mergeCommit,closingIssuesReferences";
 /// `gh issue view` fields the ticket check needs.
-pub const ISSUE_FIELDS: &str = "url,state,body,comments,closedByPullRequestsReferences";
+pub const ISSUE_FIELDS: &str = "url,state,stateReason,body,comments,closedByPullRequestsReferences";
 
 /// A pull request as the close-out sees it.
 #[derive(Debug, Clone, Default)]
@@ -24,6 +24,10 @@ pub struct Pr {
     pub merge_oid: String,
     /// Issue URLs the PR closes with a closing keyword.
     pub closes: Vec<String>,
+    /// Branch the PR merged into.
+    pub base_ref: String,
+    /// The head branch lives in a fork, not in this repository.
+    pub cross_repo: bool,
 }
 
 /// A GitHub issue as the ticket check sees it.
@@ -31,6 +35,8 @@ pub struct Pr {
 pub struct Issue {
     pub url: String,
     pub closed: bool,
+    /// Open again after a close (`stateReason` REOPENED): a person moved it, so it keeps that status.
+    pub reopened: bool,
     /// Body and every comment, joined: where a PR link and merge commit can be recorded by hand.
     pub text: String,
     /// URLs of merged PRs GitHub records as closing it (its close event links the PR and the merge commit).
@@ -62,6 +68,8 @@ impl Pr {
             head_oid: s(&v, "headRefOid"),
             merge_oid: v.get("mergeCommit").map(|m| s(m, "oid")).unwrap_or_default(),
             closes: urls(&v, "closingIssuesReferences"),
+            base_ref: s(&v, "baseRefName"),
+            cross_repo: v.get("isCrossRepository").and_then(Value::as_bool).unwrap_or(false),
         };
         if pr.url.is_empty() || pr.head_oid.is_empty() || pr.number == 0 {
             return Err("PR JSON lacks url, number or headRefOid".into());
@@ -82,8 +90,13 @@ impl Issue {
             text.push('\n');
             text.push_str(&s(c, "body"));
         }
-        let issue =
-            Issue { url: s(&v, "url"), closed: s(&v, "state") == "CLOSED", text, closed_by: urls(&v, "closedByPullRequestsReferences") };
+        let issue = Issue {
+            url: s(&v, "url"),
+            closed: s(&v, "state") == "CLOSED",
+            reopened: s(&v, "state") == "OPEN" && s(&v, "stateReason") == "REOPENED",
+            text,
+            closed_by: urls(&v, "closedByPullRequestsReferences"),
+        };
         if issue.url.is_empty() {
             return Err("issue JSON lacks url".into());
         }

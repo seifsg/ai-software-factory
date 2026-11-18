@@ -1,6 +1,8 @@
-//! `factory closeout` after a merge: removes the run's `.factory/` worktrees, their branches and the PR
-//! branch, and `.factory/` temp; keeps unmerged or dirty work, an open run's state and `run.md`; refuses an
-//! unmerged PR; a rerun finds nothing left. Each case is a scratch repository whose PR was squash-merged.
+//! `factory closeout` after a merge: stops what the run left running (never the owner's preview), removes
+//! the run's `.factory/` worktrees, their branches, the PR branch and `.factory/` scratch, and keeps the
+//! run's record, unmerged or dirty work and anything the run did not make; refuses an unmerged PR, an open
+//! run and a PR from elsewhere; a rerun finds nothing left. Each case is a scratch repository whose PR was
+//! squash-merged.
 
 mod common;
 
@@ -10,8 +12,8 @@ use std::path::{Path, PathBuf};
 
 const RUN: &str = "# Run: local: .factory/ticket.md \u{b7} Fast \u{b7} change\nStatus: closed\nNext: none (closed)\nWaiting: none\n\n## 8 Review \u{2714}\nLeft running: api :8080 (stop: true); preview :3000 (owner preview) (stop: false)\n";
 
-/// A repository on `main` whose PR branch `fix/x` (head `c1`) was squash-merged as `m`; the run made two
-/// worktrees at the PR head under `.factory/` (one detached, one on `fix/x-review`) and guard state.
+/// A repository on `main` whose PR branch `fix/x` was squash-merged; the run made two worktrees at the PR
+/// head under `.factory/` (one detached, one on `fix/x-review`), guard state and scratch briefs.
 fn merged_repo(name: &str) -> (PathBuf, Pr) {
     let d = common::scratch(name);
     git(&d, &["init", "-q", "-b", "main"], 8);
@@ -27,8 +29,11 @@ fn merged_repo(name: &str) -> (PathBuf, Pr) {
     git(&d, &["merge", "-q", "--squash", "fix/x"], 10);
     git(&d, &["commit", "-q", "-m", "fix (#7)"], 10);
     let merge = rev(&d, "HEAD");
-    std::fs::create_dir_all(d.join(".factory/guard")).unwrap();
+    for dir in ["guard", "briefs"] {
+        std::fs::create_dir_all(d.join(".factory").join(dir)).unwrap();
+    }
     std::fs::write(d.join(".factory/guard/state"), "g_ticks='1'\n").unwrap();
+    std::fs::write(d.join(".factory/briefs/a.md"), "brief\n").unwrap();
     std::fs::write(d.join(".factory/run.md"), RUN).unwrap();
     git(&d, &["worktree", "add", "-q", "--detach", ".factory/rv", &head], 10);
     git(&d, &["worktree", "add", "-q", "-b", "fix/x-review", ".factory/wt", &head], 10);
@@ -40,6 +45,8 @@ fn merged_repo(name: &str) -> (PathBuf, Pr) {
         head_oid: head,
         merge_oid: merge,
         closes: vec![],
+        base_ref: "main".into(),
+        cross_repo: false,
     };
     (d, pr)
 }
@@ -61,41 +68,45 @@ fn has_branch(d: &Path, b: &str) -> bool {
 }
 
 /// Runs the close-out on `d` with its run file's header; (report, done).
-fn closeout(d: &Path, pr: &Pr) -> (String, bool) {
+fn closeout(d: &Path, pr: &Pr) -> Result<(String, bool), String> {
     let head = Header::parse(&std::fs::read_to_string(d.join(".factory/run.md")).unwrap());
-    closeout::run(d, &head, pr, None, false).expect("merged PR closes out")
+    closeout::run(d, &head, pr, None, false)
 }
 
 #[test]
 fn merged_run_is_cleaned_and_a_rerun_finds_nothing() {
     let (d, pr) = merged_repo("co-merged");
-    let (out, done) = closeout(&d, &pr);
-    assert!(done, "{out}");
-    for x in ["worktree", "branch fix/x\n", "branch fix/x-review", ".factory/guard", "ticket: by hand"] {
+    let (out, done) = closeout(&d, &pr).unwrap();
+    assert!(done && out.ends_with("closeout: done\n"), "{out}");
+    for x in ["removed: worktree", "removed: branch fix/x\n", "removed: branch fix/x-review", "removed: .factory/briefs", "ticket: by hand"]
+    {
         assert!(out.contains(x), "{x} missing in:\n{out}");
     }
-    assert!(!d.join(".factory/rv").exists() && !d.join(".factory/wt").exists() && !d.join(".factory/guard").exists());
-    assert!(d.join(".factory/run.md").is_file(), "run.md is the run's record");
-    let run = std::fs::read_to_string(d.join(".factory/run.md")).unwrap();
-    assert!(run.ends_with("Left running: preview :3000 (owner preview) (stop: false)\n"), "only the preview stays listed: {run}");
     assert!(
         out.contains("removed: running api :8080 (ran: true)")
-            && out.contains("kept: running preview :3000 (owner preview) (the owner's, never stopped)"),
+            && out.contains("kept: running preview :3000 (owner preview) (the owner's preview"),
         "{out}"
     );
+    assert!(!d.join(".factory/rv").exists() && !d.join(".factory/wt").exists() && !d.join(".factory/briefs").exists());
+    assert!(d.join(".factory/run.md").is_file() && d.join(".factory/guard/state").is_file(), "the run's record stays for the guard");
+    let run = std::fs::read_to_string(d.join(".factory/run.md")).unwrap();
+    assert!(run.ends_with("Left running: preview :3000 (owner preview) (stop: false)\n"), "only the preview stays listed: {run}");
     assert!(!has_branch(&d, "fix/x") && !has_branch(&d, "fix/x-review") && has_branch(&d, "main"));
-    let (again, done) = closeout(&d, &pr);
+    let (again, done) = closeout(&d, &pr).unwrap();
     assert!(done && !again.contains("removed:"), "a rerun removes and stops nothing: {again}");
 }
 
 #[test]
-fn unmerged_pr_is_refused_and_nothing_moves() {
-    let (d, mut pr) = merged_repo("co-unmerged");
-    pr.merged = false;
-    let head = Header::parse(RUN);
-    let err = closeout::run(&d, &head, &pr, None, false).unwrap_err();
-    assert!(err.contains("not merged"), "{err}");
-    assert!(d.join(".factory/rv").exists() && d.join(".factory/guard/state").exists() && has_branch(&d, "fix/x"));
+fn unmerged_open_or_foreign_is_refused_and_nothing_moves() {
+    let (d, pr) = merged_repo("co-refused");
+    let unmerged = Pr { merged: false, ..pr.clone() };
+    assert!(closeout(&d, &unmerged).unwrap_err().contains("not merged"));
+    let foreign = Pr { head_oid: "1".repeat(40), ..pr.clone() };
+    assert!(closeout(&d, &foreign).unwrap_err().contains("not this run's PR"));
+    std::fs::write(d.join(".factory/run.md"), RUN.replace("Status: closed", "Status: open")).unwrap();
+    assert!(closeout(&d, &pr).unwrap_err().contains("still open"));
+    assert!(d.join(".factory/rv").exists() && d.join(".factory/briefs/a.md").exists() && has_branch(&d, "fix/x"));
+    assert!(std::fs::read_to_string(d.join(".factory/run.md")).unwrap().contains("api :8080 (stop: true)"), "nothing stopped");
 }
 
 #[test]
@@ -103,29 +114,37 @@ fn partly_clean_run_finishes() {
     let (d, pr) = merged_repo("co-partly");
     std::fs::remove_dir_all(d.join(".factory/rv")).unwrap(); // the folder went; its registration stayed
     git(&d, &["branch", "-q", "-D", "fix/x"], 11);
-    let (out, done) = closeout(&d, &pr);
+    let (out, done) = closeout(&d, &pr).unwrap();
     assert!(done, "{out}");
     let list = std::process::Command::new("git").arg("-C").arg(&d).args(["worktree", "list"]).output().unwrap();
     assert!(!String::from_utf8_lossy(&list.stdout).contains(".factory"), "registration pruned");
 }
 
 #[test]
-fn unmerged_or_dirty_work_and_open_runs_are_kept() {
+fn unmerged_dirty_or_unlisted_work_blocks_and_stays() {
     let (d, pr) = merged_repo("co-kept");
     std::fs::write(d.join(".factory/wt/a.txt"), "edit\n").unwrap(); // dirty, merged HEAD
     git(&d.join(".factory/rv"), &["commit", "-q", "--allow-empty", "-m", "later"], 11); // past the PR
-    std::fs::write(d.join(".factory/run.md"), RUN.replace("Status: closed", "Status: open")).unwrap();
-    let (out, done) = closeout(&d, &pr);
-    assert!(!done && out.ends_with("closeout: incomplete\n"), "{out}");
-    assert!(out.contains("(unmerged commits)") && out.contains(".factory/ (run still open)"), "{out}");
-    assert!(d.join(".factory/rv").exists() && d.join(".factory/wt/a.txt").exists() && d.join(".factory/guard/state").exists());
+    std::fs::create_dir_all(d.join(".factory/other/repo")).unwrap(); // a checkout Git does not list as ours
+    std::fs::write(d.join(".factory/other/repo/.git"), "gitdir: elsewhere\n").unwrap();
+    let (out, done) = closeout(&d, &pr).unwrap();
+    assert!(!done && out.contains("closeout: incomplete"), "{out}");
+    assert!(out.contains("(commits not in the merged PR)") && out.contains("blocked: .factory/other (holds a Git checkout"), "{out}");
+    assert!(d.join(".factory/rv").exists() && d.join(".factory/wt/a.txt").exists() && d.join(".factory/other/repo/.git").exists());
     assert!(has_branch(&d, "fix/x-review"), "a kept worktree keeps its branch");
 }
 
 #[test]
-fn pr_branch_checked_out_in_the_run_folder_is_a_note() {
-    let (d, pr) = merged_repo("co-here");
+fn branches_the_run_did_not_make_stay() {
+    let (d, pr) = merged_repo("co-branches");
     git(&d, &["switch", "-q", "fix/x"], 11);
-    let (out, done) = closeout(&d, &pr);
+    let (out, done) = closeout(&d, &pr).unwrap();
     assert!(done && out.contains("kept: branch fix/x (checked out in"), "{out}");
+    git(&d, &["switch", "-q", "main"], 11);
+    let fork = Pr { cross_repo: true, ..pr.clone() };
+    let (out, _) = closeout(&d, &fork).unwrap();
+    assert!(out.contains("kept: branch fix/x (the PR's base or a fork's branch") && has_branch(&d, "fix/x"), "{out}");
+    let from_main = Pr { head_ref: "main".into(), ..pr };
+    let (out, _) = closeout(&d, &from_main).unwrap();
+    assert!(has_branch(&d, "main") && !out.contains("removed: branch main"), "{out}");
 }

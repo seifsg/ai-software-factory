@@ -1,7 +1,7 @@
 //! The local half of a close-out: removes what a merged run created and nothing else.
 //! Created by the run = worktrees under `<run>/.factory/`, their branches and the PR's head branch, and
-//! `.factory/` itself except `run.md`. Each is removed only when its commits are in the merged PR (no
-//! unmerged work lost) and Git agrees (no dirty tree lost); anything else is kept and named.
+//! `.factory/` scratch. Each is removed only when its commits are in the merged PR (no unmerged work lost)
+//! and Git agrees (no dirty tree lost); anything else is kept and named.
 
 use super::facts::Pr;
 use crate::git::{self, Repo};
@@ -11,11 +11,17 @@ use std::path::Path;
 #[derive(Debug, PartialEq, Eq)]
 pub enum Line {
     Removed(String),
-    /// Kept: what, why, and whether it blocks `closeout: done`.
-    Kept(String, String, bool),
+    /// Left in place on purpose: what, why. `closeout: done` still holds.
+    Kept(String, String),
+    /// Left in place, and the close-out is not done until someone acts: what, why.
+    Blocked(String, String),
 }
 
-/// A registered worktree: path (normalized), HEAD sha, branch name if any.
+/// `.factory/` entries a closed run keeps: its record, which the Stop guard and `ticketing` still read
+/// (run file, guard state, suite receipts, a local ticket, release records).
+const RECORD: [&str; 5] = ["run.md", "guard", "receipts", "ticket.md", "releases"];
+
+/// A registered worktree: path (canonical), HEAD sha, branch name if any.
 struct Tree {
     path: String,
     head: String,
@@ -30,6 +36,22 @@ fn run(repo: &Repo, args: &[&str]) -> Result<String, String> {
     }
     let err = String::from_utf8_lossy(&out.stderr).into_owned();
     Err(err.lines().find(|l| !l.trim().is_empty()).unwrap_or("git failed").trim().to_string())
+}
+
+/// A path's canonical text (links, junctions, drive aliases and 8.3 names resolved), else its normal text.
+/// Why: Git reports worktrees by the path they were made with; a run reached through an alias must match.
+fn canon(p: &Path) -> String {
+    let c = std::fs::canonicalize(p).map(|c| crate::paths::text(&c)).unwrap_or_else(|_| crate::paths::text(p));
+    match c.strip_prefix("//?/") {
+        Some(r) => r.strip_prefix("UNC/").map_or_else(|| r.to_string(), |u| format!("//{u}")),
+        None => c,
+    }
+}
+
+/// True when `path` lies inside `dir` (canonical texts; Windows compares case-insensitively).
+fn inside(path: &str, dir: &str) -> bool {
+    let (p, d) = if cfg!(windows) { (path.to_lowercase(), dir.to_lowercase()) } else { (path.into(), dir.into()) };
+    p.strip_prefix(d.trim_end_matches('/')).is_some_and(|r| r.starts_with('/'))
 }
 
 /// True when `sha` is the PR head or inside the merged PR (its head or its merge commit holds it).
@@ -47,7 +69,7 @@ fn trees(repo: &Repo) -> Result<Vec<Tree>, String> {
             let mut t = Tree { path: String::new(), head: String::new(), branch: None };
             for l in b.lines() {
                 if let Some(p) = l.strip_prefix("worktree ") {
-                    t.path = crate::paths::norm(p);
+                    t.path = canon(Path::new(&crate::paths::norm(p)));
                 } else if let Some(h) = l.strip_prefix("HEAD ") {
                     t.head = h.into();
                 } else if let Some(r) = l.strip_prefix("branch refs/heads/") {
@@ -59,91 +81,80 @@ fn trees(repo: &Repo) -> Result<Vec<Tree>, String> {
         .collect())
 }
 
-/// True when `path` lies inside `dir` (both normalized; Windows paths compare case-insensitively).
-fn inside(path: &str, dir: &str) -> bool {
-    let (p, d) = if cfg!(windows) { (path.to_lowercase(), dir.to_lowercase()) } else { (path.into(), dir.into()) };
-    p.strip_prefix(d.trim_end_matches('/')).is_some_and(|r| r.starts_with('/'))
-}
-
-/// Removes the run's merged `.factory/` worktrees; returns the lines and the branches they held.
-fn worktrees(repo: &Repo, pr: &Pr, factory: &str, dry: bool, out: &mut Vec<Line>) -> Result<Vec<String>, String> {
-    let mut branches = Vec::new();
+/// Removes the run's merged `.factory/` worktrees; returns the branches they held and every path handled.
+fn worktrees(repo: &Repo, pr: &Pr, factory: &str, dry: bool, out: &mut Vec<Line>) -> Result<(Vec<String>, Vec<String>), String> {
+    let (mut branches, mut handled) = (Vec::new(), Vec::new());
     for t in trees(repo)?.into_iter().filter(|t| inside(&t.path, factory)) {
+        handled.push(t.path.clone());
         if !merged(repo, pr, &t.head) {
-            out.push(Line::Kept(t.path, "unmerged commits".into(), true));
+            out.push(Line::Blocked(format!("worktree {}", t.path), "commits not in the merged PR".into()));
             continue;
         }
-        let res = if dry { Ok(String::new()) } else { run(repo, &["worktree", "remove", &t.path]) };
-        match res {
+        match if dry { Ok(String::new()) } else { run(repo, &["worktree", "remove", &t.path]) } {
             Ok(_) => {
                 out.push(Line::Removed(format!("worktree {}", t.path)));
                 branches.extend(t.branch);
             }
-            Err(e) => out.push(Line::Kept(t.path, e, true)),
+            Err(e) => out.push(Line::Blocked(format!("worktree {}", t.path), e)),
         }
     }
-    Ok(branches)
+    Ok((branches, handled))
 }
 
-/// Deletes each named local branch whose tip is in the merged PR and that no worktree has checked out.
-fn branches(repo: &Repo, pr: &Pr, names: Vec<String>, dry: bool, out: &mut Vec<Line>) -> Result<(), String> {
-    // Worktrees still holding a branch: all but those removed above (a dry run removed none for real).
-    let gone = |p: &str| out.iter().any(|l| matches!(l, Line::Removed(x) if x.strip_prefix("worktree ") == Some(p)));
-    let live: Vec<Tree> = trees(repo)?.into_iter().filter(|t| !gone(&t.path)).collect();
+/// Deletes each named local branch whose tip is in the merged PR and that no live worktree has checked out.
+/// The PR's head branch is skipped when it is its base or comes from a fork: the run never made those.
+fn branches(repo: &Repo, pr: &Pr, names: Vec<String>, removed: &[String], dry: bool, out: &mut Vec<Line>) -> Result<(), String> {
+    let live: Vec<Tree> = trees(repo)?.into_iter().filter(|t| !removed.contains(&t.path)).collect();
     let mut seen = std::collections::BTreeSet::new();
     for b in names.into_iter().filter(|b| !b.is_empty()) {
         if !seen.insert(b.clone()) {
             continue;
         }
         let Ok(tip) = run(repo, &["rev-parse", "--verify", "-q", &format!("refs/heads/{b}")]) else { continue };
-        if let Some(t) = live.iter().find(|t| t.branch.as_deref() == Some(b.as_str())) {
-            out.push(Line::Kept(format!("branch {b}"), format!("checked out in {}", t.path), false));
+        let what = format!("branch {b}");
+        if b == pr.head_ref && (b == pr.base_ref || pr.cross_repo) {
+            out.push(Line::Kept(what, "the PR's base or a fork's branch, not the run's".into()));
+        } else if let Some(t) = live.iter().find(|t| t.branch.as_deref() == Some(b.as_str())) {
+            out.push(Line::Kept(what, format!("checked out in {}", t.path)));
         } else if !merged(repo, pr, tip.trim()) {
-            out.push(Line::Kept(format!("branch {b}"), "unmerged commits".into(), true));
+            out.push(Line::Blocked(what, "commits not in the merged PR".into()));
         } else if let Err(e) = if dry { Ok(String::new()) } else { run(repo, &["branch", "-D", &b]) } {
-            out.push(Line::Kept(format!("branch {b}"), e, true));
+            out.push(Line::Blocked(what, e));
         } else {
-            out.push(Line::Removed(format!("branch {b}")));
+            out.push(Line::Removed(what));
         }
     }
     Ok(())
 }
 
-/// Removes `.factory/` entries except `run.md` and folders holding a kept worktree. Refuses while the run is
-/// open (a new run's guard state) or a launched suite still runs (`receipts/*.running`).
-fn temp(run_dir: &Path, open: bool, dry: bool, out: &mut Vec<Line>) {
-    let factory = run_dir.join(".factory");
+/// True when `p` is or holds a Git checkout (a `.git` entry), never following links.
+fn holds_git(p: &Path) -> bool {
+    p.join(".git").symlink_metadata().is_ok()
+        || std::fs::read_dir(p).into_iter().flatten().flatten().any(|e| e.file_type().is_ok_and(|t| t.is_dir()) && holds_git(&e.path()))
+}
+
+/// Removes `.factory/` scratch: every entry but the run's record and the worktrees handled above. An entry
+/// holding a Git checkout Git did not remove is never deleted; nothing goes while a launched suite runs.
+fn temp(factory: &Path, handled: &[String], dry: bool, out: &mut Vec<Line>) {
     let running = std::fs::read_dir(factory.join("receipts"))
         .into_iter()
         .flatten()
         .flatten()
         .any(|e| e.path().extension().is_some_and(|x| x == "running"));
-    let why = if open {
-        "run still open"
-    } else if running {
-        "a launched suite still runs"
-    } else {
-        ""
-    };
-    if !why.is_empty() {
-        out.push(Line::Kept(".factory/".into(), why.into(), true));
+    if running {
+        out.push(Line::Blocked(".factory/".into(), "a launched suite still runs (receipts/*.running)".into()));
         return;
     }
-    // Worktrees already handled: kept ones stay, removed ones are Git's (a dry run would list them twice).
-    let kept: Vec<String> = out
-        .iter()
-        .filter_map(|l| match l {
-            Line::Kept(p, _, true) => Some(p.clone()),
-            Line::Removed(x) => x.strip_prefix("worktree ").map(String::from),
-            Line::Kept(..) => None,
-        })
-        .collect();
-    let Ok(rd) = std::fs::read_dir(&factory) else { return };
+    let Ok(rd) = std::fs::read_dir(factory) else { return };
     for e in rd.flatten() {
-        let p = e.path();
-        let name = e.file_name().to_string_lossy().into_owned();
-        let ptext = crate::paths::text(&p);
-        if name == "run.md" || kept.iter().any(|k| *k == ptext || inside(k, &ptext)) {
+        let (p, name) = (e.path(), e.file_name().to_string_lossy().into_owned());
+        let at = canon(&p);
+        if RECORD.contains(&name.as_str()) || handled.iter().any(|h| *h == at || inside(h, &at)) {
+            continue;
+        }
+        let what = format!(".factory/{name}");
+        if p.is_dir() && holds_git(&p) {
+            out.push(Line::Blocked(what, "holds a Git checkout that Git did not list as the run's worktree".into()));
             continue;
         }
         let res = if dry {
@@ -153,20 +164,27 @@ fn temp(run_dir: &Path, open: bool, dry: bool, out: &mut Vec<Line>) {
         } else {
             std::fs::remove_file(&p)
         };
-        match res {
-            Ok(()) => out.push(Line::Removed(format!(".factory/{name}"))),
-            Err(e) => out.push(Line::Kept(format!(".factory/{name}"), e.to_string(), true)),
-        }
+        out.push(res.map_or_else(|e| Line::Blocked(what.clone(), e.to_string()), |()| Line::Removed(what.clone())));
     }
 }
 
-/// Removes what the merged run created in `run_dir`; `open` is the run file's `Status: open`.
-pub fn clean(run_dir: &Path, pr: &Pr, open: bool, dry: bool, out: &mut Vec<Line>) -> Result<(), String> {
+/// Err unless the PR's head commit is in this checkout: a PR this run made has its head here.
+pub fn owns(run_dir: &Path, pr: &Pr) -> Result<(), String> {
     let repo = Repo::discover(run_dir).ok_or("not a Git checkout")?;
-    let factory = crate::paths::text(&run_dir.join(".factory"));
-    let mut names = worktrees(&repo, pr, &factory, dry, out)?;
+    run(&repo, &["cat-file", "-e", &format!("{}^{{commit}}", pr.head_oid)])
+        .map(drop)
+        .map_err(|_| format!("{} head {} is not in this checkout: not this run's PR", pr.url, pr.head_oid))
+}
+
+/// Removes what the merged run created in `run_dir`.
+pub fn clean(run_dir: &Path, pr: &Pr, dry: bool, out: &mut Vec<Line>) -> Result<(), String> {
+    let repo = Repo::discover(run_dir).ok_or("not a Git checkout")?;
+    let factory = run_dir.join(".factory");
+    let (mut names, handled) = worktrees(&repo, pr, &canon(&factory), dry, out)?;
+    let removed: Vec<String> =
+        out.iter().filter_map(|l| if let Line::Removed(x) = l { x.strip_prefix("worktree ").map(String::from) } else { None }).collect();
     names.insert(0, pr.head_ref.clone());
-    branches(&repo, pr, names, dry, out)?;
-    temp(run_dir, open, dry, out);
+    branches(&repo, pr, names, &removed, dry, out)?;
+    temp(&factory, &handled, dry, out);
     Ok(())
 }

@@ -20,7 +20,11 @@ pub fn missing(pr: &Pr, issue: &Issue) -> Vec<&'static str> {
     let pr_link = native || issue.text.contains(&pr.url) || (same_repo && cites(&issue.text, pr.number));
     let short = &pr.merge_oid[..pr.merge_oid.len().min(7)];
     let commit = native || (!short.is_empty() && issue.text.contains(short));
-    [(!issue.closed, "closed"), (!pr_link, "PR link"), (!commit, "merge commit")].into_iter().filter(|(m, _)| *m).map(|(_, w)| w).collect()
+    [(!(issue.closed || issue.reopened), "closed"), (!pr_link, "PR link"), (!commit, "merge commit")]
+        .into_iter()
+        .filter(|(m, _)| *m)
+        .map(|(_, w)| w)
+        .collect()
 }
 
 /// True when `text` cites `#<n>` as a whole number (`#34` is not `#340`).
@@ -42,10 +46,12 @@ mod tests {
             head_oid: "a".repeat(40),
             merge_oid: "1234567890".into(),
             closes: vec![],
+            base_ref: "main".into(),
+            cross_repo: false,
         }
     }
     fn issue(closed: bool, text: &str) -> Issue {
-        Issue { url: "https://github.com/o/r/issues/7".into(), closed, text: text.into(), closed_by: vec![] }
+        Issue { url: "https://github.com/o/r/issues/7".into(), closed, reopened: false, text: text.into(), closed_by: vec![] }
     }
 
     #[test]
@@ -62,6 +68,8 @@ mod tests {
         assert_eq!(missing(&pr(), &issue(true, "see #340, commit 1234567")), ["PR link"]);
         assert_eq!(missing(&pr(), &issue(true, "https://github.com/o/r/pull/34")), ["merge commit"]);
         assert_eq!(missing(&pr(), &issue(false, "")), ["closed", "PR link", "merge commit"]);
+        let reopened = Issue { reopened: true, ..issue(false, "#34 merged as 1234567") };
+        assert!(missing(&pr(), &reopened).is_empty(), "a person reopened it after merge: it keeps that status");
     }
 
     #[test]
