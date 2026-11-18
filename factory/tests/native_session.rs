@@ -41,7 +41,10 @@ fn native_begin_binds_the_child_and_rejects_unsafe_or_ambiguous_identity() {
     let result = begin(&run, &home, &cache, "child");
     assert!(result.status.success(), "{}", String::from_utf8_lossy(&result.stderr));
     let route = cache.join("ai-software-factory/sessions/child");
-    assert_eq!(fs::read_to_string(route).unwrap(), format!("{}\n", common::json_path(&run)));
+    let saved = fs::read_to_string(route).unwrap();
+    let target = saved.strip_suffix('\n').expect("newline-terminated route");
+    // macOS spells the same temporary directory as /var or /private/var.
+    assert_eq!(fs::canonicalize(target).unwrap(), fs::canonicalize(&run).unwrap());
     assert!(!cache.join("ai-software-factory/sessions/parent").exists());
     let state = fs::read_to_string(run.join(".factory/guard/state")).unwrap();
     assert!(state.contains("g_session='child'"));
