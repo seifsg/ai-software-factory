@@ -6,6 +6,8 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+## [0.8.10] - 2026-11-18
+
 ### Added
 
 - Add an examples scan to `research-market`: a `change` that builds a new surface from a short brief with no spec, design or pattern to follow first studies 3 to 5 strong existing examples, which feed Analyze and the look options ([#353])
@@ -461,7 +463,8 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 - Leaner runs (#137): product, feature and change runs each read 24% less method text, every gate message is shorter with the same facts, `scripts/token_report.py` measures both, and tests hold every method file and the gate's fixture messages to a byte budget and the product and change loads to 80% of their earlier size.
 - Self-update (#139): a clone install moves only to a release tag on `main` whose files match its manifest, records the previous revision, rolls back a failed install and shows a one-time notice naming both versions.
 
-[Unreleased]: https://github.com/seifsg/ai-software-factory/compare/v0.8.9...HEAD
+[Unreleased]: https://github.com/seifsg/ai-software-factory/compare/v0.8.10...HEAD
+[0.8.10]: https://github.com/seifsg/ai-software-factory/compare/v0.8.9...v0.8.10
 [0.8.9]: https://github.com/seifsg/ai-software-factory/compare/v0.8.8...v0.8.9
 [0.8.8]: https://github.com/seifsg/ai-software-factory/compare/v0.8.7...v0.8.8
 [0.8.7]: https://github.com/seifsg/ai-software-factory/compare/v0.8.6...v0.8.7
