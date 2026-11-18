@@ -6,6 +6,14 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+### Added
+
+- Add a fast-CI work rule: one run per commit, caches only main writes, path filters, one build profile per job, the OS matrix only where the product ships, release from CI artifacts, jobs and tests that time out with no sleeps ([#344])
+
+### Changed
+
+- Run the factory CI once per commit (main on push, branches through their pull request), cancel a superseded pull-request run, cache the test build, and run parity on the binary the tests built ([#344])
+
 ## [0.8.6] - 2026-11-18
 
 ### Fixed
@@ -480,4 +488,5 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 [#329]: https://github.com/seifsg/ai-software-factory/pull/329
 [#340]: https://github.com/seifsg/ai-software-factory/pull/340
 [#342]: https://github.com/seifsg/ai-software-factory/pull/342
+[#344]: https://github.com/seifsg/ai-software-factory/pull/344
 [#333]: https://github.com/seifsg/ai-software-factory/pull/333

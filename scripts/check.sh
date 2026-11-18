@@ -34,9 +34,9 @@ static() {
   o=$(git ls-tree -rl "$ref" $skills | awk '$5 ~ /\/SKILL\.md$/ && $4 >= 17000 {print $5}') && [ -n "$o" ] && fail "SKILL.md at 17000 bytes or over: $o"
   o=$(git ls-tree -r --name-only "$ref" | grep -iE '\.(png|jpe?g|gif|webp|mp4|webm|mov)$' | grep -vx '.agents/.claude-plugin/icon.png') && fail "media committed (proof belongs in refs/proof/): $o"
 
-  # Budgets: all methods under 177700, read set under 98700.
+  # Budgets: all methods under 178100, read set under 98700.
   set -- $(bytes "$ref")
-  [ "$1" -lt 177700 ] || fail "methods $1 bytes, budget 177700"
+  [ "$1" -lt 178100 ] || fail "methods $1 bytes, budget 178100"
   [ "$2" -lt 98700 ] || fail "read set $2 bytes, budget 98700"
 
   # A store refuses a plugin with no license: the file and every manifest name it.
