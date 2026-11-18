@@ -41,7 +41,7 @@ pub fn files(dir: &std::path::Path) -> Vec<std::path::PathBuf> {
     out
 }
 
-/// `factory proof-hash <file>...`
+/// `factory proof-hash <file>...`: prints `proof-hash <hash> <file>...`, the exact line an After file carries.
 pub fn cli(args: &[&str]) -> u8 {
     if args.is_empty() {
         eprintln!("usage: factory proof-hash <file>...");
@@ -49,7 +49,7 @@ pub fn cli(args: &[&str]) -> u8 {
     }
     match hash(args) {
         Ok(h) => {
-            println!("{h}");
+            println!("proof-hash {h} {}", args.join(" "));
             0
         }
         Err(e) => {

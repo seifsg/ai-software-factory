@@ -10,7 +10,7 @@ Before briefing, commit. Run `factory review gate-a` for A or `factory lint <gat
 Role: checker. Gate <A|B|C>. Project: <absolute path>. Commit: <HEAD sha>.
 Contracts: <`factory contracts <the gate's skills>` output, pasted; no `factory`: the "Output contract" checklist of their paths>.
 Outputs: .factory/run.md, steps <range>; <PR URL for gate C>.
-Only those checklist lines (and Gate C's list below) count; any other concern is a "note:", never
+Only those checklist lines for steps <range> (and Gate C's list below) count; a block for another step lapses; any other concern is a "note:", never
 MISSING. For every line, find the output that meets it; open what it names; check its form too (layout,
 URL vs bare number, table vs prose, commit, command). Strict: unsure is MISSING, with the reason.
 `DEFERRED (owner|hardware: <what>)` meets a line only for work that needs the

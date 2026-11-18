@@ -118,7 +118,7 @@ fn last_gate(l: &[u8], g: char) -> Option<String> {
 pub struct Session {
     /// A line carried `"isSidechain"`: a Claude Code transcript.
     pub sidechain: bool,
-    /// Step labels whose block opened an assistant text message (`0`..`8`, `2b`).
+    /// Step labels whose heading opens an assistant text item or a line in it (`0`..`8`, `2b`): several blocks in one message all count.
     pub sent: Vec<String>,
 }
 
@@ -130,25 +130,41 @@ impl Session {
         if memmem::find(l, br#""role":"assistant""#).is_none() {
             return;
         }
-        const P: &[u8] = b"\"type\":\"text\",\"text\":\"## ";
+        const P: &[u8] = b"\"type\":\"text\",\"text\":\"";
         let mut at = 0;
         while let Some(i) = memmem::find(&l[at..], P) {
             let s = at + i + P.len();
-            at = s;
-            if !l.get(s).is_some_and(|d| (b'0'..=b'8').contains(d)) {
-                continue;
+            // Walk the JSON string to its first unescaped quote; a heading opens it or follows an escaped `\n`.
+            let (mut e, mut esc) = (s, false);
+            self.heading(&l[s..]);
+            while let Some(&c) = l.get(e) {
+                if !esc && c == b'"' {
+                    break;
+                }
+                if esc && c == b'n' {
+                    self.heading(&l[e + 1..]);
+                }
+                esc = !esc && c == b'\\';
+                e += 1;
             }
-            // `[0-8]b? `: the longer `<d>b ` wins, as the awk regex matches.
-            let len = match (l.get(s + 1), l.get(s + 2)) {
-                (Some(b'b'), Some(b' ')) => 2,
-                (Some(b' '), _) => 1,
-                _ => continue,
-            };
-            let label = String::from_utf8_lossy(&l[s..s + len]).into_owned();
-            if !self.sent.contains(&label) {
-                self.sent.push(label);
-            }
-            at = s + len + 1;
+            at = e;
+        }
+    }
+
+    /// Records `t`'s step label when it opens with `## [0-8]b? `; the longer `<d>b ` wins, as the awk regex matches.
+    fn heading(&mut self, t: &[u8]) {
+        let Some(r) = t.strip_prefix(b"## ") else { return };
+        if !r.first().is_some_and(|d| (b'0'..=b'8').contains(d)) {
+            return;
+        }
+        let len = match (r.get(1), r.get(2)) {
+            (Some(b'b'), Some(b' ')) => 2,
+            (Some(b' '), _) => 1,
+            _ => return,
+        };
+        let label = String::from_utf8_lossy(&r[..len]).into_owned();
+        if !self.sent.contains(&label) {
+            self.sent.push(label);
         }
     }
 }
@@ -170,6 +186,13 @@ mod tests {
         s.line(br###"{"isSidechain":false,"message":{"role":"assistant","content":[{"type":"text","text":"## 2b Challenge x"},{"type":"text","text":"## 3 Plan"}]}}"###);
         assert!(s.sidechain);
         assert_eq!(s.sent, ["2b", "3"]);
+    }
+
+    #[test]
+    fn blocks_bundled_in_one_message_all_count_but_tool_input_never() {
+        let mut s = Session::default();
+        s.line(br###"{"message":{"role":"assistant","content":[{"type":"text","text":"## 2b Challenge x\n\n## 3 Plan y \"q\""},{"type":"tool_use","input":{"c":"\n## 5 Build "}},{"type":"text","text":"ok\n## 4 Before"},{"type":"text","text":"a ## 6 Verify\\n## 7 PR"}]}}"###);
+        assert_eq!(s.sent, ["2b", "3", "4"]);
     }
 
     #[test]

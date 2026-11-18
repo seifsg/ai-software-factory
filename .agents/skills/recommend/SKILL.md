@@ -39,6 +39,6 @@ Block `## 2 Recommend` holds:
 
 Block `## 2b Challenge` holds:
 
-- [ ] **Challenge:** the sentence above, verbatim
+- [ ] **Challenge:** "I don't think this is the best we could do. Do better. Make no mistake." verbatim
 - [ ] **Found:** each new option, wrong cell or missed cost, or "nothing new" with what was rechecked
 - [ ] **Result:** `kept <pick>` or `changed <old> → <new>` and why
