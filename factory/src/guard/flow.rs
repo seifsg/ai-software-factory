@@ -430,22 +430,34 @@ impl Ctx<'_> {
         if batched {
             return reply::batched();
         }
+        // `guard step` answers in the same turn: every open problem at once, each long line with its start, so one
+        // edit fixes them all (the Stop hook keeps its one-at-a-time order, byte for byte with the sh guard).
+        let step_mode = matches!(self.mode, Mode::Step { .. });
+        let mut all = Vec::new();
         if !f.skipped.is_empty() {
-            return reply::skipped(&f.skipped);
+            all.push(reply::skipped(&f.skipped));
         }
         if !f.long_lines.is_empty() {
-            return reply::long(&f.long_lines);
+            all.push(reply::long(&if step_mode { self.long_with_starts(&f.long_lines) } else { f.long_lines.clone() }));
+        }
+        // Stop keeps one problem per reply, byte for byte with the sh guard; `guard step` answers in the same turn
+        // with every open problem at once, the loop item first by the same order (cap, receipt, then the gate).
+        if !all.is_empty() && !step_mode {
+            return all.swap_remove(0);
         }
         if let Some(x) = lp.filter(|x| rounds >= 3 && !f.critical.contains(*x)) {
-            return reply::cap(x, rounds);
+            all.push(reply::cap(x, rounds));
+        } else if let Some((x, standing)) = f.no_receipt {
+            all.push(reply::receipt(x, standing, &super::exe()));
+        } else {
+            match f.gate {
+                Some('R') => all.push(reply::review()),
+                Some(x) => all.push(reply::gate(x)),
+                None => {}
+            }
         }
-        if let Some((x, standing)) = f.no_receipt {
-            return reply::receipt(x, standing, &super::exe());
-        }
-        match f.gate {
-            Some('R') => return reply::review(),
-            Some(x) => return reply::gate(x),
-            None => {}
+        if !all.is_empty() {
+            return all.join(" ");
         }
         let step = f.next.split(' ').next().unwrap_or("");
         let closed = self.has_line(b"Status: closed");
@@ -454,6 +466,20 @@ impl Ctx<'_> {
             todo.push_str(&reply::one_step(&self.run_path()));
         }
         todo
+    }
+
+    /// `69,122` as `69 (`**Table:** | Option…`), 122 (…)`: the line numbers with each line's first 60 characters.
+    fn long_with_starts(&self, nums: &str) -> String {
+        let text = String::from_utf8_lossy(&self.text);
+        let lines: Vec<&str> = text.lines().collect();
+        nums.split(',')
+            .map(|n| {
+                // A backtick in the line's start would close the code span early.
+                let start = n.trim().parse::<usize>().ok().and_then(|i| lines.get(i.wrapping_sub(1))).map(|l| l.chars().take(60).map(|c| if c == '`' { '\'' } else { c }).collect::<String>());
+                start.map_or(n.to_string(), |s| format!("{n} (`{s}…`)"))
+            })
+            .collect::<Vec<_>>()
+            .join(", ")
     }
 
     fn run_path(&self) -> String {

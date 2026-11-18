@@ -3,7 +3,7 @@
 //! so the run goes on in the same turn. `T<k>` lines go under `## 5 Build` without ticking it.
 
 use std::io::Read;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 /// Steps in order with their names and skills.
 pub const STEPS: [(&str, &str, &str); 10] = [
@@ -26,16 +26,23 @@ pub fn cli(args: &[&str]) -> u8 {
         eprintln!("usage: factory guard step <n|Tk> < block   (run in the run's folder)");
         return 2;
     };
-    let mut block = String::new();
-    if std::io::stdin().read_to_string(&mut block).is_err() || block.trim().is_empty() {
-        eprintln!("factory guard step: the posted block comes on stdin, e.g. factory guard step {label} <<'EOF' (the block) EOF");
-        return 2;
-    }
     let Some(dir) = crate::run::locate::walk(&super::cwd()) else {
         eprintln!("factory guard step: no .factory/run.md from this folder");
         return 1;
     };
+    // A command Stop hook records its session and transcript in the state: the step judges with that same
+    // evidence (gate handbacks, posted blocks) and keeps the record as it is for the hook's next call.
+    let state = match crate::run::state::State::load(&Path::new(&dir).join(".factory/guard/state")) {
+        crate::run::state::Loaded::Valid(s) => s,
+        _ => crate::run::state::State::default(),
+    };
     let run = Path::new(&dir).join(".factory/run.md");
+    let Some(block) = block_for(label, state.get("transcript"), &run) else {
+        eprintln!(
+            "factory guard step: no block for {label} posted since the run file's last write: post it in chat (its own message, opening with its heading), or pass it on stdin: factory guard step {label} <<'EOF' (the block) EOF"
+        );
+        return 2;
+    };
     // Never write from a failed read: an unreadable or non-UTF-8 run file stays as it is.
     let text = match std::fs::read(&run).map(String::from_utf8) {
         Ok(Ok(t)) if !t.is_empty() => t,
@@ -63,12 +70,6 @@ pub fn cli(args: &[&str]) -> u8 {
         eprintln!("factory guard step: cannot write {}: {e}", crate::paths::text(&run));
         return 1;
     }
-    // A command Stop hook records its session and transcript in the state: the step judges with that same
-    // evidence (gate handbacks, posted blocks) and keeps the record as it is for the hook's next call.
-    let state = match crate::run::state::State::load(&Path::new(&dir).join(".factory/guard/state")) {
-        crate::run::state::Loaded::Valid(s) => s,
-        _ => crate::run::state::State::default(),
-    };
     let hooked = !state.get("transcript").is_empty();
     let input = crate::hook::Input {
         session_id: state.get("session").into(),
@@ -80,6 +81,26 @@ pub fn cli(args: &[&str]) -> u8 {
     let r = super::flow::run(&input, super::flow::Mode::Step { changed: updated != text }, Path::new(&dir));
     print!("{}", super::reply::step_line(r.as_ref().map_or("", crate::hook::Reply::inner), hooked));
     0
+}
+
+/// The block: stdin when it carries one (never read from a terminal), else the newest post of it in this
+/// session's transcript (Claude Code's own session id first, then the hook's record), so it is typed once, in chat.
+/// A post counts only when made after the run file's last write: a block not posted again is never reused.
+fn block_for(label: &str, transcript: &str, run: &Path) -> Option<String> {
+    use std::io::IsTerminal;
+    let mut block = String::new();
+    if !std::io::stdin().is_terminal() && std::io::stdin().read_to_string(&mut block).is_ok() && !block.trim().is_empty() {
+        return Some(block);
+    }
+    let heading = STEPS.iter().find(|(n, _, _)| *n == label).map(|(n, name, _)| format!("## {n} {name}")).unwrap_or_default();
+    if heading.is_empty() && !label.starts_with('T') {
+        return None;
+    }
+    let secs = std::fs::metadata(run).and_then(|m| m.modified()).ok()?.duration_since(std::time::UNIX_EPOCH).ok()?.as_secs();
+    let since = &crate::receipt::utc_iso(secs)[..19];
+    // A coordinator running as a subagent carries its parent's session id: the hook's record is tried next.
+    let hooked = Some(PathBuf::from(transcript)).filter(|_| !transcript.is_empty());
+    [super::posted::own_transcript(), hooked].into_iter().flatten().find_map(|tp| super::posted::block(&tp, label, &heading, since))
 }
 
 /// The run file with the block written in: a step block replaces its section and ticks it; a `T<k>` line

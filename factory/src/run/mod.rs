@@ -239,7 +239,7 @@ fn review_line(l: &str) -> Option<(String, String)> {
 }
 
 /// The number in the first `(max <n> min)` of a line, 0 when none.
-fn jobs_max(l: &str) -> u64 {
+pub fn jobs_max(l: &str) -> u64 {
     let mut s = l;
     while let Some(i) = s.find("(max ") {
         let rest = &s[i + 5..];

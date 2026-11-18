@@ -6,6 +6,19 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+### Added
+
+- `factory guard wait none|owner: <question>|jobs: <what> (max <n> min)` sets the run file's `Waiting:` line in one write; methods no longer edit it with `sed`.
+
+### Changed
+
+- `factory guard step <n>` with no stdin takes the block this session just posted in chat (only a post made after the run file's last write), so a coordinator types each block once (a measured small change typed every block twice: about 24k output tokens, 200 s).
+- `factory guard step` names every open problem in one reply (steps not ticked, each long line with its start, the open gate) instead of one per call.
+- Gate checkers start only once the coded preflight prints no gap, and run in the foreground when nothing independent is left; a checker handback counts its met lines instead of listing them.
+- Multi-item work shows a progress list at each wait and turn end: the ticket link, then every checklist item in order, one line each (done and its gain, running and who reports, covered elsewhere, dropped and its cost).
+- With nothing independent left, a coordinator waits for a job inside the call where the host can, instead of ending the turn and waking on its report.
+- A `change` with no lens agent prints the deep-review contract instead of loading the skill, and its step-8 reviewer does the UI check from the After captures, with no separate analyst.
+
 ## [0.8.4] - 2026-11-18
 
 ### Changed
