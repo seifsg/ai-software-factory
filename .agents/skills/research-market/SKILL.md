@@ -12,6 +12,7 @@ Research and planning only. Do not build or publish.
 
 - New product or big feature: kickoff research. Parallel agents keep it under an hour.
 - Material unknown blocks a decision (stack, architecture, pattern, UX): deep research, in `references/deep-research.md`. Run only strands that can change that decision.
+- Examples scan: a `change` that builds a new surface (page, screen, tool, game) from a short brief, with no spec, design or pattern in the project to follow. One light agent, at most 10 minutes: 3 to 5 strong existing examples of the same thing (live or open source). Per example: URL, what makes it good (look, motion, interaction, accessibility), what to borrow. Record `**Examples:**` as a table in step 0's block; it feeds Analyze and step 2's looks.
 - Routine fix: skip.
 - Standalone request: findings in requested format. No files unless asked. No coding plan. Then stop.
 
