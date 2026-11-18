@@ -12,6 +12,10 @@ The public surface is the skill names, the run file format, and the hook scripts
 - Run step 6's UI check and After captures in one fresh UI-check delegate (`maker`, writing only the proof folder) briefed with criteria, proof list, look, the app's URL and the After rule, instead of the main session; trial 5 spent 120 browser calls and $4.13 there ([#351])
 - Release in minutes: `release.sh prepare` runs only the static checks (`check.sh --static`, seconds instead of the full suite), and the release branch builds the six binaries without rerunning the test matrix main already passed ([#350])
 
+### Fixed
+
+- Run the test matrix on pull requests and main again: since #350 a missing `tests` input compared equal to false and skipped it ([#351])
+
 ## [0.8.8] - 2026-11-18
 
 ### Changed
