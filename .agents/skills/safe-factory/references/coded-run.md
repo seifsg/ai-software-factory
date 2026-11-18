@@ -14,7 +14,7 @@ After creating a new run header, run `factory guard begin` before Ticket work.
 6. `Waiting:` only by `factory guard wait <value>`; no `sed`, no block read-back.
 7. End the turn only where it prints `may stop`.
 
-Step 5 runs one todo per guard call, every todo in the same turn.
+Step 5 runs one todo per guard call, every todo in the same turn. Step 6 launches each delegate once; while they run, draft step 7's PR text and the report, never idle.
 
 ## Full suite
 
