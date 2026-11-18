@@ -189,6 +189,13 @@ fn work_older_than_the_ticket_on_an_empty_base_keeps_the_check() {
     let (code, out) = factory(&d, &["guard", "step", "T1"], "T1 pre: a do: b post: c");
     assert!(code == 1 && out.contains("No Before file: P1, P2."), "{out}");
     let _ = std::fs::remove_dir_all(&d);
+    // Code left untracked from before the ticket (an empty first commit on existing files).
+    let d = scratch_project("before-untracked-old", &[10], 9);
+    std::fs::write(d.join("old.txt"), "x\n").unwrap();
+    set_time(&d.join("old.txt"), at(8));
+    let (code, out) = factory(&d, &["guard", "step", "T1"], "T1 pre: a do: b post: c");
+    assert!(code == 1 && out.contains("No Before file: P1, P2."), "{out}");
+    let _ = std::fs::remove_dir_all(&d);
     // No ticket record: the check stays.
     let d = scratch_project("before-no-ticket", &[10], 9);
     std::fs::remove_file(d.join(".factory/guard/steps.jsonl")).unwrap();
