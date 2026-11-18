@@ -38,6 +38,21 @@ fn factory_in(dir: &Path, session: &str, args: &[&str], input: &[u8]) -> (i32, S
     (out.status.code().unwrap_or(-1), format!("{}{}", String::from_utf8_lossy(&out.stdout), String::from_utf8_lossy(&out.stderr)))
 }
 
+/// `t` as a transcript timestamp, `YYYY-MM-DDTHH:MM:SS.000Z`.
+fn time_iso(t: std::time::SystemTime) -> String {
+    let s = t.duration_since(std::time::UNIX_EPOCH).unwrap().as_secs() as i64;
+    let (days, rem) = (s.div_euclid(86_400), s.rem_euclid(86_400));
+    // Civil date from days since 1970-01-01 (Howard Hinnant's algorithm).
+    let z = days + 719_468;
+    let (era, doe) = (z.div_euclid(146_097), z.rem_euclid(146_097));
+    let yoe = (doe - doe / 1460 + doe / 36_524 - doe / 146_096) / 365;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let (d, m) = (doy - (153 * mp + 2) / 5 + 1, if mp < 10 { mp + 3 } else { mp - 9 });
+    let y = yoe + era * 400 + i64::from(m <= 2);
+    format!("{y:04}-{m:02}-{d:02}T{:02}:{:02}:{:02}.000Z", rem / 3600, rem % 3600 / 60, rem % 60)
+}
+
 /// One assistant message: the chat post, and the tool call that carries no block.
 fn post(ts: &str, text: &str) -> String {
     format!(
@@ -59,7 +74,7 @@ fn step_takes_a_fresh_post_only_and_wait_sets_the_line() {
     fs::write(&tp, post("2000-01-01T00:00:00.000Z", "## 3 Plan\\nstale")).unwrap();
     let (code, out) = factory(&dir, "s1", &["guard", "step", "3"]);
     assert_eq!(code, 2, "{out}");
-    assert!(out.contains("posted since the run file's last write") && out.contains("with no stdin") && !out.contains("<<'EOF'"), "{out}");
+    assert!(out.contains("no `## 3 Plan` block in this session's chat") && out.contains("with no stdin") && !out.contains("<<'EOF'"), "{out}");
     assert_eq!(fs::read_to_string(f.join("run.md")).unwrap(), RUN);
 
     // A fresh post is written, ticked and moves Next; another session's id finds nothing.
@@ -89,11 +104,35 @@ fn a_piped_block_is_told_to_post_only_where_a_transcript_exists() {
     fs::write(dir.join("cfg/projects/p/s1.jsonl"), "").unwrap();
     const HINT: &str = "Block read from stdin: post it in chat now";
     fs::write(f.join("run.md"), RUN).unwrap();
-    let (code, out) = factory_in(&dir, "s1", &["guard", "step", "3"], b"## 3 Plan\n**Files:** `a.html` (new)\n");
-    assert!(code == 0 && out.starts_with(HINT), "{out}");
-    fs::write(f.join("run.md"), RUN).unwrap();
+    // No readable chat: stdin is the way, with no hint.
     let (code, out) = factory_in(&dir, "none", &["guard", "step", "3"], b"## 3 Plan\n**Files:** `a.html` (new)\n");
-    assert!(code == 0 && !out.contains(HINT), "no transcript: stdin is the way: {out}");
+    assert!(code == 0 && !out.contains(HINT), "{out}");
+    // A readable chat with no post: the first stdin try is refused and writes nothing; a second is taken.
+    let before = fs::read_to_string(f.join("run.md")).unwrap();
+    let (code, out) = factory_in(&dir, "s1", &["guard", "step", "4"], b"## 4 Before\nsaved\n");
+    assert!(code == 2 && out.contains("refused, nothing written") && out.contains("`## 4 Before`"), "{out}");
+    assert_eq!(fs::read_to_string(f.join("run.md")).unwrap(), before);
+    let (code, out) = factory_in(&dir, "s1", &["guard", "step", "4"], b"## 4 Before\nsaved\n");
+    assert!(code == 0 && !out.contains(HINT), "the retry is for a chat the guard cannot read: no third copy asked: {out}");
+    assert!(!f.join("guard/piped-4").exists(), "a written step spends its retry");
+
+    // A post made after the last step counts even when the run file was written since (a `guard wait`).
+    let now = std::time::SystemTime::now();
+    let ts = time_iso(now);
+    fs::write(dir.join("cfg/projects/p/s1.jsonl"), post(&ts, "## 5 Build\\nT1 pre: a do: b post: c ✔")).unwrap();
+    let later = now + std::time::Duration::from_secs(120);
+    fs::File::options().write(true).open(f.join("run.md")).unwrap().set_modified(later).unwrap();
+    let (code, out) = factory(&dir, "s1", &["guard", "step", "5"]);
+    assert!(code == 0 && fs::read_to_string(f.join("run.md")).unwrap().contains("## 5 Build ✔"), "{out}");
+
+    // A coordinator running as a subagent posts in its own file beside the session's: that post counts.
+    let subs = dir.join("cfg/projects/p/s1/subagents");
+    fs::create_dir_all(&subs).unwrap();
+    fs::write(subs.join("agent-x.jsonl"), post("2999-01-01T00:00:00.000Z", "## 6 Verify\\nchecked")).unwrap();
+    let (code, out) = factory(&dir, "s1", &["guard", "step", "6"]);
+    assert!(code == 0 && fs::read_to_string(f.join("run.md")).unwrap().contains("## 6 Verify ✔\nchecked"), "{out}");
+    assert_eq!(factory(&dir, "s1", &["guard", "step", "9"]).0, 2, "no such step");
+    assert!(!f.join("guard/piped-9").exists());
     let _ = fs::remove_dir_all(dir);
 }
 

@@ -6,6 +6,12 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+### Fixed
+
+- Refuse a step block piped on stdin once where the guard can read the session chat and finds no post of it, so the block is typed once, in chat, instead of twice; a second try is taken for a coordinator whose chat the guard cannot read ([#347])
+- Count a chat post made since the last step was written (step 0: since the run file's last write), so a `guard wait` between posting and `guard step` no longer voids it, and read a subagent coordinator's posts too ([#347])
+- Record the step the run moved to even when the guard answers with the unposted-blocks reply, so the run report keeps steps 4 and 5 apart ([#347])
+
 ## [0.8.7] - 2026-11-18
 
 ### Added
@@ -492,4 +498,5 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 [#340]: https://github.com/seifsg/ai-software-factory/pull/340
 [#342]: https://github.com/seifsg/ai-software-factory/pull/342
 [#344]: https://github.com/seifsg/ai-software-factory/pull/344
+[#347]: https://github.com/seifsg/ai-software-factory/pull/347
 [#333]: https://github.com/seifsg/ai-software-factory/pull/333

@@ -37,11 +37,30 @@ pub fn cli(args: &[&str]) -> u8 {
         _ => crate::run::state::State::default(),
     };
     let run = Path::new(&dir).join(".factory/run.md");
-    let Some((block, piped)) = block_for(label, state.get("transcript"), &run) else {
-        eprintln!(
-            "factory guard step: no block for {label} posted since the run file's last write: post it in chat first (its own message, opening with its heading), then run `factory guard step {label}` again with no stdin. Only a host with no session transcript passes it on stdin."
-        );
+    let guard = Path::new(&dir).join(".factory/guard");
+    let todo = label.strip_prefix('T').is_some_and(|k| !k.is_empty() && k.bytes().all(|b| b.is_ascii_digit()));
+    if !todo && !STEPS.iter().any(|(n, _, _)| n == label) {
+        eprintln!("factory guard step: {label} is no step (0 to 8, 2b) or todo (T<k>)");
         return 2;
+    }
+    let block = match block_for(label, state.get("transcript"), &guard, &run) {
+        Source::Posted(b) | Source::Piped(b) => b,
+        Source::Missing => {
+            eprintln!(
+                "factory guard step: no {} block in this session's chat since the last step was written. {} A coordinator whose chat the guard cannot read passes it on stdin, twice.",
+                heading_of(label),
+                post_how(label)
+            );
+            return 2;
+        }
+        Source::Unposted => {
+            eprintln!(
+                "factory guard step: refused, nothing written: the block came on stdin, but this session's chat has no {} block and the owner reads blocks in chat, so it would be typed twice. {} Only a coordinator whose chat the guard cannot read sends it on stdin again.",
+                heading_of(label),
+                post_how(label)
+            );
+            return 2;
+        }
     };
     // Never write from a failed read: an unreadable or non-UTF-8 run file stays as it is.
     let text = match std::fs::read(&run).map(String::from_utf8) {
@@ -79,36 +98,80 @@ pub fn cli(args: &[&str]) -> u8 {
         ..Default::default()
     };
     let r = super::flow::run(&input, super::flow::Mode::Step { changed: updated != text }, Path::new(&dir));
-    if piped && (hooked || super::posted::own_transcript().is_some()) {
-        print!("Block read from stdin: post it in chat now as its own message; from the next block on, post first and run with no stdin. ");
-    }
+    stamp(&guard, label);
     print!("{}", super::reply::step_line(r.as_ref().map_or("", crate::hook::Reply::inner), hooked));
     0
 }
 
-/// The block: stdin when it carries one (never read from a terminal), else the newest post of it in this
-/// session's transcript (Claude Code's own session id first, then the hook's record), so it is typed once, in chat.
-/// A post counts only when made after the run file's last write: a block not posted again is never reused.
-/// The flag says the block came on stdin.
-fn block_for(label: &str, transcript: &str, run: &Path) -> Option<(String, bool)> {
+/// Where a step's block came from, or why none was taken.
+enum Source {
+    /// Posted in this session's chat: typed once, seen by the owner.
+    Posted(String),
+    /// On stdin: a host with no readable chat, or a second try after `Unposted`.
+    Piped(String),
+    /// Neither posted nor piped.
+    Missing,
+    /// Piped where the chat is readable but holds no post of it: refused once per step.
+    Unposted,
+}
+
+/// The block's heading as the owner sees it: `## 3 Plan`, or a todo line's `T1 pre:`.
+fn heading_of(label: &str) -> String {
+    STEPS.iter().find(|(n, _, _)| *n == label).map_or_else(|| format!("`{label} pre:`"), |(n, name, _)| format!("`## {n} {name}`"))
+}
+
+/// The one way to hand a block over where the chat is readable.
+fn post_how(label: &str) -> String {
+    format!(
+        "Write the full block as plain text in your reply (not in thinking, a file or a tool call), then call `factory guard step {label}` with no stdin in that same reply."
+    )
+}
+
+/// The newest post of the block in this session's chat (Claude Code's own session id first, then the hook's
+/// record) made since the last step was written (`.factory/guard/stepped`, else the run file's last write), so
+/// a block is typed once, in chat, and an old post is never reused. Stdin counts only where no chat is readable,
+/// or on a second try for the same step: a coordinator running as a subagent posts where the guard cannot read.
+fn block_for(label: &str, transcript: &str, guard: &Path, run: &Path) -> Source {
     use std::io::IsTerminal;
-    let mut block = String::new();
-    if !std::io::stdin().is_terminal() && std::io::stdin().read_to_string(&mut block).is_ok() && !block.trim().is_empty() {
-        return Some((block, true));
-    }
+    let mut piped = String::new();
+    let _ = (!std::io::stdin().is_terminal()).then(|| std::io::stdin().read_to_string(&mut piped));
     let heading = STEPS.iter().find(|(n, _, _)| *n == label).map(|(n, name, _)| format!("## {n} {name}")).unwrap_or_default();
-    if heading.is_empty() && !label.starts_with('T') {
-        return None;
-    }
-    let secs = std::fs::metadata(run).and_then(|m| m.modified()).ok()?.duration_since(std::time::UNIX_EPOCH).ok()?.as_secs();
-    let since = &crate::receipt::utc_iso(secs)[..19];
-    // A coordinator running as a subagent carries its parent's session id: the hook's record is tried next.
+    let stamp = std::fs::metadata(guard.join("stepped")).or_else(|_| std::fs::metadata(run));
+    let since = stamp.and_then(|m| m.modified()).ok().and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok());
+    let since = since.map(|d| crate::receipt::utc_iso(d.as_secs())[..19].to_string());
     let hooked = Some(PathBuf::from(transcript)).filter(|_| !transcript.is_empty());
-    [super::posted::own_transcript(), hooked]
-        .into_iter()
-        .flatten()
-        .find_map(|tp| super::posted::block(&tp, label, &heading, since))
-        .map(|b| (b, false))
+    let mut chats: Vec<PathBuf> = [super::posted::own_transcript(), hooked].into_iter().flatten().collect();
+    // A coordinator running as a Claude Code subagent posts in its own file beside the session's.
+    let subs: Vec<PathBuf> = chats.iter().flat_map(|tp| subagent_chats(tp)).collect();
+    chats.extend(subs);
+    let posted = since.as_deref().filter(|_| !heading.is_empty() || label.starts_with('T'));
+    if let Some(b) = posted.and_then(|s| chats.iter().find_map(|tp| super::posted::block(tp, label, &heading, s))) {
+        return Source::Posted(b);
+    }
+    if piped.trim().is_empty() {
+        return Source::Missing;
+    }
+    let retry = guard.join(format!("piped-{label}"));
+    // No guard folder yet: no marker can be kept (an empty one reads as lost guard state), so stdin counts.
+    if chats.is_empty() || retry.is_file() || !guard.is_dir() {
+        return Source::Piped(piped);
+    }
+    let _ = std::fs::write(&retry, "");
+    Source::Unposted
+}
+
+/// Subagent transcripts of a Claude Code session: `<session>/subagents/*.jsonl` beside `<session>.jsonl`.
+fn subagent_chats(tp: &Path) -> Vec<PathBuf> {
+    let dir = tp.with_extension("").join("subagents");
+    std::fs::read_dir(dir)
+        .map(|rd| rd.flatten().map(|e| e.path()).filter(|p| p.extension().is_some_and(|x| x == "jsonl")).collect())
+        .unwrap_or_default()
+}
+
+/// Marks a written step once the guard folder exists: later posts count from now, and its stdin retry is spent.
+fn stamp(guard: &Path, label: &str) {
+    let _ = std::fs::write(guard.join("stepped"), label);
+    let _ = std::fs::remove_file(guard.join(format!("piped-{label}")));
 }
 
 /// The run file with the block written in: a step block replaces its section and ticks it; a `T<k>` line
