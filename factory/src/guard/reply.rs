@@ -196,7 +196,9 @@ pub fn step_line(reply: &str, hooked: bool) -> String {
             "post its full block as your last message, then end your turn.",
             "pipe its full block to `factory guard step` (its one copy), post one progress line, then go on.",
         )
-        .replace("make the final manual round with After captures", "brief the UI-check delegate for the After captures");
+        .replace("make the final manual round with After captures", "brief the UI-check delegate for the After captures")
+        .replace("post its log line as your last message, then end your turn.", "pipe its log line to `factory guard step T<n>`, then go on with the next todo.")
+        .replace("then post the full `## 5 Build` block.", "then pipe the full `## 5 Build` block.");
     if !hooked {
         return line;
     }

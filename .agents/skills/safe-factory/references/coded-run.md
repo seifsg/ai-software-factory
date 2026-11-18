@@ -8,7 +8,7 @@ After creating a new run header, run `factory guard begin` before Ticket work.
 
 1. Load the step's skill once per run; a later step of the same skill works from it, no reread. Reload a skill after compaction.
 2. Do the step's work; read, search or run fresh.
-3. Pipe its full block (a todo: its `T<n> pre:` line) on stdin to step 4's command: its one copy. The owner reads blocks on the run report (Pro), else in `.factory/run.md` opened in the host preview at step 0.
+3. Pipe its full block (a todo: its `T<n> pre:` line) on stdin to step 4's command: its one copy. The owner reads blocks on the run report (Pro), else in `.factory/run.md` opened in the host preview at step 0; no preview: post each block in chat too.
 4. Run `factory guard step <n>` (`<n>`: the step, `0` to `8` or `2b`; a todo: `T<n>`) <<'EOF'. It applies the Stop rules, writes the block under its heading in run.md, ticks it, sets `Next:` and records the step, so several steps run in one turn. Never edit block text in run.md by hand; fix a refused block and pipe it again. Then post one progress line in chat: `<heading> ✅ <key result>`.
 5. Do what it prints, in the same turn: the next step and its skill, or the fix it names. It asks for `stop-check` only when no command Stop hook guards the run; then load `stop-check` before each later block.
 6. `Waiting:` only by `factory guard wait <value>`; no `sed`, no block read-back.

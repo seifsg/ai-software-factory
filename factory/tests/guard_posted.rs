@@ -154,6 +154,20 @@ fn only_a_hand_ticked_step_is_asked_for_in_chat() {
 }
 
 #[test]
+fn step_replies_say_to_pipe_and_name_the_ui_check_delegate() {
+    let dir = scratch("guard-step-words");
+    let f = dir.join(".factory");
+    fs::create_dir_all(&f).unwrap();
+    let ticked = "# Run: local fixture · Fast · change\nStatus: open\nNext: 4 Before · how-to-make-a-pr\nWaiting: none\n\n## 0 Ticket ✔\n## 1 Analyze ✔\n## 2 Recommend ✔\n## 2b Challenge ✔\n## 3 Plan ✔\nGate A: WAIVED by owner (\"fixture\") @aaaaaaa\n## 4 Before\n";
+    fs::write(f.join("run.md"), ticked).unwrap();
+    let (_, four) = factory_in(&dir, "none", &["guard", "step", "4"], b"## 4 Before\nsaved\n");
+    assert!(four.contains("pipe its log line to `factory guard step T<n>`") && !four.contains("last message"), "{four}");
+    let (_, five) = factory_in(&dir, "none", &["guard", "step", "5"], b"## 5 Build\nT1 pre: a do: b post: c \xE2\x9C\x94\n");
+    assert!(five.contains("UI-check delegate") && !five.contains("manual round"), "{five}");
+    let _ = fs::remove_dir_all(dir);
+}
+
+#[test]
 fn a_step_reply_names_the_long_line_and_the_gate_at_once() {
     let dir = scratch("guard-all-problems");
     let f = dir.join(".factory");
