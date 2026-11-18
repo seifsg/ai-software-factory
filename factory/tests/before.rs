@@ -154,19 +154,46 @@ fn a_note_bullet_in_the_proof_list_is_no_proof_id() {
     let _ = std::fs::remove_dir_all(&d);
 }
 
-#[test]
-fn a_new_project_needs_no_before() {
-    let d = common::scratch("before-from-scratch");
+/// A repository whose `main` is one empty commit at 08:00, a `work` branch with commits at `hours`, and a
+/// run whose ticket step began at `ticket` o'clock.
+fn scratch_project(name: &str, hours: &[u64], ticket: u64) -> PathBuf {
+    let d = common::scratch(name);
     git(&d, &["init", "-q", "-b", "main"], 8);
     git(&d, &["commit", "-q", "--allow-empty", "-m", "init"], 8);
     git(&d, &["switch", "-q", "-c", "work"], 8);
-    std::fs::write(d.join("index.html"), "x\n").unwrap();
-    git(&d, &["add", "index.html"], 10);
-    git(&d, &["commit", "-q", "-m", "page"], 10);
-    std::fs::create_dir_all(d.join(".factory")).unwrap();
+    for h in hours {
+        let f = format!("f{h}.txt");
+        std::fs::write(d.join(&f), "x\n").unwrap();
+        git(&d, &["add", &f], *h);
+        git(&d, &["commit", "-q", "-m", "page"], *h);
+    }
+    std::fs::create_dir_all(d.join(".factory/guard")).unwrap();
     std::fs::write(d.join(".factory/run.md"), RUN).unwrap();
+    let at = format!("{{\"at\":\"2026-01-01T{ticket:02}:00:00Z\",\"step\":\"0\"}}\n");
+    std::fs::write(d.join(".factory/guard/steps.jsonl"), at).unwrap();
+    d
+}
+
+#[test]
+fn a_new_project_needs_no_before() {
+    let d = scratch_project("before-from-scratch", &[10], 9);
     let (code, out) = factory(&d, &["guard", "step", "T1"], "T1 pre: a do: b post: c");
-    assert_eq!(code, 0, "an empty base has nothing to show Before: {out}");
+    assert_eq!(code, 0, "an empty base and only this run's work: nothing to show Before: {out}");
+    let _ = std::fs::remove_dir_all(&d);
+}
+
+#[test]
+fn work_older_than_the_ticket_on_an_empty_base_keeps_the_check() {
+    // Stacked on another run's commit (09:00) made before this ticket (10:00).
+    let d = scratch_project("before-stacked", &[9, 11], 10);
+    let (code, out) = factory(&d, &["guard", "step", "T1"], "T1 pre: a do: b post: c");
+    assert!(code == 1 && out.contains("No Before file: P1, P2."), "{out}");
+    let _ = std::fs::remove_dir_all(&d);
+    // No ticket record: the check stays.
+    let d = scratch_project("before-no-ticket", &[10], 9);
+    std::fs::remove_file(d.join(".factory/guard/steps.jsonl")).unwrap();
+    let (code, out) = factory(&d, &["guard", "step", "T1"], "T1 pre: a do: b post: c");
+    assert!(code == 1 && out.contains("No Before file: P1, P2."), "{out}");
     let _ = std::fs::remove_dir_all(&d);
 }
 
