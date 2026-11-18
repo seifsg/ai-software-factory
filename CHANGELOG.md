@@ -6,6 +6,19 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+### Changed
+
+- Let `factory guard step <n>` take the block this session just posted in chat when no stdin comes, so each block is typed once ([#340])
+- Make `factory guard step` name every open problem in one reply: steps not ticked, long lines with their start, and the open gate or loop cap ([#340])
+- Brief gate checkers only once the coded preflight finds no gap, and count met lines in their handbacks instead of listing them ([#340])
+- Wait for a job inside the call when nothing independent is left, instead of ending the turn and waking on its report ([#340])
+- Skip the deep-review load and the separate UI analyst when no lens agent runs; the step-8 reviewer does the UI check ([#340])
+
+### Added
+
+- Add `factory guard wait none|owner: <question>|jobs: <what> (max <n> min)` to set the `Waiting:` line in one write ([#340])
+- Add a progress list at each wait and turn end of multi-item work: the ticket link, then one marked line per checklist item ([#340])
+
 ## [0.8.4] - 2026-11-18
 
 ### Changed
@@ -453,4 +466,5 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 [#320]: https://github.com/seifsg/ai-software-factory/pull/320
 [#322]: https://github.com/seifsg/ai-software-factory/pull/322
 [#329]: https://github.com/seifsg/ai-software-factory/pull/329
+[#340]: https://github.com/seifsg/ai-software-factory/pull/340
 [#333]: https://github.com/seifsg/ai-software-factory/pull/333

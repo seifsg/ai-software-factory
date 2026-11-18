@@ -10,7 +10,7 @@ One round = review, fixes, fresh review.
 - Caps, for every loop (review, gate checker, fix): each non-ready verdict or FAIL handback is a failed round.
 - 3 failed rounds, no open `CRITICAL: <finding>` in current step's block or last handback: loop passes as `Gate <X>: PASS (cap, 3 rounds, no CRITICAL) @<sha>` or `Review: ready (cap, 3 rounds, no CRITICAL) @<sha>`, never a stop; rest goes to ticket's follow-ups and the PR.
 - Open CRITICAL: rounds 4 and 5 run ([run file](run-file.md)). Open after 5: stop, `Waiting: owner:`, packet under current step: findings per round, shared cause, options (extend, amend scope, cancel).
-- Guard takes a cap line only after 3 failed handbacks in host's subagent files; halted run waits for owner's `clear`.
+- Guard takes a cap line only after 3 failed handbacks in subagent files; a halted run waits for owner's `clear`.
 
 ## Factory fault
 
@@ -18,7 +18,7 @@ A skill or hook misbehaves, or a factory improvement shows up:
 
 1. Document it: observed, expected, example, factory version.
 2. Open an issue in the factory's own repository asking for help. Mark it unverified.
-3. Do not run `improve-factory`. Owner verifies the issue first. A session offered for it launches `improve-factory` on that issue with a factory repository checkout instead of the project path, plus this project's absolute path and whether its run is still open. Only the owner starts it. Product bugs stay in delivery.
+3. Do not run `improve-factory`: the owner verifies the issue, then may start a session running it on that issue in a factory checkout, given this project's absolute path and whether its run is open. Product bugs stay in delivery.
 
 ## Resume
 
@@ -42,21 +42,21 @@ Step 1 finds no `.factory/guard/state` on a host with hooks: `safe-factory Resum
 
 ## Hooks
 
-Both use `scripts/run-guard.sh` on this session's run: its binding, nearest in its checkout, then its step block's `Workspace`. Ignored: untouched 12 hours (Stop), `Status: stopped`, finished (step 8 ticked, gates A, B, C and review proven). State: `.factory/guard/`, never edit.
+Both use `scripts/run-guard.sh` on this session's run: its binding, nearest in its checkout, then its step block's `Workspace`. Ignored: untouched 12 hours (Stop), `Status: stopped`, finished (step 8, gates A-C and review proven). State: `.factory/guard/`, never edit.
 
 | Hook | When | Does |
 |---|---|---|
-| Stop guard | turn ends | unless `Waiting: owner:`, `Waiting: jobs:` or reported background tasks: blocks, sends a step not ticked, a line over 300 characters, first unproven gate, else `Next:`'s prompt. A wait gets one block for a step not ticked. Past round 5, 6 idle turns or spent night budget: packet prompt, then halted. |
+| Stop guard | turn ends | unless `Waiting: owner:`, `Waiting: jobs:` or reported background tasks: blocks with a step not ticked, a line over 300 characters, the first unproven gate, else `Next:`'s prompt; a wait, once for a step not ticked. Past round 5, 6 idle turns or spent night budget: packet prompt, then halted. |
 | Compact | compaction or resume | prints `Next:`, "load that skill fresh"; resume: load `safe-factory` |
 
 Prompt Stop hook: same through `check`; place comes at next block.
 
-Command guard: gate or review line counts only when the named id's subagent file holds that handback on that commit.
+Command guard: a gate or review line needs the named id's own handback, in its subagent file, on that commit.
 
 ## Escalation
 
-Escalate, don't coach: after two failed gate rounds, job and handbacks go to fresh delegate one tier up, same edit access (runner to analyst, analyst to reviewer, maker to builder). A deep job that fails twice comes back to you (Authority and stops, rule 4).
+Escalate, don't coach: two failed gate rounds send job and handbacks to a fresh delegate one tier up, same edit access (runner to analyst, analyst to reviewer, maker to builder). A deep job that fails twice comes back to you (Authority and stops, rule 4).
 
 ## UI check
 
-UI check (step 2 look): fresh `analyst` lists each miss vs that look + refs on the primary platform, with the capture. A miss of the picked look = HIGH.
+UI check (step 2 look): fresh `analyst` lists each miss vs that look + refs on the primary platform, with the capture. A miss of the picked look = HIGH. No lens agent: the step-8 reviewer does it, briefed with that look, refs and After captures.

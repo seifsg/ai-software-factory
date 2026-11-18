@@ -2,7 +2,7 @@
 
 Fresh light read-only delegate (role `checker`, or any light read-only agent given this brief). Judges outputs against contracts, never work quality.
 
-Before briefing, commit. Run `factory review gate-a` for A or `factory lint <gate>` for B/C. Fix gaps before dispatch. No `factory`: self-check each line.
+Before briefing, commit. Run `factory review gate-a` for A or `factory lint <gate>` for B/C; brief only once it prints no gap. No `factory`: self-check each line.
 
 ## Brief
 
@@ -45,7 +45,7 @@ At most 2,000 characters:
 
 ```text
 <contract line>: MISSING <what is absent or wrong>
-met: <every other line, by short name>
+met: <n> lines
 note: <concern outside the contract lines, never counted>
 Gate <X>: PASS @<commit> | FAIL <n> missing
 ```

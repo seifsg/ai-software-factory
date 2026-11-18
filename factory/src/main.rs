@@ -7,7 +7,8 @@ const USAGE: &str = "usage: factory <command>
   guard check [<session id>]  with an id: the Stop rules as one line; without: gate backing
   guard clear [<run folder>]  the owner's command after a halt
   guard begin                 record the new run's Ticket start
-  guard step <n|Tk> < block    in the run's folder
+  guard step <n|Tk> [< block]  in the run's folder; no stdin: the block this session just posted
+  guard wait <none|owner: <question>|jobs: <what> (max <n> min)>
   doctor [<plugin root>] [--fix]
   update-check [<plugin root>]
   lint <A|B|C> [--skills <dir>] [<run folder>]

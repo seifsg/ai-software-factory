@@ -5,14 +5,17 @@
 //!   check    a host with no command hook: stop's rules from the run file and Git, as one plain line
 //!   clear    the owner's command after a halt
 //!   step     writes a posted block under its heading, ticks it, then answers like check
+//!   wait     sets the run file's `Waiting:` line
 
 pub mod backing;
 pub mod before;
 pub mod flow;
+mod posted;
 pub mod reply;
 pub mod rules;
 mod session;
 pub mod step;
+mod wait;
 mod timeline;
 
 use crate::hook::{Input, Reply};
@@ -40,8 +43,9 @@ pub fn cli(args: &[&str]) -> u8 {
         ["clear", dir] => clear(Some(dir)),
         ["begin"] => timeline::begin(&cwd()),
         ["step", rest @ ..] => step::cli(rest),
+        ["wait", rest @ ..] => wait::cli(rest),
         _ => {
-            eprintln!("usage: factory guard stop|compact | begin | check [<session id>] | clear [<run folder>] | step <n|Tk> < block");
+            eprintln!("usage: factory guard stop|compact | begin | check [<session id>] | clear [<run folder>] | step <n|Tk> [< block] | wait <none|owner: ...|jobs: ... (max <n> min)>");
             2
         }
     }

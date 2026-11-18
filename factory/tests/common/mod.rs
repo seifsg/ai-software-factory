@@ -38,6 +38,7 @@ pub fn factory(dir: &Path, home: &Path, args: &[&str], input: &str) -> (i32, Str
         .env("USERPROFILE", home)
         .env("XDG_CACHE_HOME", home)
         .env_remove("PWD")
+        .env_remove("CLAUDE_CODE_SESSION_ID")
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
