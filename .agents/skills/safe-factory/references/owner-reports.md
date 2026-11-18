@@ -6,3 +6,4 @@ For progress updates and delegate handbacks, not direct answers. Run files and t
 2. Time and tokens: what host measures, labeled measured, estimated or unavailable. Never split a shared session total across tickets or invent telemetry.
 3. Visual change: current picture, after inspecting it. Blank, corrupt or wrong screen: recapture.
 4. `deep-review` worth inputs; no duplicate score formula. Missing: unavailable, with reason.
+5. Multi-item work, each wait and turn end: ticket link, then each checklist item in order, one line: its mark, then gain, who reports, where or cost.
