@@ -6,6 +6,10 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+### Changed
+
+- Release in minutes: `release.sh prepare` runs only the static checks (`check.sh --static`, seconds instead of the full suite), and the release branch builds the six binaries without rerunning the test matrix main already passed ([#350])
+
 ## [0.8.8] - 2026-11-18
 
 ### Changed
@@ -507,4 +511,5 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 [#344]: https://github.com/seifsg/ai-software-factory/pull/344
 [#347]: https://github.com/seifsg/ai-software-factory/pull/347
 [#348]: https://github.com/seifsg/ai-software-factory/pull/348
+[#350]: https://github.com/seifsg/ai-software-factory/pull/350
 [#333]: https://github.com/seifsg/ai-software-factory/pull/333

@@ -18,6 +18,8 @@ concurrency:
 jobs:
   factory:
     uses: ./.github/workflows/factory.yml
+    with:
+      tests: false # the release commit only bumps versions; main's CI tested its parent
 
   bundle:
     needs: factory
