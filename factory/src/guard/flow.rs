@@ -234,6 +234,10 @@ impl Ctx<'_> {
             && self.s.get("halt").is_empty()
             && unp != self.read_marker("unposted")
         {
+            // The step the run moved to still starts now: the report keeps its work apart.
+            if self.f.skipped.is_empty() {
+                super::timeline::mark(&self.g, &self.f.next, self.f.gate, self.now as u64);
+            }
             self.save();
             let _ = std::fs::write(self.g.join("unposted"), &unp);
             return Some(Reply::Block(reply::unposted(&self.rf, &unp)));
