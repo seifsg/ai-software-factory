@@ -37,9 +37,9 @@ pub fn cli(args: &[&str]) -> u8 {
         _ => crate::run::state::State::default(),
     };
     let run = Path::new(&dir).join(".factory/run.md");
-    let Some(block) = block_for(label, state.get("transcript"), &run) else {
+    let Some((block, piped)) = block_for(label, state.get("transcript"), &run) else {
         eprintln!(
-            "factory guard step: no block for {label} posted since the run file's last write: post it in chat (its own message, opening with its heading), or pass it on stdin: factory guard step {label} <<'EOF' (the block) EOF"
+            "factory guard step: no block for {label} posted since the run file's last write: post it in chat first (its own message, opening with its heading), then run `factory guard step {label}` again with no stdin. Only a host with no session transcript passes it on stdin."
         );
         return 2;
     };
@@ -79,6 +79,9 @@ pub fn cli(args: &[&str]) -> u8 {
         ..Default::default()
     };
     let r = super::flow::run(&input, super::flow::Mode::Step { changed: updated != text }, Path::new(&dir));
+    if piped && (hooked || super::posted::own_transcript().is_some()) {
+        print!("Block read from stdin: post it in chat now as its own message; from the next block on, post first and run with no stdin. ");
+    }
     print!("{}", super::reply::step_line(r.as_ref().map_or("", crate::hook::Reply::inner), hooked));
     0
 }
@@ -86,11 +89,12 @@ pub fn cli(args: &[&str]) -> u8 {
 /// The block: stdin when it carries one (never read from a terminal), else the newest post of it in this
 /// session's transcript (Claude Code's own session id first, then the hook's record), so it is typed once, in chat.
 /// A post counts only when made after the run file's last write: a block not posted again is never reused.
-fn block_for(label: &str, transcript: &str, run: &Path) -> Option<String> {
+/// The flag says the block came on stdin.
+fn block_for(label: &str, transcript: &str, run: &Path) -> Option<(String, bool)> {
     use std::io::IsTerminal;
     let mut block = String::new();
     if !std::io::stdin().is_terminal() && std::io::stdin().read_to_string(&mut block).is_ok() && !block.trim().is_empty() {
-        return Some(block);
+        return Some((block, true));
     }
     let heading = STEPS.iter().find(|(n, _, _)| *n == label).map(|(n, name, _)| format!("## {n} {name}")).unwrap_or_default();
     if heading.is_empty() && !label.starts_with('T') {
@@ -100,7 +104,11 @@ fn block_for(label: &str, transcript: &str, run: &Path) -> Option<String> {
     let since = &crate::receipt::utc_iso(secs)[..19];
     // A coordinator running as a subagent carries its parent's session id: the hook's record is tried next.
     let hooked = Some(PathBuf::from(transcript)).filter(|_| !transcript.is_empty());
-    [super::posted::own_transcript(), hooked].into_iter().flatten().find_map(|tp| super::posted::block(&tp, label, &heading, since))
+    [super::posted::own_transcript(), hooked]
+        .into_iter()
+        .flatten()
+        .find_map(|tp| super::posted::block(&tp, label, &heading, since))
+        .map(|b| (b, false))
 }
 
 /// The run file with the block written in: a step block replaces its section and ticks it; a `T<k>` line

@@ -18,11 +18,12 @@ pub fn todo_line(l: &str) -> bool {
         .is_some_and(|(n, rest)| !n.is_empty() && n.bytes().all(|b| b.is_ascii_digit()) && rest.starts_with("pre:"))
 }
 
-/// A proof id: letters, digits, `_` or `-`, opening with a letter or digit; never the `Id` header.
+/// A proof id: letters, digits, `_` or `-`, opening with a letter or digit and holding a digit (`P1`),
+/// so a note's first word (`- Capture manifest: ...`, the `Id` header) is never read as one.
 fn is_id(s: &str) -> bool {
     s.as_bytes().first().is_some_and(u8::is_ascii_alphanumeric)
         && s.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'-')
-        && !s.eq_ignore_ascii_case("id")
+        && s.bytes().any(|b| b.is_ascii_digit())
 }
 
 /// Proof-list ids under `**Proof list:**` in `## 3 Plan`: a table row's first cell or a bullet's first word.
@@ -38,7 +39,19 @@ pub fn ids(run: &str) -> Vec<String> {
 
 /// Step 3's proof rows, with their IDs and full text for evidence validation.
 pub(crate) fn rows(run: &str) -> Vec<(&str, &str)> {
-    let (mut plan, mut list, mut out) = (false, false, Vec::new());
+    entries(run).into_iter().filter(|(id, _)| is_id(id)).collect()
+}
+
+/// First words of Proof-list bullets and rows that hold no proof id: notes the Before check skips, which
+/// Gate A's preflight names so an id without a digit never drops out of the check unseen.
+pub(crate) fn notes(run: &str) -> Vec<&str> {
+    entries(run).into_iter().map(|(id, _)| id).filter(|id| !is_id(id)).collect()
+}
+
+/// Each bullet or table body row under step 3's `**Proof list:**`: its first word or cell, and the line.
+/// A table's header and separator rows are no entries.
+fn entries(run: &str) -> Vec<(&str, &str)> {
+    let (mut plan, mut list, mut table, mut out) = (false, false, false, Vec::new());
     for l in run.lines() {
         if l.starts_with("## ") {
             (plan, list) = (l.starts_with("## 3 Plan"), false);
@@ -46,12 +59,15 @@ pub(crate) fn rows(run: &str) -> Vec<(&str, &str)> {
             list = l.starts_with("**Proof list:**");
         } else if list {
             let t = l.trim_start();
-            let first = match t.strip_prefix('|') {
-                Some(row) => row.split('|').next(),
-                None => t.strip_prefix("- ").or_else(|| t.strip_prefix("* ")).and_then(|b| b.split_whitespace().next()),
+            let (first, header) = match t.strip_prefix('|') {
+                Some(row) => (row.split('|').next(), !std::mem::replace(&mut table, true)),
+                None => {
+                    table = false;
+                    (t.strip_prefix("- ").or_else(|| t.strip_prefix("* ")).and_then(|b| b.split_whitespace().next()), false)
+                }
             };
             let id = first.map_or("", |c| c.trim().trim_matches(['`', '*', ':']));
-            if is_id(id) {
+            if !header && !id.is_empty() && !id.bytes().all(|b| b == b'-') {
                 out.push((id, t));
             }
         }
@@ -64,7 +80,11 @@ pub(crate) fn rows(run: &str) -> Vec<(&str, &str)> {
 /// `.factory/guard/before`, keyed by the Befores and their times: work after a pass is always later than
 /// each Before, so the pass holds until a Before changes, and later todos skip Git.
 pub fn refusal(dir: &Path, run: &str, repo: Option<&Repo>, head: &str) -> Option<String> {
-    let files = crate::proof::files(&proof_dir(dir, run));
+    if repo.is_some_and(|r| from_scratch(dir, r, head)) {
+        return None;
+    }
+    let folder = proof_dir(dir, run);
+    let files = crate::proof::files(&folder);
     let (mut missing, mut saved) = (Vec::new(), Vec::new());
     for id in ids(run) {
         let want = format!("before-{id}");
@@ -93,7 +113,33 @@ pub fn refusal(dir: &Path, run: &str, repo: Option<&Repo>, head: &str) -> Option
     let began = start.filter(|_| !late.is_empty()).map_or_else(String::new, |(t, what)| {
         format!("{what} at {}", crate::receipt::utc_iso(u64::try_from(t / 1_000_000_000).unwrap_or(0)))
     });
-    Some(super::reply::before_first(&missing.join(", "), &late.join(", "), &began))
+    let shown = folder.strip_prefix(dir).unwrap_or(&folder).to_string_lossy().replace('\\', "/");
+    Some(super::reply::before_first(&shown, &missing.join(", "), &late.join(", "), &began))
+}
+
+/// A new project: the base branch's commit has no files (Git's empty tree, SHA-1 or SHA-256) and nothing
+/// on the branch, committed or not, predates this run's ticket (`.factory/guard/steps.jsonl`). Every
+/// surface is then new, so no Before can show anything. Older work (a branch stacked on another run, code
+/// left untracked) or no ticket record keeps the check.
+fn from_scratch(dir: &Path, repo: &Repo, head: &str) -> bool {
+    const EMPTY: [&str; 2] =
+        ["4b825dc642cb6eb9a060e54bf8d69288fbee4904", "6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321"];
+    let Some(base) = history::base(repo).filter(|b| repo.commit_tree(b).is_some_and(|t| EMPTY.contains(&t.as_str()))) else {
+        return false;
+    };
+    let Some(start) = ticket_start(dir) else { return false };
+    let iso = |secs: u128| crate::receipt::utc_iso(u64::try_from(secs).unwrap_or(u64::MAX));
+    let Some(own) = history::own_commits(repo, head, &base) else { return false };
+    let old_commit = own.first.is_some_and(|(t, _)| iso(u128::try_from(t).unwrap_or(0)) < start);
+    let old_file = history::worktree_first(repo, 0).is_some_and(|(t, _)| iso(t / 1_000_000_000) < start);
+    !old_commit && !old_file
+}
+
+/// When this run's ticket step began (`YYYY-MM-DDTHH:MM:SSZ`), from the guard's step record.
+fn ticket_start(dir: &Path) -> Option<String> {
+    let text = std::fs::read_to_string(dir.join(".factory/guard/steps.jsonl")).ok()?;
+    let row: serde_json::Value = serde_json::from_str(text.lines().next()?).ok()?;
+    (row["step"] == "0").then(|| row["at"].as_str().map(str::to_string))?
 }
 
 /// The run's own proof folder: `.factory/proof/<ticket>/` when the `# Run:` line's first word is a ticket
@@ -124,11 +170,17 @@ fn first_change(repo: Option<&Repo>, head: &str) -> Option<(u128, String)> {
 
 #[cfg(test)]
 mod tests {
-    use super::{ids, posted};
+    use super::{ids, notes, posted};
+
+    #[test]
+    fn notes_are_list_lines_with_no_id_never_headers_or_separators() {
+        let run = "## 3 Plan\n**Proof list:**\n| Id | What |\n|:---|---|\n| P1 | a |\n| home | b |\n- P3 cmd\n- Capture manifest: x\n**Test map:**\n- note\n";
+        assert_eq!(notes(run), ["home", "Capture"]);
+    }
 
     #[test]
     fn reads_ids_from_tables_and_bullets_of_the_plan_only() {
-        let run = "## 3 Plan\n**Proof list:**\n| Id | What |\n|---|---|\n| P1 | a |\n| `P2` | b |\n- P3 cmd\n**Test map:**\n| P9 | x |\n## 6 Verify\n**Proof list:**\n- P8 x\n";
+        let run = "## 3 Plan\n**Proof list:**\n| Id | What |\n|---|---|\n| P1 | a |\n| `P2` | b |\n- P3 cmd\n- Capture manifest: x\n**Test map:**\n| P9 | x |\n## 6 Verify\n**Proof list:**\n- P8 x\n";
         assert_eq!(ids(run), ["P1", "P2", "P3"]);
     }
 

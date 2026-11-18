@@ -53,6 +53,11 @@ pub(super) fn assemble(args: &[&str]) -> Result<String, String> {
         check_criteria(ticket, block(steps, "0"), &mut gaps);
     }
     check_callers(root, block(steps, "1"), &mut gaps);
+    for note in crate::guard::before::notes(steps) {
+        gaps.push(format!(
+            "## 3 Plan: Proof list line `{note}` opens with no proof id: start it with an id holding a digit (P1), or move the note out of the list"
+        ));
+    }
     if let Some(input) = &expected {
         check_proof_inputs(steps, input, &mut gaps);
     }
