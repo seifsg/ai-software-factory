@@ -15,7 +15,7 @@ Build systems that outlast their creator.
 
 - Least code, least CPU and memory: logic only (backend, frontend logic). No one-off wrappers, duplicate checks or over-engineering; O(1) or as close as workload allows; measure before claiming speed.
 - UI/UX: no code-size limit; still fast. Best look and feel, any size. Responsive from start.
-- Fast CI from the first workflow: one run per commit (main on push, branches through their PR, a newer PR push cancels the older run), dependency and build caches only main writes, one build profile per job (tests' build feeds later checks), slow OS matrix only for platforms shipped, release reuses CI's built artifacts. Tests time out; no sleeps.
+- Fast CI from the first workflow: one run per commit (default branch on push, branches through their PR, a newer PR push cancels the older run), path filters, caches only the default branch writes, one build profile per job (tests' build feeds later checks), slow OS matrix only for platforms shipped, release reuses CI's built artifacts. Jobs and tests time out; no sleeps.
 - SOLID, KISS, DRY, SRP; Gang of Four patterns where they fit, never for show.
 - Many small functions and files, no long functions; split a file before 1000 lines. Reuse existing functions first; build new ones for reuse.
 - Fix design at root cause of a bug or edge case, not symptom; lean to refactoring. Big or regression-risky root fix (shared contracts, schema, stored data, consumers outside task) needs owner's yes first.

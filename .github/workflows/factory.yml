@@ -21,9 +21,10 @@ on:
 permissions:
   contents: read
 
-# A newer push to a pull request supersedes its older run; main and release runs always finish.
+# A newer push to a pull request supersedes its older run; every main and release run has its own group, so
+# none is queued behind or dropped for another.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
@@ -40,6 +41,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       # Dependency and build cache for tests only (release builds below stay clean); only main writes it.
@@ -66,6 +68,7 @@ jobs:
           - { target: x86_64-unknown-linux-musl, os: ubuntu-latest, ext: '', native: true }
           - { target: aarch64-unknown-linux-musl, os: ubuntu-24.04-arm, ext: '', native: true }
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
     env:
       TARGET: ${{ matrix.target }}
       BIN: factory/target/${{ matrix.target }}/release/factory${{ matrix.ext }}
