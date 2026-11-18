@@ -34,6 +34,9 @@ fn merged_repo(name: &str) -> (PathBuf, Pr) {
     }
     std::fs::write(d.join(".factory/guard/state"), "g_ticks='1'\n").unwrap();
     std::fs::write(d.join(".factory/briefs/a.md"), "brief\n").unwrap();
+    std::fs::write(d.join(".factory/ticket.md"), "local ticket\n").unwrap();
+    std::fs::create_dir_all(d.join(".factory/releases")).unwrap();
+    std::fs::write(d.join(".factory/releases/v1.md"), "release\n").unwrap();
     std::fs::write(d.join(".factory/run.md"), RUN).unwrap();
     git(&d, &["worktree", "add", "-q", "--detach", ".factory/rv", &head], 10);
     git(&d, &["worktree", "add", "-q", "-b", "fix/x-review", ".factory/wt", &head], 10);
@@ -88,7 +91,9 @@ fn merged_run_is_cleaned_and_a_rerun_finds_nothing() {
         "{out}"
     );
     assert!(!d.join(".factory/rv").exists() && !d.join(".factory/wt").exists() && !d.join(".factory/briefs").exists());
-    assert!(d.join(".factory/run.md").is_file() && d.join(".factory/guard/state").is_file(), "the run's record stays for the guard");
+    for f in ["run.md", "guard/state", "ticket.md", "releases/v1.md"] {
+        assert!(d.join(".factory").join(f).is_file(), "the run's record stays: {f}");
+    }
     let run = std::fs::read_to_string(d.join(".factory/run.md")).unwrap();
     assert!(run.ends_with("Left running: preview :3000 (owner preview) (stop: false)\n"), "only the preview stays listed: {run}");
     assert!(!has_branch(&d, "fix/x") && !has_branch(&d, "fix/x-review") && has_branch(&d, "main"));
@@ -106,6 +111,12 @@ fn unmerged_open_or_foreign_is_refused_and_nothing_moves() {
     let longer = Pr { url: "https://github.com/o/r/pull/7".into(), ..pr.clone() };
     std::fs::write(d.join(".factory/run.md"), RUN.replace("pull/7\n", "pull/70\n")).unwrap();
     assert!(closeout(&d, &longer).unwrap_err().contains("not this run's PR"), "pull/7 is not pull/70");
+    let elsewhere = RUN.replace(
+        "https://github.com/o/r/pull/7\n\n## 8 Review \u{2714}\n",
+        "local only\n\n## 8 Review \u{2714}\nsee https://github.com/o/r/pull/7\n",
+    );
+    std::fs::write(d.join(".factory/run.md"), elsewhere).unwrap();
+    assert!(closeout(&d, &pr).unwrap_err().contains("not this run's PR"), "only the step 7 block names the run's PR");
     std::fs::write(d.join(".factory/run.md"), RUN).unwrap();
     std::fs::write(d.join(".factory/run.md"), RUN.replace("Status: closed", "Status: open")).unwrap();
     assert!(closeout(&d, &pr).unwrap_err().contains("still open"));

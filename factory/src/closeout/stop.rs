@@ -10,6 +10,8 @@ use std::process::Stdio;
 use std::time::{Duration, Instant};
 
 const TAG: &str = "(owner preview)";
+/// Marks an item whose stop failed: `<item> (stop failed: <cmd>)`, kept on the line, never run again.
+const FAILED: &str = "(stop failed:";
 const LIMIT: Duration = Duration::from_secs(30);
 
 /// The items of a `Left running:` value. Items end with `)`, so they split at `); `: a stop command may
@@ -64,23 +66,33 @@ fn exec(dir: &Path, cmd: &str) -> Result<(), String> {
 /// Stops each item of `left` (the `Left running:` value) but the owner's preview; returns its lines and the
 /// value the line keeps (`none` when nothing is left).
 pub fn stop(run_dir: &Path, left: &str, dry: bool, out: &mut Vec<Line>) -> String {
-    let mut keep = Vec::new();
+    let mut keep: Vec<String> = Vec::new();
     for item in items(left) {
         let (what, cmd) = split(item);
+        let mut kept = item.to_string();
         let why = if what.contains(TAG) {
             "the owner's preview, never stopped".to_string()
+        } else if what.contains(FAILED) {
+            "its stop failed before: check it by hand, never rerun".to_string()
         } else if cmd.is_empty() {
             "no stop command recorded: stop it by hand if it still runs".to_string()
         } else if dry {
             String::new()
         } else {
-            exec(run_dir, cmd).err().map(|e| format!("{e}: stop it by hand if it still runs")).unwrap_or_default()
+            // A failed stop is never run again: a rerun could hit a reused pid.
+            exec(run_dir, cmd)
+                .err()
+                .map(|e| {
+                    kept = format!("{what} {FAILED} {cmd})");
+                    format!("{e}: stop it by hand if it still runs")
+                })
+                .unwrap_or_default()
         };
         if why.is_empty() {
             out.push(Line::Removed(format!("running {what} (ran: {cmd})")));
         } else {
             out.push(Line::Kept(format!("running {what}"), why));
-            keep.push(item);
+            keep.push(kept);
         }
     }
     if keep.is_empty() { "none".into() } else { keep.join("; ") }
@@ -109,7 +121,10 @@ mod tests {
         assert!(matches!(&out[0], Line::Kept(_, w) if w.starts_with("the owner's preview")));
         assert!(matches!(&out[2], Line::Kept(_, w) if w.starts_with("no stop command")));
         let mut failed = Vec::new();
-        assert_eq!(stop(&dir, "gone (stop: exit 3)", false, &mut failed), "gone (stop: exit 3)");
+        assert_eq!(stop(&dir, "gone (stop: exit 3)", false, &mut failed), "gone (stop failed: exit 3)");
+        let mut again = Vec::new();
+        assert_eq!(stop(&dir, "gone (stop failed: exit 3)", false, &mut again), "gone (stop failed: exit 3)");
+        assert!(matches!(&again[0], Line::Kept(_, w) if w.starts_with("its stop failed before")), "never run twice");
         assert!(matches!(&failed[0], Line::Kept(_, w) if w.starts_with("stop exited 3")));
     }
 }

@@ -32,15 +32,21 @@ pub struct Header {
     pub ticket: String,
     pub open: bool,
     pub left: String,
-    /// The whole run file: its step 7 block names the run's PR.
-    pub text: String,
+    /// The `## 7 PR` block: it names the run's PR.
+    pub pr_block: String,
 }
 
 impl Header {
-    /// Reads `# Run: <link> · ...`, `Status:` and the last `Left running:` line of a run file's text.
+    /// Reads `# Run: <link> · ...`, the header's `Status:`, the `## 7 PR` block and the last `Left running:` line.
     pub fn parse(text: &str) -> Header {
-        let (mut h, mut seen) = (Header { text: text.to_string(), ..Header::default() }, false);
+        let (mut h, mut seen, mut in_pr) = (Header::default(), false, false);
         for l in text.lines() {
+            if l.starts_with("## ") {
+                in_pr = l.starts_with("## 7 PR");
+            } else if in_pr {
+                h.pr_block.push_str(l);
+                h.pr_block.push('\n');
+            }
             if let Some(r) = l.strip_prefix("# Run: ") {
                 h.ticket = r.split(" · ").next().unwrap_or("").trim().to_string();
             } else if let Some(s) = l.strip_prefix("Status: ").filter(|_| !seen) {
@@ -81,8 +87,8 @@ pub fn check(head: &Header, pr: &Pr) -> Result<(), String> {
     if head.open {
         return Err("the run is still open: finish or stop it first".into());
     }
-    if !ticket::cites(&head.text, &pr.url) {
-        return Err(format!("{} is not named in run.md: not this run's PR", pr.url));
+    if !ticket::cites(&head.pr_block, &pr.url) {
+        return Err(format!("{} is not in run.md's `## 7 PR` block: not this run's PR", pr.url));
     }
     Ok(())
 }
