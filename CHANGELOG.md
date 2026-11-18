@@ -6,11 +6,13 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+## [0.8.6] - 2026-11-18
+
 ### Fixed
 
-- Stop reading a proof-list note such as `- Capture manifest:` as a proof id, which refused every build line for a missing Before; ids now hold a digit, and the Gate A preflight names any Proof-list line that opens with no id
-- Need no Before files on a new project (the base commit has no files and no work predates the ticket), and name the proof folder read in the refusal
-- Tell the agent to post a step block in chat and run `factory guard step <n>` with no stdin, instead of offering a heredoc that copies every block twice; a block piped where a transcript exists is told to be posted
+- Stop reading a proof-list note such as `- Capture manifest:` as a proof id, which refused every build line for a missing Before; ids now hold a digit, and the Gate A preflight names any Proof-list line that opens with no id ([#342])
+- Need no Before files on a new project (the base commit has no files and no work predates the ticket), and name the proof folder read in the refusal ([#342])
+- Tell the agent to post a step block in chat and run `factory guard step <n>` with no stdin, instead of offering a heredoc that copies every block twice; a block piped where a transcript exists is told to be posted ([#342])
 
 ## [0.8.5] - 2026-11-18
 
@@ -417,7 +419,8 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 - Leaner runs (#137): product, feature and change runs each read 24% less method text, every gate message is shorter with the same facts, `scripts/token_report.py` measures both, and tests hold every method file and the gate's fixture messages to a byte budget and the product and change loads to 80% of their earlier size.
 - Self-update (#139): a clone install moves only to a release tag on `main` whose files match its manifest, records the previous revision, rolls back a failed install and shows a one-time notice naming both versions.
 
-[Unreleased]: https://github.com/seifsg/ai-software-factory/compare/v0.8.5...HEAD
+[Unreleased]: https://github.com/seifsg/ai-software-factory/compare/v0.8.6...HEAD
+[0.8.6]: https://github.com/seifsg/ai-software-factory/compare/v0.8.5...v0.8.6
 [0.8.5]: https://github.com/seifsg/ai-software-factory/compare/v0.8.4...v0.8.5
 [0.8.4]: https://github.com/seifsg/ai-software-factory/compare/v0.8.3...v0.8.4
 [0.8.3]: https://github.com/seifsg/ai-software-factory/compare/v0.8.2...v0.8.3
@@ -476,4 +479,5 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 [#322]: https://github.com/seifsg/ai-software-factory/pull/322
 [#329]: https://github.com/seifsg/ai-software-factory/pull/329
 [#340]: https://github.com/seifsg/ai-software-factory/pull/340
+[#342]: https://github.com/seifsg/ai-software-factory/pull/342
 [#333]: https://github.com/seifsg/ai-software-factory/pull/333
