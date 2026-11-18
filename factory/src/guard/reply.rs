@@ -50,10 +50,10 @@ pub fn cap(x: char, rounds: i64) -> String {
 }
 
 /// The step 5 block or a todo line came while a Before is missing or was saved after the work began.
-/// `began` names what started the work and when (`commit <sha> at <time>`), for late Befores.
-pub fn before_first(missing: &str, late: &str, began: &str) -> String {
-    let mut s = String::from(
-        "Before proof comes first: step 5 and its todo lines wait until every proof-list id has its `before-<id>` file under .factory/proof/<ticket>/ (a new surface's file says `did not exist`), saved before the first source change.",
+/// `folder` is the proof folder read; `began` names what started the work and when (`commit <sha> at <time>`).
+pub fn before_first(folder: &str, missing: &str, late: &str, began: &str) -> String {
+    let mut s = format!(
+        "Before proof comes first: step 5 and its todo lines wait until every proof-list id has its `before-<id>` file under {folder}/ (a new surface's file says `did not exist`), saved before the first source change.",
     );
     if !missing.is_empty() {
         s.push_str(&format!(" No Before file: {missing}."));

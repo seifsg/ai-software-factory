@@ -18,11 +18,12 @@ pub fn todo_line(l: &str) -> bool {
         .is_some_and(|(n, rest)| !n.is_empty() && n.bytes().all(|b| b.is_ascii_digit()) && rest.starts_with("pre:"))
 }
 
-/// A proof id: letters, digits, `_` or `-`, opening with a letter or digit; never the `Id` header.
+/// A proof id: letters, digits, `_` or `-`, opening with a letter or digit and holding a digit (`P1`),
+/// so a note's first word (`- Capture manifest: ...`, the `Id` header) is never read as one.
 fn is_id(s: &str) -> bool {
     s.as_bytes().first().is_some_and(u8::is_ascii_alphanumeric)
         && s.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'-')
-        && !s.eq_ignore_ascii_case("id")
+        && s.bytes().any(|b| b.is_ascii_digit())
 }
 
 /// Proof-list ids under `**Proof list:**` in `## 3 Plan`: a table row's first cell or a bullet's first word.
@@ -64,7 +65,11 @@ pub(crate) fn rows(run: &str) -> Vec<(&str, &str)> {
 /// `.factory/guard/before`, keyed by the Befores and their times: work after a pass is always later than
 /// each Before, so the pass holds until a Before changes, and later todos skip Git.
 pub fn refusal(dir: &Path, run: &str, repo: Option<&Repo>, head: &str) -> Option<String> {
-    let files = crate::proof::files(&proof_dir(dir, run));
+    if repo.is_some_and(from_scratch) {
+        return None;
+    }
+    let folder = proof_dir(dir, run);
+    let files = crate::proof::files(&folder);
     let (mut missing, mut saved) = (Vec::new(), Vec::new());
     for id in ids(run) {
         let want = format!("before-{id}");
@@ -93,7 +98,16 @@ pub fn refusal(dir: &Path, run: &str, repo: Option<&Repo>, head: &str) -> Option
     let began = start.filter(|_| !late.is_empty()).map_or_else(String::new, |(t, what)| {
         format!("{what} at {}", crate::receipt::utc_iso(u64::try_from(t / 1_000_000_000).unwrap_or(0)))
     });
-    Some(super::reply::before_first(&missing.join(", "), &late.join(", "), &began))
+    let shown = folder.strip_prefix(dir).unwrap_or(&folder).to_string_lossy().replace('\\', "/");
+    Some(super::reply::before_first(&shown, &missing.join(", "), &late.join(", "), &began))
+}
+
+/// The base branch's commit has no files (a new project): every surface is new, so no Before can show
+/// anything and none is needed. Git's empty tree, SHA-1 or SHA-256.
+fn from_scratch(repo: &Repo) -> bool {
+    const EMPTY: [&str; 2] =
+        ["4b825dc642cb6eb9a060e54bf8d69288fbee4904", "6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321"];
+    history::base(repo).and_then(|b| repo.commit_tree(&b)).is_some_and(|t| EMPTY.contains(&t.as_str()))
 }
 
 /// The run's own proof folder: `.factory/proof/<ticket>/` when the `# Run:` line's first word is a ticket
@@ -128,7 +142,7 @@ mod tests {
 
     #[test]
     fn reads_ids_from_tables_and_bullets_of_the_plan_only() {
-        let run = "## 3 Plan\n**Proof list:**\n| Id | What |\n|---|---|\n| P1 | a |\n| `P2` | b |\n- P3 cmd\n**Test map:**\n| P9 | x |\n## 6 Verify\n**Proof list:**\n- P8 x\n";
+        let run = "## 3 Plan\n**Proof list:**\n| Id | What |\n|---|---|\n| P1 | a |\n| `P2` | b |\n- P3 cmd\n- Capture manifest: x\n**Test map:**\n| P9 | x |\n## 6 Verify\n**Proof list:**\n- P8 x\n";
         assert_eq!(ids(run), ["P1", "P2", "P3"]);
     }
 

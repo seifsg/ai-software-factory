@@ -6,6 +6,12 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+### Fixed
+
+- Stop reading a proof-list note such as `- Capture manifest:` as a proof id, which refused every build line for a missing Before; ids now hold a digit
+- Need no Before files when the base commit has no files (a new project), and name the proof folder read in the refusal
+- Tell the agent to post a step block in chat and run `factory guard step <n>` with no stdin, instead of offering a heredoc that copies every block twice
+
 ## [0.8.5] - 2026-11-18
 
 ### Changed

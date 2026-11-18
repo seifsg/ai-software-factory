@@ -14,6 +14,11 @@ const RUN: &str = "# Run: local fixture · Fast · change\nStatus: open\nNext: 3
 
 /// The binary in `dir`, empty stdin, `session` as Claude Code's session id and `dir/cfg` as its config folder.
 fn factory(dir: &Path, session: &str, args: &[&str]) -> (i32, String) {
+    factory_in(dir, session, args, b"")
+}
+
+/// The same, with `input` on stdin.
+fn factory_in(dir: &Path, session: &str, args: &[&str], input: &[u8]) -> (i32, String) {
     let mut child = Command::new(env!("CARGO_BIN_EXE_factory"))
         .args(args)
         .current_dir(dir)
@@ -28,7 +33,7 @@ fn factory(dir: &Path, session: &str, args: &[&str]) -> (i32, String) {
         .stderr(Stdio::piped())
         .spawn()
         .expect("run factory");
-    child.stdin.take().unwrap().write_all(b"").unwrap();
+    child.stdin.take().unwrap().write_all(input).unwrap();
     let out = child.wait_with_output().unwrap();
     (out.status.code().unwrap_or(-1), format!("{}{}", String::from_utf8_lossy(&out.stdout), String::from_utf8_lossy(&out.stderr)))
 }
@@ -54,7 +59,7 @@ fn step_takes_a_fresh_post_only_and_wait_sets_the_line() {
     fs::write(&tp, post("2000-01-01T00:00:00.000Z", "## 3 Plan\\nstale")).unwrap();
     let (code, out) = factory(&dir, "s1", &["guard", "step", "3"]);
     assert_eq!(code, 2, "{out}");
-    assert!(out.contains("posted since the run file's last write"), "{out}");
+    assert!(out.contains("posted since the run file's last write") && out.contains("with no stdin") && !out.contains("<<'EOF'"), "{out}");
     assert_eq!(fs::read_to_string(f.join("run.md")).unwrap(), RUN);
 
     // A fresh post is written, ticked and moves Next; another session's id finds nothing.
@@ -72,6 +77,23 @@ fn step_takes_a_fresh_post_only_and_wait_sets_the_line() {
     for bad in [&["guard", "wait", "later"][..], &["guard", "wait", "jobs:", "x", "(max", "0", "min)"], &["guard", "wait", "owner:", "a\nb"]] {
         assert_eq!(factory(&dir, "s1", bad).0, 2, "{bad:?}");
     }
+    let _ = fs::remove_dir_all(dir);
+}
+
+#[test]
+fn a_piped_block_is_told_to_post_only_where_a_transcript_exists() {
+    let dir = scratch("guard-piped");
+    let f = dir.join(".factory");
+    fs::create_dir_all(&f).unwrap();
+    fs::create_dir_all(dir.join("cfg/projects/p")).unwrap();
+    fs::write(dir.join("cfg/projects/p/s1.jsonl"), "").unwrap();
+    const HINT: &str = "Block read from stdin: post it in chat now";
+    fs::write(f.join("run.md"), RUN).unwrap();
+    let (code, out) = factory_in(&dir, "s1", &["guard", "step", "3"], b"## 3 Plan\n**Files:** `a.html` (new)\n");
+    assert!(code == 0 && out.starts_with(HINT), "{out}");
+    fs::write(f.join("run.md"), RUN).unwrap();
+    let (code, out) = factory_in(&dir, "none", &["guard", "step", "3"], b"## 3 Plan\n**Files:** `a.html` (new)\n");
+    assert!(code == 0 && !out.contains(HINT), "no transcript: stdin is the way: {out}");
     let _ = fs::remove_dir_all(dir);
 }
 

@@ -127,7 +127,7 @@ fn another_tickets_before_never_stands_in() {
     std::fs::write(&other, "did not exist\n").unwrap();
     set_time(&other, at(9));
     let (code, out) = factory(&d, &["guard", "step", "T1"], "T1 pre: a do: b post: c");
-    assert!(code == 1 && out.contains("No Before file: P2."), "this run's folder is .factory/proof/1/: {out}");
+    assert!(code == 1 && out.contains("No Before file: P2.") && out.contains("file under .factory/proof/1/ "), "this run's folder is .factory/proof/1/: {out}");
     let _ = std::fs::remove_dir_all(&d);
 }
 
@@ -140,6 +140,33 @@ fn an_untracked_file_older_than_the_branch_is_not_its_work() {
     set_time(&d.join("old.txt"), at(7)); // before the 08:00 base commit the branch left from
     let (code, out) = factory(&d, &["guard", "step", "T1"], "T1 pre: a do: b post: c");
     assert_eq!(code, 0, "{out}");
+    let _ = std::fs::remove_dir_all(&d);
+}
+
+#[test]
+fn a_note_bullet_in_the_proof_list_is_no_proof_id() {
+    let d = repo("note-bullet");
+    std::fs::write(d.join(".factory/run.md"), RUN.replace("| P2 | b |\n", "| P2 | b |\n- Capture manifest: `after-<id>.png`\n")).unwrap();
+    before(&d, "P1", 9);
+    before(&d, "P2", 9);
+    let (code, out) = factory(&d, &["guard", "step", "T1"], "T1 pre: a do: b post: c");
+    assert_eq!(code, 0, "{out}");
+    let _ = std::fs::remove_dir_all(&d);
+}
+
+#[test]
+fn a_new_project_needs_no_before() {
+    let d = common::scratch("before-from-scratch");
+    git(&d, &["init", "-q", "-b", "main"], 8);
+    git(&d, &["commit", "-q", "--allow-empty", "-m", "init"], 8);
+    git(&d, &["switch", "-q", "-c", "work"], 8);
+    std::fs::write(d.join("index.html"), "x\n").unwrap();
+    git(&d, &["add", "index.html"], 10);
+    git(&d, &["commit", "-q", "-m", "page"], 10);
+    std::fs::create_dir_all(d.join(".factory")).unwrap();
+    std::fs::write(d.join(".factory/run.md"), RUN).unwrap();
+    let (code, out) = factory(&d, &["guard", "step", "T1"], "T1 pre: a do: b post: c");
+    assert_eq!(code, 0, "an empty base has nothing to show Before: {out}");
     let _ = std::fs::remove_dir_all(&d);
 }
 
