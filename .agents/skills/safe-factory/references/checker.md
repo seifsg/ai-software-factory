@@ -2,7 +2,7 @@
 
 Fresh light read-only delegate (role `checker`, or any light read-only agent given this brief). Judges outputs against contracts, never work quality.
 
-Before briefing, commit. Run `factory review gate-a` for A or `factory lint <gate>` for B/C; brief only once it prints no gap. No `factory`: self-check each line.
+Before briefing, commit. Run `factory review gate-a` for A or `factory lint <gate>` for B/C; brief only once it prints no gap. No `factory`: self-check each line. Wait for each checker in the call (about a minute), never behind a turn end.
 
 ## Brief
 
@@ -52,4 +52,4 @@ Gate <X>: PASS @<commit> | FAIL <n> missing
 
 ## After a FAIL
 
-Fix each missing item at its step, then brief a fresh checker for the same gate with round 1's handback. Each FAIL is a round, capped like [review loops](run-cases.md#review-loops).
+Fix every missing item at its step and reread each MISSING line against its fix: a partial fix costs a whole round. Then send round 1's handback to the same checker (resumed), else to a fresh one. Each FAIL is a round, capped like [review loops](run-cases.md#review-loops).
