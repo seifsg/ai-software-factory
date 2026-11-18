@@ -6,6 +6,10 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+### Changed
+
+- Write step 8's `Left running:` line as `<item> (stop: <sh cmd>); ...` with your preview tagged `(owner preview)`, so the close-out can stop the rest and never your preview ([#358])
+
 ### Added
 
 - Add `factory closeout <pr>`: after you merge and say so, it checks the ticket records the merge, stops what the run left running except your preview, and removes the run's worktrees, branches and temp files ([#358])

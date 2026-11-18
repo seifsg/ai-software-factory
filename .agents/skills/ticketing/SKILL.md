@@ -33,8 +33,8 @@ Open tickets are the backlog, kept current in every mode, autonomously unless ow
 | Cancelled | Dropped or deprecated by owner. Closed | Owner decision and source |
 
 1. Intake first, at session start and after merges: bounded, never blocking the run. List closed PRs once (merged and unmerged).
-   - Merged, any base: each open ticket it names with a closing keyword closes with merged PR link and merge commit, only while at Dev done or Ready for QA (board status or label), ticking its epic checklist item. Moved or reopened by a person after merge (board or label): keeps its status. Any other status: stays open, on stale list. Merge was owner's acceptance; recording it decides nothing new.
-   - Owner OK after merge: in run folder, `factory closeout <pr>`, fixing its lines until `closeout: done`.
+   - Merged, any base: each open ticket it names with a closing keyword closes with merged PR link and merge commit, only while at Dev done or Ready for QA (board status or label), ticking its epic checklist item. Moved or reopened by a person after merge: keeps its status. Any other status: stays open, on stale list. Merge was owner's acceptance; recording it decides nothing new.
+   - Merged run PR: ask owner; on OK, in run folder, `factory closeout <pr>`, fixing its lines until `closeout: done`.
    - Closed unmerged, naming an open ticket with a closing keyword: [unmerged PRs](references/unmerged-pr.md).
    - Close each open epic that meets Done (step 5).
    - In-app feedback owner shares or agent can read goes to its existing ticket, else epic's follow-ups ticket.

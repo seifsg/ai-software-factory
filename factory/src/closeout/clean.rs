@@ -168,14 +168,6 @@ fn temp(factory: &Path, handled: &[String], dry: bool, out: &mut Vec<Line>) {
     }
 }
 
-/// Err unless the PR's head commit is in this checkout: a PR this run made has its head here.
-pub fn owns(run_dir: &Path, pr: &Pr) -> Result<(), String> {
-    let repo = Repo::discover(run_dir).ok_or("not a Git checkout")?;
-    run(&repo, &["cat-file", "-e", &format!("{}^{{commit}}", pr.head_oid)])
-        .map(drop)
-        .map_err(|_| format!("{} head {} is not in this checkout: not this run's PR", pr.url, pr.head_oid))
-}
-
 /// Removes what the merged run created in `run_dir`.
 pub fn clean(run_dir: &Path, pr: &Pr, dry: bool, out: &mut Vec<Line>) -> Result<(), String> {
     let repo = Repo::discover(run_dir).ok_or("not a Git checkout")?;

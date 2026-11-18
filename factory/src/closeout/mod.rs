@@ -32,12 +32,14 @@ pub struct Header {
     pub ticket: String,
     pub open: bool,
     pub left: String,
+    /// The whole run file: its step 7 block names the run's PR.
+    pub text: String,
 }
 
 impl Header {
     /// Reads `# Run: <link> · ...`, `Status:` and the last `Left running:` line of a run file's text.
     pub fn parse(text: &str) -> Header {
-        let (mut h, mut seen) = (Header::default(), false);
+        let (mut h, mut seen) = (Header { text: text.to_string(), ..Header::default() }, false);
         for l in text.lines() {
             if let Some(r) = l.strip_prefix("# Run: ") {
                 h.ticket = r.split(" · ").next().unwrap_or("").trim().to_string();
@@ -54,7 +56,7 @@ impl Header {
 /// The close-out of a merged PR in `run_dir`; `issue` is the fetched ticket when it is a GitHub issue.
 /// Returns the report and whether everything is done. Refuses (Err) before any effect: see [`check`].
 pub fn run(run_dir: &Path, head: &Header, pr: &Pr, issue: Option<&Issue>, dry: bool) -> Result<(String, bool), String> {
-    check(run_dir, head, pr)?;
+    check(head, pr)?;
     let t = match issue {
         Some(i) => match ticket::missing(pr, i) {
             m if m.is_empty() => Ticket::Ok(i.url.clone()),
@@ -73,13 +75,16 @@ pub fn run(run_dir: &Path, head: &Header, pr: &Pr, issue: Option<&Issue>, dry: b
 }
 
 /// Err unless the close-out may act: the PR is merged, the run is closed or stopped (an open run owns its
-/// state, and its header may be a newer run's), and the PR's head is in this checkout (this run made it).
-pub fn check(run_dir: &Path, head: &Header, pr: &Pr) -> Result<(), String> {
+/// state, and its header may be a newer run's), and the run file names the PR (step 7 records it).
+pub fn check(head: &Header, pr: &Pr) -> Result<(), String> {
     pr.require_merged()?;
     if head.open {
         return Err("the run is still open: finish or stop it first".into());
     }
-    clean::owns(run_dir, pr)
+    if !head.text.contains(&pr.url) {
+        return Err(format!("{} is not named in run.md: not this run's PR", pr.url));
+    }
+    Ok(())
 }
 
 /// Rewrites the run file's last `Left running:` line to `value`: what still runs after the stops.
@@ -88,7 +93,8 @@ fn set_left(run_dir: &Path, value: &str) -> Result<(), String> {
     let text = std::fs::read_to_string(&p).map_err(|e| format!("run.md: {e}"))?;
     let i = text.rfind("\nLeft running:").ok_or("run.md lost its Left running: line")? + 1;
     let end = text[i..].find('\n').map_or(text.len(), |n| i + n);
-    let new = format!("{}Left running: {value}{}", &text[..i], &text[end..]);
+    let cr = if text[..end].ends_with('\r') { "\r" } else { "" };
+    let new = format!("{}Left running: {value}{cr}{}", &text[..i], &text[end..]);
     crate::paths::write_atomic(&p, new.as_bytes()).map_err(|e| format!("run.md: {e}"))
 }
 
@@ -142,7 +148,7 @@ fn fetch_and_run(cwd: &Path, pr_arg: Option<&str>, dry: bool) -> Result<(String,
     let mut args = vec!["pr", "view"];
     args.extend(pr_arg);
     let pr = Pr::parse(&facts::gh(run_dir, &args, facts::PR_FIELDS)?)?;
-    check(run_dir, &head, &pr)?;
+    check(&head, &pr)?;
     let issue = match ticket::github_issue(&head.ticket) {
         Some(u) => Some(Issue::parse(&facts::gh(run_dir, &["issue", "view", u], facts::ISSUE_FIELDS)?)?),
         None => None,

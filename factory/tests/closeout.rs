@@ -10,7 +10,7 @@ use common::git;
 use factory::closeout::{self, Header, facts::Pr};
 use std::path::{Path, PathBuf};
 
-const RUN: &str = "# Run: local: .factory/ticket.md \u{b7} Fast \u{b7} change\nStatus: closed\nNext: none (closed)\nWaiting: none\n\n## 8 Review \u{2714}\nLeft running: api :8080 (stop: true); preview :3000 (owner preview) (stop: false)\n";
+const RUN: &str = "# Run: local: .factory/ticket.md \u{b7} Fast \u{b7} change\nStatus: closed\nNext: none (closed)\nWaiting: none\n\n## 7 PR \u{2714}\nhttps://github.com/o/r/pull/7\n\n## 8 Review \u{2714}\nLeft running: api :8080 (stop: true); preview :3000 (owner preview) (stop: false)\n";
 
 /// A repository on `main` whose PR branch `fix/x` was squash-merged; the run made two worktrees at the PR
 /// head under `.factory/` (one detached, one on `fix/x-review`), guard state and scratch briefs.
@@ -101,7 +101,7 @@ fn unmerged_open_or_foreign_is_refused_and_nothing_moves() {
     let (d, pr) = merged_repo("co-refused");
     let unmerged = Pr { merged: false, ..pr.clone() };
     assert!(closeout(&d, &unmerged).unwrap_err().contains("not merged"));
-    let foreign = Pr { head_oid: "1".repeat(40), ..pr.clone() };
+    let foreign = Pr { url: "https://github.com/o/r/pull/8".into(), ..pr.clone() };
     assert!(closeout(&d, &foreign).unwrap_err().contains("not this run's PR"));
     std::fs::write(d.join(".factory/run.md"), RUN.replace("Status: closed", "Status: open")).unwrap();
     assert!(closeout(&d, &pr).unwrap_err().contains("still open"));
@@ -147,4 +147,17 @@ fn branches_the_run_did_not_make_stay() {
     let from_main = Pr { head_ref: "main".into(), ..pr };
     let (out, _) = closeout(&d, &from_main).unwrap();
     assert!(has_branch(&d, "main") && !out.contains("removed: branch main"), "{out}");
+}
+
+#[test]
+fn dry_run_changes_nothing_and_crlf_run_files_keep_their_endings() {
+    let (d, pr) = merged_repo("co-dry");
+    let head = Header::parse(&std::fs::read_to_string(d.join(".factory/run.md")).unwrap());
+    let (out, done) = closeout::run(&d, &head, &pr, None, true).unwrap();
+    assert!(done && out.contains("would remove: worktree") && out.ends_with("closeout: dry run, would be done\n"), "{out}");
+    assert!(d.join(".factory/rv").exists() && d.join(".factory/briefs/a.md").exists() && has_branch(&d, "fix/x"));
+    std::fs::write(d.join(".factory/run.md"), RUN.replace('\n', "\r\n")).unwrap();
+    closeout(&d, &pr).unwrap();
+    let run = std::fs::read_to_string(d.join(".factory/run.md")).unwrap();
+    assert!(run.ends_with("Left running: preview :3000 (owner preview) (stop: false)\r\n"), "{run:?}");
 }
