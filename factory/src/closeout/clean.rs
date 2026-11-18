@@ -172,6 +172,9 @@ fn temp(factory: &Path, handled: &[String], dry: bool, out: &mut Vec<Line>) {
 pub fn clean(run_dir: &Path, pr: &Pr, dry: bool, out: &mut Vec<Line>) -> Result<(), String> {
     let repo = Repo::discover(run_dir).ok_or("not a Git checkout")?;
     let factory = run_dir.join(".factory");
+    if factory.symlink_metadata().is_ok_and(|m| m.file_type().is_symlink()) {
+        return Err(".factory is a link: the close-out acts only on a real folder".into());
+    }
     let (mut names, handled) = worktrees(&repo, pr, &canon(&factory), dry, out)?;
     let removed: Vec<String> =
         out.iter().filter_map(|l| if let Line::Removed(x) = l { x.strip_prefix("worktree ").map(String::from) } else { None }).collect();

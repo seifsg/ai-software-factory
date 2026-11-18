@@ -17,7 +17,7 @@ pub fn github_issue(link: &str) -> Option<&str> {
 pub fn missing(pr: &Pr, issue: &Issue) -> Vec<&'static str> {
     let native = pr.closes.iter().any(|u| u == &issue.url) || issue.closed_by.iter().any(|u| u == &pr.url);
     let same_repo = issue.url.rsplit_once("/issues/").map(|(r, _)| r) == pr.url.rsplit_once("/pull/").map(|(r, _)| r);
-    let pr_link = native || issue.text.contains(&pr.url) || (same_repo && cites(&issue.text, pr.number));
+    let pr_link = native || cites(&issue.text, &pr.url) || (same_repo && cites(&issue.text, &format!("#{}", pr.number)));
     let short = &pr.merge_oid[..pr.merge_oid.len().min(7)];
     let commit = native || (!short.is_empty() && issue.text.contains(short));
     [(!(issue.closed || issue.reopened), "closed"), (!pr_link, "PR link"), (!commit, "merge commit")]
@@ -27,9 +27,8 @@ pub fn missing(pr: &Pr, issue: &Issue) -> Vec<&'static str> {
         .collect()
 }
 
-/// True when `text` cites `#<n>` as a whole number (`#34` is not `#340`).
-fn cites(text: &str, n: u64) -> bool {
-    let tag = format!("#{n}");
+/// True when `text` cites `tag` (`#34`, a PR URL) whole: `#34` is not `#340`, `pull/7` is not `pull/70`.
+pub(super) fn cites(text: &str, tag: &str) -> bool {
     text.match_indices(&tag).any(|(i, _)| !text[i + tag.len()..].starts_with(|c: char| c.is_ascii_digit()))
 }
 
@@ -66,6 +65,7 @@ mod tests {
     fn by_hand_record_needs_link_and_commit() {
         assert!(missing(&pr(), &issue(true, "Done: #34 merged as 1234567")).is_empty());
         assert_eq!(missing(&pr(), &issue(true, "see #340, commit 1234567")), ["PR link"]);
+        assert_eq!(missing(&pr(), &issue(true, "https://github.com/o/r/pull/340 1234567")), ["PR link"]);
         assert_eq!(missing(&pr(), &issue(true, "https://github.com/o/r/pull/34")), ["merge commit"]);
         assert_eq!(missing(&pr(), &issue(false, "")), ["closed", "PR link", "merge commit"]);
         let reopened = Issue { reopened: true, ..issue(false, "#34 merged as 1234567") };

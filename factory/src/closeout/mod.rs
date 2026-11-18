@@ -81,7 +81,7 @@ pub fn check(head: &Header, pr: &Pr) -> Result<(), String> {
     if head.open {
         return Err("the run is still open: finish or stop it first".into());
     }
-    if !head.text.contains(&pr.url) {
+    if !ticket::cites(&head.text, &pr.url) {
         return Err(format!("{} is not named in run.md: not this run's PR", pr.url));
     }
     Ok(())
@@ -102,7 +102,7 @@ fn set_left(run_dir: &Path, value: &str) -> Result<(), String> {
 fn report(t: &Ticket, lines: &[Line], dry: bool) -> (String, bool) {
     let mut s = match t {
         Ticket::Ok(u) => format!("ticket: ok ({u})\n"),
-        Ticket::Needs(u, m) => format!("ticket: needs {} ({u})\n", m.join(", ")),
+        Ticket::Needs(u, m) => format!("ticket: needs {} ({u}): record it per `ticketing`, then rerun\n", m.join(", ")),
         Ticket::ByHand(l) => format!("ticket: by hand ({l}): check closed + PR link + merge commit per `ticketing`\n"),
     };
     let verb = if dry { "would remove" } else { "removed" };

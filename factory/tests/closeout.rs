@@ -103,6 +103,10 @@ fn unmerged_open_or_foreign_is_refused_and_nothing_moves() {
     assert!(closeout(&d, &unmerged).unwrap_err().contains("not merged"));
     let foreign = Pr { url: "https://github.com/o/r/pull/8".into(), ..pr.clone() };
     assert!(closeout(&d, &foreign).unwrap_err().contains("not this run's PR"));
+    let longer = Pr { url: "https://github.com/o/r/pull/7".into(), ..pr.clone() };
+    std::fs::write(d.join(".factory/run.md"), RUN.replace("pull/7\n", "pull/70\n")).unwrap();
+    assert!(closeout(&d, &longer).unwrap_err().contains("not this run's PR"), "pull/7 is not pull/70");
+    std::fs::write(d.join(".factory/run.md"), RUN).unwrap();
     std::fs::write(d.join(".factory/run.md"), RUN.replace("Status: closed", "Status: open")).unwrap();
     assert!(closeout(&d, &pr).unwrap_err().contains("still open"));
     assert!(d.join(".factory/rv").exists() && d.join(".factory/briefs/a.md").exists() && has_branch(&d, "fix/x"));
