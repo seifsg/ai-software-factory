@@ -6,18 +6,18 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
-### Added
-
-- `factory guard wait none|owner: <question>|jobs: <what> (max <n> min)` sets the run file's `Waiting:` line in one write; methods no longer edit it with `sed`.
-
 ### Changed
 
-- `factory guard step <n>` with no stdin takes the block this session just posted in chat (only a post made after the run file's last write), so a coordinator types each block once (a measured small change typed every block twice: about 24k output tokens, 200 s).
-- `factory guard step` names every open problem in one reply (steps not ticked, each long line with its start, the open gate) instead of one per call.
-- Gate checkers start only once the coded preflight prints no gap, and run in the foreground when nothing independent is left; a checker handback counts its met lines instead of listing them.
-- Multi-item work shows a progress list at each wait and turn end: the ticket link, then every checklist item in order, one line each (done and its gain, running and who reports, covered elsewhere, dropped and its cost).
-- With nothing independent left, a coordinator waits for a job inside the call where the host can, instead of ending the turn and waking on its report.
-- A `change` with no lens agent prints the deep-review contract instead of loading the skill, and its step-8 reviewer does the UI check from the After captures, with no separate analyst.
+- Let `factory guard step <n>` take the block this session just posted in chat when no stdin comes, so each block is typed once ([#340])
+- Make `factory guard step` name every open problem in one reply: steps not ticked, long lines with their start, and the open gate or loop cap ([#340])
+- Brief gate checkers only once the coded preflight finds no gap, and count met lines in their handbacks instead of listing them ([#340])
+- Wait for a job inside the call when nothing independent is left, instead of ending the turn and waking on its report ([#340])
+- Skip the deep-review load and the separate UI analyst when no lens agent runs; the step-8 reviewer does the UI check ([#340])
+
+### Added
+
+- Add `factory guard wait none|owner: <question>|jobs: <what> (max <n> min)` to set the `Waiting:` line in one write ([#340])
+- Add a progress list at each wait and turn end of multi-item work: the ticket link, then one marked line per checklist item ([#340])
 
 ## [0.8.4] - 2026-11-18
 
@@ -466,4 +466,5 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 [#320]: https://github.com/seifsg/ai-software-factory/pull/320
 [#322]: https://github.com/seifsg/ai-software-factory/pull/322
 [#329]: https://github.com/seifsg/ai-software-factory/pull/329
+[#340]: https://github.com/seifsg/ai-software-factory/pull/340
 [#333]: https://github.com/seifsg/ai-software-factory/pull/333
