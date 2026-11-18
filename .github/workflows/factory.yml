@@ -41,7 +41,7 @@ defaults:
 
 jobs:
   test:
-    if: ${{ inputs.tests != false }}
+    if: ${{ format('{0}', inputs.tests) != 'false' }} # null outside workflow_call loosely equals false
     strategy:
       fail-fast: false
       matrix:

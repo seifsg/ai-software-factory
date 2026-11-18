@@ -22,11 +22,11 @@ fn begin_with(start: &Path, initialize: impl FnOnce(&Path) -> Result<(), String>
             return Err("begin requires a new open run at Step 0".into());
         }
         initialize(Path::new(&root))?;
-        // A new run counts chat posts from its own start: an older run's step stamp and stdin retries go.
+        // A new run counts chat posts from its own start: an older run's step stamp and written list go.
         if let Ok(rd) = fs::read_dir(dir.join("guard")) {
             for p in rd.flatten().map(|e| e.path()) {
                 let name = p.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
-                if name == "stepped" || name.starts_with("piped-") {
+                if name == "stepped" || name == "written" {
                     let _ = fs::remove_file(p);
                 }
             }

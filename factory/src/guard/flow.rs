@@ -83,7 +83,9 @@ pub fn run(input: &Input, mode: Mode, start: &Path) -> Option<Reply> {
     let text = std::fs::read(&run).unwrap_or_default();
     let rfile = RunFile::parse(&text);
     let sessions: Vec<String> = s.get("sessions").split(' ').filter(|q| !q.is_empty()).map(String::from).collect();
-    let ev = evidence::collect(&tp, &sessions, &rfile.wanted_ids(), &g);
+    let mut ev = evidence::collect(&tp, &sessions, &rfile.wanted_ids(), &g);
+    // A block `guard step` wrote is its one copy (the owner reads it on the run page): never asked for in chat.
+    ev.sent.extend(std::fs::read_to_string(g.join("written")).unwrap_or_default().lines().map(String::from));
     let posted = locate::posted_label(&input.last_assistant_message);
     let repo = Repo::discover(&dir);
     let Info { head, mut up, remote } = repo.as_ref().map(Repo::info).unwrap_or_default();

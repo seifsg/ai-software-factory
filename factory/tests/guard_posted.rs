@@ -74,7 +74,7 @@ fn step_takes_a_fresh_post_only_and_wait_sets_the_line() {
     fs::write(&tp, post("2000-01-01T00:00:00.000Z", "## 3 Plan\\nstale")).unwrap();
     let (code, out) = factory(&dir, "s1", &["guard", "step", "3"]);
     assert_eq!(code, 2, "{out}");
-    assert!(out.contains("no `## 3 Plan` block in this session's chat") && out.contains("with no stdin") && !out.contains("<<'EOF'"), "{out}");
+    assert!(out.contains("no `## 3 Plan` block: pipe it in full, its one copy") && out.contains("<<'EOF'"), "{out}");
     assert_eq!(fs::read_to_string(f.join("run.md")).unwrap(), RUN);
 
     // A fresh post is written, ticked and moves Next; another session's id finds nothing.
@@ -96,25 +96,19 @@ fn step_takes_a_fresh_post_only_and_wait_sets_the_line() {
 }
 
 #[test]
-fn a_piped_block_is_told_to_post_only_where_a_transcript_exists() {
+fn a_piped_block_is_its_one_copy_and_never_asked_for_in_chat() {
     let dir = scratch("guard-piped");
     let f = dir.join(".factory");
     fs::create_dir_all(&f).unwrap();
     fs::create_dir_all(dir.join("cfg/projects/p")).unwrap();
     fs::write(dir.join("cfg/projects/p/s1.jsonl"), "").unwrap();
-    const HINT: &str = "Block read from stdin: post it in chat now";
     fs::write(f.join("run.md"), RUN).unwrap();
-    // No readable chat: stdin is the way, with no hint.
-    let (code, out) = factory_in(&dir, "none", &["guard", "step", "3"], b"## 3 Plan\n**Files:** `a.html` (new)\n");
-    assert!(code == 0 && !out.contains(HINT), "{out}");
-    // A readable chat with no post: the first stdin try is refused and writes nothing; a second is taken.
-    let before = fs::read_to_string(f.join("run.md")).unwrap();
+    // A readable chat with no post: stdin is taken at once, and the step joins the written list.
+    let (code, out) = factory_in(&dir, "s1", &["guard", "step", "3"], b"## 3 Plan\n**Files:** `a.html` (new)\n");
+    assert!(code == 0 && !out.contains("not posted in chat"), "{out}");
     let (code, out) = factory_in(&dir, "s1", &["guard", "step", "4"], b"## 4 Before\nsaved\n");
-    assert!(code == 2 && out.contains("refused, nothing written") && out.contains("`## 4 Before`"), "{out}");
-    assert_eq!(fs::read_to_string(f.join("run.md")).unwrap(), before);
-    let (code, out) = factory_in(&dir, "s1", &["guard", "step", "4"], b"## 4 Before\nsaved\n");
-    assert!(code == 0 && !out.contains(HINT), "the retry is for a chat the guard cannot read: no third copy asked: {out}");
-    assert!(!f.join("guard/piped-4").exists(), "a written step spends its retry");
+    assert!(code == 0 && !out.contains("not posted in chat"), "{out}");
+    assert_eq!(fs::read_to_string(f.join("guard/written")).unwrap_or_default(), "3\n4\n");
 
     // A post made after the last step counts even when the run file was written since (a `guard wait`).
     let now = std::time::SystemTime::now();
@@ -132,7 +126,44 @@ fn a_piped_block_is_told_to_post_only_where_a_transcript_exists() {
     let (code, out) = factory(&dir, "s1", &["guard", "step", "6"]);
     assert!(code == 0 && fs::read_to_string(f.join("run.md")).unwrap().contains("## 6 Verify ✔\nchecked"), "{out}");
     assert_eq!(factory(&dir, "s1", &["guard", "step", "9"]).0, 2, "no such step");
-    assert!(!f.join("guard/piped-9").exists());
+    let _ = fs::remove_dir_all(dir);
+}
+
+#[test]
+fn only_a_hand_ticked_step_is_asked_for_in_chat() {
+    let dir = scratch("guard-written-nag");
+    let f = dir.join(".factory");
+    fs::create_dir_all(&f).unwrap();
+    let tp = dir.join("cfg/projects/p/s1.jsonl");
+    fs::create_dir_all(tp.parent().unwrap()).unwrap();
+    // A Claude Code transcript (it carries isSidechain) with no block posted in it.
+    fs::write(&tp, "{\"isSidechain\":false,\"type\":\"user\",\"message\":{\"role\":\"user\",\"content\":\"go\"}}\n").unwrap();
+    fs::write(f.join("run.md"), "# Run: local fixture · Fast · change\nStatus: open\nNext: 1 Analyze · analyze-start\nWaiting: none\n\n## 0 Ticket ✔\nby hand\n## 1 Analyze\n").unwrap();
+    // The Stop hook's record of this session and its transcript, as it keeps it.
+    fs::create_dir_all(f.join("guard")).unwrap();
+    let state = format!("g_ticks='1'\ng_session='s1'\ng_sessions='s1'\ng_transcript='{}'\n", common::json_path(&tp));
+    fs::write(f.join("guard/state"), state).unwrap();
+    let (code, out) = factory_in(&dir, "s1", &["guard", "step", "1"], b"## 1 Analyze\na\n");
+    assert_eq!(code, 0, "{out}");
+    assert!(out.contains("not posted in chat: 0.") && !out.contains("as your last message"), "the hand-ticked step 0 only: {out}");
+    // A later step still asks only for step 0, never for step 1, which `guard step` wrote.
+    fs::remove_file(f.join("guard/unposted")).ok();
+    let (code, out) = factory_in(&dir, "s1", &["guard", "step", "2"], b"## 2 Recommend\nb\n");
+    assert!(code == 0 && out.contains("not posted in chat: 0.") && !out.contains("0,1"), "{out}");
+    let _ = fs::remove_dir_all(dir);
+}
+
+#[test]
+fn step_replies_say_to_pipe_and_name_the_ui_check_delegate() {
+    let dir = scratch("guard-step-words");
+    let f = dir.join(".factory");
+    fs::create_dir_all(&f).unwrap();
+    let ticked = "# Run: local fixture · Fast · change\nStatus: open\nNext: 4 Before · how-to-make-a-pr\nWaiting: none\n\n## 0 Ticket ✔\n## 1 Analyze ✔\n## 2 Recommend ✔\n## 2b Challenge ✔\n## 3 Plan ✔\nGate A: WAIVED by owner (\"fixture\") @aaaaaaa\n## 4 Before\n";
+    fs::write(f.join("run.md"), ticked).unwrap();
+    let (_, four) = factory_in(&dir, "none", &["guard", "step", "4"], b"## 4 Before\nsaved\n");
+    assert!(four.contains("pipe its log line to `factory guard step T<n>`") && !four.contains("last message"), "{four}");
+    let (_, five) = factory_in(&dir, "none", &["guard", "step", "5"], b"## 5 Build\nT1 pre: a do: b post: c \xE2\x9C\x94\n");
+    assert!(five.contains("UI-check delegate") && !five.contains("manual round"), "{five}");
     let _ = fs::remove_dir_all(dir);
 }
 

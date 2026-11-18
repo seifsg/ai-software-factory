@@ -59,4 +59,4 @@ Escalate, don't coach: two failed gate rounds send job and handbacks to a fresh 
 
 ## UI check
 
-UI check (step 2 look): fresh `analyst` lists each miss vs that look + refs on the primary platform, with the capture. A miss of the picked look = HIGH. No lens agent: the step-8 reviewer does it, briefed with that look, refs and After captures.
+UI check (step 2 look): step 6's UI-check delegate (no subagents: you) also lists each miss vs that look + refs on the primary platform, with the capture. A miss of the picked look = HIGH.
