@@ -92,9 +92,6 @@ fn prebound_native_sessions_still_relay_at_the_night_phase_boundary() {
             if id == "3" {
                 block.push_str("Gate A: PASS (checker fixture_gate_a) @aaaaaaa\n");
             }
-            // The bound chat holds no post of it: the first stdin try is refused, the second taken.
-            let (code, output) = common::factory(&run, &cache, &["guard", "step", id], &block);
-            assert!(code == 2 && output.contains("refused, nothing written"), "{output}");
             let (code, output) = common::factory(&run, &cache, &["guard", "step", id], &block);
             assert_eq!(code, 0, "{output}");
             last = output;

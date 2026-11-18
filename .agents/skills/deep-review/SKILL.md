@@ -187,7 +187,7 @@ Disposition decides the gate: `blocking`, `before-exposure` or `accepted-deferra
 
 ## Output contract
 
-In a factory run this is step 6, Verify: fresh agents run this review on the verify candidate while step 8's reviewer (`how-to-review-a-pr`) reviews it too; the builder runs the manual round and one merged fix round. The block `## 6 Verify` holds:
+In a factory run this is step 6, Verify: fresh agents run this review on the verify candidate while step 8's reviewer (`how-to-review-a-pr`) reviews it too; a UI-check delegate runs the manual round; the builder runs one merged fix round. The block `## 6 Verify` holds:
 
 - [ ] Every requested journey used through real controls, with observed results
 - [ ] compliance, change-guard when existing code, contracts or data changed, and each other lens run, each named with its verdict and a findings table only where it has findings, e.g. `**compliance:** no findings · PASS`

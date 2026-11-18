@@ -43,24 +43,12 @@ pub fn cli(args: &[&str]) -> u8 {
         eprintln!("factory guard step: {label} is no step (0 to 8, 2b) or todo (T<k>)");
         return 2;
     }
-    let block = match block_for(label, state.get("transcript"), &guard, &run) {
-        Source::Posted(b) | Source::Piped(b) => b,
-        Source::Missing => {
-            eprintln!(
-                "factory guard step: no {} block in this session's chat since the last step was written. {} A coordinator whose chat the guard cannot read passes it on stdin, twice.",
-                heading_of(label),
-                post_how(label)
-            );
-            return 2;
-        }
-        Source::Unposted => {
-            eprintln!(
-                "factory guard step: refused, nothing written: the block came on stdin, but this session's chat has no {} block and the owner reads blocks in chat, so it would be typed twice. {} Only a coordinator whose chat the guard cannot read sends it on stdin again.",
-                heading_of(label),
-                post_how(label)
-            );
-            return 2;
-        }
+    let Some(block) = block_for(label, state.get("transcript"), &guard, &run) else {
+        eprintln!(
+            "factory guard step: no {} block: pipe it in full, its one copy: factory guard step {label} <<'EOF' (the block) EOF. The owner reads it on the run page; chat gets one progress line.",
+            heading_of(label)
+        );
+        return 2;
     };
     // Never write from a failed read: an unreadable or non-UTF-8 run file stays as it is.
     let text = match std::fs::read(&run).map(String::from_utf8) {
@@ -103,61 +91,31 @@ pub fn cli(args: &[&str]) -> u8 {
     0
 }
 
-/// Where a step's block came from, or why none was taken.
-enum Source {
-    /// Posted in this session's chat: typed once, seen by the owner.
-    Posted(String),
-    /// On stdin: a host with no readable chat, or a second try after `Unposted`.
-    Piped(String),
-    /// Neither posted nor piped.
-    Missing,
-    /// Piped where the chat is readable but holds no post of it: refused once per step.
-    Unposted,
-}
-
 /// The block's heading as the owner sees it: `## 3 Plan`, or a todo line's `T1 pre:`.
 fn heading_of(label: &str) -> String {
     STEPS.iter().find(|(n, _, _)| *n == label).map_or_else(|| format!("`{label} pre:`"), |(n, name, _)| format!("`## {n} {name}`"))
 }
 
-/// The one way to hand a block over where the chat is readable.
-fn post_how(label: &str) -> String {
-    format!(
-        "Write the full block as plain text in your reply (not in thinking, a file or a tool call), then call `factory guard step {label}` with no stdin in that same reply."
-    )
-}
-
-/// The newest post of the block in this session's chat (Claude Code's own session id first, then the hook's
-/// record) made since the last step was written (`.factory/guard/stepped`, else the run file's last write), so
-/// a block is typed once, in chat, and an old post is never reused. Stdin counts only where no chat is readable,
-/// or on a second try for the same step: a coordinator running as a subagent posts where the guard cannot read.
-fn block_for(label: &str, transcript: &str, guard: &Path, run: &Path) -> Source {
+/// The block: stdin, its one copy (never read from a terminal). A host that posts blocks in chat instead runs
+/// with no stdin: the newest post in this session's chat or a subagent coordinator's, made since the last step was
+/// written (`.factory/guard/stepped`, else the run file's last write), so an old post is never reused.
+fn block_for(label: &str, transcript: &str, guard: &Path, run: &Path) -> Option<String> {
     use std::io::IsTerminal;
     let mut piped = String::new();
     let _ = (!std::io::stdin().is_terminal()).then(|| std::io::stdin().read_to_string(&mut piped));
+    if !piped.trim().is_empty() {
+        return Some(piped);
+    }
     let heading = STEPS.iter().find(|(n, _, _)| *n == label).map(|(n, name, _)| format!("## {n} {name}")).unwrap_or_default();
     let stamp = std::fs::metadata(guard.join("stepped")).or_else(|_| std::fs::metadata(run));
     let since = stamp.and_then(|m| m.modified()).ok().and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok());
-    let since = since.map(|d| crate::receipt::utc_iso(d.as_secs())[..19].to_string());
+    let since = since.map(|d| crate::receipt::utc_iso(d.as_secs())[..19].to_string())?;
     let hooked = Some(PathBuf::from(transcript)).filter(|_| !transcript.is_empty());
     let mut chats: Vec<PathBuf> = [super::posted::own_transcript(), hooked].into_iter().flatten().collect();
     // A coordinator running as a Claude Code subagent posts in its own file beside the session's.
     let subs: Vec<PathBuf> = chats.iter().flat_map(|tp| subagent_chats(tp)).collect();
     chats.extend(subs);
-    let posted = since.as_deref().filter(|_| !heading.is_empty() || label.starts_with('T'));
-    if let Some(b) = posted.and_then(|s| chats.iter().find_map(|tp| super::posted::block(tp, label, &heading, s))) {
-        return Source::Posted(b);
-    }
-    if piped.trim().is_empty() {
-        return Source::Missing;
-    }
-    let retry = guard.join(format!("piped-{label}"));
-    // No guard folder yet: no marker can be kept (an empty one reads as lost guard state), so stdin counts.
-    if chats.is_empty() || retry.is_file() || !guard.is_dir() {
-        return Source::Piped(piped);
-    }
-    let _ = std::fs::write(&retry, "");
-    Source::Unposted
+    chats.iter().find_map(|tp| super::posted::block(tp, label, &heading, &since))
 }
 
 /// Subagent transcripts of a Claude Code session: `<session>/subagents/*.jsonl` beside `<session>.jsonl`.
@@ -168,10 +126,12 @@ fn subagent_chats(tp: &Path) -> Vec<PathBuf> {
         .unwrap_or_default()
 }
 
-/// Marks a written step once the guard folder exists: later posts count from now, and its stdin retry is spent.
+/// Marks a written step once the guard folder exists: later posts count from now, and the step is on the list
+/// of blocks `guard step` wrote (`written`), which the guard never asks for in chat.
 fn stamp(guard: &Path, label: &str) {
+    use std::io::Write;
     let _ = std::fs::write(guard.join("stepped"), label);
-    let _ = std::fs::remove_file(guard.join(format!("piped-{label}")));
+    let _ = std::fs::OpenOptions::new().append(true).open(guard.join("written")).or_else(|_| std::fs::File::create(guard.join("written"))).and_then(|mut f| writeln!(f, "{label}"));
 }
 
 /// The run file with the block written in: a step block replaces its section and ticks it; a `T<k>` line
