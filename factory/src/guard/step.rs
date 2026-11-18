@@ -38,12 +38,16 @@ pub fn cli(args: &[&str]) -> u8 {
     };
     let run = Path::new(&dir).join(".factory/run.md");
     let guard = Path::new(&dir).join(".factory/guard");
-    let (block, piped) = match block_for(label, state.get("transcript"), &guard, &run) {
-        Source::Posted(b) => (b, false),
-        Source::Piped(b) => (b, true),
+    let todo = label.strip_prefix('T').is_some_and(|k| !k.is_empty() && k.bytes().all(|b| b.is_ascii_digit()));
+    if !todo && !STEPS.iter().any(|(n, _, _)| n == label) {
+        eprintln!("factory guard step: {label} is no step (0 to 8, 2b) or todo (T<k>)");
+        return 2;
+    }
+    let block = match block_for(label, state.get("transcript"), &guard, &run) {
+        Source::Posted(b) | Source::Piped(b) => b,
         Source::Missing => {
             eprintln!(
-                "factory guard step: no {} block in this session's chat since the last step was written. {}",
+                "factory guard step: no {} block in this session's chat since the last step was written. {} A coordinator whose chat the guard cannot read passes it on stdin, twice.",
                 heading_of(label),
                 post_how(label)
             );
@@ -95,9 +99,6 @@ pub fn cli(args: &[&str]) -> u8 {
     };
     let r = super::flow::run(&input, super::flow::Mode::Step { changed: updated != text }, Path::new(&dir));
     stamp(&guard, label);
-    if piped && (hooked || super::posted::own_transcript().is_some()) {
-        print!("Block read from stdin: post it in chat now as its own message; from the next block on, post first and run with no stdin. ");
-    }
     print!("{}", super::reply::step_line(r.as_ref().map_or("", crate::hook::Reply::inner), hooked));
     0
 }
@@ -139,7 +140,10 @@ fn block_for(label: &str, transcript: &str, guard: &Path, run: &Path) -> Source 
     let since = stamp.and_then(|m| m.modified()).ok().and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok());
     let since = since.map(|d| crate::receipt::utc_iso(d.as_secs())[..19].to_string());
     let hooked = Some(PathBuf::from(transcript)).filter(|_| !transcript.is_empty());
-    let chats: Vec<PathBuf> = [super::posted::own_transcript(), hooked].into_iter().flatten().collect();
+    let mut chats: Vec<PathBuf> = [super::posted::own_transcript(), hooked].into_iter().flatten().collect();
+    // A coordinator running as a Claude Code subagent posts in its own file beside the session's.
+    let subs: Vec<PathBuf> = chats.iter().flat_map(|tp| subagent_chats(tp)).collect();
+    chats.extend(subs);
     let posted = since.as_deref().filter(|_| !heading.is_empty() || label.starts_with('T'));
     if let Some(b) = posted.and_then(|s| chats.iter().find_map(|tp| super::posted::block(tp, label, &heading, s))) {
         return Source::Posted(b);
@@ -154,6 +158,14 @@ fn block_for(label: &str, transcript: &str, guard: &Path, run: &Path) -> Source 
     }
     let _ = std::fs::write(&retry, "");
     Source::Unposted
+}
+
+/// Subagent transcripts of a Claude Code session: `<session>/subagents/*.jsonl` beside `<session>.jsonl`.
+fn subagent_chats(tp: &Path) -> Vec<PathBuf> {
+    let dir = tp.with_extension("").join("subagents");
+    std::fs::read_dir(dir)
+        .map(|rd| rd.flatten().map(|e| e.path()).filter(|p| p.extension().is_some_and(|x| x == "jsonl")).collect())
+        .unwrap_or_default()
 }
 
 /// Marks a written step once the guard folder exists: later posts count from now, and its stdin retry is spent.
