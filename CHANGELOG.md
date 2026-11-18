@@ -8,7 +8,7 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ### Added
 
-- Add a fast-CI work rule: one run per commit, caches only main writes, path filters, one build profile per job, the OS matrix only where the product ships, release from CI artifacts, jobs and tests that time out with no sleeps ([#344])
+- Add a fast-CI work rule: one run per commit, path filters, caches only the default branch writes, one build profile per job, the OS matrix only where the product ships, release from CI artifacts, jobs and tests that time out with no sleeps ([#344])
 
 ### Changed
 
