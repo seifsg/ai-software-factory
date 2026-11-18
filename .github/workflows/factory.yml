@@ -17,6 +17,11 @@ on:
   pull_request:
     paths: *paths
   workflow_call:
+    inputs:
+      tests:
+        description: Run the test matrix (a release commit changes versions only; its parent passed on main)
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -36,6 +41,7 @@ defaults:
 
 jobs:
   test:
+    if: ${{ inputs.tests != false }}
     strategy:
       fail-fast: false
       matrix:

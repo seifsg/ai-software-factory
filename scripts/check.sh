@@ -1,6 +1,7 @@
 #!/bin/sh
 # Repository checks (AGENTS.md "Keep it working"), one command from the repo root: sh scripts/check.sh [--changed <base>] [<ref>]
 # Static checks read the blobs of <ref>; dynamic checks (update check, doctor, run guard, parity) run the working-tree scripts.
+# --static: the static checks alone (a release commit, whose tests ran on main's CI).
 # --changed <base>: a diff from <base>...<ref> plus uncommitted and untracked changes that touches only docs (*.md, docs/) runs static checks only.
 # A full pass on a clean tree (<ref> is the working tree) writes .factory/receipts/<tree>-full.txt; the same working tree, <ref> tree and runtime reuse it (FACTORY_CHECK_FRESH=1 runs anyway).
 # sh scripts/check.sh bytes [<ref>] prints "<all methods> <read set>" for a PR's before and after line.
@@ -23,6 +24,7 @@ bytes() {
 good() { git rev-parse -q --verify "$1^{commit}" >/dev/null || { echo "FAIL: unknown ref $1"; exit 1; }; }
 blob() { MSYS_NO_PATHCONV=1 git show "$ref:$1"; }  # <ref>:<path> as typed under Git Bash
 [ "$1" = bytes ] && { good "${2:-HEAD}"; bytes "${2:-HEAD}"; exit; }
+only=; [ "$1" = --static ] && { only=static; shift; }
 base=; [ "$1" = --changed ] && { base=$2; [ -n "$base" ] || { echo "FAIL: --changed needs a base ref"; exit 1; }; shift 2; }
 ref=${1:-HEAD}
 good "$ref"; [ -z "$base" ] || good "$base"
@@ -269,7 +271,7 @@ if [ -n "$t" ] && [ "$FACTORY_CHECK_FRESH" != 1 ] && [ -f "$r" ] &&
 fi
 
 # --changed: a diff of docs only (*.md anywhere but factory/, whose files are test inputs; docs/) needs the static checks alone.
-suite=full
+suite=${only:-full}
 if [ -n "$base" ]; then
   d=$(git diff --name-only "$base...$ref") || { echo "FAIL: no merge base for $base...$ref"; exit 1; }
   { printf '%s\n' "$d"; git status --porcelain -uall | awk '{ s = substr($0, 4); n = index(s, " -> "); if (n) { print substr(s, 1, n - 1); s = substr(s, n + 4) } print s }'; } |
