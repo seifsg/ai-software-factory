@@ -4,7 +4,7 @@
 //!   compact  after compaction or a resume: re-injects the run's place
 //!   check    a host with no command hook: stop's rules from the run file and Git, as one plain line
 //!   clear    the owner's command after a halt
-//!   step     writes a posted block under its heading, ticks it, then answers like check
+//!   step     writes a piped (or posted) block under its heading, ticks it, then answers like check
 //!   wait     sets the run file's `Waiting:` line
 
 pub mod backing;

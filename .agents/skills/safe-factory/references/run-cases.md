@@ -59,4 +59,4 @@ Escalate, don't coach: two failed gate rounds send job and handbacks to a fresh 
 
 ## UI check
 
-UI check (step 2 look): step 6's UI-check delegate also lists each miss vs that look + refs on the primary platform, with the capture. A miss of the picked look = HIGH.
+UI check (step 2 look): step 6's UI-check delegate (no subagents: you) also lists each miss vs that look + refs on the primary platform, with the capture. A miss of the picked look = HIGH.

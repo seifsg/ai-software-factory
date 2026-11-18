@@ -190,7 +190,13 @@ pub fn check_line(reply: &str, has_run_here: bool) -> String {
 /// The line `guard step` prints: the check line, minus the stop-check advice when a command Stop hook
 /// already guards the run (the method loads `stop-check` only where none does).
 pub fn step_line(reply: &str, hooked: bool) -> String {
-    let line = check_line(reply, true);
+    // A coded run pipes each block once and goes on in the same turn; the step-6 round runs in its delegate.
+    let line = check_line(reply, true)
+        .replace(
+            "post its full block as your last message, then end your turn.",
+            "pipe its full block to `factory guard step` (its one copy), post one progress line, then go on.",
+        )
+        .replace("make the final manual round with After captures", "brief the UI-check delegate for the After captures");
     if !hooked {
         return line;
     }

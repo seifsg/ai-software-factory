@@ -130,6 +130,30 @@ fn a_piped_block_is_its_one_copy_and_never_asked_for_in_chat() {
 }
 
 #[test]
+fn only_a_hand_ticked_step_is_asked_for_in_chat() {
+    let dir = scratch("guard-written-nag");
+    let f = dir.join(".factory");
+    fs::create_dir_all(&f).unwrap();
+    let tp = dir.join("cfg/projects/p/s1.jsonl");
+    fs::create_dir_all(tp.parent().unwrap()).unwrap();
+    // A Claude Code transcript (it carries isSidechain) with no block posted in it.
+    fs::write(&tp, "{\"isSidechain\":false,\"type\":\"user\",\"message\":{\"role\":\"user\",\"content\":\"go\"}}\n").unwrap();
+    fs::write(f.join("run.md"), "# Run: local fixture · Fast · change\nStatus: open\nNext: 1 Analyze · analyze-start\nWaiting: none\n\n## 0 Ticket ✔\nby hand\n## 1 Analyze\n").unwrap();
+    // The Stop hook's record of this session and its transcript, as it keeps it.
+    fs::create_dir_all(f.join("guard")).unwrap();
+    let state = format!("g_ticks='1'\ng_session='s1'\ng_sessions='s1'\ng_transcript='{}'\n", common::json_path(&tp));
+    fs::write(f.join("guard/state"), state).unwrap();
+    let (code, out) = factory_in(&dir, "s1", &["guard", "step", "1"], b"## 1 Analyze\na\n");
+    assert_eq!(code, 0, "{out}");
+    assert!(out.contains("not posted in chat: 0.") && !out.contains("as your last message"), "the hand-ticked step 0 only: {out}");
+    // A later step still asks only for step 0, never for step 1, which `guard step` wrote.
+    fs::remove_file(f.join("guard/unposted")).ok();
+    let (code, out) = factory_in(&dir, "s1", &["guard", "step", "2"], b"## 2 Recommend\nb\n");
+    assert!(code == 0 && out.contains("not posted in chat: 0.") && !out.contains("0,1"), "{out}");
+    let _ = fs::remove_dir_all(dir);
+}
+
+#[test]
 fn a_step_reply_names_the_long_line_and_the_gate_at_once() {
     let dir = scratch("guard-all-problems");
     let f = dir.join(".factory");

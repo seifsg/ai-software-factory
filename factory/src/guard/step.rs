@@ -1,4 +1,4 @@
-//! `guard step <n|Tk>`: the coordinator posts a block, then this writes it into the run file (no hand
+//! `guard step <n|Tk>`: the coordinator pipes a block (its one copy), then this writes it into the run file (no hand
 //! edits of block text), ticks its heading, sets `Next:`, and answers with the Stop rules as one plain line,
 //! so the run goes on in the same turn. `T<k>` lines go under `## 5 Build` without ticking it.
 
@@ -131,7 +131,7 @@ fn subagent_chats(tp: &Path) -> Vec<PathBuf> {
 fn stamp(guard: &Path, label: &str) {
     use std::io::Write;
     let _ = std::fs::write(guard.join("stepped"), label);
-    let _ = std::fs::OpenOptions::new().append(true).open(guard.join("written")).or_else(|_| std::fs::File::create(guard.join("written"))).and_then(|mut f| writeln!(f, "{label}"));
+    let _ = std::fs::OpenOptions::new().create(true).append(true).open(guard.join("written")).and_then(|mut f| writeln!(f, "{label}"));
 }
 
 /// The run file with the block written in: a step block replaces its section and ticks it; a `T<k>` line

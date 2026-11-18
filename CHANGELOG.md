@@ -8,11 +8,8 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ### Changed
 
-- Pipe each step block once to `factory guard step <n>`: its one copy, read on the live run page, with one progress line in chat. The guard takes stdin at once and never asks for a block it wrote to be posted in chat; trial 5 typed each block up to three times ([#351])
-- Run step 6's UI check and After captures in one fresh UI-check delegate briefed with criteria, proof list, look and app path, instead of the main session; trial 5 spent 120 browser calls and $4.13 there ([#351])
-
-### Changed
-
+- Pipe each step block once to `factory guard step <n>`: its one copy, read on the run report (Pro) or run.md in the host preview, with one progress line in chat. The guard takes stdin at once, never asks for a block it wrote to be posted in chat, and its step replies say to pipe; trial 5 typed each block up to three times ([#351])
+- Run step 6's UI check and After captures in one fresh UI-check delegate (`maker`, writing only the proof folder) briefed with criteria, proof list, look, the app's URL and the After rule, instead of the main session; trial 5 spent 120 browser calls and $4.13 there ([#351])
 - Release in minutes: `release.sh prepare` runs only the static checks (`check.sh --static`, seconds instead of the full suite), and the release branch builds the six binaries without rerunning the test matrix main already passed ([#350])
 
 ## [0.8.8] - 2026-11-18
