@@ -2,7 +2,7 @@
 
 What installs and active runs must do for each release, newest first. What changed: [CHANGELOG.md](CHANGELOG.md).
 
-## Unreleased
+## 0.8.3
 
 - Begin new Codex runs with `factory guard begin` in the run worktree. Resolve the packaged native launcher when PATH has none. The command selects the current thread before an inherited parent session and verifies its rollout under `CODEX_HOME` or `~/.codex`.
 - An unsafe, missing or ambiguous native identity now reports an initialization error. Correct the session environment or transcript location before advancing the run.
