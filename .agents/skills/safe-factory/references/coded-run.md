@@ -1,6 +1,6 @@
 # Coded run
 
-Where `factory guard step <n>` runs, it applies the Stop guard's rules inline, so steps chain in one turn. "Command not found", or it says the Stop hook still runs `run-guard.sh`: SKILL.md's live guard, unchanged.
+Use native `factory` from PATH or its package. Use the live guard only when both fail or Stop runs `run-guard.sh`.
 
 After creating a new run header, run `factory guard begin` before Ticket work.
 
