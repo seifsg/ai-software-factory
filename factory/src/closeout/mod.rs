@@ -62,7 +62,7 @@ impl Header {
 /// The close-out of a merged PR in `run_dir`; `issue` is the fetched ticket when it is a GitHub issue.
 /// Returns the report and whether everything is done. Refuses (Err) before any effect: see [`check`].
 pub fn run(run_dir: &Path, head: &Header, pr: &Pr, issue: Option<&Issue>, dry: bool) -> Result<(String, bool), String> {
-    check(head, pr)?;
+    check(run_dir, head, pr)?;
     let t = match issue {
         Some(i) => match ticket::missing(pr, i) {
             m if m.is_empty() => Ticket::Ok(i.url.clone()),
@@ -81,9 +81,13 @@ pub fn run(run_dir: &Path, head: &Header, pr: &Pr, issue: Option<&Issue>, dry: b
 }
 
 /// Err unless the close-out may act: the PR is merged, the run is closed or stopped (an open run owns its
-/// state, and its header may be a newer run's), and the run file names the PR (step 7 records it).
-pub fn check(head: &Header, pr: &Pr) -> Result<(), String> {
+/// state, and its header may be a newer run's), the run file names the PR (step 7 records it), and `.factory`
+/// is a real folder, not a link to somewhere else.
+pub fn check(run_dir: &Path, head: &Header, pr: &Pr) -> Result<(), String> {
     pr.require_merged()?;
+    if run_dir.join(".factory").symlink_metadata().is_ok_and(|m| m.file_type().is_symlink()) {
+        return Err(".factory is a link: the close-out acts only on a real folder".into());
+    }
     if head.open {
         return Err("the run is still open: finish or stop it first".into());
     }
@@ -154,7 +158,7 @@ fn fetch_and_run(cwd: &Path, pr_arg: Option<&str>, dry: bool) -> Result<(String,
     let mut args = vec!["pr", "view"];
     args.extend(pr_arg);
     let pr = Pr::parse(&facts::gh(run_dir, &args, facts::PR_FIELDS)?)?;
-    check(&head, &pr)?;
+    check(run_dir, &head, &pr)?;
     let issue = match ticket::github_issue(&head.ticket) {
         Some(u) => Some(Issue::parse(&facts::gh(run_dir, &["issue", "view", u], facts::ISSUE_FIELDS)?)?),
         None => None,

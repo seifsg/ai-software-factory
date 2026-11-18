@@ -176,3 +176,26 @@ fn dry_run_changes_nothing_and_crlf_run_files_keep_their_endings() {
     let run = std::fs::read_to_string(d.join(".factory/run.md")).unwrap();
     assert!(run.ends_with("Left running: preview :3000 (owner preview) (stop: false)\r\n"), "{run:?}");
 }
+
+#[test]
+fn a_linked_factory_folder_is_refused_before_any_stop() {
+    let (d, pr) = merged_repo("co-link");
+    let real = d.with_extension("real");
+    let _ = std::fs::remove_dir_all(&real);
+    std::fs::rename(d.join(".factory"), &real).unwrap();
+    #[cfg(windows)]
+    let linked = std::process::Command::new("cmd")
+        .args(["/C", "mklink", "/J"])
+        .arg(d.join(".factory"))
+        .arg(&real)
+        .output()
+        .unwrap()
+        .status
+        .success();
+    #[cfg(unix)]
+    let linked = std::os::unix::fs::symlink(&real, d.join(".factory")).is_ok();
+    assert!(linked, "make the link");
+    let err = closeout(&d, &pr).unwrap_err();
+    assert!(err.contains("is a link"), "{err}");
+    assert!(std::fs::read_to_string(real.join("run.md")).unwrap().contains("api :8080 (stop: true)"), "nothing stopped");
+}
