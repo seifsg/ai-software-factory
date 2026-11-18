@@ -508,12 +508,14 @@ fn whole_word(l: &str, w: &str) -> bool {
 fn after_gap(f: &Path, i: &Input) -> Option<String> {
     let text = std::fs::read_to_string(f).unwrap_or_default();
     // HEAD on the first line, or on any `HEAD <sha>` line (a pane observation often comes first).
+    // List marks, emphasis, headings and code ticks around a pasted line never matter.
+    let bare = |l: &str| l.trim_matches(['-', ' ', '*', '#', '`']).to_string();
     let on_head = |l: &str| first_sha(l).is_some_and(|c| pre(&c, i.head));
-    if text.lines().next().is_some_and(on_head) || text.lines().any(|l| l.trim_start_matches(['-', ' ', '*']).starts_with("HEAD ") && on_head(l)) {
+    if text.lines().next().is_some_and(on_head) || text.lines().any(|l| bare(l).starts_with("HEAD ") && on_head(l)) {
         return None;
     }
     let short = &i.head[..i.head.len().min(8)];
-    let Some(line) = text.lines().find_map(|l| l.trim_start_matches(['-', ' ', '#']).strip_prefix("proof-hash ")) else {
+    let Some(line) = text.lines().find_map(|l| bare(l).strip_prefix("proof-hash ").map(str::to_string)) else {
         return Some(format!("needs a line `HEAD {short}`, or a line `proof-hash <hash> <input file>...` (paste `factory proof-hash <input files>` output)"));
     };
     let mut words = line.split_whitespace();

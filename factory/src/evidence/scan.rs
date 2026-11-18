@@ -135,14 +135,15 @@ impl Session {
         while let Some(i) = memmem::find(&l[at..], P) {
             let s = at + i + P.len();
             // Walk the JSON string to its first unescaped quote; a heading opens it or follows an escaped `\n`.
-            let (mut e, mut esc) = (s, false);
-            self.heading(&l[s..]);
+            // An unterminated string (a truncated line) records nothing, as the awk twin's regex needs the quote.
+            let (mut e, mut esc, mut starts) = (s, false, vec![s]);
             while let Some(&c) = l.get(e) {
                 if !esc && c == b'"' {
+                    starts.iter().for_each(|&k| self.heading(&l[k..e]));
                     break;
                 }
                 if esc && c == b'n' {
-                    self.heading(&l[e + 1..]);
+                    starts.push(e + 1);
                 }
                 esc = !esc && c == b'\\';
                 e += 1;
