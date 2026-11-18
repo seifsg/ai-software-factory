@@ -6,6 +6,10 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+### Changed
+
+- Wait for each gate checker in the call instead of ending the turn, fix every MISSING line and reread it before the next round, and send that round to the same checker when the host can resume it; trial 4 spent 26% of its time in 8 checker rounds ([#348])
+
 ### Fixed
 
 - Refuse a step block piped on stdin once where the guard can read the session chat and finds no post of it, so the block is typed once, in chat, instead of twice; a second try is taken for a coordinator whose chat the guard cannot read ([#347])
@@ -499,4 +503,5 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 [#342]: https://github.com/seifsg/ai-software-factory/pull/342
 [#344]: https://github.com/seifsg/ai-software-factory/pull/344
 [#347]: https://github.com/seifsg/ai-software-factory/pull/347
+[#348]: https://github.com/seifsg/ai-software-factory/pull/348
 [#333]: https://github.com/seifsg/ai-software-factory/pull/333
