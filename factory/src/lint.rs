@@ -507,20 +507,75 @@ fn whole_word(l: &str, w: &str) -> bool {
 /// inputs, read now from the run folder, still hash the same. Else the gap.
 fn after_gap(f: &Path, i: &Input) -> Option<String> {
     let text = std::fs::read_to_string(f).unwrap_or_default();
-    if text.lines().next().and_then(first_sha).is_some_and(|c| pre(&c, i.head)) {
+    // HEAD on the first line, or on any `HEAD <sha>` line (a pane observation often comes first).
+    // List marks, emphasis, headings and code ticks around a pasted line never matter.
+    let bare = |l: &str| l.trim_matches(['-', ' ', '*', '#', '`']).to_string();
+    let on_head = |l: &str| first_sha(l).is_some_and(|c| pre(&c, i.head));
+    if text.lines().next().is_some_and(on_head) || text.lines().any(|l| bare(l).starts_with("HEAD ") && on_head(l)) {
         return None;
     }
     let short = &i.head[..i.head.len().min(8)];
-    let Some(line) = text.lines().find_map(|l| l.trim_start_matches(['-', ' ', '#']).strip_prefix("proof-hash ")) else {
-        return Some(format!("names no HEAD {short} and no proof-hash of its inputs"));
+    let Some(line) = text.lines().find_map(|l| bare(l).strip_prefix("proof-hash ").map(str::to_string)) else {
+        return Some(format!("needs a line `HEAD {short}`, or a line `proof-hash <hash> <input file>...` (paste `factory proof-hash <input files>` output)"));
     };
     let mut words = line.split_whitespace();
     let want = words.next().unwrap_or("");
     let files: Vec<&str> = words.collect();
+    if files.is_empty() {
+        return Some("its proof-hash line names no input files: paste `factory proof-hash <input files>` output whole".into());
+    }
     let run = i.proof.parent().and_then(Path::parent).unwrap_or(i.proof);
     match crate::proof::hash_in(run, &files) {
         Ok(h) if h == want => None,
         Ok(h) => Some(format!("inputs changed since its capture (proof-hash {want}, now {h}): recapture it")),
         Err(e) => Some(format!("proof-hash inputs unreadable: {e}")),
+    }
+}
+
+#[cfg(test)]
+mod after_tests {
+    use super::*;
+
+    fn gap(body: &str) -> Option<String> {
+        static N: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+        let n = N.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let d = std::env::temp_dir().join(format!("factory-after-{}-{n}", std::process::id()));
+        let proof = d.join(".factory/proof");
+        std::fs::create_dir_all(proof.join("t")).unwrap();
+        std::fs::write(d.join("index.html"), "x").unwrap();
+        let f = proof.join("t/after-P1.txt");
+        std::fs::write(&f, body).unwrap();
+        let i = Input { gate: 'B', run: "", ticket: None, head: "1a32eac612e591b8", has_remote: false, skills: None, proof: &proof };
+        let g = after_gap(&f, &i);
+        let _ = std::fs::remove_dir_all(&d);
+        g
+    }
+
+    #[test]
+    fn head_may_follow_a_pane_line() {
+        assert_eq!(gap("pane: desktop ok
+HEAD 1a32eac6 (commit 1a32eac612e591b8)
+"), None);
+    }
+
+    #[test]
+    fn the_pasted_proof_hash_line_holds_and_a_bare_hash_says_why() {
+        let h = crate::proof::hash_in(&std::env::temp_dir(), &[]).unwrap();
+        assert!(gap(&format!("pane: x
+proof-hash {h}
+")).unwrap().contains("names no input files"));
+        let line = {
+            let d = std::env::temp_dir().join(format!("factory-after-h-{}", std::process::id()));
+            std::fs::create_dir_all(&d).unwrap();
+            std::fs::write(d.join("index.html"), "x").unwrap();
+            let h = crate::proof::hash_in(&d, &["index.html"]).unwrap();
+            let _ = std::fs::remove_dir_all(&d);
+            format!("proof-hash {h} index.html")
+        };
+        assert_eq!(gap(&format!("pane: x
+{line}
+")), None);
+        assert!(gap("pane: x
+").unwrap().contains("HEAD 1a32eac6"));
     }
 }

@@ -6,6 +6,16 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+### Changed
+
+- `factory proof-hash` prints the whole `proof-hash <hash> <files>` line an After file carries.
+
+### Fixed
+
+- Step blocks bundled in one chat message now all count as posted, so the Stop check no longer forces reposts of blocks already shown; headings inside tool input still never count.
+- `factory lint B` accepts an After file whose `HEAD <sha>` line follows a pane observation, and a `proof-hash` line that names no input files now says so instead of comparing against the hash of nothing.
+- The Challenge contract line quotes its sentence, so a checker without the skill can verify it; a gate checker counts only the contract blocks of its own steps.
+
 ## [0.8.3] - 2026-11-18
 
 ### Fixed

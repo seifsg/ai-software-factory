@@ -150,7 +150,10 @@ $(cd "$ev" && awk -v R="$run" -v lh="$lh" -v fb=$fb -v nov=$nov -v head="$head" 
   }
   FILENAME !~ /subagents\/agent-[^\/]*$/ {  # a session transcript: the step blocks that reached chat as text
     if (index($0, "\"isSidechain\"")) cx = 1
-    if (/"role":"assistant"/) for (l = $0; match(l, /"type":"text","text":"## [0-8]b? /); l = substr(l, RSTART + RLENGTH)) sent[substr(l, RSTART + 25, RLENGTH - 26)] = 1
+    if (/"role":"assistant"/) for (l = $0; match(l, /"type":"text","text":"([^"\\]|\\.)*"/); l = substr(l, e)) {  # each text item; a heading opens it or a line in it
+      t = "\\n" substr(l, RSTART + 22, RLENGTH - 23); e = RSTART + RLENGTH; gsub(/\\\\/, "\001", t)  # an escaped backslash never starts a \n
+      while (match(t, /\\n## [0-8]b? /)) { sent[substr(t, RSTART + 5, RLENGTH - 6)] = 1; t = substr(t, RSTART + RLENGTH) }
+    }
     if (!fb) next
   }
   fb { if (index($0, "\"isSidechain\"")) cc = 1; for (x in want) if (index($0, x)) seen[x] = 1; next }
