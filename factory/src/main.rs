@@ -12,6 +12,7 @@ const USAGE: &str = "usage: factory <command>
   doctor [<plugin root>] [--fix]
   update-check [<plugin root>]
   lint <A|B|C> [--skills <dir>] [<run folder>]
+  closeout [<pr number|url>] [--dry-run]  after the owner merges and says so: stop, clean, check the ticket
   contracts [--skills <dir>] <skill>...
   review gate-a [--skills <dir>] [--proof-inputs <json>]
   review packet --base <sha> --head <sha> [--proof <file>]... [--context <file>]...
@@ -36,6 +37,7 @@ fn main() -> ExitCode {
         ["doctor", rest @ ..] => factory::doctor::cli(rest),
         ["update-check", rest @ ..] => factory::update::cli(rest),
         ["lint", rest @ ..] => factory::lint::cli(rest),
+        ["closeout", rest @ ..] => factory::closeout::cli(rest),
         ["contracts", rest @ ..] => factory::contracts::cli(rest),
         ["review", rest @ ..] => factory::review::cli(rest),
         ["tree", rest @ ..] => factory::git::tree::cli(rest),

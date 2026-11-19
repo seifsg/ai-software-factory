@@ -1,6 +1,7 @@
 //! AI Software Factory core: the run guard and the free checks, shared by the `factory` binary and the
 //! pro add-on's crate (git dependency). Modules stay small; the public items below are the stable API.
 
+pub mod closeout;
 pub mod contracts;
 pub mod doctor;
 pub mod evidence;

@@ -6,6 +6,14 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+### Changed
+
+- Write step 8's `Left running:` line as `<item> (stop: <sh cmd>); ...` with your preview tagged `(owner preview)`, so the close-out can stop the rest and never your preview ([#358])
+
+### Added
+
+- Add `factory closeout <pr>`: after you merge and say so, it checks the ticket records the merge, stops what the run left running except your preview, and removes the run's worktrees, branches and temp files ([#358])
+
 ## [0.8.10] - 2026-11-18
 
 ### Added
@@ -534,4 +542,5 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 [#350]: https://github.com/seifsg/ai-software-factory/pull/350
 [#351]: https://github.com/seifsg/ai-software-factory/pull/351
 [#353]: https://github.com/seifsg/ai-software-factory/pull/353
+[#358]: https://github.com/seifsg/ai-software-factory/pull/358
 [#333]: https://github.com/seifsg/ai-software-factory/pull/333

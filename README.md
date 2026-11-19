@@ -83,6 +83,8 @@ safe-factory Resume [absolute project directory].
 
 Products and big features add `research-market` and kickoff questions at step 0; persistence adds `database-schema`. **Fast** (default) runs straight through; **Safe** also stops for your OK on the plan.
 
+After you merge, say so: the session runs `factory closeout <pr>` in the run's folder. It refuses an unmerged PR, checks the ticket is closed with the PR and merge commit, stops what step 8 left running except your preview, and removes the run's `.factory/` worktrees, merged branches and temp files. Unmerged or uncommitted work stays; a rerun finds nothing left.
+
 ## 🛡️ How it stays on track
 
 <img src="docs/assets/guard.svg" alt="Load the step's skill fresh, do the step, write its block to .factory/run.md, then the Stop guard sends the next step on the next turn. After compaction the next stop or a compact hook sends Next. Gates A, B and C need a fresh checker's pass on the commit." width="100%">
@@ -155,7 +157,7 @@ Rules: [AGENTS.md](AGENTS.md). Changes go through `improve-factory`; checks: `sh
 .agents/skills/safe-factory/     the coordinator; scripts/ holds the guard, update check, doctor
 .agents/hooks/portable.json      Stop guard, compact hook and update check (Codex); cursor.json, the same for Cursor
 .agents/scripts/                 factory.cmd, the launcher hooks call, and the bundled factory binaries
-factory/                         the factory binary's Rust crate (guard, update check, doctor, lint, receipts); parity/ diffs it against the sh scripts
+factory/                         the factory binary's Rust crate (guard, update check, doctor, lint, receipts, close-out); parity/ diffs it against the sh scripts
 tools/night/                     overnight runs, from a clone: night.sh, watchdog.sh, deny rules, pre-push
 .agents/.claude-plugin/          plugin manifests (also .codex-plugin/, .cursor-plugin/); the plugin root is .agents/
 .claude-plugin/marketplace.json  the marketplace (Claude Code, Codex), pinned to the release tag
