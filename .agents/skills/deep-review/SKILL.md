@@ -187,12 +187,12 @@ Disposition decides the gate: `blocking`, `before-exposure` or `accepted-deferra
 
 ## Output contract
 
-In a factory run this is step 6, Verify. Web UI: also run `factory roast <app URL> .factory/proof/<ticket>/roast` in the background; in-scope BLOCKER and MAJOR findings join the fix round. The block `## 6 Verify` holds:
+In a factory run this is step 6, Verify. Web UI: the main agent also runs `factory roast <app URL> <proof folder>/roast` in the background (the other vendor's CLI plays the worst user); its in-scope BLOCKER and MAJOR findings join the fix round. The block `## 6 Verify` holds:
 
 - [ ] Every requested journey used through real controls, with observed results
 - [ ] compliance, change-guard when existing code, contracts or data changed, and each other lens run, each named with its verdict and a findings table only where it has findings, e.g. `**compliance:** no findings · PASS`
 - [ ] An `after-<id>` file for every proof-list id, same ids as Before, valid on the final head by `how-to-make-a-pr`'s After rule; a full-suite id is that final run
 - [ ] UI check (new UI): analyst misses vs step 2 look + refs, primary platform; else `existing` or `no UI`
-- [ ] Roast (web UI): its result line or `SKIP <reason>`
+- [ ] Roast (web UI): its result line or `SKIP <reason>`; else `no web UI`
 - [ ] Full suite started in the background after every fix-set landed; final head, command and log path. Gate C checks the single passing receipt.
 - [ ] The verdict; blocking findings fixed through the build loop before the gate

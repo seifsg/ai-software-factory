@@ -31,7 +31,7 @@ Fill project's PR template first, then use these blocks inside it. Skip what doe
 - **Visual yes:** screenshot, video, demo context and media-waiver forms: `media-proof.md`.
 - **Nonvisual proof:** matched request/response JSON, status, logs or command results: `**Before:**` then `**After:**` with fenced output, or `**Before → After:** <same input>, base <sha> → head <sha> (<criterion>)` and a `diff` block. Server-only, infrastructure or internal work with no affected interactive UI journey: no media waiver needed.
 - **Cold start:** original request and why, decisions with reasons, facts (IDs, paths, repos), current state, remaining steps, blockers. Links = audit trail, not substitute.
-- **Verification:** one row per confirmed criterion, plus ticket's checklist state: every item ticked, or the gap. Ticketed work: ticket's confirmed criteria, dependencies, integration status. Proof bound to exact pushed candidate. Web UI: roast verdict, top findings, shots or SKIP line. Name what is **unverified**.
+- **Verification:** one row per confirmed criterion, plus ticket's checklist state: every item ticked, or the gap. Ticketed work: dependencies, integration status. Web UI: roast verdict, top findings with uploaded shots, or SKIP line. Name what is **unverified**.
 - **Adjustment history:** append entry per requested change; keep for PR's whole life.
 - **Progress:** checked, reviewed, merged, released stay separate; name next visible result. Overall acceptance stays open.
 

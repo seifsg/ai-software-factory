@@ -32,7 +32,7 @@ After plan, verify and review, a fresh checker compares the outputs with each sk
 <td width="33%" valign="top">
 
 ### 📸 Proof, not claims
-Every Before is captured before the first edit, After during verify and kept while its inputs stay unchanged; all land in the draft PR. A fresh agent that did not build it reviews the PR. On a web app, the other vendor's agent CLI plays the worst user in a browser and roasts it (`factory roast`).
+Every Before is captured before the first edit, After during verify and kept while its inputs stay unchanged; all land in the draft PR. A fresh agent that did not build it reviews the PR. On a web app, the other vendor's agent CLI plays the worst user in a browser and roasts it ([`factory roast`](docs/hosts.md#worst-user-roast); needs Node.js, off with `FACTORY_ROAST=0`).
 
 </td>
 </tr>
