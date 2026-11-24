@@ -94,14 +94,15 @@ fn locate(v: Vendor) -> Result<PathBuf, String> {
     }
 }
 
-/// Runs the CLI's own login check, at most 30 s; a hung check counts as not logged in.
+/// Runs the CLI's own login check, at most 10 s; a hung check counts as not logged in.
 fn logged_in(v: Vendor, path: PathBuf) -> Result<PathBuf, String> {
     let mut c = quiet_command(&path);
     c.args(v.status_args()).stdin(Stdio::null()).stdout(Stdio::null()).stderr(Stdio::null());
-    match super::run::status_within(c, Duration::from_secs(30)) {
+    super::cmd::scrub(&mut c);
+    match super::run::status_within(c, Duration::from_secs(10)) {
         Some(true) => Ok(path),
         Some(false) => Err(format!("not logged in (`{} {}`)", v.name(), v.status_args().join(" "))),
-        None => Err("login check did not answer in 30 s".into()),
+        None => Err("login check did not answer in 10 s".into()),
     }
 }
 

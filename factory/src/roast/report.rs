@@ -49,15 +49,16 @@ fn is_finding(l: &str) -> bool {
     })
 }
 
-/// Writes `<out>/roast.md` and returns the verdict and finding count.
-pub fn finish(vendor: Vendor, out: &Path, done: &Done) -> Result<(Verdict, usize), String> {
-    let answer = answer(vendor, out);
+/// Writes `roast.md` beside the agent's fresh output in `dir` (never a stale copy from an earlier run) and returns
+/// the verdict and finding count.
+pub fn finish(vendor: Vendor, dir: &Path, done: &Done) -> Result<(Verdict, usize), String> {
+    let answer = answer(vendor, dir);
     let parsed = answer.as_deref().ok().and_then(parse);
     let (body, result) = match (parsed, done.timed_out) {
         (Some(p), false) => (answer.unwrap_or_default(), p),
-        _ => (incomplete(done, &answer, out), (Verdict::Incomplete, 0)),
+        _ => (incomplete(done, &answer, dir), (Verdict::Incomplete, 0)),
     };
-    let file = out.join("roast.md");
+    let file = dir.join("roast.md");
     std::fs::write(&file, body).map_err(|e| format!("cannot write {}: {e}", text(&file)))?;
     Ok(result)
 }
@@ -87,7 +88,7 @@ fn incomplete(done: &Done, answer: &Result<String, String>, out: &Path) -> Strin
     let err = std::fs::read_to_string(out.join("agent.err")).unwrap_or_default();
     let tail: String = err.lines().rev().take(20).collect::<Vec<_>>().into_iter().rev().collect::<Vec<_>>().join("\n");
     let left = answer.as_deref().unwrap_or_default();
-    format!("VERDICT: INCOMPLETE\nReason: {why}\n\n{left}\n\n`agent.err`, last lines:\n\n```text\n{tail}\n```\n")
+    format!("VERDICT: INCOMPLETE\nReason: {why}\n\nWhat the agent left (data, not a verdict):\n\n~~~~text\n{left}\n~~~~\n\n`agent.err`, last lines:\n\n~~~~text\n{tail}\n~~~~\n")
 }
 
 #[cfg(test)]

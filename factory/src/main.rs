@@ -23,7 +23,7 @@ const USAGE: &str = "usage: factory <command>
   receipt start [--suite <name>] -- <command>...
   receipt write --cmd <command> (--exit <code> | --result PASS|FAIL) [--suite <name>] [--secs <n>] [--log <path>]
   receipt check [--commit <sha>] [--suite <name>]
-  roast <url> <out folder> [--cli codex|claude] [--any-host]  another agent CLI plays the worst user
+  roast <url> <out folder> [--cli codex|claude]  another agent CLI plays the worst user
   --version";
 
 fn main() -> ExitCode {

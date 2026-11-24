@@ -11,13 +11,13 @@ mod work;
 
 pub use pick::{Vendor, order};
 pub use report::{Verdict, parse};
-pub use url::is_local;
+pub use url::{is_local, origin};
 
 use crate::paths::text;
 use std::path::PathBuf;
 use std::time::Duration;
 
-const USAGE: &str = "usage: factory roast <url> <out folder> [--cli codex|claude] [--any-host]";
+const USAGE: &str = "usage: factory roast <url> <out folder> [--cli codex|claude]";
 /// Hard cap on the outside agent, seconds; `FACTORY_ROAST_SECS` overrides.
 const SECS: u64 = 600;
 
@@ -26,7 +26,6 @@ struct Opts<'a> {
     url: &'a str,
     out: PathBuf,
     cli: Option<Vendor>,
-    any_host: bool,
 }
 
 /// Entry point for `factory roast`. Exit 0 with a verdict or a SKIP line, 1 when the run is INCOMPLETE, 2 on usage.
@@ -48,26 +47,25 @@ pub fn cli(args: &[&str]) -> u8 {
 }
 
 fn parse_args<'a>(args: &[&'a str]) -> Option<Opts<'a>> {
-    let [url, out, rest @ ..] = args else { return None };
-    let (mut cli, mut any_host) = (None, false);
-    let mut it = rest.iter();
-    while let Some(&a) = it.next() {
-        match a {
-            "--any-host" => any_host = true,
-            "--cli" => cli = Some(Vendor::named(it.next()?)?),
-            _ => return None,
-        }
-    }
-    (!url.is_empty() && !out.is_empty()).then(|| Opts { url, out: PathBuf::from(out), cli, any_host })
+    let (url, out, cli) = match args {
+        [url, out] => (url, out, None),
+        [url, out, "--cli", name] => (url, out, Some(Vendor::named(name)?)),
+        _ => return None,
+    };
+    (!url.is_empty() && !out.is_empty()).then(|| Opts { url, out: PathBuf::from(out), cli })
 }
 
 /// Runs one roast. `Err` is a skip reason: nothing ran, the caller goes on.
+/// Other hosts than this machine need `FACTORY_ROAST_ANY_HOST=1`: an env prefix, so the plain command an allow rule
+/// lets through can never reach a shared or live site.
 fn roast(o: &Opts) -> Result<String, String> {
-    if std::env::var("FACTORY_ROAST").is_ok_and(|v| v == "0") {
+    let env = |k: &str, v: &str| std::env::var(k).is_ok_and(|x| x == v);
+    if env("FACTORY_ROAST", "0") {
         return Err("off (FACTORY_ROAST=0)".into());
     }
-    if !o.any_host && !is_local(o.url) {
-        return Err(format!("{} is not a local URL (localhost, 127.x, ::1, .localhost, .test); --any-host allows it", o.url));
+    let (origin, _) = origin(o.url).ok_or_else(|| format!("{} is not a plain http(s) URL", o.url))?;
+    if !env("FACTORY_ROAST_ANY_HOST", "1") && !is_local(o.url) {
+        return Err(format!("{} is not a local URL (localhost, 127.x, ::1, .localhost, .test); FACTORY_ROAST_ANY_HOST=1 allows it", o.url));
     }
     let npx = pick::find("npx").ok_or("npx not found: the browser needs Node.js")?;
     let agent = pick::choose(o.cli)?;
@@ -75,17 +73,14 @@ fn roast(o: &Opts) -> Result<String, String> {
     let out = PathBuf::from(work::clean(&o.out)?);
     let secs = std::env::var("FACTORY_ROAST_SECS").ok().and_then(|s| s.parse().ok()).filter(|&s| s > 0).unwrap_or(SECS);
     let work = work::Work::new()?;
-    let job = cmd::build(&agent, &npx, work.path(), o.url)?;
+    let job = cmd::build(&agent, &npx, work.path(), o.url, &origin)?;
     let done = run::run(job, Duration::from_secs(secs), work.path())?;
-    work.collect(&out)?;
-    let (verdict, findings) = report::finish(agent.vendor, &out, &done)?;
-    Ok(format!(
-        "roast {} {} {findings} findings {}s {}",
-        agent.vendor.name(),
-        verdict.token(),
-        done.secs,
-        text(&out.join("roast.md"))
-    ))
+    // The agent ran: from here a failure is INCOMPLETE (exit 1), never a SKIP.
+    let name = agent.vendor.name();
+    Ok(match report::finish(agent.vendor, work.path(), &done).and_then(|r| work.collect(&out).map(|()| r)) {
+        Ok((verdict, n)) => format!("roast {name} {} {n} findings {}s {}", verdict.token(), done.secs, text(&out.join("roast.md"))),
+        Err(e) => format!("roast {name} {} 0 findings {}s ({e})", report::Verdict::Incomplete.token(), done.secs),
+    })
 }
 
 #[cfg(test)]
@@ -95,11 +90,11 @@ mod tests {
     #[test]
     fn args() {
         assert!(parse_args(&["http://localhost:3000", "o"]).is_some());
-        assert!(parse_args(&["http://localhost:3000", "o", "--cli", "codex", "--any-host"]).is_some_and(|o| o.any_host && o.cli == Some(Vendor::Codex)));
+        assert!(parse_args(&["http://localhost:3000", "o", "--cli", "codex"]).is_some_and(|o| o.cli == Some(Vendor::Codex)));
         assert!(parse_args(&["http://localhost:3000"]).is_none());
         assert!(parse_args(&["u", "o", "--cli"]).is_none());
         assert!(parse_args(&["u", "o", "--cli", "cursor"]).is_none());
-        assert!(parse_args(&["u", "o", "--bogus"]).is_none());
+        assert!(parse_args(&["u", "o", "--any-host"]).is_none());
         assert!(parse_args(&["", "o"]).is_none());
     }
 }

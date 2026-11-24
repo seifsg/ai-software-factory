@@ -30,9 +30,11 @@ pub fn run(job: Job, cap: Duration, out: &Path) -> Result<Done, String> {
     // A thread, so a child that reads late never blocks the clock below.
     let feeder = std::thread::spawn(move || stdin.write_all(brief.as_bytes()));
     let exited = wait(&mut child, cap)?;
+    // Only at the cap: after a normal exit the pid is free again and could name an unrelated process.
     if exited.is_none() {
         kill_tree(&mut child);
     }
+    // A write error only means the agent exited before reading the whole brief; its report says the rest.
     let _ = feeder.join();
     Ok(Done { secs: start.elapsed().as_secs(), timed_out: exited.is_none(), code: exited.flatten() })
 }

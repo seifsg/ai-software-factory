@@ -14,8 +14,10 @@ enum Mode {
     Report,
     /// Output with no VERDICT line.
     Garbage,
-    /// Hangs past the cap.
+    /// Hangs past the cap, with a grandchild that would write `FAKE_LATE` after about 4 s if it survived.
     Hang,
+    /// Writes nothing and fails.
+    Silent,
 }
 
 /// Writes a fake agent CLI named `name` into `bin`. `logged_in` sets its login check's exit code.
@@ -30,8 +32,9 @@ fn fake(bin: &Path, name: &str, logged_in: bool, mode: Mode) -> PathBuf {
         (Mode::Garbage, false) => out_file("looks fine"),
         (Mode::Garbage, true) => out_json("looks fine"),
         (Mode::Hang, _) => hang(),
+        (Mode::Silent, _) => fail(),
     };
-    script(bin, name, &format!("{}{}{body}", status_line(login), cwd_line()))
+    script(bin, name, &format!("{}{}{body}", status_line(login), record()))
 }
 
 #[cfg(windows)]
@@ -58,12 +61,18 @@ fn out_json(text: &str) -> String {
 
 #[cfg(windows)]
 fn hang() -> String {
-    "ping -n 60 127.0.0.1 >nul\n".into()
+    "start \"\" /b cmd /c \"ping -n 5 127.0.0.1 >nul & echo late> \"%FAKE_LATE%\"\"\nping -n 60 127.0.0.1 >nul\n".into()
 }
 
 #[cfg(windows)]
-fn cwd_line() -> String {
-    "cd > cwd.txt\n".into()
+fn fail() -> String {
+    "exit /b 3\n".into()
+}
+
+/// The fake records its working folder, arguments and environment for the tests to read.
+#[cfg(windows)]
+fn record() -> String {
+    "cd > cwd.txt\necho %* > args.txt\nset > env.txt\n".into()
 }
 
 #[cfg(unix)]
@@ -92,12 +101,18 @@ fn out_json(text: &str) -> String {
 
 #[cfg(unix)]
 fn hang() -> String {
-    "sleep 60\n".into()
+    "(sleep 4; echo late > \"$FAKE_LATE\") &\nsleep 60\n".into()
 }
 
 #[cfg(unix)]
-fn cwd_line() -> String {
-    "pwd > cwd.txt\n".into()
+fn fail() -> String {
+    "exit 3\n".into()
+}
+
+/// The fake records its working folder, arguments and environment for the tests to read.
+#[cfg(unix)]
+fn record() -> String {
+    "pwd > cwd.txt\nprintf '%s\\n' \"$@\" > args.txt\nenv > env.txt\n".into()
 }
 
 /// Runs `factory roast` with only the fakes in `bin` ahead of PATH and a clean host env; returns exit, stdout, seconds.
@@ -105,7 +120,7 @@ fn roast(bin: &Path, env: &[(&str, &str)], args: &[&str]) -> (i32, String, u64) 
     let path = std::env::join_paths(std::iter::once(bin.to_path_buf()).chain(std::env::split_paths(&std::env::var_os("PATH").unwrap()))).unwrap();
     let mut c = Command::new(env!("CARGO_BIN_EXE_factory"));
     c.arg("roast").args(args).env("PATH", path);
-    for k in ["CLAUDECODE", "CODEX_THREAD_ID", "CODEX_SESSION_ID", "FACTORY_ROAST", "FACTORY_ROAST_SECS", "FACTORY_CODEX", "FACTORY_CLAUDE"] {
+    for k in ["CLAUDECODE", "CODEX_THREAD_ID", "CODEX_SESSION_ID", "FACTORY_ROAST", "FACTORY_ROAST_SECS", "FACTORY_ROAST_ANY_HOST", "FACTORY_CODEX", "FACTORY_CLAUDE"] {
         c.env_remove(k);
     }
     c.envs(env.iter().copied());
@@ -137,8 +152,45 @@ fn claude_host_roasts_with_codex_and_parses_the_verdict() {
     let report = std::fs::read_to_string(Path::new(&out).join("roast.md")).unwrap();
     assert!(report.starts_with("VERDICT: SHIP WITH FIXES"), "{report}");
     // The agent ran in a temp folder outside the project, and its files were moved into the report folder.
-    let cwd = std::fs::read_to_string(Path::new(&out).join("cwd.txt")).unwrap();
+    let read = |f: &str| std::fs::read_to_string(Path::new(&out).join(f)).unwrap();
+    let cwd = read("cwd.txt");
     assert!(cwd.contains("factory-roast-") && !cwd.contains("roast-pick"), "agent cwd: {cwd}");
+    // Read-only, no shell, the browser kept to the app's origin, no code-running browser tool, no host session vars.
+    let args = read("args.txt");
+    for want in ["read-only", "shell_tool", "unified_exec", "--allowed-origins", "http://127.0.0.1:47811", "required=true"] {
+        assert!(args.contains(want), "{want} missing: {args}");
+    }
+    assert!(!args.contains("run_code_unsafe") && !args.contains("file_upload"), "{args}");
+    let env = read("env.txt");
+    assert!(!env.contains("CLAUDECODE=") && !env.contains("CODEX_THREAD_ID="), "host vars leaked: {env}");
+}
+
+#[test]
+fn claude_agent_gets_no_tools_but_the_browser() {
+    let (bin, out) = bin("roast-claude-args");
+    fake(&bin, "claude", true, Mode::Report);
+    let (code, line, _) = roast(&bin, &[("CODEX_THREAD_ID", "t1")], &[URL, &out, "--cli", "claude"]);
+    assert_eq!(code, 0, "{line}");
+    let read = |f: &str| std::fs::read_to_string(Path::new(&out).join(f)).unwrap();
+    let args = read("args.txt");
+    for want in ["--restricted", "--tools", "dontAsk", "--strict-mcp-config", "mcp__pw__browser_click"] {
+        assert!(args.contains(want), "{want} missing: {args}");
+    }
+    assert!(!args.contains("run_code_unsafe"), "{args}");
+    assert!(read("settings.json").contains("\"disableAllHooks\":true"));
+    assert!(read("mcp.json").contains("--allowed-origins"));
+    assert!(!read("env.txt").contains("CODEX_THREAD_ID="));
+}
+
+#[test]
+fn rerun_without_a_report_is_incomplete_not_the_old_verdict() {
+    let (bin, out) = bin("roast-rerun");
+    fake(&bin, "codex", true, Mode::Report);
+    assert_eq!(roast(&bin, &[], &[URL, &out, "--cli", "codex"]).0, 0);
+    fake(&bin, "codex", true, Mode::Silent);
+    let (code, line, _) = roast(&bin, &[], &[URL, &out, "--cli", "codex"]);
+    assert_eq!(code, 1, "{line}");
+    assert!(line.starts_with("roast codex INCOMPLETE 0 findings "), "{line}");
 }
 
 #[test]
@@ -178,12 +230,17 @@ fn malformed_report_is_incomplete_never_clean() {
 fn cap_kills_a_hung_agent() {
     let (bin, out) = bin("roast-hang");
     fake(&bin, "claude", true, Mode::Hang);
-    let (code, line, secs) = roast(&bin, &[("FACTORY_ROAST_SECS", "2")], &[URL, &out, "--cli", "claude"]);
+    let late = bin.parent().unwrap().join("late.txt");
+    let env = [("FACTORY_ROAST_SECS", "2"), ("FAKE_LATE", late.to_str().unwrap())];
+    let (code, line, secs) = roast(&bin, &env, &[URL, &out, "--cli", "claude"]);
     assert_eq!(code, 1, "{line}");
     assert!(line.starts_with("roast claude INCOMPLETE 0 findings "), "{line}");
     assert!(secs < Duration::from_secs(20).as_secs(), "took {secs} s");
     let report = std::fs::read_to_string(Path::new(&out).join("roast.md")).unwrap();
     assert!(report.contains("Reason: timed out after 2 s"), "{report}");
+    // The whole tree died: the grandchild's 4 s write never lands.
+    std::thread::sleep(Duration::from_secs(4));
+    assert!(!late.exists(), "a grandchild outlived the cap");
 }
 
 #[test]
@@ -193,5 +250,10 @@ fn skips_off_and_non_local() {
     let (code, line, _) = roast(&bin, &[], &["https://example.com", &out]);
     assert_eq!(code, 0);
     assert!(line.starts_with("SKIP https://example.com is not a local URL"), "{line}");
+    let (_, line, _) = roast(&bin, &[], &["http://evil.com\\@localhost/", &out]);
+    assert_eq!(line, "SKIP http://evil.com\\@localhost/ is not a plain http(s) URL");
+    // The env opt-in passes the host gate; no CLI is ready here, so it stops at the next check.
+    let none = [("FACTORY_ROAST_ANY_HOST", "1"), ("FACTORY_CODEX", "/nope"), ("FACTORY_CLAUDE", "/nope")];
+    assert!(roast(&bin, &none, &["https://example.com", &out]).1.starts_with("SKIP no agent CLI ready"));
     assert_eq!(roast(&bin, &[], &[URL]).0, 2);
 }
