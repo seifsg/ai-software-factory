@@ -6,6 +6,10 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+### Fixed
+
+- Fix the session-start update check opening terminal windows on Windows while it fetches the latest release ([#362])
+
 ## [0.8.11] - 2026-11-19
 
 ### Changed
@@ -547,3 +551,4 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 [#353]: https://github.com/seifsg/ai-software-factory/pull/353
 [#358]: https://github.com/seifsg/ai-software-factory/pull/358
 [#333]: https://github.com/seifsg/ai-software-factory/pull/333
+[#362]: https://github.com/seifsg/ai-software-factory/pull/362
