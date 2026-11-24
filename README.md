@@ -32,7 +32,7 @@ After plan, verify and review, a fresh checker compares the outputs with each sk
 <td width="33%" valign="top">
 
 ### 📸 Proof, not claims
-Every Before is captured before the first edit, After during verify and kept while its inputs stay unchanged; all land in the draft PR. A fresh agent that did not build it reviews the PR.
+Every Before is captured before the first edit, After during verify and kept while its inputs stay unchanged; all land in the draft PR. A fresh agent that did not build it reviews the PR. On a web app, the other vendor's agent CLI plays the worst user in a browser and roasts it (`factory roast`).
 
 </td>
 </tr>
@@ -77,7 +77,7 @@ safe-factory Resume [absolute project directory].
 | 3 Plan | `get-ready-to-code` | files, critique, phases, todos, proof list, test map, then **Gate A** |
 | 4 Before | `how-to-make-a-pr` | Before screenshots and outputs, saved before the first edit |
 | 5 Build | `get-ready-to-code` | one line per todo, through the 0–4 loop |
-| 6 Verify | `deep-review` | findings, UI pass, one full suite run, After captures, then **Gate B** |
+| 6 Verify | `deep-review` | findings, UI pass, worst-user roast (web), one full suite run, After captures, then **Gate B** |
 | 7 PR | `how-to-make-a-pr` | draft PR with Before/After pairs |
 | 8 Review | `how-to-review-a-pr` | a fresh agent's verdict, then **Gate C** |
 

@@ -6,6 +6,10 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+### Added
+
+- Add `factory roast <url> <out>`: on web UI runs, step 6 hands your running app to the other vendor's agent CLI (Codex from Claude Code, Claude from Codex), which plays the worst user in a headless browser and roasts the UI; its BLOCKER and MAJOR findings join the fix round and the PR shows the verdict. `FACTORY_ROAST=0` turns it off ([#364])
+
 ## [0.8.12] - 2026-11-24
 
 ### Fixed

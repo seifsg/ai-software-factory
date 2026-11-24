@@ -50,6 +50,22 @@ Pass request, decisions, interfaces, stops and artifact paths explicitly; full h
 | Session ceiling | a role above the session's tier runs on the session's model | the parent's model, unless the owner sets one |
 | Owner override | per-call `model` and `effort`; `CLAUDE_CODE_SUBAGENT_MODEL` with `CLAUDE_CODE_SUBAGENT_MODEL_FORCE=1`; `CLAUDE_CODE_EFFORT_LEVEL` | an agent file in `~/.codex/agents/` or `.codex/agents/` named for the role, with `model` and `model_reasoning_effort` |
 
+## Worst-user roast
+
+Step 6 runs `factory roast <app URL> .factory/proof/<ticket>/roast` in the background on web UI runs. It hands the running app to the other vendor's agent CLI, which plays the worst user in a headless browser and roasts the UI. Output: one line, `roast <cli> <SHIP|SHIP-WITH-FIXES|DO-NOT-SHIP|INCOMPLETE> <n> findings <s>s <path>/roast.md`, or `SKIP <reason>` (exit 0).
+
+| Host | Roasts with | Command the binary runs (from a fresh temp folder, brief on stdin) |
+|---|---|---|
+| Claude Code (`CLAUDECODE=1`) | Codex, else Claude | `codex exec --ephemeral --skip-git-repo-check --ignore-user-config -s read-only -c model_reasoning_effort=medium -c mcp_servers.pw.*=… -o agent.md -` |
+| Codex (`CODEX_THREAD_ID`) | Claude, else Codex | `claude -p --model sonnet --restricted --settings settings.json --strict-mcp-config --mcp-config mcp.json --tools "" --allowedTools mcp__pw__… --permission-mode dontAsk --max-turns 80 --max-budget-usd 3 --output-format json` |
+| Other or none | Codex, else Claude | as above |
+
+- Browser: Playwright MCP `@playwright/mcp@0.0.86` through `npx`, `--headless --isolated`, an 18-tool allowlist without `browser_run_code_unsafe` (it ran Node and wrote files outside the Codex sandbox in a live test) and `browser_file_upload`. Needs Node.js; the first `npx` run downloads it.
+- Ready means on PATH (or `FACTORY_CODEX` / `FACTORY_CLAUDE`) and logged in (`codex login status`, `claude auth status`). None ready, no `npx`, or a URL that is not local (`localhost`, `*.localhost`, `*.test`, `127.0.0.0/8`, `::1`; `--any-host` allows others): `SKIP`.
+- The agent runs in a fresh temp folder, never the project: inside one it loads that project's rules and hooks (a live Claude run answered the factory's own Stop hook instead of reporting). `--restricted` keeps the owner's settings, plugins and hooks out; host session variables (`CLAUDE*`, `CODEX_*` except `CODEX_HOME`, `CLAUDE_CONFIG_DIR`) are dropped. Files move to the report folder after.
+- Cap: `FACTORY_ROAST_SECS` (600) kills the whole process tree. No `VERDICT:` line, an error or the cap: `INCOMPLETE`, exit 1, never a clean pass. `--cli codex|claude` forces one. `FACTORY_ROAST=0` turns it off.
+- Codex host: its sandbox has no network for `claude`; `tools/night/codex.rules` allows `factory roast` outside it, else approve it once. Live: Claude host to Codex 99 s on a fixture page; Codex host to Claude was run from a Claude Code shell with `CODEX_THREAD_ID` set, not from a real Codex session.
+
 ## Other agents
 
 | Agent | Skills | Hooks |
