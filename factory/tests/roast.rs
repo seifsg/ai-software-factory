@@ -14,7 +14,7 @@ enum Mode {
     Report,
     /// Output with no VERDICT line.
     Garbage,
-    /// Hangs past the cap, with a grandchild that would write `FAKE_LATE` after about 2 s if it survived.
+    /// Hangs past the cap, with a grandchild that would write `FAKE_LATE` after about 4 s if it survived.
     Hang,
     /// Writes nothing and fails.
     Silent,
@@ -61,7 +61,7 @@ fn out_json(text: &str) -> String {
 
 #[cfg(windows)]
 fn hang() -> String {
-    "start \"\" /b cmd /c \"ping -n 3 127.0.0.1 >nul & echo late> \"%FAKE_LATE%\"\"\nping -n 60 127.0.0.1 >nul\n".into()
+    "start \"\" /b cmd /c \"ping -n 5 127.0.0.1 >nul & echo late> \"%FAKE_LATE%\"\"\nping -n 60 127.0.0.1 >nul\n".into()
 }
 
 #[cfg(windows)]
@@ -101,7 +101,7 @@ fn out_json(text: &str) -> String {
 
 #[cfg(unix)]
 fn hang() -> String {
-    "(sleep 2; echo late > \"$FAKE_LATE\") &\nsleep 60\n".into()
+    "(sleep 4; echo late > \"$FAKE_LATE\") &\nsleep 60\n".into()
 }
 
 #[cfg(unix)]
@@ -155,7 +155,7 @@ fn claude_host_roasts_with_codex_and_parses_the_verdict() {
     let read = |f: &str| std::fs::read_to_string(Path::new(&out).join(f)).unwrap();
     let cwd = read("cwd.txt");
     assert!(cwd.contains("factory-roast-") && !cwd.contains("roast-pick"), "agent cwd: {cwd}");
-    // Read-only, no shell, the browser kept to the app's origin, no code-running browser tool, no host session vars.
+    // Read-only, no shell, no code-running browser tool, no host session vars.
     let args = read("args.txt");
     for want in ["read-only", "shell_tool", "unified_exec", "required=true", "--headless"] {
         assert!(args.contains(want), "{want} missing: {args}");
@@ -238,8 +238,8 @@ fn cap_kills_a_hung_agent() {
     assert!(secs < Duration::from_secs(20).as_secs(), "took {secs} s");
     let report = std::fs::read_to_string(Path::new(&out).join("roast.md")).unwrap();
     assert!(report.contains("Reason: timed out after "), "{report}");
-    // The whole tree died: the grandchild's 2 s write never lands.
-    std::thread::sleep(Duration::from_secs(3));
+    // The whole tree died: the grandchild's 4 s write never lands.
+    std::thread::sleep(Duration::from_secs(5));
     assert!(!late.exists(), "a grandchild outlived the cap");
 }
 
