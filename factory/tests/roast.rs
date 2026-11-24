@@ -14,7 +14,7 @@ enum Mode {
     Report,
     /// Output with no VERDICT line.
     Garbage,
-    /// Hangs past the cap, with a grandchild that would write `FAKE_LATE` after about 4 s if it survived.
+    /// Hangs past the cap, with a grandchild that would write `FAKE_LATE` after about 5 s if it survived.
     Hang,
     /// Writes nothing and fails.
     Silent,
@@ -61,7 +61,7 @@ fn out_json(text: &str) -> String {
 
 #[cfg(windows)]
 fn hang() -> String {
-    "start \"\" /b cmd /c \"ping -n 5 127.0.0.1 >nul & echo late> \"%FAKE_LATE%\"\"\nping -n 60 127.0.0.1 >nul\n".into()
+    "start \"\" /b cmd /c \"ping -n 6 127.0.0.1 >nul & echo late> \"%FAKE_LATE%\"\"\nping -n 60 127.0.0.1 >nul\n".into()
 }
 
 #[cfg(windows)]
@@ -101,7 +101,7 @@ fn out_json(text: &str) -> String {
 
 #[cfg(unix)]
 fn hang() -> String {
-    "(sleep 4; echo late > \"$FAKE_LATE\") &\nsleep 60\n".into()
+    "(sleep 5; echo late > \"$FAKE_LATE\") &\nsleep 60\n".into()
 }
 
 #[cfg(unix)]
@@ -231,14 +231,14 @@ fn cap_kills_a_hung_agent() {
     let (bin, out) = bin("roast-hang");
     fake(&bin, "claude", true, Mode::Hang);
     let late = bin.parent().unwrap().join("late.txt");
-    let env = [("FACTORY_ROAST_SECS", "1"), ("FAKE_LATE", late.to_str().unwrap())];
+    let env = [("FACTORY_ROAST_SECS", "2"), ("FAKE_LATE", late.to_str().unwrap())];
     let (code, line, secs) = roast(&bin, &env, &[URL, &out, "--cli", "claude"]);
     assert_eq!(code, 1, "{line}");
     assert!(line.starts_with("roast claude INCOMPLETE 0 findings "), "{line}");
     assert!(secs < Duration::from_secs(20).as_secs(), "took {secs} s");
     let report = std::fs::read_to_string(Path::new(&out).join("roast.md")).unwrap();
     assert!(report.contains("Reason: timed out after "), "{report}");
-    // The whole tree died: the grandchild's 4 s write never lands.
+    // The whole tree died: the grandchild's 5 s write never lands (the 2 s cap lets it start first: a kill racing its spawn would miss it).
     std::thread::sleep(Duration::from_secs(5));
     assert!(!late.exists(), "a grandchild outlived the cap");
 }

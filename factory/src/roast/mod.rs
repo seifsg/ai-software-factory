@@ -6,6 +6,7 @@ mod cmd;
 mod pick;
 mod report;
 mod run;
+mod tree;
 mod url;
 mod work;
 

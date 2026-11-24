@@ -1,7 +1,8 @@
 //! Runs the outside agent under a hard clock: brief on stdin, output to files, the whole process tree killed at the cap.
 
 use super::cmd::Job;
-use crate::paths::{quiet_command, text};
+use super::tree::Tree;
+use crate::paths::text;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
@@ -23,16 +24,14 @@ pub fn run(job: Job, cap: Duration, out: &Path) -> Result<Done, String> {
     let Job { mut command, brief } = job;
     let file = |name: &str| File::create(out.join(name)).map_err(|e| format!("cannot write {}: {e}", text(&out.join(name))));
     command.stdin(Stdio::piped()).stdout(file("agent.out")?).stderr(file("agent.err")?);
-    group(&mut command);
     let start = Instant::now();
-    let mut child = command.spawn().map_err(|e| format!("cannot start the agent CLI: {e}"))?;
-    let mut stdin = child.stdin.take().ok_or("agent CLI has no stdin")?;
+    let mut tree = Tree::spawn(command).map_err(|e| format!("cannot start the agent CLI: {e}"))?;
+    let mut stdin = tree.child.stdin.take().ok_or("agent CLI has no stdin")?;
     // A thread, so a child that reads late never blocks the clock below.
     let feeder = std::thread::spawn(move || stdin.write_all(brief.as_bytes()));
-    let exited = wait(&mut child, cap)?;
-    // Only at the cap: after a normal exit the pid is free again and could name an unrelated process.
+    let exited = wait(&mut tree.child, cap)?;
     if exited.is_none() {
-        kill_tree(&mut child);
+        tree.kill();
     }
     // A write error only means the agent exited before reading the whole brief; its report says the rest.
     let _ = feeder.join();
@@ -40,13 +39,12 @@ pub fn run(job: Job, cap: Duration, out: &Path) -> Result<Done, String> {
 }
 
 /// True or false for the command's success within `cap`; `None` when it hung (it is killed) or did not start.
-pub fn status_within(mut command: Command, cap: Duration) -> Option<bool> {
-    group(&mut command);
-    let mut child = command.spawn().ok()?;
-    match wait(&mut child, cap).ok()? {
+pub fn status_within(command: Command, cap: Duration) -> Option<bool> {
+    let mut tree = Tree::spawn(command).ok()?;
+    match wait(&mut tree.child, cap).ok()? {
         Some(code) => Some(code == Some(0)),
         None => {
-            kill_tree(&mut child);
+            tree.kill();
             None
         }
     }
@@ -64,32 +62,4 @@ fn wait(child: &mut Child, cap: Duration) -> Result<Option<Option<i32>>, String>
         }
         std::thread::sleep(TICK);
     }
-}
-
-/// Own process group on Unix, so one signal reaches the CLI, its browser server and the browser.
-fn group(command: &mut Command) {
-    #[cfg(unix)]
-    {
-        use std::os::unix::process::CommandExt;
-        command.process_group(0);
-    }
-    #[cfg(not(unix))]
-    let _ = command;
-}
-
-/// Kills the child and everything it started: `taskkill /T` on Windows, the process group elsewhere.
-fn kill_tree(child: &mut Child) {
-    let pid = child.id().to_string();
-    let mut k = if cfg!(windows) {
-        let mut k = quiet_command("taskkill");
-        k.args(["/PID", &pid, "/T", "/F"]);
-        k
-    } else {
-        let mut k = quiet_command("kill");
-        k.args(["-KILL", &format!("-{pid}")]);
-        k
-    };
-    let _ = k.stdin(Stdio::null()).stdout(Stdio::null()).stderr(Stdio::null()).status();
-    let _ = child.kill();
-    let _ = child.wait();
 }
