@@ -109,10 +109,11 @@ fn refresh() {
         return;
     }
     sweep(&cache);
-    let tag = run_for(Command::new("gh").args(["api", &format!("repos/{SLUG}/releases/latest"), "--jq", ".tag_name"]))
+    // quiet_command: this runs in the detached refresh, which has no console, so a plain spawn opens a window
+    let tag = run_for(paths::quiet_command("gh").args(["api", &format!("repos/{SLUG}/releases/latest"), "--jq", ".tag_name"]))
         .filter(|t| !t.trim().is_empty())
         .or_else(|| {
-            run_for(Command::new("curl").args(["-fsm", "20", &format!("https://api.github.com/repos/{SLUG}/releases/latest")]))
+            run_for(paths::quiet_command("curl").args(["-fsm", "20", &format!("https://api.github.com/repos/{SLUG}/releases/latest")]))
                 .and_then(|body| tag_name(&body))
         })
         .unwrap_or_default();
