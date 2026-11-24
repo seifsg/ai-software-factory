@@ -1,9 +1,9 @@
 //! Which URLs the roast may open: a plain http(s) URL, and without `FACTORY_ROAST_ANY_HOST=1` only on this machine.
 
-/// The URL's origin (`scheme://host[:port]`) and lowercase host; `None` unless it is a plain http(s) URL.
+/// The URL's lowercase host; `None` unless it is a plain http(s) URL with a host.
 /// Refuses whitespace, control characters, quotes, backticks and `\` anywhere: browsers read `\` as `/`, so
 /// `http://evil.com\@localhost` would pass a naive host split and open evil.com.
-pub fn origin(url: &str) -> Option<(String, String)> {
+pub fn host(url: &str) -> Option<String> {
     if url.chars().any(|c| c.is_whitespace() || c.is_control() || matches!(c, '\\' | '\'' | '"' | '`')) {
         return None;
     }
@@ -18,14 +18,13 @@ pub fn origin(url: &str) -> Option<(String, String)> {
         None => hostport.split(':').next()?,
     }
     .to_ascii_lowercase();
-    // `;` separates Playwright's allowed-origins list.
-    (!host.is_empty() && !hostport.contains(';')).then(|| (format!("{scheme}://{hostport}"), host))
+    (!host.is_empty()).then_some(host)
 }
 
 /// True for a URL whose host is local: `localhost`, `*.localhost`, `*.test`, `127.0.0.0/8` or `::1`.
 /// Why: the worst-user round submits junk and clicks everything; a shared or live site must never get that unasked.
 pub fn is_local(url: &str) -> bool {
-    origin(url).is_some_and(|(_, host)| {
+    host(url).is_some_and(|host| {
         let host = host.strip_suffix('.').unwrap_or(&host);
         host == "localhost"
             || host.ends_with(".localhost")
@@ -37,7 +36,7 @@ pub fn is_local(url: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::{is_local, origin};
+    use super::{host, is_local};
 
     #[test]
     fn local_hosts_only() {
@@ -65,9 +64,9 @@ mod tests {
     }
 
     #[test]
-    fn origin_drops_path_keeps_port() {
-        assert_eq!(origin("http://127.0.0.1:47811/a?b#c"), Some(("http://127.0.0.1:47811".into(), "127.0.0.1".into())));
-        assert_eq!(origin("https://shop.test"), Some(("https://shop.test".into(), "shop.test".into())));
-        assert_eq!(origin("https://"), None);
+    fn host_of_a_plain_url_only() {
+        assert_eq!(host("http://127.0.0.1:47811/a?b#c").as_deref(), Some("127.0.0.1"));
+        assert_eq!(host("https://Shop.TEST").as_deref(), Some("shop.test"));
+        assert_eq!(host("https://"), None);
     }
 }

@@ -36,6 +36,10 @@ impl Work {
         for entry in fs::read_dir(&self.0).map_err(|e| format!("cannot read {}: {e}", text(&self.0)))?.flatten() {
             if entry.file_type().is_ok_and(|t| t.is_file()) {
                 let (from, to) = (entry.path(), out.join(entry.file_name()));
+                // A symlink planted at the target would redirect the write: replace it, never follow it.
+                if fs::symlink_metadata(&to).is_ok_and(|m| m.file_type().is_symlink()) {
+                    fs::remove_file(&to).map_err(|e| format!("cannot replace the symlink {}: {e}", text(&to)))?;
+                }
                 fs::copy(&from, &to).map_err(|e| format!("cannot copy {} to {}: {e}", text(&from), text(&to)))?;
             }
         }

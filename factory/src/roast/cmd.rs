@@ -46,11 +46,11 @@ pub struct Job {
     pub brief: String,
 }
 
-/// Builds the outside agent's command for `url`, working in the folder `out`; the browser may load only `origin`.
-pub fn build(agent: &Agent, npx: &Path, out: &Path, url: &str, origin: &str) -> Result<Job, String> {
+/// Builds the outside agent's command for `url`, working in the folder `out`.
+pub fn build(agent: &Agent, npx: &Path, out: &Path, url: &str) -> Result<Job, String> {
     let npx = super::work::clean(npx)?;
     let o = text(out);
-    let pw = mcp_args(&o, origin);
+    let pw = mcp_args(&o);
     let mut c = quiet_command(&agent.path);
     match agent.vendor {
         Vendor::Codex => codex(&mut c, &npx, &o, &pw),
@@ -62,10 +62,11 @@ pub fn build(agent: &Agent, npx: &Path, out: &Path, url: &str, origin: &str) -> 
     Ok(Job { command: c, brief })
 }
 
-/// Playwright MCP's own arguments: shots and snapshots stay in the work folder, requests stay on the app's origin
-/// (a guard against a steered agent sending data elsewhere; Playwright itself calls it no security boundary).
-fn mcp_args<'a>(o: &'a str, origin: &'a str) -> [&'a str; 9] {
-    ["-y", MCP, "--headless", "--isolated", "--output-dir", o, "--viewport-size=1440x900", "--allowed-origins", origin]
+/// Playwright MCP's own arguments; shots and snapshots stay in the work folder. No `--allowed-origins`: it would block
+/// the app's own API on another port, CDNs and sign-in pages (false findings), and with no shell or file tool the
+/// agent holds only page data, which Playwright says that flag does not guard anyway.
+fn mcp_args(o: &str) -> [&str; 7] {
+    ["-y", MCP, "--headless", "--isolated", "--output-dir", o, "--viewport-size=1440x900"]
 }
 
 /// `codex exec`, read-only sandbox, no shell (a live probe answered "NO SHELL"), no desktop browser or computer use:

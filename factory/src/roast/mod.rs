@@ -11,7 +11,7 @@ mod work;
 
 pub use pick::{Vendor, order};
 pub use report::{Verdict, parse};
-pub use url::{is_local, origin};
+pub use url::{host, is_local};
 
 use crate::paths::text;
 use std::path::PathBuf;
@@ -63,7 +63,7 @@ fn roast(o: &Opts) -> Result<String, String> {
     if env("FACTORY_ROAST", "0") {
         return Err("off (FACTORY_ROAST=0)".into());
     }
-    let (origin, _) = origin(o.url).ok_or_else(|| format!("{} is not a plain http(s) URL", o.url))?;
+    host(o.url).ok_or_else(|| format!("{} is not a plain http(s) URL", o.url))?;
     if !env("FACTORY_ROAST_ANY_HOST", "1") && !is_local(o.url) {
         return Err(format!("{} is not a local URL (localhost, 127.x, ::1, .localhost, .test); FACTORY_ROAST_ANY_HOST=1 allows it", o.url));
     }
@@ -73,7 +73,7 @@ fn roast(o: &Opts) -> Result<String, String> {
     let out = PathBuf::from(work::clean(&o.out)?);
     let secs = std::env::var("FACTORY_ROAST_SECS").ok().and_then(|s| s.parse().ok()).filter(|&s| s > 0).unwrap_or(SECS);
     let work = work::Work::new()?;
-    let job = cmd::build(&agent, &npx, work.path(), o.url, &origin)?;
+    let job = cmd::build(&agent, &npx, work.path(), o.url)?;
     let done = run::run(job, Duration::from_secs(secs), work.path())?;
     // The agent ran: from here a failure is INCOMPLETE (exit 1), never a SKIP.
     let name = agent.vendor.name();

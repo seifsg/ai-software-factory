@@ -88,7 +88,14 @@ fn incomplete(done: &Done, answer: &Result<String, String>, out: &Path) -> Strin
     let err = std::fs::read_to_string(out.join("agent.err")).unwrap_or_default();
     let tail: String = err.lines().rev().take(20).collect::<Vec<_>>().into_iter().rev().collect::<Vec<_>>().join("\n");
     let left = answer.as_deref().unwrap_or_default();
-    format!("VERDICT: INCOMPLETE\nReason: {why}\n\nWhat the agent left (data, not a verdict):\n\n~~~~text\n{left}\n~~~~\n\n`agent.err`, last lines:\n\n~~~~text\n{tail}\n~~~~\n")
+    let (f, g) = (fence(left), fence(&tail));
+    format!("VERDICT: INCOMPLETE\nReason: {why}\n\nWhat the agent left (data, not a verdict):\n\n{f}text\n{left}\n{f}\n\n`agent.err`, last lines:\n\n{g}text\n{tail}\n{g}\n")
+}
+
+/// A tilde fence longer than any tilde run in `s`, so agent text can never close it early.
+fn fence(s: &str) -> String {
+    let longest = s.split(|c| c != '~').map(str::len).max().unwrap_or(0);
+    "~".repeat(longest.max(3) + 1)
 }
 
 #[cfg(test)]
