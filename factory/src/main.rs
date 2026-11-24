@@ -23,6 +23,7 @@ const USAGE: &str = "usage: factory <command>
   receipt start [--suite <name>] -- <command>...
   receipt write --cmd <command> (--exit <code> | --result PASS|FAIL) [--suite <name>] [--secs <n>] [--log <path>]
   receipt check [--commit <sha>] [--suite <name>]
+  roast <url> <out folder> [--cli codex|claude] [--any-host]  another agent CLI plays the worst user
   --version";
 
 fn main() -> ExitCode {
@@ -43,6 +44,7 @@ fn main() -> ExitCode {
         ["tree", rest @ ..] => factory::git::tree::cli(rest),
         ["proof-hash", rest @ ..] => factory::proof::cli(rest),
         ["receipt", rest @ ..] => factory::receipt::cli(rest),
+        ["roast", rest @ ..] => factory::roast::cli(rest),
         _ => {
             eprintln!("{USAGE}");
             2
