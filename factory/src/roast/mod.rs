@@ -7,13 +7,14 @@ mod pick;
 mod report;
 mod run;
 mod url;
+mod work;
 
 pub use pick::{Vendor, order};
 pub use report::{Verdict, parse};
 pub use url::is_local;
 
 use crate::paths::text;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::time::Duration;
 
 const USAGE: &str = "usage: factory roast <url> <out folder> [--cli codex|claude] [--any-host]";
@@ -70,10 +71,13 @@ fn roast(o: &Opts) -> Result<String, String> {
     }
     let npx = pick::find("npx").ok_or("npx not found: the browser needs Node.js")?;
     let agent = pick::choose(o.cli)?;
-    let out = prepare(&o.out)?;
+    std::fs::create_dir_all(&o.out).map_err(|e| format!("cannot create {}: {e}", text(&o.out)))?;
+    let out = PathBuf::from(work::clean(&o.out)?);
     let secs = std::env::var("FACTORY_ROAST_SECS").ok().and_then(|s| s.parse().ok()).filter(|&s| s > 0).unwrap_or(SECS);
-    let job = cmd::build(&agent, &npx, &out, o.url)?;
-    let done = run::run(job, Duration::from_secs(secs), &out)?;
+    let work = work::Work::new()?;
+    let job = cmd::build(&agent, &npx, work.path(), o.url)?;
+    let done = run::run(job, Duration::from_secs(secs), work.path())?;
+    work.collect(&out)?;
     let (verdict, findings) = report::finish(agent.vendor, &out, &done)?;
     Ok(format!(
         "roast {} {} {findings} findings {}s {}",
@@ -82,17 +86,6 @@ fn roast(o: &Opts) -> Result<String, String> {
         done.secs,
         text(&out.join("roast.md"))
     ))
-}
-
-/// Creates the report folder and returns its absolute path (the outside agent runs inside it).
-fn prepare(out: &Path) -> Result<PathBuf, String> {
-    std::fs::create_dir_all(out).map_err(|e| format!("cannot create {}: {e}", text(out)))?;
-    let abs = std::path::absolute(out).map_err(|e| format!("cannot resolve {}: {e}", text(out)))?;
-    let s = text(&abs);
-    if s.contains(['\'', '"', '\n', '\r']) {
-        return Err(format!("report folder path has a quote or newline: {s}"));
-    }
-    Ok(PathBuf::from(s))
 }
 
 #[cfg(test)]

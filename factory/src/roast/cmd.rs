@@ -78,13 +78,18 @@ fn codex(c: &mut Command, npx: &str, o: &str) {
 }
 
 /// `claude -p`, no built-in tools, only the allowlisted browser tools, JSON result on stdout.
+/// `--restricted` skips the owner's settings files (so their plugins and hooks), and the settings file turns off
+/// any hook left: a live run otherwise answered the factory's own Stop hook instead of reporting.
 fn claude(c: &mut Command, npx: &str, out: &Path) -> Result<(), String> {
     let o = text(out);
-    let config = serde_json::json!({ "mcpServers": { "pw": { "command": npx, "args": mcp_args(&o) } } });
-    let file = out.join("mcp.json");
-    std::fs::write(&file, config.to_string()).map_err(|e| format!("cannot write {}: {e}", text(&file)))?;
+    let write = |name: &str, json: serde_json::Value| {
+        let file = out.join(name);
+        std::fs::write(&file, json.to_string()).map(|()| text(&file)).map_err(|e| format!("cannot write {}: {e}", text(&file)))
+    };
+    let mcp = write("mcp.json", serde_json::json!({ "mcpServers": { "pw": { "command": npx, "args": mcp_args(&o) } } }))?;
+    let settings = write("settings.json", serde_json::json!({ "disableAllHooks": true }))?;
     let allowed = TOOLS.iter().map(|t| format!("mcp__pw__{t}")).collect::<Vec<_>>().join(",");
-    c.args(["-p", "--model", "sonnet", "--strict-mcp-config", "--mcp-config", &text(&file)]);
+    c.args(["-p", "--model", "sonnet", "--restricted", "--settings", &settings, "--strict-mcp-config", "--mcp-config", &mcp]);
     c.args(["--tools", "", "--allowedTools", &allowed, "--permission-mode", "dontAsk"]);
     c.args(["--max-turns", MAX_TURNS, "--max-budget-usd", MAX_USD, "--no-session-persistence", "--output-format", "json"]);
     c.env("MCP_TIMEOUT", (MCP_START_SECS * 1000).to_string());

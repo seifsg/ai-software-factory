@@ -31,7 +31,7 @@ fn fake(bin: &Path, name: &str, logged_in: bool, mode: Mode) -> PathBuf {
         (Mode::Garbage, true) => out_json("looks fine"),
         (Mode::Hang, _) => hang(),
     };
-    script(bin, name, &format!("{}{body}", status_line(login)))
+    script(bin, name, &format!("{}{}{body}", status_line(login), cwd_line()))
 }
 
 #[cfg(windows)]
@@ -61,6 +61,11 @@ fn hang() -> String {
     "ping -n 60 127.0.0.1 >nul\n".into()
 }
 
+#[cfg(windows)]
+fn cwd_line() -> String {
+    "cd > cwd.txt\n".into()
+}
+
 #[cfg(unix)]
 fn script(bin: &Path, name: &str, body: &str) -> PathBuf {
     use std::os::unix::fs::PermissionsExt;
@@ -88,6 +93,11 @@ fn out_json(text: &str) -> String {
 #[cfg(unix)]
 fn hang() -> String {
     "sleep 60\n".into()
+}
+
+#[cfg(unix)]
+fn cwd_line() -> String {
+    "pwd > cwd.txt\n".into()
 }
 
 /// Runs `factory roast` with only the fakes in `bin` ahead of PATH and a clean host env; returns exit, stdout, seconds.
@@ -126,6 +136,9 @@ fn claude_host_roasts_with_codex_and_parses_the_verdict() {
     assert!(line.ends_with("/roast.md"), "{line}");
     let report = std::fs::read_to_string(Path::new(&out).join("roast.md")).unwrap();
     assert!(report.starts_with("VERDICT: SHIP WITH FIXES"), "{report}");
+    // The agent ran in a temp folder outside the project, and its files were moved into the report folder.
+    let cwd = std::fs::read_to_string(Path::new(&out).join("cwd.txt")).unwrap();
+    assert!(cwd.contains("factory-roast-") && !cwd.contains("roast-pick"), "agent cwd: {cwd}");
 }
 
 #[test]
