@@ -14,6 +14,7 @@ pub mod paths;
 pub mod proof;
 pub mod queue;
 pub mod receipt;
+pub mod reserve;
 pub mod review;
 pub mod run;
 pub mod update;
