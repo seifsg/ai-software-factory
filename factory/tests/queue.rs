@@ -1,5 +1,6 @@
-//! `factory queue`: one slot never runs two jobs at once, two slots do, a dead job's ticket is skipped and
-//! dropped, the job's exit code passes through and bad arguments exit 2. Each test has its own machine folder.
+//! `factory queue`: one slot never runs two jobs at once, two slots do, a dead or reused-pid job's ticket is
+//! skipped and dropped, the job's exit code passes through and bad arguments exit 2. Each test has its own
+//! machine folder.
 
 mod common;
 
@@ -112,6 +113,27 @@ fn dead_ticket_is_skipped_and_dropped() {
         (1, "1", &*std::process::id().to_string(), "C:/here", "cargo")
     );
     assert!(!stale.exists(), "list keeps the dead ticket");
+}
+
+/// A ticket naming this live pid with another start time is a reused pid: dropped, and the queue goes on.
+/// Where the OS gives no start time, liveness is pid-only and this case cannot be told apart.
+#[cfg(any(windows, target_os = "linux"))]
+#[test]
+fn reused_pid_ticket_is_dropped() {
+    let d = scratch("q-reused");
+    let q = d.join("queue-heavy");
+    std::fs::create_dir_all(&q).unwrap();
+    let me = factory::machine::Owner::me();
+    let start = me.start.expect("this OS gives a start time");
+    let stale = q.join(format!("{:020}-{}-{}", 1, me.pid, start + 1));
+    std::fs::write(&stale, format!("{}\nC:/gone\ncargo test\n", me.pid)).unwrap();
+    assert!(finish(queued(&d, &[], &d.join("a"), 0, 0)).success());
+    assert!(!stale.exists(), "the reused pid's ticket stays");
+    // This process's own identity, start time included, is live and listed.
+    std::fs::write(q.join(format!("{:020}-{me}", 2)), format!("{me}\nC:/here\ncargo build\n")).unwrap();
+    let out = factory(&d, &["queue", "list"]).output().unwrap();
+    let text = String::from_utf8_lossy(&out.stdout);
+    assert_eq!((text.lines().count(), text.split(' ').nth(1)), (1, Some(&*me.pid.to_string())));
 }
 
 #[test]
