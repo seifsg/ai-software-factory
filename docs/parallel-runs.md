@@ -11,7 +11,7 @@ Each turn end of a launched session wakes the session that launched it, and that
 
 ## Suite receipts across inert changes
 
-`factory receipt run|start|write --inert <glob>` (repeatable) records paths the suite never reads, such as `docs/**`. A later head whose change from that receipt's tree touches only such paths keeps the PASS: `receipt check` and the guard read it as carried, and `receipt check` names it with its globs (`carried from tree <id>: <n> inert paths changed (inert: docs/**)`). The change is read from Git (`git diff --name-only` of the two trees), never from an agent. A carry never stands when that exact tree has its own receipt (a FAIL wins) or a suite still running on it. A glob that matches ordinary source paths (`*`, `**`, `?**`, `**.*`) is refused. Format: [receipts](receipts.md).
+`factory receipt run|start|write --inert <glob>` (repeatable) records paths the suite never reads, such as `docs/**`. A later head whose change from that receipt's tree touches only such paths keeps the PASS: `receipt check` and the guard read it as carried, and `receipt check` names it with its globs (`carried from tree <id>: <n> inert paths changed (inert: docs/**)`). The change is read from Git (`git diff --name-only` of the two trees), never from an agent. A carry never stands when that exact tree has its own receipt (a FAIL wins) or a suite still running on it. A glob that matches common source paths (`*`, `**`, `?**`, `**.*`) is refused; any other glob is still the caller's claim, so the note shows it to the checker and reviewer. Format: [receipts](receipts.md).
 
 The base is merged into a PR once, at the final run, and that merge is reviewed as a delta.
 
