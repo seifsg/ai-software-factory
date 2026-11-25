@@ -198,7 +198,14 @@ pub fn step_line(reply: &str, hooked: bool) -> String {
         )
         .replace("make the final manual round with After captures", "brief the UI-check delegate for the After captures")
         .replace("post its log line as your last message, then end your turn.", "pipe its log line to `factory guard step T<n>`, then go on with the next todo.")
-        .replace("then post the full `## 5 Build` block.", "then pipe the full `## 5 Build` block.");
+        .replace("then post the full `## 5 Build` block.", "then pipe the full `## 5 Build` block.")
+        // Gates, the review and the suite wait inside a call: a turn end here only wakes whoever launched the session.
+        .replace(", paste its line, then end your turn.", " and wait for it in the call, paste its line, then go on.")
+        .replace(" @<sha>`, then end your turn.", " @<sha>`, then go on.")
+        .replace(
+            "Reviewers and checkers read the receipt. Then end your turn.",
+            "Reviewers and checkers read the receipt. Go on with independent work; with none left, wait in the call: `factory receipt check --wait 540`, again until it lands.",
+        );
     if !hooked {
         return line;
     }
