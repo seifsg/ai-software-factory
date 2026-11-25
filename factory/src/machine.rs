@@ -29,41 +29,97 @@ pub fn dir(kind: &str) -> Result<PathBuf, String> {
     Ok(d)
 }
 
-/// True while process `pid` runs. A process of another user that refuses the query still counts as running.
+/// A process by pid and, where the OS gives one, its start time, written `pid` or `pid-start`. Why: Windows
+/// and Linux reuse pids, so a pid alone can name a stranger that keeps a dead owner's entry alive forever.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Owner {
+    pub pid: u32,
+    pub start: Option<u64>,
+}
+
+impl Owner {
+    /// This process.
+    pub fn me() -> Owner {
+        let pid = std::process::id();
+        Owner { pid, start: probe(pid).flatten() }
+    }
+
+    /// `pid` or `pid-start`; None for anything else. An old entry without a start time stays pid-only.
+    pub fn parse(s: &str) -> Option<Owner> {
+        let (pid, start) = match s.split_once('-') {
+            Some((p, t)) => (p, Some(t.parse().ok()?)),
+            None => (s, None),
+        };
+        Some(Owner { pid: pid.parse().ok()?, start })
+    }
+
+    /// True while this owner runs: its pid runs and, when both start times are known, they match.
+    pub fn alive(self) -> bool {
+        probe(self.pid).is_some_and(|now| self.start.zip(now).is_none_or(|(a, b)| a == b))
+    }
+}
+
+impl std::fmt::Display for Owner {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self.start {
+            Some(t) => write!(f, "{}-{t}", self.pid),
+            None => write!(f, "{}", self.pid),
+        }
+    }
+}
+
+/// None when process `pid` is not running, else its start time when readable. A process of another user that
+/// refuses the query still counts as running, start unknown.
 #[cfg(windows)]
-pub fn alive(pid: u32) -> bool {
+fn probe(pid: u32) -> Option<Option<u64>> {
     use std::ffi::c_void;
     #[link(name = "kernel32")]
     unsafe extern "system" {
         fn OpenProcess(access: u32, inherit: i32, pid: u32) -> *mut c_void;
         fn GetExitCodeProcess(process: *mut c_void, code: *mut u32) -> i32;
+        fn GetProcessTimes(process: *mut c_void, created: *mut u64, exited: *mut u64, kernel: *mut u64, user: *mut u64) -> i32;
         fn CloseHandle(handle: *mut c_void) -> i32;
     }
-    // PROCESS_QUERY_LIMITED_INFORMATION: the least access that reads an exit code.
+    // PROCESS_QUERY_LIMITED_INFORMATION: the least access that reads an exit code and the process times.
     let h = unsafe { OpenProcess(0x1000, 0, pid) };
     if h.is_null() {
-        return std::io::Error::last_os_error().raw_os_error() == Some(5); // ERROR_ACCESS_DENIED
+        return (std::io::Error::last_os_error().raw_os_error() == Some(5)).then_some(None); // ERROR_ACCESS_DENIED
     }
-    let mut code = 0;
-    // The handle was opened just above and is closed once, right after the query.
-    let read = unsafe { GetExitCodeProcess(h, &mut code) } != 0;
+    // A FILETIME is two little-endian u32 halves, so a u64 reads it whole. The handle is closed once, below.
+    let (mut code, mut t) = (0, [0u64; 4]);
+    let running = unsafe { GetExitCodeProcess(h, &mut code) } != 0 && code == 259; // STILL_ACTIVE
+    let timed = unsafe { GetProcessTimes(h, &mut t[0], &mut t[1], &mut t[2], &mut t[3]) } != 0;
     unsafe { CloseHandle(h) };
-    read && code == 259 // STILL_ACTIVE
+    running.then_some(timed.then_some(t[0]))
 }
 
-/// True while process `pid` runs. A process of another user (EPERM) still counts as running.
+/// None when process `pid` is not running, else its start time when readable. A process of another user
+/// (EPERM) still counts as running.
 #[cfg(unix)]
-pub fn alive(pid: u32) -> bool {
+fn probe(pid: u32) -> Option<Option<u64>> {
     unsafe extern "C" {
         fn kill(pid: i32, sig: i32) -> i32;
     }
     // Signal 0 only checks; pid 0 or past i32 would address a process group, never one process.
-    let Ok(p) = i32::try_from(pid) else { return false };
-    p > 0 && (unsafe { kill(p, 0) } == 0 || std::io::Error::last_os_error().raw_os_error() == Some(1))
+    let p = i32::try_from(pid).ok().filter(|p| *p > 0)?;
+    (unsafe { kill(p, 0) } == 0 || std::io::Error::last_os_error().raw_os_error() == Some(1)).then(|| started(pid))
 }
 
-/// A machine-wide mutex: the file at its path holds the owner's pid and is removed on drop. A lock whose
-/// owner died is moved aside and taken, so a crash never blocks the machine.
+/// Field 22 (starttime) of `/proc/<pid>/stat`, counted after the parenthesised name, which may hold spaces.
+#[cfg(target_os = "linux")]
+fn started(pid: u32) -> Option<u64> {
+    let stat = fs::read_to_string(format!("/proc/{pid}/stat")).ok()?;
+    stat[stat.rfind(')')? + 1..].split_whitespace().nth(19)?.parse().ok()
+}
+
+// Other Unix has no portable start time, so liveness there is pid-only.
+#[cfg(all(unix, not(target_os = "linux")))]
+fn started(_: u32) -> Option<u64> {
+    None
+}
+
+/// A machine-wide mutex: the file at its path holds its `Owner` and is removed on drop. A lock whose
+/// owner died or whose pid now names another process is moved aside and taken, so a crash never blocks the machine.
 pub struct Lock(PathBuf);
 
 impl Lock {
@@ -71,8 +127,8 @@ impl Lock {
     pub fn take(path: PathBuf) -> Result<Lock, String> {
         let me = std::process::id().to_string();
         let mine = suffixed(&path, &format!("~{me}"));
-        fs::write(&mine, &me).map_err(|e| format!("cannot write {}: {e}", text(&mine)))?;
-        // A hard link publishes the file whole: no reader ever sees a lock without its pid.
+        fs::write(&mine, Owner::me().to_string()).map_err(|e| format!("cannot write {}: {e}", text(&mine)))?;
+        // A hard link publishes the file whole: no reader ever sees a lock without its owner.
         let taken = loop {
             match fs::hard_link(&mine, &path) {
                 Ok(()) => break Ok(Lock(path)),
@@ -96,14 +152,15 @@ impl Drop for Lock {
 }
 
 /// Clears the lock at `path` when its owner is dead: true when it is gone, false while a live owner holds it.
+/// Known gap: a third waiter can lock between a clearer's move-aside and its link-back of a live lock.
 fn clear_dead(path: &Path, me: &str) -> Result<bool, String> {
     let holder = match fs::read_to_string(path) {
         Ok(t) => t,
         Err(e) if e.kind() == ErrorKind::NotFound => return Ok(true),
         Err(e) => return Err(format!("cannot read {}: {e}", text(path))),
     };
-    let pid = holder.parse().map_err(|_| format!("{} holds {holder:?}, not a pid: remove it by hand", text(path)))?;
-    if alive(pid) {
+    let owner = Owner::parse(&holder).ok_or_else(|| format!("{} holds {holder:?}, not a pid: remove it by hand", text(path)))?;
+    if owner.alive() {
         return Ok(false);
     }
     // Move it aside, then check what moved: another waiter may have cleared it and locked since the read.

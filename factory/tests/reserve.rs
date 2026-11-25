@@ -1,6 +1,6 @@
-//! `factory reserve`: parallel callers get distinct consecutive numbers, a floor raises the start, a count
-//! hands a range, bad arguments exit 2 and a corrupt state file exits 1 untouched. Each test has its own
-//! machine folder.
+//! `factory reserve`: parallel callers get distinct consecutive numbers, a dead or reused-pid lock is taken
+//! over, a floor raises the start, a count hands a range, bad arguments exit 2 and a corrupt state file exits 1
+//! untouched. Each test has its own machine folder.
 
 mod common;
 
@@ -69,6 +69,27 @@ fn a_live_lock_holds_callers_and_a_dead_one_is_taken_over() {
     std::fs::write(&lock, gone.id().to_string()).unwrap();
     assert_eq!(run(&d, &["k"]), (0, "2\n".into()));
     assert!(!lock.exists());
+}
+
+/// A lock naming this live pid with another start time is a reused pid: taken over. This process's full
+/// identity still holds callers. Where the OS gives no start time, liveness is pid-only.
+#[cfg(any(windows, target_os = "linux"))]
+#[test]
+fn a_lock_of_a_reused_pid_is_taken_over() {
+    let d = scratch("r-reused");
+    let lock = d.join("reserve/lock-k");
+    std::fs::create_dir_all(d.join("reserve")).unwrap();
+    let me = factory::machine::Owner::me();
+    let start = me.start.expect("this OS gives a start time");
+    std::fs::write(&lock, format!("{}-{}", me.pid, start + 1)).unwrap();
+    assert_eq!(run(&d, &["k"]), (0, "1\n".into()));
+    assert!(!lock.exists());
+    std::fs::write(&lock, me.to_string()).unwrap();
+    let mut held = reserve(&d, &["k"]);
+    std::thread::sleep(Duration::from_millis(300));
+    assert!(held.try_wait().unwrap().is_none(), "reserve ran past a live lock");
+    std::fs::remove_file(&lock).unwrap();
+    assert_eq!(String::from_utf8_lossy(&held.wait_with_output().unwrap().stdout), "2\n");
 }
 
 #[test]

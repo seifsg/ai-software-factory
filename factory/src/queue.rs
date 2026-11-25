@@ -3,10 +3,11 @@
 //! jobs start in arrival order, and a crashed job's ticket is dropped by the next scan.
 //!
 //! Folder `<machine dir>/queue-<name>/` (the prefix keeps names like `aux` off Windows device names): one
-//! ticket per job, named `<20-digit unix nanos>-<pid>` with body `pid\ncwd\ncommand line\n`, and `lock`,
-//! held while a ticket is numbered, so later tickets always sort after earlier ones.
+//! ticket per job, named `<20-digit unix nanos>-<owner>` (a `machine::Owner`: pid, then start time where the
+//! OS gives one) with body `owner\ncwd\ncommand line\n`, and `lock`, held while a ticket is numbered, so later
+//! tickets always sort after earlier ones.
 
-use crate::machine::{self, Lock};
+use crate::machine::{self, Lock, Owner};
 use crate::paths::{ns, text};
 use std::fs::{self, File};
 use std::io::Write;
@@ -78,12 +79,12 @@ fn run(name: &str, slots: usize, cmd: &[&str]) -> Result<u8, String> {
 fn join(dir: &Path, cmd: &[&str]) -> Result<Ticket, String> {
     let _lock = Lock::take(dir.join("lock"))?;
     let last = live(dir)?.last().map_or(0, |t| t.1);
-    let pid = std::process::id();
-    let name = format!("{:020}-{pid}", ns(SystemTime::now()).max(last + 1));
+    let me = Owner::me();
+    let name = format!("{:020}-{me}", ns(SystemTime::now()).max(last + 1));
     let path = dir.join(&name);
     let mut file = File::create_new(&path).map_err(|e| format!("cannot create {}: {e}", text(&path)))?;
     let ticket = Ticket(path, name);
-    let body = format!("{pid}\n{}\n{}\n", text(&crate::guard::cwd()), cmd.join(" ").replace(['\r', '\n'], " "));
+    let body = format!("{me}\n{}\n{}\n", text(&crate::guard::cwd()), cmd.join(" ").replace(['\r', '\n'], " "));
     file.write_all(body.as_bytes()).map_err(|e| format!("cannot write {}: {e}", text(&ticket.0)))?;
     Ok(ticket)
 }
@@ -124,14 +125,15 @@ fn list(name: &str) -> Result<(), String> {
     Ok(())
 }
 
-/// Live tickets in arrival order (fixed-width names sort by arrival); a dead holder's ticket is deleted.
+/// Live tickets in arrival order (fixed-width names sort by arrival); a dead holder's ticket, or one whose pid
+/// now names another process, is deleted.
 fn live(dir: &Path) -> Result<Vec<Entry>, String> {
     let mut out = Vec::new();
     for e in fs::read_dir(dir).map_err(|e| format!("cannot read {}: {e}", text(dir)))? {
         let name = e.map_err(|e| format!("cannot read {}: {e}", text(dir)))?.file_name().to_string_lossy().into_owned();
-        let Some((at, pid)) = parse(&name) else { continue };
-        if machine::alive(pid) {
-            out.push((name, at, pid));
+        let Some((at, owner)) = parse(&name) else { continue };
+        if owner.alive() {
+            out.push((name, at, owner.pid));
             continue;
         }
         match fs::remove_file(dir.join(&name)) {
@@ -143,11 +145,11 @@ fn live(dir: &Path) -> Result<Vec<Entry>, String> {
     Ok(out)
 }
 
-/// A ticket file name as arrival nanos and pid; None for any other file.
-fn parse(name: &str) -> Option<(u128, u32)> {
-    let (at, pid) = name.split_once('-')?;
+/// A ticket file name as arrival nanos and owner; None for any other file.
+fn parse(name: &str) -> Option<(u128, Owner)> {
+    let (at, owner) = name.split_once('-')?;
     (at.len() == 20 && at.bytes().all(|b| b.is_ascii_digit())).then_some(())?;
-    Some((at.parse().ok()?, pid.parse().ok()?))
+    Some((at.parse().ok()?, Owner::parse(owner)?))
 }
 
 /// A ticket's cwd and command line; empty when its job ended since the scan.
