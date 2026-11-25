@@ -201,14 +201,34 @@ pub fn step_line(reply: &str, hooked: bool) -> String {
         .replace("then post the full `## 5 Build` block.", "then pipe the full `## 5 Build` block.")
         // Gates, the review and the suite wait inside a call: a turn end here only wakes whoever launched the session.
         .replace(", paste its line, then end your turn.", " and wait for it in the call, paste its line, then go on.")
-        .replace(" @<sha>`, then end your turn.", " @<sha>`, then go on.")
+        .replace(" @<sha>`, then end your turn.", " @<sha>` once it hands back (wait in the call), then go on.")
         .replace(
             "Reviewers and checkers read the receipt. Then end your turn.",
-            "Reviewers and checkers read the receipt. Go on with independent work; with none left, wait in the call: `factory receipt check --wait 540`, again until it lands.",
+            &format!(
+                "Reviewers and checkers read the receipt. Go on with independent work; with none left, wait in the call: `{} receipt check --wait 540` with a 600 s tool timeout, again until it lands.",
+                super::exe()
+            ),
         );
     if !hooked {
         return line;
     }
     line.replace(" Load stop-check right before your block or todo line.", "")
         .replace(" This stop ends the Stop check: load stop-check right before the next block.", "")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// `guard step` rewrites every turn-end prompt of the loop (gate, review, receipt) into a wait inside the call.
+    #[test]
+    fn step_mode_waits_in_the_call() {
+        for prompt in [gate('B'), review(), receipt('C', crate::receipt::Standing::Missing, "fx")] {
+            let line = step_line(&for_run("r", &prompt), true);
+            assert!(!line.contains("end your turn"), "{line}");
+            assert!(line.contains("in the call"), "{line}");
+        }
+        let wait = step_line(&receipt('R', crate::receipt::Standing::Missing, "fx"), true);
+        assert!(wait.contains("receipt check --wait 540` with a 600 s tool timeout"), "{wait}");
+    }
 }
