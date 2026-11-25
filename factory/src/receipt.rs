@@ -212,11 +212,16 @@ pub fn find_pass(repo: &Repo, commit: &str, suite: &str) -> Option<Found> {
     if let Some(hit) = all.iter().find(|(_, r)| r.tree == t) {
         return Some(exact(hit));
     }
-    carried(repo, all, &t)
+    carried(repo, all, &t, suite)
 }
 
-/// The newest PASS among `all` carried to `tree`.
-fn carried(repo: &Repo, all: Vec<(PathBuf, Receipt)>, tree: &str) -> Option<Found> {
+/// The newest PASS among `all` carried to `tree`, only while `tree` has no receipt of `suite` (a FAIL there
+/// is the answer) and no run claiming it (its result will be).
+fn carried(repo: &Repo, all: Vec<(PathBuf, Receipt)>, tree: &str, suite: &str) -> Option<Found> {
+    let own = path_of(&repo.work, tree, suite);
+    if own.exists() || own.with_extension("running").exists() {
+        return None;
+    }
     carry::find(repo, all, tree).map(|(path, receipt, c)| Found { path, receipt, carried: Some(c) })
 }
 
@@ -381,7 +386,7 @@ fn reused(s: &Snapshot, suite: &str) -> bool {
         );
         return true;
     }
-    let Some(f) = Repo::discover(&s.work).and_then(|repo| carried(&repo, passes(&s.work, suite), &s.tree)) else { return false };
+    let Some(f) = Repo::discover(&s.work).and_then(|repo| carried(&repo, passes(&s.work, suite), &s.tree, suite)) else { return false };
     eprintln!(
         "factory receipt: {suite} passed on {}, {} s: reused, not run again. Reviews and gates read it; `--again` runs it on this tree anyway.",
         f.line(),
@@ -434,14 +439,21 @@ fn cli_check(opts: &[&str], here: &Path) -> u8 {
     let commit = opt(opts, "--commit").map_or_else(|| repo.info().head, String::from);
     let deadline = Instant::now() + Duration::from_secs(wait.unwrap_or(0));
     let tree = wait.and_then(|_| repo.commit_tree(&commit));
+    let mut seen = None;
     loop {
-        if let Some(f) = find_pass(&repo, &commit, suite) {
-            println!("{}", f.line());
-            return 0;
-        }
-        if let Some(p) = tree.as_deref().and_then(|t| settled_fail(&repo.work, t, suite)) {
-            println!("{} FAIL", crate::paths::text(&p));
-            return 1;
+        // Receipts and claims live only in the folder: unchanged since the last look, the answer is too, so the
+        // carry's `git diff` spawns run once per folder change, not once per second.
+        let now = Some(folder_stamp(&repo.work));
+        if now != seen {
+            if let Some(f) = find_pass(&repo, &commit, suite) {
+                println!("{}", f.line());
+                return 0;
+            }
+            if let Some(p) = tree.as_deref().and_then(|t| settled_fail(&repo.work, t, suite)) {
+                println!("{} FAIL", crate::paths::text(&p));
+                return 1;
+            }
+            seen = now;
         }
         let left = deadline.saturating_duration_since(Instant::now());
         if left.is_zero() {
@@ -451,6 +463,14 @@ fn cli_check(opts: &[&str], here: &Path) -> u8 {
         }
         std::thread::sleep(left.min(Duration::from_secs(1)));
     }
+}
+
+/// The receipts folder's entry names and modified times, sorted: what `--wait` compares between looks.
+fn folder_stamp(work: &Path) -> Vec<(std::ffi::OsString, Option<std::time::SystemTime>)> {
+    let Ok(rd) = std::fs::read_dir(dir(work)) else { return Vec::new() };
+    let mut all: Vec<_> = rd.flatten().map(|e| (e.file_name(), e.metadata().and_then(|m| m.modified()).ok())).collect();
+    all.sort();
+    all
 }
 
 /// A FAIL receipt on exactly `tree` with no run of the suite still claiming it (a rerun there may pass).

@@ -51,7 +51,10 @@ fn docs_only_change_carries_the_pass() {
     change(&dir, &["docs/a.md"]);
     let (code, out) = factory(&dir, &dir, &["receipt", "check"], "");
     assert_eq!(code, 0, "{out}");
-    assert!(out.contains(&format!("{tree}-full.txt (carried from tree {}: 1 inert paths changed)", &tree[..12])), "{out}");
+    assert!(
+        out.contains(&format!("{tree}-full.txt (carried from tree {}: 1 inert paths changed (inert: docs/**, *.md))", &tree[..12])),
+        "{out}"
+    );
     // `run` reuses the carried PASS: the missing program would fail if it ran.
     let (code, out) = factory(&dir, &dir, &["receipt", "run", "--", "factory-no-such-suite-program"], "");
     assert_eq!(code, 0, "{out}");
@@ -104,16 +107,59 @@ fn no_inert_line_means_no_carry() {
 #[test]
 fn a_glob_matching_every_path_is_refused() {
     let (dir, tree) = repo("carry-refuse");
-    for glob in ["**", "*", "**/*", "/**", ""] {
+    for glob in ["**", "*", "**/*", "/**", "", "?**", "**?", "*?/**", "**.*", "**a"] {
         let (code, out) = write(&dir, "PASS", &["--inert", glob]);
         assert_eq!(code, 2, "{glob:?}: {out}");
-        assert!(out.contains("matches every path"), "{out}");
+        assert!(out.contains("so a code change would keep the PASS"), "{out}");
         let (code, out) = factory(&dir, &dir, &["receipt", "run", "--inert", glob, "--", "factory-no-such-suite-program"], "");
         assert_eq!(code, 2, "{glob:?}: {out}");
         let (code, out) = factory(&dir, &dir, &["receipt", "start", "--inert", glob, "--", "factory-no-such-suite-program"], "");
         assert_eq!(code, 2, "{glob:?}: {out}");
     }
     assert!(!dir.join(format!(".factory/receipts/{tree}-full.txt")).exists());
+    let (code, out) = write(&dir, "PASS", &["--inert", "docs/**", "--inert", "*.md", "--inert", "**/*.md", "--inert", "notes/**"]);
+    assert_eq!(code, 0, "{out}");
+    let _ = fs::remove_dir_all(dir);
+}
+
+/// A PASS with `--inert docs/**` on the base tree, then a docs-only commit; the new tree's id.
+fn carried_head(name: &str) -> (PathBuf, String) {
+    let (dir, _) = repo(name);
+    let (code, out) = write(&dir, "PASS", &["--inert", "docs/**"]);
+    assert_eq!(code, 0, "{out}");
+    change(&dir, &["docs/a.md"]);
+    let (code, tree) = factory(&dir, &dir, &["tree"], "");
+    assert_eq!(code, 0, "{tree}");
+    (dir, tree.trim().to_string())
+}
+
+#[test]
+fn a_fail_on_the_exact_tree_beats_a_carried_pass() {
+    let (dir, _) = carried_head("carry-fail");
+    let (code, out) = write(&dir, "FAIL", &[]);
+    assert_eq!(code, 0, "{out}");
+    let (code, out) = factory(&dir, &dir, &["receipt", "check"], "");
+    assert_eq!(code, 1, "{out}");
+    assert!(!out.contains("carried"), "{out}");
+    let started = Instant::now();
+    let (code, out) = factory(&dir, &dir, &["receipt", "check", "--wait", "30"], "");
+    assert_eq!(code, 1, "{out}");
+    assert!(started.elapsed() < Duration::from_secs(10), "the FAIL ends the wait");
+    assert!(out.trim_end().ends_with("-full.txt FAIL"), "{out}");
+    let _ = fs::remove_dir_all(dir);
+}
+
+#[test]
+fn a_run_claiming_the_exact_tree_blocks_the_carry() {
+    let (dir, tree) = carried_head("carry-claim");
+    let claim = dir.join(format!(".factory/receipts/{tree}-full.running"));
+    fs::write(&claim, "").unwrap();
+    let (code, out) = factory(&dir, &dir, &["receipt", "check"], "");
+    assert_eq!(code, 1, "{out}");
+    assert!(!out.contains("carried"), "{out}");
+    fs::remove_file(&claim).unwrap();
+    let (code, out) = factory(&dir, &dir, &["receipt", "check"], "");
+    assert_eq!(code, 0, "the claim gone, the PASS carries: {out}");
     let _ = fs::remove_dir_all(dir);
 }
 
@@ -156,5 +202,28 @@ fn wait_ends_at_the_deadline_or_on_a_fail() {
     assert_eq!(code, 1, "{out}");
     assert!(started.elapsed() < Duration::from_secs(10), "a FAIL ends the wait");
     assert!(out.trim_end().ends_with("-full.txt FAIL"), "{out}");
+    let _ = fs::remove_dir_all(dir);
+}
+
+#[test]
+fn only_the_newest_three_inert_passes_are_tried() {
+    let (dir, _) = repo("carry-bound");
+    let (code, out) = write(&dir, "PASS", &["--inert", "docs/**"]);
+    assert_eq!(code, 0, "{out}");
+    // Three newer inert PASSes on trees whose src differs from the head's: none of them carries.
+    for i in 1..=3 {
+        fs::write(dir.join("src/lib.rs"), format!("v{i}\n")).unwrap();
+        git(&dir, &["commit", "-qam", "src"], 9);
+        let (_, tree) = factory(&dir, &dir, &["tree"], "");
+        let tree = tree.trim();
+        let text = format!(
+            "factory-receipt 1\nsuite full\ntree {tree}\nhead {tree}\nclean no\nresult PASS\ncmd suite\nat 2999-01-0{i}T00:00:00Z\ninert docs/**\n"
+        );
+        fs::write(dir.join(format!(".factory/receipts/{tree}-full.txt")), text).unwrap();
+    }
+    fs::write(dir.join("src/lib.rs"), "code\n").unwrap();
+    change(&dir, &["docs/a.md"]);
+    let (code, out) = factory(&dir, &dir, &["receipt", "check"], "");
+    assert_eq!(code, 1, "the oldest PASS would carry, but only the newest three are tried: {out}");
     let _ = fs::remove_dir_all(dir);
 }

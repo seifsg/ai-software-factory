@@ -6,29 +6,43 @@ use super::Receipt;
 use crate::git::{Repo, refs::is_sha};
 use std::path::PathBuf;
 
-/// A PASS carried to another tree: the tree it ran on and how many inert paths changed since.
+/// Paths any real suite reads: a glob matching one would carry a PASS across code changes.
+const PROBES: [&str; 5] = ["a", "a.rs", "src/a.rs", "a/b/c", "x/y.ts"];
+
+/// Inert PASS receipts tried per call, newest first: each costs one `git diff` spawn, and the guard calls
+/// this several times per Stop, so a miss costs at most this many spawns however many receipts pile up.
+const TRIED: usize = 3;
+
+/// A PASS carried to another tree: the tree it ran on, how many inert paths changed since, and its globs.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Carried {
     pub from: String,
     pub paths: usize,
+    pub inert: Vec<String>,
 }
 
 impl Carried {
-    /// The words `receipt check` and `receipt run` print after the receipt's path.
+    /// The words `receipt check` and `receipt run` print after the receipt's path: globs named so a checker
+    /// can judge them.
     pub fn note(&self) -> String {
-        format!("carried from tree {}: {} inert paths changed", &self.from[..12], self.paths)
+        format!("carried from tree {}: {} inert paths changed (inert: {})", &self.from[..12], self.paths, self.inert.join(", "))
     }
 }
 
-/// Refuses a glob that matches every path (nothing left once `*` and `/` go) or breaks the one-line format.
+/// Refuses a glob with no literal character, one matching a probe source path, or one that breaks the
+/// one-line format: any of them would let a code change keep the PASS.
 pub fn check_glob(glob: &str) -> Result<(), String> {
     if glob.contains(['\n', '\r']) {
         return Err(format!("--inert {glob:?} spans lines; a receipt line holds one glob"));
     }
-    if glob.chars().all(|c| c == '*' || c == '/') {
-        return Err(format!("--inert '{glob}' matches every path, so any change would keep the PASS; name paths the suite never reads (docs/**)"));
-    }
-    Ok(())
+    let why = if glob.chars().all(|c| matches!(c, '*' | '?' | '/')) {
+        "matches every path".to_string()
+    } else if let Some(p) = PROBES.iter().find(|p| matches(glob, p.as_bytes())) {
+        format!("matches source paths such as '{p}'")
+    } else {
+        return Ok(());
+    };
+    Err(format!("--inert '{glob}' {why}, so a code change would keep the PASS; name paths the suite never reads (docs/**)"))
 }
 
 /// Whole-path match: `**` any bytes, `*` any bytes but `/`, `?` one byte but `/`, the rest literal.
@@ -66,15 +80,17 @@ fn changed(repo: &Repo, from: &str, to: &str) -> Option<Vec<Vec<u8>>> {
     out.status.success().then(|| out.stdout.split(|b| *b == 0).filter(|p| !p.is_empty()).map(<[u8]>::to_vec).collect())
 }
 
-/// The newest PASS among `passes` whose inert globs cover every path changed from its tree to `tree`.
+/// Among the `TRIED` newest inert PASSes in `passes`, the newest whose globs cover every path changed from
+/// its tree to `tree`.
 pub fn find(repo: &Repo, mut passes: Vec<(PathBuf, Receipt)>, tree: &str) -> Option<(PathBuf, Receipt, Carried)> {
     // Shas only: a receipt's tree goes to `git diff` as an argument.
     passes.retain(|(_, r)| !r.inert.is_empty() && r.tree != tree && is_sha(&r.tree) && is_sha(tree));
     passes.sort_by(|a, b| b.1.at.cmp(&a.1.at));
+    passes.truncate(TRIED);
     passes.into_iter().find_map(|(p, r)| {
         let paths = changed(repo, &r.tree, tree)?;
         let inert = !paths.is_empty() && paths.iter().all(|x| r.inert.iter().any(|g| matches(g, x)));
-        let carried = Carried { from: r.tree.clone(), paths: paths.len() };
+        let carried = Carried { from: r.tree.clone(), paths: paths.len(), inert: r.inert.clone() };
         inert.then_some((p, r, carried))
     })
 }
@@ -88,9 +104,11 @@ mod tests {
         let m = |g, p: &str| matches(g, p.as_bytes());
         assert!(m("docs/**", "docs/a/b.md") && m("**.md", "a/b.md") && m("*.md", "a.md") && m("a?c", "abc"));
         assert!(!m("*.md", "d/a.md") && !m("docs/*", "docs/a/b") && !m("a?c", "a/c") && !m("docs", "docs/x") && !m("x", "xy"));
-        for bad in ["", "*", "**", "**/*", "/**", "a\nb"] {
+        for bad in ["", "*", "**", "**/*", "/**", "?", "?**", "**?", "*?/**", "**.*", "**a", "*.rs", "src/**", "a\nb"] {
             assert!(check_glob(bad).is_err(), "{bad:?}");
         }
-        assert!(check_glob("docs/**").is_ok());
+        for good in ["docs/**", "*.md", "**/*.md", "notes/**"] {
+            assert!(check_glob(good).is_ok(), "{good:?}");
+        }
     }
 }
