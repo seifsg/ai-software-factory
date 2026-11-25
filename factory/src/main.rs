@@ -23,6 +23,8 @@ const USAGE: &str = "usage: factory <command>
   receipt start [--suite <name>] -- <command>...
   receipt write --cmd <command> (--exit <code> | --result PASS|FAIL) [--suite <name>] [--secs <n>] [--log <path>]
   receipt check [--commit <sha>] [--suite <name>]
+  queue run [--name <n>] [--slots <k>] -- <command>...  wait in a machine-wide FIFO, then run
+  queue list [--name <n>]
   --version";
 
 fn main() -> ExitCode {
@@ -43,6 +45,7 @@ fn main() -> ExitCode {
         ["tree", rest @ ..] => factory::git::tree::cli(rest),
         ["proof-hash", rest @ ..] => factory::proof::cli(rest),
         ["receipt", rest @ ..] => factory::receipt::cli(rest),
+        ["queue", rest @ ..] => factory::queue::cli(rest),
         _ => {
             eprintln!("{USAGE}");
             2
