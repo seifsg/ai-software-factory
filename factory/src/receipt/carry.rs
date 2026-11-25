@@ -7,7 +7,7 @@ use crate::git::{Repo, refs::is_sha};
 use std::path::PathBuf;
 
 /// Paths any real suite reads: a glob matching one would carry a PASS across code changes.
-const PROBES: [&str; 5] = ["a", "a.rs", "src/a.rs", "a/b/c", "x/y.ts"];
+const PROBES: [&str; 9] = ["a", "a.rs", "src/a.rs", "a/b/c", "x/y.ts", "package.json", "Cargo.toml", "go.mod", "pyproject.toml"];
 
 /// Inert PASS receipts tried per call, newest first: each costs one `git diff` spawn, and the guard calls
 /// this several times per Stop, so a miss costs at most this many spawns however many receipts pile up.
@@ -104,7 +104,7 @@ mod tests {
         let m = |g, p: &str| matches(g, p.as_bytes());
         assert!(m("docs/**", "docs/a/b.md") && m("**.md", "a/b.md") && m("*.md", "a.md") && m("a?c", "abc"));
         assert!(!m("*.md", "d/a.md") && !m("docs/*", "docs/a/b") && !m("a?c", "a/c") && !m("docs", "docs/x") && !m("x", "xy"));
-        for bad in ["", "*", "**", "**/*", "/**", "?", "?**", "**?", "*?/**", "**.*", "**a", "*.rs", "src/**", "a\nb"] {
+        for bad in ["", "*", "**", "**/*", "/**", "?", "?**", "**?", "*?/**", "**.*", "**a", "*.rs", "src/**", "*.json", "*.toml", "*.mod", "a\nb"] {
             assert!(check_glob(bad).is_err(), "{bad:?}");
         }
         for good in ["docs/**", "*.md", "**/*.md", "notes/**"] {
