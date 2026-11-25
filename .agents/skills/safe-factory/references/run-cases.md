@@ -30,7 +30,7 @@ Owner named a project folder: create if missing; run and code live there, even w
 
 ## Another session
 
-Work for another session launches the factory, never a bare task: record in its ticket, then a prompt opening with your agent's invoke form of `safe-factory`, naming mode, kind, ticket, project's absolute path, a worktree the new session creates; authority limited to that ticket.
+Work for another session launches the factory, never a bare task: record in its ticket, then a prompt opening with your agent's invoke form of `safe-factory`, naming mode, kind, ticket, project's absolute path, a worktree the new session creates; authority limited to that ticket. That session ends a turn (waking you) only when done, blocked or with proof to show.
 
 ## Update notice
 

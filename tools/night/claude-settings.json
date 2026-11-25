@@ -27,7 +27,7 @@
       "Bash(gh api -X POST repos/*/issues/*/sub_issues *)", "Bash(gh repo view*)", "Bash(gh pr checks*)",
       "Bash(git push origin *:refs/proof/*)", "Bash(git worktree add *)", "Bash(git worktree remove *)", "Bash(git hash-object *)", "Bash(git mktree*)", "Bash(git commit-tree *)",
       "Bash(gh pr create --draft *)", "Bash(gh pr view *)", "Bash(gh pr list*)", "Bash(gh pr diff *)", "Bash(gh pr edit *)", "Bash(gh pr comment *)",
-      "Bash(factory guard step *)", "Bash(factory guard check*)", "Bash(factory lint *)", "Bash(factory contracts *)", "Bash(factory proof-hash *)", "Bash(factory receipt *)"
+      "Bash(factory guard step *)", "Bash(factory guard check*)", "Bash(factory lint *)", "Bash(factory contracts *)", "Bash(factory proof-hash *)", "Bash(factory receipt *)", "Bash(factory queue run *)", "Bash(factory reserve *)"
     ]
   },
   "hooks": {

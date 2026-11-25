@@ -2,6 +2,10 @@
 
 What installs and active runs must do for each release, newest first. What changed: [CHANGELOG.md](CHANGELOG.md).
 
+## Unreleased
+
+- **Parallel runs on one machine:** replace a hand-made heavy-job lock with `factory queue run -- <command>`, and next-id lookups siblings share with `factory reserve <key> --floor <max on base>`. Name paths your full suite never reads with `--inert <glob>` on `factory receipt run|start` so docs-only heads keep the PASS.
+
 ## 0.8.3
 
 - Begin new Codex runs with `factory guard begin` in the run worktree. Resolve the packaged native launcher when PATH has none. The command selects the current thread before an inherited parent session and verifies its rollout under `CODEX_HOME` or `~/.codex`.
