@@ -24,6 +24,9 @@ const USAGE: &str = "usage: factory <command>
   receipt write --cmd <command> (--exit <code> | --result PASS|FAIL) [--suite <name>] [--secs <n>] [--log <path>]
   receipt check [--commit <sha>] [--suite <name>]
   roast <url> <out folder> [--cli codex|claude]  another agent CLI plays the worst user
+  queue run [--name <n>] [--slots <k>] -- <command>...  wait in a machine-wide FIFO, then run
+  queue list [--name <n>]
+  reserve <key> [--floor <n>] [--count <k>]  the next free numbers of a machine-wide counter
   --version";
 
 fn main() -> ExitCode {
@@ -45,6 +48,8 @@ fn main() -> ExitCode {
         ["proof-hash", rest @ ..] => factory::proof::cli(rest),
         ["receipt", rest @ ..] => factory::receipt::cli(rest),
         ["roast", rest @ ..] => factory::roast::cli(rest),
+        ["queue", rest @ ..] => factory::queue::cli(rest),
+        ["reserve", rest @ ..] => factory::reserve::cli(rest),
         _ => {
             eprintln!("{USAGE}");
             2

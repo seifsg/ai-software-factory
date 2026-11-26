@@ -9,6 +9,13 @@ The public surface is the skill names, the run file format, and the hook scripts
 ### Added
 
 - Add `factory roast <url> <out>`: on web UI runs, step 6 hands your running app to the other vendor's agent CLI (Codex from Claude Code, Claude from Codex), which plays the worst user in a headless browser and roasts the UI; its BLOCKER and MAJOR findings join the fix round and the PR shows the verdict. `FACTORY_ROAST=0` turns it off ([#365])
+- Add `factory queue run` and `factory reserve`: parallel runs on one machine share heavy jobs first in, first out and take distinct ids, waiting inside the call instead of polling ([#367])
+- Add `factory receipt check --wait` and `--inert <glob>` on receipts: a session waits for its suite in one call, and a head that changes only paths the suite never reads keeps its PASS ([#367])
+
+### Changed
+
+- `factory guard step` no longer asks for a turn end at an open gate, review or receipt, and a launched session ends a turn only when done, blocked or with proof to show, so its launcher wakes far less ([#367])
+- Step 6 lens agents run on the analyst role, and the base is merged in once at the final run with its conflicts reviewed as a delta ([#367])
 
 ## [0.8.12] - 2026-11-24
 
@@ -558,5 +565,6 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 [#353]: https://github.com/seifsg/ai-software-factory/pull/353
 [#358]: https://github.com/seifsg/ai-software-factory/pull/358
 [#333]: https://github.com/seifsg/ai-software-factory/pull/333
+[#367]: https://github.com/seifsg/ai-software-factory/issues/367
 [#362]: https://github.com/seifsg/ai-software-factory/pull/362
 [#365]: https://github.com/seifsg/ai-software-factory/pull/365
