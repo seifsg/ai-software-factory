@@ -16,9 +16,9 @@ pub fn stand(here: &Path) -> Option<(Repo, String)> {
     Some((Repo::discover(&s.work)?, s.tree))
 }
 
-/// The last roast's line with why it still stands, when `out` holds a finished roast of `url` on `tree`, or on a
-/// tree that differs from `tree` only in paths matching the inert globs recorded with it.
-pub fn find(out: &Path, url: &str, repo: &Repo, tree: &str) -> Option<String> {
+/// The last roast's line with why it still stands, when `out` holds a finished roast of `url` (by `cli` when one is
+/// forced) on `tree`, or on a tree that differs only in paths matching globs both recorded and named in `inert` now.
+pub fn find(out: &Path, url: &str, cli: Option<&str>, inert_now: &[&str], repo: &Repo, tree: &str) -> Option<String> {
     let record = fs::read_to_string(out.join(FILE)).ok()?;
     let (mut from, mut was, mut line, mut inert) = (None, None, None, Vec::new());
     for l in record.lines() {
@@ -31,11 +31,13 @@ pub fn find(out: &Path, url: &str, repo: &Repo, tree: &str) -> Option<String> {
         }
     }
     let (from, line) = (from?, line?);
-    (was? == url && !line.contains(" INCOMPLETE ") && out.join("roast.md").is_file()).then_some(())?;
+    let by = line.split(' ').nth(1);
+    (was? == url && cli.is_none_or(|c| by == Some(c)) && !line.contains(" INCOMPLETE ") && out.join("roast.md").is_file()).then_some(())?;
     if from == tree {
         return Some(format!("{line} (reused: same tree)"));
     }
     // A record edited by hand must not widen the carry: every glob passes the receipt rules again.
+    inert.retain(|g| inert_now.contains(g));
     (is_sha(from) && is_sha(tree) && !inert.is_empty() && inert.iter().all(|g| carry::check_glob(g).is_ok())).then_some(())?;
     let paths = carry::changed(repo, from, tree)?;
     let covered = !paths.is_empty() && paths.iter().all(|p| inert.iter().any(|g| carry::matches(g, p)));

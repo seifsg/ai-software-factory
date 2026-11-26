@@ -80,7 +80,7 @@ fn roast(o: &Opts) -> Result<String, String> {
     let here = std::env::current_dir().map_err(|e| format!("cannot read the current folder: {e}"))?;
     let stand = reuse::stand(&here);
     if let Some((repo, tree)) = stand.as_ref().filter(|_| !env_is("FACTORY_ROAST_FRESH", "1"))
-        && let Some(line) = reuse::find(&o.out, o.url, repo, tree)
+        && let Some(line) = reuse::find(&o.out, o.url, o.cli.map(Vendor::name), &o.inert, repo, tree)
     {
         return Ok(line);
     }
@@ -98,7 +98,9 @@ fn roast(o: &Opts) -> Result<String, String> {
     let done = run::run(job, Duration::from_secs(secs), work.path())?;
     // The agent ran: from here a failure is INCOMPLETE (exit 1), never a SKIP.
     let name = agent.vendor.name();
-    Ok(match report::finish(agent.vendor, work.path(), &done).and_then(|r| work.collect(&out).map(|()| r)) {
+    // `forget` again after the copy: a `roast.txt` the agent wrote itself must never stand as the record.
+    let finished = report::finish(agent.vendor, work.path(), &done).and_then(|r| work.collect(&out).and_then(|()| reuse::forget(&out)).map(|()| r));
+    Ok(match finished {
         Ok((verdict, n)) => {
             let line = format!("roast {name} {} {n} findings {}s {}", verdict.token(), done.secs, text(&out.join("roast.md")));
             if let (Some((_, tree)), false) = (&stand, verdict == Verdict::Incomplete)
