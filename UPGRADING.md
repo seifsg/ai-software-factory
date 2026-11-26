@@ -6,6 +6,9 @@ What installs and active runs must do for each release, newest first. What chang
 
 - **Worst-user roast (default on):** web UI runs now start `factory roast` at step 6. It needs Node.js (`npx`) and the other agent CLI installed and logged in; without them it prints one `SKIP` line and the run goes on. Turn it off with `FACTORY_ROAST=0`.
 - **Night mode that copied the allow list** (`claude-settings.json`) or `codex.rules`: copy both from `tools/night/` again; they allow `factory roast`.
+
+## 0.8.13
+
 - **Parallel runs on one machine:** replace a hand-made heavy-job lock with `factory queue run -- <command>`, and next-id lookups siblings share with `factory reserve <key> --floor <max on base>`. Name paths your full suite never reads with `--inert <glob>` on `factory receipt run|start` so docs-only heads keep the PASS.
 
 ## 0.8.3
