@@ -6,6 +6,10 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+### Added
+
+- Add `factory roast <url> <out>`: on web UI runs, step 6 hands your running app to the other vendor's agent CLI (Codex from Claude Code, Claude from Codex), which plays the worst user in a headless browser and roasts the UI; its BLOCKER and MAJOR findings join the fix round and the PR shows the verdict. `FACTORY_ROAST=0` turns it off. At most two roasts run at once on a machine, and an app unchanged since its last roast (or changed only in `--inert` paths) reuses it instead of paying again ([#365])
+
 ## [0.8.13] - 2026-11-26
 
 ### Added
@@ -569,3 +573,4 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 [#333]: https://github.com/seifsg/ai-software-factory/pull/333
 [#368]: https://github.com/seifsg/ai-software-factory/pull/368
 [#362]: https://github.com/seifsg/ai-software-factory/pull/362
+[#365]: https://github.com/seifsg/ai-software-factory/pull/365

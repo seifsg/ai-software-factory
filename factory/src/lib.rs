@@ -16,7 +16,10 @@ pub mod queue;
 pub mod receipt;
 pub mod reserve;
 pub mod review;
+pub mod roast;
 pub mod run;
+#[cfg(windows)]
+pub mod streams;
 pub mod update;
 
 /// Crate version; release tooling keeps it equal to the plugin version.

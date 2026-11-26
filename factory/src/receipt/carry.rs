@@ -75,7 +75,7 @@ pub fn matches(glob: &str, path: &[u8]) -> bool {
 
 /// Paths that differ between two trees, renames as delete + add; None when Git cannot diff them (an object
 /// is missing: a dirty receipt's tree is never written).
-fn changed(repo: &Repo, from: &str, to: &str) -> Option<Vec<Vec<u8>>> {
+pub fn changed(repo: &Repo, from: &str, to: &str) -> Option<Vec<Vec<u8>>> {
     let out = crate::git::command(repo).args(["diff", "--name-only", "-z", "--no-renames", from, to]).output().ok()?;
     out.status.success().then(|| out.stdout.split(|b| *b == 0).filter(|p| !p.is_empty()).map(<[u8]>::to_vec).collect())
 }

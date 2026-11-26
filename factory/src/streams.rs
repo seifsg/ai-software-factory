@@ -1,4 +1,4 @@
-//! A redirected child must not inherit the host's original command-output pipes.
+//! A redirected child must not inherit the host's original command-output pipes (`receipt start`, `roast`).
 
 use std::ffi::c_void;
 use std::io;
@@ -13,10 +13,10 @@ unsafe extern "system" {
 }
 
 /// Keep the original handles private while spawning with explicitly redirected streams.
-pub(super) struct PrivateStreams(Vec<RawHandle>);
+pub struct PrivateStreams(Vec<RawHandle>);
 
 impl PrivateStreams {
-    pub(super) fn new() -> io::Result<Self> {
+    pub fn new() -> io::Result<Self> {
         let mut streams = Self(Vec::with_capacity(3));
         for handle in [io::stdin().as_raw_handle(), io::stdout().as_raw_handle(), io::stderr().as_raw_handle()] {
             let mut flags = 0;

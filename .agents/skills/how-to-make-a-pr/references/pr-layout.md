@@ -25,13 +25,13 @@ Fill project's PR template first, then use these blocks inside it. Skip what doe
 ```
 
 - **Header:** credit requester and deciders; say who wrote the code (a person, or factory run for its owner); separate original work from port or adaptation.
-- **Context:** link discussion that triggered PR; ticket link stays visible, not hidden in a comment.
+- **Context:** link discussion that triggered PR.
 - **Before & after:** never skipped; right after purpose, ahead of implementation detail. One `### <outcome>` per changed view/state or touched journey, named by its effect (`### 🧾 Invoice totals include tax`, never `### invoice.ts`). Every inventory item maps here; reuse shared proof with captions or timestamps.
 - **Outcome declarations:** each outcome has `**Visual:** yes` or `**Visual:** no (<reason>)`, and `**Journey:** yes` or `**Journey:** no (<reason>)`, in these exact forms; extra explanation on next line. UI run needs a visual outcome. Never call a real user journey nonvisual merely because diff changes shared logic.
 - **Visual yes:** screenshot, video, demo context and media-waiver forms: `media-proof.md`.
 - **Nonvisual proof:** matched request/response JSON, status, logs or command results: `**Before:**` then `**After:**` with fenced output, or `**Before → After:** <same input>, base <sha> → head <sha> (<criterion>)` and a `diff` block. Server-only, infrastructure or internal work with no affected interactive UI journey: no media waiver needed.
 - **Cold start:** original request and why, decisions with reasons, facts (IDs, paths, repos), current state, remaining steps, blockers. Links = audit trail, not substitute.
-- **Verification:** one row per confirmed criterion, plus ticket's checklist state: every item ticked, or the gap. Ticketed work: ticket's confirmed criteria, dependencies, integration status. Proof bound to exact pushed candidate. Name what is **unverified**.
+- **Verification:** one row per confirmed criterion, plus ticket's checklist state: every item ticked, or the gap. Ticketed work: dependencies, integration status. Web UI: roast verdict, top findings with uploaded shots, or SKIP line. Name what is **unverified**.
 - **Adjustment history:** append entry per requested change; keep for PR's whole life.
 - **Progress:** checked, reviewed, merged, released stay separate; name next visible result. Overall acceptance stays open.
 

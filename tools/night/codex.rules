@@ -18,3 +18,6 @@ prefix_rule(pattern = ["factory", "guard", "clear"], decision = "forbidden", jus
 prefix_rule(pattern = ["factory", "receipt", "write"], decision = "forbidden", justification = OWNER,
     match = ["factory receipt write --exit 0 --cmd x"], not_match = ["factory receipt run -- sh t.sh"])
 prefix_rule(pattern = ["rm", ["-rf", "-r"], ["/", "~", ".."]], decision = "forbidden", justification = OWNER)
+# `factory roast` starts the other agent CLI, which needs its own network: it runs outside the sandbox, unprompted.
+prefix_rule(pattern = ["factory", "roast"], decision = "allow", justification = "Read-only browser QA by the other agent CLI.",
+    match = ["factory roast http://localhost:3000 .factory/proof/1/roast"], not_match = ["factory receipt run -- sh t.sh"])
