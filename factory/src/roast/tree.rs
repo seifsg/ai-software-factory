@@ -15,6 +15,9 @@ impl Tree {
     pub fn spawn(mut command: Command) -> std::io::Result<Self> {
         #[cfg(unix)]
         std::os::unix::process::CommandExt::process_group(&mut command, 0);
+        // The host's own stdout and stderr stay out of the tree: an orphan holding them would hang a host call waiting for their end.
+        #[cfg(windows)]
+        let _private = crate::streams::PrivateStreams::new()?;
         let child = command.spawn()?;
         #[cfg(windows)]
         let job = win::Job::holding(&child);
@@ -23,6 +26,15 @@ impl Tree {
             #[cfg(windows)]
             job,
         })
+    }
+
+    /// After the child exited: kills what it left running (a browser the agent never closed). Windows only: the job is
+    /// this run's own, so it can never name a stranger; a Unix group id may be reused once its leader is reaped.
+    pub fn reap(&self) {
+        #[cfg(windows)]
+        if let Some(job) = &self.job {
+            job.terminate();
+        }
     }
 
     /// Kills the child and all it started, then reaps it. Only for a running child: after it exited its pid may be

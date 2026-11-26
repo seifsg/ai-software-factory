@@ -19,7 +19,7 @@ use std::time::{Duration, Instant, SystemTime};
 type Entry = (String, u128, u32);
 
 /// A queued job's ticket; dropping it leaves the queue, however the job ended.
-struct Ticket(PathBuf, String);
+pub struct Ticket(PathBuf, String);
 
 impl Drop for Ticket {
     fn drop(&mut self) {
@@ -62,15 +62,22 @@ fn queue_name(value: Option<&str>) -> Option<&str> {
     machine::valid(name, 64, "_-").then_some(name)
 }
 
-/// Queues `cmd`, waits for one of the first `slots` places, runs it with this terminal's streams and returns
-/// its exit code (a code outside 0..=255, or none after a signal, is 1).
-fn run(name: &str, slots: usize, cmd: &[&str]) -> Result<u8, String> {
+/// Joins queue `name` as `cmd` and returns once among its first `slots`; the place lasts until the ticket drops.
+/// Why: `roast` holds a place for its whole run, so parallel sessions never start more browsers and agents than slots.
+pub fn hold(name: &str, slots: usize, cmd: &[&str]) -> Result<Ticket, String> {
     let dir = machine::dir(&format!("queue-{name}"))?;
     let ticket = join(&dir, cmd)?;
     let queued = Instant::now();
     if wait(&dir, &ticket, name, slots)? {
         eprintln!("factory queue: {name} started after {} s", queued.elapsed().as_secs());
     }
+    Ok(ticket)
+}
+
+/// Queues `cmd`, waits for one of the first `slots` places, runs it with this terminal's streams and returns
+/// its exit code (a code outside 0..=255, or none after a signal, is 1).
+fn run(name: &str, slots: usize, cmd: &[&str]) -> Result<u8, String> {
+    let _place = hold(name, slots, cmd)?;
     let status = Command::new(cmd[0]).args(&cmd[1..]).status().map_err(|e| format!("cannot run {}: {e}", cmd[0]))?;
     Ok(status.code().and_then(|c| u8::try_from(c).ok()).unwrap_or(1))
 }

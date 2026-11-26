@@ -2,7 +2,7 @@
 
 mod common;
 
-use common::scratch;
+use common::{git, scratch};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::time::{Duration, Instant};
@@ -115,12 +115,17 @@ fn record() -> String {
     "pwd > cwd.txt\nprintf '%s\\n' \"$@\" > args.txt\nenv > env.txt\n".into()
 }
 
-/// Runs `factory roast` with only the fakes in `bin` ahead of PATH and a clean host env; returns exit, stdout, seconds.
+/// Runs `factory roast` in the scratch folder (outside Git: no reuse) with only the fakes in `bin` ahead of PATH.
 fn roast(bin: &Path, env: &[(&str, &str)], args: &[&str]) -> (i32, String, u64) {
+    roast_in(bin.parent().unwrap(), bin, env, args)
+}
+
+/// Runs `factory roast` in `cwd` with a clean host env and the scratch folder's own queue; returns exit, stdout, seconds.
+fn roast_in(cwd: &Path, bin: &Path, env: &[(&str, &str)], args: &[&str]) -> (i32, String, u64) {
     let path = std::env::join_paths(std::iter::once(bin.to_path_buf()).chain(std::env::split_paths(&std::env::var_os("PATH").unwrap()))).unwrap();
     let mut c = Command::new(env!("CARGO_BIN_EXE_factory"));
-    c.arg("roast").args(args).env("PATH", path);
-    for k in ["CLAUDECODE", "CODEX_THREAD_ID", "CODEX_SESSION_ID", "FACTORY_ROAST", "FACTORY_ROAST_SECS", "FACTORY_ROAST_ANY_HOST", "FACTORY_CODEX", "FACTORY_CLAUDE"] {
+    c.arg("roast").args(args).env("PATH", path).current_dir(cwd).env("FACTORY_QUEUE_DIR", bin.parent().unwrap().join("queue"));
+    for k in ["CLAUDECODE", "CODEX_THREAD_ID", "CODEX_SESSION_ID", "FACTORY_ROAST", "FACTORY_ROAST_SECS", "FACTORY_ROAST_ANY_HOST", "FACTORY_CODEX", "FACTORY_CLAUDE", "FACTORY_ROAST_FRESH", "FACTORY_ROAST_SLOTS", "PWD"] {
         c.env_remove(k);
     }
     c.envs(env.iter().copied());
@@ -256,4 +261,45 @@ fn skips_off_and_non_local() {
     let none = [("FACTORY_ROAST_ANY_HOST", "1"), ("FACTORY_CODEX", "/nope"), ("FACTORY_CLAUDE", "/nope")];
     assert!(roast(&bin, &none, &["https://example.com", &out]).1.starts_with("SKIP no agent CLI ready"));
     assert_eq!(roast(&bin, &[], &[URL]).0, 2);
+}
+
+#[test]
+fn reuses_a_roast_while_the_app_is_unchanged() {
+    let (bin, out) = bin("roast-reuse");
+    let app = bin.parent().unwrap().join("app");
+    std::fs::create_dir_all(app.join("docs")).unwrap();
+    std::fs::write(app.join("index.html"), "v1").unwrap();
+    git(&app, &["init", "-q"], 1);
+    git(&app, &["add", "-A"], 1);
+    git(&app, &["commit", "-qm", "v1"], 1);
+    fake(&bin, "codex", true, Mode::Report);
+    let args = [URL, out.as_str(), "--cli", "codex", "--inert", "docs/**"];
+    let (code, first, _) = roast_in(&app, &bin, &[], &args);
+    assert_eq!(code, 0, "{first}");
+    // From here the agent would fail: only a reuse keeps the verdict.
+    fake(&bin, "codex", true, Mode::Silent);
+    let (code, line, _) = roast_in(&app, &bin, &[], &args);
+    assert_eq!((code, line.clone()), (0, format!("{first} (reused: same tree)")));
+    std::fs::write(app.join("docs/notes.md"), "n").unwrap();
+    git(&app, &["add", "-A"], 2);
+    git(&app, &["commit", "-qm", "docs"], 2);
+    let (_, line, _) = roast_in(&app, &bin, &[], &args);
+    assert!(line.starts_with(&first) && line.contains("(reused: 1 inert paths changed since tree "), "{line}");
+    // Forced fresh, or a served file changed: the roast runs again (and the fake now fails).
+    assert_eq!(roast_in(&app, &bin, &[("FACTORY_ROAST_FRESH", "1")], &args).0, 1);
+    std::fs::write(app.join("index.html"), "v2").unwrap();
+    let (code, line, _) = roast_in(&app, &bin, &[], &args);
+    assert_eq!(code, 1, "{line}");
+    // The queue place was given back after every run.
+    let tickets = std::fs::read_dir(bin.parent().unwrap().join("queue/queue-roast")).unwrap().filter_map(Result::ok);
+    assert!(tickets.filter(|e| e.file_name() != "lock").count() == 0);
+}
+
+#[test]
+fn bad_settings_are_named_never_defaulted() {
+    let (bin, out) = bin("roast-env");
+    fake(&bin, "codex", true, Mode::Report);
+    let (code, line, _) = roast(&bin, &[("FACTORY_ROAST_SECS", "soon")], &[URL, &out, "--cli", "codex"]);
+    assert_eq!((code, line.as_str()), (0, "SKIP FACTORY_ROAST_SECS must be a number from 1 to 86400"));
+    assert_eq!(roast(&bin, &[], &[URL, &out, "--inert", "**"]).0, 2);
 }

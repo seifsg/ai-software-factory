@@ -7,9 +7,6 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::time::{Duration, Instant};
 
-#[cfg(windows)]
-mod windows;
-
 /// A per-tree claim shared by the foreground and background native runners.
 pub(super) struct Claim(PathBuf);
 
@@ -96,7 +93,7 @@ fn launch(here: &Path, suite: &str, inert: &[String], cmd: &[&str]) -> Result<St
         .stdout(log)
         .stderr(err);
     #[cfg(windows)]
-    let _handles = windows::PrivateStreams::new().map_err(|e| format!("cannot isolate the host streams: {e}"))?;
+    let _handles = crate::streams::PrivateStreams::new().map_err(|e| format!("cannot isolate the host streams: {e}"))?;
     let mut worker = command.spawn().map_err(|e| format!("cannot launch suite supervisor: {e}"))?;
     // The supervisor owns release from here, including if the calling host disconnects.
     std::mem::forget(claim);

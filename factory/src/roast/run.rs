@@ -30,8 +30,9 @@ pub fn run(job: Job, cap: Duration, out: &Path) -> Result<Done, String> {
     // A thread, so a child that reads late never blocks the clock below.
     let feeder = std::thread::spawn(move || stdin.write_all(brief.as_bytes()));
     let exited = wait(&mut tree.child, cap)?;
-    if exited.is_none() {
-        tree.kill();
+    match exited {
+        None => tree.kill(),
+        Some(_) => tree.reap(),
     }
     // A write error only means the agent exited before reading the whole brief; its report says the rest.
     let _ = feeder.join();
@@ -42,7 +43,10 @@ pub fn run(job: Job, cap: Duration, out: &Path) -> Result<Done, String> {
 pub fn status_within(command: Command, cap: Duration) -> Option<bool> {
     let mut tree = Tree::spawn(command).ok()?;
     match wait(&mut tree.child, cap).ok()? {
-        Some(code) => Some(code == Some(0)),
+        Some(code) => {
+            tree.reap();
+            Some(code == Some(0))
+        }
         None => {
             tree.kill();
             None

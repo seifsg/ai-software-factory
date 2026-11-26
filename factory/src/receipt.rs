@@ -24,7 +24,7 @@ use crate::git::{Repo, tree};
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
-mod carry;
+pub mod carry;
 mod launch;
 
 pub use carry::Carried;
