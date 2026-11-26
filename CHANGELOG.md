@@ -6,6 +6,8 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+## [0.8.14] - 2026-11-26
+
 ### Added
 
 - Add `factory roast <url> <out>`: on web UI runs, step 6 hands your running app to the other vendor's agent CLI (Codex from Claude Code, Claude from Codex), which plays the worst user in a headless browser and roasts the UI; its BLOCKER and MAJOR findings join the fix round and the PR shows the verdict. `FACTORY_ROAST=0` turns it off. At most two roasts run at once on a machine, and an app unchanged since its last roast (or changed only in `--inert` paths) reuses it instead of paying again ([#365])
@@ -495,7 +497,8 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 - Leaner runs (#137): product, feature and change runs each read 24% less method text, every gate message is shorter with the same facts, `scripts/token_report.py` measures both, and tests hold every method file and the gate's fixture messages to a byte budget and the product and change loads to 80% of their earlier size.
 - Self-update (#139): a clone install moves only to a release tag on `main` whose files match its manifest, records the previous revision, rolls back a failed install and shows a one-time notice naming both versions.
 
-[Unreleased]: https://github.com/seifsg/ai-software-factory/compare/v0.8.13...HEAD
+[Unreleased]: https://github.com/seifsg/ai-software-factory/compare/v0.8.14...HEAD
+[0.8.14]: https://github.com/seifsg/ai-software-factory/compare/v0.8.13...v0.8.14
 [0.8.13]: https://github.com/seifsg/ai-software-factory/compare/v0.8.12...v0.8.13
 [0.8.12]: https://github.com/seifsg/ai-software-factory/compare/v0.8.11...v0.8.12
 [0.8.11]: https://github.com/seifsg/ai-software-factory/compare/v0.8.10...v0.8.11

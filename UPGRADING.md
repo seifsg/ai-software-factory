@@ -2,7 +2,7 @@
 
 What installs and active runs must do for each release, newest first. What changed: [CHANGELOG.md](CHANGELOG.md).
 
-## Unreleased
+## 0.8.14
 
 - **Worst-user roast (default on):** web UI runs now start `factory roast` at step 6. It needs Node.js (`npx`) and the other agent CLI installed and logged in; without them it prints one `SKIP` line and the run goes on. Turn it off with `FACTORY_ROAST=0`.
 - **Night mode that copied the allow list** (`claude-settings.json`) or `codex.rules`: copy both from `tools/night/` again; they allow `factory roast`.
