@@ -85,13 +85,16 @@ fn receipt(repo: Option<&Repo>, x: char, sha: &str) -> (bool, String) {
         return (true, String::new());
     }
     let missing = || (false, format!("; no full-suite receipt for the tree of {sha}"));
-    let Some((p, r)) = repo.and_then(|repo| receipt::find_pass(repo, sha, "full")) else {
+    let Some(found) = repo.and_then(|repo| receipt::find_pass(repo, sha, "full")) else {
         return missing();
     };
-    match receipt::gate_standing(Some(&r), x) {
+    let (p, r) = (&found.path, &found.receipt);
+    // A carried receipt ran on another tree: the report names it so no reader takes it for this tree's run.
+    let carried = found.carried.as_ref().map_or_else(String::new, |c| format!(", {}", c.note()));
+    match receipt::gate_standing(Some(r), x) {
         Standing::Ok => (
             true,
-            format!("; receipt {} (`{}`, {} s, clean {})", crate::paths::text(&p), r.cmd, r.secs, if r.clean { "yes" } else { "no" }),
+            format!("; receipt {} (`{}`, {} s, clean {}{carried})", crate::paths::text(p), r.cmd, r.secs, if r.clean { "yes" } else { "no" }),
         ),
         Standing::Repeated(n) => (false, format!("; its receipt counts {n} passing full runs on the tree: Gate C needs exactly one")),
         Standing::Missing => missing(),

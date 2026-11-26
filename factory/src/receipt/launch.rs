@@ -31,25 +31,41 @@ impl Drop for Claim {
 }
 
 pub(super) fn start(args: &[&str], here: &Path) -> u8 {
-    let (suite, cmd) = match args {
-        ["--", cmd @ ..] => ("full", cmd),
-        ["--suite", suite, "--", cmd @ ..]
-            if !suite.is_empty() && suite.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_') =>
-        {
-            (*suite, cmd)
-        }
-        _ => return super::usage(),
-    };
+    let Some((suite, inert, cmd)) = options(args) else { return super::usage() };
+    let suite = suite.unwrap_or("full");
+    if suite.is_empty() || !suite.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_') {
+        return super::usage();
+    }
     if cmd.is_empty() || cmd.iter().any(|arg| arg.contains(['\r', '\n'])) {
         return super::usage();
     }
-    launch(here, suite, cmd).map_or_else(failed, |line| {
+    let inert = match super::globs(inert) {
+        Ok(globs) => globs,
+        Err(code) => return code,
+    };
+    launch(here, suite, &inert, cmd).map_or_else(failed, |line| {
         println!("{line}");
         0
     })
 }
 
-fn launch(here: &Path, suite: &str, cmd: &[&str]) -> Result<String, String> {
+/// `--suite <name>` and `--inert <glob>` pairs, then `--` and the command; None on anything else.
+fn options<'a>(mut args: &'a [&'a str]) -> Option<(Option<&'a str>, Vec<&'a str>, &'a [&'a str])> {
+    let (mut suite, mut inert) = (None, Vec::new());
+    loop {
+        match args {
+            ["--", cmd @ ..] => return Some((suite, inert, cmd)),
+            ["--suite", s, rest @ ..] => (suite, args) = (Some(*s), rest),
+            ["--inert", g, rest @ ..] => {
+                inert.push(*g);
+                args = rest;
+            }
+            _ => return None,
+        }
+    }
+}
+
+fn launch(here: &Path, suite: &str, inert: &[String], cmd: &[&str]) -> Result<String, String> {
     let before = snapshot(here)?;
     if !before.clean {
         return Err("background suite requires a clean committed checkout".into());
@@ -72,7 +88,9 @@ fn launch(here: &Path, suite: &str, cmd: &[&str]) -> Result<String, String> {
     let exe = std::env::current_exe().map_err(|e| format!("cannot locate factory: {e}"))?;
     let mut command = background(exe.as_os_str());
     command
-        .args(["receipt", "_worker", suite, &before.head, &before.tree, "--"])
+        .args(["receipt", "_worker", suite, &before.head, &before.tree])
+        .args(inert.iter().flat_map(|g| ["--inert", g.as_str()]))
+        .arg("--")
         .args(cmd)
         .current_dir(here)
         .stdout(log)
@@ -102,23 +120,37 @@ fn launch(here: &Path, suite: &str, cmd: &[&str]) -> Result<String, String> {
 }
 
 pub(super) fn worker(args: &[&str], here: &Path, runtime: &str) -> u8 {
-    let [suite, head, tree, "--", prog, argv @ ..] = args else { return super::usage() };
+    let [suite, head, tree, rest @ ..] = args else { return super::usage() };
+    let Some((None, inert, [prog, argv @ ..])) = options(rest) else { return super::usage() };
     if !crate::git::refs::is_sha(head) || !crate::git::refs::is_sha(tree) {
         return super::usage();
     }
+    // `start` checked the globs before it reserved the tree.
+    let inert = inert.into_iter().map(String::from).collect();
     let Some(repo) = crate::git::Repo::discover(here) else { return failed("not in a Git work tree".into()) };
     let path = path_of(&repo.work, tree, suite).with_extension("running");
     if !path.is_file() {
         return failed("no active suite reservation".into());
     }
     let claim = Claim(path);
-    match run(&claim, here, suite, head, tree, prog, argv, runtime) {
+    match run(&claim, here, suite, head, tree, prog, argv, runtime, inert) {
         Ok(code) => code,
         Err(e) => failed(e),
     }
 }
 
-fn run(claim: &Claim, here: &Path, suite: &str, head: &str, tree: &str, prog: &str, argv: &[&str], runtime: &str) -> Result<u8, String> {
+#[allow(clippy::too_many_arguments)] // the worker's own arguments, passed through
+fn run(
+    claim: &Claim,
+    here: &Path,
+    suite: &str,
+    head: &str,
+    tree: &str,
+    prog: &str,
+    argv: &[&str],
+    runtime: &str,
+    inert: Vec<String>,
+) -> Result<u8, String> {
     let before = snapshot(here)?;
     if !same(&before, head, tree) {
         return Err("checkout changed before the background suite started".into());
@@ -135,7 +167,7 @@ fn run(claim: &Claim, here: &Path, suite: &str, head: &str, tree: &str, prog: &s
     let launched = paths::write_atomic(&claim.0.with_extension("launch.txt"), proof.as_bytes());
     let status = suite_child.wait().map_err(|e| format!("cannot wait for {prog}: {e}"))?;
     let unchanged = snapshot(here).is_ok_and(|after| same(&after, head, tree));
-    let (path, _) = record(before, suite, status.success() && unchanged, &cmd, start.elapsed().as_secs(), runtime, &log)?;
+    let (path, _) = record(before, suite, status.success() && unchanged, &cmd, start.elapsed().as_secs(), runtime, &log, inert)?;
     eprintln!("factory receipt: {}", text(&path));
     launched.map_err(|e| format!("cannot save the suite launch receipt: {e}"))?;
     if !unchanged {
