@@ -285,11 +285,17 @@ fn reuses_a_roast_while_the_app_is_unchanged() {
     git(&app, &["commit", "-qm", "docs"], 2);
     let (_, line, _) = roast_in(&app, &bin, &[], &args);
     assert!(line.starts_with(&first) && line.contains("(reused: 1 inert paths changed since tree "), "{line}");
-    // No reuse when the call names other globs or another CLI: the roast runs again (and the fake now fails).
+    // No reuse when the call names other globs: the roast runs again (and the fake now fails).
     assert_eq!(roast_in(&app, &bin, &[], &[URL, &out, "--cli", "codex"]).0, 1, "inert carried without --inert");
     // That failed run dropped the record: the call that just reused it now runs again. FRESH always runs.
     assert_eq!(roast_in(&app, &bin, &[], &args).0, 1, "an INCOMPLETE run left an older verdict standing");
     assert_eq!(roast_in(&app, &bin, &[("FACTORY_ROAST_FRESH", "1")], &args).0, 1);
+    // A codex roast on this tree is never reused when claude is forced.
+    fake(&bin, "codex", true, Mode::Report);
+    assert_eq!(roast_in(&app, &bin, &[], &args).0, 0);
+    fake(&bin, "codex", true, Mode::Silent);
+    fake(&bin, "claude", true, Mode::Silent);
+    assert_eq!(roast_in(&app, &bin, &[], &[URL, &out, "--cli", "claude"]).0, 1, "reused another CLI's roast");
     // A served file changed.
     std::fs::write(app.join("index.html"), "v2").unwrap();
     let (code, line, _) = roast_in(&app, &bin, &[], &args);
