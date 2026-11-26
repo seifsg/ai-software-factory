@@ -187,7 +187,7 @@ Disposition decides the gate: `blocking`, `before-exposure` or `accepted-deferra
 
 ## Output contract
 
-In a factory run this is step 6, Verify. Web UI: the main agent also runs `factory roast <app URL> <proof folder>/roast` in the background (the other vendor's CLI plays the worst user); its in-scope BLOCKER and MAJOR findings join the fix round. The block `## 6 Verify` holds:
+In a factory run this is step 6, Verify. Web UI: the main agent also runs `factory roast <app URL> <proof folder>/roast` in the background (the other vendor's CLI as worst user); its in-scope BLOCKER and MAJOR findings join the fix round. The block `## 6 Verify` holds:
 
 - [ ] Every requested journey used through real controls, with observed results
 - [ ] compliance, change-guard when existing code, contracts or data changed, and each other lens run, each named with its verdict and a findings table only where it has findings, e.g. `**compliance:** no findings · PASS`
