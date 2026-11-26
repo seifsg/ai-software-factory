@@ -6,15 +6,17 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+## [0.8.13] - 2026-11-26
+
 ### Added
 
-- Add `factory queue run` and `factory reserve`: parallel runs on one machine share heavy jobs first in, first out and take distinct ids, waiting inside the call instead of polling ([#367])
-- Add `factory receipt check --wait` and `--inert <glob>` on receipts: a session waits for its suite in one call, and a head that changes only paths the suite never reads keeps its PASS ([#367])
+- Add `factory queue run` and `factory reserve`: parallel runs on one machine share heavy jobs first in, first out and take distinct ids, waiting inside the call instead of polling ([#368])
+- Add `factory receipt check --wait` and `--inert <glob>` on receipts: a session waits for its suite in one call, and a head that changes only paths the suite never reads keeps its PASS ([#368])
 
 ### Changed
 
-- `factory guard step` no longer asks for a turn end at an open gate, review or receipt, and a launched session ends a turn only when done, blocked or with proof to show, so its launcher wakes far less ([#367])
-- Step 6 lens agents run on the analyst role, and the base is merged in once at the final run with its conflicts reviewed as a delta ([#367])
+- Stop `factory guard step` asking for a turn end at gates, reviews and receipts, and end a launched session's turn only when done, blocked or with proof ([#368])
+- Run step 6 lens agents on the analyst role, and merge the base in once at the final run, reviewed as a delta ([#368])
 
 ## [0.8.12] - 2026-11-24
 
@@ -489,7 +491,8 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 - Leaner runs (#137): product, feature and change runs each read 24% less method text, every gate message is shorter with the same facts, `scripts/token_report.py` measures both, and tests hold every method file and the gate's fixture messages to a byte budget and the product and change loads to 80% of their earlier size.
 - Self-update (#139): a clone install moves only to a release tag on `main` whose files match its manifest, records the previous revision, rolls back a failed install and shows a one-time notice naming both versions.
 
-[Unreleased]: https://github.com/seifsg/ai-software-factory/compare/v0.8.12...HEAD
+[Unreleased]: https://github.com/seifsg/ai-software-factory/compare/v0.8.13...HEAD
+[0.8.13]: https://github.com/seifsg/ai-software-factory/compare/v0.8.12...v0.8.13
 [0.8.12]: https://github.com/seifsg/ai-software-factory/compare/v0.8.11...v0.8.12
 [0.8.11]: https://github.com/seifsg/ai-software-factory/compare/v0.8.10...v0.8.11
 [0.8.10]: https://github.com/seifsg/ai-software-factory/compare/v0.8.9...v0.8.10
@@ -564,5 +567,5 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 [#353]: https://github.com/seifsg/ai-software-factory/pull/353
 [#358]: https://github.com/seifsg/ai-software-factory/pull/358
 [#333]: https://github.com/seifsg/ai-software-factory/pull/333
-[#367]: https://github.com/seifsg/ai-software-factory/issues/367
+[#368]: https://github.com/seifsg/ai-software-factory/pull/368
 [#362]: https://github.com/seifsg/ai-software-factory/pull/362

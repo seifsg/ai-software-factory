@@ -2,7 +2,7 @@
 
 What installs and active runs must do for each release, newest first. What changed: [CHANGELOG.md](CHANGELOG.md).
 
-## Unreleased
+## 0.8.13
 
 - **Parallel runs on one machine:** replace a hand-made heavy-job lock with `factory queue run -- <command>`, and next-id lookups siblings share with `factory reserve <key> --floor <max on base>`. Name paths your full suite never reads with `--inert <glob>` on `factory receipt run|start` so docs-only heads keep the PASS.
 
