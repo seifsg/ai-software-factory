@@ -6,6 +6,8 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+## [0.8.15] - 2026-11-28
+
 ### Added
 
 - Add `factory time`: a run's wall time per phase (waiting on you, plan, build, tests + CI, review + gates, publish, queue, idle) in one bar block, stamped by the guard, receipts and the queue at no model cost; `--json` for tools ([#375])
@@ -508,7 +510,8 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 - Leaner runs (#137): product, feature and change runs each read 24% less method text, every gate message is shorter with the same facts, `scripts/token_report.py` measures both, and tests hold every method file and the gate's fixture messages to a byte budget and the product and change loads to 80% of their earlier size.
 - Self-update (#139): a clone install moves only to a release tag on `main` whose files match its manifest, records the previous revision, rolls back a failed install and shows a one-time notice naming both versions.
 
-[Unreleased]: https://github.com/seifsg/ai-software-factory/compare/v0.8.14...HEAD
+[Unreleased]: https://github.com/seifsg/ai-software-factory/compare/v0.8.15...HEAD
+[0.8.15]: https://github.com/seifsg/ai-software-factory/compare/v0.8.14...v0.8.15
 [0.8.14]: https://github.com/seifsg/ai-software-factory/compare/v0.8.13...v0.8.14
 [0.8.13]: https://github.com/seifsg/ai-software-factory/compare/v0.8.12...v0.8.13
 [0.8.12]: https://github.com/seifsg/ai-software-factory/compare/v0.8.11...v0.8.12
