@@ -6,6 +6,16 @@ The public surface is the skill names, the run file format, and the hook scripts
 
 ## [Unreleased]
 
+### Added
+
+- Add `factory time`: a run's wall time per phase (waiting on you, plan, build, tests + CI, review + gates, publish, queue, idle) in one bar block, stamped by the guard, receipts and the queue at no model cost; `--json` for tools ([#374])
+- End the `guard step 6` and `guard step 8` replies with the time block, so PR bodies and done handbacks carry it ([#374])
+- Keep one row per run in the project's `.factory/bench.md` under `## Factory runs` ([#374])
+
+### Fixed
+
+- Refuse a turn end while a suite started with `factory receipt start` is live and nothing will wake the session; it names the in-call wait ([#374])
+
 ## [0.8.14] - 2026-11-26
 
 ### Added
@@ -575,6 +585,7 @@ Retains the delivery improvements listed under 1.1.0 below. That immutable tag p
 [#353]: https://github.com/seifsg/ai-software-factory/pull/353
 [#358]: https://github.com/seifsg/ai-software-factory/pull/358
 [#333]: https://github.com/seifsg/ai-software-factory/pull/333
+[#374]: https://github.com/seifsg/ai-software-factory/issues/374
 [#368]: https://github.com/seifsg/ai-software-factory/pull/368
 [#362]: https://github.com/seifsg/ai-software-factory/pull/362
 [#365]: https://github.com/seifsg/ai-software-factory/pull/365
