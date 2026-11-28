@@ -2,6 +2,10 @@
 
 What installs and active runs must do for each release, newest first. What changed: [CHANGELOG.md](CHANGELOG.md).
 
+## Unreleased
+
+- **Time blocks:** nothing to do. Runs now write `.factory/guard/time.jsonl` and a `## Factory runs` section in the project's `.factory/bench.md`; a hand-kept bench file keeps every other line. A turn can no longer end on a live `factory receipt start` suite: wait in a call (`factory receipt check --wait 540`) or run the suite as a host background job.
+
 ## 0.8.14
 
 - **Worst-user roast (default on):** web UI runs now start `factory roast` at step 6. It needs Node.js (`npx`) and the other agent CLI installed and logged in; without them it prints one `SKIP` line and the run goes on. Turn it off with `FACTORY_ROAST=0`.

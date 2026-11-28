@@ -158,8 +158,9 @@ fn run(
     let cmd = std::iter::once(prog).chain(argv.iter().copied()).collect::<Vec<_>>().join(" ");
     let at = utc_iso(paths::now());
     let proof = format!(
-        "factory-suite-launch 1\nsuite {suite}\nhead {head}\ntree {tree}\nclean yes\nmode background\ncmd {cmd}\nlog {log}\nat {at}\npid {}\n",
-        suite_child.id()
+        "factory-suite-launch 1\nsuite {suite}\nhead {head}\ntree {tree}\nclean yes\nmode background\ncmd {cmd}\nlog {log}\nat {at}\npid {}\nowner {}\n",
+        suite_child.id(),
+        crate::machine::Owner::of(suite_child.id()).map_or_else(|| suite_child.id().to_string(), |o| o.to_string())
     );
     let launched = paths::write_atomic(&claim.0.with_extension("launch.txt"), proof.as_bytes());
     let status = suite_child.wait().map_err(|e| format!("cannot wait for {prog}: {e}"))?;
@@ -191,4 +192,57 @@ fn background(program: impl AsRef<std::ffi::OsStr>) -> Command {
         command.process_group(0);
     }
     command
+}
+
+/// A live background suite run: its suite, its pid and when it started (Unix seconds, 0 when unrecorded).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Detached {
+    pub suite: String,
+    pub pid: u32,
+    pub since: u64,
+}
+
+/// The background run that is live now: its reservation stands, its launch record names a running pid. A dead
+/// supervisor's leftover reservation never counts. Why: the guard keeps a session from ending its turn on a run
+/// whose end wakes no one.
+pub fn live_detached(work: &Path) -> Option<Detached> {
+    let rd = fs::read_dir(super::dir(work)).ok()?;
+    rd.flatten().map(|e| e.path()).filter(|p| p.to_string_lossy().ends_with(".launch.txt")).find_map(|p| {
+        let running = PathBuf::from(p.to_string_lossy().trim_end_matches(".launch.txt").to_string() + ".running");
+        if !running.is_file() {
+            return None;
+        }
+        let text = fs::read_to_string(&p).ok()?;
+        let field = |k: &str| text.lines().find_map(|l| l.strip_prefix(k)).map(str::trim);
+        // `owner` (pid and start time) beats a bare `pid`: a reused pid never reads as the suite still running.
+        let pid = crate::machine::Owner::parse(field("owner ").or_else(|| field("pid "))?)?;
+        let suite = field("suite ").filter(|s| !s.is_empty() && s.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_'));
+        let since = field("at ").and_then(crate::clock::stamp::iso_secs).unwrap_or(0);
+        pid.alive().then(|| Detached { suite: suite.unwrap_or("full").to_string(), pid: pid.pid, since })
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::live_detached;
+
+    #[test]
+    fn a_live_owner_counts_and_a_reused_pid_or_lost_reservation_never_does() {
+        let work = std::env::temp_dir().join(format!("factory-detached-{}", std::process::id()));
+        let dir = super::super::dir(&work);
+        std::fs::create_dir_all(&dir).unwrap();
+        let me = crate::machine::Owner::me();
+        let launch = |owner: &str| std::fs::write(dir.join("t-full.launch.txt"), format!("suite full\npid {}\n{owner}", me.pid)).unwrap();
+        std::fs::write(dir.join("t-full.running"), "").unwrap();
+        launch(&format!("owner {me}\n"));
+        assert_eq!(live_detached(&work), Some(super::Detached { suite: "full".into(), pid: me.pid, since: 0 }));
+        if let Some(start) = me.start {
+            launch(&format!("owner {}-{}\n", me.pid, start + 1));
+            assert_eq!(live_detached(&work), None, "same pid, another start time");
+        }
+        launch("");
+        std::fs::remove_file(dir.join("t-full.running")).unwrap();
+        assert_eq!(live_detached(&work), None, "no reservation");
+        let _ = std::fs::remove_dir_all(work);
+    }
 }

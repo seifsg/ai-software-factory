@@ -26,7 +26,7 @@ fn begin_with(start: &Path, initialize: impl FnOnce(&Path) -> Result<(), String>
         if let Ok(rd) = fs::read_dir(dir.join("guard")) {
             for p in rd.flatten().map(|e| e.path()) {
                 let name = p.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
-                if name == "stepped" || name == "written" {
+                if name == "stepped" || name == "written" || name == crate::clock::stamp::FILE {
                     let _ = fs::remove_file(p);
                 }
             }
@@ -77,6 +77,8 @@ fn save(guard: &Path, step: &str, now: u64) -> io::Result<()> {
     let entry = format!("{}\n", json!({ "at": crate::receipt::utc_iso(now), "step": step }));
     fs::create_dir_all(guard)?;
     if current == 0 {
+        // A new Ticket starts a new clock: the last run's time stamps go with its step starts.
+        let _ = fs::remove_file(guard.join(crate::clock::stamp::FILE));
         crate::paths::write_atomic(&file, entry.as_bytes())
     } else {
         OpenOptions::new().create(true).append(true).open(file)?.write_all(entry.as_bytes())

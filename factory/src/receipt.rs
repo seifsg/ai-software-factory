@@ -28,6 +28,7 @@ pub mod carry;
 mod launch;
 
 pub use carry::Carried;
+pub use launch::{Detached, live_detached};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Receipt {
@@ -306,6 +307,8 @@ pub fn record(
     };
     let mut r = r;
     let p = write(&s.work, &mut r).map_err(|e| format!("cannot write the receipt: {e}"))?;
+    let now = crate::paths::now();
+    crate::clock::span(&s.work, crate::clock::Phase::Tests, now.saturating_sub(secs), now, suite);
     Ok((p, r))
 }
 

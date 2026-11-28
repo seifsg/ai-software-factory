@@ -96,6 +96,19 @@ pub fn repeat(list: &str) -> String {
     )
 }
 
+/// A suite started with `receipt start` runs detached: the host tracks no process, so its end wakes no one.
+pub fn detached(suite: &str, pid: u32) -> String {
+    format!(
+        "The `{suite}` suite runs detached (pid {pid}) and its end wakes no session: wait for it in a call, `factory receipt check --suite {suite} --wait 540` (tool timeout 600 s), repeat until it reports, then go on. Next time run the suite as a host background job (`factory receipt run ...`), which notifies on exit."
+    )
+}
+
+/// The time block after the step whose next step writes a PR body (6) or the done handback (8).
+pub fn time_block(label: &str, block: &str) -> String {
+    let what = if label == "6" { "The PR body" } else { "Your done handback" };
+    format!("\n{what} ends with this time block (`factory time` prints it fresh):\n{block}")
+}
+
 pub fn jobs_deadline() -> String {
     "Waiting: jobs: needs a deadline: write it as `Waiting: jobs: <what runs> (max <minutes> min)`, then end your turn.".into()
 }

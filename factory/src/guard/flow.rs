@@ -126,7 +126,8 @@ pub fn run(input: &Input, mode: Mode, start: &Path) -> Option<Reply> {
         .map(|(t, n)| format!("{}: {n} runs", &t[..t.len().min(8)]))
         .collect::<Vec<_>>()
         .join(", ");
-    Ctx { mode, input, s, f, d, run, g, st, rf, note, new_state, now, text, sid: sid.to_string(), tp, before, repeat }.after_judge()
+    let detached = (mode == Mode::Stop).then(|| repo.as_ref().and_then(|r| crate::receipt::live_detached(&r.work))).flatten();
+    Ctx { mode, input, s, f, d, run, g, st, rf, note, new_state, now, text, sid: sid.to_string(), tp, before, repeat, detached }.after_judge()
 }
 
 /// Clear: the owner's command after a halt; also ends night mode. Keeps the run's sessions for gate proof.
@@ -176,6 +177,8 @@ struct Ctx<'a> {
     before: Option<String>,
     /// Trees the full suite ran on more than once; flagged once per new repeat.
     repeat: String,
+    /// A live suite run started detached (`receipt start`). Read on a Stop only.
+    detached: Option<crate::receipt::Detached>,
 }
 
 impl Ctx<'_> {
@@ -335,6 +338,20 @@ impl Ctx<'_> {
         } else {
             self.s.set("jobs_since", "");
             self.s.set("jobs_id", "");
+        }
+        // Waiting on a live detached suite is progress, not an idle turn: it never spends the idle budget. The
+        // other halts (round cap, night budget) still apply, and past FACTORY_JOB_MAX the suite counts as hung.
+        let hung = env_num("FACTORY_JOB_MAX", 120).unwrap_or(120) * 60;
+        if todo.is_empty()
+            && !self.input.subagent_running
+            && !self.has_line(b"Waiting: owner:")
+            && let Some(d) = self.detached.clone().filter(|d| d.since == 0 || self.now - (d.since as i64) <= hung)
+        {
+            if let Some(r) = self.halt(lp, rounds) {
+                return Some(r);
+            }
+            self.save();
+            return Some(Reply::Block(reply::for_run(&self.rf, &reply::detached(&d.suite, d.pid))));
         }
         if todo.is_empty() {
             todo = self.before.clone().unwrap_or_default();

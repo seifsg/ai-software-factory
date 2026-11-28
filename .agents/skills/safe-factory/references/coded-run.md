@@ -18,7 +18,7 @@ Step 5 runs one todo per guard call, every todo in the same turn. Step 6 launche
 
 ## Full suite
 
-A suite that writes no full receipt itself runs on the clean final head as `factory receipt start --suite full [--inert <glob>] -- <command>`; shared machine: `factory queue run -- factory receipt run ...` in the background. A head changing only `--inert` paths keeps the PASS. Other heavy jobs: `factory queue run -- <cmd>`; shared ids: `factory reserve <key> --floor <n>`. Cite its receipt in Verify; a suite already run: `factory receipt write` (command, exit, log). `factory receipt check` finds the base or final PASS. Gate B can finish while the suite runs. Gate C and the final review need a PASS receipt for their commit's tree; Gate C exactly one run.
+A suite that writes no full receipt itself runs on the clean final head as a host background job, `factory receipt run --suite full [--inert <glob>] -- <command>`, else `receipt start`; shared machine: queue it first. A head changing only `--inert` paths keeps the PASS. Other heavy jobs: `factory queue run -- <cmd>`; shared ids: `factory reserve <key> --floor <n>`. Cite its receipt in Verify; a suite already run: `factory receipt write` (command, exit, log). `factory receipt check` finds the base or final PASS. Gate B can finish while the suite runs. Gate C and the final review need a PASS receipt for their commit's tree; Gate C exactly one run.
 
 ## Gate backing
 

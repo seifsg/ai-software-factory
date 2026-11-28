@@ -38,7 +38,7 @@ Readers ignore lines they do not know, so a writer may add its own (the pro gate
 
 `factory` is `<plugin root>/scripts/factory.cmd` (sh or cmd), or a built `factory/target/release/factory`.
 
-`receipt start` returns after the command process starts. Its `<tree>-<suite>.launch.txt` records the head, tree, command, start time, process ID and log path. The usual completion receipt records the exit result. Expect a FAIL if the tracked or untracked tree at completion differs from the starting commit. Foreground and background native runners share a reservation for each tree and suite. If a terminated supervisor leaves a `.running` file, confirm the suite process has stopped before removing that reservation and retrying.
+`receipt start` returns after the command process starts. Its `<tree>-<suite>.launch.txt` records the head, tree, command, start time, process ID with its start time (`owner`) and log path. The usual completion receipt records the exit result. Expect a FAIL if the tracked or untracked tree at completion differs from the starting commit. Foreground and background native runners share a reservation for each tree and suite. If a terminated supervisor leaves a `.running` file, confirm the suite process has stopped before removing that reservation and retrying. While a started suite is live, the Stop guard refuses a turn end that nothing would wake ([time blocks](time-blocks.md#detached-suites)); every suite run also stamps its span on the run's clock.
 
 ## What the guard accepts
 
