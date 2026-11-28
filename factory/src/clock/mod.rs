@@ -90,12 +90,16 @@ pub fn publish(dir: &Path) -> Option<Report> {
     Some(r)
 }
 
-/// A command the session ran itself (`guard step`, `guard wait`): it is back, so an open wait ends now.
-pub fn active(start: &Path) {
+/// A command the session ran itself (`guard step`, `guard wait`): it is back, so an open wait ends at the
+/// transcript's first entry after it (the owner's reply), else now. `transcript`: the session's, or empty.
+pub fn active(start: &Path, transcript: &str) {
     let Some(dir) = open_run(start) else { return };
     let g = guard(&dir);
-    if waiting_since(&stamp::read(&g)).is_some() {
-        stamp::append(&g, &Row::Resume { at: crate::paths::now() });
+    let rows = stamp::read(&g);
+    if waiting_since(&rows).is_some() {
+        let now = crate::paths::now();
+        let at = resume_due(&rows, &[], transcript, now).unwrap_or(now);
+        stamp::append(&g, &Row::Resume { at });
     }
 }
 
@@ -143,7 +147,7 @@ pub fn on_stop(input: &crate::hook::Input, reply: Option<&crate::hook::Reply>, s
     });
     // A second stop inside the same wait adds nothing: the open row already covers it.
     if open_wait.is_none_or(|(_, was_owner)| was_owner != owner.is_some()) {
-        stamp::append(&g, &Row::Wait { at: now, owner: owner.is_some(), off: resume::len(tp), why });
+        stamp::append(&g, &Row::Wait { at: now, owner: owner.is_some(), off: resume::len(tp), src: file_name(tp), why });
     }
 }
 
@@ -151,14 +155,21 @@ pub fn on_stop(input: &crate::hook::Input, reply: Option<&crate::hook::Reply>, s
 /// `guard step` call stamps its resume late, after the session already worked).
 fn resume_due(rows: &[Row], steps: &[(u64, String)], transcript: &str, now: u64) -> Option<u64> {
     let i = rows.iter().rposition(|r| matches!(r, Row::Wait { .. }))?;
-    let Row::Wait { at, off, .. } = &rows[i] else { return None };
+    let Row::Wait { at, off, src, .. } = &rows[i] else { return None };
     let later = rows[i + 1..].iter().filter_map(|r| match r {
         Row::Wait { at: t, .. } | Row::Resume { at: t } | Row::End { at: t } => Some(*t),
         _ => None,
     });
     let close = later.chain(steps.iter().map(|s| s.0).filter(|t| t > at)).min();
-    let back = resume::first_after(transcript, *at, *off).filter(|t| *t < now)?;
+    // An offset counts only in the transcript it was taken from (a relay session starts its own).
+    let from = if *src == file_name(transcript) { *off } else { 0 };
+    let back = resume::first_after(transcript, *at, from).filter(|t| *t < now)?;
     close.is_none_or(|c| back < c).then_some(back)
+}
+
+/// A transcript's file name: which session's transcript a wait's offset belongs to.
+fn file_name(transcript: &str) -> String {
+    Path::new(transcript).file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default()
 }
 
 /// The run file's last write in Unix seconds, never later than `now`.

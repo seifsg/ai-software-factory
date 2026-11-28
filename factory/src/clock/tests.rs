@@ -30,8 +30,8 @@ fn stop_stamps_owner_and_idle_waits_once_and_skips_blocked_or_subagent_turns() {
     on_stop(&stop(&d, "", false), Some(&Reply::System("idle".into())), &d);
     let rows = stamp::read(&g);
     assert!(matches!(rows.as_slice(), [Row::Wait { owner: true, why, .. }] if why == "plan OK?"));
-    active(&d);
-    active(&d);
+    active(&d, "");
+    active(&d, "");
     std::fs::write(
         d.join(".factory/run.md"),
         std::fs::read_to_string(d.join(".factory/run.md")).unwrap().replace("owner: plan OK?", "none"),
@@ -49,7 +49,10 @@ fn stop_stamps_owner_and_idle_waits_once_and_skips_blocked_or_subagent_turns() {
 fn stop_takes_the_resume_from_the_transcript_and_closes_once() {
     let d = run_dir("resume", "owner: ok?", "open");
     let g = guard(&d);
-    stamp::append(&g, &Row::Wait { at: stamp::iso_secs("2026-11-27T07:42:08Z").unwrap(), owner: true, off: 0, why: "ok?".into() });
+    stamp::append(
+        &g,
+        &Row::Wait { at: stamp::iso_secs("2026-11-27T07:42:08Z").unwrap(), owner: true, off: 0, src: String::new(), why: "ok?".into() },
+    );
     let tp = d.join("t.jsonl");
     std::fs::write(&tp, "{\"type\":\"user\",\"timestamp\":\"2026-11-27T07:51:33.000Z\"}\n").unwrap();
     on_stop(&stop(&d, &crate::paths::text(&tp), false), Some(&Reply::Block("x".into())), &d);
@@ -74,11 +77,11 @@ fn a_late_guard_call_never_hides_the_owner_reply_the_transcript_holds() {
     let tp = d.join("t.jsonl");
     std::fs::write(&tp, "{\"type\":\"assistant\",\"timestamp\":\"2026-11-27T07:42:00.000Z\"}\n").unwrap();
     let off = resume::len(&crate::paths::text(&tp));
-    stamp::append(&g, &Row::Wait { at: iso("2026-11-27T07:42:08Z"), owner: true, off, why: "ok?".into() });
+    stamp::append(&g, &Row::Wait { at: iso("2026-11-27T07:42:08Z"), owner: true, off, src: "t.jsonl".into(), why: "ok?".into() });
     let mut t = std::fs::read_to_string(&tp).unwrap();
     t.push_str("{\"type\":\"user\",\"timestamp\":\"2026-11-27T07:43:48.000Z\"}\n");
     std::fs::write(&tp, t).unwrap();
-    active(&d);
+    active(&d, "");
     on_stop(&stop(&d, &crate::paths::text(&tp), false), Some(&Reply::Block("x".into())), &d);
     let r = report(&d).unwrap();
     assert_eq!(r.json()["phases"][0], serde_json::json!({"id": "owner", "label": "waiting on you", "secs": 100, "lost": 0, "why": ""}));
@@ -138,4 +141,18 @@ fn spans_land_only_in_an_open_run() {
     assert!(stamp::read(&guard(&closed)).is_empty());
     let _ = std::fs::remove_dir_all(d);
     let _ = std::fs::remove_dir_all(closed);
+}
+
+#[test]
+fn a_guard_call_stamps_the_owner_reply_from_the_transcript() {
+    let d = run_dir("active", "owner: ok?", "open");
+    let g = guard(&d);
+    let iso = |s: &str| stamp::iso_secs(s).unwrap();
+    let tp = d.join("t.jsonl");
+    std::fs::write(&tp, "{\"type\":\"user\",\"timestamp\":\"2026-11-27T07:43:48.000Z\"}\n").unwrap();
+    // The wait's offset belongs to another session's transcript: the search starts at this one's beginning.
+    stamp::append(&g, &Row::Wait { at: iso("2026-11-27T07:42:08Z"), owner: true, off: 999, src: "other.jsonl".into(), why: "ok?".into() });
+    active(&d, &crate::paths::text(&tp));
+    assert_eq!(stamp::read(&g)[1], Row::Resume { at: iso("2026-11-27T07:43:48Z") });
+    let _ = std::fs::remove_dir_all(d);
 }

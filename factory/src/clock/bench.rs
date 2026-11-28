@@ -15,7 +15,10 @@ pub fn file(run_dir: &Path) -> PathBuf {
     // A linked worktree names the shared Git folder as `<gitdir>/../..`: resolve it, then take the checkout holding it.
     let main = crate::git::Repo::discover(run_dir)
         .and_then(|r| std::fs::canonicalize(&r.common).ok())
-        .map(|c| PathBuf::from(c.to_string_lossy().trim_start_matches(r"\\?\").to_string()))
+        .map(|c| {
+            let c = c.to_string_lossy();
+            PathBuf::from(c.strip_prefix(r"\\?\UNC\").map_or_else(|| c.trim_start_matches(r"\\?\").to_string(), |s| format!(r"\\{s}")))
+        })
         .and_then(|c| c.file_name().is_some_and(|n| n == ".git").then(|| c.parent().map(Path::to_path_buf)).flatten())
         .unwrap_or_else(|| run_dir.to_path_buf());
     main.join(".factory/bench.md")

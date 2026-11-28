@@ -136,11 +136,11 @@ mod tests {
     fn rows_sum_to_total_and_priority_holds() {
         let steps = [s(0, "0"), s(100, "5"), s(400, "6"), s(700, "7")];
         let rows = [
-            Row::Wait { at: 10, owner: true, off: 0, why: "plan OK?".into() },
+            Row::Wait { at: 10, owner: true, off: 0, src: String::new(), why: "plan OK?".into() },
             Row::Resume { at: 40 },
             // A suite runs while the session sits idle: tests win until it ends, idle (lost) after.
             Row::Span { from: 450, to: 500, phase: Phase::Tests, note: "full".into() },
-            Row::Wait { at: 460, owner: false, off: 0, why: "jobs: suite".into() },
+            Row::Wait { at: 460, owner: false, off: 0, src: String::new(), why: "jobs: suite".into() },
             Row::Resume { at: 600 },
             Row::Span { from: 600, to: 620, phase: Phase::Queue, note: "heavy".into() },
             Row::Lost { phase: Phase::Build, secs: 50, why: "bad toolchain".into() },
@@ -164,10 +164,11 @@ mod tests {
     #[test]
     fn open_waits_end_at_a_step_or_now_and_empty_runs_have_no_split() {
         let steps = [s(0, "0"), s(50, "1")];
-        let rows = [Row::Wait { at: 20, owner: true, off: 0, why: "q".into() }];
+        let rows = [Row::Wait { at: 20, owner: true, off: 0, src: String::new(), why: "q".into() }];
         let x = split(&steps, &rows, Some(70)).unwrap();
         assert_eq!((x.secs[Phase::Owner as usize], x.secs[Phase::Plan as usize], x.end), (30, 40, 70));
-        let open = split(&[s(0, "0")], &[Row::Wait { at: 5, owner: false, off: 0, why: "w".into() }], Some(65)).unwrap();
+        let open =
+            split(&[s(0, "0")], &[Row::Wait { at: 5, owner: false, off: 0, src: String::new(), why: "w".into() }], Some(65)).unwrap();
         assert_eq!(open.secs[Phase::Idle as usize], 60);
         assert!(split(&[], &[], Some(5)).is_none());
     }

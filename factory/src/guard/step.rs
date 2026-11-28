@@ -38,7 +38,7 @@ pub fn cli(args: &[&str]) -> u8 {
     };
     let run = Path::new(&dir).join(".factory/run.md");
     let guard = Path::new(&dir).join(".factory/guard");
-    crate::clock::active(Path::new(&dir));
+    crate::clock::active(Path::new(&dir), state.get("transcript"));
     let todo = label.strip_prefix('T').is_some_and(|k| !k.is_empty() && k.bytes().all(|b| b.is_ascii_digit()));
     if !todo && !STEPS.iter().any(|(n, _, _)| n == label) {
         eprintln!("factory guard step: {label} is no step (0 to 8, 2b) or todo (T<k>)");

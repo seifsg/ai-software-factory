@@ -12,11 +12,12 @@ pub const FILE: &str = "time.jsonl";
 /// One stamp. Waits run until the next resume, wait, end or step start; spans are written once, at their end.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Row {
-    /// `off`: the transcript's length when the wait began (0: unknown), where its resume search starts.
+    /// `off`: the length of transcript `src` (its file name) when the wait began, where its resume search starts.
     Wait {
         at: u64,
         owner: bool,
         off: u64,
+        src: String,
         why: String,
     },
     Resume {
@@ -42,8 +43,8 @@ impl Row {
     fn value(&self) -> Value {
         let iso = crate::receipt::utc_iso;
         match self {
-            Row::Wait { at, owner, off, why } => {
-                json!({ "at": iso(*at), "wait": if *owner { "owner" } else { "idle" }, "off": off, "why": why })
+            Row::Wait { at, owner, off, src, why } => {
+                json!({ "at": iso(*at), "wait": if *owner { "owner" } else { "idle" }, "off": off, "src": src, "why": why })
             }
             Row::Resume { at } => json!({ "at": iso(*at), "resume": true }),
             Row::End { at } => json!({ "at": iso(*at), "end": true }),
@@ -59,7 +60,8 @@ impl Row {
         let why = || v.get("why").and_then(Value::as_str).unwrap_or_default().to_string();
         if let Some(kind) = v.get("wait").and_then(Value::as_str) {
             let off = v.get("off").and_then(Value::as_u64).unwrap_or(0);
-            return Some(Row::Wait { at: at()?, owner: kind == "owner", off, why: why() });
+            let src = v.get("src").and_then(Value::as_str).unwrap_or_default().to_string();
+            return Some(Row::Wait { at: at()?, owner: kind == "owner", off, src, why: why() });
         }
         if v.get("resume").is_some() {
             return Some(Row::Resume { at: at()? });
@@ -142,7 +144,7 @@ mod tests {
     fn rows_round_trip_and_bad_lines_are_skipped() {
         let dir = std::env::temp_dir().join(format!("factory-stamp-{}", std::process::id()));
         let rows = [
-            Row::Wait { at: 10, owner: true, off: 0, why: "plan OK?".into() },
+            Row::Wait { at: 10, owner: true, off: 0, src: String::new(), why: "plan OK?".into() },
             Row::Resume { at: 20 },
             Row::Span { from: 30, to: 40, phase: Phase::Tests, note: "full".into() },
             Row::Lost { phase: Phase::Build, secs: 5, why: "x".into() },

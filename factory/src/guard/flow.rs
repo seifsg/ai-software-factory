@@ -177,8 +177,8 @@ struct Ctx<'a> {
     before: Option<String>,
     /// Trees the full suite ran on more than once; flagged once per new repeat.
     repeat: String,
-    /// A live suite run started detached (`receipt start`): suite and pid. Read on a Stop only.
-    detached: Option<(String, u32)>,
+    /// A live suite run started detached (`receipt start`). Read on a Stop only.
+    detached: Option<crate::receipt::Detached>,
 }
 
 impl Ctx<'_> {
@@ -339,15 +339,19 @@ impl Ctx<'_> {
             self.s.set("jobs_since", "");
             self.s.set("jobs_id", "");
         }
-        // Waiting on a live detached suite is progress, not an idle turn: it never spends the idle budget, and
-        // it lasts only as long as the suite runs.
+        // Waiting on a live detached suite is progress, not an idle turn: it never spends the idle budget. The
+        // other halts (round cap, night budget) still apply, and past FACTORY_JOB_MAX the suite counts as hung.
+        let hung = env_num("FACTORY_JOB_MAX", 120).unwrap_or(120) * 60;
         if todo.is_empty()
             && !self.input.subagent_running
             && !self.has_line(b"Waiting: owner:")
-            && let Some((suite, pid)) = &self.detached
+            && let Some(d) = self.detached.clone().filter(|d| d.since == 0 || self.now - (d.since as i64) <= hung)
         {
+            if let Some(r) = self.halt(lp, rounds) {
+                return Some(r);
+            }
             self.save();
-            return Some(Reply::Block(reply::for_run(&self.rf, &reply::detached(suite, *pid))));
+            return Some(Reply::Block(reply::for_run(&self.rf, &reply::detached(&d.suite, d.pid))));
         }
         if todo.is_empty() {
             todo = self.before.clone().unwrap_or_default();

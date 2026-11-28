@@ -194,10 +194,18 @@ fn background(program: impl AsRef<std::ffi::OsStr>) -> Command {
     command
 }
 
-/// The suite and pid of a background run that is live now: its reservation stands, its launch record names
-/// a running pid. A dead supervisor's leftover reservation never counts. Why: the guard keeps a session from
-/// ending its turn on a run whose end wakes no one.
-pub fn live_detached(work: &Path) -> Option<(String, u32)> {
+/// A live background suite run: its suite, its pid and when it started (Unix seconds, 0 when unrecorded).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Detached {
+    pub suite: String,
+    pub pid: u32,
+    pub since: u64,
+}
+
+/// The background run that is live now: its reservation stands, its launch record names a running pid. A dead
+/// supervisor's leftover reservation never counts. Why: the guard keeps a session from ending its turn on a run
+/// whose end wakes no one.
+pub fn live_detached(work: &Path) -> Option<Detached> {
     let rd = fs::read_dir(super::dir(work)).ok()?;
     rd.flatten().map(|e| e.path()).filter(|p| p.to_string_lossy().ends_with(".launch.txt")).find_map(|p| {
         let running = PathBuf::from(p.to_string_lossy().trim_end_matches(".launch.txt").to_string() + ".running");
@@ -209,7 +217,8 @@ pub fn live_detached(work: &Path) -> Option<(String, u32)> {
         // `owner` (pid and start time) beats a bare `pid`: a reused pid never reads as the suite still running.
         let pid = crate::machine::Owner::parse(field("owner ").or_else(|| field("pid "))?)?;
         let suite = field("suite ").filter(|s| !s.is_empty() && s.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_'));
-        pid.alive().then(|| (suite.unwrap_or("full").to_string(), pid.pid))
+        let since = field("at ").and_then(crate::clock::stamp::iso_secs).unwrap_or(0);
+        pid.alive().then(|| Detached { suite: suite.unwrap_or("full").to_string(), pid: pid.pid, since })
     })
 }
 
@@ -226,7 +235,7 @@ mod tests {
         let launch = |owner: &str| std::fs::write(dir.join("t-full.launch.txt"), format!("suite full\npid {}\n{owner}", me.pid)).unwrap();
         std::fs::write(dir.join("t-full.running"), "").unwrap();
         launch(&format!("owner {me}\n"));
-        assert_eq!(live_detached(&work), Some(("full".to_string(), me.pid)));
+        assert_eq!(live_detached(&work), Some(super::Detached { suite: "full".into(), pid: me.pid, since: 0 }));
         if let Some(start) = me.start {
             launch(&format!("owner {}-{}\n", me.pid, start + 1));
             assert_eq!(live_detached(&work), None, "same pid, another start time");

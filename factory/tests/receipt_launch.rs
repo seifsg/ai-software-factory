@@ -57,6 +57,13 @@ fn proves_the_live_launch_then_records_one_pass() {
     let stop = |extra: &str| factory(&dir, &dir, &["guard", "stop"], &format!("{{\"cwd\":\"{}\"{extra}}}", common::json_path(&dir))).1;
     run("jobs: full suite (max 30 min)");
     assert!(stop("").contains("suite runs detached"));
+    // Past FACTORY_JOB_MAX (120 min) the suite counts as hung: no more refusals, the jobs deadline takes over.
+    let launch_path = prefix.with_extension("launch.txt");
+    let record = fs::read_to_string(&launch_path).unwrap();
+    let old: String = record.lines().map(|l| if l.starts_with("at ") { "at 2020-01-01T00:00:00Z\n".to_string() } else { format!("{l}\n") }).collect();
+    fs::write(&launch_path, old).unwrap();
+    assert!(!stop("").contains("detached"));
+    fs::write(&launch_path, record).unwrap();
     assert!(!stop(",\"background_tasks\":[{\"type\":\"subagent\"}]").contains("detached"));
     run("owner: go on?");
     assert!(!stop("").contains("detached"));
