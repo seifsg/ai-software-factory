@@ -23,13 +23,13 @@ struct Claim {
     why: String,
 }
 
-/// The split; None before the run has a first stamp. `open_now` ends an open run now; a closed one ends at
-/// its `end` row, else at its last stamp.
-pub fn split(steps: &[(u64, String)], rows: &[Row], open_now: Option<u64>) -> Option<Split> {
+/// The split; None before the run has a first stamp. A run ends at its `end` row, else at `until` (now for an
+/// open run, the run file's last write for a closed one) or its last stamp, whichever is later.
+pub fn split(steps: &[(u64, String)], rows: &[Row], until: Option<u64>) -> Option<Split> {
     let start = steps.first().map(|s| s.0).or_else(|| rows.iter().find_map(first_time))?;
     let closed = rows.iter().find_map(|r| if let Row::End { at } = r { Some(*at) } else { None });
     let last = steps.iter().map(|s| s.0).chain(rows.iter().filter_map(last_time)).max().unwrap_or(start);
-    let end = closed.or(open_now).unwrap_or(last).max(start);
+    let end = closed.or(until.map(|t| t.max(last))).unwrap_or(last).max(start);
     let claims = claims(steps, rows, end);
     let mut cuts: Vec<u64> =
         [start, end].into_iter().chain(steps.iter().map(|s| s.0)).chain(claims.iter().flat_map(|c| [c.from, c.to])).collect();
@@ -70,7 +70,7 @@ fn claims(steps: &[(u64, String)], rows: &[Row], end: u64) -> Vec<Claim> {
     let mut out = Vec::new();
     for (i, r) in rows.iter().enumerate() {
         match r {
-            Row::Wait { at, owner, why } => {
+            Row::Wait { at, owner, why, .. } => {
                 let later = rows[i + 1..].iter().filter_map(|r| match r {
                     Row::Wait { at: t, .. } | Row::Resume { at: t } | Row::End { at: t } => Some(*t),
                     _ => None,
@@ -136,11 +136,11 @@ mod tests {
     fn rows_sum_to_total_and_priority_holds() {
         let steps = [s(0, "0"), s(100, "5"), s(400, "6"), s(700, "7")];
         let rows = [
-            Row::Wait { at: 10, owner: true, why: "plan OK?".into() },
+            Row::Wait { at: 10, owner: true, off: 0, why: "plan OK?".into() },
             Row::Resume { at: 40 },
             // A suite runs while the session sits idle: tests win until it ends, idle (lost) after.
             Row::Span { from: 450, to: 500, phase: Phase::Tests, note: "full".into() },
-            Row::Wait { at: 460, owner: false, why: "jobs: suite".into() },
+            Row::Wait { at: 460, owner: false, off: 0, why: "jobs: suite".into() },
             Row::Resume { at: 600 },
             Row::Span { from: 600, to: 620, phase: Phase::Queue, note: "heavy".into() },
             Row::Lost { phase: Phase::Build, secs: 50, why: "bad toolchain".into() },
@@ -164,10 +164,10 @@ mod tests {
     #[test]
     fn open_waits_end_at_a_step_or_now_and_empty_runs_have_no_split() {
         let steps = [s(0, "0"), s(50, "1")];
-        let rows = [Row::Wait { at: 20, owner: true, why: "q".into() }];
+        let rows = [Row::Wait { at: 20, owner: true, off: 0, why: "q".into() }];
         let x = split(&steps, &rows, Some(70)).unwrap();
         assert_eq!((x.secs[Phase::Owner as usize], x.secs[Phase::Plan as usize], x.end), (30, 40, 70));
-        let open = split(&[s(0, "0")], &[Row::Wait { at: 5, owner: false, why: "w".into() }], Some(65)).unwrap();
+        let open = split(&[s(0, "0")], &[Row::Wait { at: 5, owner: false, off: 0, why: "w".into() }], Some(65)).unwrap();
         assert_eq!(open.secs[Phase::Idle as usize], 60);
         assert!(split(&[], &[], Some(5)).is_none());
     }

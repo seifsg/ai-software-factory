@@ -49,10 +49,28 @@ fn note(x: &Split, p: Phase) -> String {
     }
     let lost = x.lost[p as usize];
     if lost > 0 {
-        let why = &x.why[p as usize];
+        let why = cause(&x.why[p as usize]);
         parts.push(if why.is_empty() { format!("{} lost", dur(lost)) } else { format!("{} lost: {why}", dur(lost)) });
     }
     if parts.is_empty() { String::new() } else { format!("  ({})", parts.join("; ")) }
+}
+
+/// A cause as one short line that can never close the fence (a `Waiting:` text or an agent's note), capped.
+fn cause(why: &str) -> String {
+    const MAX: usize = 120;
+    let one: String = why
+        .chars()
+        .map(|c| {
+            if c == '`' {
+                '\''
+            } else if c.is_control() {
+                ' '
+            } else {
+                c
+            }
+        })
+        .collect();
+    if one.chars().count() > MAX { one.chars().take(MAX - 1).chain(['…']).collect() } else { one }
 }
 
 /// The block, fence included, ready to paste.
@@ -62,7 +80,7 @@ pub fn text(x: &Split) -> String {
     for p in rows(x) {
         let s = x.secs[p as usize];
         let n = ((s * BAR + longest / 2) / longest).max(1) as usize;
-        let note = note(x, p).replace(['\n', '\r'], " ");
+        let note = note(x, p);
         out.push_str(&format!("{:<LABEL$}{} {}{note}\n", p.label(), "█".repeat(n), dur(s)));
     }
     out.push_str("```\n");
@@ -98,6 +116,11 @@ mod tests {
         assert_eq!(text(&x), want);
         x.full_runs = 7;
         assert!(text(&x).contains("10m17s  (7 full-suite runs)\n"));
+        // A cause can never close the fence or run on: backticks and control characters go, long text is cut.
+        x.why[Phase::Build as usize] = format!("```\nrm {}", "x".repeat(200));
+        let line = text(&x).lines().find(|l| l.starts_with("build")).unwrap().to_string();
+        assert!(line.ends_with("…)") && line.contains("lost: ''' rm xx") && !line.contains('`'), "{line}");
+        assert_eq!(text(&x).matches("```").count(), 2);
         assert_eq!(json(&x, false)["phases"][1]["lost"], 663);
     }
 

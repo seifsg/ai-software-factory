@@ -99,7 +99,7 @@ pub fn repeat(list: &str) -> String {
 /// A suite started with `receipt start` runs detached: the host tracks no process, so its end wakes no one.
 pub fn detached(suite: &str, pid: u32) -> String {
     format!(
-        "The `{suite}` suite runs detached (pid {pid}) and its end wakes no session: wait for it in a call, `factory receipt check --wait 540` (tool timeout 600 s), repeat until it reports, then go on. Next time run the suite as a host background job (`factory receipt run ...`), which notifies on exit."
+        "The `{suite}` suite runs detached (pid {pid}) and its end wakes no session: wait for it in a call, `factory receipt check --suite {suite} --wait 540` (tool timeout 600 s), repeat until it reports, then go on. Next time run the suite as a host background job (`factory receipt run ...`), which notifies on exit."
     )
 }
 

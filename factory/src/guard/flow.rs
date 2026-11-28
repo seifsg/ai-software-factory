@@ -339,12 +339,15 @@ impl Ctx<'_> {
             self.s.set("jobs_since", "");
             self.s.set("jobs_id", "");
         }
+        // Waiting on a live detached suite is progress, not an idle turn: it never spends the idle budget, and
+        // it lasts only as long as the suite runs.
         if todo.is_empty()
             && !self.input.subagent_running
             && !self.has_line(b"Waiting: owner:")
             && let Some((suite, pid)) = &self.detached
         {
-            todo = reply::detached(suite, *pid);
+            self.save();
+            return Some(Reply::Block(reply::for_run(&self.rf, &reply::detached(suite, *pid))));
         }
         if todo.is_empty() {
             todo = self.before.clone().unwrap_or_default();

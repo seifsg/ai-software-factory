@@ -75,7 +75,9 @@ pub fn report(dir: &Path) -> Option<Report> {
     let h = header(dir)?;
     let g = guard(dir);
     let open = h.status == "open";
-    let split = split::split(&stamp::steps(&g), &stamp::read(&g), open.then(crate::paths::now))?;
+    let now = crate::paths::now();
+    let until = if open { now } else { last_write(dir, now) };
+    let split = split::split(&stamp::steps(&g), &stamp::read(&g), Some(until))?;
     Some(Report { dir: dir.to_path_buf(), title: h.title, open, split })
 }
 
@@ -112,27 +114,28 @@ pub fn on_stop(input: &crate::hook::Input, reply: Option<&crate::hook::Reply>, s
         .unwrap_or_else(|| start.to_path_buf());
     let Some(dir) = crate::run::locate::walk(&from).map(PathBuf::from) else { return };
     let (Some(h), g) = (header(&dir), guard(&dir)) else { return };
-    let rows = stamp::read(&g);
+    let mut rows = stamp::read(&g);
     let now = crate::paths::now();
-    let since = waiting_since(&rows);
+    let blocked = matches!(reply, Some(crate::hook::Reply::Block(_)));
     if h.status != "open" {
+        // A run closed before this Stop ended when its run file last changed, never at this later hook call.
         let ended = rows.iter().any(|r| matches!(r, Row::End { .. }));
-        if h.status == "closed" && !ended && g.join("steps.jsonl").is_file() {
-            stamp::append(&g, &Row::End { at: now });
+        if h.status == "closed" && !ended && !blocked && g.join("steps.jsonl").is_file() {
+            stamp::append(&g, &Row::End { at: last_write(&dir, now) });
             let _ = publish(&dir);
         }
         return;
     }
-    let mut open_wait = since;
-    if let Some((at, _)) = since
-        && let Some(back) = resume::first_after(&input.transcript_path, at).filter(|t| *t < now)
-    {
-        stamp::append(&g, &Row::Resume { at: back });
-        open_wait = None;
+    let tp = &input.transcript_path;
+    if let Some(back) = resume_due(&rows, &stamp::steps(&g), tp, now) {
+        let row = Row::Resume { at: back };
+        stamp::append(&g, &row);
+        rows.push(row);
     }
-    if matches!(reply, Some(crate::hook::Reply::Block(_))) || input.subagent_running {
+    if blocked || input.subagent_running {
         return;
     }
+    let open_wait = waiting_since(&rows);
     let owner = h.waiting.strip_prefix("owner:").map(str::trim);
     let why = owner.map(str::to_string).unwrap_or_else(|| match h.waiting.as_str() {
         "none" | "" => "turn ended with nothing running".to_string(),
@@ -140,8 +143,27 @@ pub fn on_stop(input: &crate::hook::Input, reply: Option<&crate::hook::Reply>, s
     });
     // A second stop inside the same wait adds nothing: the open row already covers it.
     if open_wait.is_none_or(|(_, was_owner)| was_owner != owner.is_some()) {
-        stamp::append(&g, &Row::Wait { at: now, owner: owner.is_some(), why });
+        stamp::append(&g, &Row::Wait { at: now, owner: owner.is_some(), off: resume::len(tp), why });
     }
+}
+
+/// The transcript's first entry after the last wait, when it comes before whatever closes that wait now (a
+/// `guard step` call stamps its resume late, after the session already worked).
+fn resume_due(rows: &[Row], steps: &[(u64, String)], transcript: &str, now: u64) -> Option<u64> {
+    let i = rows.iter().rposition(|r| matches!(r, Row::Wait { .. }))?;
+    let Row::Wait { at, off, .. } = &rows[i] else { return None };
+    let later = rows[i + 1..].iter().filter_map(|r| match r {
+        Row::Wait { at: t, .. } | Row::Resume { at: t } | Row::End { at: t } => Some(*t),
+        _ => None,
+    });
+    let close = later.chain(steps.iter().map(|s| s.0).filter(|t| t > at)).min();
+    let back = resume::first_after(transcript, *at, *off).filter(|t| *t < now)?;
+    close.is_none_or(|c| back < c).then_some(back)
+}
+
+/// The run file's last write in Unix seconds, never later than `now`.
+fn last_write(dir: &Path, now: u64) -> u64 {
+    crate::paths::mtime_ns(&dir.join(".factory/run.md")).map_or(now, |ns| u64::try_from(ns / 1_000_000_000).unwrap_or(now)).min(now)
 }
 
 /// `factory time [<run folder>] [--json]` and `factory time lost <phase> <XmYYs> <cause>`.

@@ -49,7 +49,7 @@ fn stop_stamps_owner_and_idle_waits_once_and_skips_blocked_or_subagent_turns() {
 fn stop_takes_the_resume_from_the_transcript_and_closes_once() {
     let d = run_dir("resume", "owner: ok?", "open");
     let g = guard(&d);
-    stamp::append(&g, &Row::Wait { at: stamp::iso_secs("2026-11-27T07:42:08Z").unwrap(), owner: true, why: "ok?".into() });
+    stamp::append(&g, &Row::Wait { at: stamp::iso_secs("2026-11-27T07:42:08Z").unwrap(), owner: true, off: 0, why: "ok?".into() });
     let tp = d.join("t.jsonl");
     std::fs::write(&tp, "{\"type\":\"user\",\"timestamp\":\"2026-11-27T07:51:33.000Z\"}\n").unwrap();
     on_stop(&stop(&d, &crate::paths::text(&tp), false), Some(&Reply::Block("x".into())), &d);
@@ -64,6 +64,67 @@ fn stop_takes_the_resume_from_the_transcript_and_closes_once() {
     let r = report(&d).unwrap();
     assert!(!r.open && r.block().starts_with("```text\ntotal ") && r.json()["phases"][0]["id"] == "owner");
     let _ = std::fs::remove_dir_all(d);
+}
+
+#[test]
+fn a_late_guard_call_never_hides_the_owner_reply_the_transcript_holds() {
+    let d = run_dir("late", "owner: ok?", "open");
+    let g = guard(&d);
+    let iso = |s: &str| stamp::iso_secs(s).unwrap();
+    let tp = d.join("t.jsonl");
+    std::fs::write(&tp, "{\"type\":\"assistant\",\"timestamp\":\"2026-11-27T07:42:00.000Z\"}\n").unwrap();
+    let off = resume::len(&crate::paths::text(&tp));
+    stamp::append(&g, &Row::Wait { at: iso("2026-11-27T07:42:08Z"), owner: true, off, why: "ok?".into() });
+    let mut t = std::fs::read_to_string(&tp).unwrap();
+    t.push_str("{\"type\":\"user\",\"timestamp\":\"2026-11-27T07:43:48.000Z\"}\n");
+    std::fs::write(&tp, t).unwrap();
+    active(&d);
+    on_stop(&stop(&d, &crate::paths::text(&tp), false), Some(&Reply::Block("x".into())), &d);
+    let r = report(&d).unwrap();
+    assert_eq!(r.json()["phases"][0], serde_json::json!({"id": "owner", "label": "waiting on you", "secs": 100, "lost": 0, "why": ""}));
+    // Once stamped, the same reply is not stamped again.
+    on_stop(&stop(&d, &crate::paths::text(&tp), false), Some(&Reply::Block("x".into())), &d);
+    assert_eq!(stamp::read(&g).iter().filter(|r| matches!(r, Row::Resume { .. })).count(), 2);
+    let _ = std::fs::remove_dir_all(d);
+}
+
+#[test]
+fn a_run_closed_long_ago_ends_at_its_last_write_and_a_blocked_stop_stamps_nothing() {
+    let d = run_dir("old", "none", "closed");
+    let run = std::fs::File::options().write(true).open(d.join(".factory/run.md")).unwrap();
+    let then = std::time::UNIX_EPOCH + std::time::Duration::from_secs(stamp::iso_secs("2026-11-27T08:00:00Z").unwrap());
+    run.set_modified(then).unwrap();
+    drop(run);
+    on_stop(&stop(&d, "", false), Some(&Reply::Block("x".into())), &d);
+    assert!(stamp::read(&guard(&d)).is_empty());
+    assert_eq!(report(&d).unwrap().json()["end"], "2026-11-27T08:00:00Z");
+    on_stop(&stop(&d, "", false), None, &d);
+    assert_eq!(stamp::read(&guard(&d)), [Row::End { at: stamp::iso_secs("2026-11-27T08:00:00Z").unwrap() }]);
+    let _ = std::fs::remove_dir_all(d);
+}
+
+#[test]
+fn a_worktree_run_writes_the_bench_of_its_main_checkout() {
+    let root = std::env::temp_dir().join(format!("factory-clock-wt-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&root);
+    let (main, wt) = (root.join("main"), root.join("wt"));
+    std::fs::create_dir_all(&main).unwrap();
+    let git = |dir: &Path, args: &[&str]| {
+        let ok = std::process::Command::new("git")
+            .arg("-C")
+            .arg(dir)
+            .args(["-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false"])
+            .args(args)
+            .output()
+            .is_ok_and(|o| o.status.success());
+        assert!(ok, "git {args:?}");
+    };
+    git(&main, &["init", "-q"]);
+    git(&main, &["commit", "-q", "--allow-empty", "-m", "a"]);
+    git(&main, &["worktree", "add", "-q", &crate::paths::text(&wt)]);
+    assert_eq!(std::fs::canonicalize(bench::file(&wt)).ok(), None, "nothing written yet");
+    assert_eq!(bench::file(&wt).parent().and_then(|p| std::fs::canonicalize(p.parent()?).ok()), std::fs::canonicalize(&main).ok());
+    let _ = std::fs::remove_dir_all(root);
 }
 
 #[test]

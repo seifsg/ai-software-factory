@@ -12,8 +12,11 @@ const HEAD: &str = "| Start (UTC) | Run | End (UTC) | Total | Waiting on you | P
 
 /// The bench file of the project the run folder belongs to.
 pub fn file(run_dir: &Path) -> PathBuf {
+    // A linked worktree names the shared Git folder as `<gitdir>/../..`: resolve it, then take the checkout holding it.
     let main = crate::git::Repo::discover(run_dir)
-        .and_then(|r| r.common.file_name().is_some_and(|n| n == ".git").then(|| r.common.parent().map(Path::to_path_buf)).flatten())
+        .and_then(|r| std::fs::canonicalize(&r.common).ok())
+        .map(|c| PathBuf::from(c.to_string_lossy().trim_start_matches(r"\\?\").to_string()))
+        .and_then(|c| c.file_name().is_some_and(|n| n == ".git").then(|| c.parent().map(Path::to_path_buf)).flatten())
         .unwrap_or_else(|| run_dir.to_path_buf());
     main.join(".factory/bench.md")
 }
@@ -25,7 +28,9 @@ pub fn upsert(run_dir: &Path, title: &str, x: &Split, open: bool) -> Result<Path
     std::fs::create_dir_all(dir).map_err(|e| format!("cannot create {}: {e}", crate::paths::text(dir)))?;
     let _lock = crate::machine::Lock::take(path.with_extension("md.lock"))?;
     let old = std::fs::read_to_string(&path).unwrap_or_default();
-    let new = with_row(&old, &row(title, x, open));
+    // A hand-kept file keeps its line endings.
+    let new = with_row(&old.replace("\r\n", "\n"), &row(title, x, open));
+    let new = if old.contains("\r\n") { new.replace('\n', "\r\n") } else { new };
     if new != old {
         crate::paths::write_atomic(&path, new.as_bytes()).map_err(|e| format!("cannot write {}: {e}", crate::paths::text(&path)))?;
     }

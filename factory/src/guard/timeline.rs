@@ -26,7 +26,7 @@ fn begin_with(start: &Path, initialize: impl FnOnce(&Path) -> Result<(), String>
         if let Ok(rd) = fs::read_dir(dir.join("guard")) {
             for p in rd.flatten().map(|e| e.path()) {
                 let name = p.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
-                if name == "stepped" || name == "written" {
+                if name == "stepped" || name == "written" || name == crate::clock::stamp::FILE {
                     let _ = fs::remove_file(p);
                 }
             }

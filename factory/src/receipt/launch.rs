@@ -158,8 +158,9 @@ fn run(
     let cmd = std::iter::once(prog).chain(argv.iter().copied()).collect::<Vec<_>>().join(" ");
     let at = utc_iso(paths::now());
     let proof = format!(
-        "factory-suite-launch 1\nsuite {suite}\nhead {head}\ntree {tree}\nclean yes\nmode background\ncmd {cmd}\nlog {log}\nat {at}\npid {}\n",
-        suite_child.id()
+        "factory-suite-launch 1\nsuite {suite}\nhead {head}\ntree {tree}\nclean yes\nmode background\ncmd {cmd}\nlog {log}\nat {at}\npid {}\nowner {}\n",
+        suite_child.id(),
+        crate::machine::Owner::of(suite_child.id()).map_or_else(|| suite_child.id().to_string(), |o| o.to_string())
     );
     let launched = paths::write_atomic(&claim.0.with_extension("launch.txt"), proof.as_bytes());
     let status = suite_child.wait().map_err(|e| format!("cannot wait for {prog}: {e}"))?;
@@ -205,7 +206,34 @@ pub fn live_detached(work: &Path) -> Option<(String, u32)> {
         }
         let text = fs::read_to_string(&p).ok()?;
         let field = |k: &str| text.lines().find_map(|l| l.strip_prefix(k)).map(str::trim);
-        let pid = crate::machine::Owner::parse(field("pid ")?)?;
-        pid.alive().then(|| (field("suite ").unwrap_or("full").to_string(), pid.pid))
+        // `owner` (pid and start time) beats a bare `pid`: a reused pid never reads as the suite still running.
+        let pid = crate::machine::Owner::parse(field("owner ").or_else(|| field("pid "))?)?;
+        let suite = field("suite ").filter(|s| !s.is_empty() && s.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_'));
+        pid.alive().then(|| (suite.unwrap_or("full").to_string(), pid.pid))
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::live_detached;
+
+    #[test]
+    fn a_live_owner_counts_and_a_reused_pid_or_lost_reservation_never_does() {
+        let work = std::env::temp_dir().join(format!("factory-detached-{}", std::process::id()));
+        let dir = super::super::dir(&work);
+        std::fs::create_dir_all(&dir).unwrap();
+        let me = crate::machine::Owner::me();
+        let launch = |owner: &str| std::fs::write(dir.join("t-full.launch.txt"), format!("suite full\npid {}\n{owner}", me.pid)).unwrap();
+        std::fs::write(dir.join("t-full.running"), "").unwrap();
+        launch(&format!("owner {me}\n"));
+        assert_eq!(live_detached(&work), Some(("full".to_string(), me.pid)));
+        if let Some(start) = me.start {
+            launch(&format!("owner {}-{}\n", me.pid, start + 1));
+            assert_eq!(live_detached(&work), None, "same pid, another start time");
+        }
+        launch("");
+        std::fs::remove_file(dir.join("t-full.running")).unwrap();
+        assert_eq!(live_detached(&work), None, "no reservation");
+        let _ = std::fs::remove_dir_all(work);
+    }
 }

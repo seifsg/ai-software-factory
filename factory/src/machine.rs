@@ -44,6 +44,11 @@ impl Owner {
         Owner { pid, start: probe(pid).flatten() }
     }
 
+    /// A running process by pid, with its start time when readable; None when it is not running.
+    pub fn of(pid: u32) -> Option<Owner> {
+        probe(pid).map(|start| Owner { pid, start })
+    }
+
     /// `pid` or `pid-start`; None for anything else. An old entry without a start time stays pid-only.
     pub fn parse(s: &str) -> Option<Owner> {
         let (pid, start) = match s.split_once('-') {
