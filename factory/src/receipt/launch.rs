@@ -192,3 +192,20 @@ fn background(program: impl AsRef<std::ffi::OsStr>) -> Command {
     }
     command
 }
+
+/// The suite and pid of a background run that is live now: its reservation stands, its launch record names
+/// a running pid. A dead supervisor's leftover reservation never counts. Why: the guard keeps a session from
+/// ending its turn on a run whose end wakes no one.
+pub fn live_detached(work: &Path) -> Option<(String, u32)> {
+    let rd = fs::read_dir(super::dir(work)).ok()?;
+    rd.flatten().map(|e| e.path()).filter(|p| p.to_string_lossy().ends_with(".launch.txt")).find_map(|p| {
+        let running = PathBuf::from(p.to_string_lossy().trim_end_matches(".launch.txt").to_string() + ".running");
+        if !running.is_file() {
+            return None;
+        }
+        let text = fs::read_to_string(&p).ok()?;
+        let field = |k: &str| text.lines().find_map(|l| l.strip_prefix(k)).map(str::trim);
+        let pid = crate::machine::Owner::parse(field("pid ")?)?;
+        pid.alive().then(|| (field("suite ").unwrap_or("full").to_string(), pid.pid))
+    })
+}

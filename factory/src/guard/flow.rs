@@ -126,7 +126,8 @@ pub fn run(input: &Input, mode: Mode, start: &Path) -> Option<Reply> {
         .map(|(t, n)| format!("{}: {n} runs", &t[..t.len().min(8)]))
         .collect::<Vec<_>>()
         .join(", ");
-    Ctx { mode, input, s, f, d, run, g, st, rf, note, new_state, now, text, sid: sid.to_string(), tp, before, repeat }.after_judge()
+    let detached = (mode == Mode::Stop).then(|| repo.as_ref().and_then(|r| crate::receipt::live_detached(&r.work))).flatten();
+    Ctx { mode, input, s, f, d, run, g, st, rf, note, new_state, now, text, sid: sid.to_string(), tp, before, repeat, detached }.after_judge()
 }
 
 /// Clear: the owner's command after a halt; also ends night mode. Keeps the run's sessions for gate proof.
@@ -176,6 +177,8 @@ struct Ctx<'a> {
     before: Option<String>,
     /// Trees the full suite ran on more than once; flagged once per new repeat.
     repeat: String,
+    /// A live suite run started detached (`receipt start`): suite and pid. Read on a Stop only.
+    detached: Option<(String, u32)>,
 }
 
 impl Ctx<'_> {
@@ -335,6 +338,13 @@ impl Ctx<'_> {
         } else {
             self.s.set("jobs_since", "");
             self.s.set("jobs_id", "");
+        }
+        if todo.is_empty()
+            && !self.input.subagent_running
+            && !self.has_line(b"Waiting: owner:")
+            && let Some((suite, pid)) = &self.detached
+        {
+            todo = reply::detached(suite, *pid);
         }
         if todo.is_empty() {
             todo = self.before.clone().unwrap_or_default();

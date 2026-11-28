@@ -49,6 +49,18 @@ fn proves_the_live_launch_then_records_one_pass() {
     assert!(launch.contains("\npid "));
     let done = prefix.with_extension("txt");
     assert!(!done.exists());
+    // The run waits on that detached suite: Stop refuses to end the turn, unless a subagent or the owner wakes it.
+    let run = |waiting: &str| {
+        let text = format!("# Run: x · fast · change\nStatus: open\nNext: 1 Analyze · analyze-start\nWaiting: {waiting}\n\n## 0 Ticket ✔\nx\n\n## 1 Analyze\n");
+        fs::write(dir.join(".factory/run.md"), text).unwrap();
+    };
+    let stop = |extra: &str| factory(&dir, &dir, &["guard", "stop"], &format!("{{\"cwd\":\"{}\"{extra}}}", common::json_path(&dir))).1;
+    run("jobs: full suite (max 30 min)");
+    assert!(stop("").contains("suite runs detached"));
+    assert!(!stop(",\"background_tasks\":[{\"type\":\"subagent\"}]").contains("detached"));
+    run("owner: go on?");
+    assert!(!stop("").contains("detached"));
+    run("jobs: full suite (max 30 min)");
 
     let (code, duplicate) = factory(&dir, &dir, &args, "");
     assert_ne!(code, 0, "{duplicate}");
@@ -64,5 +76,13 @@ fn proves_the_live_launch_then_records_one_pass() {
         assert!(result.contains(field), "missing {field} in {result}");
     }
     assert!(fs::read_to_string(prefix.with_extension("log")).unwrap().contains("suite output reached the log"));
+    // Ended: the supervisor dropped its reservation, so Stop lets the turn end; the run's clock holds the suite span.
+    let until = Instant::now() + Duration::from_secs(5);
+    while prefix.with_extension("running").exists() && Instant::now() < until {
+        std::thread::sleep(Duration::from_millis(20));
+    }
+    assert!(!stop("").contains("detached"));
+    let stamps = fs::read_to_string(dir.join(".factory/guard/time.jsonl")).unwrap();
+    assert!(stamps.contains("\"span\":\"tests\"") && stamps.contains("\"note\":\"full\""), "{stamps}");
     let _ = fs::remove_dir_all(dir);
 }

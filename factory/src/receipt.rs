@@ -28,6 +28,7 @@ pub mod carry;
 mod launch;
 
 pub use carry::Carried;
+pub use launch::live_detached;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Receipt {
