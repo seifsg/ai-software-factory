@@ -24,7 +24,12 @@ use std::path::{Path, PathBuf};
 /// `factory guard <mode> ...`
 pub fn cli(args: &[&str]) -> u8 {
     match args {
-        ["stop"] => emit(flow::run(&Input::from_stdin(), flow::Mode::Stop, &cwd())),
+        ["stop"] => {
+            let input = Input::from_stdin();
+            let reply = flow::run(&input, flow::Mode::Stop, &cwd());
+            crate::clock::on_stop(&input, reply.as_ref(), &cwd());
+            emit(reply)
+        }
         ["compact"] => emit(flow::run(&Input::from_stdin(), flow::Mode::Compact, &cwd())),
         ["check"] => {
             let Some(dir) = crate::run::locate::walk(&cwd()) else {

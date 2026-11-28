@@ -77,6 +77,8 @@ fn save(guard: &Path, step: &str, now: u64) -> io::Result<()> {
     let entry = format!("{}\n", json!({ "at": crate::receipt::utc_iso(now), "step": step }));
     fs::create_dir_all(guard)?;
     if current == 0 {
+        // A new Ticket starts a new clock: the last run's time stamps go with its step starts.
+        let _ = fs::remove_file(guard.join(crate::clock::stamp::FILE));
         crate::paths::write_atomic(&file, entry.as_bytes())
     } else {
         OpenOptions::new().create(true).append(true).open(file)?.write_all(entry.as_bytes())

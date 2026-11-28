@@ -15,6 +15,7 @@ pub fn cli(args: &[&str]) -> u8 {
         return 1;
     };
     let run = Path::new(&dir).join(".factory/run.md");
+    crate::clock::active(Path::new(&dir));
     let text = match std::fs::read(&run).map(String::from_utf8) {
         Ok(Ok(t)) if !t.is_empty() => t,
         _ => {

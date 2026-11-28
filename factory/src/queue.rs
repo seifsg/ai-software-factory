@@ -67,9 +67,10 @@ fn queue_name(value: Option<&str>) -> Option<&str> {
 pub fn hold(name: &str, slots: usize, cmd: &[&str]) -> Result<Ticket, String> {
     let dir = machine::dir(&format!("queue-{name}"))?;
     let ticket = join(&dir, cmd)?;
-    let queued = Instant::now();
+    let (queued, since) = (Instant::now(), crate::paths::now());
     if wait(&dir, &ticket, name, slots)? {
         eprintln!("factory queue: {name} started after {} s", queued.elapsed().as_secs());
+        crate::clock::span(&crate::guard::cwd(), crate::clock::Phase::Queue, since, crate::paths::now(), name);
     }
     Ok(ticket)
 }
